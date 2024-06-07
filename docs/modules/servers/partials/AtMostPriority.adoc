@@ -1,0 +1,5 @@
+=== AtMostPriority
+
+Numeric value. The priority of this mail should be at most the specified value to be matched.
+
+Inclusive.

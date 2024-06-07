@@ -1,0 +1,11 @@
+=== AddSubjectPrefix
+
+Add an prefix (tag) to the subject of a message <br>
+
+Sample Configuration:
+
+....
+<mailet match="RecipientIs=robot@james.apache.org" class="TagMessage">
+  <subjectPrefix>[robot]</subjectPrefix>
+</mailet>
+....

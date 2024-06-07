@@ -1,0 +1,26 @@
+=== ToSenderDomainRepository
+
+Stores incoming Mail in a repository defined by the sender's domain.<br>
+
+Supported configuration parameters:
+
+* "urlPrefix" mandatory: defines the prefix for the per sender's domain repository. For example for the value
+'cassandra://var/mail/sendersRepositories/', a mail sent by 'user@james.org' will be stored
+in 'cassandra://var/mail/sendersRepositories/james.org'.
+* "passThrough" optional, defaults to false. If true, the processing of the mail continues. If false it stops.
+* "allowRepositoryCreation" optional, defaults to true. If true, non existing repository will be created. In case of
+misconfiguration, this might lead to arbitrary repository creation. If false, the incoming mails will be stored only
+ in already existing repository. If not existing, the email will be dropped with an appropriate log warning (leading
+ to potential data loss). In case, you want to create a repository manually, make a http PUT request to
+ /mailRepositories/encodedUrlOfTheRepository from web admin api.
+  For example http://ip:port/mailRepositories/file%3A%2F%2FmailRepo
+
+Example:
+
+....
+<mailet match="All" class="ToSenderDomainRepository">
+    <urlPrefix>cassandra://var/mail/sendersRepositories/</urlPrefix>
+    <passThrough>false</passThrough>
+    <allowRepositoryCreation>true</allowRepositoryCreation>
+</mailet>
+....

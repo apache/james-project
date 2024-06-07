@@ -1,0 +1,11 @@
+=== HasMimeTypeAnySubPart
+
+This matcher checks if the content type matches.
+
+This matcher walks down the mime tree and will look up at all the mime parts of this message.
+
+use:
+
+....
+<mailet match="HasMimeTypeAnySubPart=text/plain,text/html" class="..." />
+....

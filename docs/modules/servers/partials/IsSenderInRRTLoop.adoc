@@ -1,0 +1,12 @@
+=== IsSenderInRRTLoop
+
+This matcher allow you to know if the sender of an email is part of a RRT loop.
+
+This is useful when bouncing upon RRT execution issues: we don't want to create a bouncing loop
+(as the execution of that RRT loop will fail).
+
+Example:
+
+....
+<mailet match="IsSenderInRRTLoop" class="<any-class>"/>
+....

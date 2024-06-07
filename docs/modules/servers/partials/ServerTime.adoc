@@ -1,0 +1,9 @@
+=== ServerTime
+
+Returns the current time for the mail server.
+
+Sample configuration:
+
+....
+<mailet match="RecipientIs=time@cadenza.lokitech.com" class="ServerTime"/>
+....

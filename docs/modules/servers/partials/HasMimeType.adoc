@@ -1,0 +1,11 @@
+=== HasMimeType
+
+This matcher checks if the content type matches.
+
+This matcher does not walk down the mime tree and stops at the top level mime part.
+
+use:
+
+....
+<mailet match="HasMimeType=text/plain,text/html" class="..." />
+....

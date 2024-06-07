@@ -1,0 +1,5 @@
+=== Null
+
+Simplest Mailet which destroys any incoming messages by setting their state to GHOST.
+
+This effectively stops all processing of this mail.

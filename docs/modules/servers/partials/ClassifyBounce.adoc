@@ -1,0 +1,11 @@
+=== ClassifyBounce
+
+Assesses the message to determine if it was a hard or soft bounce, and if it was a soft bounce, something of its nature..
+
+Sample configuration:
+
+....
+<mailet match="All" class="ClassifyBounce">
+  <headerName>X-MailetHeader</headerName>
+</mailet>
+....

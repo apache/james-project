@@ -1,0 +1,4 @@
+=== NESSpamCheck
+
+This is based on a sample filter.cfg for a Netscape Mail Server to stop
+spam.

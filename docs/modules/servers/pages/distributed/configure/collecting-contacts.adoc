@@ -1,0 +1,39 @@
+= Contact collection
+
+== Motivation
+
+Many modern applications combines email and contacts.
+
+We want recipients of emails sent by a user to automatically be added to this user contacts, for convenience. This
+should even be performed when a user sends emails via SMTP for example using thunderbird.
+
+== Design
+
+The idea is to send AMQP messages holding information about mail envelope for a traitment via a tierce application.
+
+== Configuration
+
+We can achieve this goal by combining simple mailets building blocks.
+
+Here is a sample pipeline achieving aforementioned objectives :
+
+....
+<mailet match="SenderIsLocal" class="ContactExtractor">
+    <attribute>extractedContacts</attribute>
+</mailet>
+<mailet match="All" class="AmqpForwardAttribute">
+    <uri>amqp://${env:JAMES_AMQP_USERNAME}:${env:JAMES_AMQP_PASSWORD}@${env:JAMES_AMQP_HOST}:${env:JAMES_AMQP_PORT}</uri>
+    <exchange>collector:email</exchange>
+    <attribute>extractedContacts</attribute>
+</mailet>
+
+....
+
+A sample message looks like:
+
+....
+{
+	"userEmail": "sender@james.org",
+	"emails": ["to@james.org"]
+}
+....

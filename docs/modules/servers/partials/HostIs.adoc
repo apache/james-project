@@ -1,0 +1,3 @@
+=== HostIs
+
+Matches mail to given hosts.

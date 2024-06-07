@@ -1,0 +1,14 @@
+=== HeadersToHTTP
+
+Serialise the email and pass it to an HTTP call
+
+Sample configuration:
+
+....
+<mailet match="All" class="HeadersToHTTP">
+  <url>http://192.168.0.252:3000/alarm</url>
+  <parameterKey>Test</parameterKey>
+  <parameterValue>ParameterValue</parameterValue>
+  <passThrough>true</passThrough>
+</mailet>
+....

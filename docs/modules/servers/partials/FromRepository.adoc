@@ -1,0 +1,11 @@
+=== FromRepository
+
+Re-spools Mail found in the specified Repository.
+
+....
+<mailet match="RecipientIs=respool@localhost" class="FromRepository">
+   <repositoryPath> *repository path* </repositoryPath>
+   <processor> *target processor* </repositoryPath>
+   <delete&t; [true|<b>false</b>] </delete>
+</mailet>
+....

@@ -1,0 +1,3 @@
+=== RelayLimit
+
+Matches mail which has been relayed more than a given number of times.

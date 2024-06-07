@@ -1,0 +1,3 @@
+=== Sieve
+
+Execute Sieve scripts for incoming emails, and set the result of the execution as attributes of the mail

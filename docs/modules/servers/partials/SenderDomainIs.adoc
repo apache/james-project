@@ -1,0 +1,11 @@
+=== SenderDomainIs
+
+SenderDomainIs will look at the envelope sender's domain. If equal to
+configured value, then all recipients will be returned. Otherwise an empty
+list will be returned.
+
+Sample configuration:
+
+....
+<mailet match="SenderDomainIs=<domain.com>" class="<any-class>">
+....

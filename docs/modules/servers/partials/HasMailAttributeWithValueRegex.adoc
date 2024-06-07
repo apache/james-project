@@ -1,0 +1,14 @@
+=== HasMailAttributeWithValueRegex
+
+This Matcher determines if the mail contains the attribute specified in the
+condition and that attribute matches the supplied regular expression,
+it returns all recipients if that is the case.
+
+Sample configuration:
+
+....
+<mailet match="HasMailAttributeWithValueRegex=whatever,<regex>" class="<any-class>">
+....
+
+Note: as it is not possible to put arbitrary objects in the configuration,
+toString() is called on the attribute value, and that is the value matched against.

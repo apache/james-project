@@ -1,0 +1,36 @@
+=== SMIMESign
+
+Puts a *server-side* signature on a message.
+
+It is a concrete subclass of AbstractSign, with very few modifications to it.
+
+A text file with an explanation text is attached to the original message,
+and the resulting message with all its attachments is signed.
+
+* The resulting appearance of the message is almost unchanged: only an extra attachment
+* and the signature are added.
+
+The kind of signature depends on the value of the <keyHolderClass> init parameter.
+
+Handles the following init parameters:
+
+* <keyHolderClass>: Sets the class of the KeyHolder object that will handle the cryptography functions,
+for example org.apache.james.security.SMIMEKeyHolder for SMIME.
+* <debug>: if *true* some useful information is logged.
+The default is *false*.
+* <keyStoreFileName>: the {@link java.security.KeyStore} full file name.
+* <keyStorePassword>: the *KeyStore* password.
+If given, it is used to check the integrity of the keystore data,
+otherwise, if null, the integrity of the keystore is not checked.
+* <keyAlias>: the alias name to use to search the Key using {@link java.security.KeyStore#getKey}.
+The default is to look for the first and only alias in the keystore;
+if zero or more than one is found a {@link java.security.KeyStoreException} is thrown.
+* <keyAliasPassword>: the alias password. The default is to use the *KeyStore* password.
+At least one of the passwords must be provided.
+* <keyStoreType>: the type of the keystore. The default will use {@link java.security.KeyStore#getDefaultType}.
+* <postmasterSigns>: if *true* the message will be signed even if the sender is the Postmaster. The default is *true*.
+* <rebuildFrom>: If *true* will modify the "From:" header. The default is *true*.
+* <signerName>: the name of the signer to be shown in the explanation text. The default is to use the "CN="
+property of the signing certificate.
+* <explanationText>. There is a default explanation string template in English, displaying
+also all the headers of the original message.

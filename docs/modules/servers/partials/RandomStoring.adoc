@@ -1,0 +1,3 @@
+=== RandomStoring
+
+Process messages and randomly assign them to 4 to 8 mailboxes.

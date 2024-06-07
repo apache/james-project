@@ -1,0 +1,14 @@
+=== TextCalendarBodyToAttachment
+
+This mailet converts Content-Type of MimeMessage from text/calendar to mulitpart/mixed
+
+The BodyPart should be retrieved from content of text/calendar with all the same "Content-*" headers from original message
+and those "Content-" header are removed from original message
+
+It does not takes any parameter
+
+Sample configuration:
+
+....
+<mailet match="All" class="TextCalendarBodyToAttachment"/>
+....

@@ -1,0 +1,105 @@
+= Distributed James Server &mdash; jvm.properties
+:navtitle: jvm.properties
+
+This file may contain any additional system properties for tweaking JVM execution. When you normally would add a command line option `-Dmy.property=whatever`, you can put it in this file as `my.property=whatever` instead. These properties will be added as system properties on server start.
+
+Note that in some rare cases this might not work,
+when a property affects very early JVM start behaviour.
+
+For testing purposes, you may specify a different file path via the command line option `-Dextra.props=/some/other/jvm.properties`.
+
+== Control the threshold memory
+This governs the threshold MimeMessageInputStreamSource relies on for storing MimeMessage content on disk.
+
+In `jvm.properties`
+----
+james.message.memory.threshold=12K
+----
+
+(Optional). String (size, integer + size units, example: `12 KIB`, supported units are bytes KIB MIB GIB TIB). Defaults to 100KIB.
+
+== Enable the copy of message in memory
+Should MimeMessageWrapper use a copy of the message in memory? Or should bigger message exceeding james.message.memory.threshold
+be copied to temporary files?
+
+----
+james.message.usememorycopy=true
+----
+
+Optional. Boolean. Defaults to false. Recommended value is false.
+
+== Running resource leak detection
+It is used to detect a resource not be disposed of before it's garbage-collected.
+
+In `jvm.properties`
+----
+james.lifecycle.leak.detection.mode=advanced
+----
+
+Allowed mode values are: none, simple, advanced, testing
+
+The purpose of each mode is introduced in `config-system.xml`
+
+== Disabling host information in protocol MDC logging context
+
+Should we add the host in the MDC logging context for incoming IMAP, SMTP, POP3? Doing so, a DNS resolution
+is attempted for each incoming connection, which can be costly. Remote IP is always added to the logging context.
+
+
+In `jvm.properties`
+----
+james.protocols.mdc.hostname=false
+----
+
+Optional. Boolean. Defaults to true.
+
+== Change the encoding type used for the blobId
+
+By default, the blobId is encoded in base64 url. The property `james.blob.id.hash.encoding` allows to change the encoding type.
+The support value are: base16, hex, base32, base32Hex, base64, base64Url.
+
+Ex in `jvm.properties`
+----
+james.blob.id.hash.encoding=base16
+----
+
+Optional. String. Defaults to base64Url.
+
+== JMAP Quota draft compatibility
+
+Some JMAP clients depend on the JMAP Quota draft specifications. The property `james.jmap.quota.draft.compatibility` allows
+to enable JMAP Quota draft compatibility for those clients and allow them a time window to adapt to the RFC-9245 JMAP Quota.
+
+Optional. Boolean. Default to false.
+
+Ex in `jvm.properties`
+----
+james.jmap.quota.draft.compatibility=true
+----
+To enable the compatibility.
+
+== Enable S3 metrics
+
+James supports extracting some S3 client-level metrics e.g. number of connections being used, time to acquire an S3 connection, total time to finish a S3 request...
+
+The property `james.s3.metrics.enabled` allows to enable S3 metrics collection. Please pay attention that enable this
+would impact a bit on S3 performance.
+
+Optional. Boolean. Default to true.
+
+Ex in `jvm.properties`
+----
+james.s3.metrics.enabled=false
+----
+To disable the S3 metrics.
+
+== Reactor Stream Prefetch
+
+Prefetch to use in Reactor to stream convertions (S3 => InputStream). Default to 1.
+Higher values will tend to block less often at the price of higher memory consumptions.
+
+Ex in `jvm.properties`
+----
+# james.reactor.inputstream.prefetch=4
+----
+

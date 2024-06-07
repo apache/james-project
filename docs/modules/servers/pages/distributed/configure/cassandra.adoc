@@ -1,0 +1,165 @@
+= Distributed James Server &mdash; cassandra.properties
+:navtitle: cassandra.properties
+
+This configuration file allow setting some configuration properties in conjunction to
+Cassandra driver native configuration.
+
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/cassandra.properties[example]
+to get some examples and hints.
+
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/cassandra-driver.conf[example]
+to get some examples and hints for Cassandra driver native configuration.
+
+Cassandra native configuration allows configuring SSL, timeouts, logs and metrics as well as execution profiles.
+
+== Configuration
+
+Here are generic properties:
+
+.cassandra.properties content
+|===
+| Property name | explanation
+
+| cassandra.nodes
+| List of some nodes of the cassandra's cluster in following format host:port or host, if the port is not specified we use 9042
+
+|cassandra.keyspace.create
+|Indicate if the keyspace should be created by James. Optional, default value: *false*
+If set to true James will attempt to create the keyspace when starting up.
+
+|cassandra.keyspace
+|Is the name of the keyspace used by James. Optional, default value: *apache_james*
+
+|cassandra.user
+|Username used as a credential for contacting Cassandra cluster. Optional, default is absent,
+required if *cassandra.password* is supplied
+
+|cassandra.password
+|Password used as a credential for contacting Cassandra cluster. Optional, default is absent,
+required if <strong>cassandra.user</strong> is supplied
+
+|cassandra.replication.factor
+|Is the replication factor used upon keyspace creation. Modifying this property while the keyspace already exists
+will have no effect. Optional. Default value 1.
+
+|cassandra.local.dc
+|Optional. Allows specifying the local DC as part of the load balancing policy. Specifying it
+would result in the use of `new TokenAwarePolicy(DCAwareRoundRobinPolicy.builder().withLocalDc(value).build())` as a LoadBalancingPolicy.
+This value is useful in a multi-DC Cassandra setup. Be aware of xref:distributed/architecture/consistency-model.adoc#_about_multi_data_center_setups[limitation of multi-DC setups for James]
+Not specifying this value results in the driver's default load balancing policy to be used.
+
+|optimistic.consistency.level.enabled
+|Optional. Allows specifying consistency level ONE for reads in Cassandra BlobStore.
+Falls back to default read consistency level if the blob is missing. Defaults to false.
+
+|===
+
+== Cassandra Mailbox Configuration
+
+*cassandra.properties* file furthermore expose some options to tune the Cassandra Mailbox behaviour.
+
+.cassandra.properties content
+|===
+| Property name | explanation
+
+| mailbox.read.repair.chance
+| Optional. Defaults to 0.1 (10% chance).
+Must be between 0 and 1 (inclusive). Controls the probability of doing a read-repair upon mailbox read.
+
+| mailbox.read.repair.chance
+| Optional. Defaults to 0.1 (10% chance).
+Must be between 0 and 1 (inclusive). Controls the probability of doing a read-repair upon mailbox read.
+
+| mailbox.counters.read.repair.chance.max
+| Optional. Defaults to 0.1 (10% chance).
+Must be between 0 and 1 (inclusive). Controls the probability of doing a read-repair upon mailbox counters read.
+Formula: read_repair_chance = min(mailbox.counters.read.repair.chance.max, (100/unseens)*mailbox.counters.read.repair.chance.one.hundred)
+
+| mailbox.counters.read.repair.chance.one.hundred
+| Optional. Defaults to 0.01 (1% chance).
+Must be between 0 and 1 (inclusive). Controls the probability of doing a read-repair upon mailbox counters read.
+Formula: read_repair_chance = min(mailbox.counters.read.repair.chance.max, (100/unseens)*mailbox.counters.read.repair.chance.one.hundred)
+
+| mailbox.max.retry.acl
+| Optional. Defaults to 1000.
+Controls the number of retries upon Cassandra ACL updates.
+
+| mailbox.max.retry.modseq
+| Optional. Defaults to 100000.
+Controls the number of retries upon Cassandra ModSeq generation.
+
+| mailbox.max.retry.uid
+| Optional. Defaults to 100000.
+Controls the number of retries upon Cassandra Uid generation.
+
+| mailbox.max.retry.message.flags.update
+| Optional. Defaults to 1000.
+Controls the number of retries upon Cassandra flags update, in MessageMapper.
+
+| mailbox.max.retry.message.id.flags.update
+| Optional. Defaults to 1000.
+Controls the number of retries upon Cassandra flags update, in MessageIdMapper.
+
+| chunk.size.message.read
+| Optional. Defaults to 100.
+Controls the number of messages to be retrieved in parallel.
+
+| mailbox.blob.part.size
+| Optional. Defaults to 102400 (100KB).
+Controls the size of blob parts used to store messages in the Cassandra blobStore.
+
+| mailbox.read.strong.consistency
+| Optional. Boolean, defaults to true. Disabling should be considered experimental.
+If enabled, regular consistency level is used for read transactions for mailbox. Not doing so might result
+in stale reads as the system.paxos table will not be checked for latest updates. Better performance are expected
+by turning it off. Note that reads performed as part of write transactions are always performed with a strong
+consistency.
+
+| uid.read.strong.consistency.unsafe
+| Optional. Boolean, defaults to true. Disabling should be considered experimental.
+If enabled, regular consistency level is used for read transactions for uid upon read oepration (eg IMAP status, select).
+Not doing so might result in stale reads as the system.paxos table will not be checked for latest updates.
+Better performance are expected by turning it off.
+Note that reads performed as part of write transactions are always performed with a strong consistency.
+
+| modseq.read.strong.consistency.unsafe
+| Optional. Boolean, defaults to true. Disabling should be considered experimental.
+If enabled, regular consistency level is used for read transactions for modseq upon read operation (eg IMAP status, select).
+Not doing so might result in stale reads as the system.paxos table will not be checked for latest updates.
+Better performance are expected by turning it off.
+Note that reads performed as part of write transactions are always performed with a strong consistency.
+
+| message.read.strong.consistency
+| Optional. Boolean, defaults to true. Disabling should be considered experimental.
+If enabled, regular consistency level is used for read transactions for message. Not doing so might result
+in stale reads as the system.paxos table will not be checked for latest updates. Better performance are expected
+by turning it off. Note that reads performed as part of write transactions are always performed with a strong
+consistency.
+
+| message.write.strong.consistency.unsafe
+| Optional. Boolean, defaults to true. Disabling should be considered experimental and unsafe.
+If disabled, Lightweight transactions will no longer be used upon messages operation (table `imapUidTable`).
+As message flags updates relies so far on a read-before-write model, it exposes yourself to data races leading to
+potentially update loss. Better performance are expected
+by turning it off. Reads performed as part of write transaction are also performed with a relaxed consistency.
+
+| mailrepository.strong.consistency
+| Optional. Boolean, defaults to true. Allows not to use lightweight transactions in CassandraMailRepository.
+ If disabled we implement an idempotent behaviour (duplicates are overridden, missing entries upon deletes are ignored).
+
+| acl.enabled
+| Optional. Boolean, defaults to true. Allows disabling ACLs: if set to false, delegation will fail and users will only
+have access to the mailboxes they own. ACLs can represent a high volume of requests. If you do not propose mailbox sharing
+features to your users, you can consider disabling them in order to improve performance.
+
+| email.change.ttl
+| Optional. Duration, default to 60 days. Cassandra Time-to-live for Email change records. Setting time-to-live to zero means refusing to use time-to-live on email changes.
+
+| mailbox.change.ttl
+| Optional. Duration, default to 60 days. Cassandra Time-to-live for Mailbox change records. Setting time-to-live to zero means refusing to use time-to-live on mailbox changes.
+
+| uid.modseq.increment
+| Optional, default to 0. Defensive value to add to uids and modseqs generated. This can be used as an heuristic to maintain
+consistency even when consensus of Lightweight Transactions is broken, exemple during a disaster recovery process.
+
+|===

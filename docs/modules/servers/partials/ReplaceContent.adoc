@@ -1,0 +1,39 @@
+=== ReplaceContent
+
+Replace text contents
+
+This mailet allow to specific regular expression to replace text in subject and content.
+
+
+Each expression is defined as: */REGEX_PATTERN/SUBSTITUTION_PATTERN/FLAGS/*
+
+* *REGEX_PATTERN* is a regex used for the match
+* *SUBSTITUTION_PATTERN* is a substitution pattern
+* *FLAGS* flags supported for the pattern:
+** i: case insensitive
+** m: multi line
+** x: extended (N/A)
+** r: repeat - keep matching until a substitution is possible
+
+To identify subject and body pattern we use the tags <subjectPattern> and <bodyPattern>
+
+Rules can be specified in external files.
+Lines must be CRLF terminated and lines starting with # are considered comments.
+Tags used to include external files are <subjectPatternFile> and
+<bodyPatternFile>
+If file path starts with # then the file is loaded as a resource.
+
+Use of both files and direct patterns at the same time is allowed.
+
+This mailet allow also to enforce the resulting charset for messages processed, when a replacement has been done.
+To do that the tag <charset> must be specified.
+
+NOTE:
+Regexp rules must be escaped by regexp escaping rules and applying this 2 additional rules:
+
+- "/" char inside an expression must be prefixed with "\":
+  e.g: "/\//-//" replaces "/" with "-"
+- when the rules are specified using <subjectPattern> or <bodyPattern> and
+  "/,/" has to be used in a pattern string it must be prefixed with a "\".
+  E.g: "/\/\/,//" replaces "/" with "," (the rule would be "/\//,//" but the "/,/" must
+  be escaped.

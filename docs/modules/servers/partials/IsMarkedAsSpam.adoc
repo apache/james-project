@@ -1,0 +1,29 @@
+=== IsMarkedAsSpam
+
+Matches mails having a *org.apache.james.spamassassin.status* per recipient header with a *Yes* value.
+
+As an example, here is a part of a mailet pipeline which can be used in your LocalDelivery processor:
+
+....
+<!-- SpamAssassing mailets pipeline -->
+    <mailet match="RecipientIsLocal" class="SpamAssassin">
+        <spamdHost>spamassassin</spamdHost>
+        <spamdPort>783</spamdPort>
+    </mailet>
+    <mailet match="IsMarkedAsSpam" class="WithStorageDirective">
+        <targetFolderName>Spam</targetFolderName>
+    </mailet>
+<!-- End of SpamAssassing mailets pipeline -->
+....
+
+In order to use this with `rspamd`, we need to declare a condition for the matcher
+and drop the Rspamd jar (*third-party/rspamd*) in the James extensions-jars folder.
+Eg: With the recipient header for Rspamd being *org.apache.james.rspamd.status*,
+then the configuration would be:
+
+....
+<!-- Rspamd mailets pipeline -->
+    <mailet match="IsMarkedAsSpam=org.apache.james.rspamd.status" class="WithStorageDirective">
+        <targetFolderName>Spam</targetFolderName>
+    </mailet>
+....

@@ -71,7 +71,7 @@ any email needs you may have.
 [#distributed]
 == James Distributed Mail Server 
 
-The xref:james-distributed-app:ROOT:index.adoc[*Distributed Server*] is a heavy-duty industrial
+The xref:distributed/index.adoc[*Distributed Server*] is a heavy-duty industrial
 enterprise mail server.
 
 This is the most feature-rich server, but also by far the most complex,
