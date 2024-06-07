@@ -1,78 +1,59 @@
-Return-Path: <SRS0=tId/=NB=gmail.com=benoittellier3@ik2.com>
+Return-Path: <SRS0=fiQ1=NJ=preprod-avocat.fr=sonde-supervision-preprod.linagora@ik2.com>
 org.apache.james.rspamd.flag: NO
-org.apache.james.rspamd.status: No, actions=no action score=-2.199919 requiredScore=15.0
+org.apache.james.rspamd.status: No, actions=no action score=-0.700093 requiredScore=15.0
 Delivered-To: btellier@linagora.com
 Received: from 172.17.0.1 (EHLO incoming.linagora.com) ([172.17.0.1])
-          by incoming.linagora.com (JAMES SMTP Server ) with ESMTP ID cc361fa9
+          by incoming.linagora.com (JAMES SMTP Server ) with ESMTP ID aec1ac7b
           for <btellier@linagora.com>;
-          Thu, 30 May 2024 13:40:14 +0000 (UTC)
+          Fri, 07 Jun 2024 06:32:41 +0000 (UTC)
 Received: from obm3-ui.linagora.dc1 (arathi.linagora.com [54.36.8.82])
-	by incoming.linagora.com (Postfix) with ESMTP id 659F31407C4
-	for <btellier@linagora.com>; Thu, 30 May 2024 13:40:14 +0000 (UTC)
-Received: from s602f.ik2.com (s602f.ik2.com [66.37.25.73])
-	by obm3-ui.linagora.dc1 (Postfix) with ESMTP id C93371D5C6
-	for <btellier@linagora.com>; Thu, 30 May 2024 15:40:07 +0200 (CEST)
-Received: from s602e.ik2.com
-	by s602f.ik2.com with esmtps (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
-	(envelope-from <benoittellier3@gmail.com>)
-	id 1sCg0i-0002XM-OP
-	for btellier@linagora.com; Thu, 30 May 2024 13:40:12 +0000
-Received: from 209.85.128.46 by s602e.ik2.com (IK2 SMTP Server); Thu, 30 May 2024 13:40:04 +0000
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4211a86f124so9168275e9.0
-        for <btellier@linagora.com>; Thu, 30 May 2024 06:40:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1717076402; x=1717681202; darn=linagora.com;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=7Du5NGP2MyuADnrogxKph53e1out46j13DZF2nAEAkw=;
-        b=mxfhsA0BR3nmSdywq2v46UzKVDEgXyYV2W246HRTGntDTN0X0OEeUHX3d2mkOFS+9l
-         Ocsp8fRiGX/OsrGKLJcxCrIAVPCTjCpvcle4ROJ7FfzxAPJdl/JrAzKDgauETI55ylLd
-         t/5dt4aVuhBjEBrYOoNe1ohuad6sm0eBAFxYT07EnkwyE7tQXjse0i2jgEUBPxzxAsCE
-         rRHz+reoQBAV/BgM5pSBI/uGmXEgacd/+mr0h6RaDpRbw25Aw6xZicM8Tkr9ML+FQjaI
-         l9Vv+z/dpjoR097ivuOb8up5VjBWyKpz9LqCJT+02A6jwXrMHL8yXzWW0OwnTNnEyWu6
-         u93A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717076402; x=1717681202;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=7Du5NGP2MyuADnrogxKph53e1out46j13DZF2nAEAkw=;
-        b=OYZ4+pgXmBQ+gFJJlFtBnLAqNkeNDVWntLSfPKyOw0d87OM/Y5qHqjQ41JIOVozpbn
-         kcXQ3yvPLwqTWnj/2CH+3Zrr55vEPKJ/r3UryycznW6ZeOImbNN44Mqoneo/YtTUPycC
-         ydbRu8RGpBZ3ywGoTuicklyLNJSOk6h07rLZR9iRrUoZ0mMhxIbsLbfSzUGrWGabdr4K
-         iAUW24/GwVTG0ONoe5yq/4TcFPFEu7s4QEjBSEpNH4ls2hxixjTZJ6XfnxePcz+DfCKj
-         s9kD7OcOtonH5jEx2oBn7v/2vry7p3oWvdGOUTKLSLBU24s/qIgqWWEZ0ipoVXusce4C
-         5bBw==
-X-Gm-Message-State: AOJu0YxB4iy1wIU5a4SkuOKHbBIMae4BWDJb2NAShcTHwHF+UPr/V/g3
-	gd/z3cYJgwQcDx9J+qDAiOkYvfwqka36yu4bp6CxMUg0217AEA5RdAH5JnQl2vTaCaj+NNcXgRh
-	D0aE+XXVp/RAC3D1+7/Xqb+DwGpIs
-X-Google-Smtp-Source: AGHT+IFPn7s9C2xdjp0Ma743RGFgjdzSN2dfnYDI2LI2g+a3bAKp3bsDmdgarnz7eSkz4WYTUJGYTYOxKXtDbZK6opQ=
-X-Received: by 2002:a05:600c:3103:b0:41e:454b:2f7 with SMTP id
- 5b1f17b1804b1-4212781f6cfmr23775515e9.23.1717076402123; Thu, 30 May 2024
- 06:40:02 -0700 (PDT)
+	by incoming.linagora.com (Postfix) with ESMTP id 07BDE140137
+	for <btellier@linagora.com>; Fri,  7 Jun 2024 06:32:41 +0000 (UTC)
+Received: from s602g.ik2.com (s602g.ik2.com [66.37.25.74])
+	by obm3-ui.linagora.dc1 (Postfix) with ESMTP id 830051D5C6
+	for <btellier@linagora.com>; Fri,  7 Jun 2024 08:32:33 +0200 (CEST)
+Received: from s214b.ik2.com
+	by s602g.ik2.com with esmtps (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
+	(envelope-from <sonde-supervision-preprod.linagora@preprod-avocat.fr>)
+	id 1sFT9N-0007vZ-O9
+	for btellier@linagora.com; Fri, 07 Jun 2024 06:32:38 +0000
+Received: from 185.60.151.64 by s214b.ik2.com (IK2 SMTP Server); Fri, 7 Jun 2024 06:32:33 +0000
+Received: from outgoing.preprod-avocat.fr (unknown [100.96.59.32])
+	by outgoing.preprod-avocat.fr (Postfix) with ESMTP id 090772C00FA
+	for <btellier@linagora.com>; Fri,  7 Jun 2024 08:32:30 +0200 (CEST)
+DKIM-Signature: a=rsa-sha256; b=t91ocFueqOR3c2K2TDUz3SUxcVxY5QhaKCrbd9u40WAO11MLxUiEgK7aYTRN/GJJJo6l0sL81kSQbsNPBlcjEGUKhv4wPU34BQko5iAK4gkIGTZ3kWfC1rQo52QK17EqKd9OG9q7vAJh1eA4la5P1Z8DJzxxCB39E0bl9SEtb6s=; s=s1; d=preprod-avocat.fr; v=1; bh=DOV1GxCvw1QI/ZiqKmKwXLguFsLSCuRTQ978r2J4NGs=; h=from : reply-to : subject : date : to : cc : resent-date : resent-from : resent-sender : resent-to : resent-cc : in-reply-to : references : list-id : list-help : list-unsubscribe : list-subscribe : list-post : list-owner : list-archive;
 MIME-Version: 1.0
+Subject: DKIM signature of another domain
 X-LINAGORA-Copy-Delivery-Done: 1
-From: Benoit Tellier <benoittellier3@gmail.com>
-Date: Thu, 30 May 2024 15:39:51 +0200
-Message-ID: <CANKoxfUveC2tNpHnud_g6JAXYjsTCrc5Ck-mx+G_Rt3zk=+kcg@mail.gmail.com>
-Subject: GMail dkim
-To: =?UTF-8?Q?Beno=C3=AEt_STG=5FTELLIER?= <btellier@linagora.com>
-Content-Type: multipart/alternative; boundary="000000000000003b1e0619ac016c"
-X-SF-RX-Return-Path: <benoittellier3@gmail.com>
-X-SF-Originating-IP: 209.85.128.46
+From: rgqer <sonde-supervision-preprod.linagora@preprod-avocat.fr>
+To: "btellier@linagora.com" <btellier@linagora.com>
+Reply-To: sonde-supervision-preprod.linagora@preprod-avocat.fr
+Date: Fri, 7 Jun 2024 06:32:23 +0000
+Message-ID: <Mime4j.19.f679494c3e9bb11d.18ff165fa26@preprod-avocat.fr>
+User-Agent: Team-Mail/0.11.3 Mozilla/5.0 (X11; Linux x86_64)
+ AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36
+Disposition-Notification-To:
+ sonde-supervision-preprod.linagora@preprod-avocat.fr
+Content-Type: multipart/alternative;
+ boundary="-=Part.1a.56f2e38fc73ec684.18ff165fa26.911900ebfe468c22=-"
+X-SF-RX-Return-Path: <sonde-supervision-preprod.linagora@preprod-avocat.fr>
+X-SF-Originating-IP: 185.60.151.64
 X-SF-WhiteListedReason: Whitelisted EmailTO
-X-SF-Score: 4.4
-X-SF-SRS: Sender address rewritten from <benoittellier3@gmail.com> to <SRS0=tId/=NB=gmail.com=benoittellier3@ik2.com>
+X-SF-Score:
+X-SF-SRS: Sender address rewritten from <sonde-supervision-preprod.linagora@preprod-avocat.fr> to <SRS0=fiQ1=NJ=preprod-avocat.fr=sonde-supervision-preprod.linagora@ik2.com>
 X-SF-Domain: qgwlxqsyyb
 
---000000000000003b1e0619ac016c
-Content-Type: text/plain; charset="UTF-8"
+---=Part.1a.56f2e38fc73ec684.18ff165fa26.911900ebfe468c22=-
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Wrong!
 
---000000000000003b1e0619ac016c
-Content-Type: text/html; charset="UTF-8"
+DKIM signature of another domain
 
-<div dir="ltr">Wrong!</div>
+---=Part.1a.56f2e38fc73ec684.18ff165fa26.911900ebfe468c22=-
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
---000000000000003b1e0619ac016c--
-
+<div style=3D"line-height: 100%;"><br style=3D"line-height: 100%;">DKIM sig=
+nature of another domain<br style=3D"line-height: 100%;"></div>
+---=Part.1a.56f2e38fc73ec684.18ff165fa26.911900ebfe468c22=---
