@@ -61,13 +61,17 @@ public class JwtFilter implements AuthenticationFilter {
 
             checkHeaderPresent(bearer);
             String login = retrieveUser(bearer); // subject field can't be null
-            checkIsAdmin(bearer); // admin field should be true
-            checkIfNotAdmin(bearer,request);
+            if (typeEqualAdmin(bearer)) {
+                // If type equal admin , Has all the permissions
+                //checkIsAdmin(bearer); // admin field should be true
+            } else {
+                checkIfNotAdminAndTypeEqualAgent(bearer,request);
+            }
             request.attribute(LOGIN, login);
         }
     }
 
-    private void checkIfNotAdmin(Optional<String> bearer, Request request) throws JsonProcessingException {
+    private boolean typeEqualAdmin(Optional<String> bearer) throws JsonProcessingException {
         String token = bearer.get();
         DecodedJWT jwt = JWT.decode(token);
         String payload = new String(java.util.Base64.getUrlDecoder().decode(jwt.getPayload()));
@@ -75,12 +79,26 @@ public class JwtFilter implements AuthenticationFilter {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode payloadNode = mapper.readTree(payload);
 
-        JsonNode subNode = payloadNode.get("sub");
-        String sub = subNode != null ? subNode.asText() : "N/A";
+        JsonNode typeNode = payloadNode.get("type");
+        String sub = typeNode != null ? typeNode.asText() : "N/A";
         if (sub.equals("admin")) {
-            return;
-        } else if (!sub.equals("agent")) {
-            halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.Subject is not agent");
+            return true;
+        }
+        return false;
+    }
+
+    private void checkIfNotAdminAndTypeEqualAgent(Optional<String> bearer, Request request) throws JsonProcessingException {
+        String token = bearer.get();
+        DecodedJWT jwt = JWT.decode(token);
+        String payload = new String(java.util.Base64.getUrlDecoder().decode(jwt.getPayload()));
+        // Parse payload JSON
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode payloadNode = mapper.readTree(payload);
+
+        JsonNode typeNode = payloadNode.get("type");
+        String type = typeNode != null ? typeNode.asText() : "N/A";
+        if (!type.equals("agent")) {
+            halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.Type is not agent");
         }
         String pathProcessedValue = getProcessPath(request.pathInfo());
         JsonNode permissionsNode = payloadNode.get("permissions");
