@@ -37,6 +37,7 @@ Finally, please note that in case of a malformed URL the 400 bad request respons
  - [Administrating quotas by users](#Administrating_quotas_by_users)
  - [Administrating quotas by domains](#Administrating_quotas_by_domains)
  - [Administrating global quotas](#Administrating_global_quotas)
+ - [Administrating DropLists](#administrating-droplists)
  - [Cassandra Schema upgrades](#Cassandra_Schema_upgrades)
  - [Correcting ghost mailbox](#Correcting_ghost_mailbox)
  - [Creating address aliases](#Creating_address_aliases)
@@ -2388,6 +2389,158 @@ curl -XDELETE http://ip:port/quota/size
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
+
+## Administrating DropLists
+
+The DropList, also known as the mail blacklist, is a collection of
+domains and email addresses that are denied from sending emails within the system.
+
+Owner scopes:
+
+- `global`: contains entries that are blocked across all domains and addresses within the system.
+  Entries in the global owner scope apply universally and affect all users and domains.
+- `domain`: each domain can have its own droplist, which contains entries specific to that domain.
+- `user`: allow to customize personalized droplist of blocked domains and email addresses.
+
+The `deniedEntityType` query parameter is optional and can take the values `domain` or `address`.
+
+- [Getting the DropList](#getting-the-droplist)
+    * [Global DropList](#global-droplist)
+    * [Domain DropList](#domain-droplist)
+    * [User DropList](#user-droplist)
+- [Testing a denied entity existence](#testing-a-denied-entity-existence)
+    * [Global DropList](#global-droplist-1)
+    * [Domain DropList](#domain-droplist-1)
+    * [User DropList](#user-droplist-1)
+- [Add Entry to the DropList](#add-entry-to-the-droplist)
+    * [Global DropList](#global-droplist-2)
+    * [Domain DropList](#domain-droplist-2)
+    * [User DropList](#user-droplist-2)
+- [Remove Entry from the DropList](#remove-entry-from-the-droplist)
+    * [Global DropList](#global-droplist-3)
+    * [Domain DropList](#domain-droplist-3)
+    * [User DropList](#user-droplist-3)
+
+### Getting the DropList
+#### Global DropList
+
+```
+curl -XGET http://ip:port/droplist/global?deniedEntityType=null|domain|address
+```
+#### Domain DropList
+```
+curl -XGET http://ip:port/droplist/domain/target.com?deniedEntityType=null|domain|address
+```
+
+#### User DropList
+
+```
+curl -XGET http://ip:port/droplist/user/tagret@target.com?deniedEntityType=null|domain|address
+```
+
+The answer looks like:
+```
+[ "evil.com", "devil.com", "bad_guy@crime.com", "hacker@murder.org" ]
+```
+
+Response codes:
+
+* 200: The drop list was successfully retrieved
+* 400: Invalid `owner scope` or `deniedEntityType`
+
+### Testing a denied entity existence
+#### Global DropList
+
+```
+curl -XHEAD http://ip:port/droplist/global/attacker@evil.com
+```
+```
+curl -XHEAD http://ip:port/droplist/global/evil.com
+```
+
+#### Domain DropList
+
+```
+curl -XHEAD http://ip:port/droplist/domain/target.com/attacker@evil.com
+```
+```
+curl -XHEAD http://ip:port/droplist/domain/target.com/evil.com
+```
+
+#### User DropList
+
+```
+curl -XHEAD http://ip:port/droplist/user/target@target.com/attacker@evil.com
+```
+```
+curl -XHEAD http://ip:port/droplist/user/target@target.com/evil.com
+```
+Response codes:
+
+* 200: The denied entity exists
+* 404: The denied entity does not exist
+
+### Add Entry to the DropList
+
+The denied entity must be a valid email address or [domain](#create-a-domain).
+
+#### Global DropList
+```
+curl -XPUT http://ip:port/droplist/global/attacker@evil.com
+```
+```
+curl -XPUT http://ip:port/droplist/global/evil.com
+```
+#### Domain DropList
+
+```
+curl -XPUT http://ip:port/droplist/domain/target.com/attacker@evil.com
+```
+```
+curl -XPUT http://ip:port/droplist/domain/target.com/evil.com
+```
+#### User DropList
+
+```
+curl -XPUT http://ip:port/droplist/user/target@target.com/attacker@evil.com
+```
+```
+curl -XPUT http://ip:port/droplist/user/target@target.com/evil.com
+```
+Response codes:
+
+* 204: The denied entity was successfully added
+* 400: The denied entity is invalid
+
+### Remove Entry from the DropList
+#### Global DropList
+
+```
+curl -XDELETE http://ip:port/droplist/global/attacker@evil.com
+```
+```
+curl -XDELETE http://ip:port/droplist/global/evil.com
+```
+
+#### Domain DropList
+
+```
+curl -XDELETE http://ip:port/droplist/domain/target.com/attacker@evil.com
+```
+```
+curl -XDELETE http://ip:port/droplist/domain/target.com/evil.com
+```
+#### User DropList
+
+```
+curl -XDELETE http://ip:port/droplist/user/target@target.com/attacker@evil.com
+```
+```
+curl -XDELETE http://ip:port/droplist/user/target@target.com/evil.com
+```
+Response codes:
+
+* 204: Entry deleted successfully.
 
 ## Cassandra Schema upgrades
 
