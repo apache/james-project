@@ -1,7 +1,0 @@
-=== SenderIsNull
-
-Matches mails that are sent by a null sender.
-
-....
-<mailet match="SenderIsNull" class="<any-class>">
-....

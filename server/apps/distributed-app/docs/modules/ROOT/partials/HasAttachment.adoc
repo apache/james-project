@@ -1,3 +1,0 @@
-=== HasAttachment
-
-Checks whether this message has an attachment

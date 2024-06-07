@@ -1,3 +1,0 @@
-=== RecipientIsLocal
-
-Matches mail where the recipient is local.

@@ -1,3 +1,0 @@
-=== SubjectIs
-
-Matches mail where the subject is contained in a configurable list.

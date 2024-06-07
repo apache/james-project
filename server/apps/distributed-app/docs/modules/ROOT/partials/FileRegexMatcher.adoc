@@ -1,3 +1,0 @@
-=== FileRegexMatcher
-
-Initializes RegexMatcher with regular expressions from a file.

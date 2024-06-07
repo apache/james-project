@@ -1,3 +1,0 @@
-=== HostIsLocal
-
-Matches mail to Domains which are local

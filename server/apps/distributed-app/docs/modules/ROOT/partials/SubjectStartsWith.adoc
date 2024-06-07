@@ -1,3 +1,0 @@
-=== SubjectIs
-
-Matches mail where the subject starts with a given phrase.
