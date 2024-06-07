@@ -1,0 +1,17 @@
+---
+layout: post
+title:  "Apache James JSPF 1.0.4"
+date:   2024-06-07  01:16:30 +0200
+categories: james update
+---
+
+The Apache James developers are pleased to announce the 1.0.4 release of the JSPF library.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+This release fixes the DSNJava asynchronous resolver that was mis-behaving since 1.0.2 release/
+
+The Apache James PMC would like to thanks all contributors who made this release possible!
+
+[tracker]: https://issues.apache.org/jira/projects/JSPF/issues
+[download]: https://james.apache.org/download.cgi#Apache_jSPF
