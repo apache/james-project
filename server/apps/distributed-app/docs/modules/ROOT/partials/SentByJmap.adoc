@@ -1,3 +1,0 @@
-=== SentByJmap
-
-Matches mails sent via the JMAP protocol.

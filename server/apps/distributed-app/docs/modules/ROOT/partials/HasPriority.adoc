@@ -1,3 +1,0 @@
-=== HasPriority
-
-Numeric value. The priority of this mail should be equal to the specified value to be matched.

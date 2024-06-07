@@ -1,3 +1,0 @@
-=== IsSMIMEEncrypted
-
-Checks if a mail is smime encrypted.

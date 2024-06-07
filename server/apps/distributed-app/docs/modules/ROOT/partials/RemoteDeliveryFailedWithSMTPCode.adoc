@@ -1,3 +1,0 @@
-=== RemoteDeliveryFailedWithSMTPCode
-
-Checks the SMTP error code attached to remote delivery failures
