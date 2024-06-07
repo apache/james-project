@@ -22,6 +22,8 @@ package org.apache.james.jmap.api.projections;
 import static org.apache.james.jmap.api.projections.MessageFastViewProjection.METRIC_RETRIEVE_HIT_COUNT;
 import static org.apache.james.jmap.api.projections.MessageFastViewProjection.METRIC_RETRIEVE_MISS_COUNT;
 
+import java.util.Optional;
+
 import jakarta.inject.Inject;
 
 import org.apache.james.core.healthcheck.ComponentName;
@@ -35,7 +37,9 @@ import reactor.core.publisher.Mono;
 public class MessageFastViewProjectionHealthCheck implements HealthCheck {
 
     private static final ComponentName COMPONENT_NAME = new ComponentName("MessageFastViewProjection");
-    private static final double MAXIMUM_MISS_PERCENTAGE_ACCEPTED = 10;
+    private static final double MAXIMUM_MISS_PERCENTAGE_ACCEPTED = Optional.ofNullable(System.getProperty("james.jmap.fastview.projection.max.miss.percentage.accepted", null))
+        .map(Double::parseDouble)
+        .orElse(10d);
 
     private final Metric retrieveHitCountMetric;
     private final Metric retrieveMissCountMetric;
