@@ -22,6 +22,7 @@ package org.apache.james;
 import java.io.File;
 import java.util.Optional;
 
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
@@ -36,11 +37,13 @@ public class JPAJamesConfiguration implements Configuration {
         private Optional<String> rootDirectory;
         private Optional<ConfigurationPath> configurationPath;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
+        private Optional<Boolean> dropListsEnabled;
 
         private Builder() {
             rootDirectory = Optional.empty();
             configurationPath = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
+            dropListsEnabled = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -76,6 +79,11 @@ public class JPAJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder enableDropLists() {
+            this.dropListsEnabled = Optional.of(true);
+            return this;
+        }
+
         public JPAJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -90,10 +98,19 @@ public class JPAJamesConfiguration implements Configuration {
             UsersRepositoryModuleChooser.Implementation usersRepositoryChoice = usersRepositoryImplementation.orElseGet(
                 () -> UsersRepositoryModuleChooser.Implementation.parse(configurationProvider));
 
+            boolean dropListsEnabled = this.dropListsEnabled.orElseGet(() -> {
+                try {
+                    return configurationProvider.getConfiguration("droplists").getBoolean("enabled", false);
+                } catch (ConfigurationException e) {
+                    return false;
+                }
+            });
+
             return new JPAJamesConfiguration(
                 configurationPath,
                 directories,
-                usersRepositoryChoice);
+                usersRepositoryChoice,
+                dropListsEnabled);
         }
     }
 
@@ -104,11 +121,14 @@ public class JPAJamesConfiguration implements Configuration {
     private final ConfigurationPath configurationPath;
     private final JamesDirectoriesProvider directories;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
+    private final boolean dropListsEnabled;
 
-    public JPAJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation) {
+    public JPAJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories,
+                                 UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, boolean dropListsEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
+        this.dropListsEnabled = dropListsEnabled;
     }
 
     @Override
@@ -123,5 +143,9 @@ public class JPAJamesConfiguration implements Configuration {
 
     public UsersRepositoryModuleChooser.Implementation getUsersRepositoryImplementation() {
         return usersRepositoryImplementation;
+    }
+
+    public boolean isDropListsEnabled() {
+        return dropListsEnabled;
     }
 }

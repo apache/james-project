@@ -27,6 +27,7 @@
        <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
         <jta-data-source>osgi:service/javax.sql.DataSource/(osgi.jndi.service.name=jdbc/james)</jta-data-source>
         <class>org.apache.james.domainlist.jpa.model.JPADomain</class>
+        <class>org.apache.james.droplists.jpa.model.JPADropListEntry</class>
         <class>org.apache.james.user.jpa.model.JPAUser</class>
         <class>org.apache.james.rrt.jpa.model.JPARecipientRewrite</class>
         <class>org.apache.james.mailrepository.jpa.model.JPAUrl</class>

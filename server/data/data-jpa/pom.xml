@@ -33,7 +33,7 @@
     <name>Apache James :: Server :: Data :: JPA Persistence</name>
 
     <properties>
-        <target.jdk>11</target.jdk>
+        <target.jdk>21</target.jdk>
     </properties>
 
     <dependencies>
@@ -174,6 +174,7 @@
                         org/apache/james/user/jpa/model/JPAUser.class,
                         org/apache/james/rrt/jpa/model/JPARecipientRewrite.class,
                         org/apache/james/domainlist/jpa/model/JPADomain.class,
+                        org/apache/james/droplists/jpa/model/JPADropListEntry.class,
                         org/apache/james/mailrepository/jpa/model/JPAUrl.class,
                         org/apache/james/mailrepository/jpa/model/JPAMail.class</includes>
                     <addDefaultConstructor>true</addDefaultConstructor>
@@ -190,6 +191,7 @@
                                 org.apache.james.user.jpa.model.JPAUser;
                                 org.apache.james.rrt.jpa.model.JPARecipientRewrite;
                                 org.apache.james.domainlist.jpa.model.JPADomain;
+                                org.apache.james.droplists.jpa.model.JPADropListEntry
                                 org.apache.james.mailrepository.jpa.model.JPAUrl;
                                 org.apache.james.mailrepository.jpa.model.JPAMail)</value>
                         </property>

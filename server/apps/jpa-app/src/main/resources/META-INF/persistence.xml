@@ -32,6 +32,7 @@
         <class>org.apache.james.mailbox.jpa.user.model.JPASubscription</class>
 
         <class>org.apache.james.domainlist.jpa.model.JPADomain</class>
+        <class>org.apache.james.droplists.jpa.model.JPADropListEntry</class>
         <class>org.apache.james.mailrepository.jpa.model.JPAUrl</class>
         <class>org.apache.james.mailrepository.jpa.model.JPAMail</class>
         <class>org.apache.james.user.jpa.model.JPAUser</class>
