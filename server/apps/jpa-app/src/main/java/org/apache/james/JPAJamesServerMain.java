@@ -110,7 +110,7 @@ public class JPAJamesServerMain implements JamesServerMain {
         GuiceJamesServer server = createServer(configuration)
             .combineWith(new JMXServerModule())
             .overrideWith(new RunArgumentsModule(args))
-            .overrideWith(chooseDropListsModule(configuration));;
+            .overrideWith(chooseDropListsModule(configuration));
 
         JamesServerMain.main(server);
     }
