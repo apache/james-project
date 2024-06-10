@@ -26,13 +26,13 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.james.GuiceModuleTestExtension;
-import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PoolBackedPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
-import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -123,8 +123,8 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             this.selectedDatabase = PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
         } else {
             this.selectedDatabase = DEFAULT_DATABASE;
-            this.poolSize = maybePoolSize.orElse(DEFAULT_POOL_SIZE);
         }
+        this.poolSize = maybePoolSize.orElse(DEFAULT_POOL_SIZE);
     }
 
     @Override
@@ -166,47 +166,37 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .jooqReactiveTimeout(Optional.of(Duration.ofSeconds(20L)))
             .build();
 
-        PostgresqlConnectionConfiguration.Builder connectionBaseBuilder = PostgresqlConnectionConfiguration.builder()
-            .host(postgresConfiguration.getHost())
-            .port(postgresConfiguration.getPort())
-            .database(postgresConfiguration.getDatabaseName())
-            .schema(postgresConfiguration.getDatabaseSchema());
+        Function<PostgresConfiguration.Credential, PostgresqlConnectionConfiguration> postgresqlConnectionConfigurationFunction = credential ->
+            PostgresqlConnectionConfiguration.builder()
+                .host(postgresConfiguration.getHost())
+                .port(postgresConfiguration.getPort())
+                .database(postgresConfiguration.getDatabaseName())
+                .schema(postgresConfiguration.getDatabaseSchema())
+                .username(credential.getUsername())
+                .password(credential.getPassword())
+                .build();
 
-        connectionFactory = new PostgresqlConnectionFactory(connectionBaseBuilder
-            .username(postgresConfiguration.getCredential().getUsername())
-            .password(postgresConfiguration.getCredential().getPassword())
-            .build());
+        RecordingMetricFactory metricFactory = new RecordingMetricFactory();
 
+        connectionFactory = new PostgresqlConnectionFactory(postgresqlConnectionConfigurationFunction.apply(postgresConfiguration.getCredential()));
         superConnection = connectionFactory.create().block();
 
-        if (rlsEnabled) {
-            executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(connectionFactory), postgresConfiguration, new RecordingMetricFactory());
-        } else {
-            executorFactory = new PostgresExecutor.Factory(
-                new PoolBackedPostgresConnectionFactory(false,
-                    poolSize.getMin(),
-                    poolSize.getMax(),
-                    connectionFactory),
-                postgresConfiguration,
-                new RecordingMetricFactory());
-        }
+        executorFactory = new PostgresExecutor.Factory(
+            getJamesPostgresConnectionFactory(rlsEnabled, connectionFactory),
+            postgresConfiguration,
+            metricFactory);
 
         postgresExecutor = executorFactory.create();
-        if (rlsEnabled) {
-            nonRLSPostgresExecutor = Mono.just(connectionBaseBuilder
-                    .username(postgresConfiguration.getNonRLSCredential().getUsername())
-                    .password(postgresConfiguration.getNonRLSCredential().getPassword())
-                    .build())
-                .flatMap(configuration -> new PostgresqlConnectionFactory(configuration).create().cache())
-                .map(connection -> new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(connection), postgresConfiguration, new RecordingMetricFactory()).create())
-                .block();
-        } else {
-            nonRLSPostgresExecutor = postgresExecutor;
-        }
 
-        this.postgresTableManager = new PostgresTableManager(new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(superConnection), postgresConfiguration, new RecordingMetricFactory()).create(),
-            postgresModule,
-            postgresConfiguration);
+        PostgresqlConnectionFactory nonRLSConnectionFactory = new PostgresqlConnectionFactory(postgresqlConnectionConfigurationFunction.apply(postgresConfiguration.getNonRLSCredential()));
+
+        nonRLSPostgresExecutor = new PostgresExecutor.Factory(
+            getJamesPostgresConnectionFactory(false, nonRLSConnectionFactory),
+            postgresConfiguration,
+            metricFactory)
+            .create();
+
+        this.postgresTableManager = new PostgresTableManager(postgresExecutor, postgresModule, rlsEnabled);
     }
 
     @Override
@@ -293,5 +283,13 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .execute())
             .then()
             .block();
+    }
+
+    private JamesPostgresConnectionFactory getJamesPostgresConnectionFactory(boolean rlsEnabled, PostgresqlConnectionFactory connectionFactory) {
+        return new PoolBackedPostgresConnectionFactory(
+            rlsEnabled,
+            poolSize.getMin(),
+            poolSize.getMax(),
+            connectionFactory);
     }
 }
