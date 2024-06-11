@@ -622,6 +622,8 @@ public abstract class ImapRequestLineReader {
                         }
                     }
                 }
+            } catch (DecodingException e) {
+                throw e;
             } catch (IOException e) {
                 throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Could not read literal", e);
             }

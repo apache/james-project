@@ -103,7 +103,9 @@ public class HumanReadableText {
 
     public static final HumanReadableText SAVE_FAILED = new HumanReadableText("org.apache.james.imap.SAVE_FAILED", "failed. Save failed.");
 
-    public static final HumanReadableText FAILED = new HumanReadableText("org.apache.james.imap.SAVE_FAILED", "failed.");
+    public static final HumanReadableText FAILED = new HumanReadableText("org.apache.james.imap.FAILED", "failed.");
+
+    public static final HumanReadableText FAILED_LITERAL_SIZE_EXCEEDED = new HumanReadableText("org.apache.james.imap.FAILED_LITERAL_SIZE_EXCEEDED", "failed. Literal size exceeded.");
 
     public static final HumanReadableText UNSUPPORTED_SEARCH = new HumanReadableText("org.apache.james.imap.UNSUPPORTED_SEARCH", "failed. Unsupported search.");
 
