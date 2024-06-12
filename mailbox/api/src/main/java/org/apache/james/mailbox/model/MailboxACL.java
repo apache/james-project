@@ -289,20 +289,6 @@ public class MailboxACL {
             return value.isEmpty();
         }
 
-        /**
-         * Tells whether the implementation supports the given right.
-         *
-         * @return true if this supports the given right.
-         */
-        public boolean isSupported(Right right) {
-            try {
-                contains(right.asCharacter());
-                return true;
-            } catch (UnsupportedRightException e) {
-                return false;
-            }
-        }
-
         public Iterator<Right> iterator() {
             ImmutableList<Right> rights = ImmutableList.copyOf(value);
             return rights.iterator();
