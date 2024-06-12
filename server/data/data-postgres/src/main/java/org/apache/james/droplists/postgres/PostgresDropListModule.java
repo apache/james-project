@@ -21,6 +21,7 @@ package org.apache.james.droplists.postgres;
 
 import java.util.UUID;
 
+import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
@@ -47,11 +48,21 @@ public interface PostgresDropListModule {
                 .column(DENIED_ENTITY_TYPE)
                 .column(DENIED_ENTITY)
                 .constraint(DSL.primaryKey(DROPLIST_ID))))
-            .supportsRowLevelSecurity()
+            .disableRowLevelSecurity()
             .build();
+
+        PostgresIndex IDX_OWNER_SCOPE_OWNER = PostgresIndex.name("idx_owner_scope_owner")
+            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, OWNER_SCOPE, OWNER));
+
+        PostgresIndex IDX_OWNER_SCOPE_OWNER_DENIED_ENTITY = PostgresIndex.name("idx_owner_scope_owner_denied_entity")
+            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, OWNER_SCOPE, OWNER, DENIED_ENTITY));
     }
 
     PostgresModule MODULE = PostgresModule.builder()
         .addTable(PostgresDropListsTable.TABLE)
+        .addIndex(PostgresDropListsTable.IDX_OWNER_SCOPE_OWNER)
+        .addIndex(PostgresDropListsTable.IDX_OWNER_SCOPE_OWNER_DENIED_ENTITY)
         .build();
 }
