@@ -49,7 +49,7 @@ services:
       - james
 
   postgres:
-    image: postgres:16.1
+    image: postgres:16.3
     container_name: postgres
     ports:
       - "5432:5432"
