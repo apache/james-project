@@ -20,6 +20,8 @@
 package org.apache.james.events;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,7 +30,6 @@ import jakarta.inject.Inject;
 
 import org.apache.james.events.delivery.EventDelivery;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -51,7 +52,8 @@ public class InVMEventBus implements EventBus {
         this.eventDelivery = eventDelivery;
         this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;
-        this.registrations = Multimaps.synchronizedSetMultimap(HashMultimap.create());
+        this.registrations = Multimaps.synchronizedSetMultimap(
+                Multimaps.newSetMultimap(new HashMap<>(), () -> Collections.newSetFromMap(new ConcurrentHashMap<>())));
         this.groups = new ConcurrentHashMap<>();
     }
 

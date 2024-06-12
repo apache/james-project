@@ -22,6 +22,7 @@ package org.apache.james.events;
 import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 
 public class InVMEventBusTest implements KeyContract.SingleEventBusKeyContract, GroupContract.SingleEventBusGroupContract,
     ErrorHandlingContract {
@@ -34,6 +35,19 @@ public class InVMEventBusTest implements KeyContract.SingleEventBusKeyContract, 
         deadLetters = new MemoryEventDeadLetters();
         eventBus = new InVMEventBus(
             new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, deadLetters);
+    }
+
+    @Nested
+    class ConcurrentTest implements EventBusConcurrentTestContract.SingleEventBusConcurrentContract {
+        @Override
+        public EnvironmentSpeedProfile getSpeedProfile() {
+            return EnvironmentSpeedProfile.FAST;
+        }
+
+        @Override
+        public EventBus eventBus() {
+            return eventBus;
+        }
     }
 
     @Override

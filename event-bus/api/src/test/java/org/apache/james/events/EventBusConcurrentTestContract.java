@@ -28,7 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import org.apache.james.events.EventBusTestFixture.EventListenerCountingSuccessfulExecution;
 import org.apache.james.events.EventBusTestFixture.GroupA;
@@ -139,6 +141,26 @@ public interface EventBusConcurrentTestContract {
             AWAIT_CONDITION.untilAsserted(() ->
                 assertThat(totalEventsReceived(ImmutableList.of(countingListener1, countingListener2, countingListener3)))
                     .isEqualTo(totalEventDeliveredGlobally + totalEventDeliveredByKeys));
+        }
+
+        @Test
+        default void concurrentRegisterThenDispatchShouldDeliverAllEventsToAtLeastOneListenerWithSingleEventBus()
+                throws Exception {
+            List<EventListenerCountingSuccessfulExecution> countingListeners = IntStream
+                    .range(0, TOTAL_DISPATCH_OPERATIONS).mapToObj(i -> newCountingListener()).toList();
+
+            ConcurrentTestRunner.builder()
+                    .reactorOperation((threadNumber, operationNumber) -> Mono
+                            .from(eventBus().register(
+                                    countingListeners.get(threadNumber * OPERATION_COUNT + operationNumber), KEY_1))
+                            .then(eventBus().dispatch(EVENT, ALL_KEYS)))
+                    .threadCount(THREAD_COUNT)
+                    .operationCount(OPERATION_COUNT)
+                    .runSuccessfullyWithin(FIVE_SECONDS);
+
+            AWAIT_CONDITION.untilAsserted(() -> assertThat(countingListeners.stream()
+                    .mapToInt(EventListenerCountingSuccessfulExecution::numberOfEventCalls).max().getAsInt())
+                    .isEqualTo(TOTAL_DISPATCH_OPERATIONS));
         }
     }
 
