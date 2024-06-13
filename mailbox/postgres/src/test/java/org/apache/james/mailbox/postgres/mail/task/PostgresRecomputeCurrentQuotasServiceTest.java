@@ -71,7 +71,7 @@ class PostgresRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuota
     void setUp() throws Exception {
         MailboxSessionMapperFactory mapperFactory = PostgresMailboxManagerProvider.provideMailboxSessionMapperFactory(postgresExtension);
 
-        PostgresUsersDAO usersDAO = new PostgresUsersDAO(postgresExtension.getPostgresExecutor(),
+        PostgresUsersDAO usersDAO = new PostgresUsersDAO(postgresExtension.getDefaultPostgresExecutor(),
             PostgresUsersRepositoryConfiguration.DEFAULT);
 
         usersRepository = new PostgresUsersRepository(NO_DOMAIN_LIST, usersDAO);
@@ -81,7 +81,7 @@ class PostgresRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuota
 
         mailboxManager = PostgresMailboxManagerProvider.provideMailboxManager(postgresExtension, PreDeletionHooks.NO_PRE_DELETION_HOOK);
         sessionProvider = mailboxManager.getSessionProvider();
-        currentQuotaManager = new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()));
+        currentQuotaManager = new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getDefaultPostgresExecutor()));
 
         userQuotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
 

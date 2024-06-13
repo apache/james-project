@@ -42,12 +42,12 @@ public class PostgresAnnotationMapperTest extends AnnotationMapperTest {
 
     @Override
     protected AnnotationMapper createAnnotationMapper() {
-        return new PostgresAnnotationMapper(new PostgresMailboxAnnotationDAO(postgresExtension.getPostgresExecutor()));
+        return new PostgresAnnotationMapper(new PostgresMailboxAnnotationDAO(postgresExtension.getDefaultPostgresExecutor()));
     }
 
     @Override
     protected MailboxId generateMailboxId() {
-        MailboxMapper mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()));
+        MailboxMapper mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()));
         return mailboxMapper.create(benwaInboxPath, UID_VALIDITY).block().getMailboxId();
     }
 }

@@ -124,7 +124,7 @@ class BodyDeduplicationIntegrationTest implements MailsShouldBeWellReceived {
             .awaitMessageCount(CALMLY_AWAIT, 1);
 
         // Then the body blobs are deduplicated
-        int distinctBlobCount = postgresExtension.getPostgresExecutor()
+        int distinctBlobCount = postgresExtension.getDefaultPostgresExecutor()
             .executeCount(dslContext -> Mono.from(dslContext.select(DSL.countDistinct(PostgresMessageModule.MessageTable.BODY_BLOB_ID))
                 .from(PostgresMessageModule.MessageTable.TABLE_NAME)))
             .block();
