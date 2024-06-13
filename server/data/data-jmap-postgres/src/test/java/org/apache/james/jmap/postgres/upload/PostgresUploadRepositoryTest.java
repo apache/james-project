@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresUploadRepositoryTest implements UploadRepositoryContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(
         PostgresModule.aggregateModules(PostgresUploadModule.MODULE));
     private UploadRepository testee;
     private UpdatableTickingClock clock;
