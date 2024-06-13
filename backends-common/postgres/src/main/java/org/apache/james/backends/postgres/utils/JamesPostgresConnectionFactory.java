@@ -19,8 +19,6 @@
 
 package org.apache.james.backends.postgres.utils;
 
-import java.util.Optional;
-
 import org.apache.james.core.Domain;
 
 import io.r2dbc.spi.Connection;
@@ -30,11 +28,9 @@ public interface JamesPostgresConnectionFactory {
     String DOMAIN_ATTRIBUTE = "app.current_domain";
     String NON_RLS_INJECT = "non_rls";
 
-    default Mono<Connection> getConnection(Domain domain) {
-        return getConnection(Optional.ofNullable(domain));
-    }
+    Mono<Connection> getConnection(Domain domain);
 
-    Mono<Connection> getConnection(Optional<Domain> domain);
+    Mono<Connection> getConnection();
 
     Mono<Void> closeConnection(Connection connection);
 
