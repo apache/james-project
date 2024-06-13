@@ -38,9 +38,9 @@ public class PostgresEventSourcingFilteringManagementTest implements FilteringMa
 
     @Override
     public FilteringManagement instantiateFilteringManagement() {
-        return new EventSourcingFilteringManagement(new PostgresEventStore(new PostgresEventStoreDAO(postgresExtension.getPostgresExecutor(),
+        return new EventSourcingFilteringManagement(new PostgresEventStore(new PostgresEventStoreDAO(postgresExtension.getDefaultPostgresExecutor(),
             JsonEventSerializer.forModules(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED,
                 FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT).withoutNestedType())),
-            new PostgresFilteringProjection(new PostgresFilteringProjectionDAO(postgresExtension.getPostgresExecutor())));
+            new PostgresFilteringProjection(new PostgresFilteringProjectionDAO(postgresExtension.getDefaultPostgresExecutor())));
     }
 }

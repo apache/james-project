@@ -30,6 +30,6 @@ public class PostgresEventDeadLettersTest implements EventDeadLettersContract.Al
 
     @Override
     public EventDeadLetters eventDeadLetters() {
-        return new PostgresEventDeadLetters(postgresExtension.getPostgresExecutor(), new EventBusTestFixture.TestEventSerializer());
+        return new PostgresEventDeadLetters(postgresExtension.getDefaultPostgresExecutor(), new EventBusTestFixture.TestEventSerializer());
     }
 }

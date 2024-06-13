@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
 
 public interface JamesPostgresConnectionFactory {
     String DOMAIN_ATTRIBUTE = "app.current_domain";
-    String NON_RLS_INJECT = "non_rls";
+    String BY_PASS_RLS_INJECT = "by_pass_rls";
 
     Mono<Connection> getConnection(Domain domain);
 

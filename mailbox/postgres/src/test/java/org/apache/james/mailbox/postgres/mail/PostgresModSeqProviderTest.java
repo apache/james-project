@@ -54,7 +54,7 @@ public class PostgresModSeqProviderTest {
 
     @BeforeEach
     void setup() {
-        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(postgresExtension.getPostgresExecutor());
+        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor());
         modSeqProvider = new PostgresModSeqProvider(mailboxDAO);
         MailboxPath mailboxPath = new MailboxPath("gsoc", Username.of("ieugen" + UUID.randomUUID()), "INBOX");
         UidValidity uidValidity = UidValidity.of(1234);

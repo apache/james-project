@@ -55,7 +55,7 @@ class PostgresExecutorThreadSafetyTest {
 
     @BeforeAll
     static void beforeAll() {
-        postgresExecutor = postgresExtension.getPostgresExecutor();
+        postgresExecutor = postgresExtension.getDefaultPostgresExecutor();
     }
 
     @BeforeEach

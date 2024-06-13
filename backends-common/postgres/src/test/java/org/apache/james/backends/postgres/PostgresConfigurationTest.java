@@ -37,8 +37,8 @@ class PostgresConfigurationTest {
             .databaseSchema("sc")
             .username("james")
             .password("1")
-            .nonRLSUser("nonrlsjames")
-            .nonRLSPassword("2")
+            .byPassRLSUser("bypassrlsjames")
+            .byPassRLSPassword("2")
             .rowLevelSecurityEnabled()
             .sslMode("require")
             .build();
@@ -47,10 +47,10 @@ class PostgresConfigurationTest {
         assertThat(configuration.getPort()).isEqualTo(1111);
         assertThat(configuration.getDatabaseName()).isEqualTo("db");
         assertThat(configuration.getDatabaseSchema()).isEqualTo("sc");
-        assertThat(configuration.getCredential().getUsername()).isEqualTo("james");
-        assertThat(configuration.getCredential().getPassword()).isEqualTo("1");
-        assertThat(configuration.getNonRLSCredential().getUsername()).isEqualTo("nonrlsjames");
-        assertThat(configuration.getNonRLSCredential().getPassword()).isEqualTo("2");
+        assertThat(configuration.getDefaultCredential().getUsername()).isEqualTo("james");
+        assertThat(configuration.getDefaultCredential().getPassword()).isEqualTo("1");
+        assertThat(configuration.getByPassRLSCredential().getUsername()).isEqualTo("bypassrlsjames");
+        assertThat(configuration.getByPassRLSCredential().getPassword()).isEqualTo("2");
         assertThat(configuration.rowLevelSecurityEnabled()).isEqualTo(true);
         assertThat(configuration.getSslMode()).isEqualTo(SSLMode.REQUIRE);
     }
@@ -66,8 +66,8 @@ class PostgresConfigurationTest {
         assertThat(configuration.getPort()).isEqualTo(PostgresConfiguration.PORT_DEFAULT_VALUE);
         assertThat(configuration.getDatabaseName()).isEqualTo(PostgresConfiguration.DATABASE_NAME_DEFAULT_VALUE);
         assertThat(configuration.getDatabaseSchema()).isEqualTo(PostgresConfiguration.DATABASE_SCHEMA_DEFAULT_VALUE);
-        assertThat(configuration.getNonRLSCredential().getUsername()).isEqualTo("james");
-        assertThat(configuration.getNonRLSCredential().getPassword()).isEqualTo("1");
+        assertThat(configuration.getByPassRLSCredential().getUsername()).isEqualTo("james");
+        assertThat(configuration.getByPassRLSCredential().getPassword()).isEqualTo("1");
         assertThat(configuration.rowLevelSecurityEnabled()).isEqualTo(false);
         assertThat(configuration.getSslMode()).isEqualTo(SSLMode.ALLOW);
     }
@@ -90,26 +90,26 @@ class PostgresConfigurationTest {
     }
 
     @Test
-    void shouldThrowWhenMissingNonRLSUserAndRLSIsEnabled() {
+    void shouldThrowWhenMissingByPassRLSUserAndRLSIsEnabled() {
         assertThatThrownBy(() -> PostgresConfiguration.builder()
             .username("james")
             .password("1")
             .rowLevelSecurityEnabled()
             .build())
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("You need to specify nonRLSUser");
+            .hasMessage("You need to specify byPassRLSUser");
     }
 
     @Test
-    void shouldThrowWhenMissingNonRLSPasswordAndRLSIsEnabled() {
+    void shouldThrowWhenMissingByPassRLSPasswordAndRLSIsEnabled() {
         assertThatThrownBy(() -> PostgresConfiguration.builder()
             .username("james")
             .password("1")
-            .nonRLSUser("nonrlsjames")
+            .byPassRLSUser("bypassrlsjames")
             .rowLevelSecurityEnabled()
             .build())
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("You need to specify nonRLSPassword");
+            .hasMessage("You need to specify byPassRLSPassword");
     }
 
     @Test
