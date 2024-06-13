@@ -38,7 +38,7 @@ public abstract class JamesPostgresConnectionFactoryTest {
 
     @Test
     void getConnectionShouldWork() {
-        Connection connection = jamesPostgresConnectionFactory().getConnection(Optional.empty()).block();
+        Connection connection = jamesPostgresConnectionFactory().getConnection().block();
         String actual = Flux.from(connection.createStatement("SELECT 1")
                 .execute())
             .flatMap(result -> result.map((row, rowMetadata) -> row.get(0, String.class)))
