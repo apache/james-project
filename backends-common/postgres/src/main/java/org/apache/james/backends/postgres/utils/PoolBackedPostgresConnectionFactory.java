@@ -19,8 +19,6 @@
 
 package org.apache.james.backends.postgres.utils;
 
-import java.util.Optional;
-
 import org.apache.james.core.Domain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +33,6 @@ public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnect
     private static final Logger LOGGER = LoggerFactory.getLogger(PoolBackedPostgresConnectionFactory.class);
     private static final int DEFAULT_INITIAL_SIZE = 10;
     private static final int DEFAULT_MAX_SIZE = 20;
-
     private final boolean rowLevelSecurityEnabled;
     private final ConnectionPool pool;
 
@@ -54,13 +51,17 @@ public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnect
     }
 
     @Override
-    public Mono<Connection> getConnection(Optional<Domain> maybeDomain) {
+    public Mono<Connection> getConnection(Domain domain) {
         if (rowLevelSecurityEnabled) {
-            return pool.create().flatMap(connection -> maybeDomain.map(domain -> setDomainAttributeForConnection(domain, connection))
-                .orElse(Mono.just(connection)));
+            return pool.create().flatMap(connection -> setDomainAttributeForConnection(domain.asString(), connection));
         } else {
             return pool.create();
         }
+    }
+
+    @Override
+    public Mono<Connection> getConnection() {
+        return pool.create();
     }
 
     @Override
@@ -73,10 +74,10 @@ public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnect
         return pool.close();
     }
 
-    private Mono<Connection> setDomainAttributeForConnection(Domain domain, Connection connection) {
-        return Mono.from(connection.createStatement("SET " + DOMAIN_ATTRIBUTE + " TO '" + domain.asString() + "'") // It should be set value via Bind, but it doesn't work
+    private Mono<Connection> setDomainAttributeForConnection(String domainAttribute, Connection connection) {
+        return Mono.from(connection.createStatement("SET " + DOMAIN_ATTRIBUTE + " TO '" + domainAttribute + "'") // It should be set value via Bind, but it doesn't work
                 .execute())
-            .doOnError(e -> LOGGER.error("Error while setting domain attribute for domain {}", domain, e))
+            .doOnError(e -> LOGGER.error("Error while setting domain attribute for domain {}", domainAttribute, e))
             .then(Mono.just(connection));
     }
 }
