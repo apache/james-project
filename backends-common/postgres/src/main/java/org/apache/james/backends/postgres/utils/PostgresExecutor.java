@@ -113,7 +113,7 @@ public class PostgresExecutor {
 
     public Mono<Void> executeVoid(Function<DSLContext, Mono<?>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Mono.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+            Mono.usingWhen(getConnection(domain),
                 connection -> dslContext(connection)
                     .flatMap(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
@@ -126,7 +126,7 @@ public class PostgresExecutor {
 
     public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Flux.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+            Flux.usingWhen(getConnection(domain),
                 connection -> dslContext(connection)
                     .flatMapMany(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
@@ -140,7 +140,7 @@ public class PostgresExecutor {
 
     public Flux<Record> executeDeleteAndReturnList(Function<DSLContext, DeleteResultStep<Record>> queryFunction) {
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Flux.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+            Flux.usingWhen(getConnection(domain),
                 connection -> dslContext(connection)
                     .flatMapMany(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
@@ -154,7 +154,7 @@ public class PostgresExecutor {
 
     public Mono<Record> executeRow(Function<DSLContext, Publisher<Record>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Mono.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+            Mono.usingWhen(getConnection(domain),
                 connection -> dslContext(connection)
                     .flatMap(queryFunction.andThen(Mono::from))
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
@@ -172,7 +172,7 @@ public class PostgresExecutor {
 
     public Mono<Integer> executeCount(Function<DSLContext, Mono<Record1<Integer>>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Mono.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+            Mono.usingWhen(getConnection(domain),
                 connection -> dslContext(connection)
                     .flatMap(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
@@ -190,7 +190,7 @@ public class PostgresExecutor {
 
     public Mono<Integer> executeReturnAffectedRowsCount(Function<DSLContext, Mono<Integer>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            Mono.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+            Mono.usingWhen(getConnection(domain),
                 connection -> dslContext(connection)
                     .flatMap(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
@@ -213,5 +213,10 @@ public class PostgresExecutor {
         return throwable -> throwable.getCause() instanceof R2dbcBadGrammarException
             && throwable.getMessage().contains("prepared statement")
             && throwable.getMessage().contains("already exists");
+    }
+
+    private Mono<Connection> getConnection(Optional<Domain> maybeDomain) {
+        return maybeDomain.map(jamesPostgresConnectionFactory::getConnection)
+            .orElseGet(jamesPostgresConnectionFactory::getConnection);
     }
 }
