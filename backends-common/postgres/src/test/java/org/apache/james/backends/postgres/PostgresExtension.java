@@ -95,10 +95,10 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     private final PostgresFixture.Database selectedDatabase;
     private PoolSize poolSize;
     private PostgresConfiguration postgresConfiguration;
-    private PostgresExecutor postgresExecutor;
-    private PostgresExecutor nonRLSPostgresExecutor;
+    private PostgresExecutor defaultPostgresExecutor;
+    private PostgresExecutor byPassRLSPostgresExecutor;
     private PostgresqlConnectionFactory connectionFactory;
-    private Connection superConnection;
+    private Connection defaultConnection;
     private PostgresExecutor.Factory executorFactory;
     private PostgresTableManager postgresTableManager;
 
@@ -160,8 +160,8 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .port(getMappedPort())
             .username(selectedDatabase.dbUser())
             .password(selectedDatabase.dbPassword())
-            .nonRLSUser(DEFAULT_DATABASE.dbUser())
-            .nonRLSPassword(DEFAULT_DATABASE.dbPassword())
+            .byPassRLSUser(DEFAULT_DATABASE.dbUser())
+            .byPassRLSPassword(DEFAULT_DATABASE.dbPassword())
             .rowLevelSecurityEnabled(rlsEnabled)
             .jooqReactiveTimeout(Optional.of(Duration.ofSeconds(20L)))
             .build();
@@ -178,25 +178,24 @@ public class PostgresExtension implements GuiceModuleTestExtension {
 
         RecordingMetricFactory metricFactory = new RecordingMetricFactory();
 
-        connectionFactory = new PostgresqlConnectionFactory(postgresqlConnectionConfigurationFunction.apply(postgresConfiguration.getCredential()));
-        superConnection = connectionFactory.create().block();
-
+        connectionFactory = new PostgresqlConnectionFactory(postgresqlConnectionConfigurationFunction.apply(postgresConfiguration.getDefaultCredential()));
+        defaultConnection = connectionFactory.create().block();
         executorFactory = new PostgresExecutor.Factory(
             getJamesPostgresConnectionFactory(rlsEnabled, connectionFactory),
             postgresConfiguration,
             metricFactory);
 
-        postgresExecutor = executorFactory.create();
+        defaultPostgresExecutor = executorFactory.create();
 
-        PostgresqlConnectionFactory nonRLSConnectionFactory = new PostgresqlConnectionFactory(postgresqlConnectionConfigurationFunction.apply(postgresConfiguration.getNonRLSCredential()));
+        PostgresqlConnectionFactory byPassRLSConnectionFactory = new PostgresqlConnectionFactory(postgresqlConnectionConfigurationFunction.apply(postgresConfiguration.getByPassRLSCredential()));
 
-        nonRLSPostgresExecutor = new PostgresExecutor.Factory(
-            getJamesPostgresConnectionFactory(false, nonRLSConnectionFactory),
+        byPassRLSPostgresExecutor = new PostgresExecutor.Factory(
+            getJamesPostgresConnectionFactory(false, byPassRLSConnectionFactory),
             postgresConfiguration,
             metricFactory)
             .create();
 
-        this.postgresTableManager = new PostgresTableManager(postgresExecutor, postgresModule, rlsEnabled);
+        this.postgresTableManager = new PostgresTableManager(defaultPostgresExecutor, postgresModule, rlsEnabled);
     }
 
     @Override
@@ -205,9 +204,9 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     private void disposePostgresSession() {
-        postgresExecutor.dispose();
-        nonRLSPostgresExecutor.dispose();
-        superConnection.close();
+        defaultPostgresExecutor.dispose();
+        byPassRLSPostgresExecutor.dispose();
+        Mono.from(defaultConnection.close()).subscribe();
     }
 
     @Override
@@ -241,15 +240,15 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     public Mono<Connection> getConnection() {
-        return Mono.just(superConnection);
+        return Mono.just(defaultConnection);
     }
 
-    public PostgresExecutor getPostgresExecutor() {
-        return postgresExecutor;
+    public PostgresExecutor getDefaultPostgresExecutor() {
+        return defaultPostgresExecutor;
     }
 
-    public PostgresExecutor getNonRLSPostgresExecutor() {
-        return nonRLSPostgresExecutor;
+    public PostgresExecutor getByPassRLSPostgresExecutor() {
+        return byPassRLSPostgresExecutor;
     }
 
     public ConnectionFactory getConnectionFactory() {
@@ -279,7 +278,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .map(tableName -> "\"" + tableName + "\"")
             .collect(Collectors.joining(", "));
 
-        Flux.from(superConnection.createStatement(String.format("DROP table if exists %s cascade;", tablesToDelete))
+        Flux.from(defaultConnection.createStatement(String.format("DROP table if exists %s cascade;", tablesToDelete))
             .execute())
             .then()
             .block();

@@ -42,7 +42,7 @@ class PostgresMessageFastViewProjectionTest implements MessageFastViewProjection
     void setUp() {
         metricFactory = new RecordingMetricFactory();
         postgresMessageIdFactory = new PostgresMessageId.Factory();
-        testee = new PostgresMessageFastViewProjection(postgresExtension.getPostgresExecutor(), metricFactory);
+        testee = new PostgresMessageFastViewProjection(postgresExtension.getDefaultPostgresExecutor(), metricFactory);
     }
 
     @Override

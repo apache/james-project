@@ -32,6 +32,6 @@ public class PostgresPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTe
 
     @Override
     protected MaxQuotaManager provideMaxQuotaManager() {
-        return new PostgresPerUserMaxQuotaManager(new PostgresQuotaLimitDAO(postgresExtension.getPostgresExecutor()));
+        return new PostgresPerUserMaxQuotaManager(new PostgresQuotaLimitDAO(postgresExtension.getDefaultPostgresExecutor()));
     }
 }

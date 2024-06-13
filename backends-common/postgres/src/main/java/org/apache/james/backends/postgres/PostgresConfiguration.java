@@ -42,17 +42,17 @@ public class PostgresConfiguration {
     public static final int PORT_DEFAULT_VALUE = 5432;
     public static final String USERNAME = "database.username";
     public static final String PASSWORD = "database.password";
-    public static final String NON_RLS_USERNAME = "database.non-rls.username";
-    public static final String NON_RLS_PASSWORD = "database.non-rls.password";
+    public static final String BY_PASS_RLS_USERNAME = "database.by-pass-rls.username";
+    public static final String BY_PASS_RLS_PASSWORD = "database.by-pass-rls.password";
     public static final String RLS_ENABLED = "row.level.security.enabled";
     public static final String POOL_INITIAL_SIZE = "pool.initial.size";
     public static final int POOL_INITIAL_SIZE_DEFAULT_VALUE = 10;
     public static final String POOL_MAX_SIZE = "pool.max.size";
     public static final int POOL_MAX_SIZE_DEFAULT_VALUE = 15;
-    public static final String NON_RLS_POOL_INITIAL_SIZE = "non-rls.pool.initial.size";
-    public static final int NON_RLS_POOL_INITIAL_SIZE_DEFAULT_VALUE = 5;
-    public static final String NON_RLS_POOL_MAX_SIZE = "non-rls.pool.max.size";
-    public static final int NON_RLS_POOL_MAX_SIZE_DEFAULT_VALUE = 10;
+    public static final String BY_PASS_RLS_POOL_INITIAL_SIZE = "by-pass-rls.pool.initial.size";
+    public static final int BY_PASS_RLS_POOL_INITIAL_SIZE_DEFAULT_VALUE = 5;
+    public static final String BY_PASS_RLS_POOL_MAX_SIZE = "by-pass-rls.pool.max.size";
+    public static final int BY_PASS_RLS_POOL_MAX_SIZE_DEFAULT_VALUE = 10;
     public static final String SSL_MODE = "ssl.mode";
     public static final String SSL_MODE_DEFAULT_VALUE = "allow";
     public static final String JOOQ_REACTIVE_TIMEOUT = "jooq.reactive.timeout";
@@ -84,13 +84,13 @@ public class PostgresConfiguration {
         private Optional<Integer> port = Optional.empty();
         private Optional<String> username = Optional.empty();
         private Optional<String> password = Optional.empty();
-        private Optional<String> nonRLSUser = Optional.empty();
-        private Optional<String> nonRLSPassword = Optional.empty();
+        private Optional<String> byPassRLSUser = Optional.empty();
+        private Optional<String> byPassRLSPassword = Optional.empty();
         private Optional<Boolean> rowLevelSecurityEnabled = Optional.empty();
         private Optional<Integer> poolInitialSize = Optional.empty();
         private Optional<Integer> poolMaxSize = Optional.empty();
-        private Optional<Integer> nonRLSPoolInitialSize = Optional.empty();
-        private Optional<Integer> nonRLSPoolMaxSize = Optional.empty();
+        private Optional<Integer> byPassRLSPoolInitialSize = Optional.empty();
+        private Optional<Integer> byPassRLSPoolMaxSize = Optional.empty();
         private Optional<String> sslMode = Optional.empty();
         private Optional<Duration> jooqReactiveTimeout = Optional.empty();
 
@@ -154,23 +154,23 @@ public class PostgresConfiguration {
             return this;
         }
 
-        public Builder nonRLSUser(String nonRLSUser) {
-            this.nonRLSUser = Optional.of(nonRLSUser);
+        public Builder byPassRLSUser(String byPassRLSUser) {
+            this.byPassRLSUser = Optional.of(byPassRLSUser);
             return this;
         }
 
-        public Builder nonRLSUser(Optional<String> nonRLSUser) {
-            this.nonRLSUser = nonRLSUser;
+        public Builder byPassRLSUser(Optional<String> byPassRLSUser) {
+            this.byPassRLSUser = byPassRLSUser;
             return this;
         }
 
-        public Builder nonRLSPassword(String nonRLSPassword) {
-            this.nonRLSPassword = Optional.of(nonRLSPassword);
+        public Builder byPassRLSPassword(String byPassRLSPassword) {
+            this.byPassRLSPassword = Optional.of(byPassRLSPassword);
             return this;
         }
 
-        public Builder nonRLSPassword(Optional<String> nonRLSPassword) {
-            this.nonRLSPassword = nonRLSPassword;
+        public Builder byPassRLSPassword(Optional<String> byPassRLSPassword) {
+            this.byPassRLSPassword = byPassRLSPassword;
             return this;
         }
 
@@ -204,23 +204,23 @@ public class PostgresConfiguration {
             return this;
         }
 
-        public Builder nonRLSPoolInitialSize(Optional<Integer> nonRLSPoolInitialSize) {
-            this.nonRLSPoolInitialSize = nonRLSPoolInitialSize;
+        public Builder byPassRLSPoolInitialSize(Optional<Integer> byPassRLSPoolInitialSize) {
+            this.byPassRLSPoolInitialSize = byPassRLSPoolInitialSize;
             return this;
         }
 
-        public Builder nonRLSPoolInitialSize(Integer nonRLSPoolInitialSize) {
-            this.nonRLSPoolInitialSize = Optional.of(nonRLSPoolInitialSize);
+        public Builder byPassRLSPoolInitialSize(Integer byPassRLSPoolInitialSize) {
+            this.byPassRLSPoolInitialSize = Optional.of(byPassRLSPoolInitialSize);
             return this;
         }
 
-        public Builder nonRLSPoolMaxSize(Optional<Integer> nonRLSPoolMaxSize) {
-            this.nonRLSPoolMaxSize = nonRLSPoolMaxSize;
+        public Builder byPassRLSPoolMaxSize(Optional<Integer> byPassRLSPoolMaxSize) {
+            this.byPassRLSPoolMaxSize = byPassRLSPoolMaxSize;
             return this;
         }
 
-        public Builder nonRLSPoolMaxSize(Integer nonRLSPoolMaxSize) {
-            this.nonRLSPoolMaxSize = Optional.of(nonRLSPoolMaxSize);
+        public Builder byPassRLSPoolMaxSize(Integer byPassRLSPoolMaxSize) {
+            this.byPassRLSPoolMaxSize = Optional.of(byPassRLSPoolMaxSize);
             return this;
         }
 
@@ -244,8 +244,8 @@ public class PostgresConfiguration {
             Preconditions.checkArgument(password.isPresent() && !password.get().isBlank(), "You need to specify password");
 
             if (rowLevelSecurityEnabled.isPresent() && rowLevelSecurityEnabled.get()) {
-                Preconditions.checkArgument(nonRLSUser.isPresent() && !nonRLSUser.get().isBlank(), "You need to specify nonRLSUser");
-                Preconditions.checkArgument(nonRLSPassword.isPresent() && !nonRLSPassword.get().isBlank(), "You need to specify nonRLSPassword");
+                Preconditions.checkArgument(byPassRLSUser.isPresent() && !byPassRLSUser.get().isBlank(), "You need to specify byPassRLSUser");
+                Preconditions.checkArgument(byPassRLSPassword.isPresent() && !byPassRLSPassword.get().isBlank(), "You need to specify byPassRLSPassword");
             }
 
             return new PostgresConfiguration(host.orElse(HOST_DEFAULT_VALUE),
@@ -253,12 +253,12 @@ public class PostgresConfiguration {
                 databaseName.orElse(DATABASE_NAME_DEFAULT_VALUE),
                 databaseSchema.orElse(DATABASE_SCHEMA_DEFAULT_VALUE),
                 new Credential(username.get(), password.get()),
-                new Credential(nonRLSUser.orElse(username.get()), nonRLSPassword.orElse(password.get())),
+                new Credential(byPassRLSUser.orElse(username.get()), byPassRLSPassword.orElse(password.get())),
                 rowLevelSecurityEnabled.orElse(false),
                 poolInitialSize.orElse(POOL_INITIAL_SIZE_DEFAULT_VALUE),
                 poolMaxSize.orElse(POOL_MAX_SIZE_DEFAULT_VALUE),
-                nonRLSPoolInitialSize.orElse(NON_RLS_POOL_INITIAL_SIZE_DEFAULT_VALUE),
-                nonRLSPoolMaxSize.orElse(NON_RLS_POOL_MAX_SIZE_DEFAULT_VALUE),
+                byPassRLSPoolInitialSize.orElse(BY_PASS_RLS_POOL_INITIAL_SIZE_DEFAULT_VALUE),
+                byPassRLSPoolMaxSize.orElse(BY_PASS_RLS_POOL_MAX_SIZE_DEFAULT_VALUE),
                 SSLMode.fromValue(sslMode.orElse(SSL_MODE_DEFAULT_VALUE)),
                 jooqReactiveTimeout.orElse(JOOQ_REACTIVE_TIMEOUT_DEFAULT_VALUE));
         }
@@ -276,13 +276,13 @@ public class PostgresConfiguration {
             .port(propertiesConfiguration.getInt(PORT, PORT_DEFAULT_VALUE))
             .username(Optional.ofNullable(propertiesConfiguration.getString(USERNAME)))
             .password(Optional.ofNullable(propertiesConfiguration.getString(PASSWORD)))
-            .nonRLSUser(Optional.ofNullable(propertiesConfiguration.getString(NON_RLS_USERNAME)))
-            .nonRLSPassword(Optional.ofNullable(propertiesConfiguration.getString(NON_RLS_PASSWORD)))
+            .byPassRLSUser(Optional.ofNullable(propertiesConfiguration.getString(BY_PASS_RLS_USERNAME)))
+            .byPassRLSPassword(Optional.ofNullable(propertiesConfiguration.getString(BY_PASS_RLS_PASSWORD)))
             .rowLevelSecurityEnabled(propertiesConfiguration.getBoolean(RLS_ENABLED, false))
             .poolInitialSize(Optional.ofNullable(propertiesConfiguration.getInteger(POOL_INITIAL_SIZE, null)))
             .poolMaxSize(Optional.ofNullable(propertiesConfiguration.getInteger(POOL_MAX_SIZE, null)))
-            .nonRLSPoolInitialSize(Optional.ofNullable(propertiesConfiguration.getInteger(NON_RLS_POOL_INITIAL_SIZE, null)))
-            .nonRLSPoolMaxSize(Optional.ofNullable(propertiesConfiguration.getInteger(NON_RLS_POOL_MAX_SIZE, null)))
+            .byPassRLSPoolInitialSize(Optional.ofNullable(propertiesConfiguration.getInteger(BY_PASS_RLS_POOL_INITIAL_SIZE, null)))
+            .byPassRLSPoolMaxSize(Optional.ofNullable(propertiesConfiguration.getInteger(BY_PASS_RLS_POOL_MAX_SIZE, null)))
             .sslMode(Optional.ofNullable(propertiesConfiguration.getString(SSL_MODE)))
             .jooqReactiveTimeout(Optional.ofNullable(propertiesConfiguration.getString(JOOQ_REACTIVE_TIMEOUT))
                 .map(value -> DurationParser.parse(value, ChronoUnit.SECONDS)))
@@ -293,32 +293,32 @@ public class PostgresConfiguration {
     private final int port;
     private final String databaseName;
     private final String databaseSchema;
-    private final Credential credential;
-    private final Credential nonRLSCredential;
+    private final Credential defaultCredential;
+    private final Credential byPassRLSCredential;
     private final boolean rowLevelSecurityEnabled;
     private final Integer poolInitialSize;
     private final Integer poolMaxSize;
-    private final Integer nonRLSPoolInitialSize;
-    private final Integer nonRLSPoolMaxSize;
+    private final Integer byPassRLSPoolInitialSize;
+    private final Integer byPassRLSPoolMaxSize;
     private final SSLMode sslMode;
     private final Duration jooqReactiveTimeout;
 
     private PostgresConfiguration(String host, int port, String databaseName, String databaseSchema,
-                                  Credential credential, Credential nonRLSCredential, boolean rowLevelSecurityEnabled,
+                                  Credential defaultCredential, Credential byPassRLSCredential, boolean rowLevelSecurityEnabled,
                                   Integer poolInitialSize, Integer poolMaxSize,
-                                  Integer nonRLSPoolInitialSize, Integer nonRLSPoolMaxSize,
+                                  Integer byPassRLSPoolInitialSize, Integer byPassRLSPoolMaxSize,
                                   SSLMode sslMode, Duration jooqReactiveTimeout) {
         this.host = host;
         this.port = port;
         this.databaseName = databaseName;
         this.databaseSchema = databaseSchema;
-        this.credential = credential;
-        this.nonRLSCredential = nonRLSCredential;
+        this.defaultCredential = defaultCredential;
+        this.byPassRLSCredential = byPassRLSCredential;
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
         this.poolInitialSize = poolInitialSize;
         this.poolMaxSize = poolMaxSize;
-        this.nonRLSPoolInitialSize = nonRLSPoolInitialSize;
-        this.nonRLSPoolMaxSize = nonRLSPoolMaxSize;
+        this.byPassRLSPoolInitialSize = byPassRLSPoolInitialSize;
+        this.byPassRLSPoolMaxSize = byPassRLSPoolMaxSize;
         this.sslMode = sslMode;
         this.jooqReactiveTimeout = jooqReactiveTimeout;
     }
@@ -339,12 +339,12 @@ public class PostgresConfiguration {
         return databaseSchema;
     }
 
-    public Credential getCredential() {
-        return credential;
+    public Credential getDefaultCredential() {
+        return defaultCredential;
     }
 
-    public Credential getNonRLSCredential() {
-        return nonRLSCredential;
+    public Credential getByPassRLSCredential() {
+        return byPassRLSCredential;
     }
 
     public boolean rowLevelSecurityEnabled() {
@@ -359,12 +359,12 @@ public class PostgresConfiguration {
         return poolMaxSize;
     }
 
-    public Integer nonRLSPoolInitialSize() {
-        return nonRLSPoolInitialSize;
+    public Integer byPassRLSPoolInitialSize() {
+        return byPassRLSPoolInitialSize;
     }
 
-    public Integer nonRLSPoolMaxSize() {
-        return nonRLSPoolMaxSize;
+    public Integer byPassRLSPoolMaxSize() {
+        return byPassRLSPoolMaxSize;
     }
 
     public SSLMode getSslMode() {
@@ -377,7 +377,7 @@ public class PostgresConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(host, port, databaseName, databaseSchema, credential, nonRLSCredential, rowLevelSecurityEnabled, poolInitialSize, poolMaxSize, sslMode, jooqReactiveTimeout);
+        return Objects.hash(host, port, databaseName, databaseSchema, defaultCredential, byPassRLSCredential, rowLevelSecurityEnabled, poolInitialSize, poolMaxSize, sslMode, jooqReactiveTimeout);
     }
 
     @Override
@@ -388,8 +388,8 @@ public class PostgresConfiguration {
             return Objects.equals(this.rowLevelSecurityEnabled, that.rowLevelSecurityEnabled)
                 && Objects.equals(this.host, that.host)
                 && Objects.equals(this.port, that.port)
-                && Objects.equals(this.credential, that.credential)
-                && Objects.equals(this.nonRLSCredential, that.nonRLSCredential)
+                && Objects.equals(this.defaultCredential, that.defaultCredential)
+                && Objects.equals(this.byPassRLSCredential, that.byPassRLSCredential)
                 && Objects.equals(this.databaseName, that.databaseName)
                 && Objects.equals(this.databaseSchema, that.databaseSchema)
                 && Objects.equals(this.poolInitialSize, that.poolInitialSize)
