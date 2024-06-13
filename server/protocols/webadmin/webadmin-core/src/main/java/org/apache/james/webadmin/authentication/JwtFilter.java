@@ -100,56 +100,29 @@ public class JwtFilter implements AuthenticationFilter {
         if (!type.equals("agent")) {
             halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.Type is not agent");
         }
-        String pathProcessedValue = getProcessPath(request.pathInfo());
-        JsonNode permissionsNode = payloadNode.get("permissions");
-
         AtomicBoolean flag = new AtomicBoolean(false);
-        //Checking full match
-        if (permissionsNode != null && permissionsNode.isArray()) {
-            for (JsonNode permissionNode : permissionsNode) {
-                JsonNode groupNode = permissionNode.get(pathProcessedValue);
-                if (groupNode != null && groupNode.isArray()) {
-                    for (JsonNode valueNode : groupNode) {
-                        if (request.requestMethod().equals(valueNode.asText())) {
+
+        String requestMethod = request.requestMethod().toString();
+        //Dynamic Check
+        JsonNode permissionNode = payloadNode.get("permissions");
+        if (permissionNode != null && permissionNode.isObject()) {
+            permissionNode.fields().forEachRemaining(entry -> {
+                String key = entry.getKey();
+                if (match(key, "perm" + request.pathInfo())) {
+                    JsonNode groupValueNode = permissionNode.get(key);
+                    for (JsonNode valueNode : groupValueNode) {
+                        if (requestMethod.equals(valueNode.asText())) {
                             flag.set(true);
                             return;
                         }
                     }
                 }
-            }
-        }
-        if (flag.get()) {
-            return;
-        }
-
-        String requestMethod = request.requestMethod().toString();
-        //Dynamic Check
-        JsonNode permissions = payloadNode.get("permissions");
-        if (permissions != null && permissions.isArray()) {
-            for (JsonNode permissionNode : permissions) {
-                permissionNode.fields().forEachRemaining(entry -> {
-                    String key = entry.getKey();
-                    if (match(key, "perm" + request.pathInfo())) {
-                        JsonNode groupValueNode = permissionNode.get(key);
-                        for (JsonNode valueNode : groupValueNode) {
-                            if (requestMethod.equals(valueNode.asText())) {
-                                flag.set(true);
-                                return;
-                            }
-                        }
-                    }
-                });
-            }
+            });
         }
         if (flag.get()) {
             return;
         }
         halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.Do not have permission.");
-    }
-
-    private String getProcessPath(String path) {
-        String result = path.replace('/', '.');
-        return "perm" + result;
     }
 
     private void checkHeaderPresent(Optional<String> bearer) {
@@ -174,24 +147,21 @@ public class JwtFilter implements AuthenticationFilter {
         String[] keyArr = key1.split("@");
         String[] pathArr = path.split("/");
 
-        if (pathArr.length < keyArr.length) {
+        if (pathArr.length != keyArr.length) {
             return false;
         }
         Integer it = 0;
-        Integer it1 = 0;
-        Integer lenth = keyArr.length;
-        Integer lenth1 = pathArr.length;
-
-        while (it1 < lenth1) {
-            if (keyArr[it].equals(pathArr[it1])) {
-                it++; it1++;
-                if (it == lenth) {
-                    return true;
-                }
-            } else {
-                it1++;
+        Integer length = keyArr.length;
+        while (it < length) {
+            if (keyArr[it].equals("*")) {
+                it++;
+                continue;
             }
+            if (!keyArr[it].equals(pathArr[it])) {
+                return false;
+            }
+            it++;
         }
-        return false;
+        return true;
     }
 }
