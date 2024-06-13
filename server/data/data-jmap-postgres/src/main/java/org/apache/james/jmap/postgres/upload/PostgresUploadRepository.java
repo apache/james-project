@@ -52,17 +52,17 @@ public class PostgresUploadRepository implements UploadRepository {
     private final BlobStore blobStore;
     private final Clock clock;
     private final PostgresUploadDAO.Factory uploadDAOFactory;
-    private final PostgresUploadDAO nonRLSUploadDAO;
+    private final PostgresUploadDAO byPassRLSUploadDAO;
 
     @Inject
     @Singleton
     public PostgresUploadRepository(BlobStore blobStore, Clock clock,
                                     PostgresUploadDAO.Factory uploadDAOFactory,
-                                    PostgresUploadDAO nonRLSUploadDAO) {
+                                    PostgresUploadDAO byPassRLSUploadDAO) {
         this.blobStore = blobStore;
         this.clock = clock;
         this.uploadDAOFactory = uploadDAOFactory;
-        this.nonRLSUploadDAO = nonRLSUploadDAO;
+        this.byPassRLSUploadDAO = byPassRLSUploadDAO;
     }
 
     @Override
@@ -97,12 +97,12 @@ public class PostgresUploadRepository implements UploadRepository {
     public Mono<Void> deleteByUploadDateBefore(Duration expireDuration) {
         LocalDateTime expirationTime = INSTANT_TO_LOCAL_DATE_TIME.apply(clock.instant().minus(expireDuration));
 
-        return Flux.from(nonRLSUploadDAO.listByUploadDateBefore(expirationTime))
+        return Flux.from(byPassRLSUploadDAO.listByUploadDateBefore(expirationTime))
             .flatMap(uploadPair -> {
                 Username username = uploadPair.getRight();
                 UploadMetaData upload = uploadPair.getLeft();
                 return Mono.from(blobStore.delete(UPLOAD_BUCKET, upload.blobId()))
-                    .then(nonRLSUploadDAO.delete(upload.uploadId(), username));
+                    .then(byPassRLSUploadDAO.delete(upload.uploadId(), username));
             }, DEFAULT_CONCURRENCY)
             .then();
     }
