@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
@@ -42,7 +41,6 @@ import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +49,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresAnnotationMapperRowLevelSecurityTest {
     private static final UidValidity UID_VALIDITY = UidValidity.of(42);
-    private static final Username BENWA = Username.of("benwa");
+    private static final Username BENWA = Username.of("benwa@localhost");
     protected static final MailboxPath benwaInboxPath = MailboxPath.forUser(BENWA, "INBOX");
     private static final MailboxSession aliceSession = MailboxSessionUtil.create(Username.of("alice@domain1"));
     private static final MailboxSession bobSession = MailboxSessionUtil.create(Username.of("bob@domain1"));
@@ -66,15 +64,15 @@ public class PostgresAnnotationMapperRowLevelSecurityTest {
     private MailboxId mailboxId;
 
     private MailboxId generateMailboxId() {
-        MailboxMapper mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()));
+        PostgresExecutor postgresExecutor = postgresExtension.getExecutorFactory().create(BENWA.getDomainPart());
+        MailboxMapper mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExecutor));
         return mailboxMapper.create(benwaInboxPath, UID_VALIDITY).block().getMailboxId();
     }
 
     @BeforeEach
     public void setUp() {
         BlobId.Factory blobIdFactory = new HashBlobId.Factory();
-        postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory()),
-            postgresExtension.getPostgresConfiguration(), new RecordingMetricFactory()),
+        postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(),
             new UpdatableTickingClock(Instant.now()),
             new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
             blobIdFactory);
