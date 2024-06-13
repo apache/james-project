@@ -43,8 +43,8 @@ class PostgresSieveQuotaDAOTest {
 
     @BeforeEach
     void setup() {
-        testee = new PostgresSieveQuotaDAO(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()),
-            new PostgresQuotaLimitDAO(postgresExtension.getPostgresExecutor()));
+        testee = new PostgresSieveQuotaDAO(new PostgresQuotaCurrentValueDAO(postgresExtension.getDefaultPostgresExecutor()),
+            new PostgresQuotaLimitDAO(postgresExtension.getDefaultPostgresExecutor()));
     }
 
     @Test
