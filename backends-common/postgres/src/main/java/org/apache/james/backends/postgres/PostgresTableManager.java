@@ -20,7 +20,6 @@
 package org.apache.james.backends.postgres;
 
 import java.util.List;
-import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -70,7 +69,7 @@ public class PostgresTableManager implements Startable {
     }
 
     public Mono<Void> initializePostgresExtension() {
-        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(Optional.empty()),
+        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(),
             connection -> Mono.just(connection)
                 .flatMapMany(pgConnection -> pgConnection.createStatement("CREATE EXTENSION IF NOT EXISTS hstore")
                     .execute())
@@ -80,7 +79,7 @@ public class PostgresTableManager implements Startable {
     }
 
     public Mono<Void> initializeTables() {
-        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(Optional.empty()),
+        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(),
             connection -> postgresExecutor.dslContext(connection)
                 .flatMapMany(dsl -> listExistTables()
                     .flatMapMany(existTables -> Flux.fromIterable(module.tables())
@@ -98,7 +97,7 @@ public class PostgresTableManager implements Startable {
     }
 
     public Mono<List<String>> listExistTables() {
-        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(Optional.empty()),
+        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(),
             connection -> postgresExecutor.dslContext(connection)
                 .flatMapMany(d -> Flux.from(d.select(DSL.field("tablename"))
                     .from("pg_tables")
@@ -166,7 +165,7 @@ public class PostgresTableManager implements Startable {
     }
 
     public Mono<Void> truncate() {
-        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(Optional.empty()),
+        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(),
             connection -> postgresExecutor.dslContext(connection)
                 .flatMap(dsl -> Flux.fromIterable(module.tables())
                     .flatMap(table -> Mono.from(dsl.truncateTable(table.getName()))
@@ -177,7 +176,7 @@ public class PostgresTableManager implements Startable {
     }
 
     public Mono<Void> initializeTableIndexes() {
-        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(Optional.empty()),
+        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(),
             connection -> postgresExecutor.dslContext(connection)
                 .flatMapMany(dsl -> listExistIndexes(dsl)
                     .flatMapMany(existIndexes -> Flux.fromIterable(module.tableIndexes())
