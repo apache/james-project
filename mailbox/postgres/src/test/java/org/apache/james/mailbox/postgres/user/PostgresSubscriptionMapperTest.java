@@ -31,7 +31,7 @@ public class PostgresSubscriptionMapperTest extends SubscriptionMapperTest {
 
     @Override
     protected SubscriptionMapper createSubscriptionMapper() {
-        PostgresSubscriptionDAO dao = new PostgresSubscriptionDAO(postgresExtension.getPostgresExecutor());
+        PostgresSubscriptionDAO dao = new PostgresSubscriptionDAO(postgresExtension.getDefaultPostgresExecutor());
         return new PostgresSubscriptionMapper(dao);
     }
 }

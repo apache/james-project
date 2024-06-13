@@ -57,9 +57,9 @@ public class PostgresStepdefs {
     }
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws DomainListException {
-        PostgresRecipientRewriteTable postgresRecipientRewriteTable = new PostgresRecipientRewriteTable(new PostgresRecipientRewriteTableDAO(postgresExtension.getPostgresExecutor()));
+        PostgresRecipientRewriteTable postgresRecipientRewriteTable = new PostgresRecipientRewriteTable(new PostgresRecipientRewriteTableDAO(postgresExtension.getDefaultPostgresExecutor()));
         postgresRecipientRewriteTable.setUsersRepository(new PostgresUsersRepository(RecipientRewriteTableFixture.domainListForCucumberTests(),
-            new PostgresUsersDAO(postgresExtension.getPostgresExecutor(), PostgresUsersRepositoryConfiguration.DEFAULT)));
+            new PostgresUsersDAO(postgresExtension.getDefaultPostgresExecutor(), PostgresUsersRepositoryConfiguration.DEFAULT)));
         postgresRecipientRewriteTable.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return postgresRecipientRewriteTable;
     }

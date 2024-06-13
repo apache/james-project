@@ -96,22 +96,22 @@ public class DeleteMessageListenerTest extends DeleteMessageListenerContract {
 
     @Override
     PostgresMessageDAO providePostgresMessageDAO() {
-        return new PostgresMessageDAO(postgresExtension.getPostgresExecutor(), BLOB_ID_FACTORY);
+        return new PostgresMessageDAO(postgresExtension.getDefaultPostgresExecutor(), BLOB_ID_FACTORY);
     }
 
     @Override
     PostgresMailboxMessageDAO providePostgresMailboxMessageDAO() {
-        return new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor());
+        return new PostgresMailboxMessageDAO(postgresExtension.getDefaultPostgresExecutor());
     }
 
     @Override
     PostgresThreadDAO threadDAO() {
-        return new PostgresThreadDAO(postgresExtension.getPostgresExecutor());
+        return new PostgresThreadDAO(postgresExtension.getDefaultPostgresExecutor());
     }
 
     @Override
     PostgresAttachmentDAO attachmentDAO() {
-        return new PostgresAttachmentDAO(postgresExtension.getPostgresExecutor(), BLOB_ID_FACTORY);
+        return new PostgresAttachmentDAO(postgresExtension.getDefaultPostgresExecutor(), BLOB_ID_FACTORY);
     }
 
     @Override

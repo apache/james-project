@@ -40,7 +40,7 @@ public class PostgresDelegationStoreTest implements DelegationStoreContract {
 
     @BeforeEach
     void beforeEach() {
-        postgresUsersDAO = new PostgresUsersDAO(postgresExtension.getPostgresExecutor(), PostgresUsersRepositoryConfiguration.DEFAULT);
+        postgresUsersDAO = new PostgresUsersDAO(postgresExtension.getDefaultPostgresExecutor(), PostgresUsersRepositoryConfiguration.DEFAULT);
         postgresDelegationStore = new PostgresDelegationStore(postgresUsersDAO, any -> Mono.just(true));
     }
 

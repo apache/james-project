@@ -51,8 +51,8 @@ public class DeletedWithRangeSearchOverrideTest {
 
     @BeforeEach
     void setUp() {
-        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getPostgresExecutor(), new HashBlobId.Factory());
-        postgresMailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor());
+        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getDefaultPostgresExecutor(), new HashBlobId.Factory());
+        postgresMailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExtension.getDefaultPostgresExecutor());
         testee = new DeletedWithRangeSearchOverride(postgresExtension.getExecutorFactory());
     }
 

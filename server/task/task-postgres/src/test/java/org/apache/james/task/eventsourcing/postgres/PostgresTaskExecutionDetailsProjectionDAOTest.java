@@ -56,7 +56,7 @@ class PostgresTaskExecutionDetailsProjectionDAOTest {
 
     @BeforeEach
     void setUp() {
-        testee = new PostgresTaskExecutionDetailsProjectionDAO(postgresExtension.getPostgresExecutor(), JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER);
+        testee = new PostgresTaskExecutionDetailsProjectionDAO(postgresExtension.getDefaultPostgresExecutor(), JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER);
     }
 
     @Test

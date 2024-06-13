@@ -42,7 +42,7 @@ class PostgresAttachmentMapperTest extends AttachmentMapperTest {
 
     @Override
     protected AttachmentMapper createAttachmentMapper() {
-        PostgresAttachmentDAO postgresAttachmentDAO = new PostgresAttachmentDAO(postgresExtension.getPostgresExecutor(), BLOB_ID_FACTORY);
+        PostgresAttachmentDAO postgresAttachmentDAO = new PostgresAttachmentDAO(postgresExtension.getDefaultPostgresExecutor(), BLOB_ID_FACTORY);
         BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, BLOB_ID_FACTORY);
         return new PostgresAttachmentMapper(postgresAttachmentDAO, blobStore);
     }

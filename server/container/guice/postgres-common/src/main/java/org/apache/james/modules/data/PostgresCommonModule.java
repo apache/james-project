@@ -85,17 +85,17 @@ public class PostgresCommonModule extends AbstractModule {
     }
 
     @Provides
-    @Named(JamesPostgresConnectionFactory.NON_RLS_INJECT)
+    @Named(JamesPostgresConnectionFactory.BY_PASS_RLS_INJECT)
     @Singleton
     JamesPostgresConnectionFactory provideJamesPostgresConnectionFactoryWithRLSBypass(PostgresConfiguration postgresConfiguration,
                                                                                       JamesPostgresConnectionFactory jamesPostgresConnectionFactory,
-                                                                                      @Named(JamesPostgresConnectionFactory.NON_RLS_INJECT) ConnectionFactory connectionFactory) {
+                                                                                      @Named(JamesPostgresConnectionFactory.BY_PASS_RLS_INJECT) ConnectionFactory connectionFactory) {
         if (!postgresConfiguration.rowLevelSecurityEnabled()) {
             return jamesPostgresConnectionFactory;
         }
         return new PoolBackedPostgresConnectionFactory(DISABLED_ROW_LEVEL_SECURITY,
-            postgresConfiguration.nonRLSPoolInitialSize(),
-            postgresConfiguration.nonRLSPoolMaxSize(),
+            postgresConfiguration.byPassRLSPoolInitialSize(),
+            postgresConfiguration.byPassRLSPoolMaxSize(),
             connectionFactory);
     }
 
@@ -105,8 +105,8 @@ public class PostgresCommonModule extends AbstractModule {
         return new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
             .host(postgresConfiguration.getHost())
             .port(postgresConfiguration.getPort())
-            .username(postgresConfiguration.getCredential().getUsername())
-            .password(postgresConfiguration.getCredential().getPassword())
+            .username(postgresConfiguration.getDefaultCredential().getUsername())
+            .password(postgresConfiguration.getDefaultCredential().getPassword())
             .database(postgresConfiguration.getDatabaseName())
             .schema(postgresConfiguration.getDatabaseSchema())
             .sslMode(postgresConfiguration.getSslMode())
@@ -114,14 +114,14 @@ public class PostgresCommonModule extends AbstractModule {
     }
 
     @Provides
-    @Named(JamesPostgresConnectionFactory.NON_RLS_INJECT)
+    @Named(JamesPostgresConnectionFactory.BY_PASS_RLS_INJECT)
     @Singleton
     ConnectionFactory postgresqlConnectionFactoryRLSBypass(PostgresConfiguration postgresConfiguration) {
         return new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
             .host(postgresConfiguration.getHost())
             .port(postgresConfiguration.getPort())
-            .username(postgresConfiguration.getNonRLSCredential().getUsername())
-            .password(postgresConfiguration.getNonRLSCredential().getPassword())
+            .username(postgresConfiguration.getByPassRLSCredential().getUsername())
+            .password(postgresConfiguration.getByPassRLSCredential().getPassword())
             .database(postgresConfiguration.getDatabaseName())
             .schema(postgresConfiguration.getDatabaseSchema())
             .sslMode(postgresConfiguration.getSslMode())
@@ -143,9 +143,9 @@ public class PostgresCommonModule extends AbstractModule {
     }
 
     @Provides
-    @Named(PostgresExecutor.NON_RLS_INJECT)
+    @Named(PostgresExecutor.BY_PASS_RLS_INJECT)
     @Singleton
-    PostgresExecutor.Factory postgresExecutorFactoryWithRLSBypass(@Named(PostgresExecutor.NON_RLS_INJECT) JamesPostgresConnectionFactory singlePostgresConnectionFactory,
+    PostgresExecutor.Factory postgresExecutorFactoryWithRLSBypass(@Named(PostgresExecutor.BY_PASS_RLS_INJECT) JamesPostgresConnectionFactory singlePostgresConnectionFactory,
                                                                   PostgresConfiguration postgresConfiguration,
                                                                   MetricFactory metricFactory) {
         return new PostgresExecutor.Factory(singlePostgresConnectionFactory, postgresConfiguration, metricFactory);
@@ -159,9 +159,9 @@ public class PostgresCommonModule extends AbstractModule {
     }
 
     @Provides
-    @Named(PostgresExecutor.NON_RLS_INJECT)
+    @Named(PostgresExecutor.BY_PASS_RLS_INJECT)
     @Singleton
-    PostgresExecutor postgresExecutorWithRLSBypass(@Named(PostgresExecutor.NON_RLS_INJECT) PostgresExecutor.Factory factory) {
+    PostgresExecutor postgresExecutorWithRLSBypass(@Named(PostgresExecutor.BY_PASS_RLS_INJECT) PostgresExecutor.Factory factory) {
         return factory.create();
     }
 

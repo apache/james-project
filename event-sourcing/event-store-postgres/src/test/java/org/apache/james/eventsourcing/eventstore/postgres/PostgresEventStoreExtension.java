@@ -67,6 +67,6 @@ public class PostgresEventStoreExtension implements AfterAllCallback, BeforeAllC
 
     @Override
     public PostgresEventStore resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return new PostgresEventStore(new PostgresEventStoreDAO(postgresExtension.getPostgresExecutor(), jsonEventSerializer));
+        return new PostgresEventStore(new PostgresEventStoreDAO(postgresExtension.getDefaultPostgresExecutor(), jsonEventSerializer));
     }
 }

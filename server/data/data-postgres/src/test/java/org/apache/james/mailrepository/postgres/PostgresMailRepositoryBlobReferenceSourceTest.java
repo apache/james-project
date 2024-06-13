@@ -57,7 +57,7 @@ public class PostgresMailRepositoryBlobReferenceSourceTest {
             .blobIdFactory(factory)
             .defaultBucketName()
             .passthrough();
-        postgresMailRepositoryContentDAO = new PostgresMailRepositoryContentDAO(postgresExtension.getPostgresExecutor(), MimeMessageStore.factory(blobStore), factory);
+        postgresMailRepositoryContentDAO = new PostgresMailRepositoryContentDAO(postgresExtension.getDefaultPostgresExecutor(), MimeMessageStore.factory(blobStore), factory);
         postgresMailRepositoryBlobReferenceSource = new PostgresMailRepositoryBlobReferenceSource(postgresMailRepositoryContentDAO);
     }
 

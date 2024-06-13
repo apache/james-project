@@ -47,7 +47,7 @@ class PostgresUploadRepositoryTest implements UploadRepositoryContract {
         clock = new UpdatableTickingClock(Clock.systemUTC().instant());
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
-        PostgresUploadDAO uploadDAO = new PostgresUploadDAO(postgresExtension.getNonRLSPostgresExecutor(), blobIdFactory);
+        PostgresUploadDAO uploadDAO = new PostgresUploadDAO(postgresExtension.getDefaultPostgresExecutor(), blobIdFactory);
         PostgresUploadDAO.Factory uploadFactory = new PostgresUploadDAO.Factory(blobIdFactory, postgresExtension.getExecutorFactory());
         testee = new PostgresUploadRepository(blobStore, clock, uploadFactory, uploadDAO);
     }

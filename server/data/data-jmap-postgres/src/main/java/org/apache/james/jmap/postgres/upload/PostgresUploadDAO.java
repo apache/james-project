@@ -66,7 +66,7 @@ public class PostgresUploadDAO {
 
     @Singleton
     @Inject
-    public PostgresUploadDAO(@Named(PostgresExecutor.NON_RLS_INJECT) PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
+    public PostgresUploadDAO(@Named(PostgresExecutor.BY_PASS_RLS_INJECT) PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
         this.postgresExecutor = postgresExecutor;
         this.blobIdFactory = blobIdFactory;
     }

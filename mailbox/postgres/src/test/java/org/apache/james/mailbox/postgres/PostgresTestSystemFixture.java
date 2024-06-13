@@ -104,10 +104,10 @@ public class PostgresTestSystemFixture {
     }
 
     static MaxQuotaManager createMaxQuotaManager(PostgresExtension postgresExtension) {
-        return new PostgresPerUserMaxQuotaManager(new PostgresQuotaLimitDAO(postgresExtension.getPostgresExecutor()));
+        return new PostgresPerUserMaxQuotaManager(new PostgresQuotaLimitDAO(postgresExtension.getDefaultPostgresExecutor()));
     }
 
     public static CurrentQuotaManager createCurrentQuotaManager(PostgresExtension postgresExtension) {
-        return new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()));
+        return new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getDefaultPostgresExecutor()));
     }
 }

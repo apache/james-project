@@ -41,7 +41,7 @@ public class PostgresEmailQueryViewTest implements EmailQueryViewContract {
 
     @Override
     public EmailQueryView testee() {
-        return new PostgresEmailQueryView(new PostgresEmailQueryViewDAO(postgresExtension.getPostgresExecutor()));
+        return new PostgresEmailQueryView(new PostgresEmailQueryViewDAO(postgresExtension.getDefaultPostgresExecutor()));
     }
 
     @Override

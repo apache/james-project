@@ -27,19 +27,19 @@ import org.apache.james.lifecycle.api.Disposable;
 
 public class PostgresConnectionClosure implements Disposable {
     private final JamesPostgresConnectionFactory factory;
-    private final JamesPostgresConnectionFactory nonRLSFactory;
+    private final JamesPostgresConnectionFactory byPassRLSFactory;
 
     @Inject
     public PostgresConnectionClosure(JamesPostgresConnectionFactory factory,
-                                     @Named(JamesPostgresConnectionFactory.NON_RLS_INJECT) JamesPostgresConnectionFactory nonRLSFactory) {
+                                     @Named(JamesPostgresConnectionFactory.BY_PASS_RLS_INJECT) JamesPostgresConnectionFactory byPassRLSFactory) {
         this.factory = factory;
-        this.nonRLSFactory = nonRLSFactory;
+        this.byPassRLSFactory = byPassRLSFactory;
     }
 
     @PreDestroy
     @Override
     public void dispose() {
         factory.close().block();
-        nonRLSFactory.close().block();
+        byPassRLSFactory.close().block();
     }
 }

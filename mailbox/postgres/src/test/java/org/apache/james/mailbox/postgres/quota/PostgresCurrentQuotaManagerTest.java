@@ -36,7 +36,7 @@ class PostgresCurrentQuotaManagerTest implements CurrentQuotaManagerContract {
 
     @BeforeEach
     void setup() {
-        currentQuotaManager = new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()));
+        currentQuotaManager = new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getDefaultPostgresExecutor()));
     }
 
     @Override

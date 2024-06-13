@@ -119,8 +119,8 @@ public class PostgresHostSystem extends JamesImapHostSystem {
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
         SessionProviderImpl sessionProvider = new SessionProviderImpl(authenticator, authorizator);
         DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
-        CurrentQuotaManager currentQuotaManager = new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()));
-        maxQuotaManager = new PostgresPerUserMaxQuotaManager(new PostgresQuotaLimitDAO(postgresExtension.getPostgresExecutor()));
+        CurrentQuotaManager currentQuotaManager = new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getDefaultPostgresExecutor()));
+        maxQuotaManager = new PostgresPerUserMaxQuotaManager(new PostgresQuotaLimitDAO(postgresExtension.getDefaultPostgresExecutor()));
         StoreQuotaManager storeQuotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
         ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, storeQuotaManager);
         QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, storeQuotaManager, quotaRootResolver);
