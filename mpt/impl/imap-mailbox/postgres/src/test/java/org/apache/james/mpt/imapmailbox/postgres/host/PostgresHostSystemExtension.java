@@ -38,7 +38,7 @@ public class PostgresHostSystemExtension implements BeforeEachCallback, AfterEac
     private final PostgresExtension postgresExtension;
 
     public PostgresHostSystemExtension() {
-        this.postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresModule.aggregateModules(
+        this.postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(
             PostgresMailboxAggregateModule.MODULE,
             PostgresQuotaModule.MODULE));
         try {
