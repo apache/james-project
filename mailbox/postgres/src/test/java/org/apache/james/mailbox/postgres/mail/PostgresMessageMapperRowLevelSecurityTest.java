@@ -27,8 +27,6 @@ import java.util.Date;
 import jakarta.mail.Flags;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -50,7 +48,6 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,8 +77,7 @@ public class PostgresMessageMapperRowLevelSecurityTest {
     @BeforeEach
     public void setUp() {
         BlobId.Factory blobIdFactory = new HashBlobId.Factory();
-        postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory()),
-            postgresExtension.getPostgresConfiguration(), new RecordingMetricFactory()),
+        postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(),
             new UpdatableTickingClock(Instant.now()),
             new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
             blobIdFactory);
