@@ -39,7 +39,7 @@ public class PostgresQuotaLimitDaoTest {
 
     @BeforeEach
     void setup() {
-        postgresQuotaLimitDao = new PostgresQuotaLimitDAO(postgresExtension.getPostgresExecutor());
+        postgresQuotaLimitDao = new PostgresQuotaLimitDAO(postgresExtension.getDefaultPostgresExecutor());
     }
 
     @Test

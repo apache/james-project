@@ -41,7 +41,7 @@ class PostgresTableManagerTest {
     static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresModule.EMPTY_MODULE);
 
     Function<PostgresModule, PostgresTableManager> tableManagerFactory =
-        module -> new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, true);
+        module -> new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, true);
 
     @Test
     void initializeTableShouldSuccessWhenModuleHasSingleTable() {
@@ -343,7 +343,7 @@ class PostgresTableManagerTest {
         boolean disabledRLS = false;
 
 
-        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, disabledRLS);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, disabledRLS);
 
         testee.initializeTables()
             .block();
@@ -383,7 +383,7 @@ class PostgresTableManagerTest {
             .addAdditionalAlterQueries("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)")
             .build();
         PostgresModule module = PostgresModule.table(table);
-        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, false);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, false);
 
         testee.initializeTables().block();
 
@@ -409,7 +409,7 @@ class PostgresTableManagerTest {
             .addAdditionalAlterQueries("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)")
             .build();
         PostgresModule module = PostgresModule.table(table);
-        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, false);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, false);
 
         testee.initializeTables().block();
 
