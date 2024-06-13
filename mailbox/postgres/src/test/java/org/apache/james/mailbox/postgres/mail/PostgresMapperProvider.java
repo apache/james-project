@@ -67,7 +67,7 @@ public class PostgresMapperProvider implements MapperProvider {
         this.messageIdFactory = new PostgresMessageId.Factory();
         this.blobIdFactory = new HashBlobId.Factory();
         this.blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
-        this.messageUidProvider = new PostgresUidProvider(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()));
+        this.messageUidProvider = new PostgresUidProvider(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()));
     }
 
     @Override
@@ -78,18 +78,18 @@ public class PostgresMapperProvider implements MapperProvider {
 
     @Override
     public MailboxMapper createMailboxMapper() {
-        return new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()));
+        return new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()));
     }
 
     @Override
     public MessageMapper createMessageMapper() {
-        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(postgresExtension.getPostgresExecutor());
+        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor());
 
         PostgresModSeqProvider modSeqProvider = new PostgresModSeqProvider(mailboxDAO);
         PostgresUidProvider uidProvider = new PostgresUidProvider(mailboxDAO);
 
         return new PostgresMessageMapper(
-            postgresExtension.getPostgresExecutor(),
+            postgresExtension.getDefaultPostgresExecutor(),
             modSeqProvider,
             uidProvider,
             blobStore,
@@ -99,12 +99,12 @@ public class PostgresMapperProvider implements MapperProvider {
 
     @Override
     public MessageIdMapper createMessageIdMapper() {
-        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(postgresExtension.getPostgresExecutor());
+        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor());
         return new PostgresMessageIdMapper(mailboxDAO,
-            new PostgresMessageDAO(postgresExtension.getPostgresExecutor(), blobIdFactory),
-            new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor()),
+            new PostgresMessageDAO(postgresExtension.getDefaultPostgresExecutor(), blobIdFactory),
+            new PostgresMailboxMessageDAO(postgresExtension.getDefaultPostgresExecutor()),
             new PostgresModSeqProvider(mailboxDAO),
-            new PostgresAttachmentMapper(new PostgresAttachmentDAO(postgresExtension.getPostgresExecutor(), blobIdFactory), blobStore),
+            new PostgresAttachmentMapper(new PostgresAttachmentDAO(postgresExtension.getDefaultPostgresExecutor(), blobIdFactory), blobStore),
             blobStore,
             blobIdFactory,
             updatableTickingClock);
@@ -132,7 +132,7 @@ public class PostgresMapperProvider implements MapperProvider {
     @Override
     public ModSeq generateModSeq(Mailbox mailbox) {
         try {
-            return new PostgresModSeqProvider(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()))
+            return new PostgresModSeqProvider(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()))
                 .nextModSeq(mailbox);
         } catch (MailboxException e) {
             throw new RuntimeException(e);
@@ -141,7 +141,7 @@ public class PostgresMapperProvider implements MapperProvider {
 
     @Override
     public ModSeq highestModSeq(Mailbox mailbox) {
-        return new PostgresModSeqProvider(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()))
+        return new PostgresModSeqProvider(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()))
             .highestModSeq(mailbox);
     }
 
