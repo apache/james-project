@@ -41,7 +41,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class PostgresUploadServiceTest implements UploadServiceContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(
         PostgresModule.aggregateModules(PostgresUploadModule.MODULE, PostgresQuotaModule.MODULE));
 
     private PostgresUploadRepository uploadRepository;
@@ -54,7 +54,7 @@ public class PostgresUploadServiceTest implements UploadServiceContract {
         BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
         PostgresUploadDAO uploadDAO = new PostgresUploadDAO(postgresExtension.getNonRLSPostgresExecutor(), blobIdFactory);
         PostgresUploadDAO.Factory uploadFactory = new PostgresUploadDAO.Factory(blobIdFactory, postgresExtension.getExecutorFactory());
-        uploadRepository = new PostgresUploadRepository( blobStore, Clock.systemUTC(),uploadFactory, uploadDAO);
+        uploadRepository = new PostgresUploadRepository(blobStore, Clock.systemUTC(), uploadFactory, uploadDAO);
         uploadUsageRepository = new PostgresUploadUsageRepository(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()));
         testee = new UploadServiceDefaultImpl(uploadRepository, uploadUsageRepository, UploadServiceContract.TEST_CONFIGURATION());
     }
