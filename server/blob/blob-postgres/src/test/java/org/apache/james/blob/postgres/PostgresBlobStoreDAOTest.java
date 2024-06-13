@@ -51,7 +51,7 @@ class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
 
     @BeforeEach
     void setUp() {
-        blobStore = new PostgresBlobStoreDAO(postgresExtension.getPostgresExecutor(), new HashBlobId.Factory());
+        blobStore = new PostgresBlobStoreDAO(postgresExtension.getDefaultPostgresExecutor(), new HashBlobId.Factory());
     }
 
     @Override

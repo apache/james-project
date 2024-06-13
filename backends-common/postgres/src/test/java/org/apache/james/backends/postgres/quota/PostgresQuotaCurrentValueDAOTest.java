@@ -41,7 +41,7 @@ class PostgresQuotaCurrentValueDAOTest {
 
     @BeforeEach
     void setup() {
-        postgresQuotaCurrentValueDAO = new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor());
+        postgresQuotaCurrentValueDAO = new PostgresQuotaCurrentValueDAO(postgresExtension.getDefaultPostgresExecutor());
     }
 
     @Test

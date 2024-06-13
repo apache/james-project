@@ -33,7 +33,7 @@ class PostgresDropListsTest implements DropListContract {
 
     @BeforeEach
     void setup() {
-        dropList = new PostgresDropList(postgresExtension.getPostgresExecutor());
+        dropList = new PostgresDropList(postgresExtension.getDefaultPostgresExecutor());
     }
 
     @Override

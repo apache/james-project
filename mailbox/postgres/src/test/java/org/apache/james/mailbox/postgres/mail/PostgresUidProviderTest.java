@@ -56,7 +56,7 @@ public class PostgresUidProviderTest {
 
     @BeforeEach
     void setup() {
-        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(postgresExtension.getPostgresExecutor());
+        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor());
         uidProvider = new PostgresUidProvider(mailboxDAO);
         MailboxPath mailboxPath = new MailboxPath("gsoc", Username.of("ieugen" + UUID.randomUUID()), "INBOX");
         UidValidity uidValidity = UidValidity.of(1234);

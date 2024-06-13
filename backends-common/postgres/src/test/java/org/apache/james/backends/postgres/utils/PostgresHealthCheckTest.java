@@ -22,14 +22,9 @@ package org.apache.james.backends.postgres.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.quota.PostgresQuotaLimitDAO;
 import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.core.healthcheck.ResultStatus;
-import org.apache.james.core.quota.QuotaComponent;
-import org.apache.james.core.quota.QuotaLimit;
-import org.apache.james.core.quota.QuotaScope;
-import org.apache.james.core.quota.QuotaType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -44,7 +39,7 @@ public class PostgresHealthCheckTest {
 
     @BeforeEach
     void setup() {
-        testee = new PostgresHealthCheck(postgresExtension.getPostgresExecutor());
+        testee = new PostgresHealthCheck(postgresExtension.getDefaultPostgresExecutor());
     }
 
     @Test

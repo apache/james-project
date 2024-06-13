@@ -90,7 +90,7 @@ public class PostgresMessageDAO {
     private final BlobId.Factory blobIdFactory;
 
     @Inject
-    public PostgresMessageDAO(@Named(PostgresExecutor.NON_RLS_INJECT) PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
+    public PostgresMessageDAO(@Named(PostgresExecutor.BY_PASS_RLS_INJECT) PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
         this.postgresExecutor = postgresExecutor;
         this.blobIdFactory = blobIdFactory;
     }

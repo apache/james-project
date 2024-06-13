@@ -37,7 +37,7 @@ public class PostgresEventSourcingFilteringManagementNoProjectionTest implements
 
     @Override
     public FilteringManagement instantiateFilteringManagement() {
-        EventStore eventStore = new PostgresEventStore(new PostgresEventStoreDAO(postgresExtension.getPostgresExecutor(),
+        EventStore eventStore = new PostgresEventStore(new PostgresEventStoreDAO(postgresExtension.getDefaultPostgresExecutor(),
             JsonEventSerializer.forModules(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED,
                 FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT).withoutNestedType()));
         return new EventSourcingFilteringManagement(eventStore,

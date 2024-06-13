@@ -59,7 +59,7 @@ public class PostgresMessageBlobReferenceSourceTest {
 
     @BeforeEach
     void beforeEach() {
-        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getPostgresExecutor(), new HashBlobId.Factory());
+        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getDefaultPostgresExecutor(), new HashBlobId.Factory());
         blobReferenceSource = new PostgresMessageBlobReferenceSource(postgresMessageDAO);
     }
 

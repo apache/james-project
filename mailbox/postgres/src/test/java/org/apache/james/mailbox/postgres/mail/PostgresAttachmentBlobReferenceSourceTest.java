@@ -50,7 +50,7 @@ class PostgresAttachmentBlobReferenceSourceTest {
     @BeforeEach
     void beforeEach() {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
-        postgresAttachmentDAO = new PostgresAttachmentDAO(postgresExtension.getPostgresExecutor(),
+        postgresAttachmentDAO = new PostgresAttachmentDAO(postgresExtension.getDefaultPostgresExecutor(),
             blobIdFactory);
         testee = new PostgresAttachmentBlobReferenceSource(postgresAttachmentDAO);
     }

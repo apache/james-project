@@ -50,9 +50,9 @@ public class PostgresRecipientRewriteTableTest implements RecipientRewriteTableC
 
     @Override
     public void createRecipientRewriteTable() {
-        postgresRecipientRewriteTable = new PostgresRecipientRewriteTable(new PostgresRecipientRewriteTableDAO(postgresExtension.getPostgresExecutor()));
+        postgresRecipientRewriteTable = new PostgresRecipientRewriteTable(new PostgresRecipientRewriteTableDAO(postgresExtension.getDefaultPostgresExecutor()));
         postgresRecipientRewriteTable.setUsersRepository(new PostgresUsersRepository(new SimpleDomainList(),
-            new PostgresUsersDAO(postgresExtension.getPostgresExecutor(), PostgresUsersRepositoryConfiguration.DEFAULT)));
+            new PostgresUsersDAO(postgresExtension.getDefaultPostgresExecutor(), PostgresUsersRepositoryConfiguration.DEFAULT)));
     }
 
     @Override

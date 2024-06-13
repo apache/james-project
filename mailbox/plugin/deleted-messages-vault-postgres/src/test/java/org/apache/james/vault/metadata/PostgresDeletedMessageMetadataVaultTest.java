@@ -39,7 +39,7 @@ class PostgresDeletedMessageMetadataVaultTest implements DeletedMessageMetadataV
         DeletedMessageWithStorageInformationConverter dtoConverter = new DeletedMessageWithStorageInformationConverter(blobIdFactory,
             messageIdFactory, new InMemoryId.Factory());
 
-        return new PostgresDeletedMessageMetadataVault(postgresExtension.getPostgresExecutor(),
+        return new PostgresDeletedMessageMetadataVault(postgresExtension.getDefaultPostgresExecutor(),
             new MetadataSerializer(dtoConverter),
             blobIdFactory);
     }

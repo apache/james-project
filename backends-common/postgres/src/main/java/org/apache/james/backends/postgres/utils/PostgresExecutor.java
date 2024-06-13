@@ -57,7 +57,7 @@ import reactor.util.retry.Retry;
 public class PostgresExecutor {
 
     public static final String DEFAULT_INJECT = "default";
-    public static final String NON_RLS_INJECT = "non_rls";
+    public static final String BY_PASS_RLS_INJECT = "by_pass_rls";
     public static final int MAX_RETRY_ATTEMPTS = 5;
     public static final Duration MIN_BACKOFF = Duration.ofMillis(1);
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresExecutor.class);

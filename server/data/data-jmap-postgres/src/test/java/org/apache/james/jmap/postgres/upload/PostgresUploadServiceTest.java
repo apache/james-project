@@ -52,10 +52,10 @@ public class PostgresUploadServiceTest implements UploadServiceContract {
     void setUp() {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
-        PostgresUploadDAO uploadDAO = new PostgresUploadDAO(postgresExtension.getNonRLSPostgresExecutor(), blobIdFactory);
+        PostgresUploadDAO uploadDAO = new PostgresUploadDAO(postgresExtension.getDefaultPostgresExecutor(), blobIdFactory);
         PostgresUploadDAO.Factory uploadFactory = new PostgresUploadDAO.Factory(blobIdFactory, postgresExtension.getExecutorFactory());
         uploadRepository = new PostgresUploadRepository(blobStore, Clock.systemUTC(), uploadFactory, uploadDAO);
-        uploadUsageRepository = new PostgresUploadUsageRepository(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()));
+        uploadUsageRepository = new PostgresUploadUsageRepository(new PostgresQuotaCurrentValueDAO(postgresExtension.getDefaultPostgresExecutor()));
         testee = new UploadServiceDefaultImpl(uploadRepository, uploadUsageRepository, UploadServiceContract.TEST_CONFIGURATION());
     }
 

@@ -118,7 +118,7 @@ class PostgresUsersRepositoryTest {
     }
 
     private static UsersRepositoryImpl<PostgresUsersDAO> getUsersRepository(DomainList domainList, boolean enableVirtualHosting, Optional<Username> administrator) throws Exception {
-        PostgresUsersDAO usersDAO = new PostgresUsersDAO(postgresExtension.getPostgresExecutor(),
+        PostgresUsersDAO usersDAO = new PostgresUsersDAO(postgresExtension.getDefaultPostgresExecutor(),
             PostgresUsersRepositoryConfiguration.DEFAULT);
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("enableVirtualHosting", String.valueOf(enableVirtualHosting));

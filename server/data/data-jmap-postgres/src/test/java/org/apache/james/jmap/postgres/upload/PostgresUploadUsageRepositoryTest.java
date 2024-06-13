@@ -37,7 +37,7 @@ public class PostgresUploadUsageRepositoryTest implements UploadUsageRepositoryC
     private PostgresUploadUsageRepository uploadUsageRepository;
     @BeforeEach
     public void setup() {
-        uploadUsageRepository = new PostgresUploadUsageRepository(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()));
+        uploadUsageRepository = new PostgresUploadUsageRepository(new PostgresQuotaCurrentValueDAO(postgresExtension.getDefaultPostgresExecutor()));
         resetCounterToZero();
     }
     @Override
