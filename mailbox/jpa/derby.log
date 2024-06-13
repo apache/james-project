@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Wed Aug 07 13:25:47 BDT 2024:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0191-2bba-c8ae-00001c3271e8 
+on database directory memory:/home/sami/go/src/github.com/ops-center/james-project/mailbox/jpa/mailboxintegrationtesting with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@4e0e2f2a 
+Loaded from file:/home/sami/.m2/repository/org/apache/derby/derby/10.14.2.0/derby-10.14.2.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=21.0.2+13-LTS-58
+user.dir=/home/sami/go/src/github.com/ops-center/james-project/mailbox/jpa
+os.name=Linux
+os.arch=amd64
+os.version=6.5.0-45-generic
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

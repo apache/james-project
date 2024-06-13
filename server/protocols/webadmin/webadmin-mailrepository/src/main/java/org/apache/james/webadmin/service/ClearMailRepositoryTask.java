@@ -23,7 +23,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 
+<<<<<<< HEAD
 import javax.inject.Inject;
+=======
+import jakarta.inject.Inject;
+>>>>>>> 423e377e9f (merged with chibenwa/fix-and)
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;

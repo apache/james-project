@@ -6,4 +6,10 @@ dockerfiles/run/**/keystore
 dockerfiles/run/**/glowroot
 .m2
 test-run.log
+<<<<<<< HEAD
 build
+=======
+build
+.idea
+.mvn/.gradle-enterprise
+>>>>>>> 423e377e9f (merged with chibenwa/fix-and)

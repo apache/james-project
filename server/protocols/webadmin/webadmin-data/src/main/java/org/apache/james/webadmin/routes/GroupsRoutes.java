@@ -25,9 +25,14 @@ import static spark.Spark.halt;
 import java.util.List;
 import java.util.Optional;
 
+<<<<<<< HEAD
 import javax.inject.Inject;
 import javax.mail.internet.AddressException;
 
+=======
+import jakarta.inject.Inject;
+import jakarta.mail.internet.AddressException;
+>>>>>>> 423e377e9f (merged with chibenwa/fix-and)
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;

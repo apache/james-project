@@ -69,7 +69,17 @@ public class RabbitMQEventBusModule extends AbstractModule {
         reconnectionHandlerMultibinder.addBinding().to(EventBusReconnectionHandler.class);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class)
+<<<<<<< HEAD
             .addBinding().to(RabbitMQEventBusDeadLetterQueueHealthCheck.class);
+=======
+            .addBinding().to(RabbitMQMailboxEventBusDeadLetterQueueHealthCheck.class);
+    }
+
+    @ProvidesIntoSet
+    HealthCheck healthCheck(RabbitMQEventBus eventBus, NamingStrategy namingStrategy,
+                            SimpleConnectionPool connectionPool) {
+        return new RabbitEventBusConsumerHealthCheck(eventBus, namingStrategy, connectionPool);
+>>>>>>> 423e377e9f (merged with chibenwa/fix-and)
     }
 
     @ProvidesIntoSet
