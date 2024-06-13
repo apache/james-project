@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
