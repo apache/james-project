@@ -39,7 +39,7 @@ class PostgresTaskExecutionDetailsProjectionTest implements TaskExecutionDetails
 
     @BeforeEach
     void setUp() {
-        PostgresTaskExecutionDetailsProjectionDAO dao = new PostgresTaskExecutionDetailsProjectionDAO(postgresExtension.getPostgresExecutor(),
+        PostgresTaskExecutionDetailsProjectionDAO dao = new PostgresTaskExecutionDetailsProjectionDAO(postgresExtension.getDefaultPostgresExecutor(),
             JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER);
         testeeSupplier = () -> new PostgresTaskExecutionDetailsProjection(dao);
     }

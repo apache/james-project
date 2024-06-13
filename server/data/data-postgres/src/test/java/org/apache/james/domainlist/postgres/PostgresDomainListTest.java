@@ -34,7 +34,7 @@ public class PostgresDomainListTest implements DomainListContract {
 
     @BeforeEach
     public void setup() throws Exception {
-        domainList = new PostgresDomainList(getDNSServer("localhost"), postgresExtension.getPostgresExecutor());
+        domainList = new PostgresDomainList(getDNSServer("localhost"), postgresExtension.getDefaultPostgresExecutor());
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)

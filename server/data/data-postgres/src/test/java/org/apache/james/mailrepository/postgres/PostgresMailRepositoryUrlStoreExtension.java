@@ -65,6 +65,6 @@ public class PostgresMailRepositoryUrlStoreExtension implements ParameterResolve
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return new PostgresMailRepositoryUrlStore(postgresExtension.getPostgresExecutor());
+        return new PostgresMailRepositoryUrlStore(postgresExtension.getDefaultPostgresExecutor());
     }
 }

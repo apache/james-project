@@ -36,7 +36,7 @@ public class PostgresAttachmentBlobReferenceSource implements BlobReferenceSourc
 
     @Inject
     @Singleton
-    public PostgresAttachmentBlobReferenceSource(@Named(PostgresExecutor.NON_RLS_INJECT) PostgresExecutor postgresExecutor,
+    public PostgresAttachmentBlobReferenceSource(@Named(PostgresExecutor.BY_PASS_RLS_INJECT) PostgresExecutor postgresExecutor,
                                                  BlobId.Factory bloIdFactory) {
         this(new PostgresAttachmentDAO(postgresExecutor, bloIdFactory));
     }
