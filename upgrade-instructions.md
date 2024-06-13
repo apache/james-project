@@ -31,9 +31,9 @@ Change list:
  - [javax -> jakarta](#javax---jakarta)
  - [Make all queues on RabbitMQ quorum queue when `quorum.queues.enable=true`](#make-all-queues-on-rabbitmq-quorum-queue-when-quorumqueuesenabletrue)
  - [Migrate RabbitMQ classic queues to version 2](#migrate-rabbitmq-classic-queues-to-version-2)
- - [JAMES-3946 removals](#james-3946-removals)
+ - [JAMES-3946 removals](#james-3946-white-list-removals)
 
-#### JAMES-3946 removals
+#### JAMES-3946 White list removals
 
 Date: 14/06/2024
 
