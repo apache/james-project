@@ -38,8 +38,8 @@ class PostgresSieveRepositoryTest implements SieveRepositoryContract {
 
     @BeforeEach
     void setUp() {
-        sieveRepository = new PostgresSieveRepository(new PostgresSieveQuotaDAO(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()), new PostgresQuotaLimitDAO(postgresExtension.getPostgresExecutor())),
-            new PostgresSieveScriptDAO(postgresExtension.getPostgresExecutor()));
+        sieveRepository = new PostgresSieveRepository(new PostgresSieveQuotaDAO(new PostgresQuotaCurrentValueDAO(postgresExtension.getDefaultPostgresExecutor()), new PostgresQuotaLimitDAO(postgresExtension.getDefaultPostgresExecutor())),
+            new PostgresSieveScriptDAO(postgresExtension.getDefaultPostgresExecutor()));
     }
 
     @Override

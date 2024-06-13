@@ -46,7 +46,7 @@ public class PostgresEmailQueryViewDAO {
     private PostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresEmailQueryViewDAO(@Named(PostgresExecutor.NON_RLS_INJECT) PostgresExecutor postgresExecutor) {
+    public PostgresEmailQueryViewDAO(@Named(PostgresExecutor.BY_PASS_RLS_INJECT) PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

@@ -70,7 +70,7 @@ public class PostgresMessageMapperRowLevelSecurityTest {
     private Mailbox mailbox;
 
     private Mailbox generateMailbox() {
-        MailboxMapper mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()));
+        MailboxMapper mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()));
         return mailboxMapper.create(benwaInboxPath, UID_VALIDITY).block();
     }
 
