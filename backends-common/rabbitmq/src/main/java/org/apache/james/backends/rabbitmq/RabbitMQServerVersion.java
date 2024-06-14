@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.util.VersionUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
 public class RabbitMQServerVersion {
     public static RabbitMQServerVersion of(String input) {
@@ -35,6 +36,7 @@ public class RabbitMQServerVersion {
 
     @VisibleForTesting
     RabbitMQServerVersion(Version version) {
+        Preconditions.checkNotNull(version, "version cannot be null");
         this.version = version;
     }
 
@@ -48,9 +50,10 @@ public class RabbitMQServerVersion {
 
     @Override
     public final boolean equals(Object other) {
-        if (other instanceof RabbitMQServerVersion) {
-            RabbitMQServerVersion that = (RabbitMQServerVersion) other;
-            return Objects.equals(version, that.version);
+        if (other instanceof RabbitMQServerVersion that) {
+            return Objects.equals(version.getMajorVersion(), that.version.getMajorVersion()) &&
+                Objects.equals(version.getMinorVersion(), that.version.getMinorVersion()) &&
+                Objects.equals(version.getPatchLevel(), that.version.getPatchLevel());
         }
 
         return false;
