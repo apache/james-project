@@ -19,10 +19,6 @@
 
 package org.apache.james.user.ldap;
 
-import java.net.URI;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -32,11 +28,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
@@ -54,17 +45,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.unboundid.ldap.sdk.Attribute;
-import com.unboundid.ldap.sdk.BindRequest;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.Entry;
-import com.unboundid.ldap.sdk.FailoverServerSet;
 import com.unboundid.ldap.sdk.Filter;
-import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.LDAPSearchException;
@@ -72,29 +58,9 @@ import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
-import com.unboundid.ldap.sdk.ServerSet;
-import com.unboundid.ldap.sdk.SimpleBindRequest;
-import com.unboundid.ldap.sdk.SingleServerSet;
 
 public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUsersDAO.class);
-
-    private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
-
-        @Override
-        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-            // Always trust
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-            // Always trust
-        }
-    };
 
     private LdapRepositoryConfiguration ldapConfiguration;
     private LDAPConnectionPool ldapConnectionPool;
@@ -140,20 +106,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
                 + ldapConfiguration.getConnectionTimeout() + '\n' + "readTimeout: " + ldapConfiguration.getReadTimeout());
         }
 
-        LDAPConnectionOptions connectionOptions = new LDAPConnectionOptions();
-        connectionOptions.setConnectTimeoutMillis(ldapConfiguration.getConnectionTimeout());
-        connectionOptions.setResponseTimeoutMillis(ldapConfiguration.getReadTimeout());
-
-        BindRequest bindRequest = new SimpleBindRequest(ldapConfiguration.getPrincipal(), ldapConfiguration.getCredentials());
-
-        List<ServerSet> serverSets = ldapConfiguration.getLdapHosts()
-            .stream()
-            .map(toSingleServerSet(connectionOptions, bindRequest))
-            .collect(ImmutableList.toImmutableList());
-
-        FailoverServerSet failoverServerSet = new FailoverServerSet(serverSets);
-        ldapConnectionPool = new LDAPConnectionPool(failoverServerSet, bindRequest, 4);
-        ldapConnectionPool.setRetryFailedOperationsDueToInvalidConnections(true);
+        ldapConnectionPool = new LDAPConnectionFactory(ldapConfiguration).getLdapConnectionPool();
 
         userExtraFilter = Optional.ofNullable(ldapConfiguration.getFilter())
             .map(Throwing.function(Filter::create).sneakyThrow());
@@ -164,23 +117,6 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         if (!ldapConfiguration.getPerDomainBaseDN().isEmpty()) {
             Preconditions.checkState(ldapConfiguration.supportsVirtualHosting(), "'virtualHosting' is needed for per domain DNs");
         }
-    }
-
-    private SocketFactory supportLDAPS(URI uri) throws KeyManagementException, NoSuchAlgorithmException {
-        if (uri.getScheme().equals("ldaps")) {
-            if (ldapConfiguration.isTrustAllCerts()) {
-                SSLContext context = SSLContext.getInstance("TLSv1.2");
-                context.init(null, new TrustManager[]{DUMMY_TRUST_MANAGER}, null);
-                return context.getSocketFactory();
-            }
-            return SSLSocketFactory.getDefault();
-        } else {
-            return null;
-        }
-    }
-
-    private ThrowingFunction<URI, SingleServerSet> toSingleServerSet(LDAPConnectionOptions connectionOptions, BindRequest bindRequest) {
-        return Throwing.function(uri -> new SingleServerSet(uri.getHost(), uri.getPort(), supportLDAPS(uri), connectionOptions, bindRequest, null));
     }
 
     @PreDestroy
@@ -305,7 +241,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         SearchResult searchResult = ldapConnectionPool.search(userBase(retrievalName),
             SearchScope.SUB,
             createFilter(retrievalName.asString(), evaluateLdapUserRetrievalAttribute(retrievalName, resolveLocalPartAttribute)),
-            getReturnedAttributes());
+            ldapConfiguration.getReturnedAttributes());
 
         SearchResultEntry result = searchResult.getSearchEntries()
             .stream()
@@ -324,14 +260,6 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             return Optional.of(new ReadOnlyLDAPUser(translatedUsername, result.getParsedDN(), ldapConnectionPool));
         }
         return Optional.empty();
-    }
-
-    private String[] getReturnedAttributes() {
-        if (ldapConfiguration.getUsernameAttribute().isPresent()) {
-            return new String[]{ldapConfiguration.getUserIdAttribute(), ldapConfiguration.getUsernameAttribute().get()};
-        } else {
-            return new String[]{ldapConfiguration.getUserIdAttribute()};
-        }
     }
 
     private String evaluateLdapUserRetrievalAttribute(Username retrievalName, Optional<String> resolveLocalPartAttribute) {

@@ -458,6 +458,14 @@ public class LdapRepositoryConfiguration {
         return perDomainBaseDN;
     }
 
+    public String[] getReturnedAttributes() {
+        if (getUsernameAttribute().isPresent()) {
+            return new String[]{getUserIdAttribute(), getUsernameAttribute().get()};
+        } else {
+            return new String[]{getUserIdAttribute()};
+        }
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof LdapRepositoryConfiguration) {
