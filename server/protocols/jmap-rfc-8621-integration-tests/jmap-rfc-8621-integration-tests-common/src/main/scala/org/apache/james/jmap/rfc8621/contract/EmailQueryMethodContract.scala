@@ -34,7 +34,6 @@ import io.restassured.http.ContentType.JSON
 import jakarta.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
-import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
@@ -2492,7 +2491,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(
         s"""["${messageId2.serialize}", "${messageId1.serialize}"]""".stripMargin)
@@ -3888,7 +3887,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(
           s"""[
@@ -3945,7 +3944,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(
           s"""[
@@ -4157,7 +4156,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId2.serialize}", "${messageId1.serialize}"]""")
     }
@@ -5604,7 +5603,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId7.serialize}", "${messageId6.serialize}", "${messageId4.serialize}", "${messageId1.serialize}"]""")
     }
@@ -5670,7 +5669,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId2.serialize}", "${messageId3.serialize}"]""")
     }
@@ -5754,7 +5753,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId7.serialize}", "${messageId6.serialize}", "${messageId4.serialize}", "${messageId1.serialize}"]""")
     }
@@ -5820,7 +5819,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId2.serialize}", "${messageId3.serialize}"]""")
     }
@@ -5905,7 +5904,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId7.serialize}", "${messageId6.serialize}", "${messageId4.serialize}", "${messageId1.serialize}"]""")
     }
@@ -5971,7 +5970,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId2.serialize}", "${messageId3.serialize}"]""")
     }
@@ -6056,7 +6055,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId7.serialize}", "${messageId6.serialize}", "${messageId4.serialize}", "${messageId1.serialize}"]""")
     }
@@ -6122,7 +6121,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId2.serialize}", "${messageId3.serialize}"]""")
     }
@@ -6181,7 +6180,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId1.serialize}"]""")
     }
@@ -6246,7 +6245,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId1.serialize}", "${messageId4.serialize}"]""")
     }
@@ -6427,7 +6426,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(
           s"""[
@@ -6819,7 +6818,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId3.serialize}", "${messageId2.serialize}", "${messageId1.serialize}"]""")
     }
@@ -6884,7 +6883,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId4.serialize}"]""")
     }
@@ -7047,7 +7046,7 @@ trait EmailQueryMethodContract {
       .asString
 
     assertThatJson(response)
-      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .withOptions(IGNORING_ARRAY_ORDER)
       .inPath("$.methodResponses[0][1].ids")
       .isEqualTo(s"""["${messageId1.serialize}","${messageId2.serialize}"]""")
   }
@@ -7189,7 +7188,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId.serialize}"]""")
     }
@@ -7476,7 +7475,7 @@ trait EmailQueryMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(s"""["${messageId2.serialize}", "${messageId3.serialize}"]""")
     }

@@ -24,7 +24,6 @@ import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
-import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
@@ -92,7 +91,7 @@ trait BackReferenceContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[1][1].state")
-      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .withOptions(Option.IGNORING_ARRAY_ORDER)
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
@@ -175,7 +174,7 @@ trait BackReferenceContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].state")
-      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .withOptions(Option.IGNORING_ARRAY_ORDER)
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
@@ -248,7 +247,7 @@ trait BackReferenceContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].state")
-      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .withOptions(Option.IGNORING_ARRAY_ORDER)
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
@@ -321,7 +320,7 @@ trait BackReferenceContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].state")
-      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .withOptions(Option.IGNORING_ARRAY_ORDER)
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
@@ -394,7 +393,7 @@ trait BackReferenceContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].state")
-      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .withOptions(Option.IGNORING_ARRAY_ORDER)
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
@@ -503,7 +502,7 @@ trait BackReferenceContract {
       .asString()
 
     assertThatJson(response)
-      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .withOptions(Option.IGNORING_ARRAY_ORDER)
       .whenIgnoringPaths("methodResponses[2][1].state")
       .isEqualTo(
       s"""{

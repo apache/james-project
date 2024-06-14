@@ -44,7 +44,6 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import net.javacrumbs.jsonunit.core.Option;
-import net.javacrumbs.jsonunit.core.internal.Options;
 
 class HTTPConfigurationServerTest {
     private HTTPConfigurationServer.RunningStage server;
@@ -100,7 +99,7 @@ class HTTPConfigurationServerTest {
                     .asString();
 
             assertThatJson(response)
-                .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER))
+                .withOptions(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER)
                 .isEqualTo(JSON_BEHAVIORS);
         }
 
@@ -194,7 +193,7 @@ class HTTPConfigurationServerTest {
                     .asString();
 
             assertThatJson(response)
-                .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER))
+                .withOptions(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER)
                 .isEqualTo(JSON_MAIL);
         }
 
@@ -211,7 +210,7 @@ class HTTPConfigurationServerTest {
                     .asString();
 
             assertThatJson(response)
-                .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER))
+                .withOptions(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER)
                 .isEqualTo("[{" +
                     "    \"from\": \"bob@james.org\"," +
                     "    \"mailParameters\": [{" +

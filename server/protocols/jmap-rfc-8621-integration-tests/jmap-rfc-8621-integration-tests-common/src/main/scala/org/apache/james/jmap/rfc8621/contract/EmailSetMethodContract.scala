@@ -32,7 +32,6 @@ import io.restassured.http.ContentType.JSON
 import jakarta.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
-import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.{SC_CREATED, SC_OK}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.quota.QuotaCountLimit
@@ -7155,7 +7154,7 @@ trait EmailSetMethodContract {
       .asString
 
     assertThatJson(response)
-      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .withOptions(Option.IGNORING_ARRAY_ORDER)
       .whenIgnoringPaths("methodResponses[1][1].oldState",
         "methodResponses[1][1].newState")
       .inPath("methodResponses[1][1]")
@@ -7224,7 +7223,7 @@ trait EmailSetMethodContract {
       .asString
 
     assertThatJson(response)
-      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .withOptions(Option.IGNORING_ARRAY_ORDER)
       .whenIgnoringPaths("methodResponses[1][1].oldState", "methodResponses[1][1].newState")
       .inPath("methodResponses[1][1]")
       .isEqualTo(

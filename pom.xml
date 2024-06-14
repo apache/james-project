@@ -660,7 +660,7 @@
         <doclint>none</doclint>
         <mockito.version>5.10.0</mockito.version>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
-        <javacrumbs.json-unit.version>2.38.0</javacrumbs.json-unit.version>
+        <javacrumbs.json-unit.version>3.2.7</javacrumbs.json-unit.version>
     </properties>
 
     <dependencyManagement>

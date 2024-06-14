@@ -27,7 +27,6 @@ import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
-import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.MailAddress
@@ -1435,7 +1434,7 @@ trait IdentitySetContract {
       .asString
 
     assertThatJson(response)
-      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .withOptions(IGNORING_ARRAY_ORDER)
       .isEqualTo(
         s"""{
            |    "sessionState": "${SESSION_STATE.value}",
