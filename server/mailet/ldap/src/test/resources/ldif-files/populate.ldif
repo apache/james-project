@@ -1,0 +1,29 @@
+dn: ou=people, dc=james,dc=org
+ou: people
+objectClass: organizationalUnit
+
+dn: ou=empty, dc=james,dc=org
+ou: empty
+objectClass: organizationalUnit
+
+dn: ou=whatever, dc=james,dc=org
+ou: whatever
+objectClass: organizationalUnit
+
+dn: uid=james-user, ou=people, dc=james,dc=org
+objectClass: inetOrgPerson
+uid: james-user
+cn: james-user
+sn: james-user
+mail: james-user@james.org
+userPassword: secret
+description: abcdef
+
+dn: uid=bob, ou=people, dc=james,dc=org
+objectClass: inetOrgPerson
+uid: bob
+cn: bob
+sn: bob
+mail: bob@james.org
+userPassword: secret
+description: Extra user
