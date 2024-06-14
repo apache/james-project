@@ -24,6 +24,7 @@ import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.JPADataModule;
+import org.apache.james.modules.data.JPADropListsModule;
 import org.apache.james.modules.data.JPAUsersRepositoryModule;
 import org.apache.james.modules.data.SieveJPARepositoryModules;
 import org.apache.james.modules.mailbox.DefaultEventModule;
@@ -39,6 +40,7 @@ import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.queue.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
+import org.apache.james.modules.server.DropListsRoutesModule;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
@@ -107,7 +109,8 @@ public class JPAJamesServerMain implements JamesServerMain {
         LOGGER.info("Loading configuration {}", configuration.toString());
         GuiceJamesServer server = createServer(configuration)
             .combineWith(new JMXServerModule())
-            .overrideWith(new RunArgumentsModule(args));
+            .overrideWith(new RunArgumentsModule(args))
+            .overrideWith(chooseDropListsModule(configuration));
 
         JamesServerMain.main(server);
     }
@@ -117,5 +120,14 @@ public class JPAJamesServerMain implements JamesServerMain {
             .combineWith(JPA_MODULE_AGGREGATE)
             .combineWith(new UsersRepositoryModuleChooser(new JPAUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()));
+    }
+
+    private static Module chooseDropListsModule(JPAJamesConfiguration configuration) {
+        if (configuration.isDropListsEnabled()) {
+            return Modules.combine(new JPADropListsModule(), new DropListsRoutesModule());
+        }
+        return binder -> {
+
+        };
     }
 }
