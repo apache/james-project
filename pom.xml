@@ -602,7 +602,7 @@
         <apache-mime4j.version>0.8.11</apache-mime4j.version>
         <apache.openjpa.version>4.0.0</apache.openjpa.version>
         <derby.version>10.14.2.0</derby.version>
-        <log4j2.version>2.20.0</log4j2.version>
+        <log4j2.version>2.23.1</log4j2.version>
         <jakarta.inject-api.version>2.0.1</jakarta.inject-api.version>
         <jakarta.annotation-api.version>2.1.1</jakarta.annotation-api.version>
         <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
