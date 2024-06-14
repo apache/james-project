@@ -2526,7 +2526,7 @@
             <dependency>
                 <groupId>nl.jqno.equalsverifier</groupId>
                 <artifactId>equalsverifier</artifactId>
-                <version>3.15</version>
+                <version>3.16.1</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.activemq</groupId>
