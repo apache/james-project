@@ -88,4 +88,20 @@ class SieveDelivery {
             .select(TARGETED_MAILBOX)
             .awaitMessage(awaitAtMostOneMinute);
     }
+
+    @Test
+    void shouldDeliverToEmailAddressWithAND() throws Exception {
+        String recipient = "a&b@james.org";
+        jamesServer.getProbe(DataProbeImpl.class)
+            .addUser(recipient, PASSWORD);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, recipient);
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(recipient, PASSWORD)
+            .select("INBOX")
+            .awaitMessage(awaitAtMostOneMinute);
+    }
 }
