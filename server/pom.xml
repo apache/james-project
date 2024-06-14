@@ -104,6 +104,7 @@
         <module>protocols/protocols-pop3</module>
         <module>protocols/protocols-pop3-distributed</module>
         <module>protocols/protocols-smtp</module>
+        <module>protocols/protocols-smtp-dkim</module>
         <module>protocols/webadmin</module>
         <module>protocols/webadmin-integration-test</module>
 

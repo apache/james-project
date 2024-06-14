@@ -317,3 +317,36 @@ The Distributed server has optional support for FUTURERELEASE (link:https://www.
     </handlerchain>
 </smtpserver>
 ....
+
+== DKIM checks hooks
+
+Hook for verifying DKIM signatures of incoming mails.
+
+This hook can be restricted to specific sender domains and authenticate those emails against
+their DKIM signature. Given a signed outgoing traffic this hook can use operators to accept legitimate
+emails emitted by their infrastructure but redirected without envelope changes to there own domains by
+some intermediate third parties. See link:https://issues.apache.org/jira/browse/JAMES-4032[JAMES-4032].
+
+Supported configuration elements:
+
+ - *forceCRLF*: Should CRLF be forced when computing body hashes.
+ - *onlyForSenderDomain*: If specified, the DKIM checks are applied just for the emails whose MAIL FROM specifies this domain. If unspecified, all emails are checked (default).
+ - *signatureRequired*: If DKIM signature is checked, the absence of signature will generate failure. Defaults to false.
+ - *expectedDToken*: If DKIM signature is checked, the body should contain at least one DKIM signature with this d token. If unspecified, all d tokens are considered valid (default).
+
+Example handlerchain configuration for `smtpserver.xml`:
+
+....xml
+   <handlerchain>
+      <handler class="org.apache.james.smtpserver.DKIMHook">
+          <forceCLRF>true</forceCLRF>
+          <onlyForSenderDomain>apache.org</onlyForSenderDomain>
+          <signatureRequired>true</signatureRequired>
+          <expectedDToken>apache.org</expectedDToken>
+      </handler>
+      <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+    </handlerchain>
+....
+
+Would allow emails using `apache.org` as a MAIL FROM domain if, and only if they contain a
+valid DKIM signature for the `apache.org` domain.

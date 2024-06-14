@@ -44,6 +44,12 @@
         <handlerchain>
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+            <handler class="org.apache.james.smtpserver.DKIMHook">
+                <forceCLRF>true</forceCLRF>
+                <signatureRequired>true</signatureRequired>
+                <onlyForSenderDomain>avocat.fr</onlyForSenderDomain>
+                <expectedDToken>avocat.fr</expectedDToken>
+            </handler>
         </handlerchain>
         <gracefulShutdown>false</gracefulShutdown>
     </smtpserver>
