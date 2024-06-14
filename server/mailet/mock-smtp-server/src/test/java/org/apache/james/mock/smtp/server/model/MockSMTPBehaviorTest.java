@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import net.javacrumbs.jsonunit.core.Option;
-import net.javacrumbs.jsonunit.core.internal.Options;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MockSMTPBehaviorTest {
@@ -115,7 +114,7 @@ class MockSMTPBehaviorTest {
             String json = OBJECT_MAPPER.writeValueAsString(BEHAVIOR_ALL_FIELDS);
 
             assertThatJson(json)
-                .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT))
+                .withOptions(Option.TREATING_NULL_AS_ABSENT)
                 .isEqualTo(JSON_BEHAVIOR_ALL_FIELDS);
         }
 
@@ -132,7 +131,7 @@ class MockSMTPBehaviorTest {
             String json = OBJECT_MAPPER.writeValueAsString(BEHAVIOR_COMPULSORY_FIELDS);
 
             assertThatJson(json)
-                .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT))
+                .withOptions(Option.TREATING_NULL_AS_ABSENT)
                 .isEqualTo(JSON_BEHAVIOR_COMPULSORY_FIELDS);
         }
     }

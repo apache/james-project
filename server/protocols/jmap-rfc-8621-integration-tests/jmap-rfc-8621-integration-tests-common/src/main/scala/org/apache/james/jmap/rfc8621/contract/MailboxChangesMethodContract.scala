@@ -29,7 +29,6 @@ import io.restassured.http.ContentType.JSON
 import jakarta.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
-import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.JmapGuiceProbe
@@ -120,7 +119,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -182,7 +181,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -270,7 +269,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -358,7 +357,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -424,7 +423,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -495,7 +494,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -570,7 +569,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |  "sessionState": "${SESSION_STATE.value}",
@@ -641,7 +640,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |  "sessionState": "${SESSION_STATE.value}",
@@ -714,7 +713,7 @@ trait MailboxChangesMethodContract {
 
         assertThatJson(response)
           .whenIgnoringPaths("methodResponses[0][1].newState")
-          .withOptions(new Options(IGNORING_ARRAY_ORDER))
+          .withOptions(IGNORING_ARRAY_ORDER)
           .isEqualTo(
             s"""{
                |    "sessionState": "${SESSION_STATE.value}",
@@ -780,7 +779,7 @@ trait MailboxChangesMethodContract {
 
         assertThatJson(response)
           .whenIgnoringPaths("methodResponses[0][1].newState")
-          .withOptions(new Options(IGNORING_ARRAY_ORDER))
+          .withOptions(IGNORING_ARRAY_ORDER)
           .isEqualTo(
             s"""{
                |    "sessionState": "${SESSION_STATE.value}",
@@ -855,7 +854,7 @@ trait MailboxChangesMethodContract {
 
           assertThatJson(response)
             .whenIgnoringPaths("methodResponses[0][1].newState")
-            .withOptions(new Options(IGNORING_ARRAY_ORDER))
+            .withOptions(IGNORING_ARRAY_ORDER)
             .isEqualTo(
               s"""{
                  |    "sessionState": "${SESSION_STATE.value}",
@@ -929,7 +928,7 @@ trait MailboxChangesMethodContract {
 
         assertThatJson(response)
           .whenIgnoringPaths("methodResponses[0][1].newState")
-          .withOptions(new Options(IGNORING_ARRAY_ORDER))
+          .withOptions(IGNORING_ARRAY_ORDER)
           .isEqualTo(
             s"""{
                |    "sessionState": "${SESSION_STATE.value}",
@@ -1004,7 +1003,7 @@ trait MailboxChangesMethodContract {
 
         assertThatJson(response)
           .whenIgnoringPaths("methodResponses[0][1].newState")
-          .withOptions(new Options(IGNORING_ARRAY_ORDER))
+          .withOptions(IGNORING_ARRAY_ORDER)
           .isEqualTo(
             s"""{
                |    "sessionState": "${SESSION_STATE.value}",
@@ -1068,7 +1067,7 @@ trait MailboxChangesMethodContract {
 
         assertThatJson(response)
           .whenIgnoringPaths("methodResponses[0][1].newState")
-          .withOptions(new Options(IGNORING_ARRAY_ORDER))
+          .withOptions(IGNORING_ARRAY_ORDER)
           .isEqualTo(
             s"""{
                |    "sessionState": "${SESSION_STATE.value}",
@@ -1116,7 +1115,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(responseAndre)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -1179,7 +1178,7 @@ trait MailboxChangesMethodContract {
 
         assertThatJson(response)
           .whenIgnoringPaths("methodResponses[0][1].newState")
-          .withOptions(new Options(IGNORING_ARRAY_ORDER))
+          .withOptions(IGNORING_ARRAY_ORDER)
           .isEqualTo(
             s"""{
                |    "sessionState": "${SESSION_STATE.value}",
@@ -1227,7 +1226,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(responseAndre)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -1297,7 +1296,7 @@ trait MailboxChangesMethodContract {
 
         assertThatJson(response)
           .whenIgnoringPaths("methodResponses[0][1].newState")
-          .withOptions(new Options(IGNORING_ARRAY_ORDER))
+          .withOptions(IGNORING_ARRAY_ORDER)
           .isEqualTo(
             s"""{
                |    "sessionState": "${SESSION_STATE.value}",
@@ -1363,7 +1362,7 @@ trait MailboxChangesMethodContract {
 
         assertThatJson(response)
           .whenIgnoringPaths("methodResponses[0][1].newState")
-          .withOptions(new Options(IGNORING_ARRAY_ORDER))
+          .withOptions(IGNORING_ARRAY_ORDER)
           .isEqualTo(
             s"""{
                |    "sessionState": "${SESSION_STATE.value}",
@@ -1426,7 +1425,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -1494,7 +1493,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -1565,7 +1564,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -1637,7 +1636,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -1718,7 +1717,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -1794,7 +1793,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -1871,7 +1870,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -1963,7 +1962,7 @@ trait MailboxChangesMethodContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].newState")
-      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .withOptions(IGNORING_ARRAY_ORDER)
       .isEqualTo(
         s"""{
            |  "sessionState": "${SESSION_STATE.value}",
@@ -2006,7 +2005,7 @@ trait MailboxChangesMethodContract {
         .asString
 
       assertThatJson(response)
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -2133,7 +2132,7 @@ trait MailboxChangesMethodContract {
       .asString
 
     assertThatJson(response2)
-      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .withOptions(IGNORING_ARRAY_ORDER)
       .isEqualTo(
         s"""{
            |    "sessionState": "${SESSION_STATE.value}",
@@ -2204,7 +2203,7 @@ trait MailboxChangesMethodContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].newState")
-      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .withOptions(IGNORING_ARRAY_ORDER)
       .isEqualTo(
         s"""{
            |    "sessionState": "${SESSION_STATE.value}",
@@ -2275,7 +2274,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -2354,7 +2353,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[1][1].state")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",
@@ -2451,7 +2450,7 @@ trait MailboxChangesMethodContract {
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[1][1].state")
-        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .withOptions(IGNORING_ARRAY_ORDER)
         .isEqualTo(
           s"""{
              |    "sessionState": "${SESSION_STATE.value}",

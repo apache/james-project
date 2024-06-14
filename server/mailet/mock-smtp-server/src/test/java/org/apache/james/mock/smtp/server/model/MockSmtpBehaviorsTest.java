@@ -28,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import net.javacrumbs.jsonunit.core.Option;
-import net.javacrumbs.jsonunit.core.internal.Options;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MockSmtpBehaviorsTest {
@@ -51,7 +50,7 @@ class MockSmtpBehaviorsTest {
         String json = OBJECT_MAPPER.writeValueAsString(BEHAVIORS);
 
         assertThatJson(json)
-            .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER))
+            .withOptions(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER)
             .isEqualTo(JSON_BEHAVIORS);
     }
 }

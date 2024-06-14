@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.core
 
-import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
