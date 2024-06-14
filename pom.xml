@@ -613,7 +613,7 @@
         <angus-mail.version>2.0.2</angus-mail.version>
         <angus-activation.version>2.0.1</angus-activation.version>
         <jakarta.activation-api.version>2.1.2</jakarta.activation-api.version>
-        <slf4j.version>2.0.7</slf4j.version>
+        <slf4j.version>2.0.13</slf4j.version>
 
         <dnsjava.version>3.5.2</dnsjava.version>
         <junit.jupiter.version>5.9.3</junit.jupiter.version>
