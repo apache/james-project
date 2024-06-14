@@ -47,6 +47,7 @@ class MailAddressTest {
                 GOOD_ADDRESS,
                 GOOD_QUOTED_LOCAL_PART,
                 "server-dev@james-apache.org",
+                "a&b@james-apache.org",
                 "server-dev@[127.0.0.1]",
                 "server.dev@james.apache.org",
                 "\\.server-dev@james.apache.org",

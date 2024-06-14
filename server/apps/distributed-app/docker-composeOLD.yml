@@ -14,14 +14,11 @@ services:
         condition: service_started
       s3:
         condition: service_started
-    image: shn27/distributed-james-test:chibenwa-fix-and
+    image: sami7786/distributed-james-test:revertmerge
     container_name: james
     hostname: james.local
-    #volumes:
-     # - ./docker-configuration/jvm.properties:/root/conf/jvm.properties
-      #- ./docker-configuration/webadmin.properties:/root/conf/webadmin.properties
-      #- ./docker-configuration/jmap.properties:/root/conf/jmap.properties
-      #- ./docker-configuration/cassandra.properties:/root/conf/cassandra.properties
+    volumes:
+      - $PWD/jmap.properties:/root/conf/jmap.properties
     command:
       - --generate-keystore
     networks:

@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +61,12 @@ class QuotaRootTest {
     }
 
     @Test
+    void quotaRootWithAndShouldBeWellDeSerialized() {
+        assertThat(DTO_JSON_SERIALIZE.quotaRootReads().reads(new JsString("#private&bob&marley")).get())
+            .isEqualTo(QuotaRoot.quotaRoot("#private&bob&marley", Optional.empty()));
+    }
+
+    @Test
     void emptyQuotaRootShouldBeWellSerialized() {
         assertThat(DTO_JSON_SERIALIZE.quotaRootWrites().writes(QuotaRoot.quotaRoot("", Optional.empty())))
             .isEqualTo(new JsString(""));
@@ -70,8 +75,8 @@ class QuotaRootTest {
     @Test
     void emptyQuotaRootShouldBeWellDeSerialized() {
         assertThatThrownBy(() -> DTO_JSON_SERIALIZE.quotaRootReads().reads(new JsString("")).get())
-            .isInstanceOf(MailboxException.class)
-            .hasMessage(" used as QuotaRoot should contain exactly one \"&\"");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("username should not be null or empty after being trimmed");
     }
 
     @Test

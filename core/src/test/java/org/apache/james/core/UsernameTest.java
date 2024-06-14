@@ -185,6 +185,12 @@ class UsernameTest {
     }
 
     @Test
+    void fromUsernameShouldParseUsernameWithDomainWithAnd() {
+        assertThat(Username.of("a&a@bb"))
+            .isEqualTo(Username.from("a&a", Optional.of("bb")));
+    }
+
+    @Test
     void fromUsernameShouldParseUsernameWithoutDomain() {
         assertThat(Username.of("aa"))
             .isEqualTo(Username.from("aa", Optional.empty()));
