@@ -31,11 +31,17 @@
     <name>Apache James :: Backends Common :: Pulsar</name>
     <properties>
         <pulsar-client.version>2.11.0</pulsar-client.version>
-        <clever-cloud.pulsar4s.version>2.9.0</clever-cloud.pulsar4s.version>
-        <akka-stream.version>2.6.21</akka-stream.version>
+        <clever-cloud.pulsar4s.version>2.9.1</clever-cloud.pulsar4s.version>
+        <pekko-stream.version>1.0.2</pekko-stream.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-common</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-testing</artifactId>
@@ -52,7 +58,7 @@
         </dependency>
         <dependency>
             <groupId>com.clever-cloud.pulsar4s</groupId>
-            <artifactId>pulsar4s-akka-streams_${scala.base}</artifactId>
+            <artifactId>pulsar4s-core_${scala.base}</artifactId>
             <version>${clever-cloud.pulsar4s.version}</version>
             <exclusions>
                 <exclusion>
@@ -69,7 +75,7 @@
         </dependency>
         <dependency>
             <groupId>com.clever-cloud.pulsar4s</groupId>
-            <artifactId>pulsar4s-core_${scala.base}</artifactId>
+            <artifactId>pulsar4s-pekko-streams_${scala.base}</artifactId>
             <version>${clever-cloud.pulsar4s.version}</version>
             <exclusions>
                 <exclusion>
@@ -101,16 +107,6 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-stream-typed_${scala.base}</artifactId>
-            <version>${akka-stream.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-stream_${scala.base}</artifactId>
-            <version>${akka-stream.version}</version>
-        </dependency>
-        <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
         </dependency>
@@ -119,10 +115,14 @@
             <artifactId>commons-configuration2</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-guice-common</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
+            <groupId>org.apache.pekko</groupId>
+            <artifactId>pekko-stream-typed_${scala.base}</artifactId>
+            <version>${pekko-stream.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.pekko</groupId>
+            <artifactId>pekko-stream_${scala.base}</artifactId>
+            <version>${pekko-stream.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.pulsar</groupId>

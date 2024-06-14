@@ -23,14 +23,14 @@ import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete, StreamConverters}
-import akka.stream.{Attributes, OverflowStrategy}
-import akka.util.Timeout
-import akka.{Done, NotUsed}
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete, StreamConverters}
+import org.apache.pekko.stream.{Attributes, OverflowStrategy}
+import org.apache.pekko.util.Timeout
+import org.apache.pekko.{Done, NotUsed}
 import com.sksamuel.pulsar4s._
-import com.sksamuel.pulsar4s.akka.streams
-import com.sksamuel.pulsar4s.akka.streams.{CommittableMessage, Control}
+import com.sksamuel.pulsar4s.pekko.streams
+import com.sksamuel.pulsar4s.pekko.streams.{CommittableMessage, Control}
 import jakarta.mail.MessagingException
 import jakarta.mail.internet.MimeMessage
 import org.apache.james.backends.pulsar.{PulsarClients, PulsarReader}
