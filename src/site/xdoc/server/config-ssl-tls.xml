@@ -192,7 +192,7 @@ openssl rsa -in private.key -out private.nopass.key
         <p>To import an existing certificate into a JKS keystore, please read the documentation (in your JDK documentation package) about keytool.</p>
         <p>To create a new keystore from scratch, containing a single self-signed Certificate, execute the following from a terminal command line:</p>
         <p><code>keytool -genkey -alias james -keyalg RSA -keystore your_keystore_filename</code></p>
-        <p><strong>Note:</strong> This will create a keystore in PKCS12 format. To create a JKS format keystore add the option '-storetype JKS' to the command line.
+        <p><strong>Note:</strong> This will create a keystore in PKCS12 format. To create a JKS format keystore add the option '-storetype JKS' to the command line.</p>
         <p>(The RSA algorithm should be preferred as a secure algorithm, and this also ensures general compatibility with other servers and components.)</p>
         <p>As a suggested standard, create the keystore in the james/conf directory, with a name like james.keystore.</p>
         <p>After executing this command, you will first be prompted for the keystore password.</p>
