@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
 import static org.hamcrest.Matchers.is;
 
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -60,7 +59,7 @@ class RabbitMQDisabledTasksTest {
         RestAssured.defaultParser = Parser.JSON;
         webAdminApi = WebAdminUtils.spec(server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
             .config(WebAdminUtils.defaultConfig()
-                .paramConfig(new ParamConfig(REPLACE, REPLACE, REPLACE)));
+                .paramConfig(new ParamConfig().replaceAllParameters()));
     }
 
     @Test
