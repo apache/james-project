@@ -623,7 +623,6 @@
         <netty.version>4.1.101.Final</netty.version>
         <cucumber.version>7.15.0</cucumber.version>
 
-        <pax-logging-api.version>1.6.4</pax-logging-api.version>
         <jackson.version>2.17.1</jackson.version>
         <jackson.databind.version>2.17.1</jackson.databind.version>
         <feign.version>13.2.1</feign.version>
@@ -631,7 +630,6 @@
         <jjwt.version>0.11.5</jjwt.version>
         <metrics.version>4.2.19</metrics.version>
         <testcontainers.version>1.19.8</testcontainers.version>
-        <es.version>2.2.1</es.version>
         <es-reporter.version>6.0.0-RC3</es-reporter.version>
         <guava.version>33.2.1-jre</guava.version>
 
@@ -656,7 +654,6 @@
 
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.11</scala.version>
-        <scalatestplus-play.version>5.0.0</scalatestplus-play.version>
         <doclint>none</doclint>
         <mockito.version>5.10.0</mockito.version>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
