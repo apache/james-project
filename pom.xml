@@ -653,7 +653,7 @@
         <bouncycastle.version>1.77</bouncycastle.version>
 
         <scala.base>2.13</scala.base>
-        <scala.version>${scala.base}.11</scala.version>
+        <scala.version>${scala.base}.14</scala.version>
         <doclint>none</doclint>
         <mockito.version>5.10.0</mockito.version>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
@@ -2247,7 +2247,7 @@
             <dependency>
                 <groupId>com.typesafe.play</groupId>
                 <artifactId>play-json_${scala.base}</artifactId>
-                <version>2.9.4</version>
+                <version>2.10.5</version>
             </dependency>
             <dependency>
                 <groupId>com.unboundid</groupId>
@@ -2314,7 +2314,7 @@
             <dependency>
                 <groupId>eu.timepit</groupId>
                 <artifactId>refined_${scala.base}</artifactId>
-                <version>0.11.0</version>
+                <version>0.11.2</version>
             </dependency>
             <dependency>
                 <groupId>io.cucumber</groupId>
@@ -2751,7 +2751,7 @@
             <dependency>
                 <groupId>org.julienrf</groupId>
                 <artifactId>play-json-derived-codecs_${scala.base}</artifactId>
-                <version>10.1.0</version>
+                <version>11.0.0</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -2821,12 +2821,12 @@
             <dependency>
                 <groupId>org.scalacheck</groupId>
                 <artifactId>scalacheck_${scala.base}</artifactId>
-                <version>1.17.0</version>
+                <version>1.18.0</version>
             </dependency>
             <dependency>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest_${scala.base}</artifactId>
-                <version>3.2.16</version>
+                <version>3.2.18</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -2975,7 +2975,7 @@
                 <plugin>
                     <groupId>io.github.evis</groupId>
                     <artifactId>scalafix-maven-plugin_2.13</artifactId>
-                    <version>0.1.8_0.11.0</version>
+                    <version>0.1.10_0.11.0</version>
                     <configuration>
                         <config>${basedir}/.scalafix.conf</config>
                         <mode>CHECK</mode>
@@ -2984,7 +2984,7 @@
                         <dependency>
                             <groupId>ch.epfl.scala</groupId>
                             <artifactId>scalafix-core_${scala.base}</artifactId>
-                            <version>0.11.0</version>
+                            <version>0.12.1</version>
                         </dependency>
                         <dependency>
                             <groupId>com.nequissimus</groupId>
@@ -3028,7 +3028,7 @@
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
-                    <version>4.6.1</version>
+                    <version>4.9.1</version>
                     <configuration>
                         <recompileMode>all</recompileMode>
                         <source>${target.jdk}</source>
@@ -3051,7 +3051,7 @@
                             <compilerPlugin>
                                 <groupId>org.scalameta</groupId>
                                 <artifactId>semanticdb-scalac_${scala.version}</artifactId>
-                                <version>4.8.4</version>
+                                <version>4.9.6</version>
                             </compilerPlugin>
                         </compilerPlugins>
                     </configuration>
