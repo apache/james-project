@@ -19,8 +19,8 @@
 
 package org.apache.james.queue.pulsar
 
-import akka.actor.{Actor, ActorLogging, Props}
-import com.sksamuel.pulsar4s.akka.streams.CommittableMessage
+import org.apache.pekko.actor.{Actor, ActorLogging, Props}
+import com.sksamuel.pulsar4s.pekko.streams.CommittableMessage
 import com.sksamuel.pulsar4s.{ConsumerMessage, SequenceId}
 import org.apache.james.blob.api.BlobId
 

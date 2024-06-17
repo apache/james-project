@@ -55,6 +55,7 @@ import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.server.blob.deduplication.PassThroughBlobStore;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
+import org.apache.pekko.actor.ActorSystem;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,7 +67,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import com.github.fge.lambdas.Throwing;
 import com.sksamuel.pulsar4s.ConsumerMessage;
 
-import akka.actor.ActorSystem;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import scala.jdk.javaapi.OptionConverters;

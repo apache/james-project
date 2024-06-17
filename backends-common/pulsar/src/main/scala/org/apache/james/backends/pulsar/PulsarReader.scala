@@ -26,8 +26,8 @@ import org.apache.pulsar.client.api.Schema
 
 import com.sksamuel.pulsar4s.{ConsumerMessage, Message, MessageId, PulsarClient, Reader, ReaderConfig, SequenceId, Topic}
 
-import akka.Done
-import akka.stream.scaladsl.Source
+import org.apache.pekko.Done
+import org.apache.pekko.stream.scaladsl.Source
 
 
 object PulsarReader {

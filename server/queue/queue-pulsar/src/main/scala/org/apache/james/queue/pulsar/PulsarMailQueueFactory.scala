@@ -23,7 +23,7 @@ import java.util
 import java.util.Optional
 import java.util.concurrent.atomic.AtomicReference
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import jakarta.mail.internet.MimeMessage
 import jakarta.annotation.PreDestroy
 import jakarta.inject.Inject
