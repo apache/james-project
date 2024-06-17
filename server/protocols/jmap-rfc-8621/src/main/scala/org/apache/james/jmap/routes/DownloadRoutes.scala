@@ -20,6 +20,8 @@ package org.apache.james.jmap.routes
 
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.Callable
+import java.util.function.Consumer
 import java.util.stream
 import java.util.stream.Stream
 
@@ -29,7 +31,7 @@ import eu.timepit.refined.refineV
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus._
-import io.netty.handler.codec.http.{HttpHeaderValidationUtil, HttpMethod, HttpResponseStatus, QueryStringDecoder}
+import io.netty.handler.codec.http.{HttpHeaderValidationUtil, HttpMethod, QueryStringDecoder}
 import jakarta.inject.{Inject, Named}
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
@@ -62,7 +64,6 @@ import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
-import scala.compat.java8.FunctionConverters._
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
@@ -310,20 +311,24 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
   private def downloadBlob(optionalName: Option[String],
                            response: HttpServerResponse,
                            blobContentType: ContentType,
-                           blob: Blob): SMono[Unit] =
+                           blob: Blob): SMono[Unit] = {
+    val resourceSupplier: Callable[InputStream] = () => blob.content
+    val sourceSupplier: java.util.function.Function[InputStream, Mono[Void]] = stream => SMono(addContentDispositionHeader(optionalName)
+      .compose(addContentLengthHeader(blob.size))
+      .apply(response)
+      .header(CONTENT_TYPE, sanitizeHeaderValue(blobContentType.asString))
+      .status(OK)
+      .send(ReactorUtils.toChunks(stream, BUFFER_SIZE)
+        .map(Unpooled.wrappedBuffer(_))
+        .subscribeOn(Schedulers.boundedElastic()))).asJava()
+    val resourceRelease: Consumer[InputStream] = (stream: InputStream) => stream.close()
+
     SMono.fromPublisher(Mono.using(
-      () => blob.content,
-      (stream: InputStream) => addContentDispositionHeader(optionalName)
-        .compose(addContentLengthHeader(blob.size))
-        .apply(response)
-        .header(CONTENT_TYPE, sanitizeHeaderValue(blobContentType.asString))
-        .status(OK)
-        .send(ReactorUtils.toChunks(stream, BUFFER_SIZE)
-          .map(Unpooled.wrappedBuffer(_))
-          .subscribeOn(Schedulers.boundedElastic()))
-        .`then`,
-      asJavaConsumer[InputStream]((stream: InputStream) => stream.close())))
+        resourceSupplier,
+        sourceSupplier,
+        resourceRelease))
       .`then`
+  }
 
   private def addContentDispositionHeader(optionalName: Option[String]): HttpServerResponse => HttpServerResponse =
     resp => optionalName.map(addContentDispositionHeaderRegardingEncoding(_, resp))
