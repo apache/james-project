@@ -23,6 +23,7 @@ import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.util.NoSuchElementException;
 
@@ -256,7 +257,7 @@ class MessageMetaDataTest {
                     "        \"messageId\": \"42\"" +
                     "}"))
                     .get())
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOf(DateTimeException.class);
         }
 
         @Test
