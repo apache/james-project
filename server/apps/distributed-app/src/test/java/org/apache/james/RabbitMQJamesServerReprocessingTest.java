@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.ONE_MINUTE;
 
@@ -64,7 +63,7 @@ class RabbitMQJamesServerReprocessingTest {
         RestAssured.defaultParser = Parser.JSON;
         webAdminApi = WebAdminUtils.spec(server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
             .config(WebAdminUtils.defaultConfig()
-                .paramConfig(new ParamConfig(REPLACE, REPLACE, REPLACE)));
+                .paramConfig(new ParamConfig().replaceAllParameters()));
     }
 
     @Test

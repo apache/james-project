@@ -21,7 +21,6 @@ package org.apache.james.webadmin.integration.vault;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
-import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
 import static io.restassured.http.ContentType.JSON;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
@@ -177,7 +176,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
             .config(WebAdminUtils.defaultConfig()
-                .paramConfig(new ParamConfig(REPLACE, REPLACE, REPLACE)));
+                .paramConfig(new ParamConfig().replaceAllParameters()));
 
     }
 
