@@ -23,6 +23,7 @@ import static org.apache.james.backends.postgres.PostgresFixture.Database.DEFAUL
 import static org.apache.james.backends.postgres.PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -162,6 +163,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .nonRLSUser(DEFAULT_DATABASE.dbUser())
             .nonRLSPassword(DEFAULT_DATABASE.dbPassword())
             .rowLevelSecurityEnabled(rlsEnabled)
+            .jooqReactiveTimeout(Optional.of(Duration.ofSeconds(20L)))
             .build();
 
         PostgresqlConnectionConfiguration.Builder connectionBaseBuilder = PostgresqlConnectionConfiguration.builder()
