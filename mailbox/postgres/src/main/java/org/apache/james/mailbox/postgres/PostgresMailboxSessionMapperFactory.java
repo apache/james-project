@@ -22,6 +22,7 @@ import java.time.Clock;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -29,10 +30,12 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.postgres.mail.PostgresAnnotationMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresAttachmentMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxMapper;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberDAO;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageIdMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresModSeqProvider;
 import org.apache.james.mailbox.postgres.mail.PostgresUidProvider;
+import org.apache.james.mailbox.postgres.mail.RLSSupportPostgresMailboxMapper;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxAnnotationDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
@@ -57,22 +60,30 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
     private final Clock clock;
+    private final boolean isRLSEnabled;
 
     @Inject
     public PostgresMailboxSessionMapperFactory(PostgresExecutor.Factory executorFactory,
                                                Clock clock,
                                                BlobStore blobStore,
-                                               BlobId.Factory blobIdFactory) {
+                                               BlobId.Factory blobIdFactory,
+                                               PostgresConfiguration postgresConfiguration) {
         this.executorFactory = executorFactory;
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
         this.clock = clock;
+        this.isRLSEnabled = postgresConfiguration.rowLevelSecurityEnabled();
     }
 
     @Override
     public MailboxMapper createMailboxMapper(MailboxSession session) {
         PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(executorFactory.create(session.getUser().getDomainPart()));
-        return new PostgresMailboxMapper(mailboxDAO);
+        if (isRLSEnabled) {
+            return new RLSSupportPostgresMailboxMapper(mailboxDAO,
+                new PostgresMailboxMemberDAO(executorFactory.create(session.getUser().getDomainPart())));
+        } else {
+            return new PostgresMailboxMapper(mailboxDAO);
+        }
     }
 
     @Override

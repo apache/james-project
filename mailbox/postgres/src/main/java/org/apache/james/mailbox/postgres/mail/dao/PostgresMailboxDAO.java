@@ -32,6 +32,7 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.Postg
 import static org.jooq.impl.DSL.coalesce;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -146,12 +147,10 @@ public class PostgresMailboxDAO {
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailbox.getMailboxId())));
     }
 
-    public Mono<MailboxACL> upsertACL(MailboxId mailboxId, MailboxACL acl) {
-        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
+    public Mono<Void> upsertACL(MailboxId mailboxId, MailboxACL acl) {
+        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
             .set(MAILBOX_ACL, MAILBOX_ACL_TO_HSTORE_FUNCTION.apply(acl))
-            .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))
-            .returning(MAILBOX_ACL)))
-            .map(record -> HSTORE_TO_MAILBOX_ACL_FUNCTION.apply(record.get(MAILBOX_ACL)));
+            .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))));              //TODO check if update is success
     }
 
     public Flux<PostgresMailbox> findNonPersonalMailboxes(Username userName, MailboxACL.Right right) {
@@ -182,6 +181,12 @@ public class PostgresMailboxDAO {
             .where(MAILBOX_ID.eq(((PostgresMailboxId) id).asUuid()))))
             .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION)
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(id)));
+    }
+
+    public Flux<PostgresMailbox> findMailboxByIds(List<PostgresMailboxId> mailboxIds) {
+        return postgresExecutor.executeRows(dsl -> Flux.from(dsl.selectFrom(TABLE_NAME)
+                .where(MAILBOX_ID.in(mailboxIds.stream().map(PostgresMailboxId::asUuid).toList()))))
+            .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION);
     }
 
     public Flux<PostgresMailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
