@@ -108,7 +108,7 @@ services:
       redis:
         condition: service_started
     container_name: rspamd
-    image: a16bitsysop/rspamd:3.5-r7-alpine3.18.2-r0
+    image: a16bitsysop/rspamd:3.8.4-r0-alpine3.20.0-r0
     environment:
       - REDIS=redis
       - CLAMAV=clamav
