@@ -123,6 +123,8 @@ public class PostgresTableManager implements Startable {
 
     private Mono<Void> executeAdditionalAlterQueries(PostgresTable table, Connection connection) {
         return Flux.fromIterable(table.getAdditionalAlterQueries())
+            .filter(this::isApplied)
+            .map(PostgresTable.AdditionalAlterQuery::query)
             .concatMap(alterSQLQuery -> Mono.just(connection)
                 .flatMapMany(pgConnection -> pgConnection.createStatement(alterSQLQuery)
                     .execute())
@@ -136,6 +138,27 @@ public class PostgresTableManager implements Startable {
                     return Mono.error(e);
                 }))
             .then();
+    }
+
+    private boolean isApplied(PostgresTable.AdditionalAlterQuery additionalAlterQuery) {
+        switch (additionalAlterQuery.supportCase()) {
+            case RLS:
+                if (rowLevelSecurityEnabled) {
+                    return true;
+                } else {
+                    return false;
+                }
+            case NON_RLS:
+                if (!rowLevelSecurityEnabled) {
+                    return true;
+                } else {
+                    return false;
+                }
+            case ALL:
+                return true;
+            default:
+                throw new UnsupportedOperationException();
+        }
     }
 
     private Mono<Void> enableRLSIfNeeded(PostgresTable table, Connection connection) {

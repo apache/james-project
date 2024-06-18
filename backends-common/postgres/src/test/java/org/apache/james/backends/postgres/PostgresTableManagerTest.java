@@ -399,6 +399,58 @@ class PostgresTableManagerTest {
     }
 
     @Test
+    void additionalAlterQueryToCreateConstraintShouldSucceedWhenSupportCaseIsNonRLSAndRLSIsDisabled() {
+        String constraintName = "exclude_constraint";
+        PostgresTable table = PostgresTable.name("tbn1")
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("clm1", SQLDataType.UUID.notNull())
+                .column("clm2", SQLDataType.VARCHAR(255).notNull()))
+            .disableRowLevelSecurity()
+            .addAdditionalAlterQuery("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)", PostgresTable.SupportCase.NON_RLS)
+            .build();
+        PostgresModule module = PostgresModule.table(table);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, false);
+
+        testee.initializeTables().block();
+
+        boolean constraintExists = postgresExtension.getConnection()
+            .flatMapMany(connection -> connection.createStatement("SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_constraint WHERE conname = $1) AS constraint_exists;")
+                .bind("$1", constraintName)
+                .execute())
+            .flatMap(result -> result.map((row, rowMetaData) -> row.get("constraint_exists", Boolean.class)))
+            .single()
+            .block();
+
+        assertThat(constraintExists).isTrue();
+    }
+
+    @Test
+    void additionalAlterQueryToCreateConstraintShouldNotBeExecutedWhenSupportCaseIsNonRLSAndRLSIsEnabled() {
+        String constraintName = "exclude_constraint";
+        PostgresTable table = PostgresTable.name("tbn1")
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("clm1", SQLDataType.UUID.notNull())
+                .column("clm2", SQLDataType.VARCHAR(255).notNull()))
+            .disableRowLevelSecurity()
+            .addAdditionalAlterQuery("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)", PostgresTable.SupportCase.NON_RLS)
+            .build();
+        PostgresModule module = PostgresModule.table(table);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, true);
+
+        testee.initializeTables().block();
+
+        boolean constraintExists = postgresExtension.getConnection()
+            .flatMapMany(connection -> connection.createStatement("SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_constraint WHERE conname = $1) AS constraint_exists;")
+                .bind("$1", constraintName)
+                .execute())
+            .flatMap(result -> result.map((row, rowMetaData) -> row.get("constraint_exists", Boolean.class)))
+            .single()
+            .block();
+
+        assertThat(constraintExists).isFalse();
+    }
+
+    @Test
     void additionalAlterQueryToReCreateConstraintShouldNotThrow() {
         String constraintName = "exclude_constraint";
         PostgresTable table = PostgresTable.name("tbn1")

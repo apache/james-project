@@ -58,6 +58,7 @@ import org.apache.james.mailbox.postgres.mail.PostgresMailbox;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
+import org.jooq.impl.DefaultDataType;
 import org.jooq.postgres.extensions.types.Hstore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,13 +154,20 @@ public class PostgresMailboxDAO {
             .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))));              //TODO check if update is success
     }
 
-    public Flux<PostgresMailbox> findNonPersonalMailboxes(Username userName, MailboxACL.Right right) {
-        String mailboxACLEntryByUser = String.format("mailbox_acl -> '%s'", userName.asString());
-
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectFrom(TABLE_NAME)
-                .where(MAILBOX_ACL.isNotNull(),
-                    DSL.field(mailboxACLEntryByUser).isNotNull(),
-                    DSL.field(mailboxACLEntryByUser).contains(Character.toString(right.asCharacter())))))
+    public Flux<PostgresMailbox> findMailboxesByUsername(Username userName) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MAILBOX_ID,
+                    MAILBOX_NAME,
+                    MAILBOX_UID_VALIDITY,
+                    USER_NAME,
+                    MAILBOX_NAMESPACE,
+                    MAILBOX_LAST_UID,
+                    MAILBOX_HIGHEST_MODSEQ,
+                    DSL.function("slice",
+                        DefaultDataType.getDefaultDataType("hstore"),
+                        MAILBOX_ACL,
+                        DSL.array(DSL.val(userName.asString()))).as(MAILBOX_ACL)
+                ).from(TABLE_NAME)
+                .where(DSL.sql(MAILBOX_ACL.getName() + " ? '" + userName.asString() + "'"))))       //TODO fix security vulnerability
             .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION);
     }
 
