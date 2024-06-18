@@ -25,6 +25,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -74,7 +75,8 @@ public class DeleteMessageListenerWithRLSTest extends DeleteMessageListenerContr
             postgresExtension.getExecutorFactory(),
             Clock.systemUTC(),
             blobStore,
-            blobIdFactory);
+            blobIdFactory,
+            PostgresConfiguration.builder().username("a").password("a").build());
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
