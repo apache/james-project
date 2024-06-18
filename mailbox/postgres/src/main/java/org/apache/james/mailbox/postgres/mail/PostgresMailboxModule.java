@@ -63,6 +63,8 @@ public interface PostgresMailboxModule {
                 .constraint(DSL.primaryKey(MAILBOX_ID))
                 .constraint(DSL.constraint(MAILBOX_NAME_USER_NAME_NAMESPACE_UNIQUE_CONSTRAINT).unique(MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE))))
             .supportsRowLevelSecurity()
+            .addAdditionalAlterQuery("CREATE INDEX mailbox_mailbox_acl_index ON " + TABLE_NAME.getName() + " USING GIN (" + MAILBOX_ACL.getName() + ")",
+                PostgresTable.SupportCase.NON_RLS)
             .build();
         PostgresIndex MAILBOX_USERNAME_NAMESPACE_INDEX = PostgresIndex.name("mailbox_username_namespace_index")
             .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)

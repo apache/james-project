@@ -88,9 +88,9 @@ public class PostgresMailboxMapper implements MailboxMapper {
             .map(Function.identity());
     }
 
-    @Override
     public Flux<Mailbox> findNonPersonalMailboxes(Username userName, MailboxACL.Right right) {
-        return postgresMailboxDAO.findNonPersonalMailboxes(userName, right)
+        return postgresMailboxDAO.findMailboxesByUsername(userName)
+            .filter(postgresMailbox -> postgresMailbox.getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(userName)).contains(right))
             .map(Function.identity());
     }
 
