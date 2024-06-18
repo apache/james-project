@@ -23,74 +23,34 @@ import java.util.function.Function;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.acl.PositiveUserACLDiff;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.UidValidity;
-import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
-import org.apache.james.mailbox.store.mail.MailboxMapper;
 
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class PostgresMailboxMapper implements MailboxMapper {
+public class RLSSupportPostgresMailboxMapper extends PostgresMailboxMapper {
     private final PostgresMailboxDAO postgresMailboxDAO;
+    private final PostgresMailboxMemberDAO postgresMailboxMemberDAO;
 
-    public PostgresMailboxMapper(PostgresMailboxDAO postgresMailboxDAO) {
+    public RLSSupportPostgresMailboxMapper(PostgresMailboxDAO postgresMailboxDAO, PostgresMailboxMemberDAO postgresMailboxMemberDAO) {
+        super(postgresMailboxDAO);
         this.postgresMailboxDAO = postgresMailboxDAO;
-    }
-
-    @Override
-    public Mono<Mailbox> create(MailboxPath mailboxPath, UidValidity uidValidity) {
-        return postgresMailboxDAO.create(mailboxPath,uidValidity);
-    }
-
-    @Override
-    public Mono<MailboxId> rename(Mailbox mailbox) {
-        return postgresMailboxDAO.rename(mailbox);
-    }
-
-    @Override
-    public Mono<Void> delete(Mailbox mailbox) {
-        return postgresMailboxDAO.delete(mailbox.getMailboxId());
-    }
-
-    @Override
-    public Mono<Mailbox> findMailboxByPath(MailboxPath mailboxName) {
-        return postgresMailboxDAO.findMailboxByPath(mailboxName)
-            .map(Function.identity());
-    }
-
-    @Override
-    public Mono<Mailbox> findMailboxById(MailboxId mailboxId) {
-        return postgresMailboxDAO.findMailboxById(mailboxId)
-            .map(Function.identity());
-    }
-
-    @Override
-    public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
-        return postgresMailboxDAO.findMailboxWithPathLike(query)
-            .map(Function.identity());
-    }
-
-    @Override
-    public Mono<Boolean> hasChildren(Mailbox mailbox, char delimiter) {
-        return postgresMailboxDAO.hasChildren(mailbox, delimiter);
-    }
-
-    @Override
-    public Flux<Mailbox> list() {
-        return postgresMailboxDAO.getAll()
-            .map(Function.identity());
+        this.postgresMailboxMemberDAO = postgresMailboxMemberDAO;
     }
 
     @Override
     public Flux<Mailbox> findNonPersonalMailboxes(Username userName, MailboxACL.Right right) {
-        return postgresMailboxDAO.findNonPersonalMailboxes(userName, right)
+        return postgresMailboxMemberDAO.findMailboxIdByUsername(userName)
+            .collectList()
+            .filter(postgresMailboxIds -> !postgresMailboxIds.isEmpty())
+            .flatMapMany(postgresMailboxDAO::findMailboxByIds)
+            .filter(postgresMailbox -> postgresMailbox.getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(userName)).contains(right))
             .map(Function.identity());
     }
 
@@ -98,21 +58,32 @@ public class PostgresMailboxMapper implements MailboxMapper {
     public Mono<ACLDiff> updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) {
         MailboxACL oldACL = mailbox.getACL();
         MailboxACL newACL = Throwing.supplier(() -> oldACL.apply(mailboxACLCommand)).get();
+        ACLDiff aclDiff = ACLDiff.computeDiff(oldACL, newACL);
+        PositiveUserACLDiff userACLDiff = new PositiveUserACLDiff(aclDiff);
         return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), newACL)
+            .then(postgresMailboxMemberDAO.delete(PostgresMailboxId.class.cast(mailbox.getMailboxId()),
+                userACLDiff.removedEntries().map(entry -> Username.of(entry.getKey().getName())).toList()))
+            .then(postgresMailboxMemberDAO.insert(PostgresMailboxId.class.cast(mailbox.getMailboxId()),
+                userACLDiff.addedEntries().map(entry -> Username.of(entry.getKey().getName())).toList()))
             .then(Mono.fromCallable(() -> {
                 mailbox.setACL(newACL);
-                return ACLDiff.computeDiff(oldACL, newACL);
+                return aclDiff;
             }));
     }
 
     @Override
     public Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL) {
         MailboxACL oldACL = mailbox.getACL();
+        ACLDiff aclDiff = ACLDiff.computeDiff(oldACL, mailboxACL);
+        PositiveUserACLDiff userACLDiff = new PositiveUserACLDiff(aclDiff);
         return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), mailboxACL)
+            .then(postgresMailboxMemberDAO.delete(PostgresMailboxId.class.cast(mailbox.getMailboxId()),
+                userACLDiff.removedEntries().map(entry -> Username.of(entry.getKey().getName())).toList()))
+            .then(postgresMailboxMemberDAO.insert(PostgresMailboxId.class.cast(mailbox.getMailboxId()),
+                userACLDiff.addedEntries().map(entry -> Username.of(entry.getKey().getName())).toList()))
             .then(Mono.fromCallable(() -> {
                 mailbox.setACL(mailboxACL);
-                return ACLDiff.computeDiff(oldACL, mailboxACL);
+                return aclDiff;
             }));
     }
-
 }
