@@ -71,7 +71,7 @@ public class PostgresCommonModule extends AbstractModule {
     @Provides
     @Singleton
     PostgresConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws FileNotFoundException, ConfigurationException {
-        return PostgresConfiguration.from(propertiesProvider.getConfiguration("postgres"));
+        return PostgresConfiguration.from(propertiesProvider.getConfiguration(PostgresConfiguration.POSTGRES_CONFIGURATION_NAME));
     }
 
     @Provides
