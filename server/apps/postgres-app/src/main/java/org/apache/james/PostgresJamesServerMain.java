@@ -40,6 +40,7 @@ import org.apache.james.modules.data.PostgresDLPConfigurationStoreModule;
 import org.apache.james.modules.data.PostgresDataJmapModule;
 import org.apache.james.modules.data.PostgresDataModule;
 import org.apache.james.modules.data.PostgresDelegationStoreModule;
+import org.apache.james.modules.data.PostgresDropListsModule;
 import org.apache.james.modules.data.PostgresEventStoreModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
 import org.apache.james.modules.data.PostgresVacationModule;
@@ -67,6 +68,7 @@ import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
+import org.apache.james.modules.server.DropListsRoutesModule;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.JmapTasksModule;
@@ -98,7 +100,8 @@ import com.google.inject.util.Modules;
 public class PostgresJamesServerMain implements JamesServerMain {
 
     private static final Module EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE = binder ->
-        binder.bind(new TypeLiteral<Set<DTOModule<?, ? extends DTO>>>() {}).annotatedWith(Names.named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME))
+        binder.bind(new TypeLiteral<Set<DTOModule<?, ? extends DTO>>>() {
+            }).annotatedWith(Names.named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME))
             .toInstance(ImmutableSet.of());
 
     private static final Module WEBADMIN = Modules.combine(
@@ -185,7 +188,8 @@ public class PostgresJamesServerMain implements JamesServerMain {
             .combineWith(chooseBlobStoreModules(configuration))
             .combineWith(chooseDeletedMessageVaultModules(configuration.getDeletedMessageVaultConfiguration()))
             .overrideWith(chooseJmapModules(configuration))
-            .overrideWith(chooseTaskManagerModules(configuration));
+            .overrideWith(chooseTaskManagerModules(configuration))
+            .overrideWith(chooseDropListsModule(configuration));
     }
 
     private static List<Module> chooseUsersRepositoryModule(PostgresJamesConfiguration configuration) {
@@ -245,6 +249,15 @@ public class PostgresJamesServerMain implements JamesServerMain {
             return Modules.combine(new JMAPEventBusModule(), new JMAPListenerModule());
         }
         return binder -> {
+        };
+    }
+
+    private static Module chooseDropListsModule(PostgresJamesConfiguration configuration) {
+        if (configuration.isDropListsEnabled()) {
+            return Modules.combine(new PostgresDropListsModule(), new DropListsRoutesModule());
+        }
+        return binder -> {
+
         };
     }
 }
