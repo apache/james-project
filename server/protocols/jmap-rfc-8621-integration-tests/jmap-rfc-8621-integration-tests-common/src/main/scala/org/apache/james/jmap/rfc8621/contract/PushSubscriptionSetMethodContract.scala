@@ -24,6 +24,8 @@ import java.security.KeyPair
 import java.security.interfaces.ECPublicKey
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import java.util.{Base64, UUID}
 
 import com.google.common.collect.ImmutableSet
@@ -50,15 +52,13 @@ import org.apache.james.jmap.rfc8621.contract.PushSubscriptionSetMethodContract.
 import org.apache.james.utils.{DataProbeImpl, GuiceProbe, UpdatableTickingClock}
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
+import org.awaitility.Awaitility
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
-import org.mockserver.model.JsonBody.json
-import org.mockserver.model.Not.not
 import org.mockserver.model.NottableString.string
 import org.mockserver.model.{HttpRequest, HttpResponse}
-import org.mockserver.verify.VerificationTimes
 import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
@@ -90,6 +90,9 @@ class PushSubscriptionProbeModule extends AbstractModule {
 }
 
 trait PushSubscriptionSetMethodContract {
+  private lazy val awaitAtMostTenSeconds = Awaitility.`with`
+    .await.atMost(10, TimeUnit.SECONDS)
+
   @BeforeEach
   def setUp(server: GuiceJamesServer, pushServer: ClientAndServer): Unit = {
     server.getProbe(classOf[DataProbeImpl])
@@ -2300,14 +2303,18 @@ trait PushSubscriptionSetMethodContract {
       .jsonPath()
       .get("methodResponses[0][1].created.4f29.id")
 
-    pushServer.verify(HttpRequest.request()
-      .withPath("/subscribe")
-      .withBody(json(s"""{
-                        |    "@type": "PushVerification",
-                        |    "pushSubscriptionId": "$pushSubscriptionId",
-                        |    "verificationCode": "$${json-unit.any-string}"
-                        |}""".stripMargin)),
-      VerificationTimes.atLeast(1))
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+        .isEqualTo(
+          s"""{
+             |    "@type": "PushVerification",
+             |    "pushSubscriptionId": "$pushSubscriptionId",
+             |    "verificationCode": "$${json-unit.any-string}"
+             |}""".stripMargin)
+
+      assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath("/subscribe")).toSeq.asJava)
+        .anySatisfy(bodyAssert)
+    }
   }
 
   @Test
@@ -2564,15 +2571,19 @@ trait PushSubscriptionSetMethodContract {
     .`then`
       .statusCode(SC_OK)
 
-    pushServer.verify(HttpRequest.request()
-      .withPath("/subscribe")
-      .withBody(not(json(
-        s"""{
-           |    "@type": "PushVerification",
-           |    "pushSubscriptionId": "$${json-unit.any-string}",
-           |    "verificationCode": "$${json-unit.any-string}"
-           |}""".stripMargin))),
-      VerificationTimes.atLeast(1))
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+        .isNotEqualTo(
+          s"""{
+             |    "@type": "PushVerification",
+             |    "pushSubscriptionId": "$${json-unit.any-string}",
+             |    "verificationCode": "$${json-unit.any-string}"
+             |}""".stripMargin)
+
+      assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath("/subscribe")).toSeq.asJava)
+        .hasSizeGreaterThanOrEqualTo(1)
+        .allSatisfy(bodyAssert)
+    }
   }
 
   @Test

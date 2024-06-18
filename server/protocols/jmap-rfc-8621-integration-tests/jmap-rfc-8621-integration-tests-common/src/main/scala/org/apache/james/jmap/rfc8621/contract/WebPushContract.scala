@@ -26,6 +26,7 @@ import java.time.temporal.ChronoUnit
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Consumer
 
 import com.google.crypto.tink.apps.webpush.WebPushHybridDecrypt
 import com.google.crypto.tink.subtle.EllipticCurves
@@ -48,6 +49,7 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.modules.protocols.SmtpGuiceProbe
 import org.apache.james.utils.{DataProbeImpl, SMTPMessageSender, SpoolerProbe, UpdatableTickingClock}
+import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.awaitility.core.ConditionFactory
@@ -61,6 +63,8 @@ import org.mockserver.model.Not.not
 import org.mockserver.model.{HttpRequest, HttpResponse}
 import org.mockserver.verify.VerificationTimes
 import play.api.libs.json.{JsObject, JsString, Json}
+
+import scala.jdk.CollectionConverters._
 
 trait WebPushContract {
   private lazy val awaitAtMostTenSeconds: ConditionFactory = Awaitility.`with`
@@ -184,15 +188,17 @@ trait WebPushContract {
     val pushSubscriptionId: String = createPushSubscription(pushServer)
     // THEN a validation code is sent
     awaitAtMostTenSeconds.untilAsserted { () =>
-      pushServer.verify(HttpRequest.request()
-        .withPath(PUSH_URL_PATH)
-        .withBody(json(
+      val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+        .isEqualTo(
           s"""{
              |    "@type": "PushVerification",
              |    "pushSubscriptionId": "$pushSubscriptionId",
              |    "verificationCode": "$${json-unit.any-string}"
-             |}""".stripMargin)),
-        VerificationTimes.atLeast(1))
+             |}""".stripMargin)
+
+      assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+        .hasSizeGreaterThanOrEqualTo(1)
+        .anySatisfy(bodyAssert)
     }
 
     // GIVEN bob retrieves the validation code from the mock server
@@ -227,9 +233,8 @@ trait WebPushContract {
 
     // THEN bob has a stateChange on the push gateway
     awaitAtMostTenSeconds.untilAsserted { () =>
-      pushServer.verify(HttpRequest.request()
-        .withPath(PUSH_URL_PATH)
-        .withBody(json(
+      val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+        .isEqualTo(
           s"""{
              |    "@type": "StateChange",
              |    "changed": {
@@ -237,8 +242,11 @@ trait WebPushContract {
              |          "Mailbox": "$${json-unit.any-string}"
              |        }
              |    }
-             |}""".stripMargin)),
-        VerificationTimes.atLeast(1))
+             |}""".stripMargin)
+
+      assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+        .hasSizeGreaterThanOrEqualTo(1)
+        .anySatisfy(bodyAssert)
     }
   }
 
@@ -251,9 +259,8 @@ trait WebPushContract {
 
     // THEN bob has a EmailDelivery stateChange on the push gateway
     awaitAtMostTenSeconds.untilAsserted { () =>
-      pushServer.verify(HttpRequest.request()
-        .withPath(PUSH_URL_PATH)
-        .withBody(json(
+      val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+        .isEqualTo(
           s"""{
              |    "@type": "StateChange",
              |    "changed": {
@@ -261,8 +268,11 @@ trait WebPushContract {
              |          "EmailDelivery": "$${json-unit.any-string}"
              |        }
              |    }
-             |}""".stripMargin)),
-        VerificationTimes.atLeast(1))
+             |}""".stripMargin)
+
+      assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+        .hasSizeGreaterThanOrEqualTo(1)
+        .anySatisfy(bodyAssert)
     }
   }
 
@@ -300,9 +310,8 @@ trait WebPushContract {
 
     // THEN bob should not have a EmailDelivery stateChange on the push gateway
     awaitAtMostTenSeconds.untilAsserted { () =>
-      pushServer.verify(HttpRequest.request()
-        .withPath(PUSH_URL_PATH)
-        .withBody(json(
+      val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+        .isNotEqualTo(
           s"""{
              |    "@type": "StateChange",
              |    "changed": {
@@ -310,8 +319,10 @@ trait WebPushContract {
              |          "EmailDelivery": "$${json-unit.any-string}"
              |        }
              |    }
-             |}""".stripMargin)),
-        VerificationTimes.never())
+             |}""".stripMargin)
+
+      assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+        .allSatisfy(bodyAssert)
     }
   }
 
@@ -349,9 +360,8 @@ trait WebPushContract {
 
     // THEN bob should not have a EmailDelivery stateChange on the push gateway
     awaitAtMostTenSeconds.untilAsserted { () =>
-      pushServer.verify(HttpRequest.request()
-        .withPath(PUSH_URL_PATH)
-        .withBody(json(
+      val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+        .isNotEqualTo(
           s"""{
              |    "@type": "StateChange",
              |    "changed": {
@@ -359,8 +369,10 @@ trait WebPushContract {
              |          "EmailDelivery": "$${json-unit.any-string}"
              |        }
              |    }
-             |}""".stripMargin)),
-        VerificationTimes.never())
+             |}""".stripMargin)
+
+      assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+        .allSatisfy(bodyAssert)
     }
   }
 
@@ -373,15 +385,16 @@ trait WebPushContract {
     val pushSubscriptionId: String = createPushSubscription(pushServer)
     // THEN a validation code is sent
     awaitAtMostTenSeconds.untilAsserted { () =>
-      pushServer.verify(HttpRequest.request()
-        .withPath(PUSH_URL_PATH)
-        .withBody(json(
+      val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+        .isEqualTo(
           s"""{
              |    "@type": "PushVerification",
              |    "pushSubscriptionId": "$pushSubscriptionId",
              |    "verificationCode": "$${json-unit.any-string}"
-             |}""".stripMargin)),
-        VerificationTimes.atLeast(1))
+             |}""".stripMargin)
+
+      assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+        .anySatisfy(bodyAssert)
     }
 
     // GIVEN bob retrieves the validation code from the mock server
@@ -420,9 +433,8 @@ trait WebPushContract {
     // THEN bob has a stateChange on the push gateway
     TimeUnit.MILLISECONDS.sleep(200)
 
-    pushServer.verify(HttpRequest.request()
-      .withPath(PUSH_URL_PATH)
-      .withBody(json(
+    val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+      .isNotEqualTo(
         s"""{
            |    "@type": "StateChange",
            |    "changed": {
@@ -430,8 +442,10 @@ trait WebPushContract {
            |          "Mailbox": "$${json-unit.any-string}"
            |        }
            |    }
-           |}""".stripMargin)),
-      VerificationTimes.exactly(0))
+           |}""".stripMargin)
+
+    assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+      .allSatisfy(bodyAssert)
   }
 
   @Test
@@ -443,15 +457,16 @@ trait WebPushContract {
     val pushSubscriptionId: String = createPushSubscription(pushServer)
     // THEN a validation code is sent
     awaitAtMostTenSeconds.untilAsserted { () =>
-      pushServer.verify(HttpRequest.request()
-        .withPath(PUSH_URL_PATH)
-        .withBody(json(
+      val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+        .isEqualTo(
           s"""{
              |    "@type": "PushVerification",
              |    "pushSubscriptionId": "$pushSubscriptionId",
              |    "verificationCode": "$${json-unit.any-string}"
-             |}""".stripMargin)),
-        VerificationTimes.atLeast(1))
+             |}""".stripMargin)
+
+      assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+        .anySatisfy(bodyAssert)
     }
 
     // GIVEN bob retrieves the validation code from the mock server
@@ -509,9 +524,8 @@ trait WebPushContract {
     // THEN bob has no stateChange on the push gateway
     TimeUnit.MILLISECONDS.sleep(200)
 
-    pushServer.verify(HttpRequest.request()
-      .withPath(PUSH_URL_PATH)
-      .withBody(json(
+    val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+      .isNotEqualTo(
         s"""{
            |    "@type": "StateChange",
            |    "changed": {
@@ -519,8 +533,10 @@ trait WebPushContract {
            |          "Mailbox": "$${json-unit.any-string}"
            |        }
            |    }
-           |}""".stripMargin)),
-      VerificationTimes.exactly(0))
+           |}""".stripMargin)
+
+    assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+      .allSatisfy(bodyAssert)
   }
 
   @Test
@@ -537,9 +553,8 @@ trait WebPushContract {
     // THEN bob has no stateChange on the push gateway
     TimeUnit.MILLISECONDS.sleep(200)
 
-    pushServer.verify(HttpRequest.request()
-      .withPath(PUSH_URL_PATH)
-      .withBody(json(
+    val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+      .isNotEqualTo(
         s"""{
            |    "@type": "StateChange",
            |    "changed": {
@@ -547,8 +562,10 @@ trait WebPushContract {
            |          "Mailbox": "$${json-unit.any-string}"
            |        }
            |    }
-           |}""".stripMargin)),
-      VerificationTimes.exactly(0))
+           |}""".stripMargin)
+
+    assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+      .allSatisfy(bodyAssert)
   }
 
   @Test
@@ -610,15 +627,17 @@ trait WebPushContract {
 
     // THEN a validation code is sent
     awaitAtMostTenSeconds.untilAsserted { () =>
-      pushServer.verify(HttpRequest.request()
-        .withPath(PUSH_URL_PATH)
-        .withBody(not(json(
+      val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+        .isNotEqualTo(
           s"""{
              |    "@type": "PushVerification",
              |    "pushSubscriptionId": "$pushSubscriptionId",
              |    "verificationCode": "$${json-unit.any-string}"
-             |}""".stripMargin))),
-        VerificationTimes.atLeast(1))
+             |}""".stripMargin)
+
+      assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+        .hasSizeGreaterThanOrEqualTo(1)
+        .allSatisfy(bodyAssert)
     }
 
     val hybridDecrypt: WebPushHybridDecrypt = new WebPushHybridDecrypt.Builder()
@@ -712,15 +731,17 @@ trait WebPushContract {
 
     // THEN a validation code is sent
     awaitAtMostTenSeconds.untilAsserted { () =>
-      pushServer.verify(HttpRequest.request()
-        .withPath(PUSH_URL_PATH)
-        .withBody(json(
+
+      val bodyAssert: Consumer[HttpRequest] = request => assertThatJson(request.getBodyAsString)
+        .isEqualTo(
           s"""{
              |    "@type": "PushVerification",
              |    "pushSubscriptionId": "$pushSubscriptionId",
              |    "verificationCode": "$${json-unit.any-string}"
-             |}""".stripMargin)),
-        VerificationTimes.atLeast(1))
+             |}""".stripMargin)
+
+      assertThat(pushServer.retrieveRecordedRequests(HttpRequest.request().withPath(PUSH_URL_PATH)).toSeq.asJava)
+        .anySatisfy(bodyAssert)
     }
 
     // GIVEN bob retrieves the validation code from the mock server

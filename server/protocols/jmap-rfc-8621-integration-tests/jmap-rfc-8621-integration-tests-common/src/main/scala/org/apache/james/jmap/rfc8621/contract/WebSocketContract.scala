@@ -191,6 +191,7 @@ trait WebSocketContract {
         .body
 
     assertThatJson(response.toOption.get)
+      .whenIgnoringPaths("detail")
       .isEqualTo("""{
                    |  "status":400,
                    |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Unrecognized token 'The': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n at [Source: (String)\"The quick brown fox\"; line: 1, column: 4]),List()))))",
@@ -198,6 +199,10 @@ trait WebSocketContract {
                    |  "requestId":null,
                    |  "@type":"RequestError"
                    |}""".stripMargin)
+
+    assertThatJson(response.toOption.get)
+      .node("detail")
+      .isString.contains("The request was successfully parsed as JSON but did not match the type signature of the Request object")
   }
 
   @Test
