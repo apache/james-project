@@ -641,6 +641,7 @@
         <maven-plugin-api.version>3.9.3</maven-plugin-api.version>
         <maven-reporting-impl.version>3.1.0</maven-reporting-impl.version>
         <maven-reporting-api.version>3.1.1</maven-reporting-api.version>
+        <maven-surefire-plugin.version>3.3.0</maven-surefire-plugin.version>
         <qdox.version>2.0.3</qdox.version>
         <jaxb.version>2.3.1</jaxb.version>
         <lucene.version>3.6.2</lucene.version>
@@ -3287,7 +3288,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.2.5</version>
+                    <version>${maven-surefire-plugin.version}</version>
                     <configuration>
                         <systemPropertyVariables>
                             <!--https://issues.apache.org/jira/browse/JAMES-3724-->
@@ -3756,7 +3757,7 @@
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-surefire-plugin</artifactId>
-                            <version>3.2.5</version>
+                            <version>${maven-surefire-plugin.version}</version>
                             <configuration>
                                 <excludedGroups />
                                 <groups>unstable</groups>
