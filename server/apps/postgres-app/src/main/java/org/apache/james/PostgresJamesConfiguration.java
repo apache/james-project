@@ -74,6 +74,7 @@ public class PostgresJamesConfiguration implements Configuration {
         private Optional<EventBusImpl> eventBusImpl;
         private Optional<VaultConfiguration> deletedMessageVaultConfiguration;
         private Optional<Boolean> jmapEnabled;
+        private Optional<Boolean> dropListsEnabled;
 
         private Builder() {
             searchConfiguration = Optional.empty();
@@ -84,6 +85,7 @@ public class PostgresJamesConfiguration implements Configuration {
             eventBusImpl = Optional.empty();
             deletedMessageVaultConfiguration = Optional.empty();
             jmapEnabled = Optional.empty();
+            dropListsEnabled = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -144,6 +146,11 @@ public class PostgresJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder enableDropLists() {
+            this.dropListsEnabled = Optional.of(true);
+            return this;
+        }
+
         public PostgresJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -189,6 +196,14 @@ public class PostgresJamesConfiguration implements Configuration {
                 }
             });
 
+            boolean dropListsEnabled = this.dropListsEnabled.orElseGet(() -> {
+                try {
+                    return configurationProvider.getConfiguration("droplists").getBoolean("enabled", false);
+                } catch (ConfigurationException e) {
+                    return false;
+                }
+            });
+
             LOGGER.info("BlobStore configuration {}", blobStoreConfiguration);
             return new PostgresJamesConfiguration(
                 configurationPath,
@@ -198,7 +213,8 @@ public class PostgresJamesConfiguration implements Configuration {
                 blobStoreConfiguration,
                 eventBusImpl,
                 deletedMessageVaultConfiguration,
-                jmapEnabled);
+                jmapEnabled,
+                dropListsEnabled);
         }
     }
 
@@ -214,6 +230,7 @@ public class PostgresJamesConfiguration implements Configuration {
     private final EventBusImpl eventBusImpl;
     private final VaultConfiguration deletedMessageVaultConfiguration;
     private final boolean jmapEnabled;
+    private final boolean dropListsEnabled;
 
     private PostgresJamesConfiguration(ConfigurationPath configurationPath,
                                        JamesDirectoriesProvider directories,
@@ -222,7 +239,8 @@ public class PostgresJamesConfiguration implements Configuration {
                                        BlobStoreConfiguration blobStoreConfiguration,
                                        EventBusImpl eventBusImpl,
                                        VaultConfiguration deletedMessageVaultConfiguration,
-                                       boolean jmapEnabled) {
+                                       boolean jmapEnabled,
+                                       boolean dropListsEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.searchConfiguration = searchConfiguration;
@@ -231,6 +249,7 @@ public class PostgresJamesConfiguration implements Configuration {
         this.eventBusImpl = eventBusImpl;
         this.deletedMessageVaultConfiguration = deletedMessageVaultConfiguration;
         this.jmapEnabled = jmapEnabled;
+        this.dropListsEnabled = dropListsEnabled;
     }
 
     @Override
@@ -265,5 +284,9 @@ public class PostgresJamesConfiguration implements Configuration {
 
     public boolean isJmapEnabled() {
         return jmapEnabled;
+    }
+
+    public boolean isDropListsEnabled() {
+        return dropListsEnabled;
     }
 }
