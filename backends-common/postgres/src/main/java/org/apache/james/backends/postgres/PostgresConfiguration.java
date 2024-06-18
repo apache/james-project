@@ -32,6 +32,8 @@ import com.google.common.base.Preconditions;
 import io.r2dbc.postgresql.client.SSLMode;
 
 public class PostgresConfiguration {
+    public static final String POSTGRES_CONFIGURATION_NAME = "postgres";
+
     public static final String DATABASE_NAME = "database.name";
     public static final String DATABASE_NAME_DEFAULT_VALUE = "postgres";
     public static final String DATABASE_SCHEMA = "database.schema";

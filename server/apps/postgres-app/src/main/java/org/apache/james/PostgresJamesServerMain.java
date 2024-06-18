@@ -51,6 +51,7 @@ import org.apache.james.modules.events.PostgresDeadLetterModule;
 import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.PostgresDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.PostgresMailboxModule;
+import org.apache.james.modules.mailbox.RLSSupportPostgresMailboxModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.plugins.QuotaMailingModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
@@ -187,6 +188,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
             .combineWith(chooseUsersRepositoryModule(configuration))
             .combineWith(chooseBlobStoreModules(configuration))
             .combineWith(chooseDeletedMessageVaultModules(configuration.getDeletedMessageVaultConfiguration()))
+            .combineWith(chooseRLSSupportPostgresMailboxModule(configuration))
             .overrideWith(chooseJmapModules(configuration))
             .overrideWith(chooseTaskManagerModules(configuration))
             .overrideWith(chooseDropListsModule(configuration));
@@ -259,5 +261,12 @@ public class PostgresJamesServerMain implements JamesServerMain {
         return binder -> {
 
         };
+    }
+
+    private static Module chooseRLSSupportPostgresMailboxModule(PostgresJamesConfiguration configuration) {
+        if (configuration.isRlsEnabled()) {
+            return new RLSSupportPostgresMailboxModule();
+        }
+        return Modules.EMPTY_MODULE;
     }
 }

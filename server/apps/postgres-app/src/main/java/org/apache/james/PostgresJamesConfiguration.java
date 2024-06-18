@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
@@ -75,6 +76,7 @@ public class PostgresJamesConfiguration implements Configuration {
         private Optional<VaultConfiguration> deletedMessageVaultConfiguration;
         private Optional<Boolean> jmapEnabled;
         private Optional<Boolean> dropListsEnabled;
+        private Optional<Boolean> rlsEnabled;
 
         private Builder() {
             searchConfiguration = Optional.empty();
@@ -86,6 +88,7 @@ public class PostgresJamesConfiguration implements Configuration {
             deletedMessageVaultConfiguration = Optional.empty();
             jmapEnabled = Optional.empty();
             dropListsEnabled = Optional.empty();
+            rlsEnabled = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -151,6 +154,11 @@ public class PostgresJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder rlsEnabled(Optional<Boolean> rlsEnabled) {
+            this.rlsEnabled = rlsEnabled;
+            return this;
+        }
+
         public PostgresJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -186,6 +194,8 @@ public class PostgresJamesConfiguration implements Configuration {
                 }
             });
 
+            boolean rlsEnabled = this.rlsEnabled.orElse(readRLSEnabledFromFile(propertiesProvider));
+
             boolean jmapEnabled = this.jmapEnabled.orElseGet(() -> {
                 try {
                     return JMAPModule.parseConfiguration(propertiesProvider).isEnabled();
@@ -214,7 +224,16 @@ public class PostgresJamesConfiguration implements Configuration {
                 eventBusImpl,
                 deletedMessageVaultConfiguration,
                 jmapEnabled,
-                dropListsEnabled);
+                dropListsEnabled,
+                rlsEnabled);
+        }
+
+        private boolean readRLSEnabledFromFile(PropertiesProvider propertiesProvider) {
+            try {
+                return PostgresConfiguration.from(propertiesProvider.getConfiguration(PostgresConfiguration.POSTGRES_CONFIGURATION_NAME)).rowLevelSecurityEnabled();
+            } catch (FileNotFoundException | ConfigurationException e) {
+                return false;
+            }
         }
     }
 
@@ -231,6 +250,7 @@ public class PostgresJamesConfiguration implements Configuration {
     private final VaultConfiguration deletedMessageVaultConfiguration;
     private final boolean jmapEnabled;
     private final boolean dropListsEnabled;
+    private final boolean rlsEnabled;
 
     private PostgresJamesConfiguration(ConfigurationPath configurationPath,
                                        JamesDirectoriesProvider directories,
@@ -240,7 +260,8 @@ public class PostgresJamesConfiguration implements Configuration {
                                        EventBusImpl eventBusImpl,
                                        VaultConfiguration deletedMessageVaultConfiguration,
                                        boolean jmapEnabled,
-                                       boolean dropListsEnabled) {
+                                       boolean dropListsEnabled,
+                                       boolean rlsEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.searchConfiguration = searchConfiguration;
@@ -250,6 +271,7 @@ public class PostgresJamesConfiguration implements Configuration {
         this.deletedMessageVaultConfiguration = deletedMessageVaultConfiguration;
         this.jmapEnabled = jmapEnabled;
         this.dropListsEnabled = dropListsEnabled;
+        this.rlsEnabled = rlsEnabled;
     }
 
     @Override
@@ -288,5 +310,9 @@ public class PostgresJamesConfiguration implements Configuration {
 
     public boolean isDropListsEnabled() {
         return dropListsEnabled;
+    }
+
+    public boolean isRlsEnabled() {
+        return rlsEnabled;
     }
 }

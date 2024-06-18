@@ -26,6 +26,7 @@ import java.util.Date;
 
 import jakarta.mail.Flags;
 
+import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
@@ -80,7 +81,8 @@ public class PostgresMessageMapperRowLevelSecurityTest {
         postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(),
             new UpdatableTickingClock(Instant.now()),
             new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
-            blobIdFactory);
+            blobIdFactory,
+            PostgresConfiguration.builder().username("a").password("a").build());
 
         mailbox = generateMailbox();
     }
