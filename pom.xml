@@ -650,7 +650,7 @@
         <guice.version>7.0.0</guice.version>
         <logback.version>1.4.14</logback.version>
         <tink.version>1.9.0</tink.version>
-        <lettuce.core.version>6.3.0.RELEASE</lettuce.core.version>
+        <lettuce.core.version>6.3.2.RELEASE</lettuce.core.version>
 
         <bouncycastle.version>1.77</bouncycastle.version>
 
