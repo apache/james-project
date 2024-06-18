@@ -62,7 +62,7 @@ services:
       - james
 
   rabbitmq:
-    image: rabbitmq:3.12.1-management
+    image: rabbitmq:3.13.3-management
     container_name: rabbitmq
     ports:
       - "5672:5672"
