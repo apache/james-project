@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.postgres;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -52,11 +53,22 @@ public class PostgresTable {
         }
     }
 
+    public enum SupportCase {
+        RLS, NON_RLS, ALL
+    }
+
+    public record AdditionalAlterQuery(String query,
+                                       SupportCase supportCase) {
+        public AdditionalAlterQuery(String query) {
+            this(query, SupportCase.ALL);
+        }
+    }
+
     public static class FinalStage {
         private final String tableName;
         private final boolean supportsRowLevelSecurity;
         private final Function<DSLContext, DDLQuery> createTableStepFunction;
-        private final ImmutableList.Builder<String> additionalAlterQueries;
+        private final ImmutableList.Builder<AdditionalAlterQuery> additionalAlterQueries;
 
         public FinalStage(String tableName, boolean supportsRowLevelSecurity, Function<DSLContext, DDLQuery> createTableStepFunction) {
             this.tableName = tableName;
@@ -68,7 +80,31 @@ public class PostgresTable {
         /**
          * Raw SQL ALTER queries in case not supported by jOOQ DSL.
          */
+        public FinalStage addAdditionalAlterQuery(String additionalAlterQuery) {
+            this.additionalAlterQueries.add(new AdditionalAlterQuery(additionalAlterQuery));
+            return this;
+        }
+
+        /**
+         * Raw SQL ALTER queries in case not supported by jOOQ DSL.
+         */
+        public FinalStage addAdditionalAlterQuery(String additionalAlterQuery, SupportCase supportCase) {
+            this.additionalAlterQueries.add(new AdditionalAlterQuery(additionalAlterQuery, supportCase));
+            return this;
+        }
+
+        /**
+         * Raw SQL ALTER queries in case not supported by jOOQ DSL.
+         */
         public FinalStage addAdditionalAlterQueries(String... additionalAlterQueries) {
+            this.additionalAlterQueries.addAll(Arrays.stream(additionalAlterQueries).map(AdditionalAlterQuery::new).toList());
+            return this;
+        }
+
+        /**
+         * Raw SQL ALTER queries in case not supported by jOOQ DSL.
+         */
+        public FinalStage addAdditionalAlterQueries(AdditionalAlterQuery... additionalAlterQueries) {
             this.additionalAlterQueries.add(additionalAlterQueries);
             return this;
         }
@@ -88,9 +124,9 @@ public class PostgresTable {
     private final String name;
     private final boolean supportsRowLevelSecurity;
     private final Function<DSLContext, DDLQuery> createTableStepFunction;
-    private final List<String> additionalAlterQueries;
+    private final List<AdditionalAlterQuery> additionalAlterQueries;
 
-    private PostgresTable(String name, boolean supportsRowLevelSecurity, Function<DSLContext, DDLQuery> createTableStepFunction, List<String> additionalAlterQueries) {
+    private PostgresTable(String name, boolean supportsRowLevelSecurity, Function<DSLContext, DDLQuery> createTableStepFunction, List<AdditionalAlterQuery> additionalAlterQueries) {
         this.name = name;
         this.supportsRowLevelSecurity = supportsRowLevelSecurity;
         this.createTableStepFunction = createTableStepFunction;
@@ -110,7 +146,7 @@ public class PostgresTable {
         return supportsRowLevelSecurity;
     }
 
-    public List<String> getAdditionalAlterQueries() {
+    public List<AdditionalAlterQuery> getAdditionalAlterQueries() {
         return additionalAlterQueries;
     }
 }
