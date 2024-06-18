@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.time.Clock;
 import java.time.Instant;
 
+import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
@@ -81,7 +82,8 @@ public class PostgresMailboxManagerAttachmentTest extends AbstractMailboxManager
     void beforeAll() throws Exception {
         BlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, BLOB_ID_FACTORY);
-        mapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, BLOB_ID_FACTORY);
+        mapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, BLOB_ID_FACTORY,
+            PostgresConfiguration.builder().username("a").password("a").build());
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
