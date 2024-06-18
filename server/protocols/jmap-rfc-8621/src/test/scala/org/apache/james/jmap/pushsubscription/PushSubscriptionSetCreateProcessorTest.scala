@@ -26,18 +26,18 @@ import java.util.{Base64, UUID}
 
 import com.google.crypto.tink.subtle.EllipticCurves
 import com.google.crypto.tink.subtle.EllipticCurves.CurveType
+import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.jmap.api.model.{PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionServerURL, VerificationCode}
 import org.apache.james.jmap.method.{PushSubscriptionSetCreateProcessor, PushVerification}
 import org.apache.james.jmap.pushsubscription.PushSubscriptionSetCreateProcessorTest.PUSH_VERIFICATION_SAMPLE
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.mockserver.integration.ClientAndServer
+import org.mockserver.model.HttpRequest
 import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
-import org.mockserver.model.JsonBody.json
-import org.mockserver.model.Not.not
 import org.mockserver.model.NottableString.string
-import org.mockserver.verify.VerificationTimes
 
 object PushSubscriptionSetCreateProcessorTest {
   val PUSH_VERIFICATION_SAMPLE: PushVerification = PushVerification(
@@ -69,14 +69,20 @@ class PushSubscriptionSetCreateProcessorTest {
   @Test
   def pushVerificationShouldSuccess(pushServer: ClientAndServer): Unit = {
     testee.pushVerificationToPushServer(pushServerUrl, PUSH_VERIFICATION_SAMPLE, None).block()
-    pushServer.verify(request()
-      .withPath("/subscribe")
-      .withBody(json("""{
-                       |    "@type": "PushVerification",
-                       |    "pushSubscriptionId": "44111166-affc-4187-b974-0672e312b72e",
-                       |    "verificationCode": "2b295d19-b37a-4865-b93e-bbb59f76ffc0"
-                       |}""".stripMargin)),
-      VerificationTimes.atLeast(1))
+
+    val requests: Seq[HttpRequest] = pushServer.retrieveRecordedRequests(
+      request()
+        .withMethod("POST")
+        .withPath("/subscribe")).toSeq
+
+    assertThat(requests.size).isEqualTo(1)
+    assertThatJson(requests.head.getBodyAsString)
+      .isEqualTo(
+        """{
+          |    "@type": "PushVerification",
+          |    "pushSubscriptionId": "44111166-affc-4187-b974-0672e312b72e",
+          |    "verificationCode": "2b295d19-b37a-4865-b93e-bbb59f76ffc0"
+          |}""".stripMargin)
   }
 
   @Test
@@ -89,13 +95,19 @@ class PushSubscriptionSetCreateProcessorTest {
     val auth: String = Base64.getUrlEncoder.encodeToString(authSecret)
 
     testee.pushVerificationToPushServer(pushServerUrl, PUSH_VERIFICATION_SAMPLE, Some(PushSubscriptionKeys(p256dh, auth))).block()
-    pushServer.verify(request()
-      .withPath("/subscribe")
-      .withBody(not(json("""{
-                       |    "@type": "PushVerification",
-                       |    "pushSubscriptionId": "44111166-affc-4187-b974-0672e312b72e",
-                       |    "verificationCode": "2b295d19-b37a-4865-b93e-bbb59f76ffc0"
-                       |}""".stripMargin))),
-      VerificationTimes.atLeast(1))
+
+    val requests: Seq[HttpRequest] = pushServer.retrieveRecordedRequests(
+      request()
+        .withMethod("POST")
+        .withPath("/subscribe")).toSeq
+    assertThat(requests.size).isEqualTo(1)
+
+    assertThatJson(requests.head.getBodyAsString)
+      .isNotEqualTo(
+        """{
+          |    "@type": "PushVerification",
+          |    "pushSubscriptionId": "44111166-affc-4187-b974-0672e312b72e",
+          |    "verificationCode": "2b295d19-b37a-4865-b93e-bbb59f76ffc0"
+          |}""".stripMargin)
   }
 }
