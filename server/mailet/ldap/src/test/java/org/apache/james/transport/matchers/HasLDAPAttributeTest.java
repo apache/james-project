@@ -22,9 +22,13 @@ package org.apache.james.transport.matchers;
 import static org.apache.james.user.ldap.DockerLdapSingleton.ADMIN;
 import static org.apache.james.user.ldap.DockerLdapSingleton.ADMIN_PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Collection;
 import java.util.Optional;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.plist.PropertyListConfiguration;
@@ -55,7 +59,7 @@ class HasLDAPAttributeTest {
     }
 
     @Test
-    void shouldReturnRecipientWhenHasAttribute() throws Exception {
+    void shouldReturnRecipientWhenHasAttributeWithValue() throws Exception {
         HasLDAPAttribute testee = new HasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
             .matcherName("HasLDAPAttribute")
@@ -70,6 +74,67 @@ class HasLDAPAttributeTest {
             .build());
 
         assertThat(matched).containsOnly(recipient);
+    }
+
+    @Test
+    void shouldThrowWhenPrefixedWithDelimiter() throws Exception {
+        HasLDAPAttribute testee = new HasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("HasLDAPAttribute")
+            .condition(":abcdef")
+            .build();
+
+        assertThatThrownBy(() -> testee.init(matcherConfig))
+            .isInstanceOf(MessagingException.class);
+    }
+
+    @Test
+    void shouldNotThrowWhenValueContainsDelimiter() throws Exception {
+        HasLDAPAttribute testee = new HasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("HasLDAPAttribute")
+            .condition("description:abc:def")
+            .build();
+        testee.init(matcherConfig);
+
+        assertThatCode(() -> testee.init(matcherConfig))
+            .doesNotThrowAnyException();;
+    }
+
+    @Test
+    void shouldReturnRecipientWhenHasAttribute() throws Exception {
+        HasLDAPAttribute testee = new HasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("HasLDAPAttribute")
+            .condition("description")
+            .build();
+        testee.init(matcherConfig);
+
+        MailAddress recipient = new MailAddress("james-user@james.org");
+        Collection<MailAddress> matched = testee.match(FakeMail.builder()
+            .name("default-id")
+            .recipient(recipient)
+            .build());
+
+        assertThat(matched).containsOnly(recipient);
+    }
+
+    @Test
+    void shouldNotReturnRecipientWhenDoesNotHaveAttibure() throws Exception {
+        HasLDAPAttribute testee = new HasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("HasLDAPAttribute")
+            .condition("descriptionaa")
+            .build();
+        testee.init(matcherConfig);
+
+        MailAddress recipient = new MailAddress("james-user@james.org");
+        Collection<MailAddress> matched = testee.match(FakeMail.builder()
+            .name("default-id")
+            .recipient(recipient)
+            .build());
+
+        assertThat(matched).isEmpty();
     }
 
     @Test

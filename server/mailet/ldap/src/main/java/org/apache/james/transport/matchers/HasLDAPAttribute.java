@@ -41,6 +41,7 @@ import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.LDAPSearchException;
 import com.unboundid.ldap.sdk.SearchResult;
+import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
 
 public class HasLDAPAttribute extends GenericMatcher {
@@ -49,7 +50,7 @@ public class HasLDAPAttribute extends GenericMatcher {
     private final Filter objectClassFilter;
     private final Optional<Filter> userExtraFilter;
     private String attributeName;
-    private String attributeValue;
+    private Optional<String> attributeValue;
     private String[] attributes;
 
     @Inject
@@ -67,16 +68,17 @@ public class HasLDAPAttribute extends GenericMatcher {
         String condition = getCondition().trim();
         int commaPosition = condition.indexOf(':');
 
-        if (-1 == commaPosition) {
-            throw new MessagingException("Syntax Error. Missing ':'.");
+        if (commaPosition == -1) {
+            attributeName = condition;
+            attributeValue = Optional.empty();
+        } else {
+            if (commaPosition == 0) {
+                throw new MessagingException("Syntax Error. Missing attribute name.");
+            }
+            attributeName = condition.substring(0, commaPosition).trim();
+            attributeValue = Optional.of(condition.substring(commaPosition + 1).trim());
         }
 
-        if (0 == commaPosition) {
-            throw new MessagingException("Syntax Error. Missing attribute name.");
-        }
-
-        attributeName = condition.substring(0, commaPosition).trim();
-        attributeValue = condition.substring(commaPosition + 1).trim();
         attributes = ImmutableSet.builder()
             .add(configuration.getReturnedAttributes())
             .add(attributeName)
@@ -98,15 +100,20 @@ public class HasLDAPAttribute extends GenericMatcher {
                 createFilter(rcpt.asString(), configuration.getUserIdAttribute()),
                 attributes);
 
-            return searchResult.getSearchEntries().stream()
-                .anyMatch(entry -> Optional.ofNullable(entry.getAttribute(attributeName))
-                    .map(Attribute::getValue)
-                    .map(attributeValue::equals)
-                    .orElse(false));
-
+            return searchResult.getSearchEntries()
+                .stream()
+                .anyMatch(this::hasAttribute);
         } catch (LDAPSearchException e) {
             throw new RuntimeException("Failed searching LDAP", e);
         }
+    }
+
+    private boolean hasAttribute(SearchResultEntry entry) {
+        return attributeValue.map(value -> Optional.ofNullable(entry.getAttribute(attributeName))
+            .map(Attribute::getValue)
+            .map(value::equals)
+            .orElse(false))
+            .orElseGet(() -> entry.hasAttribute(attributeName));
     }
 
     private Filter createFilter(String retrievalName, String ldapUserRetrievalAttribute) {
