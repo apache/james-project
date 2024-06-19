@@ -24,10 +24,31 @@ Then copy the JAR located in `/target` into the `extensions-jars` folder of your
 
 The LDAP settings are reused from the `usersrepository.xml` configuration file.
 
-Then LDAP matchers can be configured within `mailetcontainer.xml`. For instance:
+Then LDAP matchers can be configured within `mailetcontainer.xml`. 
+
+For instance:
 
 ```xml
+<!-- Matches recipients that have the following attribute with the specified value-->
 <mailet matcher="HasLDAPAttibute=description:blocked" class="Null">
+
+</mailet>
+```
+
+or
+
+```xml
+<!-- Matches sender that have the following attribute with the specified value-->
+<mailet matcher="SenderHasLDAPAttibute=description:blocked" class="Null">
+
+</mailet>
+```
+
+or
+
+```xml
+<!-- Matches recipients that have the following attribute regardless of the actual value-->
+<mailet matcher="HasLDAPAttibute=description" class="Null">
     
 </mailet>
 ```
@@ -35,7 +56,8 @@ Then LDAP matchers can be configured within `mailetcontainer.xml`. For instance:
 or
 
 ```xml
-<mailet matcher="SenderHasLDAPAttibute=description:blocked" class="Null">
+<!-- Matches sender that have the following attribute regardless of the actual value-->
+<mailet matcher="SenderHasLDAPAttibute=description" class="Null">
     
 </mailet>
 ```
