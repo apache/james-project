@@ -42,6 +42,8 @@ include::partial$ICSSanitizer.adoc[]
 
 include::partial$LocalDelivery.adoc[]
 
+include::partial$LDAPMatchers.adoc[]
+
 include::partial$LogMessage.adoc[]
 
 include::partial$MailAttributesListToMimeHeaders.adoc[]
