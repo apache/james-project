@@ -3107,7 +3107,6 @@
                     <version>3.13.0</version>
                     <configuration>
                         <parameters>true</parameters>
-                        <optimize>true</optimize>
                         <source>${target.jdk}</source>
                         <target>${target.jdk}</target>
                         <release>${target.jdk}</release>
