@@ -44,6 +44,30 @@ import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
 
+/**
+ * Matchers that allow looking up for LDAP attributed based on the sender..
+ *
+ * To enable this matcher one need first to add the james-server-mailet-ldap.jar in the externals-jars folder of your
+ * James installation.
+ *
+ * In order to match the presence of an attribute:
+ *
+ * <pre><code>
+ * &lt;!-- Matches sender that have the following attribute regardless of the actual value--&gt;
+ * &lt;mailet matcher=&quot;SenderHasLDAPAttibute=description&quot; class=&quot;Null&quot;&gt;
+ *
+ * &lt;/mailet&gt;
+ * </code></pre>
+ *
+ * And in order to Match a specific value for that attribute:
+ *
+ * <pre><code>
+ * &lt;!-- Matches sender that have the following attribute with the specified value--&gt;
+ * &lt;mailet matcher=&quot;SenderHasLDAPAttribute=description:blocked&quot; class=&quot;Null&quot;&gt;
+ *
+ * &lt;/mailet&gt;
+ * </code></pre>
+ */
 public class SenderHasLDAPAttribute extends GenericMatcher {
     private final LDAPConnectionPool ldapConnectionPool;
     private final LdapRepositoryConfiguration configuration;
