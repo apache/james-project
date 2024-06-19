@@ -1310,7 +1310,7 @@ blob.export.linshare.technical.account.uuid
 blob.export.linshare.technical.account.password
 ```
 
--The legacy property `blob.export.linshare.token` will not use anymore, you can remove it.
+-The legacy property `blob.export.linshare.token` will not be used anymore, so you can remove it.
 ### Hybrid blobStore replaces Union blobStore
 
 Date 6/01/2020
