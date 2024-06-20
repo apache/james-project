@@ -31,9 +31,9 @@ Change list:
  - [javax -> jakarta](#javax---jakarta)
  - [Make all queues on RabbitMQ quorum queue when `quorum.queues.enable=true`](#make-all-queues-on-rabbitmq-quorum-queue-when-quorumqueuesenabletrue)
  - [Migrate RabbitMQ classic queues to version 2](#migrate-rabbitmq-classic-queues-to-version-2)
- - [JAMES-3946 removals](#james-3946-white-list-removals)
+ - [JAMES-3946 White list removals](#james-3946-white-list-removals)
 
-#### JAMES-3946 White list removals
+### JAMES-3946 White list removals
 
 Date: 14/06/2024
 
@@ -141,7 +141,7 @@ This behaviour can be disabled via the RecipientRewriteTable mailet configuratio
 <mailet/>>
 ```
 
-Note that now `JMAPFiltering` mailet requires the `rrt-error` processor for handling forward loops. We thus recommand adding
+Note that now `JMAPFiltering` mailet requires the `rrt-error` processor for handling forward loops. We thus recommend adding
 this processor, that is part of the default configuration of your distribution.
 
 ### Change compaction strategy of blob_cache table
@@ -549,7 +549,7 @@ Date: 11/01/2022
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-3690
 
-As a security safe guard, we now enforce the `host` configuration parameter defined in `webadmin.properties` when 
+As a security safeguard, we now enforce the `host` configuration parameter defined in `webadmin.properties` when 
 binding the listening interface for the webadmin server.
 
 By default, it listens on the loopback interface.
@@ -634,7 +634,7 @@ Date: 24/11/2021
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-3674
 
-With this update, the password algorithm may include an option to salt the password hash with the user name, for increased security against rainbow table cracking. To use this feature, update your usersrepository.xml :
+With this update, the password algorithm may include an option to salt the password hash with the username, for increased security against rainbow table cracking. To use this feature, update your usersrepository.xml :
 ```
 <algorithm>SHA-512/salted</algorithm>
 ```
@@ -700,13 +700,13 @@ JIRA: https://issues.apache.org/jira/browse/JAMES-3629
 
 Concerned product: Distributed James
 
-In order to avoid uses of non frozen Cassandra collection by the MailQueue component,
+In order to avoid uses of non-frozen Cassandra collection by the MailQueue component,
 we introduced a new table, enqueuedMailsv4, not suffering from these pitfalls.
 
-Pre existing table, enqueuedMailsV3 is no longer read and can be dropped.
+Pre-existing table, enqueuedMailsV3 is no longer read and can be dropped.
 
 To avoid data loss (only noticeable when browsing the mailqueue email, no email
-in flight in the mailqueue will be lost, they will just be non-browseable) do your
+in flight in the mailqueue will be lost, they will just be non-browsable) do your
 rolling upgrade with an empty mailqueue. 
 
 To achieve an empty mailqueue, start a James server with SMTP and JMAP ports not exposed:
@@ -1096,8 +1096,8 @@ JIRA: https://issues.apache.org/jira/browse/JAMES-3300
 
 Concerned product: all products relying on LDAP users repository
 
-`useConnectionPool` is now false by default. If you really want it, you have to explicitely put it to `true` in `usersrepository.xml`.
-It is false by default because it can create too much connections on the LDAP server. If you have few users it can eventually still make sense.
+`useConnectionPool` is now false by default. If you really want it, you have to explicitly put it to `true` in `usersrepository.xml`.
+It is false by default because it can create too many connections on the LDAP server. If you have few users it can eventually still make sense.
 
 ### mailqueue.size.metricsEnabled now defaults to false
 
@@ -1176,7 +1176,7 @@ JIRA: https://issues.apache.org/jira/browse/JAMES-3121
 
 Impacted product: Guice distributed James
 
-Our usage of Cassandra for the time series have been improved by fine tuning the compaction strategy and
+Our usage of Cassandra for the time series have been improved by fine-tuning the compaction strategy and
 the read repair option.
 
 #### Upgrade procedure
@@ -1217,7 +1217,7 @@ SHA-1 58b1d879ab
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-3119
 
-`ProtocolSession` have been reworked in order to increase type strengh
+`ProtocolSession` have been reworked in order to increase type strength
 and reduce errors.
 
 Now `setAttachment` and `getAttachment` are expecting an `AttachmentKey` as key
@@ -1310,7 +1310,7 @@ blob.export.linshare.technical.account.uuid
 blob.export.linshare.technical.account.password
 ```
 
--The legacy property `blob.export.linshare.token` will not used anymore, you can remove it.
+-The legacy property `blob.export.linshare.token` will not be used anymore, so you can remove it.
 ### Hybrid blobStore replaces Union blobStore
 
 Date 6/01/2020
@@ -1390,8 +1390,8 @@ SHA-1 9e976d3f49
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-2949
 
-Many users recently complained about mails non received when sending to upper cased local recipients. We decided to simplify the handling of case for local recipients and users by always storing them lower cased.
-Now all the users repositories are storing user in lower case to ensure that. If you previously used to store users in a case sensitive way (which is very unlikely as it is broking delivery), you could need to update your user database to lower case all your users.
+Many users recently complained about mails non received when sending to upper-cased local recipients. We decided to simplify the handling of case for local recipients and users by always storing them lower cased.
+Now all the users repositories are storing user in lower case to ensure that. If you previously used to store users in a case-sensitive way (which is very unlikely as it is broking delivery), you could need to update your user database to lower case all your users.
 
 #### Cassandra keyspace creation configuration
 
@@ -1514,8 +1514,8 @@ JIRA: https://issues.apache.org/jira/browse/JAMES-2794
 Concerned products: (experimental) RabbitMQ MailQueue
 
 RabbitMQ mail queue combines RabbitMQ with projections in Cassandra to offer advanced management capabilities expected from
-a mail queue (browse, delete, size, clear). In these projections, the mails are identified by there name. Thus enqueuing a
-mail that had already been processed will lead the given email to be considered already deleted and it will be discarded 
+a mail queue (browse, delete, size, clear). In these projections, the mails are identified by their name. Thus, enqueuing a
+mail that had already been processed will lead the given email to be considered already deleted, and it will be discarded 
 and lost.
 
 This is an issue, as several other components build features around submitting a mail several time with the name. 
@@ -1548,7 +1548,7 @@ JIRA: https://issues.apache.org/jira/browse/JAMES-2766
 
 Concerned products: (experimental) Cassandra-guice products.
 
-In version 3.3.0 indexing for the Cassandra product was handled using ElasticSearch 2.2 released on the 31 march 2016. Some major upgrades had been included in recent ElasticSearch version.
+In version 3.3.0 indexing for the Cassandra product was handled using ElasticSearch 2.2 released on the 31 March 2016. Some major upgrades had been included in recent ElasticSearch version.
 
 Note that ElasticSearch APIs had been undergoing some major changes, making a smooth migration hard to provide. We proposed 2 migration strategies. A
 simple one leading to major search inconsistencies in the process, and another one mitigating these inconsistencies (but getting rid of them).
@@ -1708,9 +1708,9 @@ Concerned products: User developed extensions - mailet/matcher
 
 As part of the SMTP protocol, a mail can be sent without sender. This was represented implicitly in James by a potentially null MailAddress
 (`null` or `MailAddress.nullSender()`). This means that mailet/matcher implementers needs to be aware, and handle these cases. This implicit
-handling makes nullSender hard to work with, and prooved to be error prone as part of the 3.2.0 development process.
+handling makes nullSender hard to work with, and prooved to be error-prone as part of the 3.2.0 development process.
 
-Hence we propose an alternative API returning a `MaybeSender` object, requiring the caller to explicitly handle missing sender.
+Hence, we propose an alternative API returning a `MaybeSender` object, requiring the caller to explicitly handle missing sender.
 
 `Mail::getSender` had then been deprecated. We strongly encourage our users to rely on `Mail::getMaybeSender`.
 
@@ -1751,7 +1751,7 @@ Required: Yes
 Concerned products: Cassandra Guice products
 
 James Cassandra Guice now officially uses Cassandra 3.11.3 as a storage backend. After performing the upgrade, the team
-did perform some breaking changes, detailed below. James Cassandra Guice products are no more tested against Cassandra 2.2.x. Thus we strongly
+did perform some breaking changes, detailed below. James Cassandra Guice products are no more tested against Cassandra 2.2.x. Thus, we strongly
 advise our users to upgrade.
 
 #### Changes not compatible with Cassandra 2.2.x
