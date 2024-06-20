@@ -41,8 +41,11 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -61,7 +64,10 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
         public List<String> toParts(String serializedQuotaRoot) throws MailboxException {
             List<String> parts = Splitter.on(SEPARATOR).splitToList(serializedQuotaRoot);
             if (parts.size() != 2) {
-                throw new MailboxException(serializedQuotaRoot + " used as QuotaRoot should contain exactly one \"" + SEPARATOR + "\"");
+                return ImmutableList.<String>builder()
+                    .add(parts.get(0))
+                    .add(Joiner.on(SEPARATOR).join(Iterables.skip(parts, 1)))
+                    .build();
             }
             return parts;
         }
@@ -96,10 +102,6 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
     public QuotaRoot getQuotaRoot(MailboxPath mailboxPath) {
         Preconditions.checkArgument(!mailboxPath.getNamespace().contains(SEPARATOR), "Namespace should not contain %s", SEPARATOR);
         return Optional.ofNullable(mailboxPath.getUser())
-                .map(user -> {
-                    Preconditions.checkArgument(!mailboxPath.getUser().asString().contains(SEPARATOR), "Username should not contain %s", SEPARATOR);
-                    return mailboxPath.getUser();
-                })
                 .map(user -> QuotaRoot.quotaRoot(mailboxPath.getNamespace() + SEPARATOR + user.asString(), user.getDomainPart()))
                 .orElseGet(() -> QuotaRoot.quotaRoot(mailboxPath.getNamespace(), Optional.empty()));
     }
