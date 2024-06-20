@@ -406,7 +406,7 @@ class PostgresTableManagerTest {
                 .column("clm1", SQLDataType.UUID.notNull())
                 .column("clm2", SQLDataType.VARCHAR(255).notNull()))
             .disableRowLevelSecurity()
-            .addAdditionalAlterQuery("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)", PostgresTable.SupportCase.NON_RLS)
+            .addAdditionalAlterQueries(new PostgresTable.NonRLSOnlyAdditionalAlterQuery("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)"))
             .build();
         PostgresModule module = PostgresModule.table(table);
         PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, false);
@@ -432,7 +432,7 @@ class PostgresTableManagerTest {
                 .column("clm1", SQLDataType.UUID.notNull())
                 .column("clm2", SQLDataType.VARCHAR(255).notNull()))
             .disableRowLevelSecurity()
-            .addAdditionalAlterQuery("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)", PostgresTable.SupportCase.NON_RLS)
+            .addAdditionalAlterQueries(new PostgresTable.NonRLSOnlyAdditionalAlterQuery("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)"))
             .build();
         PostgresModule module = PostgresModule.table(table);
         PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, true);

@@ -47,11 +47,12 @@ public class PostgresMailboxMemberDAO {
     }
 
     public Mono<Void> insert(PostgresMailboxId mailboxId, List<Username> usernames) {
-        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.batch(usernames.stream()      //TODO check issue: batch does not throw exception
-            .map(username -> dslContext.insertInto(TABLE_NAME)
-                .set(USER_NAME, username.asString())
-                .set(MAILBOX_ID, mailboxId.asUuid()))
-            .toList())));
+        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME, USER_NAME, MAILBOX_ID)
+            .valuesOfRecords(usernames.stream()
+                .map(username -> dslContext.newRecord(USER_NAME, MAILBOX_ID)
+                    .value1(username.asString())
+                    .value2(mailboxId.asUuid()))
+                .toList())));
     }
 
     public Mono<Void> delete(PostgresMailboxId mailboxId, List<Username> usernames) {

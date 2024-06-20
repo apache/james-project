@@ -96,23 +96,21 @@ public class PostgresMailboxMapper implements MailboxMapper {
 
     @Override
     public Mono<ACLDiff> updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) {
-        MailboxACL oldACL = mailbox.getACL();
-        MailboxACL newACL = Throwing.supplier(() -> oldACL.apply(mailboxACLCommand)).get();
+        return upsertACL(mailbox,
+            mailbox.getACL(),
+            Throwing.supplier(() -> mailbox.getACL().apply(mailboxACLCommand)).get());
+    }
+
+    @Override
+    public Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL) {
+        return upsertACL(mailbox, mailbox.getACL(), mailboxACL);
+    }
+
+    private Mono<ACLDiff> upsertACL(Mailbox mailbox, MailboxACL oldACL, MailboxACL newACL) {
         return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), newACL)
             .then(Mono.fromCallable(() -> {
                 mailbox.setACL(newACL);
                 return ACLDiff.computeDiff(oldACL, newACL);
             }));
     }
-
-    @Override
-    public Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL) {
-        MailboxACL oldACL = mailbox.getACL();
-        return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), mailboxACL)
-            .then(Mono.fromCallable(() -> {
-                mailbox.setACL(mailboxACL);
-                return ACLDiff.computeDiff(oldACL, mailboxACL);
-            }));
-    }
-
 }

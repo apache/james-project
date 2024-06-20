@@ -60,15 +60,7 @@ public class RLSSupportPostgresMailboxMapper extends PostgresMailboxMapper {
         MailboxACL newACL = Throwing.supplier(() -> oldACL.apply(mailboxACLCommand)).get();
         ACLDiff aclDiff = ACLDiff.computeDiff(oldACL, newACL);
         PositiveUserACLDiff userACLDiff = new PositiveUserACLDiff(aclDiff);
-        return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), newACL)
-            .then(postgresMailboxMemberDAO.delete(PostgresMailboxId.class.cast(mailbox.getMailboxId()),
-                userACLDiff.removedEntries().map(entry -> Username.of(entry.getKey().getName())).toList()))
-            .then(postgresMailboxMemberDAO.insert(PostgresMailboxId.class.cast(mailbox.getMailboxId()),
-                userACLDiff.addedEntries().map(entry -> Username.of(entry.getKey().getName())).toList()))
-            .then(Mono.fromCallable(() -> {
-                mailbox.setACL(newACL);
-                return aclDiff;
-            }));
+        return upsertACL(mailbox, newACL, aclDiff, userACLDiff);
     }
 
     @Override
@@ -76,13 +68,17 @@ public class RLSSupportPostgresMailboxMapper extends PostgresMailboxMapper {
         MailboxACL oldACL = mailbox.getACL();
         ACLDiff aclDiff = ACLDiff.computeDiff(oldACL, mailboxACL);
         PositiveUserACLDiff userACLDiff = new PositiveUserACLDiff(aclDiff);
-        return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), mailboxACL)
+        return upsertACL(mailbox, mailboxACL, aclDiff, userACLDiff);
+    }
+
+    private Mono<ACLDiff> upsertACL(Mailbox mailbox, MailboxACL newACL, ACLDiff aclDiff, PositiveUserACLDiff userACLDiff) {
+        return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), newACL)
             .then(postgresMailboxMemberDAO.delete(PostgresMailboxId.class.cast(mailbox.getMailboxId()),
                 userACLDiff.removedEntries().map(entry -> Username.of(entry.getKey().getName())).toList()))
             .then(postgresMailboxMemberDAO.insert(PostgresMailboxId.class.cast(mailbox.getMailboxId()),
                 userACLDiff.addedEntries().map(entry -> Username.of(entry.getKey().getName())).toList()))
             .then(Mono.fromCallable(() -> {
-                mailbox.setACL(mailboxACL);
+                mailbox.setACL(newACL);
                 return aclDiff;
             }));
     }
