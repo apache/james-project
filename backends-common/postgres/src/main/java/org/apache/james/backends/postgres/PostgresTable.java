@@ -53,14 +53,50 @@ public class PostgresTable {
         }
     }
 
-    public enum SupportCase {
-        RLS, NON_RLS, ALL
+    public abstract static class AdditionalAlterQuery {
+        private String query;
+
+        public AdditionalAlterQuery(String query) {
+            this.query = query;
+        }
+
+        abstract boolean shouldBeApplied(boolean rowLevelSecurityEnabled);
+
+        public String getQuery() {
+            return query;
+        }
     }
 
-    public record AdditionalAlterQuery(String query,
-                                       SupportCase supportCase) {
-        public AdditionalAlterQuery(String query) {
-            this(query, SupportCase.ALL);
+    public static class RLSOnlyAdditionalAlterQuery extends AdditionalAlterQuery {
+        public RLSOnlyAdditionalAlterQuery(String query) {
+            super(query);
+        }
+
+        @Override
+        boolean shouldBeApplied(boolean rowLevelSecurityEnabled) {
+            return rowLevelSecurityEnabled;
+        }
+    }
+
+    public static class NonRLSOnlyAdditionalAlterQuery extends AdditionalAlterQuery {
+        public NonRLSOnlyAdditionalAlterQuery(String query) {
+            super(query);
+        }
+
+        @Override
+        boolean shouldBeApplied(boolean rowLevelSecurityEnabled) {
+            return !rowLevelSecurityEnabled;
+        }
+    }
+
+    public static class AllCasesAdditionalAlterQuery extends AdditionalAlterQuery {
+        public AllCasesAdditionalAlterQuery(String query) {
+            super(query);
+        }
+
+        @Override
+        boolean shouldBeApplied(boolean rowLevelSecurityEnabled) {
+            return true;
         }
     }
 
@@ -80,24 +116,8 @@ public class PostgresTable {
         /**
          * Raw SQL ALTER queries in case not supported by jOOQ DSL.
          */
-        public FinalStage addAdditionalAlterQuery(String additionalAlterQuery) {
-            this.additionalAlterQueries.add(new AdditionalAlterQuery(additionalAlterQuery));
-            return this;
-        }
-
-        /**
-         * Raw SQL ALTER queries in case not supported by jOOQ DSL.
-         */
-        public FinalStage addAdditionalAlterQuery(String additionalAlterQuery, SupportCase supportCase) {
-            this.additionalAlterQueries.add(new AdditionalAlterQuery(additionalAlterQuery, supportCase));
-            return this;
-        }
-
-        /**
-         * Raw SQL ALTER queries in case not supported by jOOQ DSL.
-         */
         public FinalStage addAdditionalAlterQueries(String... additionalAlterQueries) {
-            this.additionalAlterQueries.addAll(Arrays.stream(additionalAlterQueries).map(AdditionalAlterQuery::new).toList());
+            this.additionalAlterQueries.addAll(Arrays.stream(additionalAlterQueries).map(AllCasesAdditionalAlterQuery::new).toList());
             return this;
         }
 
