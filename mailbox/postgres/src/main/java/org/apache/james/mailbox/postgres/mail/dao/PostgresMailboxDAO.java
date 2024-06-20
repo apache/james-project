@@ -149,9 +149,12 @@ public class PostgresMailboxDAO {
     }
 
     public Mono<Void> upsertACL(MailboxId mailboxId, MailboxACL acl) {
-        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
+        return postgresExecutor.executeReturnAffectedRowsCount(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
             .set(MAILBOX_ACL, MAILBOX_ACL_TO_HSTORE_FUNCTION.apply(acl))
-            .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))));              //TODO check if update is success
+            .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))))
+            .filter(count -> count > 0)
+            .switchIfEmpty(Mono.error(new RuntimeException("Upsert mailbox acl failed with mailboxId " + mailboxId.serialize())))
+            .then();
     }
 
     public Flux<PostgresMailbox> findMailboxesByUsername(Username userName) {
