@@ -137,7 +137,7 @@ public class DockerCassandra {
 
     @SuppressWarnings("resource")
     public DockerCassandra() {
-        this("cassandra_4_1_3-" + buildSpecificImageDiscriminator(),
+        this("cassandra_4_1_5-" + buildSpecificImageDiscriminator(),
             getFixedBuildId().isEmpty(),
             AdditionalDockerFileStep.IDENTITY);
     }
@@ -181,7 +181,7 @@ public class DockerCassandra {
             new ImageFromDockerfile(imageName,deleteImageAfterUsage)
                 .withDockerfileFromBuilder(builder ->
                     additionalSteps.applyStep(builder
-                        .from("cassandra:4.1.3")
+                        .from("cassandra:4.1.5")
                         .env("CASSANDRA_CONFIG", "/etc/cassandra")
                         .run(memorySettingCommand
                             + "&& echo \"-Dcassandra.skip_wait_for_gossip_to_settle=0\" >> " + JVM_OPTIONS
@@ -189,6 +189,7 @@ public class DockerCassandra {
                             + "&& echo \"-Dcassandra.initial_token=1 \" >> " + JVM_OPTIONS
                             + "&& sed -i 's/auto_snapshot: true/auto_snapshot: false/g' /etc/cassandra/cassandra.yaml"
                             + "&& sed -i 's/allocate_tokens_for_local_replication_factor: 3/allocate_tokens_for_local_replication_factor: 0/g' /etc/cassandra/cassandra.yaml"
+                            + "&& sed -i 's/sstable_preemptive_open_interval: .*$/sstable_preemptive_open_interval_in_mb: 0/' /etc/cassandra/cassandra.yaml"
                             + "&& echo 'authenticator: PasswordAuthenticator' >> /etc/cassandra/cassandra.yaml"
                             + "&& echo 'authorizer: org.apache.cassandra.auth.CassandraAuthorizer' >> /etc/cassandra/cassandra.yaml"))
                         .build()))
