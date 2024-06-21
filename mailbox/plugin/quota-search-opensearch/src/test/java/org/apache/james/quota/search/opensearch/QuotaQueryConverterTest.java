@@ -46,7 +46,7 @@ class QuotaQueryConverterTest {
     @Test
     void fromShouldReturnMatchAllWhenEmptyClauses() {
         QuotaQuery query = QuotaQuery.builder().build();
-        Query expected = new MatchAllQuery.Builder().build()._toQuery();
+        Query expected = new MatchAllQuery.Builder().build().toQuery();
 
         Query actual = testee.from(query);
 
@@ -60,7 +60,7 @@ class QuotaQueryConverterTest {
             .field(DOMAIN)
             .value(new FieldValue.Builder().stringValue("my.tld").build())
             .build()
-            ._toQuery();
+            .toQuery();
 
         Query actual = testee.from(query);
 
@@ -78,7 +78,7 @@ class QuotaQueryConverterTest {
             .field(QUOTA_RATIO)
             .lte(JsonData.of(0.1))
             .build()
-            ._toQuery();
+            .toQuery();
 
         Query actual = testee.from(query);
 
@@ -96,7 +96,7 @@ class QuotaQueryConverterTest {
             .field(QUOTA_RATIO)
             .gte(JsonData.of(0.1))
             .build()
-            ._toQuery();
+            .toQuery();
 
         Query actual = testee.from(query);
 

@@ -246,7 +246,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         // Try to delete the document manually to simulate a not found document.
         client.deleteByQuery(new DeleteByQueryRequest.Builder()
                 .index(indexName.getValue())
-                .query(new MatchAllQuery.Builder().build()._toQuery())
+                .query(new MatchAllQuery.Builder().build().toQuery())
                 .build())
             .block();
         awaitUntilAsserted(mailboxAId, 0);
@@ -271,7 +271,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0à2345678é", 3200), StandardCharsets.UTF_8)),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 14);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session)).toStream())
             .containsExactly(composedMessageId.getUid());
@@ -294,7 +294,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .untilAsserted(() -> assertThat(client.search(
                     new SearchRequest.Builder()
                         .index(indexName.getValue())
-                        .query(QueryBuilders.matchAll().build()._toQuery())
+                        .query(QueryBuilders.matchAll().build().toQuery())
                         .build())
                 .block()
                 .hits().total().value()).isEqualTo(14));
@@ -316,7 +316,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0123456789 ", 5000), StandardCharsets.UTF_8)),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 14);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("0123456789")), session)).toStream())
             .containsExactly(composedMessageId.getUid());
@@ -335,7 +335,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0123456789 ", 5000) + " matchMe", StandardCharsets.UTF_8)),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 14);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("matchMe")), session)).toStream())
             .containsExactly(composedMessageId.getUid());
@@ -377,7 +377,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mailCustomStringHeader.eml")),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 15);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 15);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.headerExists("Custom-header")), session)).toStream())
             .containsExactly(customDateHeaderMessageId.getUid(), customStringHeaderMessageId.getUid());
@@ -430,7 +430,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 15);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 15);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "bob@other.tld")), session)).toStream())
             .containsOnly(messageId2.getUid());
@@ -461,7 +461,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 15);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 15);
         Thread.sleep(500);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "other")), session)).toStream())
@@ -493,7 +493,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 15);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 15);
         Thread.sleep(500);
 
         Flux.range(0, 1050)
@@ -624,7 +624,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         openSearch.awaitForOpenSearch();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 20);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 20);
 
         assertThat(Flux.from(
             messageManager.search(SearchQuery.allSortedWith(new SearchQuery.Sort(SearchQuery.Sort.SortClause.BaseSubject)), session)).toStream())

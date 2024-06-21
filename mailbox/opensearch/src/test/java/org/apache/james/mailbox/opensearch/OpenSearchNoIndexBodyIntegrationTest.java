@@ -151,7 +151,7 @@ public class OpenSearchNoIndexBodyIntegrationTest {
     void searchingByBodyContentShouldNotReturnMessageWhenNoIndexBody() throws Exception {
         addMessage(session, inboxPath).block();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.bodyContains("Hello"));
 
@@ -163,7 +163,7 @@ public class OpenSearchNoIndexBodyIntegrationTest {
     void searchingAllShoulReturnMessageWhenNoIndexBody() throws Exception {
         ComposedMessageId composedMessageId = addMessage(session, inboxPath).block();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.all());
 

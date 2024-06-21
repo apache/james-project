@@ -60,7 +60,7 @@ class QuotaQueryConverter {
     Query from(QuotaQuery query) {
         List<QuotaClause> clauses = query.getClause().getClauses();
         if (clauses.isEmpty()) {
-            return new MatchAllQuery.Builder().build()._toQuery();
+            return new MatchAllQuery.Builder().build().toQuery();
         }
         if (clauses.size() == 1) {
             return singleClauseAsESQuery(clauses.get(0));
@@ -74,7 +74,7 @@ class QuotaQueryConverter {
         clauses.stream()
             .map(this::singleClauseAsESQuery)
             .forEach(boolQueryBuilder::must);
-        return boolQueryBuilder.build()._toQuery();
+        return boolQueryBuilder.build().toQuery();
     }
 
     private Query disableNestedAnd(QuotaClause clause) {
@@ -87,7 +87,7 @@ class QuotaQueryConverter {
             .field(DOMAIN)
             .value(new FieldValue.Builder().stringValue(hasDomain.getDomain().asString()).build())
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private Query convertMoreThan(QuotaClause clause) {
@@ -96,7 +96,7 @@ class QuotaQueryConverter {
             .field(QUOTA_RATIO)
             .gte(JsonData.of(moreThan.getQuotaBoundary().getRatio()))
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private Query convertLessThan(QuotaClause clause) {
@@ -105,7 +105,7 @@ class QuotaQueryConverter {
             .field(QUOTA_RATIO)
             .lte(JsonData.of(lessThan.getQuotaBoundary().getRatio()))
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private Query singleClauseAsESQuery(QuotaClause clause) {

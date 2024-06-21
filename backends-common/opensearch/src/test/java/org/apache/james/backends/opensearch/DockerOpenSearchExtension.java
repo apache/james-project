@@ -62,10 +62,10 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
                     openSearch.flushIndices();
                     ReactorOpenSearchClient client = client(openSearch);
                     new DeleteByQueryPerformer(client, aliasName)
-                        .perform(new MatchAllQuery.Builder().build()._toQuery())
+                        .perform(new MatchAllQuery.Builder().build().toQuery())
                         .block();
                     SearchRequest searchRequest = new SearchRequest.Builder()
-                        .query(new MatchAllQuery.Builder().build()._toQuery())
+                        .query(new MatchAllQuery.Builder().build().toQuery())
                         .build();
                     openSearch.flushIndices();
                     return client.search(searchRequest)

@@ -89,7 +89,7 @@ class OpenSearchIndexerTest {
             .field("message")
             .query(new FieldValue.Builder().stringValue("trying").build())
             .build()
-            ._toQuery(), 1L);
+            .toQuery(), 1L);
     }
     
     @Test
@@ -103,12 +103,12 @@ class OpenSearchIndexerTest {
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
         testee.index(DOCUMENT_ID, content, useDocumentId(DOCUMENT_ID)).block();
-        awaitForOpenSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
+        awaitForOpenSearch(new MatchAllQuery.Builder().build().toQuery(), 1L);
 
         testee.update(ImmutableList.of(new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), useDocumentId(DOCUMENT_ID)).block();
-        awaitForOpenSearch(new MatchQuery.Builder().field("message").query(new FieldValue.Builder().stringValue("mastering").build()).build()._toQuery(), 1L);
+        awaitForOpenSearch(new MatchQuery.Builder().field("message").query(new FieldValue.Builder().stringValue("mastering").build()).build().toQuery(), 1L);
 
-        awaitForOpenSearch(new MatchQuery.Builder().field("field").query(new FieldValue.Builder().stringValue("unchanged").build()).build()._toQuery(), 1L);
+        awaitForOpenSearch(new MatchQuery.Builder().field("field").query(new FieldValue.Builder().stringValue("unchanged").build()).build().toQuery(), 1L);
     }
 
     @Test
@@ -146,11 +146,11 @@ class OpenSearchIndexerTest {
         RoutingKey routingKey = useDocumentId(documentId);
 
         testee.index(documentId, content, routingKey).block();
-        awaitForOpenSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
+        awaitForOpenSearch(new MatchAllQuery.Builder().build().toQuery(), 1L);
 
-        testee.deleteAllMatchingQuery(new TermQuery.Builder().field("property").value(new FieldValue.Builder().stringValue("1").build()).build()._toQuery(), routingKey).block();
+        testee.deleteAllMatchingQuery(new TermQuery.Builder().field("property").value(new FieldValue.Builder().stringValue("1").build()).build().toQuery(), routingKey).block();
 
-        awaitForOpenSearch(new MatchAllQuery.Builder().build()._toQuery(), 0L);
+        awaitForOpenSearch(new MatchAllQuery.Builder().build().toQuery(), 0L);
     }
 
     @Test
@@ -169,11 +169,11 @@ class OpenSearchIndexerTest {
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"property\":\"2\"}";
         
         testee.index(documentId3, content3, ROUTING).block();
-        awaitForOpenSearch(new MatchAllQuery.Builder().build()._toQuery(), 3L);
+        awaitForOpenSearch(new MatchAllQuery.Builder().build().toQuery(), 3L);
 
-        testee.deleteAllMatchingQuery(new TermQuery.Builder().field("property").value(new FieldValue.Builder().stringValue("1").build()).build()._toQuery(), ROUTING).block();
+        testee.deleteAllMatchingQuery(new TermQuery.Builder().field("property").value(new FieldValue.Builder().stringValue("1").build()).build().toQuery(), ROUTING).block();
 
-        awaitForOpenSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
+        awaitForOpenSearch(new MatchAllQuery.Builder().build().toQuery(), 1L);
     }
     
     @Test
@@ -182,11 +182,11 @@ class OpenSearchIndexerTest {
         String content = "{\"message\": \"trying out Elasticsearch\"}";
 
         testee.index(documentId, content, useDocumentId(documentId)).block();
-        awaitForOpenSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
+        awaitForOpenSearch(new MatchAllQuery.Builder().build().toQuery(), 1L);
 
         testee.delete(ImmutableList.of(documentId), useDocumentId(documentId)).block();
 
-        awaitForOpenSearch(new MatchAllQuery.Builder().build()._toQuery(), 0L);
+        awaitForOpenSearch(new MatchAllQuery.Builder().build().toQuery(), 0L);
     }
 
     @Test
@@ -203,11 +203,11 @@ class OpenSearchIndexerTest {
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"mailboxId\":\"2\"}";
         testee.index(documentId3, content3, ROUTING).block();
 
-        awaitForOpenSearch(new MatchAllQuery.Builder().build()._toQuery(), 3L);
+        awaitForOpenSearch(new MatchAllQuery.Builder().build().toQuery(), 3L);
 
         testee.delete(ImmutableList.of(documentId, documentId3), ROUTING).block();
 
-        awaitForOpenSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
+        awaitForOpenSearch(new MatchAllQuery.Builder().build().toQuery(), 1L);
     }
     
     @Test
@@ -228,7 +228,7 @@ class OpenSearchIndexerTest {
         String content = "{\"message\":\"trying out Elasticsearch\"}";
 
         testee.index(documentId, content, useDocumentId(documentId)).block();
-        awaitForOpenSearch(new MatchAllQuery.Builder().build()._toQuery(), 1L);
+        awaitForOpenSearch(new MatchAllQuery.Builder().build().toQuery(), 1L);
 
         GetResponse getResponse = testee.get(documentId, useDocumentId(documentId)).block();
 

@@ -73,7 +73,7 @@ public class CriterionConverter {
         registerCriterionConverter(SearchQuery.CustomFlagCriterion.class, this::convertCustomFlagCriterion);
         
         registerCriterionConverter(SearchQuery.AllCriterion.class,
-            criterion -> new MatchAllQuery.Builder().build()._toQuery());
+            criterion -> new MatchAllQuery.Builder().build().toQuery());
         
         registerCriterionConverter(SearchQuery.ModSeqCriterion.class,
             criterion -> createNumericFilter(JsonMessageConstants.MODSEQ, criterion.getOperator()));
@@ -106,10 +106,10 @@ public class CriterionConverter {
                     .field(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.NAME)
                     .value(new FieldValue.Builder().stringValue(headerName).build())
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .scoreMode(ChildScoreMode.Avg)
                 .build()
-                ._toQuery());
+                .toQuery());
         
         registerHeaderOperatorConverter(
             SearchQuery.AddressOperator.class,
@@ -128,17 +128,17 @@ public class CriterionConverter {
                         .field(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.NAME)
                         .value(new FieldValue.Builder().stringValue(headerName).build())
                         .build()
-                        ._toQuery())
+                        .toQuery())
                     .must(new MatchQuery.Builder()
                         .field(JsonMessageConstants.HEADERS + "." + JsonMessageConstants.HEADER.VALUE)
                         .query(new FieldValue.Builder().stringValue(operator.getValue()).build())
                         .build()
-                        ._toQuery())
+                        .toQuery())
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .scoreMode(ChildScoreMode.Avg)
                 .build()
-                ._toQuery());
+                .toQuery());
     }
 
     @SuppressWarnings("unchecked")
@@ -155,7 +155,7 @@ public class CriterionConverter {
             .field(JsonMessageConstants.HAS_ATTACHMENT)
             .value(new FieldValue.Builder().booleanValue(criterion.getOperator().isSet()).build())
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private Query convertMimeMessageIDCriterion(SearchQuery.MimeMessageIDCriterion criterion) {
@@ -163,7 +163,7 @@ public class CriterionConverter {
             .field(JsonMessageConstants.MIME_MESSAGE_ID)
             .value(new FieldValue.Builder().stringValue(criterion.getMessageID()).build())
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private Query convertThreadIdCriterion(SearchQuery.ThreadIdCriterion criterion) {
@@ -171,7 +171,7 @@ public class CriterionConverter {
             .field(JsonMessageConstants.THREAD_ID)
             .value(new FieldValue.Builder().stringValue(criterion.getThreadId().serialize()).build())
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private Query convertCustomFlagCriterion(SearchQuery.CustomFlagCriterion criterion) {
@@ -179,14 +179,14 @@ public class CriterionConverter {
             .field(JsonMessageConstants.USER_FLAGS)
             .value(new FieldValue.Builder().stringValue(criterion.getFlag()).build())
             .build()
-            ._toQuery();
+            .toQuery();
         if (criterion.getOperator().isSet()) {
             return termQuery;
         } else {
             return new BoolQuery.Builder()
                 .mustNot(termQuery)
                 .build()
-                ._toQuery();
+                .toQuery();
         }
     }
 
@@ -199,15 +199,15 @@ public class CriterionConverter {
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .operator(Operator.And)
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.HTML_BODY)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .operator(Operator.And)
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         case FULL:
             return new BoolQuery.Builder()
                 .should(new MatchQuery.Builder()
@@ -215,39 +215,39 @@ public class CriterionConverter {
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .operator(Operator.And)
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.HTML_BODY)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .operator(Operator.And)
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .operator(Operator.And)
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         case ATTACHMENTS:
             return new BoolQuery.Builder()
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         case ATTACHMENT_FILE_NAME:
             return new BoolQuery.Builder()
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILENAME)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         default:
             throw new RuntimeException("Unknown SCOPE for text criterion");
         }
@@ -266,7 +266,7 @@ public class CriterionConverter {
                         DateResolutionFormatter.convertDateToZonedDateTime(dateOperator.getDate()),
                         dateOperator.getDateResultion()))))
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private Query convertConjunction(SearchQuery.ConjunctionCriterion criterion) {
@@ -291,7 +291,7 @@ public class CriterionConverter {
     private Query convertToBoolQuery(Stream<Query> stream, BiFunction<BoolQuery.Builder, Query, BoolQuery.Builder> addCriterionToBoolQuery) {
         BoolQuery.Builder builder = new BoolQuery.Builder();
         stream.forEach(query -> addCriterionToBoolQuery.apply(builder, query));
-        return builder.build()._toQuery();
+        return builder.build().toQuery();
     }
 
     private Query convertFlag(SearchQuery.FlagCriterion flagCriterion) {
@@ -303,9 +303,9 @@ public class CriterionConverter {
                     .field(JsonMessageConstants.IS_DELETED)
                     .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         }
         if (flag.equals(Flags.Flag.ANSWERED)) {
             return new BoolQuery.Builder()
@@ -313,9 +313,9 @@ public class CriterionConverter {
                     .field(JsonMessageConstants.IS_ANSWERED)
                     .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         }
         if (flag.equals(Flags.Flag.DRAFT)) {
             return new BoolQuery.Builder()
@@ -323,9 +323,9 @@ public class CriterionConverter {
                     .field(JsonMessageConstants.IS_DRAFT)
                     .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         }
         if (flag.equals(Flags.Flag.SEEN)) {
             return new BoolQuery.Builder()
@@ -333,9 +333,9 @@ public class CriterionConverter {
                     .field(JsonMessageConstants.IS_UNREAD)
                     .value(new FieldValue.Builder().booleanValue(!operator.isSet()).build())
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         }
         if (flag.equals(Flags.Flag.RECENT)) {
             return new BoolQuery.Builder()
@@ -343,9 +343,9 @@ public class CriterionConverter {
                     .field(JsonMessageConstants.IS_RECENT)
                     .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         }
         if (flag.equals(Flags.Flag.FLAGGED)) {
             return new BoolQuery.Builder()
@@ -353,9 +353,9 @@ public class CriterionConverter {
                     .field(JsonMessageConstants.IS_FLAGGED)
                     .value(new FieldValue.Builder().booleanValue(operator.isSet()).build())
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         }
         throw new RuntimeException("Unknown flag used in Flag search criterion");
     }
@@ -369,27 +369,27 @@ public class CriterionConverter {
                     .gte(JsonData.of(operator.getValue()))
                     .lte(JsonData.of(operator.getValue()))
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         case GREATER_THAN:
             return new BoolQuery.Builder()
                 .filter(new RangeQuery.Builder()
                     .field(fieldName)
                     .gt(JsonData.of(operator.getValue()))
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         case LESS_THAN:
             return new BoolQuery.Builder()
                 .filter(new RangeQuery.Builder()
                     .field(fieldName)
                     .lt(JsonData.of(operator.getValue()))
                     .build()
-                    ._toQuery())
+                    .toQuery())
                 .build()
-                ._toQuery();
+                .toQuery();
         default:
             throw new RuntimeException("A non existing numeric operator was triggered");
         }
@@ -397,14 +397,14 @@ public class CriterionConverter {
 
     private Query convertUid(SearchQuery.UidCriterion uidCriterion) {
         if (uidCriterion.getOperator().getRange().length == 0) {
-            return new BoolQuery.Builder().build()._toQuery();
+            return new BoolQuery.Builder().build().toQuery();
         }
         return new BoolQuery.Builder()
             .filter(convertToBoolQuery(
                 Arrays.stream(uidCriterion.getOperator().getRange())
                     .map(this::uidRangeFilter), BoolQuery.Builder::should))
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private Query convertMessageId(SearchQuery.MessageIdCriterion messageIdCriterion) {
@@ -412,7 +412,7 @@ public class CriterionConverter {
             .field(JsonMessageConstants.MESSAGE_ID)
             .value(new FieldValue.Builder().stringValue(messageIdCriterion.getMessageId().serialize()).build())
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private Query uidRangeFilter(SearchQuery.UidRange numericRange) {
@@ -421,7 +421,7 @@ public class CriterionConverter {
             .lte(JsonData.of(numericRange.getHighValue().asLong()))
             .gte(JsonData.of(numericRange.getLowValue().asLong()))
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private Query convertHeader(SearchQuery.HeaderCriterion headerCriterion) {
@@ -439,7 +439,7 @@ public class CriterionConverter {
                 .build())
             .operator(Operator.And)
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private Query manageAddressFields(String headerName, String value) {
@@ -448,24 +448,24 @@ public class CriterionConverter {
                 .field(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME)
                 .query(new FieldValue.Builder().stringValue(value).build())
                 .build()
-                ._toQuery())
+                .toQuery())
             .should(new MatchQuery.Builder()
                 .field(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS)
                 .query(new FieldValue.Builder().stringValue(value).build())
                 .build()
-                ._toQuery())
+                .toQuery())
             .should(new MatchQuery.Builder()
                 .field(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.DOMAIN)
                 .query(new FieldValue.Builder().stringValue(value).build())
                 .build()
-                ._toQuery())
+                .toQuery())
             .should(new MatchQuery.Builder()
                 .field(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW)
                 .query(new FieldValue.Builder().stringValue(value).build())
                 .build()
-                ._toQuery())
+                .toQuery())
             .build()
-            ._toQuery();
+            .toQuery();
     }
 
     private String getFieldNameFromHeaderName(String headerName) {
@@ -490,20 +490,20 @@ public class CriterionConverter {
                 .field(field)
                 .lt(JsonData.of(lowDateString))
                 .build()
-                ._toQuery();
+                .toQuery();
         case AFTER:
             return new RangeQuery.Builder()
                 .field(field)
                 .gte(JsonData.of(upDateString))
                 .build()
-                ._toQuery();
+                .toQuery();
         case ON:
             return new RangeQuery.Builder()
                 .field(field)
                 .lt(JsonData.of(upDateString))
                 .gte(JsonData.of(lowDateString))
                 .build()
-                ._toQuery();
+                .toQuery();
         default:
             throw new RuntimeException("Unknown date operator");
         }
