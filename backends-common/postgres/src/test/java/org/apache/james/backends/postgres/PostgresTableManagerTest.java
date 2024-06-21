@@ -41,7 +41,7 @@ class PostgresTableManagerTest {
     static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresModule.EMPTY_MODULE);
 
     Function<PostgresModule, PostgresTableManager> tableManagerFactory =
-        module -> new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, true);
+        module -> new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.ENABLED);
 
     @Test
     void initializeTableShouldSuccessWhenModuleHasSingleTable() {
@@ -340,10 +340,7 @@ class PostgresTableManagerTest {
             .build();
 
         PostgresModule module = PostgresModule.table(table);
-        boolean disabledRLS = false;
-
-
-        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, disabledRLS);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.DISABLED);
 
         testee.initializeTables()
             .block();
@@ -383,7 +380,7 @@ class PostgresTableManagerTest {
             .addAdditionalAlterQueries("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)")
             .build();
         PostgresModule module = PostgresModule.table(table);
-        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, false);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.DISABLED);
 
         testee.initializeTables().block();
 
@@ -409,7 +406,7 @@ class PostgresTableManagerTest {
             .addAdditionalAlterQueries(new PostgresTable.NonRLSOnlyAdditionalAlterQuery("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)"))
             .build();
         PostgresModule module = PostgresModule.table(table);
-        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, false);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.DISABLED);
 
         testee.initializeTables().block();
 
@@ -435,7 +432,7 @@ class PostgresTableManagerTest {
             .addAdditionalAlterQueries(new PostgresTable.NonRLSOnlyAdditionalAlterQuery("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)"))
             .build();
         PostgresModule module = PostgresModule.table(table);
-        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, true);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.ENABLED);
 
         testee.initializeTables().block();
 
@@ -461,7 +458,7 @@ class PostgresTableManagerTest {
             .addAdditionalAlterQueries("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)")
             .build();
         PostgresModule module = PostgresModule.table(table);
-        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, false);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.DISABLED);
 
         testee.initializeTables().block();
 

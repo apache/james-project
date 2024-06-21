@@ -256,7 +256,7 @@ public class PostgresConfiguration {
                 databaseSchema.orElse(DATABASE_SCHEMA_DEFAULT_VALUE),
                 new Credential(username.get(), password.get()),
                 new Credential(byPassRLSUser.orElse(username.get()), byPassRLSPassword.orElse(password.get())),
-                rowLevelSecurityEnabled.orElse(false),
+                    rowLevelSecurityEnabled.filter(rlsEnabled -> rlsEnabled).map(rlsEnabled -> RowLevelSecurity.ENABLED).orElse(RowLevelSecurity.DISABLED),
                 poolInitialSize.orElse(POOL_INITIAL_SIZE_DEFAULT_VALUE),
                 poolMaxSize.orElse(POOL_MAX_SIZE_DEFAULT_VALUE),
                 byPassRLSPoolInitialSize.orElse(BY_PASS_RLS_POOL_INITIAL_SIZE_DEFAULT_VALUE),
@@ -297,7 +297,7 @@ public class PostgresConfiguration {
     private final String databaseSchema;
     private final Credential defaultCredential;
     private final Credential byPassRLSCredential;
-    private final boolean rowLevelSecurityEnabled;
+    private final RowLevelSecurity rowLevelSecurity;
     private final Integer poolInitialSize;
     private final Integer poolMaxSize;
     private final Integer byPassRLSPoolInitialSize;
@@ -306,7 +306,7 @@ public class PostgresConfiguration {
     private final Duration jooqReactiveTimeout;
 
     private PostgresConfiguration(String host, int port, String databaseName, String databaseSchema,
-                                  Credential defaultCredential, Credential byPassRLSCredential, boolean rowLevelSecurityEnabled,
+                                  Credential defaultCredential, Credential byPassRLSCredential, RowLevelSecurity rowLevelSecurity,
                                   Integer poolInitialSize, Integer poolMaxSize,
                                   Integer byPassRLSPoolInitialSize, Integer byPassRLSPoolMaxSize,
                                   SSLMode sslMode, Duration jooqReactiveTimeout) {
@@ -316,7 +316,7 @@ public class PostgresConfiguration {
         this.databaseSchema = databaseSchema;
         this.defaultCredential = defaultCredential;
         this.byPassRLSCredential = byPassRLSCredential;
-        this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
+        this.rowLevelSecurity = rowLevelSecurity;
         this.poolInitialSize = poolInitialSize;
         this.poolMaxSize = poolMaxSize;
         this.byPassRLSPoolInitialSize = byPassRLSPoolInitialSize;
@@ -349,8 +349,8 @@ public class PostgresConfiguration {
         return byPassRLSCredential;
     }
 
-    public boolean rowLevelSecurityEnabled() {
-        return rowLevelSecurityEnabled;
+    public RowLevelSecurity getRowLevelSecurity() {
+        return rowLevelSecurity;
     }
 
     public Integer poolInitialSize() {
@@ -379,7 +379,7 @@ public class PostgresConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(host, port, databaseName, databaseSchema, defaultCredential, byPassRLSCredential, rowLevelSecurityEnabled, poolInitialSize, poolMaxSize, sslMode, jooqReactiveTimeout);
+        return Objects.hash(host, port, databaseName, databaseSchema, defaultCredential, byPassRLSCredential, rowLevelSecurity, poolInitialSize, poolMaxSize, sslMode, jooqReactiveTimeout);
     }
 
     @Override
@@ -387,7 +387,7 @@ public class PostgresConfiguration {
         if (o instanceof PostgresConfiguration) {
             PostgresConfiguration that = (PostgresConfiguration) o;
 
-            return Objects.equals(this.rowLevelSecurityEnabled, that.rowLevelSecurityEnabled)
+            return Objects.equals(this.rowLevelSecurity, that.rowLevelSecurity)
                 && Objects.equals(this.host, that.host)
                 && Objects.equals(this.port, that.port)
                 && Objects.equals(this.defaultCredential, that.defaultCredential)
