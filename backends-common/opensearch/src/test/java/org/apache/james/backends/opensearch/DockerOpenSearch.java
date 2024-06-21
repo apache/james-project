@@ -226,6 +226,7 @@ public interface DockerOpenSearch {
             this.openSearch = new DockerOpenSearch.NoAuth(
                 DockerOpenSearch.NoAuth
                     .defaultContainer(imageName)
+                    .withEnv("OPENSEARCH_INITIAL_ADMIN_PASSWORD", DEFAULT_PASSWORD)
                     .withLogConsumer(frame -> LOGGER.debug("[OpenSearch] " + frame.getUtf8String()))
                     .withNetwork(network)
                     .withNetworkAliases("elasticsearch"));
