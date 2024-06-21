@@ -43,7 +43,7 @@ public class PostgresTableManager implements Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresTableManager.class);
     private final PostgresExecutor postgresExecutor;
     private final PostgresModule module;
-    private final boolean rowLevelSecurityEnabled;
+    private final RowLevelSecurity rowLevelSecurity;
 
     @Inject
     public PostgresTableManager(PostgresExecutor postgresExecutor,
@@ -51,14 +51,14 @@ public class PostgresTableManager implements Startable {
                                 PostgresConfiguration postgresConfiguration) {
         this.postgresExecutor = postgresExecutor;
         this.module = module;
-        this.rowLevelSecurityEnabled = postgresConfiguration.rowLevelSecurityEnabled();
+        this.rowLevelSecurity = postgresConfiguration.getRowLevelSecurity();
     }
 
     @VisibleForTesting
-    public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresModule module, boolean rowLevelSecurityEnabled) {
+    public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresModule module, RowLevelSecurity rowLevelSecurity) {
         this.postgresExecutor = postgresExecutor;
         this.module = module;
-        this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
+        this.rowLevelSecurity = rowLevelSecurity;
     }
 
     public void initPostgres() {
@@ -123,7 +123,7 @@ public class PostgresTableManager implements Startable {
 
     private Mono<Void> executeAdditionalAlterQueries(PostgresTable table, Connection connection) {
         return Flux.fromIterable(table.getAdditionalAlterQueries())
-            .filter(additionalAlterQuery -> additionalAlterQuery.shouldBeApplied(rowLevelSecurityEnabled))
+            .filter(additionalAlterQuery -> additionalAlterQuery.shouldBeApplied(rowLevelSecurity))
             .map(PostgresTable.AdditionalAlterQuery::getQuery)
             .concatMap(alterSQLQuery -> Mono.just(connection)
                 .flatMapMany(pgConnection -> pgConnection.createStatement(alterSQLQuery)
@@ -141,7 +141,7 @@ public class PostgresTableManager implements Startable {
     }
 
     private Mono<Void> enableRLSIfNeeded(PostgresTable table, Connection connection) {
-        if (rowLevelSecurityEnabled && table.supportsRowLevelSecurity()) {
+        if (rowLevelSecurity.isRowLevelSecurityEnabled() && table.supportsRowLevelSecurity()) {
             return alterTableEnableRLS(table, connection);
         }
         return Mono.empty();
