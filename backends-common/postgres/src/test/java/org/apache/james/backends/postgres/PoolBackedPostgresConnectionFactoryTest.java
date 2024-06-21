@@ -29,6 +29,6 @@ public class PoolBackedPostgresConnectionFactoryTest extends JamesPostgresConnec
 
     @Override
     JamesPostgresConnectionFactory jamesPostgresConnectionFactory() {
-        return new PoolBackedPostgresConnectionFactory(true, postgresExtension.getConnectionFactory());
+        return new PoolBackedPostgresConnectionFactory(RowLevelSecurity.ENABLED, postgresExtension.getConnectionFactory());
     }
 }
