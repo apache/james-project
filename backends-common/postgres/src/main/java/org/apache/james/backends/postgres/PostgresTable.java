@@ -60,7 +60,7 @@ public class PostgresTable {
             this.query = query;
         }
 
-        abstract boolean shouldBeApplied(boolean rowLevelSecurityEnabled);
+        abstract boolean shouldBeApplied(RowLevelSecurity rowLevelSecurity);
 
         public String getQuery() {
             return query;
@@ -73,8 +73,8 @@ public class PostgresTable {
         }
 
         @Override
-        boolean shouldBeApplied(boolean rowLevelSecurityEnabled) {
-            return rowLevelSecurityEnabled;
+        boolean shouldBeApplied(RowLevelSecurity rowLevelSecurity) {
+            return rowLevelSecurity.isRowLevelSecurityEnabled();
         }
     }
 
@@ -84,8 +84,8 @@ public class PostgresTable {
         }
 
         @Override
-        boolean shouldBeApplied(boolean rowLevelSecurityEnabled) {
-            return !rowLevelSecurityEnabled;
+        boolean shouldBeApplied(RowLevelSecurity rowLevelSecurity) {
+            return !rowLevelSecurity.isRowLevelSecurityEnabled();
         }
     }
 
@@ -95,7 +95,7 @@ public class PostgresTable {
         }
 
         @Override
-        boolean shouldBeApplied(boolean rowLevelSecurityEnabled) {
+        boolean shouldBeApplied(RowLevelSecurity rowLevelSecurity) {
             return true;
         }
     }
