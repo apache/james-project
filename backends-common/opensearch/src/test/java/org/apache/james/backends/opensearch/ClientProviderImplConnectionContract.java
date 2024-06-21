@@ -75,7 +75,7 @@ interface ClientProviderImplConnectionContract {
         try (ReactorOpenSearchClient client = clientProvider.get()) {
             client.search(
                 new SearchRequest.Builder()
-                    .query(new MatchAllQuery.Builder().build()._toQuery())
+                    .query(new MatchAllQuery.Builder().build().toQuery())
                     .build()).block();
             return true;
         } catch (Exception e) {

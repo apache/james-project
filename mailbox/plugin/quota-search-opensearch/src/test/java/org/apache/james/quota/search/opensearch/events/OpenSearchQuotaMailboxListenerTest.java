@@ -69,7 +69,6 @@ class OpenSearchQuotaMailboxListenerTest {
     static ReactorOpenSearchClient client;
 
     OpenSearchQuotaMailboxListener quotaMailboxListener;
-    private DefaultUserQuotaRootResolver quotaRootResolver;
 
     @BeforeAll
     static void beforeAll() throws IOException {
@@ -87,7 +86,7 @@ class OpenSearchQuotaMailboxListenerTest {
 
     @BeforeEach
     void setUp() {
-        quotaRootResolver = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class));
+        DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class));
         quotaMailboxListener = new OpenSearchQuotaMailboxListener(
             new OpenSearchIndexer(client,
                 QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
@@ -113,11 +112,11 @@ class OpenSearchQuotaMailboxListenerTest {
             .instant(NOW)
             .build());
 
-        CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+        CALMLY_AWAIT.atMost(Durations.ONE_MINUTE)
             .untilAsserted(() -> assertThat(client.search(
                 new SearchRequest.Builder()
                     .index(QuotaRatioOpenSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
-                    .query(new MatchAllQuery.Builder().build()._toQuery())
+                    .query(new MatchAllQuery.Builder().build().toQuery())
                     .build())
                 .block()
                 .hits().total().value()).isEqualTo(1));

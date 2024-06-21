@@ -164,7 +164,7 @@ class OpenSearchSearcherTest {
             .collectList()
             .block();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), composedMessageIds.size());
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), composedMessageIds.size());
 
         MultimailboxesSearchQuery multimailboxesSearchQuery = MultimailboxesSearchQuery
             .from(SearchQuery.of(SearchQuery.all()))

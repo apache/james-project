@@ -80,7 +80,7 @@ class ScrolledSearchTest {
         SearchRequest searchRequest = new SearchRequest.Builder()
             .index(INDEX_NAME.getValue())
             .scroll(TIMEOUT)
-            .query(new MatchAllQuery.Builder().build()._toQuery())
+            .query(new MatchAllQuery.Builder().build().toQuery())
             .size(SIZE)
             .build();
 
@@ -104,7 +104,7 @@ class ScrolledSearchTest {
         SearchRequest searchRequest = new SearchRequest.Builder()
             .index(INDEX_NAME.getValue())
             .scroll(TIMEOUT)
-            .query(new MatchAllQuery.Builder().build()._toQuery())
+            .query(new MatchAllQuery.Builder().build().toQuery())
             .size(SIZE)
             .build();
 
@@ -137,7 +137,7 @@ class ScrolledSearchTest {
         SearchRequest searchRequest = new SearchRequest.Builder()
             .index(INDEX_NAME.getValue())
             .scroll(TIMEOUT)
-            .query(new MatchAllQuery.Builder().build()._toQuery())
+            .query(new MatchAllQuery.Builder().build().toQuery())
             .size(SIZE)
             .build();
 
@@ -178,7 +178,7 @@ class ScrolledSearchTest {
         SearchRequest searchRequest = new SearchRequest.Builder()
             .index(INDEX_NAME.getValue())
             .scroll(TIMEOUT)
-            .query(new MatchAllQuery.Builder().build()._toQuery())
+            .query(new MatchAllQuery.Builder().build().toQuery())
             .size(SIZE)
             .build();
 
@@ -190,7 +190,7 @@ class ScrolledSearchTest {
     private void hasIdsInIndex(ReactorOpenSearchClient client, String... ids) throws IOException {
         SearchRequest searchRequest = new SearchRequest.Builder()
             .index(INDEX_NAME.getValue())
-            .query(new MatchAllQuery.Builder().build()._toQuery())
+            .query(new MatchAllQuery.Builder().build().toQuery())
             .build();
 
         List<String> hitIds = client.search(searchRequest)

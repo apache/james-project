@@ -235,7 +235,7 @@ class OpenSearchListeningMessageSearchIndexTest {
     @Test
     void addShouldIndexMessageWithoutAttachment() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query).toStream())
@@ -245,7 +245,7 @@ class OpenSearchListeningMessageSearchIndexTest {
     @Test
     void addShouldIndexMessageWithAttachment() throws Exception {
         testee.add(session, mailbox, MESSAGE_WITH_ATTACHMENT).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query).toStream())
@@ -257,7 +257,7 @@ class OpenSearchListeningMessageSearchIndexTest {
         testee.add(session, mailbox, MESSAGE_1).block();
         testee.add(session, mailbox, MESSAGE_1).block();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query).toStream())
@@ -269,7 +269,7 @@ class OpenSearchListeningMessageSearchIndexTest {
         testee.add(session, mailbox, MESSAGE_1).block();
         testee.add(session, mailbox, MESSAGE_2).block();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 2L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 2L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query).toStream())
@@ -290,7 +290,7 @@ class OpenSearchListeningMessageSearchIndexTest {
             OpenSearchMailboxConfiguration.builder().build(), new RecordingMetricFactory());
 
         testee.add(session, mailbox, MESSAGE_WITH_ATTACHMENT).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query).toStream())
@@ -359,10 +359,10 @@ class OpenSearchListeningMessageSearchIndexTest {
     @Test
     void deleteShouldRemoveIndex() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 0L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 0L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query).toStream())
@@ -373,10 +373,10 @@ class OpenSearchListeningMessageSearchIndexTest {
     void deleteShouldOnlyRemoveIndexesPassedAsArguments() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         testee.add(session, mailbox, MESSAGE_2).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 2L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 2L);
 
         testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query).toStream())
@@ -387,10 +387,10 @@ class OpenSearchListeningMessageSearchIndexTest {
     void deleteShouldRemoveMultipleIndexes() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         testee.add(session, mailbox, MESSAGE_2).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 2L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 2L);
 
         testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1, MESSAGE_UID_2)).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 0L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 0L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query).toStream())
@@ -412,11 +412,11 @@ class OpenSearchListeningMessageSearchIndexTest {
     @Test
     void deleteShouldBeIdempotent() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block();
         testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 0L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 0L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query).toStream())
@@ -443,7 +443,7 @@ class OpenSearchListeningMessageSearchIndexTest {
     @Test
     void updateShouldUpdateIndex() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         Flags newFlags = new Flags(Flags.Flag.ANSWERED);
         UpdatedFlags updatedFlags = UpdatedFlags.builder()
@@ -454,7 +454,7 @@ class OpenSearchListeningMessageSearchIndexTest {
             .build();
 
         testee.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
-        awaitForOpenSearch(QueryBuilders.term().field("isAnswered").value(FieldValue.of(true)).build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.term().field("isAnswered").value(FieldValue.of(true)).build().toQuery(), 1L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
         assertThat(testee.search(session, mailbox, query).toStream())
@@ -464,7 +464,7 @@ class OpenSearchListeningMessageSearchIndexTest {
     @Test
     void updateShouldThrowOnUnknownMessageUid() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         Flags newFlags = new Flags(Flags.Flag.ANSWERED);
         UpdatedFlags updatedFlags = UpdatedFlags.builder()
@@ -484,7 +484,7 @@ class OpenSearchListeningMessageSearchIndexTest {
     @Test
     void updateShouldBeIdempotent() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
 
         Flags newFlags = new Flags(Flags.Flag.ANSWERED);
         UpdatedFlags updatedFlags = UpdatedFlags.builder()
@@ -496,7 +496,7 @@ class OpenSearchListeningMessageSearchIndexTest {
 
         testee.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
         testee.update(session, mailbox.getMailboxId(), Lists.newArrayList(updatedFlags)).block();
-        awaitForOpenSearch(QueryBuilders.term().field("isAnswered").value(FieldValue.of(true)).build()._toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.term().field("isAnswered").value(FieldValue.of(true)).build().toQuery(), 1L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
         assertThat(testee.search(session, mailbox, query).toStream())
@@ -526,10 +526,10 @@ class OpenSearchListeningMessageSearchIndexTest {
     void deleteAllShouldRemoveAllIndexes() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
         testee.add(session, mailbox, MESSAGE_2).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 2L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 2L);
 
         testee.deleteAll(session, mailbox.getMailboxId()).block();
-        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 0L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 0L);
 
         SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query).toStream())

@@ -49,7 +49,7 @@ public class QueryConverter {
             .must(generateQueryBuilder(query));
 
         mailboxesQuery(mailboxIds).map(boolQueryBuilder::filter);
-        return boolQueryBuilder.build()._toQuery();
+        return boolQueryBuilder.build().toQuery();
     }
 
     private Query generateQueryBuilder(SearchQuery searchQuery) {
@@ -77,7 +77,7 @@ public class QueryConverter {
                 .value(ids)
                 .build())
             .build()
-            ._toQuery());
+            .toQuery());
     }
 
 }

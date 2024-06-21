@@ -383,7 +383,7 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     public Mono<Void> deleteAll(MailboxSession session, MailboxId mailboxId) {
         Query query = TermQuery.of(t -> t
             .field(MAILBOX_ID)
-            .value(new FieldValue.Builder().stringValue(mailboxId.serialize()).build()))._toQuery();
+            .value(new FieldValue.Builder().stringValue(mailboxId.serialize()).build())).toQuery();
 
         return openSearchIndexer
                 .deleteAllMatchingQuery(query, routingKeyFactory.from(mailboxId));
