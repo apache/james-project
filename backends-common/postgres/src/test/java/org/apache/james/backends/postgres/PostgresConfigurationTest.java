@@ -51,7 +51,7 @@ class PostgresConfigurationTest {
         assertThat(configuration.getDefaultCredential().getPassword()).isEqualTo("1");
         assertThat(configuration.getByPassRLSCredential().getUsername()).isEqualTo("bypassrlsjames");
         assertThat(configuration.getByPassRLSCredential().getPassword()).isEqualTo("2");
-        assertThat(configuration.rowLevelSecurityEnabled()).isEqualTo(true);
+        assertThat(configuration.getRowLevelSecurity()).isEqualTo(RowLevelSecurity.ENABLED);
         assertThat(configuration.getSslMode()).isEqualTo(SSLMode.REQUIRE);
     }
 
@@ -68,7 +68,7 @@ class PostgresConfigurationTest {
         assertThat(configuration.getDatabaseSchema()).isEqualTo(PostgresConfiguration.DATABASE_SCHEMA_DEFAULT_VALUE);
         assertThat(configuration.getByPassRLSCredential().getUsername()).isEqualTo("james");
         assertThat(configuration.getByPassRLSCredential().getPassword()).isEqualTo("1");
-        assertThat(configuration.rowLevelSecurityEnabled()).isEqualTo(false);
+        assertThat(configuration.getRowLevelSecurity()).isEqualTo(RowLevelSecurity.DISABLED);
         assertThat(configuration.getSslMode()).isEqualTo(SSLMode.ALLOW);
     }
 
