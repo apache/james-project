@@ -17,23 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.postgres.mail;
+package org.apache.james.backends.postgres;
 
-import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
-import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.MailboxMapperACLTest;
-import org.junit.jupiter.api.extension.RegisterExtension;
+public enum RowLevelSecurity {
+    ENABLED(true),
+    DISABLED(false);
 
-class RLSSupportPostgresMailboxMapperACLTest extends MailboxMapperACLTest {
-    @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresMailboxModule.MODULE,
-        PostgresMailboxMemberModule.MODULE));
+    private boolean rowLevelSecurityEnabled;
 
-    @Override
-    protected MailboxMapper createMailboxMapper() {
-        return new RLSSupportPostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()),
-            new PostgresMailboxMemberDAO(postgresExtension.getDefaultPostgresExecutor()));
+    RowLevelSecurity(boolean rowLevelSecurityEnabled) {
+        this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
+    }
+
+    public boolean isRowLevelSecurityEnabled() {
+        return rowLevelSecurityEnabled;
     }
 }
