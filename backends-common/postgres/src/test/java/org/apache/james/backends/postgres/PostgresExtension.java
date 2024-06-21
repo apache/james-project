@@ -70,10 +70,8 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         }
     }
 
-    private static final boolean ROW_LEVEL_SECURITY_ENABLED = true;
-
     public static PostgresExtension withRowLevelSecurity(PostgresModule module) {
-        return new PostgresExtension(module, ROW_LEVEL_SECURITY_ENABLED);
+        return new PostgresExtension(module, RowLevelSecurity.ENABLED);
     }
 
     public static PostgresExtension withoutRowLevelSecurity(PostgresModule module) {
@@ -81,7 +79,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     public static PostgresExtension withoutRowLevelSecurity(PostgresModule module, PoolSize poolSize) {
-        return new PostgresExtension(module, !ROW_LEVEL_SECURITY_ENABLED, Optional.of(poolSize));
+        return new PostgresExtension(module, RowLevelSecurity.DISABLED, Optional.of(poolSize));
     }
 
     public static PostgresExtension empty() {
@@ -91,7 +89,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     public static final PoolSize DEFAULT_POOL_SIZE = PoolSize.SMALL;
     public static PostgreSQLContainer<?> PG_CONTAINER = DockerPostgresSingleton.SINGLETON;
     private final PostgresModule postgresModule;
-    private final boolean rlsEnabled;
+    private final RowLevelSecurity rowLevelSecurity;
     private final PostgresFixture.Database selectedDatabase;
     private PoolSize poolSize;
     private PostgresConfiguration postgresConfiguration;
@@ -112,14 +110,14 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .exec();
     }
 
-    private PostgresExtension(PostgresModule postgresModule, boolean rlsEnabled) {
-        this(postgresModule, rlsEnabled, Optional.empty());
+    private PostgresExtension(PostgresModule postgresModule, RowLevelSecurity rowLevelSecurity) {
+        this(postgresModule, rowLevelSecurity, Optional.empty());
     }
 
-    private PostgresExtension(PostgresModule postgresModule, boolean rlsEnabled, Optional<PoolSize> maybePoolSize) {
+    private PostgresExtension(PostgresModule postgresModule, RowLevelSecurity rowLevelSecurity, Optional<PoolSize> maybePoolSize) {
         this.postgresModule = postgresModule;
-        this.rlsEnabled = rlsEnabled;
-        if (rlsEnabled) {
+        this.rowLevelSecurity = rowLevelSecurity;
+        if (rowLevelSecurity.isRowLevelSecurityEnabled()) {
             this.selectedDatabase = PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
         } else {
             this.selectedDatabase = DEFAULT_DATABASE;
@@ -138,7 +136,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     private void querySettingRowLevelSecurityIfNeed() {
-        if (rlsEnabled) {
+        if (rowLevelSecurity.isRowLevelSecurityEnabled()) {
             Throwing.runnable(() -> {
                 PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "create user " + ROW_LEVEL_SECURITY_DATABASE.dbUser() + " WITH PASSWORD '" + ROW_LEVEL_SECURITY_DATABASE.dbPassword() + "';");
                 PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "create database " + ROW_LEVEL_SECURITY_DATABASE.dbName() + ";");
@@ -162,7 +160,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .password(selectedDatabase.dbPassword())
             .byPassRLSUser(DEFAULT_DATABASE.dbUser())
             .byPassRLSPassword(DEFAULT_DATABASE.dbPassword())
-            .rowLevelSecurityEnabled(rlsEnabled)
+            .rowLevelSecurityEnabled(rowLevelSecurity.isRowLevelSecurityEnabled())
             .jooqReactiveTimeout(Optional.of(Duration.ofSeconds(20L)))
             .build();
 
@@ -181,7 +179,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         connectionFactory = new PostgresqlConnectionFactory(postgresqlConnectionConfigurationFunction.apply(postgresConfiguration.getDefaultCredential()));
         defaultConnection = connectionFactory.create().block();
         executorFactory = new PostgresExecutor.Factory(
-            getJamesPostgresConnectionFactory(rlsEnabled, connectionFactory),
+            getJamesPostgresConnectionFactory(rowLevelSecurity, connectionFactory),
             postgresConfiguration,
             metricFactory);
 
@@ -190,12 +188,12 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         PostgresqlConnectionFactory byPassRLSConnectionFactory = new PostgresqlConnectionFactory(postgresqlConnectionConfigurationFunction.apply(postgresConfiguration.getByPassRLSCredential()));
 
         byPassRLSPostgresExecutor = new PostgresExecutor.Factory(
-            getJamesPostgresConnectionFactory(false, byPassRLSConnectionFactory),
+            getJamesPostgresConnectionFactory(RowLevelSecurity.DISABLED, byPassRLSConnectionFactory),
             postgresConfiguration,
             metricFactory)
             .create();
 
-        this.postgresTableManager = new PostgresTableManager(defaultPostgresExecutor, postgresModule, rlsEnabled);
+        this.postgresTableManager = new PostgresTableManager(defaultPostgresExecutor, postgresModule, rowLevelSecurity);
     }
 
     @Override
@@ -284,9 +282,9 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .block();
     }
 
-    private JamesPostgresConnectionFactory getJamesPostgresConnectionFactory(boolean rlsEnabled, PostgresqlConnectionFactory connectionFactory) {
+    private JamesPostgresConnectionFactory getJamesPostgresConnectionFactory(RowLevelSecurity rowLevelSecurity, PostgresqlConnectionFactory connectionFactory) {
         return new PoolBackedPostgresConnectionFactory(
-            rlsEnabled,
+            rowLevelSecurity,
             poolSize.getMin(),
             poolSize.getMax(),
             connectionFactory);

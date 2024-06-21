@@ -28,6 +28,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTableManager;
+import org.apache.james.backends.postgres.RowLevelSecurity;
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PoolBackedPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresConnectionClosure;
@@ -55,7 +56,6 @@ import io.r2dbc.spi.ConnectionFactory;
 
 public class PostgresCommonModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger("POSTGRES");
-    private static final boolean DISABLED_ROW_LEVEL_SECURITY = false;
 
     @Override
     public void configure() {
@@ -78,7 +78,7 @@ public class PostgresCommonModule extends AbstractModule {
     @Singleton
     JamesPostgresConnectionFactory provideJamesPostgresConnectionFactory(PostgresConfiguration postgresConfiguration,
                                                                          ConnectionFactory connectionFactory) {
-        return new PoolBackedPostgresConnectionFactory(postgresConfiguration.rowLevelSecurityEnabled(),
+        return new PoolBackedPostgresConnectionFactory(postgresConfiguration.getRowLevelSecurity(),
             postgresConfiguration.poolInitialSize(),
             postgresConfiguration.poolMaxSize(),
             connectionFactory);
@@ -90,10 +90,10 @@ public class PostgresCommonModule extends AbstractModule {
     JamesPostgresConnectionFactory provideJamesPostgresConnectionFactoryWithRLSBypass(PostgresConfiguration postgresConfiguration,
                                                                                       JamesPostgresConnectionFactory jamesPostgresConnectionFactory,
                                                                                       @Named(JamesPostgresConnectionFactory.BY_PASS_RLS_INJECT) ConnectionFactory connectionFactory) {
-        if (!postgresConfiguration.rowLevelSecurityEnabled()) {
+        if (!postgresConfiguration.getRowLevelSecurity().isRowLevelSecurityEnabled()) {
             return jamesPostgresConnectionFactory;
         }
-        return new PoolBackedPostgresConnectionFactory(DISABLED_ROW_LEVEL_SECURITY,
+        return new PoolBackedPostgresConnectionFactory(RowLevelSecurity.DISABLED,
             postgresConfiguration.byPassRLSPoolInitialSize(),
             postgresConfiguration.byPassRLSPoolMaxSize(),
             connectionFactory);

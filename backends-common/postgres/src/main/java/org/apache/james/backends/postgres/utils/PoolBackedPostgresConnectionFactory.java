@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.postgres.utils;
 
+import org.apache.james.backends.postgres.RowLevelSecurity;
 import org.apache.james.core.Domain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,11 +34,12 @@ public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnect
     private static final Logger LOGGER = LoggerFactory.getLogger(PoolBackedPostgresConnectionFactory.class);
     private static final int DEFAULT_INITIAL_SIZE = 10;
     private static final int DEFAULT_MAX_SIZE = 20;
-    private final boolean rowLevelSecurityEnabled;
+
+    private final RowLevelSecurity rowLevelSecurity;
     private final ConnectionPool pool;
 
-    public PoolBackedPostgresConnectionFactory(boolean rowLevelSecurityEnabled, int initialSize, int maxSize, ConnectionFactory connectionFactory) {
-        this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
+    public PoolBackedPostgresConnectionFactory(RowLevelSecurity rowLevelSecurity, int initialSize, int maxSize, ConnectionFactory connectionFactory) {
+        this.rowLevelSecurity = rowLevelSecurity;
         ConnectionPoolConfiguration configuration = ConnectionPoolConfiguration.builder(connectionFactory)
             .initialSize(initialSize)
             .maxSize(maxSize)
@@ -46,13 +48,13 @@ public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnect
         pool = new ConnectionPool(configuration);
     }
 
-    public PoolBackedPostgresConnectionFactory(boolean rowLevelSecurityEnabled, ConnectionFactory connectionFactory) {
-        this(rowLevelSecurityEnabled, DEFAULT_INITIAL_SIZE, DEFAULT_MAX_SIZE, connectionFactory);
+    public PoolBackedPostgresConnectionFactory(RowLevelSecurity rowLevelSecurity, ConnectionFactory connectionFactory) {
+        this(rowLevelSecurity, DEFAULT_INITIAL_SIZE, DEFAULT_MAX_SIZE, connectionFactory);
     }
 
     @Override
     public Mono<Connection> getConnection(Domain domain) {
-        if (rowLevelSecurityEnabled) {
+        if (rowLevelSecurity.isRowLevelSecurityEnabled()) {
             return pool.create().flatMap(connection -> setDomainAttributeForConnection(domain.asString(), connection));
         } else {
             return pool.create();
