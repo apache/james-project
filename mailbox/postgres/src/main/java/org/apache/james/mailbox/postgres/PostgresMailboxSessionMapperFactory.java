@@ -23,6 +23,7 @@ import java.time.Clock;
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.postgres.PostgresConfiguration;
+import org.apache.james.backends.postgres.RowLevelSecurity;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -60,7 +61,7 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
     private final Clock clock;
-    private final boolean isRLSEnabled;
+    private final RowLevelSecurity rowLevelSecurity;
 
     @Inject
     public PostgresMailboxSessionMapperFactory(PostgresExecutor.Factory executorFactory,
@@ -72,13 +73,13 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
         this.clock = clock;
-        this.isRLSEnabled = postgresConfiguration.rowLevelSecurityEnabled();
+        this.rowLevelSecurity = postgresConfiguration.getRowLevelSecurity();
     }
 
     @Override
     public MailboxMapper createMailboxMapper(MailboxSession session) {
         PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(executorFactory.create(session.getUser().getDomainPart()));
-        if (isRLSEnabled) {
+        if (rowLevelSecurity.isRowLevelSecurityEnabled()) {
             return new RLSSupportPostgresMailboxMapper(mailboxDAO,
                 new PostgresMailboxMemberDAO(executorFactory.create(session.getUser().getDomainPart())));
         } else {
