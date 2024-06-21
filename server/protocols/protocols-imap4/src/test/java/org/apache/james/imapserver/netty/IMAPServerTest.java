@@ -1788,7 +1788,7 @@ class IMAPServerTest {
 
         @Disabled("JAMES-4043 Multiple literals and file literals are buggy")
         @Test
-        void testee2() throws Exception {
+        void shouldAcceptSeveralFileLiteral() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
                 .createMailbox(MailboxPath.inbox(USER), mailboxSession);
