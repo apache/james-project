@@ -110,6 +110,7 @@ import org.awaitility.Awaitility;
 import org.eclipse.angus.mail.imap.IMAPFolder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -1729,6 +1730,83 @@ class IMAPServerTest {
         }
 
         @Test
+        void passing2literalOnDifferentNetworkPackage() throws Exception {
+            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a0 OK"));
+            clientConnection.write(ByteBuffer.wrap("a1 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK"));
+
+            String literal = "a".repeat(20);
+            clientConnection.write(ByteBuffer.wrap(("a2 SEARCH CHARSET UTF-8 TO {" + literal.length() + "+}\r\n").getBytes()));
+            clientConnection.write(ByteBuffer.wrap((literal + " TO {" + literal.length() + "+}\r\n").getBytes()));
+            clientConnection.write(ByteBuffer.wrap((literal + " ALL\r\n").getBytes()));
+
+            readStringUntil(clientConnection, s -> s.contains(("a2 OK ")));
+        }
+
+        @Test
+        void passing2literalOnSameNetworkPackage() throws Exception {
+            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a0 OK"));
+            clientConnection.write(ByteBuffer.wrap("a1 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK"));
+
+            String literal = "a".repeat(16);
+            String s1 = "a2 SEARCH CHARSET UTF-8 TO {" + literal.length() + "+}\r\n" +
+                literal + " TO {" + literal.length() + "+}\r\n" + literal + " ALL\r\n";
+            clientConnection.write(ByteBuffer.wrap(s1.getBytes()));
+
+            readStringUntil(clientConnection, s -> s.contains(("a2 OK ")));
+        }
+
+        @Test
+        void passing2literalOnSameNetworkPackageWhenMoreThan16Chars() throws Exception {
+            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a0 OK"));
+            clientConnection.write(ByteBuffer.wrap("a1 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK"));
+
+            String literal = "a".repeat(17);
+            String s1 = "a2 SEARCH CHARSET UTF-8 TO {" + literal.length() + "+}\r\n" +
+                literal + " TO {" + literal.length() + "+}\r\n" + literal + " ALL\r\n";
+            clientConnection.write(ByteBuffer.wrap(s1.getBytes()));
+
+            readStringUntil(clientConnection, s -> s.contains(("a2 OK ")));
+        }
+
+        @Disabled("JAMES-4043 Multiple literals and file literals are buggy")
+        @Test
+        void shouldAcceptSeveralFileLiteral() throws Exception {
+            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a0 OK"));
+            clientConnection.write(ByteBuffer.wrap("a1 SELECT INBOX\r\n".getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK"));
+
+            String litteral = "a".repeat(72 * 1024);
+            clientConnection.write(ByteBuffer.wrap(("a2 SEARCH CHARSET UTF-8 TO {" + litteral.length() + "+}\r\n").getBytes()));
+            clientConnection.write(ByteBuffer.wrap((litteral + " TO {2+}\r\n").getBytes()));
+            clientConnection.write(ByteBuffer.wrap(("aa ALL\r\n").getBytes()));
+
+            readStringUntil(clientConnection, s -> s.contains(("a2 OK ")));
+        }
+
+        @Test
         void shouldRejectLongLineAfterLiteralWhenLogin() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
@@ -2627,7 +2705,6 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("A1 OK [READ-WRITE] SELECT completed."));
             clientConnection.write(ByteBuffer.wrap(("A2 UID FETCH 1:500 (BODY[])\r\n").getBytes(StandardCharsets.UTF_8)));
 
-            Thread.sleep(1000);
 
             assertThat(loaded.get()).isLessThan(500);
             readStringUntil(clientConnection, s -> s.contains("A2 OK FETCH completed."));
