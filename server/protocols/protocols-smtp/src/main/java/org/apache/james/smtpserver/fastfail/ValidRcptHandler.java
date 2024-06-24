@@ -22,6 +22,7 @@ import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.TrimSuffixOfPlusSign;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -64,12 +65,13 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
 
     @Override
     protected boolean isValidRecipient(SMTPSession session, MailAddress recipient) throws UsersRepositoryException, RecipientRewriteTableException {
-        Username username = users.getUsername(recipient);
+        MailAddress trimmedRecipient = TrimSuffixOfPlusSign.trimSuffixOfPlusSign(recipient);
+        Username trimmedUsername = users.getUsername(trimmedRecipient);
 
-        if (users.contains(username)) {
+        if (users.contains(trimmedUsername)) {
             return true;
         } else {
-            return supportsRecipientRewriteTable && isRedirected(recipient, username.asString());
+            return supportsRecipientRewriteTable && isRedirected(trimmedRecipient, trimmedUsername.asString());
         }
     }
 
