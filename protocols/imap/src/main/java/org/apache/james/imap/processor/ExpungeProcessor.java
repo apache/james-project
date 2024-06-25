@@ -129,7 +129,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
             .doOnNext(selected::removeRecent)
             .count()
             .map(Long::intValue)
-            .doOnSuccess(any -> AuditTrail.entry()
+            .doOnSuccess(count -> AuditTrail.entry()
                 .username(() -> mailboxSession.getUser().asString())
                 .sessionId(() -> session.sessionId().asString())
                 .protocol("IMAP")
@@ -137,7 +137,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
                 .parameters(() -> ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
                     "mailboxId", mailbox.getId().serialize(),
                     "messageUids", range.toString()))
-                .log("IMAP EXPUNGE succeeded."));
+                .log(String.format("IMAP EXPUNGE succeeded. %d message deleted.", count)));
     }
 
     @Override
