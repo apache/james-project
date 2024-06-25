@@ -285,9 +285,9 @@ public abstract class AbstractConfigurableAsyncServer
         LOGGER.info("Dispose {}", getServiceType());
         
         if (isEnabled()) {
+            executorGroup.shutdownGracefully();
             unbind();
             postDestroy();
-            executorGroup.shutdownGracefully();
 
             unregisterMBean();
         }
