@@ -170,6 +170,11 @@ public class ActionApplier {
     }
 
     private void removeFromRecipients() {
+        AuditTrail.entry()
+            .action("REJECT")
+            .username(mailAddress::asString)
+            .sessionId(mail::getName)
+            .log("Dropping email for the user as he rejected the mail.");
         mail.setRecipients(mail.getRecipients().stream()
             .filter(recipient -> !recipient.equals(mailAddress))
             .collect(ImmutableList.toImmutableList()));
