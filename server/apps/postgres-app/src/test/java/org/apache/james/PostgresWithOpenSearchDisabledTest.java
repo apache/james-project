@@ -19,13 +19,12 @@
 
 package org.apache.james;
 
-import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
-
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.core.Domain;

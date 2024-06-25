@@ -26,13 +26,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 
 import org.apache.commons.net.imap.IMAPClient;
+import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.data.LdapTestExtension;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.user.ldap.DockerLdapSingleton;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
+
 class PostgresWithLDAPJamesServerTest {
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
