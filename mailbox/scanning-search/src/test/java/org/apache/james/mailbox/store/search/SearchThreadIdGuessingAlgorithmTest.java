@@ -38,8 +38,6 @@ import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 
-import reactor.core.publisher.Flux;
-
 public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
     private InMemoryMailboxManager mailboxManager;
 

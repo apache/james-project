@@ -19,7 +19,6 @@
 
 package org.apache.james.webadmin.integration.vault;
 
-import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Durations.ONE_MINUTE;
@@ -84,7 +83,7 @@ class PostgresDeletedMessageVaultIntegrationTest {
         this.smtpMessageSender = new SMTPMessageSender(DOMAIN);
         this.webAdminApi = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
             .config(WebAdminUtils.defaultConfig()
-                .paramConfig(new ParamConfig(REPLACE, REPLACE, REPLACE)));
+                .paramConfig(new ParamConfig().replaceAllParameters()));
 
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()

@@ -40,6 +40,7 @@ class PostgresNotificationRegistryTest implements NotificationRegistryContract {
         notificationRegistry = new PostgresNotificationRegistry(zonedDateTimeProvider, postgresExtension.getExecutorFactory());
         recipientId = RecipientId.fromMailAddress(new MailAddress("benwa@apache.org"));
     }
+
     @Override
     public NotificationRegistry notificationRegistry() {
         return notificationRegistry;
