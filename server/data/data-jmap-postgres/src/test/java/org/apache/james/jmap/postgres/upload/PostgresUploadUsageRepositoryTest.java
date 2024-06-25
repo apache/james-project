@@ -35,11 +35,13 @@ public class PostgresUploadUsageRepositoryTest implements UploadUsageRepositoryC
         PostgresModule.aggregateModules(PostgresUploadModule.MODULE, PostgresQuotaModule.MODULE));
 
     private PostgresUploadUsageRepository uploadUsageRepository;
+
     @BeforeEach
     public void setup() {
         uploadUsageRepository = new PostgresUploadUsageRepository(new PostgresQuotaCurrentValueDAO(postgresExtension.getDefaultPostgresExecutor()));
         resetCounterToZero();
     }
+
     @Override
     public UploadUsageRepository uploadUsageRepository() {
         return uploadUsageRepository;
