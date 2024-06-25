@@ -852,7 +852,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void updateFlagsOnRangeShouldReturnUpdatedFlagsWithUidOrderAsc() throws MailboxException {
+    public void updateFlagsOnRangeShouldReturnUpdatedFlagsWithUidOrderAsc() throws MailboxException {
         saveMessages();
 
         Iterator<UpdatedFlags> it = messageMapper.updateFlags(benwaInboxMailbox,
@@ -867,7 +867,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void updateFlagsWithRangeFromShouldReturnUpdatedFlagsWithUidOrderAsc() throws MailboxException {
+    public void updateFlagsWithRangeFromShouldReturnUpdatedFlagsWithUidOrderAsc() throws MailboxException {
         saveMessages();
 
         Iterator<UpdatedFlags> it = messageMapper.updateFlags(benwaInboxMailbox,
@@ -882,7 +882,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void updateFlagsWithRangeAllRangeShouldReturnUpdatedFlagsWithUidOrderAsc() throws MailboxException {
+    public void updateFlagsWithRangeAllRangeShouldReturnUpdatedFlagsWithUidOrderAsc() throws MailboxException {
         saveMessages();
 
         Iterator<UpdatedFlags> it = messageMapper.updateFlags(benwaInboxMailbox,
