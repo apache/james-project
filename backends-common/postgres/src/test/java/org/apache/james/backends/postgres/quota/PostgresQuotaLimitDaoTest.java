@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.postgres.quota;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaLimit;
@@ -27,8 +29,6 @@ import org.apache.james.core.quota.QuotaType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class PostgresQuotaLimitDaoTest {
 
@@ -44,8 +44,8 @@ public class PostgresQuotaLimitDaoTest {
 
     @Test
     void getQuotaLimitsShouldGetSomeQuotaLimitsSuccessfully() {
-        QuotaLimit expectedOne = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(200l).build();
-        QuotaLimit expectedTwo = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.SIZE).quotaLimit(100l).build();
+        QuotaLimit expectedOne = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(200L).build();
+        QuotaLimit expectedTwo = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.SIZE).quotaLimit(100L).build();
         postgresQuotaLimitDao.setQuotaLimit(expectedOne).block();
         postgresQuotaLimitDao.setQuotaLimit(expectedTwo).block();
 
@@ -55,7 +55,7 @@ public class PostgresQuotaLimitDaoTest {
 
     @Test
     void setQuotaLimitShouldSaveObjectSuccessfully() {
-        QuotaLimit expected = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(100l).build();
+        QuotaLimit expected = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(100L).build();
         postgresQuotaLimitDao.setQuotaLimit(expected).block();
 
         assertThat(postgresQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block())
@@ -64,7 +64,7 @@ public class PostgresQuotaLimitDaoTest {
 
     @Test
     void setQuotaLimitShouldSaveObjectSuccessfullyWhenLimitIsMinusOne() {
-        QuotaLimit expected = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(-1l).build();
+        QuotaLimit expected = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(-1L).build();
         postgresQuotaLimitDao.setQuotaLimit(expected).block();
 
         assertThat(postgresQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block())
@@ -73,7 +73,7 @@ public class PostgresQuotaLimitDaoTest {
 
     @Test
     void deleteQuotaLimitShouldDeleteObjectSuccessfully() {
-        QuotaLimit quotaLimit = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(100l).build();
+        QuotaLimit quotaLimit = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(100L).build();
         postgresQuotaLimitDao.setQuotaLimit(quotaLimit).block();
         postgresQuotaLimitDao.deleteQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block();
 
