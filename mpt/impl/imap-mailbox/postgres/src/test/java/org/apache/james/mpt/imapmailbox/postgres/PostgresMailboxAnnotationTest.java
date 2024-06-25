@@ -22,7 +22,6 @@ package org.apache.james.mpt.imapmailbox.postgres;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.postgres.host.PostgresHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.MailboxAnnotation;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresMailboxAnnotationTest extends MailboxAnnotation {
