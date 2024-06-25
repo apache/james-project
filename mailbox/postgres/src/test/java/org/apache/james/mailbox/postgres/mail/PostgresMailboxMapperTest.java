@@ -63,17 +63,17 @@ public class PostgresMailboxMapperTest extends MailboxMapperTest {
 
     @Test
     void retrieveMailboxShouldReturnCorrectHighestModSeqAndLastUid() {
-        Username BENWA = Username.of("benwa");
-        MailboxPath benwaInboxPath = MailboxPath.forUser(BENWA, "INBOX");
+        Username benwa = Username.of("benwa");
+        MailboxPath benwaInboxPath = MailboxPath.forUser(benwa, "INBOX");
 
         Mailbox mailbox = mailboxMapper.create(benwaInboxPath, UidValidity.of(43)).block();
 
         // increase modSeq
-        ModSeq nextModSeq = new PostgresModSeqProvider.Factory(postgresExtension.getExecutorFactory()).create(MailboxSessionUtil.create(BENWA))
+        ModSeq nextModSeq = new PostgresModSeqProvider.Factory(postgresExtension.getExecutorFactory()).create(MailboxSessionUtil.create(benwa))
             .nextModSeqReactive(mailbox.getMailboxId()).block();
 
         // increase lastUid
-        MessageUid nextUid = new PostgresUidProvider.Factory(postgresExtension.getExecutorFactory()).create(MailboxSessionUtil.create(BENWA))
+        MessageUid nextUid = new PostgresUidProvider.Factory(postgresExtension.getExecutorFactory()).create(MailboxSessionUtil.create(benwa))
             .nextUidReactive(mailbox.getMailboxId()).block();
 
         PostgresMailbox metaData = (PostgresMailbox) mailboxMapper.findMailboxById(mailbox.getMailboxId()).block();
