@@ -25,6 +25,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.RejectedExecutionException;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -59,6 +60,8 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
+import io.netty.util.concurrent.RejectedExecutionHandler;
+import io.netty.util.internal.SystemPropertyUtil;
 
 
 /**
@@ -180,8 +183,16 @@ public abstract class AbstractConfigurableAsyncServer
         Integer bossWorker = config.getInteger("bossWorkerCount", null);
         setBossWorkerCount(Optional.ofNullable(bossWorker));
 
+        RejectedExecutionHandler rejectedExecutionHandler = (task, executor) -> {
+            if (!executor.isShuttingDown()) {
+                throw new RejectedExecutionException();
+            }
+        };
+
         executorGroup = new DefaultEventExecutorGroup(config.getInt("maxExecutorCount", DEFAULT_MAX_EXECUTOR_COUNT),
-            NamedThreadFactory.withName(jmxName));
+            NamedThreadFactory.withName(jmxName),
+            Math.max(16, SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", Integer.MAX_VALUE)),
+            rejectedExecutionHandler);
         
         configureHelloName(config);
 
