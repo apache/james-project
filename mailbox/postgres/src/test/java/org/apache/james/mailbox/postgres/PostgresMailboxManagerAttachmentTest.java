@@ -80,9 +80,9 @@ public class PostgresMailboxManagerAttachmentTest extends AbstractMailboxManager
 
     @BeforeEach
     void beforeAll() throws Exception {
-        BlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
-        DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, BLOB_ID_FACTORY);
-        mapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, BLOB_ID_FACTORY,
+        BlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
+        mapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, blobIdFactory,
             PostgresConfiguration.builder().username("a").password("a").build());
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
@@ -101,9 +101,9 @@ public class PostgresMailboxManagerAttachmentTest extends AbstractMailboxManager
 
         MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), storeAttachmentManager);
 
-        PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(BLOB_ID_FACTORY, postgresExtension.getExecutorFactory());
+        PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(blobIdFactory, postgresExtension.getExecutorFactory());
         PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(postgresExtension.getExecutorFactory());
-        PostgresAttachmentDAO.Factory attachmentDAOFactory = new PostgresAttachmentDAO.Factory(postgresExtension.getExecutorFactory(), BLOB_ID_FACTORY);
+        PostgresAttachmentDAO.Factory attachmentDAOFactory = new PostgresAttachmentDAO.Factory(postgresExtension.getExecutorFactory(), blobIdFactory);
         PostgresThreadDAO.Factory threadDAOFactory = new PostgresThreadDAO.Factory(postgresExtension.getExecutorFactory());
 
         eventBus.register(new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory,

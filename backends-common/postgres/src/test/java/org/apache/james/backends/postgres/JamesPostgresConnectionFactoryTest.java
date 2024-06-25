@@ -21,8 +21,6 @@ package org.apache.james.backends.postgres;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.core.Domain;
 import org.junit.jupiter.api.Test;

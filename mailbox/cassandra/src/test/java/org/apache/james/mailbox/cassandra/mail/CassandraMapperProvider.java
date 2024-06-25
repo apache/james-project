@@ -42,7 +42,6 @@ import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
-import org.apache.james.mailbox.store.mail.model.MessageUidProvider;
 import org.apache.james.utils.UpdatableTickingClock;
 
 import com.google.common.collect.ImmutableList;

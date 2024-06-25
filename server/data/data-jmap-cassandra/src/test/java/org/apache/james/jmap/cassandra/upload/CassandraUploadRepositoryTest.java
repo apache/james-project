@@ -41,6 +41,7 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(UploadModule.MODULE);
     private CassandraUploadRepository testee;
     private UpdatableTickingClock clock;
+
     @BeforeEach
     void setUp() {
         clock = new UpdatableTickingClock(Clock.systemUTC().instant());
