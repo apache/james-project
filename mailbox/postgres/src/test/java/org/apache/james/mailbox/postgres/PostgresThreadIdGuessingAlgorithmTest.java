@@ -47,9 +47,9 @@ import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 
 import reactor.core.publisher.Flux;
