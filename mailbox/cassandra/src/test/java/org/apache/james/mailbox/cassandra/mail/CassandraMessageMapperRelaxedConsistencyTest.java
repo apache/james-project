@@ -98,5 +98,20 @@ class CassandraMessageMapperRelaxedConsistencyTest {
         public void userFlagsUpdateShouldWorkInConcurrentEnvironment() throws Exception {
             super.userFlagsUpdateShouldWorkInConcurrentEnvironment();
         }
+
+        @Disabled("JAMES-3435 Without strong consistency flags update is not thread safe as long as it follows a read-before-write pattern")
+        @Override
+        public void updateFlagsWithRangeAllRangeShouldReturnUpdatedFlagsWithUidOrderAsc() {
+        }
+
+        @Disabled("JAMES-3435 Without strong consistency flags update is not thread safe as long as it follows a read-before-write pattern")
+        @Override
+        public void updateFlagsOnRangeShouldReturnUpdatedFlagsWithUidOrderAsc() {
+        }
+
+        @Disabled("JAMES-3435 Without strong consistency flags update is not thread safe as long as it follows a read-before-write pattern")
+        @Override
+        public void updateFlagsWithRangeFromShouldReturnUpdatedFlagsWithUidOrderAsc() {
+        }
     }
 }
