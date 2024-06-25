@@ -37,8 +37,8 @@ public class PostgresEmailQueryViewManagerRLSTest {
     public static final PostgresMailboxId MAILBOX_ID_1 = PostgresMailboxId.generate();
     public static final PostgresMessageId.Factory MESSAGE_ID_FACTORY = new PostgresMessageId.Factory();
     public static final PostgresMessageId MESSAGE_ID_1 = MESSAGE_ID_FACTORY.generate();
-    ZonedDateTime DATE_1 = ZonedDateTime.parse("2010-10-30T15:12:00Z");
-    ZonedDateTime DATE_2 = ZonedDateTime.parse("2010-10-30T16:12:00Z");
+    private static final ZonedDateTime DATE_1 = ZonedDateTime.parse("2010-10-30T15:12:00Z");
+    private static final ZonedDateTime DATE_2 = ZonedDateTime.parse("2010-10-30T16:12:00Z");
 
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresEmailQueryViewModule.MODULE);
