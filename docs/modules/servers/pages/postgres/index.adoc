@@ -1,0 +1,14 @@
+= Postgres James Mail Server
+:navtitle: Distributed Postgres James Application
+
+The Postgres James server offers an easy way to scale email server. Based on
+SQL database solutions, here is https://www.postgresql.org/[Postgres].
+
+Postgres is a powerful and versatile database server. Known for its advanced features, scalability,
+and robust performance, Postgres is the ideal choice for handling high-throughput and large data sets efficiently.
+Its row-level security ensures top-notch data protection, while the flexible architecture allows seamless integration
+with various storage and search solutions
+
+In this section of the documentation, we will introduce you to:
+
+* xref:postgres/objectives.adoc[Objectives and motivation of the Distributed Postgres Server]
