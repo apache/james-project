@@ -21,6 +21,7 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
+import org.apache.james.ClockExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.PostgresJamesConfiguration;
@@ -53,6 +54,7 @@ public class PostgresPushSubscriptionSetMethodTest implements PushSubscriptionSe
             .build())
         .extension(PostgresExtension.empty())
         .extension(new RabbitMQExtension())
+        .extension(new ClockExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new PushSubscriptionProbeModule())
