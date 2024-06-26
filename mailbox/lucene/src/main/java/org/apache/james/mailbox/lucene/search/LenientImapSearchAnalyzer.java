@@ -22,7 +22,7 @@ import java.io.Reader;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.WhitespaceTokenizer;
+import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.util.Version;
 
@@ -47,7 +47,9 @@ public final class LenientImapSearchAnalyzer extends Analyzer {
     }
     
     @Override
-    public TokenStream tokenStream(String arg0, Reader reader) {
-        return new ShingleFilter(new UpperCaseFilter(new WhitespaceTokenizer(Version.LUCENE_31, reader)), 2, maxTokenLength);
+    protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
+        WhitespaceTokenizer source = new WhitespaceTokenizer(Version.LUCENE_40, reader);
+        TokenStream filter = new ShingleFilter(new UpperCaseFilter(source), 2, maxTokenLength);
+        return new TokenStreamComponents(source, filter);
     }
 }
