@@ -1,0 +1,2 @@
+= Distributed James Postgres Server &mdash; Architecture
+:navtitle: Architecture
