@@ -1,0 +1,22 @@
+= Distributed James Server &mdash; Objectives and motivation
+:navtitle: Objectives and motivation
+
+From the outstanding advantages of a distributed mail system, such as scalability and enhancement,
+this project aims to implement a backend database version using Postgres.
+
+Primary Objectives:
+
+* Provide more options: The current James Distributed server uses Cassandra as the backend database.
+  This project aims to provide an alternative to Cassandra, using Postgres as the backend database.
+  This choice aims to offer a highly scalable and reactive James mail server, suitable for small to medium deployments,
+  while the distributed setup remains more fitting for larger ones.
+* Propose an alternative to the jpa-app variant: The jpa-app variant is a simple version of James that uses JPA
+  to store data and is compatible with various SQL databases.
+  With the postgres-app, we use the `r2dbc` library to connect to the Postgres database, implementing non-blocking,
+  reactive APIs for higher performance.
+* Leverage advanced Postgres features: Postgres is a powerful database that supports many advanced features.
+  This project aims to leverage these features to improve the efficiency of the James server.
+  For example, the implement https://www.postgresql.org/docs/current/ddl-rowsecurity.html[row-level security]
+  to improve the security of the James server.
+* Flexible deployment: The new architecture allows flexible module choices. You can use Postgres directly for
+  blob storage or use Object Storage (e.g Minio, S3...).
