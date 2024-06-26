@@ -257,7 +257,7 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, file, s3");
+            .hasMessage("implementation property is missing please use one of supported values in: " + supportedBlobStores());
     }
 
     @Test
@@ -267,7 +267,7 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, file, s3");
+            .hasMessage("implementation property is missing please use one of supported values in: " + supportedBlobStores());
     }
 
     @Test
@@ -277,7 +277,7 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, file, s3");
+            .hasMessage("implementation property is missing please use one of supported values in: " + supportedBlobStores());
     }
 
     @Test
@@ -287,7 +287,11 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: cassandra, file, s3");
+            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: " + supportedBlobStores());
+    }
+
+    private String supportedBlobStores() {
+        return "cassandra, file, s3, postgres";
     }
 
     @Test
