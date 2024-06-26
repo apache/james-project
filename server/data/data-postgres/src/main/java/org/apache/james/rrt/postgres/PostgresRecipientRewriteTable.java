@@ -36,6 +36,8 @@ import org.apache.james.rrt.lib.MappingsImpl;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Flux;
+
 public class PostgresRecipientRewriteTable extends AbstractRecipientRewriteTable {
     private PostgresRecipientRewriteTableDAO postgresRecipientRewriteTableDAO;
 
@@ -85,4 +87,10 @@ public class PostgresRecipientRewriteTable extends AbstractRecipientRewriteTable
         return postgresRecipientRewriteTableDAO.getSources(mapping).toStream();
     }
 
+    @Override
+    public Flux<MappingSource> listSourcesReactive(Mapping mapping) {
+        Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
+            "Not supported mapping of type %s", mapping.getType());
+        return postgresRecipientRewriteTableDAO.getSources(mapping);
+    }
 }
