@@ -18,13 +18,10 @@
  ****************************************************************/
 package org.apache.james.mailbox.lucene.search;
 
-import java.io.Reader;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.shingle.ShingleFilter;
-import org.apache.lucene.util.Version;
 
 /**
  * This {@link Analyzer} is not 100% conform with RFC3501 but does
@@ -47,8 +44,8 @@ public final class LenientImapSearchAnalyzer extends Analyzer {
     }
     
     @Override
-    protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
-        WhitespaceTokenizer source = new WhitespaceTokenizer(Version.LUCENE_40, reader);
+    protected TokenStreamComponents createComponents(String fieldName) {
+        WhitespaceTokenizer source = new WhitespaceTokenizer();
         TokenStream filter = new ShingleFilter(new UpperCaseFilter(source), 2, maxTokenLength);
         return new TokenStreamComponents(source, filter);
     }
