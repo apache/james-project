@@ -652,7 +652,7 @@
         <tink.version>1.9.0</tink.version>
         <lettuce.core.version>6.3.2.RELEASE</lettuce.core.version>
 
-        <bouncycastle.version>1.77</bouncycastle.version>
+        <bouncycastle.version>1.78.1</bouncycastle.version>
 
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.14</scala.version>
