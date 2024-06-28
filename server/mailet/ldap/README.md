@@ -67,6 +67,15 @@ For matching recipients against a specific LDAP group:
 
 ```xml
 <mailet matcher="IsInLDAPGroup=cn=mygroup,ou=groups, dc=james,dc=org" class="Null">
+
+</mailet>
+```
+
+
+For matching senders against a specific LDAP group:
+
+```xml
+<mailet matcher="SenderIsInLDAPGroup=cn=mygroup,ou=groups, dc=james,dc=org" class="Null">
     
 </mailet>
 ```
