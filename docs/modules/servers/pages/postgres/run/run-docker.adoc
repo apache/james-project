@@ -1,0 +1,145 @@
+= Postgresql James Server &mdash; Run with docker
+:navtitle: Run with docker
+
+== Running via docker-compose
+
+Requirements: docker & docker-compose installed.
+
+When you try James this way, you will use the most current state of James.
+
+=== Running with Postgresql only
+
+It will be configured to run with Postgresql.
+All those components will be started with a single command.
+
+You can retrieve the docker-compose file : ( docker-compose file and james image name should be changed)
+
+    $ wget https://raw.githubusercontent.com/apache/james-project/master/server/apps/postgres-app/docker-compose.yml
+
+
+Then, you just have to start the services:
+
+    $ docker-compose up -d
+
+Wait a few seconds in order to have all those services start up. You will see the following log when James is available:
+james           | Started : true
+
+A default domain, james.local, has been created. You can see this by running:
+
+    $ docker exec james james-cli -h 127.0.0.1 -p 9999 listdomains
+
+James will respond to IMAP port 143 and SMTP port 25.
+You have to create users before playing with james. You may also want to create other domains.
+Follow the 'Useful commands' section for more information about James CLI.
+
+=== Running distributed James
+
+We also have a distributed version of the James postgresql app with:
+
+* OpenSearch as a search indexer
+* S3 as the object storage
+* RabbitMQ as the event bus
+
+To run it, simply type:
+
+    $ docker compose -f docker-compose-distributed.yml up -d
+
+== Run with docker
+
+=== Requirements
+
+Compile the whole project:
+
+    mvn clean install -DskipTests -T 4
+
+Then load the James Postgresql server docker image:
+
+    docker load -i server/apps/postgres-app/target/jib-image.tar
+
+Alternatively we provide convenience distribution for the latest release:
+
+    docker pull apache/james:postgres-3.9.0
+
+=== Running with Postgresql only
+
+Firstly, create your own user network on Docker for the James environment:
+
+    $ docker network create --driver bridge james
+
+You need a running *Postgresql* in docker which connects to *james* network. To achieve this run:
+
+    $ docker run -d --network james --name=postgres --env 'POSTGRES_DB=james' --env 'POSTGRES_USER=james' --env 'POSTGRES_PASSWORD=secret1' postgres:16.0
+
+To run this container :
+
+    $ docker run --network james --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000" --name james_run
+        -v $PWD/keystore:/root/conf/keystore -t apache/james:postgres-3.9.0 --generate-keystore
+
+Where :
+
+- HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
+
+Webadmin port binding is restricted to loopback as users are not authenticated by default on webadmin server. Thus you should avoid exposing it in production.
+Note that the above example assumes `127.0.0.1` is your loopback interface for convenience but you should change it if this is not the case on your machine.
+
+If you want to pass additional options to the underlying java command, you can configure a _JAVA_TOOL_OPTIONS_ env variable, for example add:
+
+    --env "JAVA_TOOL_OPTIONS=-Xms256m -Xmx2048m"
+
+To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
+
+=== Running distributed
+
+Same as above, except that you need to run before James instances of RabbitMQ, S3 object storage and Opensearch.
+
+You need a running *rabbitmq* in docker which connects to *james* network. To achieve this run:
+
+    $ docker run -d --network james --name=rabbitmq rabbitmq:3.13.3-management
+
+You need a running *Zenko Cloudserver* objectstorage in docker which connects to *james* network. To achieve this run:
+
+    $ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 registry.scality.com/cloudserver/cloudserver:8.7.25
+
+You need a running *OpenSearch* in docker which connects to *james* network. To achieve this run:
+
+$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.14.0
+
+Then run James like in the section above.
+
+=== Specific keystore
+
+Alternatively, you can also generate a keystore in your conf folder with the
+following command, and drop `--generate-keystore` option:
+
+[source,bash]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+----
+
+=== Instrumentation
+You can use link:https://glowroot.org/[Glowroot] to instrumentalize James. It is packaged as part of the docker distribution to easily enable valuable performances insights.
+Disabled by default, its java agent can easily be enabled:
+
+    --env "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" -p "4000:4000"
+
+By default, the Glowroot UI is accessible from every machines in the network as defined in the _destination/admin.json_.
+Which you could configure before building the image, if you want to restrict its accessibility to localhost for example.
+See the https://github.com/glowroot/glowroot/wiki/Agent-Installation-(with-Embedded-Collector)#user-content-optional-post-installation-steps[Glowroot post installation steps]  for more details.
+
+Or by mapping the 4000 port to the IP of the desired network interface, for example `-p 127.0.0.1:4000:4000`.
+
+
+=== Handling attachment indexing
+
+You can handle attachment text extraction before indexing in OpenSearch. This makes attachments searchable. To enable this:
+
+Run tika connect to *james* network:
+
+    $ docker run -d --network james --name tika apache/tika:2.9.2.1
+
+Run James:
+
+    $ docker run --network james --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000"
+        --name james_run -v $PWD/keystore:/root/conf/keystore -t apache/james:postgres-latest
+
+You can find more explanation on the need of Tika in this xref:postgres/configure/tika.adoc[page].
