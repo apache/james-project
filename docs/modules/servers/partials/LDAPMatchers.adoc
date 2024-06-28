@@ -7,6 +7,7 @@ Those include:
 
  - LDAP conditions based on attributes of the recipients
  - LDAP conditions based on attributes of the sender
+ - LDAP groups of the recipients
 
 Support is planned for LDAP groups both for sender and recipients.
 
@@ -59,5 +60,14 @@ or
 <!-- Matches sender that have the following attribute regardless of the actual value-->
 <mailet matcher="SenderHasLDAPAttribute=description" class="Null">
 
+</mailet>
+....
+
+
+For matching recipients against a specific LDAP group:
+
+....xml
+<mailet matcher="IsInLDAPGroup=cn=mygroup,ou=groups, dc=james,dc=org" class="Null">
+    
 </mailet>
 ....
