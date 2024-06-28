@@ -1,0 +1,108 @@
+= Postgresql James Server &mdash; Run
+:navtitle: Run
+
+== Building
+
+=== Requirements
+
+* Java 21 SDK
+* Maven 3
+
+=== Building the artifacts
+
+An usual compilation using maven will produce two artifacts into
+server/apps/postgres-app/target directory:
+
+* james-server-postgres-app.jar
+* james-server-postgres-app.lib
+
+You can for example run in the base of
+https://github.com/apache/james-project[this git repository]:
+
+....
+mvn clean install
+....
+
+== Running
+
+=== Running James with Postgresql only
+
+==== Requirements
+
+* Postgresql 16.0+
+
+==== James launch
+
+To run james, you have to create a directory containing required
+configuration files.
+
+James requires the configuration to be in a subfolder of working directory that is called conf.
+A https://github.com/apache/james-project/tree/master/server/apps/postgres-app/sample-configuration[sample directory]
+is provided with some default values you may need to replace. You will need to update its content to match your needs.
+
+Also you might need to add the files like in the
+https://github.com/apache/james-project/tree/master/server/apps/postgres-app/sample-configuration-single[sample directory]
+to not have OpenSearch indexing enabled by default for the search.
+
+You need to have a Postgresql instance running. You can either install the server or launch it via docker:
+
+[source,bash]
+----
+$ docker run -d --network james -p 5432:5432 --name=postgres --env 'POSTGRES_DB=james' --env 'POSTGRES_USER=james' --env 'POSTGRES_PASSWORD=secret1' postgres:16.0
+----
+
+Once everything is set up, you just have to run the jar with:
+
+[source,bash]
+----
+$ java -Dworking.directory=. -jar target/james-server-postgres-app.jar --generate-keystore
+----
+
+Alternatively, you can also generate a keystore in your conf folder with the
+following command, and drop `--generate-keystore` option:
+
+[source,bash]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+----
+
+=== Running distributed James
+
+==== Requirements
+
+* Postgresql 16.0+
+* OpenSearch 2.1.0+
+* RabbitMQ-Management 3.8.17+
+* Swift ObjectStorage 2.15.1+ or Zenko Cloudserver or AWS S3
+
+==== James Launch
+
+If you want to use the distributed version of James Postgres app, you will need to add configuration in the conf folder
+like in the https://github.com/apache/james-project/tree/master/server/apps/postgres-app/sample-configuration-distributed[sample directory].
+
+You need to have a Postgresql, OpenSearch, S3 and RabbitMQ instance
+running. You can either install the servers or launch them via docker:
+
+[source,bash]
+----
+$ docker run -d --network james -p 5432:5432 --name=postgres --env 'POSTGRES_DB=james' --env 'POSTGRES_USER=james' --env 'POSTGRES_PASSWORD=secret1' postgres:16.0
+$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.14.0
+$ docker run -d -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.13.3-management
+$ docker run -d --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 registry.scality.com/cloudserver/cloudserver:8.7.25
+----
+
+Once everything is set up, you just have to run the jar like in the with Postgresql only section.
+
+==== Using AWS S3 of Zenko Cloudserver
+
+By default, James is configured with [Zenko Cloudserver](https://hub.docker.com/r/zenko/cloudserver) which is compatible with AWS S3, in `blobstore.propeties` as such:
+
+[source,bash]
+----
+implementation=s3
+objectstorage.namespace=james
+objectstorage.s3.endPoint=http://s3.docker.test:8000/
+objectstorage.s3.region=eu-west-1
+objectstorage.s3.accessKeyId=accessKey1
+objectstorage.s3.secretKey=secretKey1
+----
