@@ -137,8 +137,8 @@ public interface DockerOpenSearch {
             return new HttpWaitStrategy()
                 .forPort(OS_HTTP_PORT)
                 .forStatusCodeMatching(response -> response == HTTP_OK)
-                .withReadTimeout(Duration.ofSeconds(10))
-                .withStartupTimeout(Duration.ofMinutes(3));
+                .withReadTimeout(Duration.ofSeconds(30))
+                .withStartupTimeout(Duration.ofMinutes(5));
         }
 
         static DockerContainer defaultContainer(String imageName) {
