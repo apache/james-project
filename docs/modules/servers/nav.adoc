@@ -84,6 +84,8 @@
 **** xref:postgres/architecture/consistency-model.adoc[]
 **** xref:postgres/architecture/specialized-instances.adoc[]
 *** xref:postgres/run/index.adoc[]
+**** xref:postgres/run/run-java.adoc[Run with Java]
+**** xref:postgres/run/run-docker.adoc[Run with Docker]
 *** xref:postgres/configure/index.adoc[]
 **** Protocols
 ***** xref:postgres/configure/imap.adoc[imapserver.xml]
