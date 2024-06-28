@@ -40,7 +40,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-class IsInLDAPGroupTest {
+class SenderIsInLDAPGroupTest {
 
     static LdapGenericContainer ldapContainer = DockerLdapSingleton.ldapContainer;
 
@@ -56,16 +56,18 @@ class IsInLDAPGroupTest {
 
     @Test
     void shouldMatchGroupMember() throws Exception {
-        IsInLDAPGroup testee = new IsInLDAPGroup(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        SenderIsInLDAPGroup testee = new SenderIsInLDAPGroup(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
-            .matcherName("IsInLDAPGroup")
+            .matcherName("SenderIsInLDAPGroup")
             .condition("cn=mygroup,ou=groups, dc=james,dc=org")
             .build();
         testee.init(matcherConfig);
 
-        MailAddress recipient = new MailAddress("james-user@james.org");
+        MailAddress sender = new MailAddress("james-user@james.org");
+        MailAddress recipient = new MailAddress("rcpt@james.org");
         Collection<MailAddress> matched = testee.match(FakeMail.builder()
             .name("default-id")
+            .sender(sender)
             .recipient(recipient)
             .build());
 
@@ -74,16 +76,18 @@ class IsInLDAPGroupTest {
 
     @Test
     void shouldNotMatchNotGroupMember() throws Exception {
-        IsInLDAPGroup testee = new IsInLDAPGroup(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        SenderIsInLDAPGroup testee = new SenderIsInLDAPGroup(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
-            .matcherName("IsInLDAPGroup")
+            .matcherName("SenderIsInLDAPGroup")
             .condition("cn=mygroup,ou=groups, dc=james,dc=org")
             .build();
         testee.init(matcherConfig);
 
-        MailAddress recipient = new MailAddress("bob@james.org");
+        MailAddress sender = new MailAddress("bob@james.org");
+        MailAddress recipient = new MailAddress("rcpt@james.org");
         Collection<MailAddress> matched = testee.match(FakeMail.builder()
             .name("default-id")
+            .sender(sender)
             .recipient(recipient)
             .build());
 
@@ -92,16 +96,18 @@ class IsInLDAPGroupTest {
 
     @Test
     void shouldNotMatchWhenGroupNotFound() throws Exception {
-        IsInLDAPGroup testee = new IsInLDAPGroup(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        SenderIsInLDAPGroup testee = new SenderIsInLDAPGroup(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
-            .matcherName("IsInLDAPGroup")
+            .matcherName("SenderIsInLDAPGroup")
             .condition("cn=notfound,ou=groups, dc=james,dc=org")
             .build();
         testee.init(matcherConfig);
 
-        MailAddress recipient = new MailAddress("bob@james.org");
+        MailAddress sender = new MailAddress("james-user@james.org");
+        MailAddress recipient = new MailAddress("rcpt@james.org");
         Collection<MailAddress> matched = testee.match(FakeMail.builder()
             .name("default-id")
+            .sender(sender)
             .recipient(recipient)
             .build());
 

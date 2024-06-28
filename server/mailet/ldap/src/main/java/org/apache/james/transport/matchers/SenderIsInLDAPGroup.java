@@ -32,15 +32,15 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 
 /**
- * Matchers that allow looking up for LDAP group membership for each recipient.
+ * Matchers that allow looking up for LDAP group membership for the sender.
  *
  * To enable this matcher one need first to add the james-server-mailet-ldap.jar in the externals-jars folder of your
  * James installation.
@@ -48,18 +48,18 @@ import com.unboundid.ldap.sdk.SearchResultEntry;
  * In order to match the group membership:
  *
  * <pre><code>
- * &lt;mailet matcher=&quot;IsInLDAPGroup=cn=mygroup,ou=groups, dc=james,dc=org&quot; class=&quot;Null&quot;&gt;
+ * &lt;mailet matcher=&quot;SenderIsInLDAPGroup=cn=mygroup,ou=groups, dc=james,dc=org&quot; class=&quot;Null&quot;&gt;
  *
  * &lt;/mailet&gt;
  * </code></pre>
  */
-public class IsInLDAPGroup extends GenericMatcher {
+public class SenderIsInLDAPGroup extends GenericMatcher {
     private final LDAPConnectionPool ldapConnectionPool;
     private final LdapRepositoryConfiguration configuration;
     private String groupDN;
 
     @Inject
-    public IsInLDAPGroup(LdapRepositoryConfiguration configuration) throws LDAPException {
+    public SenderIsInLDAPGroup(LdapRepositoryConfiguration configuration) throws LDAPException {
         this.configuration = configuration;
         ldapConnectionPool = new LDAPConnectionFactory(this.configuration).getLdapConnectionPool();
     }
@@ -71,7 +71,10 @@ public class IsInLDAPGroup extends GenericMatcher {
 
     @Override
     public Collection<MailAddress> match(Mail mail) {
-        return Sets.intersection(ImmutableSet.copyOf(mail.getRecipients()), groupMembers());
+        if (mail.getMaybeSender().asOptional().map(a -> groupMembers().contains(a)).orElse(false)) {
+            return mail.getRecipients();
+        }
+        return ImmutableList.of();
     }
 
     private Set<MailAddress> groupMembers() {
