@@ -1,2 +1,14 @@
-= Distributed James Postgres Server &mdash; Run
+= Postgresql James Server &mdash; Run
 :navtitle: Run
+
+This sections presents guidance to all current deployment types of Postgresql James Server.
+
+== Run with Java
+
+Build your own Apache James Postgresql artifacts and start xref:postgres/run/run-java.adoc[Running it directly on a Java Virtual Machine].
+
+== Run with Docker
+
+We have prepared a docker-compose for Apache James to run with Postgresql & OpenSearch.
+
+You can start xref:postgres/run/run-docker.adoc[Running James with few simple Docker commands].
