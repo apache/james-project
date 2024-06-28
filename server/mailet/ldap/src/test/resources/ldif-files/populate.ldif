@@ -6,6 +6,10 @@ dn: ou=empty, dc=james,dc=org
 ou: empty
 objectClass: organizationalUnit
 
+dn: ou=groups, dc=james,dc=org
+ou: groups
+objectClass: organizationalUnit
+
 dn: ou=whatever, dc=james,dc=org
 ou: whatever
 objectClass: organizationalUnit
@@ -27,3 +31,12 @@ sn: bob
 mail: bob@james.org
 userPassword: secret
 description: Extra user
+
+dn: cn=mygroup,ou=groups, dc=james,dc=org
+objectclass: top
+objectclass: groupofnames
+member: uid=james-user,ou=people,dc=james,dc=org
+member: uid=not-found,ou=people,dc=james,dc=org
+cn: mygroup
+ou: groups
+
