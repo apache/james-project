@@ -123,6 +123,8 @@ include::partial$CompareNumericHeaderValue.adoc[]
 
 include::partial$FileRegexMatcher.adoc[]
 
+include::partial$HasHabeasWarrantMark.adoc[]
+
 include::partial$InSpammerBlacklist.adoc[]
 
 include::partial$NESSpamCheck.adoc[]
