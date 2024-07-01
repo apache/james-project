@@ -1,0 +1,51 @@
+= Postgresql James Server &mdash; blobstore.properties
+:navtitle: blobstore.properties
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:pages-path: postgres
+
+== BlobStore
+
+This file is optional. If omitted, the *postgres* blob store will be used.
+
+BlobStore is the dedicated component to store blobs, non-indexable content.
+James uses the BlobStore for storing blobs which are usually mail contents, attachments, deleted mails...
+
+You can choose the underlying implementation of BlobStore to fit with your James setup.
+
+It could be the implementation on top of Postgres or file storage service S3 compatible like Openstack Swift and AWS S3.
+
+Consult link:{sample-configuration-prefix-url}/blob.properties[blob.properties]
+in GIT to get some examples and hints.
+
+=== Implementation choice
+
+*implementation* :
+
+* postgres: use cassandra based Postgres
+* objectstorage: use Swift/AWS S3 based BlobStore
+* file: (experimental) use directly the file system. Useful for legacy architecture based on shared ISCI SANs and/or
+distributed file system with no object store available.
+
+*deduplication.enable*: Mandatory. Supported value: true and false.
+
+If you choose to enable deduplication, the mails with the same content will be stored only once.
+
+WARNING: Once this feature is enabled, there is no turning back as turning it off will lead to the deletion of all
+the mails sharing the same content once one is deleted.
+
+Deduplication requires a garbage collector mechanism to effectively drop blobs. A first implementation
+based on bloom filters can be used and triggered using the WebAdmin REST API. See
+xref:{pages-path}/operate/webadmin.adoc#_running_blob_garbage_collection[Running blob garbage collection].
+
+In order to avoid concurrency issues upon garbage collection, we slice the blobs in generation, the two more recent
+generations are not garbage collected.
+
+*deduplication.gc.generation.duration*: Allow controlling the duration of one generation. Longer implies better deduplication
+but deleted blobs will live longer. Duration, defaults on 30 days, the default unit is in days.
+
+*deduplication.gc.generation.family*: Every time the duration is changed, this integer counter must be incremented to avoid
+conflicts. Defaults to 1.
+
+
+include::partial$configure/blobstore.adoc[]
