@@ -1,0 +1,7 @@
+= Postgresql James Server &mdash; SSL & TLS configuration
+:navtitle: SSL & TLS configuration
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:pages-path: postgres
+:server-name: Postgresql James server
+include::partial$configure/ssl.adoc[]

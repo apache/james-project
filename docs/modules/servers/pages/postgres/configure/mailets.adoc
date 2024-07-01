@@ -1,0 +1,6 @@
+= Postgresql James Server &mdash; Mailets
+:navtitle: Mailets
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:server-name: Postgresql James server
+include::partial$configure/mailets.adoc[]
