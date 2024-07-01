@@ -36,6 +36,7 @@ This page details standards implemented by the {server-name}.
 - link:https://datatracker.ietf.org/doc/html/rfc2554[RFC-2554] ESMTP Service Extension for Authentication
 - link:https://datatracker.ietf.org/doc/rfc6710/[RFC-6710] SMTP Extension for Message Transfer Priorities
 - link:https://datatracker.ietf.org/doc/rfc8689/[RFC-8689] SMTP Require TLS Option
+- link:https://datatracker.ietf.org/doc/html/rfc1893[RFC-1893] Enhanced Mail System Status Codes
 
 == LMTP
 
