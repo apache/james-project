@@ -10,6 +10,7 @@ The idea is to write a portion of mailet pipeline extracting Icalendar attachmen
 can later be sent to other applications over AMQP to be treated in an asynchronous, decoupled fashion.
 
 == Configuration
+
 We can achieve this goal by combining simple mailets building blocks.
 
 Here is a sample pipeline achieving aforementioned objectives :
