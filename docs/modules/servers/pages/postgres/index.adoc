@@ -1,7 +1,7 @@
-= James Postgres Mail Server
+= Postgres James Mail Server
 :navtitle: Distributed Postgres James Application
 
-The Distributed server offers an easy way to scale email server. Based on
+The Postgres James server offers an easy way to scale email server. Based on
 SQL database solutions, here is https://www.postgresql.org/[Postgres].
 
 Postgres is a powerful and versatile database server. Known for its advanced features, scalability,
