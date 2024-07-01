@@ -1,0 +1,5 @@
+= Postgresql James Server &mdash; batchsizes.properties
+:navtitle: batchsizes.properties
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+include::partial$configure/batchsizes.adoc[]

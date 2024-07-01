@@ -1,0 +1,8 @@
+= Postgresql James Server &mdash; opensearch.properties
+:navtitle: opensearch.properties
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:pages-path: postgres
+:server-name: Postgresql James server
+:package-tag: postgres
+include::partial$configure/opensearch.adoc[]
