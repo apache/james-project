@@ -1,0 +1,7 @@
+= Postgresql James Server &mdash; Delivery Submission Notifications
+:navtitle: ESMTP DSN setup
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:pages-path: distributed
+:mailet-repository-path-prefix: postgres
+include::partial$configure/dsn.adoc[]

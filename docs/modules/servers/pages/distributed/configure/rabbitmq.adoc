@@ -1,137 +1,8 @@
 = Distributed James Server &mdash; rabbitmq.properties
 :navtitle: rabbitmq.properties
 
-This configuration helps you configure components using RabbitMQ.
-
-Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/rabbitmq.properties[example]
-to get some examples and hints.
-
-== RabbitMQ Configuration
-
-.rabbitmq.properties content
-|===
-| Property name | explanation
-
-| uri
-| the amqp URI pointing to RabbitMQ server. If you use a vhost, specify it as well at the end of the URI.
-Details about amqp URI format is in https://www.rabbitmq.com/uri-spec.html[RabbitMQ URI Specification]
-
-| management.uri
-| the URI pointing to RabbitMQ Management Service. James need to retrieve some information about listing queues
-from this service in runtime.
-Details about URI format is in https://www.rabbitmq.com/management.html#usage-ui[RabbitMQ Management URI]
-
-| management.user
-| username used to access management service
-
-| management.password
-| password used to access management service
-
-| connection.pool.retries
-| Configure retries count to retrieve a connection. Exponential backoff is performed between each retries.
-Optional integer, defaults to 10
-
-| connection.pool.min.delay.ms
-| Configure initial duration (in ms) between two connection retries. Exponential backoff is performed between each retries.
-Optional integer, defaults to 100
-
-| channel.pool.retries
-| Configure retries count to retrieve a channel. Exponential backoff is performed between each retries.
-Optional integer, defaults to 3
-
-| channel.pool.max.delay.ms
-| Configure timeout duration (in ms) to obtain a rabbitmq channel. Defaults to 30 seconds.
-Optional integer, defaults to 30 seconds.
-
-| channel.pool.size
-| Configure the size of the channel pool.
-Optional integer, defaults to 3
-
-| driver.network.recovery.interval
-| Optional, non-negative integer, default to 100ms. The interval (in ms) that RabbitMQ driver will automatic recovery wait before attempting to reconnect. See https://www.rabbitmq.com/client-libraries/java-api-guide#connection-recovery
-
-| ssl.enabled
-| Is using ssl enabled
-Optional boolean, defaults to false
-
-| ssl.management.enabled
-| Is using ssl on management api enabled
-Optional boolean, defaults to false
-
-| ssl.validation.strategy
-| Configure the validation strategy used for rabbitmq connections. Possible values are default, ignore and override.
-Optional string, defaults to using systemwide ssl configuration
-
-| ssl.truststore
-| Points to the truststore (PKCS12) used for verifying rabbitmq connection. If configured then "ssl.truststore.password" must also be configured,
-Optional string, defaults to systemwide truststore. "ssl.validation.strategy: override" must be configured if you want to use this
-
-| ssl.truststore.password
-| Configure the truststore password. If configured then "ssl.truststore" must also be configured,
-Optional string, defaults to empty string. "ssl.validation.strategy: override" must be configured if you want to use this
-
-| ssl.hostname.verifier
-| Configure host name verification. Possible options are default and accept_any_hostname
-Optional string, defaults to subject alternative name host verifier
-
-| ssl.keystore
-| Points to the keystore(PKCS12) used for client certificate authentication. If configured then "ssl.keystore.password" must also be configured,
-Optional string, defaults to empty string
-
-| ssl.keystore.password
-| Configure the keystore password. If configured then "ssl.keystore" must also be configured,
-Optional string, defaults to empty string
-
-| quorum.queues.enable
-| Boolean. Whether to activate Quorum queue usage for all queues.
-Quorum queues enables high availability.
-False (default value) results in the usage of classic queues.
-
-| quorum.queues.replication.factor
-| Strictly positive integer. The replication factor to use when creating quorum queues.
-
-| quorum.queues.delivery.limit
-| Strictly positive integer. Value for x-delivery-limit queue parameter, default to none. Setting a delivery limit can
-prevent RabbitMQ outage if message processing fails. Read https://www.rabbitmq.com/docs/quorum-queues#poison-message-handling
-
-| hosts
-| Optional, default to the host specified as part of the URI.
-Allow creating cluster aware connections.
-A coma separated list of hosts, example: hosts=ip1:5672,ip2:5672
-
-| mailqueue.publish.confirm.enabled
-| Whether or not to enable publish confirms for the mail queue. Optional boolean, defaults to true.
-
-| event.bus.publish.confirm.enabled
-| Whether or not to enable publish confirms for the event bus. Optional boolean, defaults to true.
-
-| event.bus.notification.durability.enabled
-| Whether or not the queue backing notifications should be durable. Optional boolean, defaults to true.
-
-| event.bus.propagate.dispatch.error
-| Whether to propagate errors back to the callers when eventbus fails to dispatch group events to RabbitMQ (then store the failed events in the event dead letters).
-Optional boolean, defaults to true.
-
-| vhost
-| Optional string. This parameter is only a workaround to support invalid URIs containing character like '_'.
-You still need to specify the vhost in the uri parameter.
-
-|===
-
-== Tuning RabbitMQ for quorum queue use
-
-While quorum queues are great at preserving your data and enabling High Availability, they demand more resources and
-a greater care than regular RabbitMQ queues.
-
-See link:https://www.rabbitmq.com/docs/quorum-queues#performance-tuning[this section of RabbitMQ documentation regarding RabbitMQ quroum queue performance tunning].
-
- - Provide decent amount of RAM memory to RabbitMQ. 4GB is a good start.
- - Setting a delivery limit is advised as looping messages can cause extreme memory consumptions onto quorum queues.
- - Set up Raft for small messages:
-
-....
-raft.segment_max_entries = 32768
-....
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration
+include::partial$configure/rabbitmq.adoc[]
 
 == RabbitMQ MailQueue Configuration
 
@@ -153,19 +24,19 @@ Not necessarily needed for MDA deployments, mail queue management adds significa
 | mailqueue.view.sliceWindow
 | James divides the view into slices, each slice contains data for a given period, sliceWindow parameter controls this period.
 This dividing of periods allows faster browsing of the mail queue. Tips for choosing sliceWindow are explained in
-https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/rabbitmq.properties[rabbitmq.properties]
+{sample-configuration-prefix-url}/rabbitmq.properties[rabbitmq.properties]
 
 | mailqueue.view.bucketCount
 | Mails in a mail queue are distributed across the underlying storage service.
 BucketCount describes how to be distributing mails to fit with your James setup
 Tips for choosing bucketCount are explained in
-https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/rabbitmq.properties[rabbitmq.properties]
+{sample-configuration-prefix-url}/rabbitmq.properties[rabbitmq.properties]
 
 | mailqueue.view.updateBrowseStartPace
 | To browse, James needs a starting point and to continuously update that point in runtime.
 UpdateBrowseStartPace describes the probability to update the starting point.
 Tips for choosing updateBrowseStartPace are explained in
-https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/rabbitmq.properties[rabbitmq.properties]
+{sample-configuration-prefix-url}/rabbitmq.properties[rabbitmq.properties]
 
 | mailqueue.size.metricsEnabled
 |  By default, the metrics are disabled for the mail queue size.
@@ -173,42 +44,11 @@ As computing the size of the mail queue is currently implemented on top of brows
 sometimes it can get too big, making it impossible for the ES reporter to handle it correctly without crashing.
 It can be useful then to disable it.
 Tips for choosing metricsEnabled are explained in
-https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/rabbitmq.properties[rabbitmq.properties]
+{sample-configuration-prefix-url}/rabbitmq.properties[rabbitmq.properties]
 
 | notification.queue.ttl
 | Configure queue ttl (in ms). References: https://www.rabbitmq.com/ttl.html#queue-ttl.
 This is used only on queues used to share notification patterns, are exclusive to a node. If omitted, it will not add the TTL configure when declaring queues.
 Optional integer, defaults is 3600000.
-
-|===
-
-== RabbitMQ Tasks Configuration
-
-Tasks are WebAdmin triggered long running jobs. RabbitMQ is used to organise their execution in a work queue,
-with an exclusive consumer.
-
-.rabbitmq.properties content
-|===
-| Property name | explanation
-
-| task.consumption.enabled
-| Whether to enable task consumption on this node.
-Disable with caution (this only makes sense in a distributed setup where other nodes consume tasks).
-Defaults to true.
-
-Limitation: Sometimes, some tasks running on James can be very heavy and take a couple of hours to complete.
-If other tasks are being triggered meanwhile on WebAdmin, they go on the TaskManagerWorkQueue and James unack them,
-telling RabbitMQ it will consume them later. If they don't get consumed before the consumer timeout setup in
-RabbitMQ (default being 30 minutes), RabbitMQ closes the channel on an exception. It is thus advised to declare a
-longer timeout in rabbitmq.conf. More https://www.rabbitmq.com/consumers.html#acknowledgement-timeout[here].
-
-| task.queue.consumer.timeout
-| Task queue consumer timeout.
-
-Optional. Duration (support multiple time units cf `DurationParser`), defaults to 1 day.
-
-Required at least RabbitMQ version 3.12 to have effect.
-This is used to avoid the task queue consumer (which could run very long tasks) being disconnected by RabbitMQ after the default acknowledgement timeout 30 minutes.
-References: https://www.rabbitmq.com/consumers.html#acknowledgement-timeout.
 
 |===
