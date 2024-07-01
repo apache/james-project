@@ -3,4 +3,80 @@
 
 :sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration
 :pages-path: distributed
+
+== BlobStore
+
+This file is optional. If omitted, the *cassandra* blob store will be used.
+
+BlobStore is the dedicated component to store blobs, non-indexable content.
+James uses the BlobStore for storing blobs which are usually mail contents, attachments, deleted mails...
+
+You can choose the underlying implementation of BlobStore to fit with your James setup.
+
+It could be the implementation on top of Cassandra or file storage service S3 compatible like Openstack Swift and AWS S3.
+
+Consult link:{sample-configuration-prefix-url}/blob.properties[blob.properties]
+in GIT to get some examples and hints.
+
+=== Implementation choice
+
+*implementation* :
+
+* cassandra: use cassandra based BlobStore
+* objectstorage: use Swift/AWS S3 based BlobStore
+* file: (experimental) use directly the file system. Useful for legacy architecture based on shared ISCI SANs and/or
+distributed file system with no object store available.
+
+WARNING: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
+Alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)
+
+The generated startup warning log can be deactivated via the `cassandra.blob.store.disable.startup.warning` environment
+variable being positioned to `false`.
+
+*deduplication.enable*: Mandatory. Supported value: true and false.
+
+If you choose to enable deduplication, the mails with the same content will be stored only once.
+
+WARNING: Once this feature is enabled, there is no turning back as turning it off will lead to the deletion of all
+the mails sharing the same content once one is deleted.
+
+NOTE: If you are upgrading from James 3.5 or older, the deduplication was enabled.
+
+Deduplication requires a garbage collector mechanism to effectively drop blobs. A first implementation
+based on bloom filters can be used and triggered using the WebAdmin REST API. See
+xref:{pages-path}/operate/webadmin.adoc#_running_blob_garbage_collection[Running blob garbage collection].
+
+In order to avoid concurrency issues upon garbage collection, we slice the blobs in generation, the two more recent
+generations are not garbage collected.
+
+*deduplication.gc.generation.duration*: Allow controlling the duration of one generation. Longer implies better deduplication
+but deleted blobs will live longer. Duration, defaults on 30 days, the default unit is in days.
+
+*deduplication.gc.generation.family*: Every time the duration is changed, this integer counter must be incremented to avoid
+conflicts. Defaults to 1.
+
+=== Cassandra BlobStore Cache
+
+A Cassandra cache can be enabled to reduce latency when reading small blobs frequently.
+A dedicated keyspace with a replication factor of one is then used.
+Cache eviction policy is TTL based.
+Only blobs below a given threshold will be stored.
+To be noted that blobs are stored within a single Cassandra row, hence a low threshold should be used.
+
+.blobstore.properties cache related content
+|===
+| Property name | explanation
+
+| cache.enable
+| DEFAULT: false, optional, must be a boolean. Whether the cache should be enabled.
+
+| cache.cassandra.ttl
+| DEFAULT: 7 days, optional, must be a duration. Cache eviction policy is TTL based.
+
+| cache.sizeThresholdInBytes
+| DEFAULT: 8192, optional, must be a positive integer. Unit: bytes.
+Supported units: bytes, Kib, MiB, GiB, TiB
+Maximum size of stored objects expressed in bytes.
+|===
+
 include::partial$configure/blobstore.adoc[]
