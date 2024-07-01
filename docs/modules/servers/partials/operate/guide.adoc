@@ -1,0 +1,270 @@
+This guide aims to be an entry-point to the James documentation for user
+managing a {server-name}.
+
+It includes:
+
+* Simple architecture explanations
+* Propose some diagnostics for some common issues
+* Present procedures that can be set up to address these issues
+
+In order to not duplicate information, existing documentation will be
+linked.
+
+Please note that this product is under active development, should be
+considered experimental and thus targets advanced users.
+
+== Basic Monitoring
+
+A toolbox is available to help an administrator diagnose issues:
+
+* xref:{xref-base}/operate/logging.adoc[Structured logging into Kibana]
+* xref:{xref-base}/operate/metrics.adoc[Metrics graphs into Grafana]
+* xref:{xref-base}/operate/webadmin.adoc#_healthcheck[WebAdmin HealthChecks]
+
+== Mail processing
+
+Currently, an administrator can monitor mail processing failure through `ERROR` log
+review. We also recommend watching in Kibana INFO logs using the
+`org.apache.james.transport.mailets.ToProcessor` value as their `logger`. Metrics about
+mail repository size, and the corresponding Grafana boards are yet to be contributed.
+
+Furthermore, given the default mailet container configuration, we recommend monitoring
+`{mailet-repository-path-prefix}://var/mail/error/` to be empty.
+
+WebAdmin exposes all utilities for
+xref:{xref-base}/operate/webadmin.adoc#_reprocessing_mails_from_a_mail_repository[reprocessing
+all mails in a mail repository] or
+xref:{xref-base}/operate/webadmin.adoc#_reprocessing_a_specific_mail_from_a_mail_repository[reprocessing
+a single mail in a mail repository].
+
+In order to prevent unbounded processing that could consume unbounded resources. We can provide a CRON with `limit` parameter.
+Ex: 10 reprocessed per minute
+Note that it only support the reprocessing all mails.
+
+Also, one can decide to
+xref:{xref-base}/operate/webadmin.adoc#_removing_all_mails_from_a_mail_repository[delete
+all the mails of a mail repository] or
+xref:{xref-base}/operate/webadmin.adoc#_removing_a_mail_from_a_mail_repository[delete
+a single mail of a mail repository].
+
+Performance of mail processing can be monitored via the
+https://github.com/apache/james-project/blob/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting/es-datasource/MAILET-1490071694187-dashboard.json[mailet
+grafana board] and
+https://github.com/apache/james-project/blob/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting/es-datasource/MATCHER-1490071813409-dashboard.json[matcher
+grafana board].
+
+=== Recipient rewriting
+
+Given the default configuration, errors (like loops) uopn recipient rewritting will lead
+to emails being stored in `{mailet-repository-path-prefix}://var/mail/rrt-error/`.
+
+We recommend monitoring the content of this mail repository to be empty.
+
+If it is not empty, we recommend
+verifying user mappings via xref:{xref-base}/operate/webadmin.adoc#_listing_user_mappings_[User Mappings webadmin API] then once identified break the loop by removing
+some Recipient Rewrite Table entry via the
+xref:{xref-base}/operate/webadmin.adoc#_removing_an_alias_of_an_user[Delete Alias],
+xref:{xref-base}/operate/webadmin.adoc#_removing_a_group_member[Delete Group member],
+xref:{xref-base}/operate/webadmin.adoc#_removing_a_destination_of_a_forward[Delete forward],
+xref:{xref-base}/operate/webadmin.adoc#_remove_an_address_mapping[Delete Address mapping],
+xref:{xref-base}/operate/webadmin.adoc#_removing_a_domain_mapping[Delete Domain mapping]
+or xref:{xref-base}/operate/webadmin.adoc#_removing_a_regex_mapping[Delete Regex mapping]
+APIs (as needed).
+
+The `Mail.error` field can help diagnose the issue as well. Then once
+the root cause has been addressed, the mail can be reprocessed.
+
+== Mailbox Event Bus
+
+It is possible for the administrator of James to define the mailbox
+listeners he wants to use, by adding them in the
+{sample-configuration-prefix-url}/listeners.xml[listeners.xml]
+configuration file. It’s possible also to add your own custom mailbox
+listeners. This enables to enhance capabilities of James as a Mail
+Delivery Agent. You can get more information about those
+    xref:{xref-base}/configure/listeners.adoc[here].
+
+Currently, an administrator can monitor listeners failures through
+`ERROR` log review. Metrics regarding mailbox listeners can be monitored
+via
+https://github.com/apache/james-project/blob/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting/es-datasource/MailboxListeners-1528958667486-dashboard.json[mailbox_listeners
+grafana board] and
+https://github.com/apache/james-project/blob/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting/es-datasource/MailboxListeners%20rate-1552903378376.json[mailbox_listeners_rate
+grafana board].
+
+Upon exceptions, a bounded number of retries are performed (with
+exponential backoff delays). If after those retries the listener is
+still failing to perform its operation, then the event will be stored in
+the xref:{xref-base}/operate/webadmin.adoc#_event_dead_letter[Event Dead Letter]. This
+API allows diagnosing issues, as well as redelivering the events.
+
+To check that you have undelivered events in your system, you can first
+run the associated with
+xref:{xref-base}/operate/webadmin.adoc#_healthcheck[event dead letter health check] .
+You can explore Event DeadLetter content through WebAdmin. For
+this, xref:{xref-base}/operate/webadmin.adoc#_listing_mailbox_listener_groups[list mailbox listener groups]
+you will get a list of groups back, allowing
+you to check if those contain registered events in each by
+xref:{xref-base}/operate/webadmin.adoc#_listing_failed_events[listing their failed events].
+
+If you get failed events IDs back, you can as well
+xref:{xref-base}/operate/webadmin.adoc#_getting_event_details[check their details].
+
+An easy way to solve this is just to trigger then the
+xref:{xref-base}/operate/webadmin.adoc#_redeliver_all_events[redeliver all events]
+task. It will start reprocessing all the failed events registered in
+event dead letters.
+
+In order to prevent unbounded processing that could consume unbounded resources. We can provide a CRON with `limit` parameter.
+Ex: 10 redelivery per minute
+
+If for some other reason you don’t need to redeliver all events, you
+have more fine-grained operations allowing you to
+xref:{xref-base}/operate/webadmin.adoc#_redeliver_group_events[redeliver group events]
+or even just
+xref:{xref-base}/operate/webadmin.adoc#_redeliver_a_single_event[redeliver a single event].
+
+== OpenSearch Indexing
+
+A projection of messages is maintained in OpenSearch via a listener
+plugged into the mailbox event bus in order to enable search features.
+
+You can find more information about OpenSearch configuration
+xref:{xref-base}/configure/opensearch.adoc[here].
+
+=== Usual troubleshooting procedures
+
+As explained in the link:#_mailbox_event_bus[Mailbox Event Bus] section,
+processing those events can fail sometimes.
+
+Currently, an administrator can monitor indexation failures through
+`ERROR` log review. You can as well
+xref:{xref-base}/operate/webadmin.adoc#_listing_failed_events[list failed events] by
+looking with the group called
+`org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex$OpenSearchListeningMessageSearchIndexGroup`.
+A first on-the-fly solution could be to just
+link:#_mailbox_event_bus[redeliver those group events with event dead letter].
+
+If the event storage in dead-letters fails (for instance in the face of
+{backend-name} storage exceptions), then you might need to use our WebAdmin
+reIndexing tasks.
+
+From there, you have multiple choices. You can
+xref:{xref-base}/operate/webadmin.adoc#_reindexing_all_mails[reIndex all mails],
+xref:{xref-base}/operate/webadmin.adoc#_reindexing_a_mailbox_mails[reIndex mails from a mailbox] or even just
+xref:{xref-base}/operate/webadmin.adoc#_reindexing_a_single_mail_by_messageid[reIndex a single mail].
+
+When checking the result of a reIndexing task, you might have failed
+reprocessed mails. You can still use the task ID to
+xref:{xref-base}/operate/webadmin.adoc#_fixing_previously_failed_reindexing[reprocess previously failed reIndexing mails].
+
+=== On the fly OpenSearch Index setting update
+
+Sometimes you might need to update index settings. Cases when an
+administrator might want to update index settings include:
+
+* Scaling out: increasing the shard count might be needed.
+* Changing string analysers, for instance to target another language
+* etc.
+
+In order to achieve such a procedure, you need to:
+
+* https://www.elastic.co/guide/en/elasticsearch/reference/7.10/indices-create-index.html[Create
+the new index] with the right settings and mapping
+* James uses two aliases on the mailbox index: one for reading
+(`mailboxReadAlias`) and one for writing (`mailboxWriteAlias`). First
+https://www.elastic.co/guide/en/elasticsearch/reference/7.10/indices-aliases.html[add
+an alias] `mailboxWriteAlias` to that new index, so that now James
+writes on the old and new indexes, while only keeping reading on the
+first one
+* Now trigger a
+https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docs-reindex.html[reindex]
+from the old index to the new one (this actively relies on `_source`
+field being present)
+* When this is done, add the `mailboxReadAlias` alias to the new index
+* Now that the migration to the new index is done, you can
+https://www.elastic.co/guide/en/elasticsearch/reference/7.10/indices-delete-index.html[drop
+the old index]
+* You might want as well modify the James configuration file
+{sample-configuration-prefix-url}/opensearch.properties[opensearch.properties]
+by setting the parameter `opensearch.index.mailbox.name` to the name
+of your new index. This is to avoid that James re-creates index upon
+restart
+
+_Note_: keep in mind that reindexing can be a very long operation
+depending on the volume of mails you have stored.
+
+== Mail Queue
+
+=== Fine tune configuration for RabbitMQ
+
+In order to adapt mail queue settings to the actual traffic load, an
+administrator needs to perform fine configuration tunning as explained
+in
+https://github.com/apache/james-project/blob/master/src/site/xdoc/server/config-rabbitmq.xml[rabbitmq.properties].
+
+Be aware that `MailQueue::getSize` is currently performing a browse and
+thus is expensive. Size recurring metric reporting thus introduces
+performance issues. As such, we advise setting
+`mailqueue.size.metricsEnabled=false`.
+
+=== Managing email queues
+
+Managing an email queue is an easy task if you follow this procedure:
+
+* First, xref:{xref-base}/operate/webadmin.adoc#_listing_mail_queues[List mail queues]
+and xref:{xref-base}/operate/webadmin.adoc#_getting_a_mail_queue_details[get a mail queue details].
+* And then
+xref:{xref-base}/operate/webadmin.adoc#_listing_the_mails_of_a_mail_queue[List the mails of a mail queue].
+
+In case, you need to clear an email queue because there are only spam or
+trash emails in the email queue you have this procedure to follow:
+
+* All mails from the given mail queue will be deleted with
+xref:{xref-base}/operate/webadmin.adoc#_clearing_a_mail_queue[Clearing a mail queue].
+
+== Deleted Message Vault
+
+We recommend the administrator to
+xref:#_cleaning_expired_deleted_messages[run it] in cron job to save
+storage volume.
+
+=== How to configure deleted messages vault
+
+To setup James with Deleted Messages Vault, you need to follow those
+steps:
+
+* Enable Deleted Messages Vault by configuring Pre Deletion Hooks.
+* Configuring the retention time for the Deleted Messages Vault.
+
+==== Enable Deleted Messages Vault by configuring Pre Deletion Hooks
+
+You need to configure this hook in
+{sample-configuration-prefix-url}/listeners.xml[listeners.xml]
+configuration file. More details about configuration & example can be
+found at http://james.apache.org/server/config-listeners.html[Pre
+Deletion Hook Configuration]
+
+==== Configuring the retention time for the Deleted Messages Vault
+
+In order to configure the retention time for the Deleted Messages Vault,
+an administrator needs to perform fine configuration tunning as
+explained in
+{sample-configuration-prefix-url}/deletedMessageVault.properties[deletedMessageVault.properties].
+Mails are not retained forever as you have to configure a retention
+period (by `retentionPeriod`) before using it (with one-year retention
+by default if not defined).
+
+=== Restore deleted messages after deletion
+
+After users deleted their mails and emptied the trash, the admin can use
+xref:{xref-base}/operate/webadmin.adoc#_restore_deleted_messages[Restore Deleted Messages]
+to restore all the deleted mails.
+
+=== Cleaning expired deleted messages
+
+You can delete all deleted messages older than the configured
+`retentionPeriod` by using
+xref:{xref-base}/operate/webadmin.adoc#_deleted_messages_vault[Purge Deleted Messages].
+We recommend calling this API in CRON job on 1st day each
+month.
