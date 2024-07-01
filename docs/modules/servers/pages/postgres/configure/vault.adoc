@@ -1,0 +1,8 @@
+= Postgresql James Server &mdash; deletedMessageVault.properties
+:navtitle: deletedMessageVault.properties
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:pages-path: postgres
+:server-name: Postgresql James server
+:backend-name: Postgresql
+include::partial$configure/vault.adoc[]
