@@ -1,0 +1,191 @@
+Anti-Spam system can be configured via two main different mechanisms:
+
+* SMTP Hooks;
+* Mailets;
+
+== AntiSpam SMTP Hooks
+
+"FastFail" SMTP Hooks acts to reject before spooling
+on the SMTP level. The Spam detector hook can be used as a fastfail hook, therefore
+Spam filtering system must run as a server on the same machine as the Apache James Server.
+
+SMTP Hooks for non-existent users, DSN filter, domains with invalid MX record,
+can also be configured.
+
+*SpamAssassinHandler* (experimental) also enables to classify the messages as spam or not
+with a configurable score threshold (`0.0`, non-configurable). Only a global database is supported. Per user spam
+detection is not supported by this hook.
+
+== AntiSpam Mailets
+
+James' repository provide two AntiSpam mailets: SpamAssassin and RspamdScanner.
+We can select one in them for filtering spam mail.
+
+* *SpamAssassin and RspamdScanner* Mailet is designed to classify the messages as spam or not
+with a configurable score threshold. Usually a message will only be
+considered as spam if it matches multiple criteria; matching just a single test
+will not usually be enough to reach the threshold. Note that this mailet is executed on a per-user basis.
+
+=== Rspamd
+
+The Rspamd extension (optional) requires an extra configuration file `rspamd.properties` to configure RSpamd connection
+
+.rspamd.properties content
+|===
+| Property name | explanation
+
+| rSpamdUrl
+| URL defining the Rspamd's server. Eg: http://rspamd:11334
+
+| rSpamdPassword
+| Password for pass authentication when request to Rspamd's server. Eg: admin
+
+| rspamdTimeout
+| Integer. Timeout for http requests to Rspamd. Default to 15 seconds.
+
+| perUserBayes
+| Boolean. Whether to scan/learn mails using per-user Bayes. Default to false.
+|===
+
+`RspamdScanner` supports the following options:
+
+* You can specify the `virusProcessor` if you want to enable virus scanning for mail. Upon configurable `virusProcessor`
+you can specify how James process mail virus. We provide a sample Rspamd mailet and `virusProcessor` configuration:
+
+* You can specify the `rejectSpamProcessor`. Emails marked as `rejected` by Rspamd will be redirected to this
+processor. This corresponds to emails with the highest spam score, thus delivering them to users as marked as spam
+might not even be desirable.
+
+* The `rewriteSubject` option allows to rewritte subjects when asked by Rspamd.
+
+This mailet can scan mails against per-user Bayes by configure `perUserBayes` in `rspamd.properties`. This is achieved
+through the use of Rspamd `Deliver-To` HTTP header. If true, Rspamd will be called for each recipient of the mail, which comes at a performance cost. If true, subjects are not rewritten.
+If true `virusProcessor` and `rejectSpamProcessor` are honnered per user, at the cost of email copies. Default to false.
+
+Here is an example of mailet pipeline conducting out RspamdScanner execution:
+
+[subs=attributes+,xml]
+----
+<processor state="local-delivery" enableJmx="true">
+    <mailet match="All" class="org.apache.james.rspamd.RspamdScanner">
+        <rewriteSubject>true</rewriteSubject>
+        <virusProcessor>virus</virusProcessor>
+        <rejectSpamProcessor>spam</rejectSpamProcessor>
+    </mailet>
+    <mailet match="IsMarkedAsSpam=org.apache.james.rspamd.status" class="WithStorageDirective">
+        <targetFolderName>Spam</targetFolderName>
+    </mailet>
+    <mailet match="All" class="LocalDelivery"/>
+</processor>
+<!--Choose one between these two following virus processor, or configure a custom one if you want-->
+<!--Hard reject virus mail-->
+<processor state="virus" enableJmx="false">
+    <mailet match="All" class="ToRepository">
+        <repositoryPath>file://var/mail/virus/</repositoryPath>
+    </mailet>
+</processor>
+<!--Soft reject virus mail-->
+<processor state="virus" enableJmx="false">
+    <mailet match="All" class="StripAttachment">
+        <remove>all</remove>
+        <pattern>.*</pattern>
+    </mailet>
+    <mailet match="All" class="AddSubjectPrefix">
+        <subjectPrefix>[VIRUS]</subjectPrefix>
+    </mailet>
+    <mailet match="All" class="LocalDelivery"/>
+</processor>
+<!--Store rejected spam emails (with a very high score) -->
+<processor state="virus" enableJmx="false">
+    <mailet match="All" class="ToRepository">
+        <repositoryPath>{mailet-repository-path-prefix}://var/mail/spam</repositoryPath>
+    </mailet>
+</processor>
+----
+
+==== Feedback for Rspamd
+If enabled, the `RspamdListener` will base on the Mailbox event to detect the message is a spam or not, then James will send report `spam` or `ham` to Rspamd.
+This listener can report mails to per-user Bayes by configure `perUserBayes` in `rspamd.properties`.
+The Rspamd listener needs to explicitly be registered with xref:{pages-path}/configure/listeners.adoc[listeners.xml].
+
+Example:
+
+[source,xml]
+....
+<listeners>
+    <listener>
+        <class>org.apache.james.rspamd.RspamdListener</class>
+    </listener>
+</listeners>
+....
+
+For more detail about how to use Rspamd's extension: `third-party/rspamd/index.md`
+
+Alternatively, batch reports can be triggered on user mailbox content via webAdmin. link:https://github.com/apache/james-project/tree/master/third-party/rspamd#additional-webadmin-endpoints[Read more].
+
+
+=== SpamAssassin
+Here is an example of mailet pipeline conducting out SpamAssassin execution:
+
+[source,xml]
+....
+<mailet match="All" class="SpamAssassin">
+    <onMailetException>ignore</onMailetException>
+    <spamdHost>spamassassin</spamdHost>
+    <spamdPort>783</spamdPort>
+</mailet>
+<mailet match="All" class="MailAttributesToMimeHeaders">
+    <!-- This mailet is not required, but useful to have SpamAssassin score in headers-->
+    <simplemapping>org.apache.james.spamassassin.status; X-JAMES-SPAMASSASSIN-STATUS</simplemapping>
+    <simplemapping>org.apache.james.spamassassin.flag; X-JAMES-SPAMASSASSIN-FLAG</simplemapping>
+</mailet>
+<mailet match="IsMarkedAsSpam" class="WithStorageDirective">
+    <targetFolderName>Spam</targetFolderName>
+</mailet>
+....
+
+* *BayesianAnalysis* (unsupported) in the Mailet uses Bayesian probability to classify mail as
+spam or not spam. It relies on the training data coming from the users’ judgment.
+Users need to manually judge as spam and send to spam@thisdomain.com, oppositely,
+if not spam they then send to not.spam@thisdomain.com. BayesianAnalysisfeeder learns
+from this training dataset, and build predictive models based on Bayesian probability.
+There will be a certain table for maintaining the frequency of Corpus for keywords
+in the database. Every 10 mins a thread in the BayesianAnalysis will check and update
+the table. Also, the correct approach is to send the original spam or non-spam
+as an attachment to another message sent to the feeder in order to avoid bias from the
+current sender's email header.
+
+==== Feedback for SpamAssassin
+
+If enabled, the `SpamAssassinListener` will asynchronously report users mails moved to the `Spam` mailbox as Spam,
+and other mails as `Ham`, effectively populating the user database for per user spam detection. This enables a per-user
+Spam categorization to be conducted out by the SpamAssassin mailet, the SpamAssassin hook being unaffected.
+
+The SpamAssassin listener requires an extra configuration file `spamassassin.properties` to configure SpamAssassin connection (optional):
+
+.spamassassin.properties content
+|===
+| Property name | explanation
+
+| spamassassin.host
+| Hostname of the SpamAssassin server. Defaults to 127.0.0.1.
+
+| spamassassin.port
+| Port of the SpamAssassin server. Defaults to 783.
+|===
+
+Note that this configuration file only affects the listener, and not the hook or mailet.
+
+The SpamAssassin listener needs to explicitly be registered with xref:{pages-path}/configure/listeners.adoc[listeners.xml].
+
+Example:
+
+[source,xml]
+....
+<listeners>
+  <listener>
+    <class>org.apache.james.mailbox.spamassassin.SpamAssassinListener</class>
+    <async>true</async>
+  </listener>
+</listeners>
+....

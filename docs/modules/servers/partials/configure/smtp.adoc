@@ -1,0 +1,315 @@
+== Incoming SMTP
+
+Consult this link:{sample-configuration-prefix-url}/smtpserver.xml[example]
+to get some examples and hints.
+
+The SMTP service is controlled by a configuration block in the smptserver.xml.
+The smtpserver tag defines the boundaries of the configuration block.  It encloses
+all the relevant configuration for the SMTP server. The behavior of the SMTP service is
+controlled by the attributes and children of this tag.
+
+This tag has an optional boolean attribute - *enabled* - that defines whether the service is active or not.  The value defaults to "true" if
+not present.
+
+The standard children of the smtpserver tag are:
+
+.smtpserver.xml content
+|===
+| Property name | explanation
+
+| bind
+| A list of address:port separed by comma - This is an optional value.  If present, this value is a string describing
+the IP address to which this service should be bound.  If the tag or value is absent then the service
+will bind to all network interfaces for the machine on port 25. Port 25 is the well-known/IANA registered port for SMTP.
+Port 465 is the well-known/IANA registered port for SMTP over TLS.
+
+| connectBacklog
+|The IP address (host name) the MBean Server will bind/listen to.
+
+| tls
+| Set to true to support STARTTLS or SSL for the Socket.
+To use this you need to copy sunjce_provider.jar to /path/james/lib directory. To create a new keystore execute:
+`keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore /path/to/james/conf/keystore`.
+The algorithm is optional and only needs to be specified when using something other
+than the Sun JCE provider - You could use IbmX509 with IBM Java runtime.
+Please note that each SMTP/LMTP server exposed on different port can specify its own keystore, independently from any other
+TLS based protocols.
+
+| helloName
+| This is a required tag with an optional body that defines the server name
+used in the initial service greeting.  The tag may have an optional attribute - *autodetect*.  If
+the autodetect attribute is present and true, the service will use the local hostname
+returned by the Java libraries.  If autodetect is absent or false, the body of the tag will be used.  In
+this case, if nobody is present, the value "localhost" will be used.
+
+| connectionTimeout
+| This is an optional tag with a non-negative integer body. Connection timeout in seconds.
+
+| connectionLimit
+| Set the maximum simultaneous incoming connections for this service.
+
+| connectionLimitPerIP
+| Set the maximum simultaneous incoming connections per IP for this service.
+
+| proxyRequired
+| Enables proxy support for this service for incoming connections. HAProxy's protocol
+(https://www.haproxy.org/download/2.7/doc/proxy-protocol.txt) is used and might be compatible
+with other proxies (e.g. traefik). If enabled, it is *required* to initiate the connection
+using HAProxy's proxy protocol.
+
+| authRequired
+| (deprecated) use auth.announce instead.
+
+This is an optional tag with a boolean body.  If true, then the server will
+announce authentication after HELO command.  If this tag is absent, or the value
+is false then the client will not be prompted for authentication.  Only simple user/password authentication is
+supported at this time. Supported values:
+
+ * true: announced only to not authorizedAddresses
+
+ * false: don't announce AUTH. If absent, *authorizedAddresses* are set to a wildcard to accept all remote hosts.
+
+ * announce: like true, but always announce AUTH capability to clients
+
+Please note that emails are only relayed if, and only if, the user did authenticate, or is in an authorized network,
+regardless of this option.
+
+| auth.announce
+| This is an optional tag.  Possible values are:
+
+* never: Don't announce auth.
+
+* always: always announce AUTH capability to clients.
+
+* forUnauthorizedAddresses: announced only to not authorizedAddresses
+
+Please note that emails are only relayed if, and only if, the user did authenticate, or is in an authorized network,
+regardless of this option.
+
+| auth.requireSSL
+| This is an optional tag, defaults to true. If true, authentication is not advertised via capabilities on unencrypted
+channels.
+
+| auth.plainAuthEnabled
+| This is an optional tag, defaults to true. If false, AUTH PLAIN and AUTH LOGIN will not be exposed. This setting
+can be used to enforce strong authentication mechanisms.
+
+| auth.oidc.oidcConfigurationURL
+| Provide OIDC url address for information to user. Only configure this when you want to authenticate SMTP server using a OIDC provider.
+
+| auth.oidc.jwksURL
+| Provide url to get OIDC's JSON Web Key Set to validate user token. Only configure this when you want to authenticate SMTP server using a OIDC provider.
+
+| auth.oidc.claim
+| Claim string uses to identify user. E.g: "email_address". Only configure this when you want to authenticate SMTP server using a OIDC provider.
+
+| auth.oidc.scope
+| An OAuth scope that is valid to access the service (RF: RFC7628). Only configure this when you want to authenticate SMTP server using a OIDC provider.
+
+| auth.oidc.introspection.url
+| Optional. An OAuth introspection token URL will be called to validate the token (RF: RFC7662).
+Only configure this when you want to validate the revocation token by the OIDC provider.
+Note that James always verifies the signature of the token even whether this configuration is provided or not.
+
+| auth.oidc.introspection.auth
+| Optional. Provide Authorization in header request when introspecting token.
+Eg: `Basic xyz`
+
+| auth.oidc.userinfo.url
+| Optional. An Userinfo URL will be called to validate the token (RF: OpenId.Core https://openid.net/specs/openid-connect-core-1_0.html).
+Only configure this when you want to validate the revocation token by the OIDC provider.
+Note that James always verifies the signature of the token even whether this configuration is provided or not.
+James will ignore check token by userInfo if the `auth.oidc.introspection.url` is already configured
+
+| authorizedAddresses
+| Authorize specific addresses/networks.
+
+If you use SMTP AUTH, addresses that match those specified here will
+be permitted to relay without SMTP AUTH.  If you do not use SMTP
+AUTH, and you specify addresses here, then only addresses that match
+those specified will be permitted to relay.
+
+Addresses may be specified as a IP address or domain name, with an
+optional netmask, e.g.,
+
+127.*, 127.0.0.0/8, 127.0.0.0/255.0.0.0, and localhost/8 are all the same
+
+See also the RemoteAddrNotInNetwork matcher in the transport processor.
+You would generally use one OR the other approach.
+
+| verifyIdentity
+| This is an optional tag. This options governs MAIL FROM verifications, and prevents spoofing of the MAIL FROM
+envelop field.
+
+The following values are supported:
+
+ - `strict`: use of a local domain in MAIL FROM requires the SMTP client to be authenticated with a matching user or one
+ of its aliases. It will verify that the sender address matches the address of the user or one of its alias (from user or domain aliases).
+ This prevents a user of your mail server from acting as someone else
+ - `disabled`: no check is performed and third party are free to send emails as local users. Note that relaying emails will
+ need third party to be authenticated thus preventing open relays.
+ - `relaxed`: Based on a simple heuristic to determine if the SMTP client is a MUA or a MX (use of a valid domain in EHLO),
+ we do act as `strict` for MUAs thus prompting them early for the need of authentication, but accept use of local MAIL FROM for
+ MX. Authentication can then be delayed to later, eg after DATA transaction with the DKIMHook which might allow email looping through
+ third party domains via mail redirection, effectively enforcing that the mail originates from our servers. See
+ link:https://issues.apache.org/jira/browse/JAMES-4032[JAMES-4032] for detailed explanation.
+
+Backward compatibility is provided and thus the following values are supported:
+
+ - `true`: act as `strict`
+ - `false`: act as `disabled`
+
+| maxmessagesize
+| This is an optional tag with a non-negative integer body.  It specifies the maximum
+size, in kbytes, of any message that will be transmitted by this SMTP server.  It is a service-wide, as opposed to
+a per user, limit.  If the value is zero then there is no limit.  If the tag isn't specified, the service will
+default to an unlimited message size. Must be a positive integer, optionally with a unit: B, K, M, G.
+
+| heloEhloEnforcement
+| This sets whether to enforce the use of HELO/EHLO salutation before a
+MAIL command is accepted. If unspecified, the value defaults to true.
+
+| smtpGreeting
+| This sets the SMTPGreeting which will be used when connect to the smtpserver
+If none is specified a default is generated
+
+| handlerchain
+| The configuration handler chain. See xref:{pages-path}/configure/smtp-hooks.adoc[this page] for configuring out-of the
+box extra SMTP handlers and hooks.
+
+| bossWorkerCount
+| Set the maximum count of boss threads. Boss threads are responsible for accepting incoming SMTP connections
+and initializing associated resources. Optional integer, by default, boss threads are not used and this responsibility is being dealt with
+by IO threads.
+
+| ioWorkerCount
+| Set the maximum count of IO threads. IO threads are responsible for receiving incoming SMTP messages and framing them
+(split line by line). IO threads also take care of compression and SSL encryption. Their tasks are short-lived and non-blocking.
+Optional integer, defaults to 2 times the count of CPUs.
+
+| maxExecutorCount
+| Set the maximum count of worker threads. Worker threads takes care of potentially blocking tasks like executing SMTP commands.
+Optional integer, defaults to 16.
+
+| useEpoll
+| true or false - If true uses native EPOLL implementation for Netty otherwise uses NIO. Defaults to false.
+
+| gracefulShutdown
+| true or false - If true attempts a graceful shutdown, which is safer but can take time. Defaults to true.
+
+| disabledFeatures
+| Extended SMTP features to hide in EHLO responses.
+|===
+
+=== OIDC setup
+James SMTP support XOAUTH2 authentication mechanism which allow authenticating against a OIDC providers.
+Please configure `auth.oidc` part to use this.
+
+We do supply an link:https://github.com/apache/james-project/tree/master/examples/oidc[example] of such a setup.
+It uses the Keycloak OIDC provider, but usage of similar technologies is definitely doable.
+
+== About open relays
+
+Authenticated SMTP is a method of securing your SMTP server.  With SMTP AUTH enabled senders who wish to
+relay mail through the SMTP server (that is, send mail that is eventually to be delivered to another SMTP
+server) must authenticate themselves to Apache James Server before sending their message.  Mail that is to be delivered
+locally does not require authentication.  This method ensures that spammers cannot use your SMTP server
+to send unauthorized mail, while still enabling users who may not have fixed IP addresses to send their
+messages.
+
+Mail servers that allow spammers to send unauthorized email are known as open relays.  So SMTP AUTH
+is a mechanism for ensuring that your server is not an open relay.
+
+It is extremely important that your server not be configured as an open relay.  Aside from potential
+costs associated with usage by spammers, connections from servers that are determined to be open relays
+are routinely rejected by SMTP servers.  This can severely impede the ability of your mail server to
+send mail.
+
+At this time Apache James Server only supports simple user name / password authentication.
+
+As mentioned above, SMTP AUTH requires that Apache James Server be able to distinguish between mail intended
+for local delivery and mail intended for remote delivery. Apache James Server makes this determination by matching the
+domain to which the mail was sent against the *DomainList* component, configured by
+xref:{pages-path}/configure/domainlist.adoc[*domainlist.xml*].
+
+The {server-name} is configured out of the box so as to not serve as an open relay for spammers.  This is done
+by relayed emails originate from a trusted source. This includes:
+
+* Authenticated SMTP/JMAP users
+* Mails generated by the server (eg: bounces)
+* Mails originating from a trusted network as configured in *smtpserver.xml*
+
+If you wish to ensure that authenticated users can only send email from their own account, you may
+optionally set the verifyIdentity element of the smtpserver configuration block to "true".
+
+=== Verification
+
+Verify that you have not inadvertently configured your server as an open relay. This is most easily
+accomplished by using the service provided at https://mxtoolbox.com/diagnostic.aspx[mxtoolbox.com]. mxtoolbox.com will
+check your mail server and inform you if it is an open relay. This tool further more verifies additional properties like:
+
+* Your DNS configuration, especially that you mail server IP has a valid reverse DNS entry
+* That your SMTP connection is secured
+* That you are not an OpenRelay
+* This website also allow a quick lookup to ensure your mail server is not in public blacklists.
+
+Of course it is also necessary to confirm that users and log in and send
+mail through your server.  This can be accomplished using any standard mail client (i.e. Thunderbird, Outlook,
+Eudora, Evolution).
+
+== LMTP Configuration
+
+Consult this link:{sample-configuration-prefix-url}/lmtpserver.xml[example]
+to get some examples and hints.
+
+The configuration is the same of for SMTP.
+
+By default, it is deactivated. You can activate it alongside SMTP and bind for example on port 24.
+
+The default LMTP server stores directly emails in user mailboxes, without further treatment.
+
+However we do ship an alternative handler chain allowing to execute the mailet container, thus achieving a behaviour similar
+to the default SMTP protocol. Here is how to achieve this:
+
+[source,xml]
+....
+<lmtpservers>
+    <lmtpserver enabled="true">
+        <jmxName>lmtpserver</jmxName>
+        <bind>0.0.0.0:24</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <connectiontimeout>1200</connectiontimeout>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <maxmessagesize>0</maxmessagesize>
+        <handlerchain coreHandlersPackage="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader">
+            <handler class="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader"/>
+        </handlerchain>
+    </lmtpserver>
+</lmtpservers>
+....
+
+Note that by default the mailet container is executed with all recipients at once and do not allow per recipient
+error reporting. An option <code>splitExecution</code> allow to execute the mailet container for each recipient separately and mitigate this
+limitation at the cost of performance.
+
+[source,xml]
+....
+<lmtpservers>
+    <lmtpserver enabled="true">
+        <jmxName>lmtpserver</jmxName>
+        <bind>0.0.0.0:24</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <connectiontimeout>1200</connectiontimeout>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <maxmessagesize>0</maxmessagesize>
+        <handlerchain coreHandlersPackage="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader">
+            <handler class="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader"/>
+            <handler class="org.apache.james.lmtpserver.MailetContainerHandler">
+                <splitExecution>true</splitExecution>
+            </handler>
+        </handlerchain>
+    </lmtpserver>
+</lmtpservers>
+....
