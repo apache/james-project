@@ -2,7 +2,7 @@
 
 *Search overrides* allow resolution of predefined search queries against alternative sources of data
 and allow bypassing OpenSearch. This is useful to handle most resynchronisation queries that
-are simple enough to be resolved against Cassandra.
+are simple enough to be resolved against {package-tag}.
 
 Possible values are:
 
