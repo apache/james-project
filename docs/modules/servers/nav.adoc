@@ -105,7 +105,7 @@
 ***** xref:postgres/configure/batchsizes.adoc[batchsizes.properties]
 ***** xref:postgres/configure/dns.adoc[dnsservice.xml]
 ***** xref:postgres/configure/domainlist.adoc[domainlist.xml]
-**** xref:postgres/configure/droplists.adoc[DropLists]
+***** xref:postgres/configure/droplists.adoc[DropLists]
 ***** xref:postgres/configure/healthcheck.adoc[healthcheck.properties]
 ***** xref:postgres/configure/mailetcontainer.adoc[mailetcontainer.xml]
 ***** xref:postgres/configure/mailets.adoc[Packaged Mailets]
