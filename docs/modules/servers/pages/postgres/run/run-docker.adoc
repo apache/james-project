@@ -30,7 +30,7 @@ A default domain, james.local, has been created. You can see this by running:
 
 James will respond to IMAP port 143 and SMTP port 25.
 You have to create users before playing with james. You may also want to create other domains.
-Follow the 'Useful commands' section for more information about James CLI.
+Follow the xref:postgres/operate/cli.adoc['Useful commands'] section for more information about James CLI.
 
 === Running distributed James
 
