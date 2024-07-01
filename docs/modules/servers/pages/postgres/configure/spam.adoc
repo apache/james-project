@@ -1,0 +1,8 @@
+= Postgresql James Server &mdash; Anti-Spam configuration
+:navtitle: Anti-Spam configuration
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:pages-path: postgres
+:server-name: Postgresql James server
+:mailet-repository-path-prefix: postgres
+include::partial$configure/spam.adoc[]
