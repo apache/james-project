@@ -1,0 +1,6 @@
+= Postgresql James Server &mdash; mailetcontainer.xml
+:navtitle: mailetcontainer.xml
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:pages-path: postgres
+include::partial$configure/mailetcontainer.adoc[]
