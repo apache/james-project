@@ -1,0 +1,15 @@
+== For core components
+
+By omitting these files, sane default values are used.
+
+** xref:{xref-base}/batchsizes.adoc[*batchsizes.properties*] allows to configure mailbox read batch sizes link:{sample-configuration-prefix-url}/sample-configuration/batchsizes.properties[example]
+** xref:{xref-base}/dns.adoc[*dnsservice.xml*] allows to configure DNS resolution link:{sample-configuration-prefix-url}/sample-configuration/dnsservice.xml[example]
+** xref:{xref-base}/domainlist.adoc[*domainlist.xml*] allows to configure Domain storage link:{sample-configuration-prefix-url}/sample-configuration/domainlist.xml[example]
+** xref:{xref-base}/healthcheck.adoc[*healthcheck.properties*] allows to configure periodical healthchecks link:{sample-configuration-prefix-url}/sample-configuration/healthcheck.properties[example]
+** xref:{xref-base}/mailetcontainer.adoc[*mailetcontainer.xml*] allows configuring mail processing link:{sample-configuration-prefix-url}/sample-configuration/mailetcontainer.xml[example]
+*** xref:{xref-base}/mailets.adoc[This page] list matchers that can be used out of the box with the {server-name}.
+*** xref:{xref-base}/matchers.adoc[This page] list matchers that can be used out of the box with the {server-name}.
+** xref:{xref-base}/mailrepositorystore.adoc[*mailrepositorystore.xml*] enables registration of allowed MailRepository protcols and link them to MailRepository implementations link:{sample-configuration-prefix-url}/sample-configuration/mailrepositorystore.xml[example]
+** xref:{xref-base}/recipientrewritetable.adoc[*recipientrewritetable.xml*] enables advanced configuration for the Recipient Rewrite Table component link:{sample-configuration-prefix-url}/sample-configuration/recipientrewritetable.xml[example]
+*** xref:{xref-base}/matchers.adoc[This page] allows choosing the indexing technology.
+** xref:{xref-base}/usersrepository.adoc[*usersrepository.xml*] allows configuration of user storage link:{sample-configuration-prefix-url}/sample-configuration/usersrepository.xml[example]
