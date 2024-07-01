@@ -20,6 +20,8 @@ include::partial$ContactExtractor.adoc[]
 
 include::partial$ConvertTo7Bit.adoc[]
 
+include::partial$DeconnectionRight.adoc[]
+
 include::partial$DKIMSign.adoc[]
 
 include::partial$DKIMVerify.adoc[]
