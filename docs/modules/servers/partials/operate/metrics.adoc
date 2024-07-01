@@ -1,0 +1,179 @@
+James relies on the https://metrics.dropwizard.io/4.1.2/manual/core.html[Dropwizard metric library]
+for keeping track of some core metrics of James.
+
+Such metrics are made available via JMX. You can connect for instance using VisualVM and the associated
+mbean plugins.
+
+We also support displaying them via https://grafana.com/[Grafana]. Two methods can be used to back grafana display:
+
+ - Prometheus metric collection - Data are exposed on a HTTP endpoint for Prometheus scrape.
+ - ElasticSearch metric collection - This method is depreciated and will be removed in next version.
+ 
+== Expose metrics for Prometheus collection
+
+To enable James metrics, add ``extensions.routes`` to xref:{xref-base}/operate/webadmin.adoc[webadmin.properties] file:
+
+```
+extensions.routes=org.apache.james.webadmin.dropwizard.MetricsRoutes
+```
+Connect to james-admin url to test the result: 
+....
+http://james-admin-url/metrics
+....
+
+== Configure Prometheus Data source
+You need to set up https://prometheus.io/docs/prometheus/latest/getting_started/[Prometheus] first to scrape James metrics. +
+Add Apache James WebAdmin Url or IP address to ``prometheus.yaml`` configuration file:
+....
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'WebAdmin url Example'
+    scrape_interval: 5s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['james-webamin-url']
+  - job_name: 'WebAdmin IP Example'
+    scrape_interval: 5s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['192.168.100.10:8000'] 
+....
+
+== Connect Prometheus to Grafana
+
+You can do this either from https://prometheus.io/docs/visualization/grafana/[Grafana UI] or from a https://grafana.com/docs/grafana/latest/datasources/prometheus/[configuration file]. +
+The following `docker-compose.yaml` will help you install a simple Prometheus/ Grafana stack :
+       
+```
+version: '3'
+#Metric monitoring
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./conf/prometheus.yml:/etc/prometheus/prometheus.yml
+```
+
+== Getting dashboards
+Now that the Promtheus/Grafana servers are up, go to this https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/[link] to get all dashboards JSON file. Import the different JSON files in this directory to Grafana via UI. 
+
+
+image::preload-dashboards.png[Pre-loaded dashboards]
+
+*Note: For communication between multiple docker-compose projects, see https://stackoverflow.com/questions/38088279/communication-between-multiple-docker-compose-projects[here] for example. An easier approach is to merge James and Metric docker-compose files together.
+
+== Available metrics
+
+Here are the available metrics :
+
+ - James JVM metrics
+ - Number of active SMTP connections
+ - Number of SMTP commands received
+ - Number of active IMAP connections
+ - Number of IMAP commands received
+ - Number of active LMTP connections
+ - Number of LMTP commands received
+ - Number of per queue number of enqueued mails
+ - Number of sent emails
+ - Number of delivered emails
+ - Diverse Response time percentiles, counts and rates for JMAP
+ - Diverse Response time percentiles, counts and rates for IMAP
+ - Diverse Response time percentiles, counts and rates for SMTP
+ - Diverse Response time percentiles, counts and rates for WebAdmin
+ - Diverse Response time percentiles, counts and rates for each Mail Queue
+ - Per mailet and per matcher Response time percentiles
+ - Diverse Response time percentiles, counts and rates for DNS
+ - Tika HTTP client statistics
+ - SpamAssassin TCP client statistics
+ - Mailbox listeners statistics time percentiles
+ - Mailbox listeners statistics requests rate
+ - Pre-deletion hooks execution statistics time percentiles
+ - {other-metrics}
+
+== Available Grafana boards
+
+Here are the various relevant Grafana boards for the {server-name}:
+
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_BlobStore.json[BlobStore] :
+Rates and percentiles for the BlobStore component
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_DNS_Dashboard.json[DNS] :
+Latencies and query counts for DNS resolution.
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_IMAP_Board.json[IMAP] :
+Latencies for the IMAP protocol
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_IMAP_CountBoard.json[IMAP counts] :
+Request counts for the IMAP protocol
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_JMAP_Board.json[JMAP] :
+Latencies for the JMAP protocol
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_JMAP_CountBoard.json[JMAP counts] :
+Request counts for the JMAP protocol
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_JVM.json[JVM] :
+JVM statistics (heap, gcs, etc...)
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_MAILET.json[Mailets] :
+Per-mailet execution timings.
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_MATCHER.json[Matchers] :
+Per-matcher execution timings
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_MailQueue.json[MailQueue] :
+MailQueue statistics
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_SMTP_Board.json[SMTP] :
+SMTP latencies reports
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_SMTP_CountBoard.json[SMTP count] :
+Request count for the SMTP protocol
+
+=== Dashboard samples
+Latencies for the JMAP protocol +
+
+image::JMAP_board.png[JMAP]
+
+Latencies for the IMAP protocol +
+
+image::IMAP_board.png[IMAP]
+
+JVM Statistics +
+
+image::JVM_board.png[JVM]
+
+BlobStore Statistics +
+
+image::BlobStore.png[BlobStore]
+
+webAdmin Statistics +
+
+image::webAdmin.png[webAdmin]
+
+== Expose metrics for Elasticsearch collection
+
+The following command allow you to run a fresh grafana server :
+
+....
+docker run -i -p 3000:3000 grafana/grafana
+....
+
+Once running, you need to set up an ElasticSearch data-source : - select
+proxy mode - Select version 2.x of ElasticSearch - make the URL point
+your ES node - Specify the index name. By default, it should be :
+
+....
+[james-metrics-]YYYY-MM
+....
+
+Import the different dashboards you want.
+
+You then need to enable reporting through ElasticSearch. Modify your
+James ElasticSearch configuration file accordingly. To help you doing
+this, you can take a look to
+link:https://github.com/apache/james-project/blob/3.7.x/server/apps/distributed-app/sample-configuration/elasticsearch.properties[elasticsearch.properties].
+
+If some metrics seem abnormally slow despite in depth database
+performance tuning, feedback is appreciated as well on the bug tracker,
+the user mailing list or our Gitter channel (see our
+http://james.apache.org/#second[community page]) . Any additional
+details categorizing the slowness are appreciated as well (details of
+the slow requests for instance).
