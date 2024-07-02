@@ -1,0 +1,10 @@
+= Postgresql James Server &mdash; WebAdmin REST administration API
+:navtitle: WebAdmin REST administration API
+
+:server-name: Postgresql James Server
+:xref-base: postgres
+:backend-name: postgres
+:admin-mail-queues-extend: servers:postgres/operate/webadmin/admin-mail-queues-extend.adoc
+:admin-messages-extend: servers:postgres/operate/webadmin/admin-messages-extend.adoc
+:admin-mailboxes-extend: servers:postgres/operate/webadmin/admin-mailboxes-extend.adoc
+include::partial$operate/webadmin.adoc[]

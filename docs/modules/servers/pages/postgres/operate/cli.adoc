@@ -1,0 +1,6 @@
+= Postgresql James Server &mdash; Command Line Interface
+:navtitle: Command Line Interface
+
+:xref-base: postgres
+:server-name: Postgresql James Server
+include::partial$operate/cli.adoc[]

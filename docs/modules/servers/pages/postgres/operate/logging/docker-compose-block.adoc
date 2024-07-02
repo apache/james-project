@@ -1,0 +1,81 @@
+[source,docker-compose]
+----
+version: "3"
+
+services:
+  james:
+    depends_on:
+      - elasticsearch
+      - postgres
+      - rabbitmq
+      - s3
+    image: apache/james:postgres-latest
+    container_name: james
+    hostname: james.local
+    volumes:
+      - ./extension-jars:/root/extension-jars
+      - ./conf/logback.xml:/root/conf/logback.xml
+      - ./logs:/root/logs
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8080:8000"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+
+  postgres:
+    image: postgres:16.3
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=james
+      - POSTGRES_USER=james
+      - POSTGRES_PASSWORD=secret1
+
+  rabbitmq:
+    image: rabbitmq:3.13.3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  s3:
+    image: registry.scality.com/cloudserver/cloudserver:8.7.25
+    container_name: s3.docker.test
+    environment:
+      - SCALITY_ACCESS_KEY_ID=accessKey1
+      - SCALITY_SECRET_ACCESS_KEY=secretKey1
+      - S3BACKEND=mem
+      - LOG_LEVEL=trace
+      - REMOTE_MANAGEMENT_DISABLE=1
+
+  fluent-bit:
+    image: fluent/fluent-bit:1.5.7
+    volumes:
+      - ./fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./fluentbit/parsers.conf:/fluent-bit/etc/parsers.conf
+      - ./logs:/fluent-bit/log
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.10.2
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+----
