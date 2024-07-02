@@ -143,7 +143,7 @@ class DeconnectionRightTest {
         "2024-07-01T05:00:00.00Z",
         "2024-07-01T10:15:30.00Z",
         "2024-07-01T18:00:00.00Z"})
-        // 2024-07-01 => monday
+    // 2024-07-01 => monday
     void noDelaywithUTCPlus2(String dateTime) throws Exception {
         Clock clock = Clock.fixed(Instant.parse(dateTime), ZoneId.of("UTC"));
         DeconnectionRight testee = new DeconnectionRight(clock);

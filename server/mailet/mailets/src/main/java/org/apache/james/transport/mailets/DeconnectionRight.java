@@ -29,7 +29,6 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Preconditions;
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 
@@ -39,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
 /**
  * Mailet to avoid people to receive emails outside working hour.<br/>
