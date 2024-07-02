@@ -1,4 +1,4 @@
-= Distributed James Server &mdash; Custom mail processing components
+= Custom mail processing components
 :navtitle: Custom mail processing components
 
 When none of the matchers and mailets available in James allows us to implement what we want, extension

@@ -1,4 +1,4 @@
-= Distributed James Server &mdash; Custom Mailbox Listeners
+= Custom Mailbox Listeners
 :navtitle: Custom Mailbox Listeners
 
 == Writing additional listener
@@ -35,7 +35,7 @@ handled events and can save some IOs.
 
 Your custom additional listener needs to be in the *extensions-jars* folder.
 
-You need to register its fully qualified class name in xref:distributed/configure/listeners.adoc[listeners.xml]
+You need to register its fully qualified class name in xref:listeners.adoc[listeners.xml]
 
 == Events
 

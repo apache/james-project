@@ -1,4 +1,4 @@
-= Distributed James Server &mdash; Custom WebAdmin routes
+= Custom WebAdmin routes
 :navtitle: Custom WebAdmin routes
 
 == Writing custom WebAdmin routes
@@ -35,5 +35,5 @@ public interface Routes {
 
 Your custom WebAdmin routes needs to be in the *extensions-jars* folder.
 
-You need to register its fully qualified class name in xref:distributed/configure/webadmin.adoc[webadmin.properties]
+You need to register its fully qualified class name in xref:webadmin.adoc[webadmin.properties]
 using the *extensions.routes* property.
