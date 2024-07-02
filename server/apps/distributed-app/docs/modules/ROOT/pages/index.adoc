@@ -1,0 +1,5 @@
+= Apache James Distributed server
+
+The distributed server documentation had been move to
+ xref:3.9.0@james-project:servers:distributed/index.adoc[this location].
+
