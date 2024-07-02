@@ -9,7 +9,6 @@
 *** xref:basic/architecture.adoc[]
 *** xref:basic/conf/index.adoc[]
 *** xref:basic/help.adoc[]
-** xref:extendable.adoc[]
 ** xref:distributed/index.adoc[]
 *** xref:distributed/objectives.adoc[]
 *** xref:distributed/architecture/index.adoc[]
