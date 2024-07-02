@@ -1,5 +1,10 @@
 = Apache James Developer Guide
 :navtitle: Developer Guide
 
-(TODO)
+This page aggregates common knowledge for contributing to Apache james servers.
 
+xref:community:contributing.adoc[Contribution guidelines] apply.
+
+xref:logging.adoc[This page] explains how *logging* should be done.
+
+Help of kind contributors is more than welcome to write guides explaining newcomers your hard-learned lessons!
