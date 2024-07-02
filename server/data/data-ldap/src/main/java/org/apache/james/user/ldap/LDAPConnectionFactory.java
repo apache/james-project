@@ -80,8 +80,9 @@ public class LDAPConnectionFactory {
             .collect(ImmutableList.toImmutableList());
 
         FailoverServerSet failoverServerSet = new FailoverServerSet(serverSets);
-        ldapConnectionPool = new LDAPConnectionPool(failoverServerSet, bindRequest, 4);
+        ldapConnectionPool = new LDAPConnectionPool(failoverServerSet, bindRequest, configuration.getPoolSize());
         ldapConnectionPool.setRetryFailedOperationsDueToInvalidConnections(true);
+        ldapConnectionPool.setMaxWaitTimeMillis(configuration.getMaxWaitTime());
     }
 
     private ThrowingFunction<URI, SingleServerSet> toSingleServerSet(LDAPConnectionOptions connectionOptions, BindRequest bindRequest) {
