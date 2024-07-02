@@ -48,6 +48,8 @@ public class LdapRepositoryConfiguration {
     private static final String NO_FILTER = null;
     private static final Optional<String> NO_ADMINISTRATOR_ID = Optional.empty();
     private static final int DEFAULT_POOL_SIZE = 4;
+    // Await a connection for the given amount of time before opening a new one
+    private static final int DEFAULT_MAX_WAIT_TIME_MILLIS = 1000;
 
     public static class Builder {
         private Optional<List<URI>> ldapHosts;
@@ -60,6 +62,7 @@ public class LdapRepositoryConfiguration {
         private Optional<String> userObjectClass;
         private Optional<String> usernameAttribute;
         private Optional<Integer> poolSize;
+        private Optional<Integer> maxWaitTime;
         private Optional<Boolean> trustAllCerts;
         private ImmutableMap.Builder<Domain, String> perDomainBaseDN;
 
@@ -76,6 +79,7 @@ public class LdapRepositoryConfiguration {
             poolSize = Optional.empty();
             trustAllCerts = Optional.empty();
             perDomainBaseDN = ImmutableMap.builder();
+            maxWaitTime = Optional.empty();
         }
 
         public Builder ldapHosts(List<URI> ldapHosts) {
@@ -123,6 +127,11 @@ public class LdapRepositoryConfiguration {
             return this;
         }
 
+        public Builder maxWaitTime(int waitTimeMillis) {
+            this.maxWaitTime = Optional.of(waitTimeMillis);
+            return this;
+        }
+
         public Builder trustAllCerts(boolean trustAllCerts) {
             this.trustAllCerts = Optional.of(trustAllCerts);
             return this;
@@ -155,11 +164,11 @@ public class LdapRepositoryConfiguration {
                 NO_READ_TIME_OUT,
                 !ENABLE_VIRTUAL_HOSTING,
                 poolSize.orElse(DEFAULT_POOL_SIZE),
+                maxWaitTime.orElse(DEFAULT_MAX_WAIT_TIME_MILLIS),
                 NO_RESTRICTION,
                 NO_FILTER,
                 NO_ADMINISTRATOR_ID,
-                trustAllCerts.orElse(false),
-                perDomainBaseDN.build());
+                trustAllCerts.orElse(false), perDomainBaseDN.build());
         }
     }
 
@@ -206,6 +215,8 @@ public class LdapRepositoryConfiguration {
         Optional<String> administratorId = Optional.ofNullable(configuration.getString("[@administratorId]"));
         int poolSize = Optional.ofNullable(configuration.getInteger("[@poolSize]", null))
                 .orElse(DEFAULT_POOL_SIZE);
+        int maxWaitTime = Optional.ofNullable(configuration.getInteger("[@maxWaitTime]", null))
+                .orElse(DEFAULT_MAX_WAIT_TIME_MILLIS);
 
         ImmutableMap.Builder<Domain, String> builder = ImmutableMap.builder();
         if (configuration.getNodeModel()
@@ -233,11 +244,11 @@ public class LdapRepositoryConfiguration {
             readTimeout,
             supportsVirtualHosting,
             poolSize,
+            maxWaitTime,
             restriction,
             filter,
             administratorId,
-            trustAllCerts,
-            builder.build());
+            trustAllCerts, builder.build());
     }
 
     /**
@@ -323,6 +334,7 @@ public class LdapRepositoryConfiguration {
 
     private final boolean supportsVirtualHosting;
     private final int poolSize;
+    private final int maxWaitTime;
 
     /**
      * Encapsulates the information required to restrict users to LDAP groups or
@@ -349,7 +361,7 @@ public class LdapRepositoryConfiguration {
 
     private LdapRepositoryConfiguration(List<URI> ldapHosts, String principal, String credentials, String userBase, String userListBase, String userIdAttribute,
                                         Optional<String> resolveLocalPartAttribute, Optional<String> usernameAttribute, String userObjectClass, int connectionTimeout, int readTimeout,
-                                        boolean supportsVirtualHosting, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
+                                        boolean supportsVirtualHosting, int poolSize, int maxWaitTime, ReadOnlyLDAPGroupRestriction restriction, String filter,
                                         Optional<String> administratorId, boolean trustAllCerts,
                                         ImmutableMap<Domain, String> perDomainBaseDN) throws ConfigurationException {
         this.ldapHosts = ldapHosts;
@@ -365,6 +377,7 @@ public class LdapRepositoryConfiguration {
         this.readTimeout = readTimeout;
         this.supportsVirtualHosting = supportsVirtualHosting;
         this.poolSize = poolSize;
+        this.maxWaitTime = maxWaitTime;
         this.restriction = restriction;
         this.filter = filter;
         this.administratorId = administratorId.map(Username::of);
@@ -464,6 +477,10 @@ public class LdapRepositoryConfiguration {
         } else {
             return new String[]{getUserIdAttribute()};
         }
+    }
+
+    public int getMaxWaitTime() {
+        return maxWaitTime;
     }
 
     @Override
