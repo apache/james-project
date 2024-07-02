@@ -159,6 +159,18 @@
 
         <p>Note that &quot;userListBase&quot; can not be specified on a per-domain-basis.</p>
 
+        <p><b>LDAP connection pool size tuning</b></p>
+
+        <p>Apache James offers some options for configuring the LDAP connection pool used by unboundid:
+        <ul>
+            <li> <b>poolSize</b>: (optional, default = 4) The maximum number of connection in the pool. Note that if the pool is exhausted,
+                extra connections will be created on the fly as needed.</li>
+            <li> <b>maxWaitTime</b>: (optional, default = 1000) the number of milli seconds to wait before creating off-pool connections,
+                using a pool connection if released in time. This effectively smooth out traffic burst, thus in some case can help
+                not overloading the LDAP</li>
+            <li> <b>connectionTimeout:</b> (optional) Sets the connection timeout on the underlying  to the specified integer value</li>
+            <li> <b>readTimeout:</b> (optional) Sets property the read timeout to the specified integer value.</li>
+        </ul></p>
      </subsection>
 
   </section>

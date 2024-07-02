@@ -37,6 +37,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
+import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.lib.UsersRepositoryContract;
 import org.apache.james.user.lib.UsersRepositoryImpl;
@@ -79,7 +80,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
         configuration.addProperty("[@filter]", "INVALID!!!");
 
-        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
         usersLDAPRepository.configure(configuration);
 
         assertThatThrownBy(usersLDAPRepository::init)
@@ -95,7 +96,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfigurationWithVirtualHosting(ldapContainer);
             configuration.addProperty("domains.extra.org", "ou=whatever,dc=james,dc=org");
 
-            usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
             usersLDAPRepository.configure(configuration);
             usersLDAPRepository.init();
         }
@@ -138,7 +139,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
             usersLDAPRepository.configure(configuration(ldapContainer));
             usersLDAPRepository.init();
         }
@@ -182,7 +183,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
             configuration.addProperty("[@filter]", "(sn=james-user)");
 
-            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
             usersLDAPRepository.configure(configuration);
             usersLDAPRepository.init();
 
@@ -194,7 +195,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
             configuration.addProperty("[@filter]", "(sn=nomatch)");
 
-            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
             usersLDAPRepository.configure(configuration);
             usersLDAPRepository.init();
 
@@ -206,7 +207,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
             configuration.addProperty("[@filter]", "(sn=nomatch)");
 
-            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
             usersLDAPRepository.configure(configuration);
             usersLDAPRepository.init();
 
@@ -218,7 +219,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
             configuration.addProperty("[@filter]", "(sn=nomatch)");
 
-            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
             usersLDAPRepository.configure(configuration);
             usersLDAPRepository.init();
 
@@ -426,7 +427,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
 
         @Test
         void supportVirtualHostingShouldReturnFalseByDefault() throws Exception {
-            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
             usersLDAPRepository.configure(ldapRepositoryConfiguration(ldapContainer));
 
             assertThat(usersLDAPRepository.supportVirtualHosting()).isFalse();
@@ -437,7 +438,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
             configuration.addProperty(SUPPORTS_VIRTUAL_HOSTING, "true");
 
-            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
             usersLDAPRepository.configure(configuration);
 
             assertThat(usersLDAPRepository.supportVirtualHosting()).isTrue();
@@ -448,7 +449,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
             configuration.addProperty(SUPPORTS_VIRTUAL_HOSTING, "false");
 
-            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
             usersLDAPRepository.configure(configuration);
 
             assertThat(usersLDAPRepository.supportVirtualHosting()).isFalse();
@@ -459,7 +460,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
             configuration.addProperty(SUPPORTS_VIRTUAL_HOSTING, "bad");
 
-            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
 
             assertThatThrownBy(() -> usersLDAPRepository.configure(configuration))
                 .isInstanceOf(ConversionException.class);
@@ -471,7 +472,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
         configuration.addProperty("[@ldapHost]", ldapContainer.getLdapsBadHost());
 
-        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
         usersLDAPRepository.configure(configuration);
 
         assertThatThrownBy(usersLDAPRepository::init)
@@ -486,7 +487,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty("[@trustAllCerts]", "true");
 
         Awaitility.await().untilAsserted(() -> {
-            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
             usersLDAPRepository.configure(configuration);
 
             assertThatThrownBy(usersLDAPRepository::init)
@@ -497,7 +498,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
 
     private static ReadOnlyUsersLDAPRepository startUsersRepository(HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration,
                                                              DomainList domainList) throws Exception {
-        ReadOnlyUsersLDAPRepository ldapRepository = new ReadOnlyUsersLDAPRepository(domainList);
+        ReadOnlyUsersLDAPRepository ldapRepository = new ReadOnlyUsersLDAPRepository(domainList, new NoopGaugeRegistry());
         ldapRepository.configure(ldapRepositoryConfiguration);
         ldapRepository.init();
         return ldapRepository;

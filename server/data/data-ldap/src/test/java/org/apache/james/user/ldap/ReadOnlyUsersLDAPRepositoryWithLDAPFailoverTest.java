@@ -36,6 +36,7 @@ import org.apache.commons.configuration2.plist.PropertyListConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
+import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -66,7 +67,7 @@ class ReadOnlyUsersLDAPRepositoryWithLDAPFailoverTest {
 
         HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfigurationWithVirtualHosting(List.of(masterLdap, slaveLdap));
 
-        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
         usersLDAPRepository.configure(configuration);
         usersLDAPRepository.init();
     }
@@ -138,7 +139,7 @@ class ReadOnlyUsersLDAPRepositoryWithLDAPFailoverTest {
         masterLdap.pause();
         slaveLdap.pause();
 
-        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
         usersLDAPRepository.configure(configuration);
 
         assertThatThrownBy(() -> usersLDAPRepository.init())
@@ -151,7 +152,7 @@ class ReadOnlyUsersLDAPRepositoryWithLDAPFailoverTest {
         HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfigurationWithVirtualHosting(List.of(masterLdap, slaveLdap));
         masterLdap.pause();
 
-        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
         usersLDAPRepository.configure(configuration);
 
         assertThatCode(() -> usersLDAPRepository.init())
@@ -164,7 +165,7 @@ class ReadOnlyUsersLDAPRepositoryWithLDAPFailoverTest {
         HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfigurationWithVirtualHosting(List.of(masterLdap, slaveLdap));
         slaveLdap.pause();
 
-        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
         usersLDAPRepository.configure(configuration);
 
         assertThatCode(() -> usersLDAPRepository.init())
@@ -176,7 +177,7 @@ class ReadOnlyUsersLDAPRepositoryWithLDAPFailoverTest {
     void shouldSupportBackwardCompatibilityForTheLegacyLdapHostProperty() throws Exception {
         HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfigurationWithVirtualHosting(List.of(masterLdap, slaveLdap), "ldapHost");
 
-        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
         usersLDAPRepository.configure(configuration);
 
         assertThatCode(() -> usersLDAPRepository.init())
@@ -189,7 +190,7 @@ class ReadOnlyUsersLDAPRepositoryWithLDAPFailoverTest {
         HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfigurationWithVirtualHosting(
             Set.of(masterLdap.getLdapHost(), slaveLdap.getLdapsHost()));
 
-        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
         usersLDAPRepository.configure(configuration);
         usersLDAPRepository.init();
 

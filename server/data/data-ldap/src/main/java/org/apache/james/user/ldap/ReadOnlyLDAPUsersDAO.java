@@ -38,6 +38,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
@@ -62,6 +63,7 @@ import com.unboundid.ldap.sdk.SearchScope;
 public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUsersDAO.class);
 
+    private final GaugeRegistry gaugeRegistry;
     private LdapRepositoryConfiguration ldapConfiguration;
     private LDAPConnectionPool ldapConnectionPool;
     private Optional<Filter> userExtraFilter;
@@ -69,8 +71,8 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private Filter listingFilter;
 
     @Inject
-    public ReadOnlyLDAPUsersDAO() {
-
+    public ReadOnlyLDAPUsersDAO(GaugeRegistry gaugeRegistry) {
+        this.gaugeRegistry = gaugeRegistry;
     }
 
     /**
@@ -117,6 +119,9 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         if (!ldapConfiguration.getPerDomainBaseDN().isEmpty()) {
             Preconditions.checkState(ldapConfiguration.supportsVirtualHosting(), "'virtualHosting' is needed for per domain DNs");
         }
+
+        gaugeRegistry.register("ldap-connection-available-count", () -> ldapConnectionPool.getConnectionPoolStatistics().getNumAvailableConnections());
+        gaugeRegistry.register("ldap-created-connection-count", () -> ldapConnectionPool.getConnectionPoolStatistics().getNumSuccessfulConnectionAttempts());
     }
 
     @PreDestroy

@@ -28,6 +28,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.UsersRepositoryImpl;
@@ -95,8 +96,11 @@ import reactor.core.publisher.Mono;
  * &quot;user&quot; for Microsoft Active Directory.</li>
  **
  * <li>
- * <b>poolSize:</b> (optional, default = 4) The maximum number of connection
- * in the pool.</li>
+ * <b>poolSize:</b> (optional, default = 4) The maximum number of connection in the pool. Note that if the pool is exhausted,
+ * extra connections will be created on the fly as needed.</li>
+ * <li><b>maxWaitTime</b>: (optional, default = 1000) the number of milli seconds to wait before creating off-pool
+ * connections, using a pool connection if released in time. This effectively smooth out traffic burst, thus in some case can help
+ * not overloading the LDAP</li>
  * <li>
  * </ul>
  * </p>
@@ -157,8 +161,8 @@ public class ReadOnlyUsersLDAPRepository extends UsersRepositoryImpl<ReadOnlyLDA
     private LdapRepositoryConfiguration ldapConfiguration;
 
     @Inject
-    public ReadOnlyUsersLDAPRepository(DomainList domainList) {
-        super(domainList, new ReadOnlyLDAPUsersDAO());
+    public ReadOnlyUsersLDAPRepository(DomainList domainList, GaugeRegistry gaugeRegistry) {
+        super(domainList, new ReadOnlyLDAPUsersDAO(gaugeRegistry));
     }
 
     /**
