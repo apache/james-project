@@ -1,0 +1,6 @@
+= Security checklist
+:navtitle: Security checklist
+
+:xref-base: postgres
+:backend-name: postgres
+include::partial$operate/security.adoc[]
