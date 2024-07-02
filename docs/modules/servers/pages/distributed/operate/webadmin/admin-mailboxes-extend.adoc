@@ -1,0 +1,226 @@
+==== Fixing mailboxes inconsistencies
+
+....
+curl -XPOST /mailboxes?task=SolveInconsistencies
+....
+
+Will schedule a task for fixing inconsistencies for the mailbox
+deduplicated object stored in Cassandra.
+
+link:#_endpoints_returning_a_task[More details about endpoints returning
+a task].
+
+The `I-KNOW-WHAT-I-M-DOING` header is mandatory (you can read more
+information about it in the warning section below).
+
+The scheduled task will have the following type
+`solve-mailbox-inconsistencies` and the following
+`additionalInformation`:
+
+....
+{
+  "type":"solve-mailbox-inconsistencies",
+  "processedMailboxEntries": 3,
+  "processedMailboxPathEntries": 3,
+  "fixedInconsistencies": 2,
+  "errors": 1,
+  "conflictingEntries":[{
+    "mailboxDaoEntry":{
+      "mailboxPath":"#private:user:mailboxName",
+      "mailboxId":"464765a0-e4e7-11e4-aba4-710c1de3782b"
+    }," +
+    "mailboxPathDaoEntry":{
+      "mailboxPath":"#private:user:mailboxName2",
+      "mailboxId":"464765a0-e4e7-11e4-aba4-710c1de3782b"
+    }
+  }]
+}
+....
+
+Note that conflicting entry inconsistencies will not be fixed and will
+require to explicitly use link:#_correcting_ghost_mailbox[ghost mailbox]
+endpoint in order to merge the conflicting mailboxes and prevent any
+message loss.
+
+*WARNING*: this task can cancel concurrently running legitimate user
+operations upon dirty read. As such this task should be run offline.
+
+A dirty read is when data is read between the two writes of the
+denormalization operations (no isolation).
+
+In order to ensure being offline, stop the traffic on SMTP, JMAP and
+IMAP ports, for example via re-configuration or firewall rules.
+
+Due to all of those risks, a `I-KNOW-WHAT-I-M-DOING` header should be
+positioned to `ALL-SERVICES-ARE-OFFLINE` in order to prevent accidental
+calls.
+
+==== Recomputing mailbox counters
+
+....
+curl -XPOST /mailboxes?task=RecomputeMailboxCounters
+....
+
+Will recompute counters (unseen & total count) for the mailbox object
+stored in Cassandra.
+
+Cassandra maintains a per mailbox projection for message count and
+unseen message count. As with any projection, it can go out of sync,
+leading to inconsistent results being returned to the client.
+
+link:#_endpoints_returning_a_task[More details about endpoints returning
+a task].
+
+The scheduled task will have the following type
+`recompute-mailbox-counters` and the following `additionalInformation`:
+
+....
+{
+  "type":"recompute-mailbox-counters",
+  "processedMailboxes": 3,
+  "failedMailboxes": ["464765a0-e4e7-11e4-aba4-710c1de3782b"]
+}
+....
+
+Note that conflicting inconsistencies entries will not be fixed and will
+require to explicitly use link:#_correcting_ghost_mailbox[ghost mailbox]
+endpoint in order to merge the conflicting mailboxes and prevent any
+message loss.
+
+*WARNING*: this task do not take into account concurrent modifications
+upon a single mailbox counter recomputation. Rerunning the task will
+_eventually_ provide the consistent result. As such we advise to run
+this task offline.
+
+In order to ensure being offline, stop the traffic on SMTP, JMAP and
+IMAP ports, for example via re-configuration or firewall rules.
+
+`trustMessageProjection` query parameter can be set to `true`. Content
+of `messageIdTable` (listing messages by their mailbox context) table
+will be trusted and not compared against content of `imapUidTable` table
+(listing messages by their messageId mailbox independent identifier).
+This will result in a better performance running the task at the cost of
+safety in the face of message denormalization inconsistencies.
+
+Defaults to false, which generates additional checks. You can read
+https://github.com/apache/james-project/blob/master/src/adr/0022-cassandra-message-inconsistency.md[this
+ADR] to better understand the message projection and how it can become
+inconsistent.
+
+=== Fixing message inconsistencies
+
+This task is only available on top of Guice Cassandra products.
+
+....
+curl -XPOST /messages?task=SolveInconsistencies
+....
+
+Will schedule a task for fixing message inconsistencies created by the
+message denormalization process.
+
+Messages are denormalized and stored in separated data tables in
+Cassandra, so they can be accessed by their unique identifier or mailbox
+identifier & local mailbox identifier through different protocols.
+
+Failure in the denormalization process will lead to inconsistencies, for
+example:
+
+....
+BOB receives a message
+The denormalization process fails
+BOB can read the message via JMAP
+BOB cannot read the message via IMAP
+
+BOB marks a message as SEEN
+The denormalization process fails
+The message is SEEN via JMAP
+The message is UNSEEN via IMAP
+....
+
+link:#_endpoints_returning_a_task[More details about endpoints returning
+a task].
+
+An admin can specify the concurrency that should be used when running
+the task:
+
+* `messagesPerSecond` rate of messages to be processed per second.
+Default is 100.
+
+This optional parameter must have a strictly positive integer as a value
+and be passed as query parameter.
+
+An admin can also specify the reindexing mode it wants to use when
+running the task:
+
+* `mode` the reindexing mode used. There are 2 modes for the moment:
+** `rebuildAll` allows to rebuild all indexes. This is the default mode.
+** `fixOutdated` will check for outdated indexed document and reindex
+only those.
+
+This optional parameter must be passed as query parameter.
+
+It’s good to note as well that there is a limitation with the
+`fixOutdated` mode. As we first collect metadata of stored messages to
+compare them with the ones in the index, a failed `expunged` operation
+might not be well corrected (as the message might not exist anymore but
+still be indexed).
+
+Example:
+
+....
+curl -XPOST /messages?task=SolveInconsistencies&messagesPerSecond=200&mode=rebuildAll
+....
+
+Response codes:
+
+* 201: Success. Corresponding task id is returned.
+* 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type
+`solve-message-inconsistencies` and the following
+`additionalInformation`:
+
+....
+{
+  "type":"solve-message-inconsistencies",
+  "timestamp":"2007-12-03T10:15:30Z",
+  "processedImapUidEntries": 2,
+  "processedMessageIdEntries": 1,
+  "addedMessageIdEntries": 1,
+  "updatedMessageIdEntries": 0,
+  "removedMessageIdEntries": 1,
+  "runningOptions":{
+    "messagesPerSecond": 200,
+    "mode":"REBUILD_ALL"
+  },
+  "fixedInconsistencies": [
+    {
+      "mailboxId": "551f0580-82fb-11ea-970e-f9c83d4cf8c2",
+      "messageId": "d2bee791-7e63-11ea-883c-95b84008f979",
+      "uid": 1
+    },
+    {
+      "mailboxId": "551f0580-82fb-11ea-970e-f9c83d4cf8c2",
+      "messageId": "d2bee792-7e63-11ea-883c-95b84008f979",
+      "uid": 2
+    }
+  ],
+  "errors": [
+    {
+      "mailboxId": "551f0580-82fb-11ea-970e-f9c83d4cf8c2",
+      "messageId": "ffffffff-7e63-11ea-883c-95b84008f979",
+      "uid": 3
+    }
+  ]
+}
+....
+
+User actions concurrent to the inconsistency fixing task could result in
+concurrency issues. New inconsistencies could be created.
+
+However the source of truth will not be impacted, hence rerunning the
+task will eventually fix all issues.
+
+This task could be run safely online and can be scheduled on a recurring
+basis outside of peak traffic by an admin to ensure Cassandra message
+consistency.

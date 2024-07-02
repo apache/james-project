@@ -1,0 +1,6 @@
+= Postgresql James Server &mdash; Performance checklist
+:navtitle: Performance checklist
+
+:xref-base: postgres
+:backend-name: postgres
+include::partial$operate/performanceChecklist.adoc[]
