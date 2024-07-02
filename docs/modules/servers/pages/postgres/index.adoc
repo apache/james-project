@@ -12,3 +12,4 @@ with various storage and search solutions
 In this section of the documentation, we will introduce you to:
 
 * xref:postgres/objectives.adoc[Objectives and motivation of the Distributed Postgres Server]
+* xref:postgres/run/index.adoc[Run the Postgresql Server]
