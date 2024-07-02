@@ -1,7 +1,6 @@
 name: james-project
 title: Apache James Server
-version: '3.6.0'
-prerelease: Snapshot
+version: '3.6.2'
 nav:
 - modules/concepts/nav.adoc
 - modules/servers/nav.adoc
