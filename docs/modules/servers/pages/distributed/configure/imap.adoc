@@ -156,7 +156,7 @@ It uses the Keycloak OIDC provider, but usage of similar technologies is definit
 
 == Extending IMAP
 
-IMAP decoders, processors and encoder can be customized. xref:distributed/extending/imap.adoc[Read more].
+IMAP decoders, processors and encoder can be customized. xref:customization:imap.adoc[Read more].
 
 Check this link:https://github.com/apache/james-project/tree/master/examples/custom-imap[example].
 
