@@ -1,0 +1,9 @@
+= Postgresql James Server &mdash; Logging
+:navtitle: Logging
+
+:xref-base: postgres
+:server-name: Postgresql James Server
+:server-tag: postgres
+:docker-compose-code-block-sample: servers:postgres/operate/logging/docker-compose-block.adoc
+:backend-name: postgres
+include::partial$operate/logging.adoc[]
