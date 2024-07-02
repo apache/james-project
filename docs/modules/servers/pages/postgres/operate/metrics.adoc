@@ -1,0 +1,7 @@
+= Postgresql James Server &mdash; Metrics
+:navtitle: Metrics
+
+:other-metrics: Postgresql Java driver metrics
+:xref-base: postgres
+:server-name: Postgresql James Server
+include::partial$operate/metrics.adoc[]
