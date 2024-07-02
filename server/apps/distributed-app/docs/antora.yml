@@ -1,0 +1,4 @@
+name: james-distributed-app
+title: Apache James Distributed Server
+version: '3.9.0'
+prerelease: SNAPSHOT
