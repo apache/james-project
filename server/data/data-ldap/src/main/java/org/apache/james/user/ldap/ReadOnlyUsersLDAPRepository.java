@@ -28,6 +28,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.UsersRepositoryImpl;
@@ -157,8 +158,8 @@ public class ReadOnlyUsersLDAPRepository extends UsersRepositoryImpl<ReadOnlyLDA
     private LdapRepositoryConfiguration ldapConfiguration;
 
     @Inject
-    public ReadOnlyUsersLDAPRepository(DomainList domainList) {
-        super(domainList, new ReadOnlyLDAPUsersDAO());
+    public ReadOnlyUsersLDAPRepository(DomainList domainList, GaugeRegistry gaugeRegistry) {
+        super(domainList, new ReadOnlyLDAPUsersDAO(gaugeRegistry));
     }
 
     /**

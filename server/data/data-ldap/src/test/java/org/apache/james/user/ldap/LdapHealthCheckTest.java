@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
+import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +45,7 @@ class LdapHealthCheckTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        ReadOnlyUsersLDAPRepository ldapUserRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        ReadOnlyUsersLDAPRepository ldapUserRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
         ldapUserRepository.configure(ReadOnlyUsersLDAPRepositoryTest.ldapRepositoryConfigurationWithVirtualHosting(ldapContainer));
         ldapUserRepository.init();
         ldapHealthCheck = new LdapHealthCheck(ldapUserRepository);
