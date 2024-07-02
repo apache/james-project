@@ -1,4 +1,4 @@
-= Distributed James Server &mdash; Custom IMAP processing
+= Custom IMAP processing
 :navtitle: Custom IMAP processing
 
 James allows defining your own handler packages.
@@ -22,7 +22,7 @@ Custom configuration can be obtained through `ImapConfiguration` class via the `
 
 A full working example is available link:https://github.com/apache/james-project/tree/master/examples/custom-imap[here].
 
-See this page for xref:distributed/configure/imap.adoc#_extending_imap[more details on configuring IMAP extensions].
+See this page for xref:imap.adoc#_extending_imap[more details on configuring IMAP extensions].
 
 == IMAP additional Connection Checks
 
