@@ -1,0 +1,4 @@
+= Distributed James Server &mdash; Extending behaviour
+:navtitle: Extending behaviour
+
+This section can be read xref:customization:index.adoc[this page].
