@@ -1,0 +1,17 @@
+=== DeconnectionRight
+
+Mailet to avoid people to receive emails outside working hour.
+
+Working hours are defined by a starting time and an end time, on weekdays from monday to friday.
+
+ Emails received outside working hours are to be delayed to next working hours.
+
+Example:
+
+....xml
+<mailet match="all" class="DeconnectionRight">
+    <zoneId>Europe/Paris</zoneId>
+    <workDayStart>07:00:00</workDayStart>
+    <workDayEnd>20:00:00</metricName>
+</mailet>
+....
