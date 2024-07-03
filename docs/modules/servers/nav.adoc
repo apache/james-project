@@ -80,6 +80,9 @@
 ** xref:postgres/index.adoc[]
 *** xref:postgres/objectives.adoc[]
 *** xref:postgres/architecture/index.adoc[]
+**** xref:postgres/architecture/implemented-standards.adoc[]
+**** xref:postgres/architecture/consistency-model.adoc[]
+**** xref:postgres/architecture/specialized-instances.adoc[]
 *** xref:postgres/run/index.adoc[]
 *** xref:postgres/configure/index.adoc[]
 **** Protocols
