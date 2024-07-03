@@ -38,6 +38,7 @@ This page details standards implemented by the distributed server.
 - link:https://datatracker.ietf.org/doc/html/rfc2197[RFC-2197] SMTP Service Extension for Command Pipelining
 - link:https://datatracker.ietf.org/doc/html/rfc2554[RFC-2554] ESMTP Service Extension for Authentication
 - link:https://datatracker.ietf.org/doc/html/rfc1893[RFC-1893] Enhanced Mail System Status Codes
+- link:https://datatracker.ietf.org/doc/rfc6710/[RFC-6710] SMTP Extension for Message Transfer Priorities
 
 == LMTP
 

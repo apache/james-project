@@ -46,6 +46,8 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.james.core.MailAddress;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
@@ -124,6 +126,8 @@ public class MailDelivrerToHost {
             connect(outgoingMailServer, transport);
             if (mail.dsnParameters().isPresent()) {
                 sendDSNAwareEmail(mail, transport, addr);
+            } else if (transport.supportsExtension("MT-PRIORITY")) {
+                sendEmailWithPriority(mail, transport, addr);
             } else {
                 transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr.toArray(InternetAddress[]::new));
             }
@@ -183,7 +187,7 @@ public class MailDelivrerToHost {
             .map(address -> Pair.of(
                 mail.dsnParameters()
                     .flatMap(Throwing.<DsnParameters, Optional<DsnParameters.RecipientDsnParameters>>function(
-                        dsn -> Optional.ofNullable(dsn.getRcptParameters().get(new MailAddress(address.toString()))))
+                            dsn -> Optional.ofNullable(dsn.getRcptParameters().get(new MailAddress(address.toString()))))
                         .orReturn(Optional.empty()))
                     .flatMap(DsnParameters.RecipientDsnParameters::getNotifyParameter)
                     .map(this::toJavaxNotify),
@@ -210,6 +214,20 @@ public class MailDelivrerToHost {
                     smtpMessage.setMailExtension("ENVID=" + envId.asString());
                 }
             });
+        if (transport.supportsExtension("MT-PRIORITY")) {
+            return toSmtpMessageWithPriorityExtension(mail, smtpMessage);
+        }
+        return smtpMessage;
+    }
+
+    private void sendEmailWithPriority(Mail mail, SMTPTransport transport, Collection<InternetAddress> addresses) throws MessagingException {
+        SMTPMessage smtpMessage = new SMTPMessage(adaptToTransport(mail.getMessage(), transport));
+        transport.sendMessage(toSmtpMessageWithPriorityExtension(mail, smtpMessage), addresses.toArray(InternetAddress[]::new));
+    }
+
+    private SMTPMessage toSmtpMessageWithPriorityExtension(Mail mail, SMTPMessage smtpMessage) {
+        Optional<Attribute> priorityAttribute = Optional.ofNullable(mail.attributesMap().get(AttributeName.of("MAIL_PRIORITY")));
+        priorityAttribute.ifPresent(attribute -> smtpMessage.setMailExtension(smtpMessage.getMailExtension() + " MT-PRIORITY=" + attribute.getValue().value()));
         return smtpMessage;
     }
 

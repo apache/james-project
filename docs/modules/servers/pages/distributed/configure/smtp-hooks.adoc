@@ -318,6 +318,25 @@ The Distributed server has optional support for FUTURERELEASE (link:https://www.
 </smtpserver>
 ....
 
+== Message Transfer Priorities hooks
+
+The Distributed server has optional support for SMTP Extension for Message Transfer Priorities (link:https://www.rfc-editor.org/rfc/rfc6710.html[RFC-6710])
+
+The SMTP server changes the priority of the message from -9 to -1 as 0 according to the implemented mail priority support policy.
+The SMTP server does not allow positive priorities from unauthorized sources and sets the priority to the default value (0).
+
+....
+<smtpserver enabled="true">
+    <...> <!-- The rest of your SMTP configuration, unchanged -->
+    <handlerchain>
+        <handler class="org.apache.james.smtpserver.priority.SmtpMtPriorityEhloHook"/>
+        <handler class="org.apache.james.smtpserver.priority.SmtpMtPriorityParameterHook"/>
+        <handler class="org.apache.james.smtpserver.priority.SmtpMtPriorityMessageHook"/>
+        <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+    </handlerchain>
+</smtpserver>
+....
+
 == DKIM checks hooks
 
 Hook for verifying DKIM signatures of incoming mails.
@@ -336,14 +355,14 @@ Supported configuration elements:
 
 Example handlerchain configuration for `smtpserver.xml`:
 
-....xml
+....
 <handlerchain>
-<handler class="org.apache.james.smtpserver.DKIMHook">
-<forceCLRF>true</forceCLRF>
-<onlyForSenderDomain>apache.org</onlyForSenderDomain>
-<signatureRequired>true</signatureRequired>
-<expectedDToken>apache.org</expectedDToken>
-</handler>
+    <handler class="org.apache.james.smtpserver.DKIMHook">
+        <forceCLRF>true</forceCLRF>
+        <onlyForSenderDomain>apache.org</onlyForSenderDomain>
+        <signatureRequired>true</signatureRequired>
+        <expectedDToken>apache.org</expectedDToken>
+    </handler>
 <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
 </handlerchain>
 ....
