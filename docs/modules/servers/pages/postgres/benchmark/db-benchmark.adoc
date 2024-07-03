@@ -1,0 +1,8 @@
+= Postgresql James server -- Database benchmarks
+:navtitle: Database benchmarks
+
+:backend-name: postgres
+:server-name: Postgresql James server
+:backend-database-extend-sample: PostgreSQL 16 as main database: 1 nodes (OVH instance, 2 CPU / 7 GB RAM, 160 GB SSD)
+
+include::partial$benchmark/db-benchmark.adoc[]
