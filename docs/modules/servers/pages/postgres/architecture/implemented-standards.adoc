@@ -1,0 +1,6 @@
+= Postgresql James server &mdash; Implemented standards
+:navtitle: Implemented standards
+
+:server-name: Postgresql James server
+
+include::partial$architecture/implemented-standards.adoc[]

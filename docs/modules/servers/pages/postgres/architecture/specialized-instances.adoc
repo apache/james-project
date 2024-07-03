@@ -1,0 +1,7 @@
+= Postgresql James server &mdash; Specialized instances
+:navtitle: Specialized instances
+
+:server-name: Postgresql James server
+:specialized-instances-file-name: specialized-instances-postgres.png
+
+include::partial$architecture/specialized-instances.adoc[]
