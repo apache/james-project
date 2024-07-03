@@ -226,14 +226,15 @@ class RemoteDeliveryTest {
     }
 
     @Test
-    void remoteDeliveryShouldAddPriorityIfSpecified() throws Exception {
+    void remoteDeliveryShouldDeletePriorityWhenUsePriorityIsFalse() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "true")
+            .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "false")
             .build());
 
         Mail mail = FakeMail.builder()
             .name(MAIL_NAME)
             .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
             .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
             .build();
         remoteDelivery.service(mail);
@@ -244,7 +245,31 @@ class RemoteDeliveryTest {
             .extracting(MailProjection::from)
             .containsOnly(MailProjection.from(FakeMail.builder()
                 .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
-                .attribute(MailPrioritySupport.HIGH_PRIORITY_ATTRIBUTE)
+                .recipient(MailAddressFixture.ANY_AT_JAMES)
+                .build()));
+    }
+
+    @Test
+    void remoteDeliveryShouldPreservePriority() throws Exception {
+        remoteDelivery.init(FakeMailetConfig.builder()
+            .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "true")
+            .build());
+
+        Mail mail = FakeMail.builder()
+            .name(MAIL_NAME)
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+            .build();
+        remoteDelivery.service(mail);
+
+
+        assertThat(mailQueue.browse())
+            .toIterable()
+            .extracting(MailProjection::from)
+            .containsOnly(MailProjection.from(FakeMail.builder()
+                .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
+                .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
                 .recipient(MailAddressFixture.ANY_AT_JAMES)
                 .build()));
     }

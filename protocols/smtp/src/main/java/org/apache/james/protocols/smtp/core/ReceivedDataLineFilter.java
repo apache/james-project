@@ -53,6 +53,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
     private final ProtocolSession.AttachmentKey<Boolean> headersPrefixAdded = ProtocolSession.AttachmentKey.of("HEADERS_PREFIX_ADDED" + COUNTER.incrementAndGet(), Boolean.class);
     private final ProtocolSession.AttachmentKey<Boolean> headersSuffixAdded = ProtocolSession.AttachmentKey.of("HEADERS_SUFFIX_ADDED" + COUNTER.incrementAndGet(), Boolean.class);
+    private final ProtocolSession.AttachmentKey<Integer> mtPriority = ProtocolSession.AttachmentKey.of("MT-PRIORITY", Integer.class);
 
     /**
      * Return the service type which will be used in the Received headers.
@@ -111,23 +112,28 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
                 sslSession.getProtocol(),
                 Optional.ofNullable(sslSession.getCipherSuite())
                     .orElse("")))
-                .ifPresent(header::add);
+            .ifPresent(header::add);
 
         headerLineBuffer.append("by ").append(session.getConfiguration().getHelloName()).append(" (").append(session.getConfiguration().getSoftwareName()).append(") with ").append(getServiceType(session, heloMode.orElse("NOT-DEFINED")));
         headerLineBuffer.append(" ID ").append(session.getSessionID());
 
         List<MailAddress> rcptList = session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction).orElse(ImmutableList.of());
+
+        String priorityValue = session.getAttachment(mtPriority, State.Transaction)
+            .map(p -> " (PRIORITY " + p + ")").orElse("");
+
         if (rcptList.size() == 1) {
             // Only indicate a recipient if they're the only recipient
             // (prevents email address harvesting and large headers in
             // bulk email)
             header.add(headerLineBuffer.toString());
-            
+
             headerLineBuffer = new StringBuilder();
-            headerLineBuffer.append("for <").append(rcptList.get(0).toString()).append(">;");
+            headerLineBuffer.append("for <").append(rcptList.getFirst().toString()).append(">");
+            headerLineBuffer.append(priorityValue).append(";");
         } else {
             // Put the ; on the end of the 'by' line
-            headerLineBuffer.append(";");
+            headerLineBuffer.append(priorityValue).append(";");
         }
         header.add(headerLineBuffer.toString());
         headerLineBuffer = new StringBuilder();
@@ -165,7 +171,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
      */
     private Response addHeaders(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
         Response response;
-        for (Header header: headers(session)) {
+        for (Header header : headers(session)) {
             response = header.transferTo(session, next);
             if (response != null) {
                 return response;

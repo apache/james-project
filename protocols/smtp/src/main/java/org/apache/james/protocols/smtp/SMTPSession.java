@@ -73,7 +73,16 @@ public interface SMTPSession extends ProtocolSession {
      */
     boolean isAuthAnnounced();
 
-    
+    /**
+     Returns a boolean value indicating whether the user is unauthorized based on their priority level.
+    *
+    * @param priority the priority level of the user
+    * @return true if the user is unauthorized, false otherwise
+    */
+    default boolean isUnAuthorized(int priority) {
+        return this.getUsername() == null && priority > 0;
+    }
+
     /**
      * Returns the recipient count
      * 

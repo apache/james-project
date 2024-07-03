@@ -74,6 +74,10 @@ within the mailet code.<br>
 Note: This facility should be used with extreme care by expert users with a thorough knowledge of the relevant RFCs and
 the ability to perform their own problem resolutions.
 * *debug* (optional) - a Boolean (true/false) indicating whether debugging is on. Default is false.
+* *usePriority* (optional) - a Boolean value (true/false) that indicates whether email priority support is enabled.
+When the property is set to false, it allows for the disabling of priorities when interacting with unknown third-party
+systems during remote delivery MX resolution. When this option is enabled, any email will be assigned the lowest priority
+during retry attempts. Default is false.
 
 ==== Security
 

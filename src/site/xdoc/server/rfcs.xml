@@ -47,6 +47,7 @@
       <a href="rfclist/smtp/rfc2197.txt">RFC 2197: SMTP Service Extension for Command Pipelining (elective)</a><br/>
       <a href="rfclist/smtp/rfc2554.txt">RFC 2554: SMTP Service Extension for Authentication</a><br/>
       <a href="rfclist/smtp/rfc2821.txt">RFC 2821: Simple Mail Transfer Protocol (obsoletes RFC 821)</a><br/>
+      <a href="rfclist/smtp/rfc6710.txt">RFC 6710: Simple Mail Transfer Protocol Extension for Message Transfer Priorities</a><br/>
     </subsection>
     <subsection name="LMTP RFCs">
       <a href="rfclist/lmtp/rfc2033.txt">RFC 2033 : LMTP Local Mail Transfer Protocol</a><br/>

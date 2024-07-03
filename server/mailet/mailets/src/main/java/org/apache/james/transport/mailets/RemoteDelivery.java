@@ -35,7 +35,6 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -43,6 +42,7 @@ import org.apache.james.transport.mailets.remote.delivery.Bouncer;
 import org.apache.james.transport.mailets.remote.delivery.DeliveryRunnable;
 import org.apache.james.transport.mailets.remote.delivery.RemoteDeliveryConfiguration;
 import org.apache.james.util.AuditTrail;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.Mail;
 import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.GenericMailet;
@@ -91,7 +91,7 @@ import com.google.common.collect.ImmutableMap;
  * <li><b>bounceProcessor</b> (optional) - a String containing the name of the mailet processor to pass messages that cannot
  * be delivered to for DSN bounce processing. Default is to send a traditional message containing the bounce details.</li>
  * <li><b>onSuccess</b> (optional) - if specified, this processor is called for each email successfully sent to remote third parties.</li>
- *
+ * <p>
  * When using bounceProcessor or onSuccess processors, take special care of error handling (see onMailetException and onMatcherException)
  * to avoid confusing situations. Also remember that on partial delivery, both processors will be used: <code>onSuccess</code> with successfull recipients,
  * and <code>bounceProcessor</code> with failed recipients.
@@ -132,18 +132,22 @@ import com.google.common.collect.ImmutableMap;
  * Note: This facility should be used with extreme care by expert users with a thorough knowledge of the relevant RFCs and
  * the ability to perform their own problem resolutions.</li>
  * <li><b>debug</b> (optional) - a Boolean (true/false) indicating whether debugging is on. Default is false.</li>
+ * <li><b>usePriority</b> (optional) - a Boolean value (true/false) that indicates whether email priority support is enabled.
+ * When the property is set to false, it allows for the disabling of priorities when interacting with unknown third-party
+ * systems during remote delivery MX resolution. When this option is enabled, any email will be assigned the lowest priority
+ * during retry attempts. Default is false.</li>
  * </ul>
  * <br/>
  * <b>Security:</b><br/>
  * You can use the <b>sslEnable</b> parameter described above to force SMTP outgoing delivery to default to SSL encrypted traffic (SMTPS).
  * This is a shortcut for the <i>mail.smtps.ssl.enable</i> javax property.<br/>
  * When enabling SSL, you might need to specify the <i>mail.smtps.ssl.trust</i> property as well.
- * You can also control ciphersuites and protocols via *mail.smtps.ssl.ciphersuites* and 
+ * You can also control ciphersuites and protocols via *mail.smtps.ssl.ciphersuites* and
  * <b>mail.smtps.ssl.protocols</b> properties.<br/>
  * StartTLS can alternatively be enabled upon sending a mail. For this, use the <b>startTls</b> parameter, serving as a shortcut for the
  * javax <i>mail.smtp.starttls.enable</i> property. Depending on how strict your security policy is, you might consider
  * <i>mail.smtp.starttls.required</i> as well. Be aware that configuring trust will then be required.
- * You can also use other javax properties for StartTLS, but their property prefix must be <i>mail.smtp.ssl.</i> in this case.<br/> 
+ * You can also use other javax properties for StartTLS, but their property prefix must be <i>mail.smtp.ssl.</i> in this case.<br/>
  * James enables server identity verification by default. In certain rare edge cases you might disable it via the <b>verifyServerIdentity</b> parameter,
  * or use the <i>mail.smtps.ssl.checkserveridentity</i> and <i>mail.smtp.ssl.checkserveridentity</i> javax properties for fine control.<br/>
  * Read <a href="https://eclipse-ee4j.github.io/angus-mail/docs/api/org.eclipse.angus.mail/org/eclipse/angus/mail/smtp/package-summary.html"><code>org.eclipse.angus.mail.smtp</code></a>
@@ -159,6 +163,7 @@ public class RemoteDelivery extends GenericMailet {
     }
 
     public static final String NAME_JUNCTION = "-to-";
+    private static final AttributeName MAIL_PRIORITY_ATTRIBUTE_NAME = AttributeName.of("MAIL_PRIORITY");
 
     private final DNSService dnsServer;
     private final DomainList domainList;
@@ -207,8 +212,8 @@ public class RemoteDelivery extends GenericMailet {
         if (configuration.isDebug()) {
             LOGGER.debug("Remotely delivering mail {}", mail.getName());
         }
-        if (configuration.isUsePriority()) {
-            mail.setAttribute(MailPrioritySupport.HIGH_PRIORITY_ATTRIBUTE);
+        if (!configuration.isUsePriority()) {
+            mail.removeAttribute(MAIL_PRIORITY_ATTRIBUTE_NAME);
         }
         if (!mail.getRecipients().isEmpty()) {
             if (configuration.getGatewayServer().isEmpty()) {

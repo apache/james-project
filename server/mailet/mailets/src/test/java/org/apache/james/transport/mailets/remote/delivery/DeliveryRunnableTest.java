@@ -36,6 +36,7 @@ import java.util.function.Supplier;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
@@ -61,6 +62,7 @@ public class DeliveryRunnableTest {
     void setUp() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .setProperty(RemoteDeliveryConfiguration.DEBUG, "true")
+            .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "true")
             .setProperty(RemoteDeliveryConfiguration.DELAY_TIME, "1000,2000,3000,4000,5000")
             .build();
 
@@ -140,6 +142,7 @@ public class DeliveryRunnableTest {
         verify(mailQueue).enQueue(FakeMail.builder()
                 .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(1))
+                .attribute(MailPrioritySupport.LOW_PRIORITY_ATTRIBUTE)
                 .attribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(false)))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
@@ -163,6 +166,7 @@ public class DeliveryRunnableTest {
         verify(mailQueue).enQueue(FakeMail.builder()
                 .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(3))
+                .attribute(MailPrioritySupport.LOW_PRIORITY_ATTRIBUTE)
                 .attribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(false)))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
@@ -186,6 +190,7 @@ public class DeliveryRunnableTest {
         verify(mailQueue).enQueue(FakeMail.builder()
                 .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(5))
+                .attribute(MailPrioritySupport.LOW_PRIORITY_ATTRIBUTE)
                 .attribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(false)))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)
@@ -240,6 +245,29 @@ public class DeliveryRunnableTest {
         verify(mailQueue).enQueue(FakeMail.builder()
                 .name("name")
                 .attribute(DeliveryRetriesHelper.makeAttribute(1))
+                .attribute(MailPrioritySupport.LOW_PRIORITY_ATTRIBUTE)
+                .attribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(false)))
+                .state(Mail.ERROR)
+                .lastUpdated(FIXED_DATE)
+                .build(),
+            Duration.ofSeconds(1));
+        verifyNoMoreInteractions(mailQueue);
+    }
+
+    @Test
+    void deliveryTemporaryFailureShouldRetryDeliveryWithPreservedPriority() throws Exception {
+        FakeMail fakeMail = FakeMail.builder().name("name")
+            .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
+            .state(Mail.DEFAULT).build();
+        Exception exception = new Exception();
+        when(mailDelivrer.deliver(fakeMail)).thenReturn(ExecutionResult.temporaryFailure(exception));
+
+        testee.attemptDelivery(fakeMail);
+
+        verify(mailQueue).enQueue(FakeMail.builder()
+                .name("name")
+                .attribute(DeliveryRetriesHelper.makeAttribute(1))
+                .attribute(MailPrioritySupport.LOW_PRIORITY_ATTRIBUTE)
                 .attribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(false)))
                 .state(Mail.ERROR)
                 .lastUpdated(FIXED_DATE)

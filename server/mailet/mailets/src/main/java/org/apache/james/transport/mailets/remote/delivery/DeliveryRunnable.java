@@ -41,6 +41,7 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.util.AuditTrail;
 import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
@@ -65,6 +66,7 @@ public class DeliveryRunnable implements Disposable {
     public static final Supplier<Date> CURRENT_DATE_SUPPLIER = Date::new;
     public static final String OUTGOING_MAILS = "outgoingMails";
     public static final String REMOTE_DELIVERY_TRIAL = "RemoteDeliveryTrial";
+    private static final AttributeName MAIL_PRIORITY_ATTRIBUTE_NAME = AttributeName.of("MAIL_PRIORITY");
 
     private final MailQueue queue;
     private final RemoteDeliveryConfiguration configuration;
