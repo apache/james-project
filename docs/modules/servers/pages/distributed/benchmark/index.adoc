@@ -1,10 +1,7 @@
-= Distributed James Server &mdash; Performance testing the Distributed server
+= Distributed James Server &mdash; Performance testing
 :navtitle: Performance testing the Distributed server
 
-The following pages detail how to do performance testing for the Distributed server also its database.
+:xref-base: distributed
+:server-name: Distributed James Server
 
-Once you have a Distributed James server up and running you then need to ensure it operates correctly and has a decent performance.
-You may need to do performance testings periodically to make sure your James performs well.
-
-We introduced xref:distributed/benchmark/james-benchmark.adoc[tools and base benchmark result for Distributed James] also xref:distributed/benchmark/db-benchmark.adoc[James database's base performance and how to benchmark them]
-to cover this topic.
+include::partial$benchmark/index.adoc[]
