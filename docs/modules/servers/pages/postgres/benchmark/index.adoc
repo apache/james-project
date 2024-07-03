@@ -1,2 +1,7 @@
-= Distributed James Postgres Server &mdash; Performance testing
-:navtitle: Performance testing
+= Postgresql James server &mdash; Performance testing
+:navtitle: Performance testing the Postgresql James server
+
+:xref-base: postgres
+:server-name: Postgresql James server
+
+include::partial$benchmark/index.adoc[]

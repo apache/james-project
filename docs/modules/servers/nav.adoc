@@ -114,4 +114,6 @@
 *** xref:postgres/operate/index.adoc[]
 *** xref:postgres/extending/index.adoc[]
 *** xref:postgres/benchmark/index.adoc[]
+**** xref:postgres/benchmark/db-benchmark.adoc[]
+**** xref:postgres/benchmark/james-benchmark.adoc[]
 ** xref:test.adoc[]
