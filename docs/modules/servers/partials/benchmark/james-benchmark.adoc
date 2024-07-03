@@ -1,12 +1,9 @@
-= Distributed James Server benchmark
-:navtitle: James benchmarks
-
-This document provides benchmark methodology and basic performance of Distributed James as a basis for a James administrator who
-can test and evaluate if his Distributed James is performing well.
+This document provides benchmark methodology and basic performance of {server-name} as a basis for a James administrator who
+can test and evaluate if his {server-name} is performing well.
 
 It includes:
 
-* A sample Distributed James deployment topology
+* A sample {server-name} deployment topology
 * Propose benchmark methodology
 * Sample performance results
 
@@ -14,19 +11,21 @@ This aims to help operators quickly identify performance issues.
 
 == Sample deployment topology
 
-We deploy a sample topology of Distributed James with these following components:
+We deploy a sample topology of {server-name} with these following components:
 
-- Distributed James: 3 Kubernetes pods, each pod has 2 OVH vCore CPU and 4 GB memory limit.
-- Apache Cassandra 4 as main database: 3 nodes, each node has 8 OVH vCores CPU and 30 GB memory limit (OVH b2-30 instance).
+- {server-name}: 3 Kubernetes pods, each pod has 2 OVH vCore CPU and 4 GB memory limit.
 - OpenDistro 1.13.1 as search engine: 3 nodes, each node has 8 OVH vCores CPU and 30 GB memory limit (OVH b2-30 instance).
 - RabbitMQ 3.8.17 as message queue: 3 Kubernetes pods, each pod has 0.6 OVH vCore CPU and 2 GB memory limit.
 - OVH Swift S3 as an object storage
+- {backend-database-extend-sample}
 
 == Benchmark methodology and base performance
 
+include::{benchmark_prepare_extend}[]
+
 === Provision testing data
 
-Before doing the performance test, you should make sure you have a Distributed James up and running with some provisioned testing
+Before doing the performance test, you should make sure you have a {server-name} up and running with some provisioned testing
 data so that it is representative of reality.
 
 Please follow these steps to provision testing data:
@@ -35,11 +34,13 @@ Please follow these steps to provision testing data:
 provisioned emails.
 
 Add this under transport processor
+
+[source,xml]
 ----
 <mailet match="All" class="RandomStoring"/>
 ----
 
-* Modify https://github.com/apache/james-project/tree/master/docs/modules/servers/pages/distributed/benchmark/provision.sh[provision.sh]
+* Modify {provision_file_url}[provision.sh]
 upon your need (number of users, mailboxes, emails to be provisioned).
 
 Currently, this script provisions 10 users, 15 mailboxes and hundreds of emails for example. Normally to make the performance test representative, you
@@ -71,7 +72,7 @@ Here are steps to do performance testing with James Gatling:
 
 * Setup James Gatling with `sbt` build tool
 
-* Configure the `Configuration.scala` to point to your Distributed James IMAP/JMAP server(s). For more configuration details, please read
+* Configure the `Configuration.scala` to point to your {server-name} IMAP/JMAP server(s). For more configuration details, please read
 https://github.com/linagora/james-gatling#readme[James Gatling Readme].
 
 * Run the performance testing simulation:
@@ -94,7 +95,7 @@ Some symbolic simulations we often use:
 
 A sample IMAP performance testing result (PlatformValidationSimulation):
 
-image::james-imap-base-performance.png[]
+image::{james-imap-base-performance-picture}[]
 
 If you get a IMAP performance far below this base performance, you should consider investigating for performance issues.
 
