@@ -1,0 +1,19 @@
+From: support@yourbank.com
+To: victim@example.com
+Subject: Urgent: Verify Your Account
+
+Date: Thu, 04 Jul 2024 10:00:00 +0000
+Message-ID: <0000000000000000000@yourbank.com>
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<html>
+  <body>
+    <p>Dear Valued Customer,</p>
+    <p>We regret to inform you that your account has been temporarily suspended due to suspicious activity. To restore your account access, please verify your identity by clicking on the link below:</p>
+    <p><a href="http://evil.yourbankk.com">yourbank.com</a></p>
+    <p>Failure to verify your account within 24 hours will result in permanent suspension. We apologize for any inconvenience this may cause and appreciate your prompt attention to this matter.</p>
+    <p>Thank you for your cooperation.</p>
+    <p>Sincerely,<br>Customer Support Team<br>Your Bank</p>
+  </body>
+</html>
