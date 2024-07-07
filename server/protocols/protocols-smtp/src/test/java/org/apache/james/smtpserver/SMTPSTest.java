@@ -104,6 +104,6 @@ class SMTPSTest {
         Mail lastMail = testSystem.queue.getLastMail();
         ImmutableList.copyOf(lastMail.getMessage().getHeader("Received")).forEach(System.out::println);
         assertThat(lastMail.getMessage().getHeader("Received"))
-            .hasOnlyOneElementSatisfying(s -> s.contains("(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)"));
+            .hasOnlyOneElementSatisfying(s -> assertThat(s).contains("(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)"));
     }
 }
