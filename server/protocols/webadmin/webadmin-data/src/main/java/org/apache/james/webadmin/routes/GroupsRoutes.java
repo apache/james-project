@@ -102,6 +102,7 @@ public class GroupsRoutes implements Routes {
         service.get(GROUP_ADDRESS_PATH, this::listGroupMembers, jsonTransformer);
         service.put(GROUP_ADDRESS_PATH, (request, response) -> halt(HttpStatus.BAD_REQUEST_400));
         service.post(GROUP_ADDRESS_PATH, this::createGroupWithDummyUser);
+        service.post(ROOT_PATH, this::createMultipleGroupWithDummyUser);
         service.put(USER_IN_GROUP_ADDRESS_PATH, this::addToGroup);
         //service.delete(GROUP_ADDRESS_PATH, (request, response) -> halt(HttpStatus.BAD_REQUEST_400));
         service.delete(USER_IN_GROUP_ADDRESS_PATH, this::removeFromGroup);
@@ -119,6 +120,50 @@ public class GroupsRoutes implements Routes {
         MappingSource source = MappingSource.fromUser(Username.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
         addGroupMember(source, dummyUser);
         return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    public static class GroupStatusInfo {
+        // Fields
+        public String address;
+        public String status;
+        public String reason;
+
+        // Constructor
+        public GroupStatusInfo(String address, String status, String reason) {
+            this.address = address;
+            this.status = status;
+            this.reason = reason;
+        }
+    }
+
+    public String createMultipleGroupWithDummyUser(Request request, Response response) throws JsonProcessingException {
+
+        String jsonString = request.body();
+        List<String> groups = objectMapper.readValue(jsonString, new TypeReference<List<String>>() {});
+
+        GroupStatusInfo[] result = new GroupStatusInfo[groups.size()];
+
+        for (int i = 0; i < groups.size(); i++) {
+            String group = groups.get(i);
+            MailAddress groupAddress;
+            try {
+                groupAddress = new MailAddress(group);
+                Domain domain = groupAddress.getDomain();
+                MappingSource source = MappingSource.fromUser(Username.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
+                addGroupMember(source, dummyUser);
+                result[i] = new GroupStatusInfo(group, "success","");
+            } catch (Exception e) {
+                if (e.toString().equals("spark.HaltException")) {
+                    result[i] = new GroupStatusInfo(group, "failed", "The source domain is not recognized or does not exist in the domain list.");
+                } else {
+                    result[i] = new GroupStatusInfo(group, "failed", e.toString());
+                }
+            }
+        }
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String jsonResult = ow.writeValueAsString(result);
+
+        return jsonResult;
     }
 
     public HaltException addToGroup(Request request, Response response) {
@@ -206,26 +251,6 @@ public class GroupsRoutes implements Routes {
             }
         }
         return halt(HttpStatus.NO_CONTENT_204);
-    }
-
-    public static class GroupStatusInfo {
-        // Fields
-        public String address;
-        public String status;
-        public String reason;
-
-        // Constructor
-        public GroupStatusInfo(String address, String status, String reason) {
-            this.address = address;
-            this.status = status;
-            this.reason = reason;
-        }
-
-        @Override
-
-        public String toString() {
-            return "Address: " + address + "\nStatus: " + status + "\nReason: " + reason;
-        }
     }
 
     public String isExist(Request request, Response response) throws RecipientRewriteTableException, JsonProcessingException {
