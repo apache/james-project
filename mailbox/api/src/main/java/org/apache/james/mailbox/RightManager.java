@@ -170,6 +170,7 @@ public interface RightManager {
      */
     void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException;
 
+    Publisher<Void> setRightsReactive(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException;
 
     /**
      * Reset the Mailbox ACL of the designated mailbox.

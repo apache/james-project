@@ -53,6 +53,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -263,14 +264,19 @@ public class StoreRightManager implements RightManager {
 
     @Override
     public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
+        block(setRightsReactive(mailboxPath, mailboxACL, session));
+    }
+
+    @Override
+    public Publisher<Void> setRightsReactive(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
         assertSharesBelongsToUserDomain(mailboxPath.getUser(), mailboxACL.getEntries());
 
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        block(mapper.findMailboxByPath(mailboxPath)
+        return mapper.findMailboxByPath(mailboxPath)
             .flatMap(Throwing.<Mailbox, Mono<Void>>function(mailbox -> {
                 assertHaveAccessTo(mailbox, session);
                 return setRights(mailboxACL, mapper, mailbox, session);
-            }).sneakyThrow()));
+            }).sneakyThrow());
     }
 
     private void assertHaveAccessTo(Mailbox mailbox, MailboxSession session) throws InsufficientRightsException, MailboxNotFoundException {

@@ -1028,6 +1028,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public Publisher<Void> setRightsReactive(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
+        return storeRightManager.setRightsReactive(mailboxPath, mailboxACL, session);
+    }
+
+    @Override
     public List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         return annotationManager.getAllAnnotations(mailboxPath, session);
     }
