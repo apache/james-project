@@ -22,7 +22,9 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
@@ -49,6 +51,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -67,6 +70,7 @@ public class GroupsRoutes implements Routes {
     private static final String GROUP_ADDRESS_PATH = ROOT_PATH + SEPARATOR + ":" + GROUP_ADDRESS;
 
     private static final String GROUP_MULTIPLE_PATH = "address/groups";
+    private static final String GROUP_MULTIPLE_PATH_IS_EXIST = "address/groups/isExist";
     private static final String USER_ADDRESS = "userAddress";
     private static final String USER_IN_GROUP_ADDRESS_PATH = GROUP_ADDRESS_PATH + SEPARATOR + ":" + USER_ADDRESS;
     private static final String GROUP_ADDRESS_TYPE = "group";
@@ -94,6 +98,7 @@ public class GroupsRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.get(ROOT_PATH, this::listGroups, jsonTransformer);
+        service.get(GROUP_MULTIPLE_PATH_IS_EXIST, this::isExist);
         service.get(GROUP_ADDRESS_PATH, this::listGroupMembers, jsonTransformer);
         service.put(GROUP_ADDRESS_PATH, (request, response) -> halt(HttpStatus.BAD_REQUEST_400));
         service.post(GROUP_ADDRESS_PATH, this::createGroupWithDummyUser);
@@ -169,6 +174,7 @@ public class GroupsRoutes implements Routes {
 
             ensureNonEmptyMappings(mappings, group);
         }
+
         // Iterate through the array and print each element
         for (int i = 0; i < groups.size(); i++) {
             String group = groups.get(i);//todo
@@ -200,6 +206,59 @@ public class GroupsRoutes implements Routes {
             }
         }
         return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    public static class GroupStatusInfo {
+        // Fields
+        public String address;
+        public String status;
+        public String reason;
+
+        // Constructor
+        public GroupStatusInfo(String address, String status, String reason) {
+            this.address = address;
+            this.status = status;
+            this.reason = reason;
+        }
+
+        @Override
+
+        public String toString() {
+            return "Address: " + address + "\nStatus: " + status + "\nReason: " + reason;
+        }
+    }
+
+    public String isExist(Request request, Response response) throws RecipientRewriteTableException, JsonProcessingException {
+
+        List<MappingSource> currentGroupList = recipientRewriteTable.getSourcesForType(Mapping.Type.Group).collect(ImmutableList.toImmutableList());
+        Map<String, Boolean> mp = new HashMap<>();
+        for (int i = 0; i < currentGroupList.size(); i++) {
+            mp.put(currentGroupList.get(i).asMailAddressString(), true);
+        }
+        String jsonString = request.body();
+        List<String> groups = objectMapper.readValue(jsonString, new TypeReference<List<String>>() {});
+
+        //checking is this group exist or not.
+        GroupStatusInfo[] result = new GroupStatusInfo[groups.size()];
+        for (int i = 0; i < groups.size(); i++) {
+            String group = groups.get(i);
+            MailAddress groupAddress;
+            try {
+                groupAddress = new MailAddress(group);
+                if (mp.containsKey(groupAddress)) {
+                    result[i] = new GroupStatusInfo(group, "Exists", "");
+                } else {
+                    result[i] = new GroupStatusInfo(group,  "DoesNotExists", "");
+                }
+            } catch (AddressException e) {
+                result[i] = new GroupStatusInfo(group, "Error", e.toString());
+            }
+        }
+
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String jsonResult = ow.writeValueAsString(result);
+
+        return jsonResult;
     }
 
 
