@@ -1273,6 +1273,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 doc.removeFields(FLAGS_FIELD);
                 indexFlags(doc, f);
 
+                // somehow the document getting from the search lost DocValues data for the uid field, we need to re-define the field with proper DocValues.
+                long uidValue = doc.getField("uid").numericValue().longValue();
+                doc.removeField("uid");
+                doc.add(new NumericDocValuesField(UID_FIELD, uidValue));
+                doc.add(new LongPoint(UID_FIELD, uidValue));
+                doc.add(new StoredField(UID_FIELD, uidValue));
+
                 writer.updateDocument(new Term(ID_FIELD, doc.get(ID_FIELD)), doc);
             }
         }
