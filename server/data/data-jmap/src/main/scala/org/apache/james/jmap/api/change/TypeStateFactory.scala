@@ -21,15 +21,25 @@ package org.apache.james.jmap.api.change
 
 import jakarta.inject.Inject
 import org.apache.james.jmap.api.model.TypeName
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.jdk.CollectionConverters._
 
 case class TypeStateFactory @Inject()(setTypeName: java.util.Set[TypeName]) {
+  val logger: Logger = LoggerFactory.getLogger(classOf[TypeStateFactory])
   val all: scala.collection.mutable.Set[TypeName] = setTypeName.asScala
 
-  def parse(string: String): Either[IllegalArgumentException, TypeName] =
+  def strictParse(string: String): Either[IllegalArgumentException, TypeName] =
     all.flatMap(_.parse(string))
       .headOption
       .map(Right(_))
       .getOrElse(Left(new IllegalArgumentException(s"Unknown typeName $string")))
+
+  def lenientParse(string: String): Option[TypeName] =
+    all.flatMap(_.parse(string)).headOption match {
+      case Some(value) => Some(value)
+      case None =>
+        logger.warn("Leniently ignore {} while parsing TypeName", string)
+        None
+    }
 }

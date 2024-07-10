@@ -177,7 +177,7 @@ public class CassandraPushSubscriptionDAO {
 
     private Seq<TypeName> toTypes(Row row) {
         return CollectionConverters.asScala(row.getSet(TYPES, String.class).stream()
-                .map(string -> typeStateFactory.parse(string).right().get())
+                .flatMap(string -> OptionConverters.toJava(typeStateFactory.lenientParse(string)).stream())
                 .collect(ImmutableSet.toImmutableSet()))
             .toSeq();
     }

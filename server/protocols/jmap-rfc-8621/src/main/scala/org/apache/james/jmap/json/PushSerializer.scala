@@ -56,7 +56,7 @@ case class PushSerializer @Inject()(typeStateFactory: TypeStateFactory) {
     case _ => JsError("Expecting a JsObject to represent a webSocket inbound request")
   }
   private implicit val typeNameReads: Reads[TypeName] = {
-    case JsString(string) => typeStateFactory.parse(string)
+    case JsString(string) => typeStateFactory.strictParse(string)
       .fold(throwable => JsError(throwable.getMessage), JsSuccess(_))
     case _ => JsError("Expecting a JsString as typeName")
   }

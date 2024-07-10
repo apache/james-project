@@ -56,7 +56,7 @@ class PushSubscriptionSerializer @Inject()(typeStateFactory: TypeStateFactory) {
       ) (PushSubscriptionKeys.apply _)
 
   private implicit val typeNameReads: Reads[TypeName] = {
-    case JsString(serializeValue) => typeStateFactory.parse(serializeValue)
+    case JsString(serializeValue) => typeStateFactory.strictParse(serializeValue)
       .fold(e => JsError(e.getMessage), v => JsSuccess(v))
     case _ => JsError()
   }
