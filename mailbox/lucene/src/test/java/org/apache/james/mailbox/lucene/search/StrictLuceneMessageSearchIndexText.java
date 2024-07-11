@@ -28,18 +28,6 @@ class StrictLuceneMessageSearchIndexText extends LuceneMailboxMessageSearchIndex
     }
 
     @Override
-    @Disabled("Failed after Lucene 4.x upgrade. Won't fix soon as production code just uses the lenient mode")
-    void updateShouldUpdateFlags() {
-
-    }
-
-    @Override
-    @Disabled("Failed after Lucene 4.x upgrade. Won't fix soon as production code just uses the lenient mode")
-    void updateShouldBeIdempotent() {
-
-    }
-
-    @Override
     @Disabled("Failed after Lucene 6.x upgrade. Won't fix soon as production code just uses the lenient mode")
     void addressSearchShouldMatchToFullAddress() {
 

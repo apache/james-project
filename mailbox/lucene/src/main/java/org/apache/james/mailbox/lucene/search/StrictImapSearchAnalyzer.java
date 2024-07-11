@@ -54,7 +54,7 @@ public final class StrictImapSearchAnalyzer extends Analyzer {
     @Override
     protected TokenStreamComponents createComponents(String fieldName) {
         WhitespaceTokenizer source = new WhitespaceTokenizer();
-        TokenStream filter = new NGramTokenFilter(new UpperCaseFilter(source), minTokenLength, maxTokenLength, false);
+        TokenStream filter = new NGramTokenFilter(new UpperCaseFilter(source), minTokenLength, maxTokenLength, true);
         return new TokenStreamComponents(source, filter);
     }
    
