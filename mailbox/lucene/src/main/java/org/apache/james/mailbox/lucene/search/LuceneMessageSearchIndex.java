@@ -93,7 +93,6 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.NumericDocValuesField;
-import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
@@ -381,8 +380,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final SortField ARRIVAL_MAILBOX_SORT = new SortField(INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION, SortField.Type.LONG);
     private static final SortField ARRIVAL_MAILBOX_SORT_REVERSE = new SortField(INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION, SortField.Type.LONG, true);
 
-    private static final SortField BASE_SUBJECT_SORT = new SortField(BASE_SUBJECT_FIELD, SortField.Type.STRING);
-    private static final SortField BASE_SUBJECT_SORT_REVERSE = new SortField(BASE_SUBJECT_FIELD, SortField.Type.STRING, true);
+    private static final SortField BASE_SUBJECT_SORT = new SortedSetSortField(BASE_SUBJECT_FIELD, false);
+    private static final SortField BASE_SUBJECT_SORT_REVERSE = new SortedSetSortField(BASE_SUBJECT_FIELD, true);
     
     private static final SortField SENT_DATE_SORT = new SortField(SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION, SortField.Type.LONG);
     private static final SortField SENT_DATE_SORT_REVERSE = new SortField(SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION, SortField.Type.LONG, true);
@@ -692,7 +691,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
                     } else if (headerName.equalsIgnoreCase("Subject")) {
                         doc.add(new StringField(BASE_SUBJECT_FIELD, SearchUtil.getBaseSubject(headerValue), Store.YES));
-                        doc.add(new SortedDocValuesField(BASE_SUBJECT_FIELD, new BytesRef(SearchUtil.getBaseSubject(headerValue))));
+                        doc.add(new SortedSetDocValuesField(BASE_SUBJECT_FIELD, new BytesRef(SearchUtil.getBaseSubject(headerValue))));
                     }
                 }
                 if (sentDate == null) {
