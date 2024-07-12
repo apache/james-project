@@ -137,7 +137,7 @@ object TypesUpdate {
     case _ => Left(InvalidUpdateException("types", "Expecting an array of JSON strings as an argument"))
   }
   def parseType(jsValue: JsValue, typeStateFactory: TypeStateFactory): Either[PatchUpdateValidationException, TypeName] = jsValue match {
-    case JsString(aString) => typeStateFactory.parse(aString).left.map(e => InvalidUpdateException("types", e.getMessage))
+    case JsString(aString) => typeStateFactory.strictParse(aString).left.map(e => InvalidUpdateException("types", e.getMessage))
     case _ => Left(InvalidUpdateException("types", "Expecting an array of JSON strings as an argument"))
   }
 }

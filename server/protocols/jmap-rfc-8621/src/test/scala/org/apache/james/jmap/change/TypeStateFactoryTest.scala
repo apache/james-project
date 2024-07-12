@@ -32,44 +32,67 @@ class TypeStateFactoryTest {
   val factory: TypeStateFactory = TypeStateFactory(ALL.asJava)
 
   @Test
-  def parseEmailTypeNameStringShouldReturnRightEmailTypeName(): Unit =
-    assertThat(factory.parse("Email")).isEqualTo(Right(EmailTypeName))
+  def strictParseEmailTypeNameStringShouldReturnRightEmailTypeName(): Unit =
+    assertThat(factory.strictParse("Email")).isEqualTo(Right(EmailTypeName))
 
   @Test
-  def parseMailboxTypeNameStringShouldReturnRightMailboxTypeName(): Unit =
-    assertThat(factory.parse("Mailbox")).isEqualTo(Right(MailboxTypeName))
+  def strictParseMailboxTypeNameStringShouldReturnRightMailboxTypeName(): Unit =
+    assertThat(factory.strictParse("Mailbox")).isEqualTo(Right(MailboxTypeName))
 
   @Test
-  def parseThreadTypeNameStringShouldReturnRightThreadTypeName(): Unit =
-    assertThat(factory.parse("Thread")).isEqualTo(Right(ThreadTypeName))
+  def strictParseThreadTypeNameStringShouldReturnRightThreadTypeName(): Unit =
+    assertThat(factory.strictParse("Thread")).isEqualTo(Right(ThreadTypeName))
 
   @Test
-  def parseIdentityTypeNameStringShouldReturnRightIdentityTypeName(): Unit =
-    assertThat(factory.parse("Identity")).isEqualTo(Right(IdentityTypeName))
+  def strictParseIdentityTypeNameStringShouldReturnRightIdentityTypeName(): Unit =
+    assertThat(factory.strictParse("Identity")).isEqualTo(Right(IdentityTypeName))
 
   @Test
-  def parseEmailSubmissionTypeNameStringShouldReturnRightEmailSubmissionTypeName(): Unit =
-    assertThat(factory.parse("EmailSubmission")).isEqualTo(Right(EmailSubmissionTypeName))
+  def strictParseEmailSubmissionTypeNameStringShouldReturnRightEmailSubmissionTypeName(): Unit =
+    assertThat(factory.strictParse("EmailSubmission")).isEqualTo(Right(EmailSubmissionTypeName))
 
   @Test
-  def parseEmailDeliveryTypeNameStringShouldReturnRightEmailDeliveryTypeName(): Unit =
-    assertThat(factory.parse("EmailDelivery")).isEqualTo(Right(EmailDeliveryTypeName))
+  def strictParseEmailDeliveryTypeNameStringShouldReturnRightEmailDeliveryTypeName(): Unit =
+    assertThat(factory.strictParse("EmailDelivery")).isEqualTo(Right(EmailDeliveryTypeName))
 
   @Test
-  def parseVacationResponseTypeNameStringShouldReturnRightVacationResponseTypeName(): Unit =
-    assertThat(factory.parse("VacationResponse")).isEqualTo(Right(VacationResponseTypeName))
+  def strictParseVacationResponseTypeNameStringShouldReturnRightVacationResponseTypeName(): Unit =
+    assertThat(factory.strictParse("VacationResponse")).isEqualTo(Right(VacationResponseTypeName))
 
   @Test
-  def parseWrongTypeNameStringShouldReturnLeft(): Unit =
+  def strictParseWrongTypeNameStringShouldReturnLeft(): Unit =
     SoftAssertions.assertSoftly(softly => {
-      softly.assertThat(factory.parse("email").isLeft).isTrue
-      softly.assertThat(factory.parse("mailbox").isLeft).isTrue
-      softly.assertThat(factory.parse("thread").isLeft).isTrue
-      softly.assertThat(factory.parse("identity").isLeft).isTrue
-      softly.assertThat(factory.parse("emailSubmission").isLeft).isTrue
-      softly.assertThat(factory.parse("emailDelivery").isLeft).isTrue
-      softly.assertThat(factory.parse("filter").isLeft).isTrue
-      softly.assertThat(factory.parse("vacationResponse").isLeft).isTrue
+      softly.assertThat(factory.strictParse("email").isLeft).isTrue
+      softly.assertThat(factory.strictParse("mailbox").isLeft).isTrue
+      softly.assertThat(factory.strictParse("thread").isLeft).isTrue
+      softly.assertThat(factory.strictParse("identity").isLeft).isTrue
+      softly.assertThat(factory.strictParse("emailSubmission").isLeft).isTrue
+      softly.assertThat(factory.strictParse("emailDelivery").isLeft).isTrue
+      softly.assertThat(factory.strictParse("filter").isLeft).isTrue
+      softly.assertThat(factory.strictParse("vacationResponse").isLeft).isTrue
     })
 
+  @Test
+  def lenientParseValidTypeNameStringShouldReturnTypeName(): Unit = {
+    assertThat(factory.lenientParse("Email")).isEqualTo(Some(EmailTypeName))
+    assertThat(factory.lenientParse("Mailbox")).isEqualTo(Some(MailboxTypeName))
+    assertThat(factory.lenientParse("Thread")).isEqualTo(Some(ThreadTypeName))
+    assertThat(factory.lenientParse("Identity")).isEqualTo(Some(IdentityTypeName))
+    assertThat(factory.lenientParse("EmailSubmission")).isEqualTo(Some(EmailSubmissionTypeName))
+    assertThat(factory.lenientParse("EmailDelivery")).isEqualTo(Some(EmailDeliveryTypeName))
+    assertThat(factory.lenientParse("VacationResponse")).isEqualTo(Some(VacationResponseTypeName))
+  }
+
+  @Test
+  def lenientParseWrongTypeNameStringShouldReturnEmpty(): Unit =
+    SoftAssertions.assertSoftly(softly => {
+      softly.assertThat(factory.lenientParse("email").isEmpty).isTrue
+      softly.assertThat(factory.lenientParse("mailbox").isEmpty).isTrue
+      softly.assertThat(factory.lenientParse("thread").isEmpty).isTrue
+      softly.assertThat(factory.lenientParse("identity").isEmpty).isTrue
+      softly.assertThat(factory.lenientParse("emailSubmission").isEmpty).isTrue
+      softly.assertThat(factory.lenientParse("emailDelivery").isEmpty).isTrue
+      softly.assertThat(factory.lenientParse("filter").isEmpty).isTrue
+      softly.assertThat(factory.lenientParse("vacationResponse").isEmpty).isTrue
+    })
 }

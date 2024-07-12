@@ -40,7 +40,7 @@ case class StateChangeEventDTOFactory @Inject()(typeStateFactory: TypeStateFacto
     .toDomainObjectConverter(dto => dto.toDomainObject(typeStateFactory))
     .toDTOConverter((event, aType) => toDTO(event))
     .typeName(classOf[StateChangeEvent].getCanonicalName)
-    .withFactory(EventDTOModule.apply);
+    .withFactory(EventDTOModule.apply)
 
   def toDTO(event: StateChangeEvent): StateChangeEventDTO = StateChangeEventDTO(
     getType = classOf[StateChangeEvent].getCanonicalName,
@@ -66,7 +66,7 @@ case class StateChangeEventDTO(@JsonProperty("type") getType: String,
     map = typeStatesFromMap(typeStateFactory))
 
   private def typeStatesFromMap(typeStateFactory: TypeStateFactory): Map[TypeName, State] =
-    getTypeStates.toScala.map(typeStates => typeStates.asScala.flatMap(element => typeStateFactory.parse(element._1).toOption
+    getTypeStates.toScala.map(typeStates => typeStates.asScala.flatMap(element => typeStateFactory.lenientParse(element._1)
       .flatMap(typeName => typeName.parseState(element._2).toOption.map(state => typeName -> state))).toMap)
       .getOrElse(fallbackToOldFormat())
 
