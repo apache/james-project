@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -46,7 +47,7 @@ public abstract class AbstractLineHandlerResultJMXMonitor<R extends Response, S 
     @Override
     public Response onResponse(ProtocolSession session, Response response, long executionTime, ProtocolHandler handler) {
         if (handler instanceof LineHandler) {
-            lStats.get(handler.getClass().getName()).increment(response);
+            Optional.ofNullable(lStats.get(handler.getClass().getName())).ifPresent(handlerClassName -> handlerClassName.increment(response));
         }
         return response;
     }

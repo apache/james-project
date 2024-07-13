@@ -18,10 +18,13 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
+import java.util.List;
+
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
+import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -37,10 +40,12 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 public class LineHandlerUpstreamHandler<S extends ProtocolSession> extends ChannelInboundHandlerAdapter {
     private final LineHandler<S> handler;
     private final S session;
+    private final List<ProtocolHandlerResultHandler> resultHandlers;
     
-    public LineHandlerUpstreamHandler(S session, LineHandler<S> handler) {
+    public LineHandlerUpstreamHandler(S session, LineHandler<S> handler, List<ProtocolHandlerResultHandler> resultHandlers) {
         this.handler = handler;
         this.session = session;
+        this.resultHandlers = resultHandlers;
     }
     
     @Override
@@ -49,7 +54,12 @@ public class LineHandlerUpstreamHandler<S extends ProtocolSession> extends Chann
         try {
             byte[] bytes = new byte[buf.readableBytes()];
             buf.getBytes(0, bytes);
+            long start = System.currentTimeMillis();
             Response response = handler.onLine(session, bytes);
+            long executionTime = System.currentTimeMillis() - start;
+            for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
+                response = resultHandler.onResponse(session, response, executionTime, handler);
+            }
             if (response != null) {
                 // TODO: This kind of sucks but I was not able to come up with something more elegant here
                 ((ProtocolSessionImpl) session).getProtocolTransport().writeResponse(response, session);

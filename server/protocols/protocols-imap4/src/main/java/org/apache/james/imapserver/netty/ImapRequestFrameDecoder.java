@@ -41,6 +41,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
+import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapDecoder;
@@ -65,7 +66,7 @@ import reactor.core.scheduler.Schedulers;
 /**
  * {@link ByteToMessageDecoder} which will decode via and {@link ImapDecoder} instance
  */
-public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements NettyConstants, LineHandlerAware {
+public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements NettyConstants, LineHandlerAware<ImapLineHandler, ImapSession> {
     @VisibleForTesting
     static final String NEEDED_DATA = "NEEDED_DATA";
     private static final boolean RETRY = true;
@@ -444,8 +445,8 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     }
 
     @Override
-    public void pushLineHandler(ChannelInboundHandlerAdapter lineHandlerUpstreamHandler) {
-        behaviourOverrides.addFirst(lineHandlerUpstreamHandler);
+    public void pushLineHandler(ImapLineHandler lineHandler, ImapSession session) {
+        behaviourOverrides.addFirst(new ImapLineHandlerAdapter(session, lineHandler));
     }
 
     @Override

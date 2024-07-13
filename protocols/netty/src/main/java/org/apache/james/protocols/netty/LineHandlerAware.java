@@ -19,10 +19,8 @@
 
 package org.apache.james.protocols.netty;
 
-import io.netty.channel.ChannelInboundHandlerAdapter;
-
-public interface LineHandlerAware {
-    void pushLineHandler(ChannelInboundHandlerAdapter lineHandlerUpstreamHandler);
+public interface LineHandlerAware<H, S> {
+    void pushLineHandler(H lineHandler, S session);
 
     void popLineHandler();
 }

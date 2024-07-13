@@ -63,7 +63,7 @@ import io.netty.util.AttributeKey;
 /**
  * {@link ChannelInboundHandlerAdapter} which is used by the SMTPServer and other line based protocols
  */
-public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter implements LineHandlerAware {
+public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter implements LineHandlerAware<LineHandler<? extends ProtocolSession>, ProtocolSession> {
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicChannelInboundHandler.class);
     public static final ProtocolSession.AttachmentKey<MDCBuilder> MDC_ATTRIBUTE_KEY = ProtocolSession.AttachmentKey.of("bound_MDC", MDCBuilder.class);
     public static final AttributeKey<CommandDetectionSession> SESSION_ATTRIBUTE_KEY =
@@ -301,8 +301,8 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     }
 
     @Override
-    public void pushLineHandler(ChannelInboundHandlerAdapter lineHandlerUpstreamHandler) {
-        behaviourOverrides.addFirst(lineHandlerUpstreamHandler);
+    public void pushLineHandler(LineHandler<? extends ProtocolSession> overrideCommandHandler, ProtocolSession session) {
+        behaviourOverrides.addFirst(new LineHandlerUpstreamHandler(session, overrideCommandHandler, resultHandlers));
     }
 
     @Override

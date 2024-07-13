@@ -152,11 +152,10 @@ public class NettyProtocolTransport extends AbstractProtocolTransport {
     }
 
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void pushLineHandler(LineHandler<? extends ProtocolSession> overrideCommandHandler, ProtocolSession session) {
         LineHandlerAware channelHandler = (LineHandlerAware) channel.pipeline()
             .get(HandlerConstants.CORE_HANDLER);
-        channelHandler.pushLineHandler(new LineHandlerUpstreamHandler(session, overrideCommandHandler));
+        channelHandler.pushLineHandler(overrideCommandHandler, session);
     }
     
    

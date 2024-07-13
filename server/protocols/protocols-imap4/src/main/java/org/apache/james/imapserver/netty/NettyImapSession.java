@@ -263,7 +263,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     @Override
     public void pushLineHandler(ImapLineHandler lineHandler) {
         LineHandlerAware handler = (LineHandlerAware) channel.pipeline().get(REQUEST_DECODER);
-        handler.pushLineHandler(new ImapLineHandlerAdapter(this, lineHandler));
+        handler.pushLineHandler(lineHandler, this);
     }
 
     @Override
