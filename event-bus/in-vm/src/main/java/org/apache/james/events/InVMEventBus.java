@@ -20,7 +20,6 @@
 package org.apache.james.events;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
@@ -53,7 +52,7 @@ public class InVMEventBus implements EventBus {
         this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;
         this.registrations = Multimaps.synchronizedSetMultimap(
-                Multimaps.newSetMultimap(new HashMap<>(), () -> Collections.newSetFromMap(new ConcurrentHashMap<>())));
+                Multimaps.newSetMultimap(new HashMap<>(), ConcurrentHashMap::newKeySet));
         this.groups = new ConcurrentHashMap<>();
     }
 
