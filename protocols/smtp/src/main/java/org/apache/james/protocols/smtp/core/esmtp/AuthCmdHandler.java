@@ -521,8 +521,9 @@ public class AuthCmdHandler
 
     @Override
     public List<Class<?>> getMarkerInterfaces() {
-        List<Class<?>> classes = new ArrayList<>(1);
+        List<Class<?>> classes = new ArrayList<>(2);
         classes.add(AuthHook.class);
+        classes.add(HookResultHook.class);
         return classes;
     }
 
