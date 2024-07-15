@@ -239,11 +239,19 @@ public class MailAddress implements java.io.Serializable {
             throw new AddressException("Addresses cannot start end with '.' or contain two consecutive dots");
         }
 
+        if (haveBackSlashComma(localPart)) {
+            throw new AddressException("Addresses cannot contain \\,");
+        }
+
         domain = createDomain(domainSB.toString());
     }
 
     private boolean haveDoubleDot(String localPart) {
         return localPart.contains("..");
+    }
+
+    private boolean haveBackSlashComma(String localPart) {
+        return localPart.contains("\\,");
     }
 
     private Domain createDomain(String domain) throws AddressException {
