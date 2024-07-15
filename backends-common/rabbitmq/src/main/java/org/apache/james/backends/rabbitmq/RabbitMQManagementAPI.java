@@ -19,7 +19,10 @@
 
 package org.apache.james.backends.rabbitmq;
 
+import static feign.FeignException.errorStatus;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -48,6 +51,7 @@ import feign.Client;
 import feign.Feign;
 import feign.Logger;
 import feign.Param;
+import feign.Request;
 import feign.RequestLine;
 import feign.RetryableException;
 import feign.Retryer;
@@ -436,7 +440,17 @@ public interface RabbitMQManagementAPI {
             throw new RetryableException(response.status(), "Error encountered, scheduling retry",
                 response.request().httpMethod(), new Date(), response.request());
         }
-        throw new RuntimeException("Non recoverable exception status: " + response.status());
+
+        Request request = response.request();
+        String detailResponseMessage = "---" + request.httpMethod() + "---" + methodKey + "\n" +
+                "---ResponseStatus=" + response.status() + "\n" +
+                "---Reason=" + response.reason() + "\n" +
+                "---Response=" + errorStatus(methodKey, response).contentUTF8() + "\n" +
+                "---ResponseHeader=" + response.headers() + "\n" +
+                "---RequestUrl=" + request.url() + "\n" +
+                "---RequestBody=" + (request.body() == null ? "" : new String(request.body(), StandardCharsets.UTF_8));
+
+        throw new RuntimeException("Non recoverable exception: " + detailResponseMessage);
     };
 
     @RequestLine("GET /api/queues")
