@@ -49,6 +49,7 @@ import reactor.util.retry.Retry;
 @ExtendWith(DockerAwsS3Extension.class)
 public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
     private static S3BlobStoreDAO testee;
+    private static S3ClientFactory s3ClientFactory;
 
     @BeforeAll
     static void setUp(DockerAwsS3Container dockerAwsS3) {
@@ -65,7 +66,9 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
                 .filter(UPLOAD_RETRY_EXCEPTION_PREDICATE)))
             .build();
 
-        testee = new S3BlobStoreDAO(s3Configuration, new TestBlobId.Factory(), new RecordingMetricFactory(), new NoopGaugeRegistry());
+        s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
+
+        testee = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory());
     }
 
     @AfterEach
@@ -75,7 +78,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
 
     @AfterAll
     static void tearDownClass() {
-        testee.close();
+        s3ClientFactory.close();
     }
 
     @Override

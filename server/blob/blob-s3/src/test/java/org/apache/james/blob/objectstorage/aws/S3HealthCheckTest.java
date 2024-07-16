@@ -50,7 +50,8 @@ public class S3HealthCheckTest {
             .region(dockerAwsS3.dockerAwsS3().region())
             .build();
 
-        BlobStoreDAO s3BlobStoreDAO = new S3BlobStoreDAO(s3Configuration, new TestBlobId.Factory(), new RecordingMetricFactory(), new NoopGaugeRegistry());
+        S3ClientFactory s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
+        BlobStoreDAO s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory());
         s3HealthCheck = new ObjectStorageHealthCheck(s3BlobStoreDAO);
     }
 

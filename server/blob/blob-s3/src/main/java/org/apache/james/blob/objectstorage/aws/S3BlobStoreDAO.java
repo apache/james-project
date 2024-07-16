@@ -21,24 +21,14 @@ package org.apache.james.blob.objectstorage.aws;
 
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
-import java.io.Closeable;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-
-import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -48,9 +38,6 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
-import org.apache.james.lifecycle.api.Startable;
-import org.apache.james.metrics.api.GaugeRegistry;
-import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
@@ -66,17 +53,12 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.RetryBackoffSpec;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.BytesWrapper;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.core.exception.SdkClientException;
-import software.amazon.awssdk.http.TlsTrustManagersProvider;
-import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.Bucket;
 import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
@@ -89,26 +71,7 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
-public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
-    private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
-
-        @Override
-        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-            // Always trust
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-            // Always trust
-        }
-    };
-
-    private static final String S3_METRICS_ENABLED_PROPERTY_KEY = "james.s3.metrics.enabled";
-    private static final String S3_METRICS_ENABLED_DEFAULT_VALUE = "true";
+public class S3BlobStoreDAO implements BlobStoreDAO {
 
     private static class FileBackedOutputStreamByteSource extends ByteSource {
         private final FileBackedOutputStream stream;
@@ -145,87 +108,22 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     private final BucketNameResolver bucketNameResolver;
     private final S3AsyncClient client;
-    private final BlobId.Factory blobIdFactory;
     private final S3BlobStoreConfiguration configuration;
+    private final BlobId.Factory blobIdFactory;
 
     @Inject
     @Singleton
-    S3BlobStoreDAO(S3BlobStoreConfiguration configuration, BlobId.Factory blobIdFactory, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
-        this.blobIdFactory = blobIdFactory;
+    S3BlobStoreDAO(S3ClientFactory s3ClientFactory,
+                   S3BlobStoreConfiguration configuration,
+                   BlobId.Factory blobIdFactory) {
         this.configuration = configuration;
-        AwsS3AuthConfiguration authConfiguration = this.configuration.getSpecificAuthConfiguration();
-
-        S3Configuration pathStyleAccess = S3Configuration.builder()
-            .pathStyleAccessEnabled(true)
-            .build();
-
-        client = S3AsyncClient.builder()
-            .credentialsProvider(StaticCredentialsProvider.create(
-                AwsBasicCredentials.create(authConfiguration.getAccessKeyId(), authConfiguration.getSecretKey())))
-            .httpClientBuilder(httpClientBuilder(configuration))
-            .endpointOverride(authConfiguration.getEndpoint())
-            .region(configuration.getRegion().asAws())
-            .serviceConfiguration(pathStyleAccess)
-            .overrideConfiguration(builder -> {
-                boolean s3MetricsEnabled = Boolean.parseBoolean(System.getProperty(S3_METRICS_ENABLED_PROPERTY_KEY, S3_METRICS_ENABLED_DEFAULT_VALUE));
-                if (s3MetricsEnabled) {
-                    builder.addMetricPublisher(new JamesS3MetricPublisher(metricFactory, gaugeRegistry));
-                }
-            })
-            .build();
+        this.client = s3ClientFactory.get();
+        this.blobIdFactory = blobIdFactory;
 
         bucketNameResolver = BucketNameResolver.builder()
             .prefix(configuration.getBucketPrefix())
             .namespace(configuration.getNamespace())
             .build();
-    }
-
-    private NettyNioAsyncHttpClient.Builder httpClientBuilder(S3BlobStoreConfiguration configuration) {
-        NettyNioAsyncHttpClient.Builder result = NettyNioAsyncHttpClient.builder()
-            .tlsTrustManagersProvider(getTrustManagerProvider(configuration.getSpecificAuthConfiguration()))
-            .maxConcurrency(configuration.getHttpConcurrency())
-            .maxPendingConnectionAcquires(10_000);
-        configuration.getWriteTimeout().ifPresent(result::writeTimeout);
-        configuration.getReadTimeout().ifPresent(result::readTimeout);
-        configuration.getConnectionTimeout().ifPresent(result::connectionTimeout);
-        result.useNonBlockingDnsResolver(true);
-        return result;
-    }
-
-    private TlsTrustManagersProvider getTrustManagerProvider(AwsS3AuthConfiguration configuration) {
-        if (configuration.isTrustAll()) {
-            return () -> ImmutableList.of(DUMMY_TRUST_MANAGER).toArray(new TrustManager[0]);
-        }
-        try {
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(
-                configuration.getTrustStoreAlgorithm().orElse(TrustManagerFactory.getDefaultAlgorithm()));
-            KeyStore trustStore = loadTrustStore(configuration);
-            trustManagerFactory.init(trustStore);
-            return trustManagerFactory::getTrustManagers;
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private KeyStore loadTrustStore(AwsS3AuthConfiguration configuration) {
-        if (configuration.getTrustStorePath().isEmpty()) {
-            return null; // use java default truststore
-        }
-        try (FileInputStream trustStoreStream = new FileInputStream(configuration.getTrustStorePath().get())) {
-            char[] secret = configuration.getTrustStoreSecret().map(String::toCharArray).orElse(null);
-            KeyStore trustStore = KeyStore.getInstance(
-                configuration.getTrustStoreType().orElse(KeyStore.getDefaultType()));
-            trustStore.load(trustStoreStream, secret);
-            return trustStore;
-        } catch (GeneralSecurityException | IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    @PreDestroy
-    public void close() {
-        client.close();
     }
 
     @Override

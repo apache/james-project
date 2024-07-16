@@ -37,6 +37,8 @@ class S3PrefixAndNamespaceTest implements BlobStoreContract {
     private static BlobStore testee;
     private static S3BlobStoreDAO s3BlobStoreDAO;
 
+    private static S3ClientFactory s3ClientFactory;
+
     @BeforeAll
     static void setUpClass(DockerAwsS3Container dockerAwsS3) {
         AwsS3AuthConfiguration authConfiguration = AwsS3AuthConfiguration.builder()
@@ -53,7 +55,8 @@ class S3PrefixAndNamespaceTest implements BlobStoreContract {
             .build();
 
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
-        s3BlobStoreDAO = new S3BlobStoreDAO(s3Configuration, blobIdFactory, new RecordingMetricFactory(), new NoopGaugeRegistry());
+        s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
+        s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, blobIdFactory);
 
         testee = BlobStoreFactory.builder()
             .blobStoreDAO(s3BlobStoreDAO)
@@ -69,7 +72,7 @@ class S3PrefixAndNamespaceTest implements BlobStoreContract {
 
     @AfterAll
     static void tearDownClass() {
-        s3BlobStoreDAO.close();
+        s3ClientFactory.close();
     }
 
     @Override

@@ -62,6 +62,8 @@ public class S3MinioTest implements BlobStoreDAOContract {
     private static final int MINIO_PORT = 9000;
     private static S3BlobStoreDAO testee;
 
+    private static S3ClientFactory s3ClientFactory;
+
     @Container
     private static final GenericContainer<?> minioContainer = new GenericContainer<>(MINIO_IMAGE_FULL)
         .withExposedPorts(MINIO_PORT)
@@ -86,12 +88,13 @@ public class S3MinioTest implements BlobStoreDAOContract {
                 .filter(UPLOAD_RETRY_EXCEPTION_PREDICATE)))
             .build();
 
-        testee = new S3BlobStoreDAO(s3Configuration, new TestBlobId.Factory(), new RecordingMetricFactory(), new NoopGaugeRegistry());
+        s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
+        testee = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory());
     }
 
     @AfterAll
     static void tearDownClass() {
-        testee.close();
+        s3ClientFactory.close();
     }
 
     @AfterEach
