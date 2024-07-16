@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -27,7 +28,6 @@ import static org.mockito.Mockito.when;
 import java.util.Comparator;
 
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.Sort;
 import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
@@ -50,9 +50,9 @@ class CombinedComparatorTest {
     }
 
     @Test
-    void createShouldThrowOnEmptySort() {
-        assertThatThrownBy(() -> CombinedComparator.create(ImmutableList.<SearchQuery.Sort>of()))
-            .isInstanceOf(IllegalArgumentException.class);
+    void createShouldNotOnEmptySort() {
+        assertThatCode(() -> CombinedComparator.create(ImmutableList.of()))
+            .doesNotThrowAnyException();
     }
 
     @Test

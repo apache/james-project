@@ -38,7 +38,6 @@ public class CombinedComparator implements Comparator<MailboxMessage> {
 
     public static CombinedComparator create(List<Sort> sorts) {
         Preconditions.checkNotNull(sorts);
-        Preconditions.checkArgument(!sorts.isEmpty());
         return new CombinedComparator(sorts.stream()
             .map(toComparator())
             .collect(ImmutableList.toImmutableList()));

@@ -795,10 +795,7 @@ public class SearchQuery {
         }
 
         public Builder sorts(List<Sort> sorts) {
-            if (sorts == null || sorts.isEmpty()) {
-                throw new IllegalArgumentException("There must be at least one Sort");
-            }
-            this.sorts = Optional.of(ImmutableList.copyOf(sorts));
+            this.sorts = Optional.ofNullable(sorts).map(ImmutableList::copyOf);
             return this;
         }
 
@@ -809,7 +806,7 @@ public class SearchQuery {
 
         public SearchQuery build() {
             return new SearchQuery(criterias.build(),
-                sorts.orElse(DEFAULT_SORTS),
+                sorts.orElse(ImmutableList.of()),
                 recentMessageUids.build());
         }
     }
@@ -819,11 +816,15 @@ public class SearchQuery {
     }
 
     public static SearchQuery of(Criterion... criterias) {
-        return new Builder().andCriteria(criterias).build();
+        return new Builder().andCriteria(criterias)
+            .sorts(new Sort(Sort.SortClause.Uid, Sort.Order.NATURAL))
+            .build();
     }
 
     public static SearchQuery matchAll() {
-        return new Builder().build();
+        return new Builder()
+            .sorts(new Sort(Sort.SortClause.Uid, Sort.Order.NATURAL))
+            .build();
     }
 
     public static SearchQuery allSortedWith(Sort... sorts) {
