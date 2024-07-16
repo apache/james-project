@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.search;
 
 import static jakarta.mail.Flags.Flag.DELETED;
 import static jakarta.mail.Flags.Flag.SEEN;
+import static org.apache.james.mailbox.model.SearchQuery.DEFAULT_SORTS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -66,6 +67,7 @@ class DeletedSearchOverrideTest {
         assertThat(testee.applicable(
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsSet(DELETED))
+                .sorts(DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
@@ -76,6 +78,7 @@ class DeletedSearchOverrideTest {
         assertThat(testee.applicable(
             SearchQuery.builder()
                 .andCriteria(SearchQuery.sizeEquals(12))
+                .sorts(DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isFalse();
@@ -86,6 +89,7 @@ class DeletedSearchOverrideTest {
         assertThat(testee.search(MAILBOX_SESSION, MAILBOX,
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsUnSet(SEEN))
+                .sorts(DEFAULT_SORTS)
                 .build()).collectList().block())
             .isEmpty();
     }
@@ -103,6 +107,7 @@ class DeletedSearchOverrideTest {
         assertThat(testee.search(MAILBOX_SESSION, MAILBOX,
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsUnSet(DELETED))
+                .sorts(DEFAULT_SORTS)
                 .build()).collectList().block())
             .containsOnly(messageUid, messageUid2, messageUid3);
     }
