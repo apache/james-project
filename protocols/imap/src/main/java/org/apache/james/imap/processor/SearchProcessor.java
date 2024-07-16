@@ -87,6 +87,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         Capability.of("ESEARCH"),
         Capability.of("SEARCHRES"),
         Capability.of("PARTIAL"));
+    public static final SearchQuery.Sort DEFAULT_IMAP_SORT = new SearchQuery.Sort(SearchQuery.Sort.SortClause.Uid, SearchQuery.Sort.Order.NATURAL);
 
     @Inject
     public SearchProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
@@ -315,7 +316,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             builder.addRecentMessageUids(selected.getRecent());
         }
         return builder.andCriterion(criterion)
-            .sorts(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Uid, SearchQuery.Sort.Order.NATURAL))
+            .sorts(DEFAULT_IMAP_SORT)
             .build();
     }
 

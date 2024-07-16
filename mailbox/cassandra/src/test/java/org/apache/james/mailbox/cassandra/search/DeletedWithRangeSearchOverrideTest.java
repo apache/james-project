@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.search;
 
 import static jakarta.mail.Flags.Flag.DELETED;
 import static jakarta.mail.Flags.Flag.SEEN;
+import static org.apache.james.mailbox.model.SearchQuery.DEFAULT_SORTS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -67,6 +68,7 @@ class DeletedWithRangeSearchOverrideTest {
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsSet(DELETED))
                 .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(4), MessageUid.of(45))))
+                .sorts(DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
@@ -77,6 +79,7 @@ class DeletedWithRangeSearchOverrideTest {
         assertThat(testee.applicable(
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsSet(DELETED))
+                .sorts(DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isFalse();
@@ -87,6 +90,7 @@ class DeletedWithRangeSearchOverrideTest {
         assertThat(testee.applicable(
             SearchQuery.builder()
                 .andCriteria(SearchQuery.sizeEquals(12))
+                .sorts(DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isFalse();
@@ -98,6 +102,7 @@ class DeletedWithRangeSearchOverrideTest {
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsUnSet(SEEN))
                 .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.MIN_VALUE, MessageUid.of(45))))
+                .sorts(DEFAULT_SORTS)
                 .build()).collectList().block())
             .isEmpty();
     }
@@ -120,6 +125,7 @@ class DeletedWithRangeSearchOverrideTest {
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsUnSet(DELETED))
                 .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(messageUid2, messageUid4)))
+                .sorts(DEFAULT_SORTS)
                 .build()).collectList().block())
             .containsOnly(messageUid2, messageUid3, messageUid4);
     }

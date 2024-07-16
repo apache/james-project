@@ -308,6 +308,7 @@ class SearchProcessorTest {
         check(SearchKey.buildNew(), SearchQuery.builder()
             .andCriteria(SearchQuery.flagIsSet(Flag.RECENT),
                 SearchQuery.flagIsUnSet(Flag.SEEN))
+            .sorts(SearchProcessor.DEFAULT_IMAP_SORT)
             .build());
     }
 
@@ -351,6 +352,7 @@ class SearchProcessorTest {
         criteria.add(SearchQuery.sizeGreaterThan(SIZE));
         check(SearchKey.buildAnd(keys), SearchQuery.builder()
             .andCriteria(criteria)
+            .sorts(SearchProcessor.DEFAULT_IMAP_SORT)
             .build());
     }
 

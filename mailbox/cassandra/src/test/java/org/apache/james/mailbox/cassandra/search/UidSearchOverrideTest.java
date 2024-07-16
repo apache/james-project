@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.search;
 
+import static org.apache.james.mailbox.model.SearchQuery.DEFAULT_SORTS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Date;
@@ -78,6 +79,7 @@ class UidSearchOverrideTest {
         assertThat(testee.applicable(
             SearchQuery.builder()
                 .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(4), MessageUid.of(45))))
+                .sorts(DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
@@ -88,6 +90,7 @@ class UidSearchOverrideTest {
         assertThat(testee.applicable(
             SearchQuery.builder()
                 .andCriteria(SearchQuery.sizeEquals(12))
+                .sorts(DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isFalse();
@@ -98,6 +101,7 @@ class UidSearchOverrideTest {
         assertThat(testee.search(MAILBOX_SESSION, MAILBOX,
             SearchQuery.builder()
                 .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(34), MessageUid.of(345))))
+                .sorts(DEFAULT_SORTS)
                 .build()).collectList().block())
             .isEmpty();
     }
@@ -120,6 +124,7 @@ class UidSearchOverrideTest {
         assertThat(testee.search(MAILBOX_SESSION, MAILBOX,
             SearchQuery.builder()
                 .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(messageUid2, messageUid4)))
+                .sorts(DEFAULT_SORTS)
                 .build()).collectList().block())
             .containsOnly(messageUid2, messageUid3, messageUid4);
     }
