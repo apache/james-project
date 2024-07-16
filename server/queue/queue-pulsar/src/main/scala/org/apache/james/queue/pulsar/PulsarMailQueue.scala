@@ -397,10 +397,10 @@ class PulsarMailQueue(
   override def close(): Unit = {
     enqueue.complete()
     requeue.complete()
-    dequeueControl.stop()
-    scheduledConsumerControl.stop()
-    filtersCommandFlowControl.stop()
-    scheduledFiltersCommandFlowControl.stop()
+    dequeueControl.complete()
+    scheduledConsumerControl.complete()
+    filtersCommandFlowControl.complete()
+    scheduledFiltersCommandFlowControl.complete()
   }
 
   /**
