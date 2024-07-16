@@ -6662,9 +6662,9 @@ trait EmailQueryMethodContract {
   }
 
   @Test
-  def emailQueryFilterByTextShouldIgnoreAttachmentName(server: GuiceJamesServer): Unit = {
+  def emailQueryFilterByTextShouldIncludeAttachmentName(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
-    server.getProbe(classOf[MailboxProbeImpl])
+    val messageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
@@ -6701,7 +6701,7 @@ trait EmailQueryMethodContract {
       assertThatJson(response)
         .inPath("$.methodResponses[0][1].ids")
         .isEqualTo(
-          s"""[]""".stripMargin)
+          s"""["${messageId.serialize()}"]""".stripMargin)
     }
   }
 
