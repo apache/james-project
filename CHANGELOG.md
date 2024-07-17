@@ -157,7 +157,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - JAMES-4029 Fix infinite loop with Bounce + forward
  - JAMES-4026 Fix inconsistency issue between imap and JMAP RFC-8621
  - [FIX] Filter too big values for Cassandra TTLs (#2156
- - 
 
 ### Performance
 
