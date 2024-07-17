@@ -104,7 +104,8 @@ class MailAddressTest {
                 "我買@屋企.香港",
                 "二ノ宮@黒川.日本",
                 "медведь@с-балалайкой.рф",
-                "संपर्क@डाटामेल.भारत")
+                "संपर्क@डाटामेल.भारत",
+                "mail.allow\\,d@james.apache.org")
             .map(Arguments::of);
     }
 

@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
  * <p/>
  * <p>This parses an address as per the BNF specification for <mailbox>
  * from RFC 821 on page 30 and 31, section 4.1.2. COMMAND SYNTAX.
- * http://www.freesoft.org/CIE/RFC/821/15.htm</p>
+ * <a href="http://www.freesoft.org/CIE/RFC/821/15.htm">...</a></p>
  *
  * @version 1.0
  */
@@ -239,11 +239,20 @@ public class MailAddress implements java.io.Serializable {
             throw new AddressException("Addresses cannot start end with '.' or contain two consecutive dots");
         }
 
+        // not handle by jakarta.mail
+        if (haveBackSlashComma(localPart)) {
+            throw new AddressException("Addresses cannot contain \\,");
+        }
+
         domain = createDomain(domainSB.toString());
     }
 
     private boolean haveDoubleDot(String localPart) {
         return localPart.contains("..");
+    }
+
+    private boolean haveBackSlashComma(String localPart) {
+        return localPart.contains("\\,");
     }
 
     private Domain createDomain(String domain) throws AddressException {
