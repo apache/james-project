@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.queue.pulsar
 
-import julienrf.json.derived
 import com.sksamuel.pulsar4s.SequenceId
-import play.api.libs.json.{Json, OFormat}
+import io.circe.generic.semiauto._
+import io.circe.{Codec, Decoder, Encoder}
 
 private[pulsar] sealed trait Filter {
   def lastSequenceId: SequenceId
@@ -29,8 +29,12 @@ private[pulsar] sealed trait Filter {
 }
 
 private[pulsar] object Filter {
-  implicit val sequenceIdFormat: OFormat[SequenceId] = Json.format[SequenceId]
-  implicit val filterOFormat: OFormat[Filter] = derived.oformat()
+  implicit val sequenceIdFormat: Codec[SequenceId] =
+    Codec.from(
+      Decoder.decodeLong.map(SequenceId),
+      Encoder.encodeLong.contramap(_.value))
+
+  implicit val filterOFormat: Codec[Filter] = deriveCodec
 
   case class ByName(name: String, lastSequenceId: SequenceId) extends Filter {
     def matches(mailMetadata: MailMetadata): Boolean = mailMetadata.name == name

@@ -2319,6 +2319,21 @@
                 <version>0.11.2</version>
             </dependency>
             <dependency>
+                <groupId>io.circe</groupId>
+                <artifactId>circe-core_${scala.base}</artifactId>
+                <version>0.14.9</version>
+            </dependency>
+            <dependency>
+                <groupId>io.circe</groupId>
+                <artifactId>circe-generic_${scala.base}</artifactId>
+                <version>0.14.9</version>
+            </dependency>
+            <dependency>
+                <groupId>io.circe</groupId>
+                <artifactId>circe-parser_${scala.base}</artifactId>
+                <version>0.14.9</version>
+            </dependency>
+            <dependency>
                 <groupId>io.cucumber</groupId>
                 <artifactId>cucumber-guice</artifactId>
                 <version>${cucumber.version}</version>
