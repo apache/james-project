@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - Upgrade javax -> jakarta. See releated upgrade instructions.
  - Upgrade Java 11 -> 21. See related upgrade instructions.
 
+### Removals
+
+ - JAMES-3946 WhiteList manager removals (#2299)
+ - JAMES-4025 Drop Jmap draft
+
 ### Security
 
 - [FIX] JMX password auto-detection
@@ -19,6 +24,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Bump org.apache.commons:commons-configuration2 from 2.9.0 to 2.10.1 (#2147)
 - [Fix] BouncyCastle 1.70 -> 1.77 (fixes multiple minor CVEs)
 - [FIX] SMTP stack should recompute relaying rights upon PROXY message (#1933)
+- JAMES-4032 DKIM SMTP hook (#2264)
+- JAMES-4034 SMTP submission: validate FROM header (#2246)
+- JAMES-4041 Fix OOM upon IMAP COPY (#2265)
 
 ### New Features
 
@@ -37,6 +45,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - JAMES-3906 SSL hot reload for IMAP /SMTP
 - JAMES-3908 Storage directive with several folder (#1575)
 - JAMES-3909 Fully delete one user data webadmin endpoint
+- JAMES-4047 DeconnectionRight mailet (#2325)
+- JAMES-4044 LDAP matchers
+- JAMES-3946 DropLists
+- [ENHANCEMENT] Reprocess for a specific recipient (#2226)
+- [ENHANCEMENT] Workqueue for the deleted message vault (#2131)
 
 ### Improvements
 
@@ -124,6 +137,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - JAMES-3976 Email/import should accept empty keywords (#1962)
  - [FIX] OpenSearch should normalize base subject (#1910)
  - JAMES-3968 Fix mail loss due to RabbitMQ ack failure
+ - [FIX] HookResultHook added to marker interfaces
+ - JAMES-3581 Parsing TypeName should be more lenient while parsing server side data (#2343)
+ - JAMES-4048 Record LDAP connection metrics
+ - JAMES-4043 Improve literal handling (#2311)
+ - JAMES-3994 Adopt Apache Pekko instead of Akka (#2300)
+ - [FIX] registrations multimap made fully thread safe (#2291)
+ - JAMES-3955 Software timeout before consumer timeout (#2284)
+ - [IMPROVEMENT] Configure fastview projection miss threshold (#2276)
+ - JAMES-4015 VacationMailet should sanitize broken Reply-To fields (#2275)
+ - JAMES-4040 JMAP mailbox role spam => junk (#2261)
+ - JAMES-4038 Relax EHLO validation for EMclient (#2262)
+ - JAMES-4037 Fix NPE in IMAP LIST with APPENDLIMIT (#2257)
+ - JAMES-4037 Resolve MailboxTyper for Spring
+ - [METRICS] Expose useful S3 Client Metrics
+ - JAMES-3539 Backend should clean expired Push subscriptions
+ - [ENHANCEMENT] Metrics for rabbitmq channel pool (#2232)
+ - JAMES-4027 Make all queues on Rabbitmq quorum queue when quorum option is enabled
+ - JAMES-4029 Fix infinite loop with Bounce + forward
+ - JAMES-4026 Fix inconsistency issue between imap and JMAP RFC-8621
+ - [FIX] Filter too big values for Cassandra TTLs (#2156
 
 ### Performance
 
@@ -139,6 +172,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - JAMES-4010 Ability to not index body (#2018)
  - JAMES-4001 File buffering for message storage (#2019)
  - [FIX] IMAP FETCH was pulling all messages into memory
+ - [ENHANCEMENT] Apply RabbitMQ classic queue version 2 (#2243)
+ - [ENHANCEMENT] Fully reactive RRT for JMAP
+ - [ENHANCEMENT] Better reactify Identity methods
+ - [FIX] Remove some blocking calls in IMAP event loop
+ - [FIX] Leak upon unmanaged SMTP error (#2221)
+ - JAMES-4023 Avoid blocking the SMTP Netty event loop
+ - [PERF] Avoid calling Session::getAttachment on each SMTP line
 
 ## [Unreleased 3.8.x]
 
