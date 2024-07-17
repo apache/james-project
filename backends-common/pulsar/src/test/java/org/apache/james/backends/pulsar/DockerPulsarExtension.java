@@ -57,7 +57,7 @@ public class DockerPulsarExtension implements GuiceModuleTestExtension {
 
     @Inject
     public DockerPulsarExtension() {
-        container = new PulsarContainer(DEFAULT_IMAGE_NAME.withTag("2.10.1"))
+        container = new PulsarContainer(DEFAULT_IMAGE_NAME.withTag("3.3.0"))
                 .withLogConsumer(DockerPulsarExtension::displayDockerLog);
     }
 
