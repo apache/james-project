@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.UUID;
 
 import jakarta.mail.internet.MimeMessage;
 
@@ -614,7 +615,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         @Test
         void metricsShouldNotWorkExceptLatencyWhenReadNonExistingBlob() {
             SoftAssertions.assertSoftly(softly -> {
-                softly.assertThatThrownBy(() -> testee.read(DEFAULT_BUCKETNAME, new TestBlobId.Factory().randomId(), HIGH_PERFORMANCE))
+                softly.assertThatThrownBy(() -> testee.read(DEFAULT_BUCKETNAME, new TestBlobId.Factory().of(UUID.randomUUID().toString()), HIGH_PERFORMANCE))
                     .isInstanceOf(ObjectNotFoundException.class);
 
                 softly.assertThat(metricFactory.countFor(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME))
@@ -635,7 +636,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         @Test
         void metricsShouldNotWorkExceptLatencyWhenReadNonExistingBlobAsBytes() {
             SoftAssertions.assertSoftly(softly -> {
-                softly.assertThatThrownBy(() -> Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, new TestBlobId.Factory().randomId(), HIGH_PERFORMANCE)).blockOptional())
+                softly.assertThatThrownBy(() -> Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, new TestBlobId.Factory().of(UUID.randomUUID().toString()), HIGH_PERFORMANCE)).blockOptional())
                     .isInstanceOf(ObjectNotFoundException.class);
 
                 softly.assertThat(metricFactory.countFor(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME))

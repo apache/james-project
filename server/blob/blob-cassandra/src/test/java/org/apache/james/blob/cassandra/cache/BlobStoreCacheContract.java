@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.james.blob.api.BlobId;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,7 @@ public interface BlobStoreCacheContract {
 
     @Test
     default void shouldSaveWhenCacheSmallByteData() {
-        BlobId blobId = blobIdFactory().randomId();
+        BlobId blobId = blobIdFactory().of(UUID.randomUUID().toString());
         assertThatCode(Mono.from(testee().cache(blobId, EIGHT_KILOBYTES))::block)
             .doesNotThrowAnyException();
 
@@ -56,7 +57,7 @@ public interface BlobStoreCacheContract {
 
     @Test
     default void shouldReturnExactlyDataWhenRead() {
-        BlobId blobId = blobIdFactory().randomId();
+        BlobId blobId = blobIdFactory().of(UUID.randomUUID().toString());
         Mono.from(testee().cache(blobId, EIGHT_KILOBYTES)).block();
 
         byte[] actual = Mono.from(testee().read(blobId)).block();
@@ -65,13 +66,13 @@ public interface BlobStoreCacheContract {
 
     @Test
     default void shouldReturnEmptyWhenReadWithTimeOut() {
-        BlobId blobId = blobIdFactory().randomId();
+        BlobId blobId = blobIdFactory().of(UUID.randomUUID().toString());
         Mono.from(testee().cache(blobId, EIGHT_KILOBYTES)).block();
     }
 
     @Test
     default void shouldReturnNothingWhenDelete() {
-        BlobId blobId = blobIdFactory().randomId();
+        BlobId blobId = blobIdFactory().of(UUID.randomUUID().toString());
         Mono.from(testee().cache(blobId, EIGHT_KILOBYTES)).block();
         Mono.from(testee().remove(blobId)).block();
 
@@ -81,8 +82,8 @@ public interface BlobStoreCacheContract {
 
     @Test
     default void shouldDeleteExactlyAndReturnNothingWhenDelete() {
-        BlobId blobId = blobIdFactory().randomId();
-        BlobId blobId2 = blobIdFactory().randomId();
+        BlobId blobId = blobIdFactory().of(UUID.randomUUID().toString());
+        BlobId blobId2 = blobIdFactory().of(UUID.randomUUID().toString());
         Mono.from(testee().cache(blobId, EIGHT_KILOBYTES)).block();
         Mono.from(testee().cache(blobId2, EIGHT_KILOBYTES)).block();
         Mono.from(testee().remove(blobId)).block();
@@ -93,7 +94,7 @@ public interface BlobStoreCacheContract {
 
     @Test
     default void shouldReturnDataWhenCacheSmallDataInConfigurationTTL() {
-        BlobId blobId = blobIdFactory().randomId();
+        BlobId blobId = blobIdFactory().of(UUID.randomUUID().toString());
         assertThatCode(Mono.from(testee().cache(blobId, EIGHT_KILOBYTES))::block)
             .doesNotThrowAnyException();
 
@@ -103,7 +104,7 @@ public interface BlobStoreCacheContract {
 
     @Test
     default void shouldNotReturnDataWhenCachedSmallDataOutOfConfigurationTTL() {
-        BlobId blobId = blobIdFactory().randomId();
+        BlobId blobId = blobIdFactory().of(UUID.randomUUID().toString());
         assertThatCode(Mono.from(testee().cache(blobId, EIGHT_KILOBYTES))::block)
             .doesNotThrowAnyException();
         //add some time after the TTL to avoid threshold effect
@@ -113,7 +114,7 @@ public interface BlobStoreCacheContract {
 
     @Test
     default void readShouldReturnEmptyCachedByteArray() {
-        BlobId blobId = blobIdFactory().randomId();
+        BlobId blobId = blobIdFactory().of(UUID.randomUUID().toString());
         byte[] emptyByteArray = new byte[] {};
 
         Mono.from(testee().cache(blobId, emptyByteArray)).block();

@@ -235,7 +235,7 @@ public interface BloomFilterGCAlgorithmContract {
     default void gcShouldHandlerErrorWhenException() {
         when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.empty());
         BlobStoreDAO blobStoreDAO = mock(BlobStoreDAO.class);
-        BlobId blobId = GENERATION_AWARE_BLOB_ID_FACTORY.randomId();
+        BlobId blobId = GENERATION_AWARE_BLOB_ID_FACTORY.of(UUID.randomUUID().toString());
         when(blobStoreDAO.listBlobs(DEFAULT_BUCKET)).thenReturn(Flux.just(blobId));
         when(blobStoreDAO.delete(ArgumentMatchers.eq(DEFAULT_BUCKET), any(Collection.class))).thenReturn(Mono.error(new RuntimeException("test")));
 

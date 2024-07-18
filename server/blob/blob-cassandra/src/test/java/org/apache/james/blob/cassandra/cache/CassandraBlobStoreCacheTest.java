@@ -22,6 +22,7 @@ import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.time.Duration;
+import java.util.UUID;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -70,7 +71,7 @@ class CassandraBlobStoreCacheTest implements BlobStoreCacheContract {
             .forever()
             .whenQueryStartsWith("INSERT INTO blob_cache"));
 
-        BlobId blobId = blobIdFactory().randomId();
+        BlobId blobId = blobIdFactory().of(UUID.randomUUID().toString());
 
         assertThatCode(() -> Mono.from(testee.cache(blobId, EIGHT_KILOBYTES)).block())
             .doesNotThrowAnyException();

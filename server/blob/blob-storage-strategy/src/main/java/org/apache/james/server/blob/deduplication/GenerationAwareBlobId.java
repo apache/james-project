@@ -133,6 +133,11 @@ public class GenerationAwareBlobId implements BlobId {
         }
 
         @Override
+        public GenerationAwareBlobId of(String id) {
+            return decorate(delegate.of(id));
+        }
+
+        @Override
         public GenerationAwareBlobId from(String id) {
             int separatorIndex1 = id.indexOf('_');
             if (separatorIndex1 == -1 || separatorIndex1 == id.length() - 1) {

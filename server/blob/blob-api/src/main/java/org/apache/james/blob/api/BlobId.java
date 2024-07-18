@@ -26,6 +26,8 @@ import com.google.common.io.ByteSource;
 public interface BlobId {
 
     interface Factory {
+        BlobId of(String id);
+
         BlobId forPayload(byte[] payload);
 
         BlobId forPayload(ByteSource payload);
