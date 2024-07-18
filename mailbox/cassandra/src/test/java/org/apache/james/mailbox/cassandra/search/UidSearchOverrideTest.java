@@ -31,7 +31,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -57,7 +57,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class UidSearchOverrideTest {
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(Username.of("benwa"));
     private static final Mailbox MAILBOX = new Mailbox(MailboxPath.inbox(MAILBOX_SESSION), UidValidity.of(12), CassandraId.timeBased());
-    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().of("abc");
+    private static final PlainBlobId HEADER_BLOB_ID_1 = new PlainBlobId.Factory().of("abc");
     private static final CassandraModule MODULE = CassandraModule.aggregateModules(
         CassandraMessageModule.MODULE,
         CassandraSchemaVersionModule.MODULE);
@@ -70,7 +70,7 @@ class UidSearchOverrideTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        dao = new CassandraMessageIdDAO(cassandra.getConf(), new HashBlobId.Factory());
+        dao = new CassandraMessageIdDAO(cassandra.getConf(), new PlainBlobId.Factory());
         testee = new UidSearchOverride(dao);
     }
 

@@ -23,7 +23,7 @@ import java.time.Clock;
 
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.upload.UploadService;
@@ -41,7 +41,7 @@ public class InMemoryUploadServiceTest implements UploadServiceContract {
 
     @BeforeEach
     void setUp() {
-        BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, new HashBlobId.Factory());
+        BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, new PlainBlobId.Factory());
         uploadRepository = new InMemoryUploadRepository(blobStore, Clock.systemUTC());
         uploadUsageRepository = new InMemoryUploadUsageRepository();
         testee = new UploadServiceDefaultImpl(uploadRepository, uploadUsageRepository, UploadServiceContract.TEST_CONFIGURATION());

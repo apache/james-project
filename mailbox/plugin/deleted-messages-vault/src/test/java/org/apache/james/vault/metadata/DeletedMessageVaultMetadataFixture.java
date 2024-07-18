@@ -21,12 +21,12 @@ package org.apache.james.vault.metadata;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.vault.DeletedMessageFixture;
 
 public interface DeletedMessageVaultMetadataFixture {
-    BlobId BLOB_ID = new HashBlobId.Factory().parse("05dcb33b-8382-4744-923a-bc593ad84d23");
-    BlobId BLOB_ID_2 = new HashBlobId.Factory().parse("05dcb33b-8382-4744-923a-bc593ad84d24");
+    BlobId BLOB_ID = new PlainBlobId.Factory().parse("05dcb33b-8382-4744-923a-bc593ad84d23");
+    BlobId BLOB_ID_2 = new PlainBlobId.Factory().parse("05dcb33b-8382-4744-923a-bc593ad84d24");
     BucketName BUCKET_NAME = BucketName.of("bucket-2019-06-01");
     BucketName OTHER_BUCKET_NAME = BucketName.of("other");
 

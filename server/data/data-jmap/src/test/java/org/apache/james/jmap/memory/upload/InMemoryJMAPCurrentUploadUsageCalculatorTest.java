@@ -23,7 +23,7 @@ import java.time.Clock;
 
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageCalculator;
 import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageCalculatorContract;
@@ -40,7 +40,7 @@ public class InMemoryJMAPCurrentUploadUsageCalculatorTest implements JMAPCurrent
 
     @BeforeEach
     private void setup() {
-        BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, new HashBlobId.Factory());
+        BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, new PlainBlobId.Factory());
         uploadRepository = new InMemoryUploadRepository(blobStore, Clock.systemUTC());
         uploadUsageRepository = new InMemoryUploadUsageRepository();
         jmapCurrentUploadUsageCalculator = new JMAPCurrentUploadUsageCalculator(uploadRepository, uploadUsageRepository);

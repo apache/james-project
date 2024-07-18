@@ -29,8 +29,8 @@ import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 
 class MimeMessageStoreTest {
-    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+    private static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 
     private Store<MimeMessage, MimeMessagePartsId> testee;
     private BlobStore blobStore;

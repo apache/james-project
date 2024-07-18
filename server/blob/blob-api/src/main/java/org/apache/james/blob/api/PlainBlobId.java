@@ -26,17 +26,17 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 // FIXME (in later commit) use java record
-public class HashBlobId implements BlobId {
+public class PlainBlobId implements BlobId {
     public static class Factory implements BlobId.Factory {
 
         @Override
-        public HashBlobId of(String id) {
+        public PlainBlobId of(String id) {
             Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
-            return new HashBlobId(id);
+            return new PlainBlobId(id);
         }
 
         @Override
-        public HashBlobId parse(String id) {
+        public PlainBlobId parse(String id) {
             return of(id);
         }
     }
@@ -44,7 +44,7 @@ public class HashBlobId implements BlobId {
     private final String id;
 
     @VisibleForTesting
-    HashBlobId(String id) {
+    PlainBlobId(String id) {
         this.id = id;
     }
 
@@ -55,8 +55,8 @@ public class HashBlobId implements BlobId {
 
     @Override
     public final boolean equals(Object obj) {
-        if (obj instanceof HashBlobId) {
-            HashBlobId other = (HashBlobId) obj;
+        if (obj instanceof PlainBlobId) {
+            PlainBlobId other = (PlainBlobId) obj;
             return Objects.equal(id, other.id);
         }
         return false;

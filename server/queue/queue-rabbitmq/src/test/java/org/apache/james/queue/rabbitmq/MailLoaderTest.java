@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 
 import jakarta.mail.internet.MimeMessage;
 
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class MailLoaderTest {
         when(store.read(any())).thenReturn(Mono.error(new RuntimeException("Cassandra problem")));
         MailReferenceDTO dto = mock(MailReferenceDTO.class);
         when(dto.toMailReference(any())).thenReturn(mock(MailReference.class));
-        MailLoader loader = new MailLoader(store, new HashBlobId.Factory());
+        MailLoader loader = new MailLoader(store, new PlainBlobId.Factory());
 
         String result = loader.load(dto)
             .thenReturn("continued")

@@ -41,7 +41,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.BlobTables;
 import org.apache.james.core.Username;
 import org.apache.james.events.EventBus;
@@ -812,18 +812,18 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         private CassandraAttachmentDAOV2 attachmentDAO(CassandraCluster cassandraCluster) {
             return new CassandraAttachmentDAOV2(
-                new HashBlobId.Factory(),
+                new PlainBlobId.Factory(),
                 cassandraCluster.getConf());
         }
 
         private CassandraMessageIdDAO messageIdDAO(CassandraCluster cassandraCluster) {
-            return new CassandraMessageIdDAO(cassandraCluster.getConf(), new HashBlobId.Factory());
+            return new CassandraMessageIdDAO(cassandraCluster.getConf(), new PlainBlobId.Factory());
         }
 
         private CassandraMessageIdToImapUidDAO imapUidDAO(CassandraCluster cassandraCluster) {
             return new CassandraMessageIdToImapUidDAO(
                 cassandraCluster.getConf(),
-                new HashBlobId.Factory(),
+                new PlainBlobId.Factory(),
                 CassandraConfiguration.DEFAULT_CONFIGURATION);
         }
 
@@ -832,7 +832,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 cassandraCluster.getConf(),
                 cassandraCluster.getTypesProvider(),
                 mock(BlobStore.class),
-                new HashBlobId.Factory());
+                new PlainBlobId.Factory());
         }
 
         private CassandraThreadDAO threadDAO(CassandraCluster cassandraCluster) {

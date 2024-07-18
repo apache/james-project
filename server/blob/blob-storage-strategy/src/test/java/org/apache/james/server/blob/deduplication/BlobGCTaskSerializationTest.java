@@ -31,7 +31,7 @@ import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.UpdatableTickingClock;
@@ -53,7 +53,7 @@ class BlobGCTaskSerializationTest {
         blobReferenceSources = ImmutableSet.of(mock(BlobReferenceSource.class));
         clock = new UpdatableTickingClock(Instant.parse("2007-12-03T10:15:30.00Z"));
         generationAwareBlobIdConfiguration = GenerationAwareBlobId.Configuration.DEFAULT;
-        generationAwareBlobIdFactory = new GenerationAwareBlobId.Factory(clock, new HashBlobId.Factory(), generationAwareBlobIdConfiguration);
+        generationAwareBlobIdFactory = new GenerationAwareBlobId.Factory(clock, new PlainBlobId.Factory(), generationAwareBlobIdConfiguration);
     }
 
     @Test

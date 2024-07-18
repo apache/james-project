@@ -29,7 +29,7 @@ import org.apache.james.backends.pulsar.DockerPulsarExtension;
 import org.apache.james.backends.pulsar.PulsarClients;
 import org.apache.james.backends.pulsar.PulsarConfiguration;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
@@ -56,7 +56,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class PulsarMailQueueFactoryTest implements MailQueueFactoryContract<PulsarMailQueue>, ManageableMailQueueFactoryContract<PulsarMailQueue> {
 
     PulsarMailQueueFactory mailQueueFactory;
-    private HashBlobId.Factory blobIdFactory;
+    private PlainBlobId.Factory blobIdFactory;
     private Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
     private MailQueueItemDecoratorFactory factory;
     private PulsarConfiguration config;
@@ -67,7 +67,7 @@ class PulsarMailQueueFactoryTest implements MailQueueFactoryContract<PulsarMailQ
     void setUp(DockerPulsarExtension.DockerPulsar dockerPulsar, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws PulsarClientException, PulsarAdminException {
         this.metricTestSystem = metricTestSystem;
 
-        blobIdFactory = new HashBlobId.Factory();
+        blobIdFactory = new PlainBlobId.Factory();
 
         MemoryBlobStoreDAO memoryBlobStore = new MemoryBlobStoreDAO();
         PassThroughBlobStore blobStore = new PassThroughBlobStore(memoryBlobStore, BucketName.DEFAULT, blobIdFactory);

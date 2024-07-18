@@ -31,7 +31,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -118,7 +118,7 @@ class DeletedMessageVaultHookTest {
         messageVault = new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
             BlobStoreFactory.builder()
                 .blobStoreDAO(blobStoreDAO)
-                .blobIdFactory(new HashBlobId.Factory())
+                .blobIdFactory(new PlainBlobId.Factory())
                 .defaultBucketName()
                 .passthrough(), blobStoreDAO, new BucketNameGenerator(clock), clock,
             VaultConfiguration.ENABLED_DEFAULT);

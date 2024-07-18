@@ -27,7 +27,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.upload.UploadService;
@@ -51,8 +51,8 @@ class CassandraUploadServiceTest implements UploadServiceContract {
     @BeforeEach
     void setUp(CassandraCluster cassandraCluster) {
         Clock clock = Clock.systemUTC();
-        uploadRepository = new CassandraUploadRepository(new UploadDAO(cassandraCluster.getConf(), new HashBlobId.Factory()), new DeDuplicationBlobStore(new MemoryBlobStoreDAO(),
-            BucketName.of("default"), new HashBlobId.Factory()), clock);
+        uploadRepository = new CassandraUploadRepository(new UploadDAO(cassandraCluster.getConf(), new PlainBlobId.Factory()), new DeDuplicationBlobStore(new MemoryBlobStoreDAO(),
+            BucketName.of("default"), new PlainBlobId.Factory()), clock);
         uploadUsageRepository = new CassandraUploadUsageRepository(new CassandraQuotaCurrentValueDao(cassandraCluster.getConf()));
         testee = new UploadServiceDefaultImpl(uploadRepository, uploadUsageRepository, UploadServiceContract.TEST_CONFIGURATION());
     }

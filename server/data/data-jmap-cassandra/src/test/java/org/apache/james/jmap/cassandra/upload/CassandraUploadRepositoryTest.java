@@ -23,7 +23,7 @@ import java.time.Clock;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.model.UploadId;
 import org.apache.james.jmap.api.upload.UploadRepository;
@@ -44,7 +44,7 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     void setUp() {
         Clock clock = Clock.systemUTC();
         testee = new CassandraUploadRepository(new UploadDAO(cassandra.getCassandraCluster().getConf(),
-            new HashBlobId.Factory()), new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory()),
+            new PlainBlobId.Factory()), new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new PlainBlobId.Factory()),
             clock);
     }
 

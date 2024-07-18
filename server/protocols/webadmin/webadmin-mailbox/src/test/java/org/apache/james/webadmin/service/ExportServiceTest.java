@@ -35,8 +35,8 @@ import java.io.InputStream;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.blob.export.file.FileSystemExtension;
 import org.apache.james.core.Domain;
@@ -72,7 +72,7 @@ class ExportServiceTest {
         "testmail";
     private static final String TWELVE_MEGABYTES_STRING = Strings.repeat("0123456789\r\n", 1024 * 1024);
     private static final String FILE_PREFIX = "mailbox-backup-";
-    private static final BlobId.Factory FACTORY = new HashBlobId.Factory();
+    private static final BlobId.Factory FACTORY = new PlainBlobId.Factory();
 
     private ExportService testee;
     private ExportServiceTestSystem testSystem;

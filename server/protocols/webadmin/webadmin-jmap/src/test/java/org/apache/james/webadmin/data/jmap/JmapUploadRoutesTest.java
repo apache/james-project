@@ -38,7 +38,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.UploadId;
@@ -99,10 +99,10 @@ class JmapUploadRoutesTest {
         clock = new UpdatableTickingClock(TIMESTAMP.toInstant());
         blobStore = new PassThroughBlobStore(new MemoryBlobStoreDAO(),
             BucketName.of("default"),
-            new HashBlobId.Factory());
+            new PlainBlobId.Factory());
 
         cassandraUploadRepository = new CassandraUploadRepository(new UploadDAO(cassandraCluster.getCassandraCluster().getConf(),
-            new HashBlobId.Factory()), blobStore, clock);
+            new PlainBlobId.Factory()), blobStore, clock);
 
         JsonTransformer jsonTransformer = new JsonTransformer();
         TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(UploadCleanupTaskAdditionalInformationDTO.SERIALIZATION_MODULE));

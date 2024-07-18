@@ -46,8 +46,8 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
@@ -101,7 +101,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
     @Override
     public BlobId.Factory blobIdFactory() {
-        return new HashBlobId.Factory();
+        return new PlainBlobId.Factory();
     }
 
     @Test

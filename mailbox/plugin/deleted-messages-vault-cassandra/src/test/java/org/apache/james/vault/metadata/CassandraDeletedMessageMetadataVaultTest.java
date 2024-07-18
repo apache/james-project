@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
@@ -56,7 +56,7 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         DeletedMessageWithStorageInformationConverter dtoConverter = new DeletedMessageWithStorageInformationConverter(blobIdFactory, messageIdFactory, new InMemoryId.Factory());
 

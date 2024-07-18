@@ -39,7 +39,7 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
@@ -68,7 +68,7 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
         messageVault = new BlobStoreDeletedMessageVault(metricFactory, new MemoryDeletedMessageMetadataVault(),
             BlobStoreFactory.builder()
                 .blobStoreDAO(blobStoreDAO)
-                .blobIdFactory(new HashBlobId.Factory())
+                .blobIdFactory(new PlainBlobId.Factory())
                 .defaultBucketName()
                 .passthrough(),
             blobStoreDAO, new BucketNameGenerator(clock), clock, VaultConfiguration.ENABLED_DEFAULT);

@@ -28,7 +28,7 @@ import java.util.Date;
 
 import jakarta.mail.MessagingException;
 
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Attribute;
@@ -47,7 +47,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 class MailDTOTest {
     static final EnqueueId EN_QUEUE_ID = EnqueueId.ofSerialized("110e8400-e29b-11d4-a716-446655440000");
-    static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+    static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
     static final Date LAST_UPDATED = Date.from(Instant.parse("2016-09-08T14:25:52.000Z"));
 
     private ObjectMapper objectMapper;

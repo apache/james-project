@@ -26,7 +26,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageCalculator;
 import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageCalculatorContract;
@@ -49,7 +49,7 @@ public class CassandraJMAPCurrentUploadUsageCalculatorTest implements JMAPCurren
     private void setup() {
         Clock clock = Clock.systemUTC();
         uploadRepository = new CassandraUploadRepository(new UploadDAO(cassandraCluster.getCassandraCluster().getConf(),
-            new HashBlobId.Factory()), new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory()),
+            new PlainBlobId.Factory()), new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new PlainBlobId.Factory()),
             clock);
         uploadUsageRepository = new CassandraUploadUsageRepository(new CassandraQuotaCurrentValueDao(cassandraCluster.getCassandraCluster().getConf()));
         jmapCurrentUploadUsageCalculator = new JMAPCurrentUploadUsageCalculator(uploadRepository, uploadUsageRepository);

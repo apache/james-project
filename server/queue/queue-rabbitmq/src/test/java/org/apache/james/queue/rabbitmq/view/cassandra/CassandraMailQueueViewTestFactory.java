@@ -22,7 +22,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 import java.time.Clock;
 import java.util.Optional;
 
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
@@ -35,7 +35,7 @@ public class CassandraMailQueueViewTestFactory {
     public static CassandraMailQueueView.Factory factory(Clock clock, CqlSession session,
                                                          CassandraMailQueueViewConfiguration configuration,
                                                          MimeMessageStore.Factory mimeMessageStoreFactory) {
-        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
 
         EnqueuedMailsDAO enqueuedMailsDao = new EnqueuedMailsDAO(session, blobIdFactory);
         BrowseStartDAO browseStartDao = new BrowseStartDAO(session);

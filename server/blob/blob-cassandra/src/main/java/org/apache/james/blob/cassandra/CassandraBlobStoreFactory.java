@@ -21,7 +21,7 @@ package org.apache.james.blob.cassandra;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 
@@ -29,7 +29,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 
 public class CassandraBlobStoreFactory {
     public static BlobStoreFactory.RequireStoringStrategy forTesting(CqlSession session, MetricFactory metricFactory) {
-        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, session);
         CassandraDefaultBucketDAO defaultBucketDAO = new CassandraDefaultBucketDAO(session, blobIdFactory);
         CassandraBlobStoreDAO blobStoreDAO = new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, CassandraConfiguration.DEFAULT_CONFIGURATION, BucketName.DEFAULT, metricFactory);

@@ -25,7 +25,7 @@ import java.time.Instant;
 
 import jakarta.mail.MessagingException;
 
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
@@ -49,8 +49,8 @@ class EnqueuedItemWithSlicingContextTest {
                         .build())
                 .enqueuedTime(Instant.now())
                 .mimeMessagePartsId(MimeMessagePartsId.builder()
-                        .headerBlobId(new HashBlobId.Factory().parse("headerBlodId"))
-                        .bodyBlobId(new HashBlobId.Factory().parse("bodyBlodId"))
+                        .headerBlobId(new PlainBlobId.Factory().parse("headerBlodId"))
+                        .bodyBlobId(new PlainBlobId.Factory().parse("bodyBlodId"))
                         .build())
                 .build();
         slicingContext = EnqueuedItemWithSlicingContext.SlicingContext.of(BucketedSlices.BucketId.of(1), Instant.now());

@@ -36,7 +36,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.mail.MimeMessageStore;
@@ -71,7 +71,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.github.fge.lambdas.Throwing;
 
 class RabbitMQMailQueueConfigurationChangeTest {
-    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+    private static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
     private static final int THREE_BUCKET_COUNT = 3;
     private static final int UPDATE_BROWSE_START_PACE = 2;
     private static final Duration ONE_HOUR_SLICE_WINDOW = Duration.ofHours(1);

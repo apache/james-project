@@ -29,7 +29,7 @@ import java.util.UUID;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +49,7 @@ class GenerationAwareBlobIdTest {
 
     @BeforeEach
     void setUp() {
-        delegate = new HashBlobId.Factory();
+        delegate = new PlainBlobId.Factory();
         clock = new UpdatableTickingClock(NOW);
         testee = new GenerationAwareBlobId.Factory(clock, delegate, GenerationAwareBlobId.Configuration.DEFAULT);
     }

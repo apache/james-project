@@ -31,7 +31,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -51,7 +51,7 @@ import com.datastax.oss.driver.api.core.uuid.Uuids;
 import reactor.core.publisher.Flux;
 
 class CassandraMessageIdToImapUidDAOTest {
-    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().of("abc");
+    private static final PlainBlobId HEADER_BLOB_ID_1 = new PlainBlobId.Factory().of("abc");
     private static final CassandraModule MODULE = CassandraModule.aggregateModules(
         CassandraSchemaVersionModule.MODULE,
         CassandraMessageModule.MODULE);
@@ -66,7 +66,7 @@ class CassandraMessageIdToImapUidDAOTest {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         testee = new CassandraMessageIdToImapUidDAO(
             cassandra.getConf(),
-            new HashBlobId.Factory(),
+            new PlainBlobId.Factory(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
