@@ -581,7 +581,7 @@ public class CassandraMessageIdDAO {
                 .map(Date::from))
             .size(row.get(FULL_CONTENT_OCTETS, Long.class))
             .headerContent(Optional.ofNullable(row.get(HEADER_CONTENT, TypeCodecs.TEXT))
-                .map(blobIdFactory::from))
+                .map(blobIdFactory::parse))
             .build());
     }
 

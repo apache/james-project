@@ -183,13 +183,13 @@ public class CassandraBucketDAO {
 
     public Flux<Pair<BucketName, BlobId>> listAll() {
         return cassandraAsyncExecutor.executeRows(listAll.bind())
-            .map(row -> Pair.of(BucketName.of(row.getString(BUCKET)), blobIdFactory.from(row.getString(ID))));
+            .map(row -> Pair.of(BucketName.of(row.getString(BUCKET)), blobIdFactory.parse(row.getString(ID))));
     }
 
     public Flux<BlobId> listAll(BucketName bucketName) {
         return cassandraAsyncExecutor.executeRows(listBucketContent.bind()
                 .setString(BUCKET, bucketName.asString()))
-            .map(row -> blobIdFactory.from(row.getString(ID)));
+            .map(row -> blobIdFactory.parse(row.getString(ID)));
     }
 
     private ByteBuffer rowToData(Row row) {

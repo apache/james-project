@@ -36,7 +36,7 @@ public class HashBlobId implements BlobId {
         }
 
         @Override
-        public HashBlobId from(String id) {
+        public HashBlobId parse(String id) {
             return of(id);
         }
     }

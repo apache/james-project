@@ -216,7 +216,7 @@ public class UploadDAO {
 
     private Function<Row, UploadRepresentation> rowToUploadRepresentation() {
         return row -> new UploadRepresentation(UploadId.from(row.getUuid(ID)),
-            blobIdFactory.from(row.getString(BLOB_ID)),
+            blobIdFactory.parse(row.getString(BLOB_ID)),
             ContentType.of(row.getString(CONTENT_TYPE)),
             row.getLong(SIZE),
             Username.of(row.getString(USER)),

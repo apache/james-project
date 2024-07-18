@@ -160,7 +160,7 @@ public class CassandraDefaultBucketDAO {
 
     Flux<BlobId> listBlobs() {
         return cassandraAsyncExecutor.executeRows(listBlobs.bind())
-            .map(row -> blobIdFactory.from(row.getString(DefaultBucketBlobParts.ID)));
+            .map(row -> blobIdFactory.parse(row.getString(DefaultBucketBlobParts.ID)));
     }
 
     private ByteBuffer rowToData(Row row) {

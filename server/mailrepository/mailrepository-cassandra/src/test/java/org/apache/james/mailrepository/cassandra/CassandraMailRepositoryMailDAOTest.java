@@ -70,8 +70,8 @@ class CassandraMailRepositoryMailDAOTest {
 
     @Test
     void storeShouldAcceptMailWithOnlyName() throws Exception {
-        BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
-        BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
+        BlobId blobIdBody = BLOB_ID_FACTORY.parse("blobHeader");
+        BlobId blobIdHeader = BLOB_ID_FACTORY.parse("blobBody");
 
         testee.store(URL,
             FakeMail.builder()
@@ -93,8 +93,8 @@ class CassandraMailRepositoryMailDAOTest {
 
     @Test
     void removeShouldDeleteMailMetaData() throws Exception {
-        BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
-        BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
+        BlobId blobIdBody = BLOB_ID_FACTORY.parse("blobHeader");
+        BlobId blobIdHeader = BLOB_ID_FACTORY.parse("blobBody");
 
         testee.store(URL,
             FakeMail.builder()
@@ -118,8 +118,8 @@ class CassandraMailRepositoryMailDAOTest {
 
     @Test
     void readShouldReturnAllMailMetadata() throws Exception {
-        BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
-        BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
+        BlobId blobIdBody = BLOB_ID_FACTORY.parse("blobHeader");
+        BlobId blobIdHeader = BLOB_ID_FACTORY.parse("blobBody");
         String errorMessage = "error message";
         String state = "state";
         String remoteAddr = "remoteAddr";
@@ -176,8 +176,8 @@ class CassandraMailRepositoryMailDAOTest {
 
     @Test
     void blobReferencesShouldAllAddedValues() throws Exception {
-        BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
-        BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
+        BlobId blobIdBody = BLOB_ID_FACTORY.parse("blobHeader");
+        BlobId blobIdHeader = BLOB_ID_FACTORY.parse("blobBody");
         String state = "state";
         AttributeName attributeName = AttributeName.of("att1");
         List<AttributeValue<?>> attributeValue = ImmutableList.of(AttributeValue.of("value1"), AttributeValue.of("value2"));
@@ -196,8 +196,8 @@ class CassandraMailRepositoryMailDAOTest {
             blobIdBody)
             .block();
 
-        BlobId blobIdBody2 = BLOB_ID_FACTORY.from("blobHeader2");
-        BlobId blobIdHeader2 = BLOB_ID_FACTORY.from("blobBody2");
+        BlobId blobIdBody2 = BLOB_ID_FACTORY.parse("blobHeader2");
+        BlobId blobIdHeader2 = BLOB_ID_FACTORY.parse("blobBody2");
 
         testee.store(URL,
             FakeMail.builder()

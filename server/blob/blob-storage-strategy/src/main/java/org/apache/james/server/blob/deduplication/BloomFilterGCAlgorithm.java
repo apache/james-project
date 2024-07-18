@@ -274,7 +274,7 @@ public class BloomFilterGCAlgorithm {
     private Mono<Result> gc(BloomFilter<CharSequence> bloomFilter, BucketName bucketName, Context context, int deletionWindowSize) {
         return Flux.from(blobStoreDAO.listBlobs(bucketName))
             .doOnNext(blobId -> context.incrementBlobCount())
-            .flatMap(blobId -> Mono.fromCallable(() -> generationAwareBlobIdFactory.from(blobId.asString())))
+            .flatMap(blobId -> Mono.fromCallable(() -> generationAwareBlobIdFactory.parse(blobId.asString())))
             .filter(blobId -> !blobId.inActiveGeneration(generationAwareBlobIdConfiguration, now))
             .filter(blobId -> !bloomFilter.mightContain(salt + blobId.asString()))
             .window(deletionWindowSize)

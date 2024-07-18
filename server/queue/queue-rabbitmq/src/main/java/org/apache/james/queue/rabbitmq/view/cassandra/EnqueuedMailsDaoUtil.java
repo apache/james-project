@@ -86,8 +86,8 @@ public class EnqueuedMailsDaoUtil {
         Instant timeRangeStart = row.getInstant(TIME_RANGE_START);
         BucketedSlices.BucketId bucketId = BucketedSlices.BucketId.of(row.getInt(BUCKET_ID));
         Instant enqueuedTime = row.getInstant(ENQUEUED_TIME);
-        BlobId headerBlobId = blobFactory.from(row.getString(HEADER_BLOB_ID));
-        BlobId bodyBlobId = blobFactory.from(row.getString(BODY_BLOB_ID));
+        BlobId headerBlobId = blobFactory.parse(row.getString(HEADER_BLOB_ID));
+        BlobId bodyBlobId = blobFactory.parse(row.getString(BODY_BLOB_ID));
         MimeMessagePartsId mimeMessagePartsId = MimeMessagePartsId
             .builder()
             .headerBlobId(headerBlobId)

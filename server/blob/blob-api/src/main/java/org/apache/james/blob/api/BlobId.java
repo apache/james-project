@@ -24,8 +24,7 @@ public interface BlobId {
     interface Factory {
         BlobId of(String id);
 
-        //FIXME (in later commit) - rename to parse or parseFrom this should only be used for deserialization
-        BlobId from(String id);
+        BlobId parse(String id);
     }
 
     String asString();

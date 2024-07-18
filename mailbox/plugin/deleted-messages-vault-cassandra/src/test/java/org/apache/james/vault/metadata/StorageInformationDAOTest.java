@@ -42,8 +42,8 @@ class StorageInformationDAOTest {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     private static final Username OWNER = Username.of("owner");
     private static final TestMessageId MESSAGE_ID = TestMessageId.of(36);
-    private static final BlobId BLOB_ID = new HashBlobId.Factory().from("05dcb33b-8382-4744-923a-bc593ad84d23");
-    private static final BlobId BLOB_ID_2 = new HashBlobId.Factory().from("05dcb33b-8382-4744-923a-bc593ad84d24");
+    private static final BlobId BLOB_ID = new HashBlobId.Factory().parse("05dcb33b-8382-4744-923a-bc593ad84d23");
+    private static final BlobId BLOB_ID_2 = new HashBlobId.Factory().parse("05dcb33b-8382-4744-923a-bc593ad84d24");
     private static final StorageInformation STORAGE_INFORMATION = StorageInformation.builder().bucketName(BUCKET_NAME).blobId(BLOB_ID);
     private static final StorageInformation STORAGE_INFORMATION_2 = StorageInformation.builder().bucketName(BUCKET_NAME_2).blobId(BLOB_ID_2);
 

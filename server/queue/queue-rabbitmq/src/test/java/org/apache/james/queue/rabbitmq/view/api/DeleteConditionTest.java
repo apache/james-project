@@ -47,8 +47,8 @@ class DeleteConditionTest {
     private static final MailQueueName OUT_GOING_1 = MailQueueName.fromString("OUT_GOING_1");
     private static final Instant ENQUEUE_TIME = Instant.now();
     private static final MimeMessagePartsId MESSAGE_PARTS_ID = MimeMessagePartsId.builder()
-        .headerBlobId(new HashBlobId.Factory().from("headerBlobId"))
-        .bodyBlobId(new HashBlobId.Factory().from("bodyBlobId"))
+        .headerBlobId(new HashBlobId.Factory().parse("headerBlobId"))
+        .bodyBlobId(new HashBlobId.Factory().parse("bodyBlobId"))
         .build();
 
     @Nested

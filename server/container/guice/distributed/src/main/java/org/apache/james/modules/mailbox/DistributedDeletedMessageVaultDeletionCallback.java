@@ -148,8 +148,8 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
                 internalDate,
                 size,
                 hasAttachments,
-                blobIdFactory.from(headerId),
-                blobIdFactory.from(bodyId));
+                blobIdFactory.parse(headerId),
+                blobIdFactory.parse(bodyId));
         }
     }
 

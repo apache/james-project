@@ -89,8 +89,8 @@ private[blob] case class MailMetadata(
 
   def mimePartsId(implicit blobIdFactory: BlobId.Factory): MimeMessagePartsId =
     MimeMessagePartsId.builder()
-      .headerBlobId(blobIdFactory.from(headerBlobId))
-      .bodyBlobId(blobIdFactory.from(bodyBlobId))
+      .headerBlobId(blobIdFactory.parse(headerBlobId))
+      .bodyBlobId(blobIdFactory.parse(bodyBlobId))
       .build()
 
 }

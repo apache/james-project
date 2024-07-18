@@ -49,8 +49,8 @@ class EnqueuedItemWithSlicingContextTest {
                         .build())
                 .enqueuedTime(Instant.now())
                 .mimeMessagePartsId(MimeMessagePartsId.builder()
-                        .headerBlobId(new HashBlobId.Factory().from("headerBlodId"))
-                        .bodyBlobId(new HashBlobId.Factory().from("bodyBlodId"))
+                        .headerBlobId(new HashBlobId.Factory().parse("headerBlodId"))
+                        .bodyBlobId(new HashBlobId.Factory().parse("bodyBlodId"))
                         .build())
                 .build();
         slicingContext = EnqueuedItemWithSlicingContext.SlicingContext.of(BucketedSlices.BucketId.of(1), Instant.now());

@@ -189,9 +189,9 @@ class ExportServiceTest {
         String blobId = fileName.substring(fileName.lastIndexOf("-") + 1);
 
         SoftAssertions.assertSoftly(softly -> {
-            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.from(blobId)))
+            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.parse(blobId)))
                 .isInstanceOf(ObjectNotFoundException.class);
-            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.from(blobId)))
+            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.parse(blobId)))
                 .hasMessage(String.format("blob '%s' not found in bucket '%s'", blobId, testSystem.blobStore.getDefaultBucketName().asString()));
         });
     }

@@ -198,8 +198,8 @@ class MailReferenceDTO {
 
     MailReference toMailReference(BlobId.Factory blobIdFactory) {
         MimeMessagePartsId messagePartsId = MimeMessagePartsId.builder()
-            .headerBlobId(blobIdFactory.from(headerBlobId))
-            .bodyBlobId(blobIdFactory.from(bodyBlobId))
+            .headerBlobId(blobIdFactory.parse(headerBlobId))
+            .bodyBlobId(blobIdFactory.parse(bodyBlobId))
             .build();
 
         return new MailReference(EnqueueId.ofSerialized(enqueueId), mailMetadata(), messagePartsId);

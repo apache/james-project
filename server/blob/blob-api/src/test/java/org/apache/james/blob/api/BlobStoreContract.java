@@ -156,7 +156,7 @@ public interface BlobStoreContract extends BucketBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatThrownBy(() -> Mono.from(store.readBytes(defaultBucketName, blobIdFactory().from("unknown"))).block())
+        assertThatThrownBy(() -> Mono.from(store.readBytes(defaultBucketName, blobIdFactory().parse("unknown"))).block())
             .isExactlyInstanceOf(ObjectNotFoundException.class);
     }
 
@@ -243,7 +243,7 @@ public interface BlobStoreContract extends BucketBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatThrownBy(() -> store.read(defaultBucketName, blobIdFactory().from("unknown")).read())
+        assertThatThrownBy(() -> store.read(defaultBucketName, blobIdFactory().parse("unknown")).read())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 

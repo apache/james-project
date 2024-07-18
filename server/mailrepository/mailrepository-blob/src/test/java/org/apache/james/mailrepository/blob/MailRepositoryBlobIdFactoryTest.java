@@ -48,11 +48,11 @@ class MailRepositoryBlobIdFactoryTest {
     }
 
     @Test
-    void fromShouldNotRelocateBlobIdUnderTheMailRepositoryPath() {
+    void parseShouldNotRelocateBlobIdUnderTheMailRepositoryPath() {
         var id = MAIL_REPOSITORY_PATH + "/" + "0c222abb-d115-4a88-9fbe-e65e951301f6";
         MailRepositoryBlobIdFactory factory = new MailRepositoryBlobIdFactory(blobIdFactory, url);
 
-        BlobId actual = factory.from(id);
+        BlobId actual = factory.parse(id);
 
         assertThat(actual.asString()).isEqualTo(id);
     }

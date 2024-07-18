@@ -261,8 +261,8 @@ public class CassandraMailRepositoryMailDaoV2 {
             .addAttributes(toAttributes(rawAttributes));
 
         return new MailDTO(mailBuilder,
-            blobIdFactory.from(row.getString(HEADER_BLOB_ID)),
-            blobIdFactory.from(row.getString(BODY_BLOB_ID)));
+            blobIdFactory.parse(row.getString(HEADER_BLOB_ID)),
+            blobIdFactory.parse(row.getString(BODY_BLOB_ID)));
     }
 
     private List<Attribute> toAttributes(Map<String, String> rowAttributes) {
@@ -314,8 +314,8 @@ public class CassandraMailRepositoryMailDaoV2 {
     Flux<BlobId> listBlobs() {
         return executor.executeRows(litBlobs.bind())
             .flatMapIterable(row -> List.of(
-                blobIdFactory.from(row.getString(HEADER_BLOB_ID)),
-                blobIdFactory.from(row.getString(BODY_BLOB_ID))
+                blobIdFactory.parse(row.getString(HEADER_BLOB_ID)),
+                blobIdFactory.parse(row.getString(BODY_BLOB_ID))
             ));
     }
 

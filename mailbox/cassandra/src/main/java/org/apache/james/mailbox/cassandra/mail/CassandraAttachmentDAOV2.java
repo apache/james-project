@@ -134,7 +134,7 @@ public class CassandraAttachmentDAOV2 {
         return new DAOAttachment(
             messageId,
             StringBackedAttachmentId.from(row.getString(ID)),
-            blobIfFactory.from(row.getString(BLOB_ID)),
+            blobIfFactory.parse(row.getString(BLOB_ID)),
             ContentType.of(row.getString(TYPE)),
             row.getLong(SIZE));
     }
@@ -217,6 +217,6 @@ public class CassandraAttachmentDAOV2 {
 
     public Flux<BlobId> listBlobs() {
         return cassandraAsyncExecutor.executeRows(listBlobs.bind())
-            .map(row -> blobIdFactory.from(row.getString(BLOB_ID)));
+            .map(row -> blobIdFactory.parse(row.getString(BLOB_ID)));
     }
 }

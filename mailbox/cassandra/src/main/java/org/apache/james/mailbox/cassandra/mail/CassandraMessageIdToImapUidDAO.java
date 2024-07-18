@@ -408,7 +408,7 @@ public class CassandraMessageIdToImapUidDAO {
                 .map(Date::from))
             .size(row.get(FULL_CONTENT_OCTETS, Long.class))
             .headerContent(Optional.ofNullable(row.getString(HEADER_CONTENT))
-                .map(blobIdFactory::from))
+                .map(blobIdFactory::parse))
             .build();
     }
 

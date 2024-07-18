@@ -30,7 +30,7 @@ public class TestBlobId implements BlobId {
         }
 
         @Override
-        public BlobId from(String id) {
+        public BlobId parse(String id) {
             return of(id);
         }
     }
