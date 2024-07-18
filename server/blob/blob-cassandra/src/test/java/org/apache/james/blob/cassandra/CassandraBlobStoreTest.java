@@ -41,6 +41,7 @@ public class CassandraBlobStoreTest implements CassandraBlobStoreContract, Dedup
 
     private BlobStore testee;
     private CassandraDefaultBucketDAO defaultBucketDAO;
+    private CassandraCluster cassandra;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
@@ -54,16 +55,16 @@ public class CassandraBlobStoreTest implements CassandraBlobStoreContract, Dedup
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, this.cassandra.getConf());
         defaultBucketDAO = spy(new CassandraDefaultBucketDAO(this.cassandra.getConf(), blobIdFactory));
         CassandraConfiguration cassandraConfiguration = CassandraConfiguration.builder()
-            .blobPartSize(CHUNK_SIZE)
-            .build();
+                .blobPartSize(CHUNK_SIZE)
+                .build();
         MetricFactory metricFactory = metricsTestExtension.getMetricFactory();
-        testee = new MetricableBlobStore(
-            metricFactory,
-            BlobStoreFactory.builder()
-                .blobStoreDAO(new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT, metricFactory))
-                .blobIdFactory(blobIdFactory)
-                .defaultBucketName()
-                .deduplication());
+        return new MetricableBlobStore(
+                metricFactory,
+                BlobStoreFactory.builder()
+                        .blobStoreDAO(new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT, metricFactory))
+                        .blobIdFactory(blobIdFactory)
+                        .defaultBucketName()
+                        .deduplication());
     }
 
     @Override

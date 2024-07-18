@@ -24,10 +24,13 @@ import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.blob.api.BlobStoreContract.SHORT_BYTEARRAY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -47,6 +50,22 @@ public interface DeduplicationBlobStoreContract {
     BlobStore testee();
 
     BlobId.Factory blobIdFactory();
+
+    BlobStore createBlobStore();
+
+    @BeforeEach
+    default void beforeEach() {
+        System.clearProperty("james.blob.id.hash.encoding");
+    }
+
+    @Test
+    default void deduplicationBlobstoreCreationShouldFailOnInvalidProperty() {
+        System.setProperty("james.blob.id.hash.encoding", "invalid");
+
+        assertThatThrownBy(this::createBlobStore)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Unknown encoding type: invalid");
+    }
 
     @ParameterizedTest
     @MethodSource("storagePolicies")

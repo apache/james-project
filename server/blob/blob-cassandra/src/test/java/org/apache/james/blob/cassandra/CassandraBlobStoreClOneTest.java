@@ -53,12 +53,13 @@ import com.google.common.base.Strings;
 
 import reactor.core.publisher.Mono;
 
-class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract {
+class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, DeduplicationBlobStoreContract {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobModule.MODULE);
 
     private BlobStore testee;
     private CassandraDefaultBucketDAO defaultBucketDAO;
+    private CassandraCluster cassandra;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
@@ -72,17 +73,17 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract {
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, this.cassandra.getConf());
         defaultBucketDAO = spy(new CassandraDefaultBucketDAO(this.cassandra.getConf(), blobIdFactory));
         CassandraConfiguration cassandraConfiguration = CassandraConfiguration.builder()
-            .blobPartSize(CHUNK_SIZE)
-            .optimisticConsistencyLevel(true)
-            .build();
+                .blobPartSize(CHUNK_SIZE)
+                .optimisticConsistencyLevel(true)
+                .build();
         MetricFactory metricFactory = metricsTestExtension.getMetricFactory();
-        testee = new MetricableBlobStore(
-            metricFactory,
-            BlobStoreFactory.builder()
-                .blobStoreDAO(new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT, metricFactory))
-                .blobIdFactory(blobIdFactory)
-                .defaultBucketName()
-                .deduplication());
+        return new MetricableBlobStore(
+                metricFactory,
+                BlobStoreFactory.builder()
+                        .blobStoreDAO(new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT, metricFactory))
+                        .blobIdFactory(blobIdFactory)
+                        .defaultBucketName()
+                        .deduplication());
     }
 
     @Override

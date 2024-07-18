@@ -33,10 +33,15 @@ public class MemoryBlobStoreTest implements MetricableBlobStoreContract, Dedupli
 
     @BeforeEach
     void setUp() {
-        blobStore = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), MemoryBlobStoreFactory.builder()
-            .blobIdFactory(BLOB_ID_FACTORY)
-            .defaultBucketName()
-            .deduplication());
+        blobStore = createBlobStore();
+    }
+
+    @Override
+    public MetricableBlobStore createBlobStore() {
+        return new MetricableBlobStore(metricsTestExtension.getMetricFactory(), MemoryBlobStoreFactory.builder()
+                .blobIdFactory(BLOB_ID_FACTORY)
+                .defaultBucketName()
+                .deduplication());
     }
 
     @Override
