@@ -19,14 +19,10 @@
 
 package org.apache.james.blob.api;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-// FIXME (in later commit) use java record
-public class PlainBlobId implements BlobId {
+public record PlainBlobId(String id) implements BlobId {
     public static class Factory implements BlobId.Factory {
 
         @Override
@@ -41,37 +37,8 @@ public class PlainBlobId implements BlobId {
         }
     }
 
-    private final String id;
-
-    @VisibleForTesting
-    PlainBlobId(String id) {
-        this.id = id;
-    }
-
     @Override
     public String asString() {
         return id;
-    }
-
-    @Override
-    public final boolean equals(Object obj) {
-        if (obj instanceof PlainBlobId) {
-            PlainBlobId other = (PlainBlobId) obj;
-            return Objects.equal(id, other.id);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hashCode(id);
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects
-            .toStringHelper(this)
-            .add("id", id)
-            .toString();
     }
 }
