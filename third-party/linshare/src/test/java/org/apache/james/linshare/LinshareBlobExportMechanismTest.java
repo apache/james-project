@@ -109,7 +109,7 @@ class LinshareBlobExportMechanismTest {
 
     @Test
     void exportShouldFailWhenBlobDoesNotExist() {
-        BlobId blobId = blobIdFactory.randomId();
+        BlobId blobId = blobIdFactory.of("NOT_EXISTING_BLOB_ID");
 
         assertThatThrownBy(
             () -> testee.blobId(blobId)

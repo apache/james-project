@@ -51,7 +51,7 @@ import com.datastax.oss.driver.api.core.uuid.Uuids;
 import reactor.core.publisher.Flux;
 
 class CassandraMessageIdToImapUidDAOTest {
-    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().forPayload("abc".getBytes());
+    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().of("abc");
     private static final CassandraModule MODULE = CassandraModule.aggregateModules(
         CassandraSchemaVersionModule.MODULE,
         CassandraMessageModule.MODULE);

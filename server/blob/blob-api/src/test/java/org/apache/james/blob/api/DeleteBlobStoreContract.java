@@ -55,7 +55,7 @@ public interface DeleteBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatCode(() -> Mono.from(store.delete(defaultBucketName, blobIdFactory().randomId())).block())
+        assertThatCode(() -> Mono.from(store.delete(defaultBucketName, blobIdFactory().of("NOT_EXISTING_BLOB_ID"))).block())
             .doesNotThrowAnyException();
     }
 
@@ -115,7 +115,7 @@ public interface DeleteBlobStoreContract {
     @Test
     default void deleteShouldThrowWhenNullBucketName() {
         BlobStore store = testee();
-        assertThatThrownBy(() -> Mono.from(store.delete(null, blobIdFactory().randomId())).block())
+        assertThatThrownBy(() -> Mono.from(store.delete(null, blobIdFactory().of("ANY_BLOB_ID"))).block())
             .isInstanceOf(NullPointerException.class);
     }
 
