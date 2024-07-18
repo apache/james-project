@@ -19,10 +19,11 @@
 
 package org.apache.james.queue.pulsar
 
+import cats.implicits.toShow
+
 import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
-
 import org.apache.pekko.actor.{ActorRef, ActorSystem}
 import org.apache.pekko.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete, StreamConverters}
 import org.apache.pekko.stream.{Attributes, OverflowStrategy}
@@ -45,10 +46,9 @@ import org.apache.james.queue.pulsar.EnqueueId.EnqueueId
 import org.apache.james.server.core.MailImpl
 import org.apache.mailet._
 import org.apache.pulsar.client.admin.PulsarAdminException.NotFoundException
-import org.apache.pulsar.client.api.{Schema, SubscriptionInitialPosition, SubscriptionType}
+import org.apache.pulsar.client.api.{DeadLetterPolicy, Schema, SubscriptionInitialPosition, SubscriptionType}
 import org.reactivestreams.Publisher
 import org.slf4j.LoggerFactory
-import play.api.libs.json._
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -56,16 +56,19 @@ import scala.jdk.CollectionConverters._
 import scala.jdk.DurationConverters._
 import scala.math.Ordered.orderingToOrdered
 import scala.util.Failure
+import io.circe.generic.semiauto._
+import io.circe.syntax.EncoderOps
+import io.circe.{Codec, Decoder, Encoder}
+import io.circe._
+import io.circe.parser._
 
 private[pulsar] object serializers {
-  implicit val headerFormat: Format[Header] = Json.format[Header]
-  implicit val enqueueIdFormat: Format[EnqueueId] = new Format[EnqueueId] {
-    override def writes(o: EnqueueId): JsValue = JsString(o.value)
-
-    override def reads(json: JsValue): JsResult[EnqueueId] =
-      json.validate[String].map(EnqueueId.apply).flatMap(_.fold(JsError.apply, JsSuccess(_)))
-  }
-  implicit val mailMetadataFormat: Format[MailMetadata] = Json.format[MailMetadata]
+  implicit val headerCodec: Codec[Header] = deriveCodec
+  implicit val enqueueIdCodec: Codec[EnqueueId] = Codec.from(
+    Decoder.decodeString.emap(EnqueueId.apply),
+    Encoder.encodeString.contramap(_.value)
+  )
+  implicit val mailMetadataCodec: Codec[MailMetadata] = deriveCodec
 }
 
 private[pulsar] object schemas {
@@ -150,7 +153,7 @@ class PulsarMailQueue(
     Source.fromPublisher(saveMimeMessage(mail.getMessage))
       .map { partsId =>
         val mailMetadata = MailMetadata.of(EnqueueId.generate(), mail, partsId)
-        val payload = Json.stringify(Json.toJson(mailMetadata))
+        val payload = mailMetadata.asJson.noSpaces
         (payload, duration, enqueued)
       }
 
@@ -196,7 +199,8 @@ class PulsarMailQueue(
         topics = Seq(topic),
         subscriptionType = Some(SubscriptionType.Shared),
         subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest),
-        negativeAckRedeliveryDelay = Some(1.second)
+        negativeAckRedeliveryDelay = Some(1.second),
+        deadLetterPolicy = Some(DeadLetterPolicy.builder().maxRedeliverCount(1).initialSubscriptionName("dead-letter-sub-name").build())
       )
     )
 
@@ -240,12 +244,20 @@ class PulsarMailQueue(
       .toMat(Sink.asPublisher[MailQueue.MailQueueItem](true).withAttributes(Attributes.inputBuffer(initial = 1, max = 1)))(Keep.both)
   }
 
+  private def decodeOrFail(message: CommittableMessage[String]): Source[(MailMetadata, CommittableMessage[MessageAsJson]), NotUsed] =
+    decode[MailMetadata](message.message.value).map(_ -> message) match {
+      case Right(value) => Source.single(value)
+      case Left(value) =>
+        logger.error("unable to parse message {}", value.show)
+        Source.lazyFuture(() => message.nack()).flatMapConcat(_ => Source.empty)
+    }
+
+
   private def filteringFlow(filterActor: ActorRef) = {
     implicit val timeout: Timeout = Timeout(1, TimeUnit.SECONDS)
-    Flow.apply[CommittableMessage[String]].map(message =>
-      (Json.fromJson[MailMetadata](Json.parse(message.message.value)).get,
-        message)
-    ).ask[(Option[MailMetadata], Option[MimeMessagePartsId], CommittableMessage[String])](filterActor)
+    Flow.apply[CommittableMessage[String]]
+      .flatMapConcat(decodeOrFail)
+      .ask[(Option[MailMetadata], Option[MimeMessagePartsId], CommittableMessage[String])](filterActor)
       .flatMapConcat {
         case (None, Some(partsId), committableMessage) =>
           Source.lazyFuture(() => committableMessage.ack())
@@ -323,11 +335,12 @@ class PulsarMailQueue(
    * @see [[FilterStage]]
    */
   private def filtersCommandFlow(topic: Topic, filterSubscription: Subscription, filteringStage: ActorRef) = {
-    val logInvalidFilterPayload = Flow.apply[JsResult[Filter]]
-      .collectType[JsError]
-      .map(error => "unable to parse filter" + Json.prettyPrint(JsError.toJson(error)))
+    val logInvalidFilterPayload = Flow.apply[Either[Error, Filter]]
+      .collect { case Left(error) => error }
+      .map(error => "unable to parse filter " + error.show)
       .log("filterFlow")
-      .addAttributes(Attributes.logLevels(onElement = Attributes.LogLevels.Error)).to(Sink.ignore)
+      .addAttributes(Attributes.logLevels(onElement = Attributes.LogLevels.Error))
+      .to(Sink.ignore)
 
     streams.source(() =>
       client.consumer(
@@ -338,9 +351,9 @@ class PulsarMailQueue(
           subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest),
         )
       )
-    ).map(message => Json.fromJson[Filter](Json.parse(message.value)))
-      .divertTo(logInvalidFilterPayload, when = _.isError)
-      .map(_.get)
+    ).map(message => decode[Filter](message.value))
+      .divertTo(logInvalidFilterPayload, when = _.isLeft)
+      .map(_.toOption.get)
       .via(debugLogger("filterFlow"))
       .to(Sink.foreach(filter => filteringStage ! filter))
   }
@@ -550,11 +563,11 @@ class PulsarMailQueue(
     // received through pulsar will be eliminated by the filter stage as
     // filters are stored in a set @see org.apache.james.queue.pulsar.FilterStage.filters
     filterStage ! filter
-    producer.send(Json.stringify(Json.toJson(filter)))
+    producer.send(filter.asJson.noSpaces)
   }
 
   private def jsonStringToMailMetadata(json: String): MailMetadata =
-    Json.fromJson[MailMetadata](Json.parse(json)).get
+    decode[MailMetadata](json).toOption.get
 
   /**
    * @inheritdoc

@@ -100,21 +100,20 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.chuusai</groupId>
-            <artifactId>shapeless_2.13</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.clever-cloud.pulsar4s</groupId>
-            <artifactId>pulsar4s-play-json_${scala.base}</artifactId>
-            <version>2.9.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.typesafe.play</groupId>
-            <artifactId>play-json_${scala.base}</artifactId>
-        </dependency>
-        <dependency>
             <groupId>eu.timepit</groupId>
             <artifactId>refined_${scala.base}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-core_${scala.base}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-generic_${scala.base}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-parser_${scala.base}</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.annotation</groupId>
@@ -123,16 +122,6 @@
         <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.julienrf</groupId>
-            <artifactId>play-json-derived-codecs_${scala.base}</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.chuusai</groupId>
-                    <artifactId>shapeless_2.13</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
