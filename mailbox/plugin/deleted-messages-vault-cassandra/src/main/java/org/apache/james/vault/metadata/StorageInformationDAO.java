@@ -102,6 +102,6 @@ public class StorageInformationDAO {
             .setString(MESSAGE_ID, messageId.serialize()))
             .map(row -> StorageInformation.builder()
                     .bucketName(BucketName.of(row.getString(BUCKET_NAME)))
-                    .blobId(blobIdFactory.from(row.getString(BLOB_ID))));
+                    .blobId(blobIdFactory.parse(row.getString(BLOB_ID))));
     }
 }

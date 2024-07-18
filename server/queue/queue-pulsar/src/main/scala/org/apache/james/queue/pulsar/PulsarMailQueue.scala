@@ -592,8 +592,8 @@ class PulsarMailQueue(
       .collect { case Some(value) => value }
       .flatMapConcat(metadata => {
         val partsId = MimeMessagePartsId.builder()
-          .headerBlobId(blobIdFactory.from(metadata.headerBlobId))
-          .bodyBlobId(blobIdFactory.from(metadata.bodyBlobId))
+          .headerBlobId(blobIdFactory.parse(metadata.headerBlobId))
+          .bodyBlobId(blobIdFactory.parse(metadata.bodyBlobId))
           .build()
         Source.fromPublisher(readMimeMessage(partsId))
           .collect { case Some(message) => message }

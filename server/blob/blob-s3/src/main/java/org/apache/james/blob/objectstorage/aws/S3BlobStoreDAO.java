@@ -377,7 +377,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
         return Flux.from(client.listObjectsV2Paginator(builder -> builder.bucket(bucketName.asString())))
             .flatMapIterable(ListObjectsV2Response::contents)
             .map(S3Object::key)
-            .map(blobIdFactory::from)
+            .map(blobIdFactory::parse)
             .onErrorResume(e -> e.getCause() instanceof NoSuchBucketException, e -> Flux.empty())
             .onErrorResume(NoSuchBucketException.class, e -> Flux.empty());
     }

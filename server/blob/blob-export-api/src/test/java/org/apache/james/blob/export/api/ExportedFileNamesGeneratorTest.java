@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 class ExportedFileNamesGeneratorTest {
 
     private static final TestBlobId.Factory BLOB_ID_FACTORY = new TestBlobId.Factory();
-    private static final BlobId BLOB_ID = BLOB_ID_FACTORY.from("blobId");
+    private static final BlobId BLOB_ID = BLOB_ID_FACTORY.parse("blobId");
 
     @Test
     void generateFileNameShouldNotHavePrefixWhenEmptyPrefix() {

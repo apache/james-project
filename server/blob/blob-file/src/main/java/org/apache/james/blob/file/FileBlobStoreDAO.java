@@ -216,7 +216,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
                 return Files.list(bucketRoot.toPath());
             })
             .flatMapMany(Flux::fromStream)
-            .map(path -> blobIdFactory.from(path.getFileName().toString()))
+            .map(path -> blobIdFactory.parse(path.getFileName().toString()))
             .subscribeOn(Schedulers.boundedElastic());
     }
 }

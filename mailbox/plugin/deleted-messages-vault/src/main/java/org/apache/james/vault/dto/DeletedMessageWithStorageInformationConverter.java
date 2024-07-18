@@ -56,7 +56,7 @@ public class DeletedMessageWithStorageInformationConverter {
     public StorageInformation toDomainObject(DeletedMessageWithStorageInformationDTO.StorageInformationDTO storageInformationDTO) {
         return StorageInformation.builder()
             .bucketName(BucketName.of(storageInformationDTO.getBucketName()))
-            .blobId(blobFactory.from(storageInformationDTO.getBlobId()));
+            .blobId(blobFactory.parse(storageInformationDTO.getBlobId()));
     }
 
     public DeletedMessage toDomainObject(DeletedMessageWithStorageInformationDTO.DeletedMessageDTO deletedMessageDTO) throws AddressException {

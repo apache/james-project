@@ -79,7 +79,7 @@ class CassandraAttachmentDAOV2Test {
             .type("application/json")
             .size(4)
             .build();
-        BlobId blobId = BLOB_ID_FACTORY.from("blobId");
+        BlobId blobId = BLOB_ID_FACTORY.parse("blobId");
         DAOAttachment daoAttachment = CassandraAttachmentDAOV2.from(attachment, blobId);
         testee.storeAttachment(daoAttachment).block();
 
@@ -96,7 +96,7 @@ class CassandraAttachmentDAOV2Test {
             .type("application/json")
             .size(36)
             .build();
-        BlobId blobId = BLOB_ID_FACTORY.from("blobId");
+        BlobId blobId = BLOB_ID_FACTORY.parse("blobId");
         DAOAttachment daoAttachment = CassandraAttachmentDAOV2.from(attachment, blobId);
         testee.storeAttachment(daoAttachment).block();
 
@@ -121,7 +121,7 @@ class CassandraAttachmentDAOV2Test {
             .messageId(CassandraMessageId.Factory.of(Uuids.timeBased()))
             .size(36)
             .build();
-        BlobId blobId1 = BLOB_ID_FACTORY.from("blobId");
+        BlobId blobId1 = BLOB_ID_FACTORY.parse("blobId");
         DAOAttachment daoAttachment1 = CassandraAttachmentDAOV2.from(attachment1, blobId1);
         testee.storeAttachment(daoAttachment1).block();
 
@@ -131,7 +131,7 @@ class CassandraAttachmentDAOV2Test {
             .messageId(CassandraMessageId.Factory.of(Uuids.timeBased()))
             .size(36)
             .build();
-        BlobId blobId2 = BLOB_ID_FACTORY.from("blobId");
+        BlobId blobId2 = BLOB_ID_FACTORY.parse("blobId");
         DAOAttachment daoAttachment2 = CassandraAttachmentDAOV2.from(attachment2, blobId2);
         testee.storeAttachment(daoAttachment2).block();
 
@@ -147,7 +147,7 @@ class CassandraAttachmentDAOV2Test {
             .messageId(CassandraMessageId.Factory.of(Uuids.timeBased()))
             .size(36)
             .build();
-        BlobId blobId = BLOB_ID_FACTORY.from("blobId");
+        BlobId blobId = BLOB_ID_FACTORY.parse("blobId");
         DAOAttachment daoAttachment1 = CassandraAttachmentDAOV2.from(attachment1, blobId);
         testee.storeAttachment(daoAttachment1).block();
 

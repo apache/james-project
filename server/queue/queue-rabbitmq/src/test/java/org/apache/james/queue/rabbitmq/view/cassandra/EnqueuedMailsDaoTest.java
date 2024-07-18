@@ -55,8 +55,8 @@ class EnqueuedMailsDaoTest {
     private static final Slice SLICE_OF_NOW = Slice.of(NOW);
 
     private static final BlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
-    private static final BlobId HEADER_BLOB_ID = BLOB_ID_FACTORY.from("header blob id");
-    private static final BlobId BODY_BLOB_ID = BLOB_ID_FACTORY.from("body blob id");
+    private static final BlobId HEADER_BLOB_ID = BLOB_ID_FACTORY.parse("header blob id");
+    private static final BlobId BODY_BLOB_ID = BLOB_ID_FACTORY.parse("body blob id");
     private static final MimeMessagePartsId MIME_MESSAGE_PARTS_ID = MimeMessagePartsId.builder()
         .headerBlobId(HEADER_BLOB_ID)
         .bodyBlobId(BODY_BLOB_ID)

@@ -45,8 +45,8 @@ class EnqueuedItemTest {
         mail = FakeMail.defaultFakeMail();
         enqueuedTime = Instant.now();
         partsId = MimeMessagePartsId.builder()
-                .headerBlobId(new HashBlobId.Factory().from("headerBlobId"))
-                .bodyBlobId(new HashBlobId.Factory().from("bodyBlobId"))
+                .headerBlobId(new HashBlobId.Factory().parse("headerBlobId"))
+                .bodyBlobId(new HashBlobId.Factory().parse("bodyBlobId"))
                 .build();
     }
 

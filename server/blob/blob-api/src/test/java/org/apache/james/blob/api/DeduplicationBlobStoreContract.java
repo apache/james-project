@@ -75,7 +75,7 @@ public interface DeduplicationBlobStoreContract {
 
         BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_STRING, storagePolicy)).block();
 
-        assertThat(blobId).isEqualTo(blobIdFactory().from("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
+        assertThat(blobId).isEqualTo(blobIdFactory().parse("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
     }
 
     @ParameterizedTest
@@ -86,7 +86,7 @@ public interface DeduplicationBlobStoreContract {
 
         BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy)).block();
 
-        assertThat(blobId).isEqualTo(blobIdFactory().from("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
+        assertThat(blobId).isEqualTo(blobIdFactory().parse("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
     }
 
     @ParameterizedTest

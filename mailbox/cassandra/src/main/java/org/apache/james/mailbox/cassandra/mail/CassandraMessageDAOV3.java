@@ -417,13 +417,13 @@ public class CassandraMessageDAOV3 {
     }
 
     private BlobId retrieveBlobId(CqlIdentifier field, Row row) {
-        return blobIdFactory.from(row.get(field, TypeCodecs.TEXT));
+        return blobIdFactory.parse(row.get(field, TypeCodecs.TEXT));
     }
 
     Flux<BlobId> listBlobs() {
         return cassandraAsyncExecutor.executeRows(listBlobs.bind())
             .flatMapIterable(row -> ImmutableList.of(
-                blobIdFactory.from(row.get(HEADER_CONTENT, TypeCodecs.TEXT)),
-                blobIdFactory.from(row.get(BODY_CONTENT, TypeCodecs.TEXT))));
+                blobIdFactory.parse(row.get(HEADER_CONTENT, TypeCodecs.TEXT)),
+                blobIdFactory.parse(row.get(BODY_CONTENT, TypeCodecs.TEXT))));
     }
 }

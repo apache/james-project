@@ -31,8 +31,8 @@ class MailRepositoryBlobIdFactory(
                                    url: MailRepositoryUrl
                                  ) extends BlobId.Factory {
   // Must wrap the default BlobId factory but inject a MailRepositoryUrl dependant prefix
-  override def from(id: String): BlobId =
-    blobIdFactory.from(id)
+  override def parse(id: String): BlobId =
+    blobIdFactory.parse(id)
 
   override def of(id: String): BlobId =
     blobIdFactory.of(url.getPath.subPath(id).asString())

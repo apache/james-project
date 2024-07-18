@@ -201,7 +201,7 @@ public class EnqueuedMailsDAO {
     Flux<BlobId> listBlobIds() {
         return executor.executeRows(selectBlobIdsStatement.bind())
             .flatMapIterable(row -> ImmutableList.of(
-                blobFactory.from(row.getString(HEADER_BLOB_ID)),
-                blobFactory.from(row.getString(BODY_BLOB_ID))));
+                blobFactory.parse(row.getString(HEADER_BLOB_ID)),
+                blobFactory.parse(row.getString(BODY_BLOB_ID))));
     }
 }

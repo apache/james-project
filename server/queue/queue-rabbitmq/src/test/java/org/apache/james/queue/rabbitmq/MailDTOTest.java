@@ -114,8 +114,8 @@ class MailDTOTest {
                 .state("state")
                 .build(),
             MimeMessagePartsId.builder()
-                .headerBlobId(BLOB_ID_FACTORY.from("210e7136-ede3-44eb-9495-3ed816d6e23b"))
-                .bodyBlobId(BLOB_ID_FACTORY.from("ef46c026-7819-4048-b562-3a37469191ed"))
+                .headerBlobId(BLOB_ID_FACTORY.parse("210e7136-ede3-44eb-9495-3ed816d6e23b"))
+                .bodyBlobId(BLOB_ID_FACTORY.parse("ef46c026-7819-4048-b562-3a37469191ed"))
                 .build()));
     }
 
@@ -130,8 +130,8 @@ class MailDTOTest {
                 EN_QUEUE_ID,
                 mail,
                 MimeMessagePartsId.builder()
-                    .headerBlobId(BLOB_ID_FACTORY.from("210e7136-ede3-44eb-9495-3ed816d6e23b"))
-                    .bodyBlobId(BLOB_ID_FACTORY.from("ef46c026-7819-4048-b562-3a37469191ed"))
+                    .headerBlobId(BLOB_ID_FACTORY.parse("210e7136-ede3-44eb-9495-3ed816d6e23b"))
+                    .bodyBlobId(BLOB_ID_FACTORY.parse("ef46c026-7819-4048-b562-3a37469191ed"))
                     .build()));
     }
 }

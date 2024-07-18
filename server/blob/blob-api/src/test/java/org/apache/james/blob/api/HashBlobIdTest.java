@@ -38,19 +38,19 @@ class HashBlobIdTest {
     @Test
     void fromShouldConstructBlobId() {
         String id = "111";
-        assertThat(BLOB_ID_FACTORY.from(id))
+        assertThat(BLOB_ID_FACTORY.parse(id))
             .isEqualTo(new HashBlobId(id));
     }
 
     @Test
     void fromShouldThrowOnNull() {
-        assertThatThrownBy(() -> BLOB_ID_FACTORY.from(null))
+        assertThatThrownBy(() -> BLOB_ID_FACTORY.parse(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void fromShouldThrowOnEmpty() {
-        assertThatThrownBy(() -> BLOB_ID_FACTORY.from(""))
+        assertThatThrownBy(() -> BLOB_ID_FACTORY.parse(""))
             .isInstanceOf(IllegalArgumentException.class);
     }
 }

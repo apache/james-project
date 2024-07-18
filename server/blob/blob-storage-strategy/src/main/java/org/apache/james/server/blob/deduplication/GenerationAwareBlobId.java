@@ -127,7 +127,7 @@ public class GenerationAwareBlobId implements BlobId {
         }
 
         @Override
-        public GenerationAwareBlobId from(String id) {
+        public GenerationAwareBlobId parse(String id) {
             int separatorIndex1 = id.indexOf('_');
             if (separatorIndex1 == -1 || separatorIndex1 == id.length() - 1) {
                 return decorateWithoutGeneration(id);
@@ -138,13 +138,13 @@ public class GenerationAwareBlobId implements BlobId {
             }
             int family = Integer.parseInt(id.substring(0, separatorIndex1));
             int generation = Integer.parseInt(id.substring(separatorIndex1 + 1, separatorIndex2));
-            BlobId wrapped = delegate.from(id.substring(separatorIndex2 + 1));
+            BlobId wrapped = delegate.parse(id.substring(separatorIndex2 + 1));
 
             return new GenerationAwareBlobId(generation, family, wrapped);
         }
 
         private GenerationAwareBlobId decorateWithoutGeneration(String id) {
-            return new GenerationAwareBlobId(NO_GENERATION, NO_FAMILY, delegate.from(id));
+            return new GenerationAwareBlobId(NO_GENERATION, NO_FAMILY, delegate.parse(id));
         }
 
         private GenerationAwareBlobId decorate(BlobId blobId) {

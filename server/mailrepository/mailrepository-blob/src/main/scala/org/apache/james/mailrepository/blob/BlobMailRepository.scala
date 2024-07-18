@@ -189,7 +189,7 @@ class BlobMailRepository(val mailMetaDataBlobStore: BlobStore,
 
   @throws[MessagingException]
   override def retrieve(key: MailKey): Mail = {
-    mailMetadataStore.read(MailPartsId(mailMetadataBlobIdFactory.from(key.asString())))
+    mailMetadataStore.read(MailPartsId(mailMetadataBlobIdFactory.parse(key.asString())))
       .flatMap {
         case (mail, mimeMessagePartsId) => mimeMessageStore.read(mimeMessagePartsId).map { mimeMessage =>
           mail.setMessage(mimeMessage)
@@ -204,7 +204,7 @@ class BlobMailRepository(val mailMetaDataBlobStore: BlobStore,
   // FIXME - on supprime les metadata mais pas les mimeMessages associés ?
   @throws[MessagingException]
   override def remove(key: MailKey): Unit = {
-    Mono.from(mailMetadataStore.delete( MailPartsId(mailMetadataBlobIdFactory.from(key.asString())))).block()
+    Mono.from(mailMetadataStore.delete( MailPartsId(mailMetadataBlobIdFactory.parse(key.asString())))).block()
   }
   // FIXME - on supprime les metadata mais pas les mimeMessages associés ?
   @throws[MessagingException]
