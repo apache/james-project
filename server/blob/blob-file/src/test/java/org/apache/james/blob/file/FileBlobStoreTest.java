@@ -34,11 +34,16 @@ public class FileBlobStoreTest implements MetricableBlobStoreContract, Deduplica
 
     @BeforeEach
     void setUp() {
+        blobStore = createBlobStore();
+    }
+
+    @Override
+    public MetricableBlobStore createBlobStore() {
         FileSystemImpl fileSystem = FileSystemImpl.forTesting();
-        blobStore = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), new FileBlobStoreFactory(fileSystem).builder()
-            .blobIdFactory(BLOB_ID_FACTORY)
-            .defaultBucketName()
-            .deduplication());
+        return new MetricableBlobStore(metricsTestExtension.getMetricFactory(), new FileBlobStoreFactory(fileSystem).builder()
+                .blobIdFactory(BLOB_ID_FACTORY)
+                .defaultBucketName()
+                .deduplication());
     }
 
     @Override

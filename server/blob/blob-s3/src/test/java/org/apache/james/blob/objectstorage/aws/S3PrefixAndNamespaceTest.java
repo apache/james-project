@@ -28,51 +28,53 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-class S3PrefixAndNamespaceTest implements BlobStoreContract {
-    private static BlobStore testee;
-    private static S3BlobStoreDAO s3BlobStoreDAO;
+class S3PrefixAndNamespaceTest implements BlobStoreContract, DeduplicationBlobStoreContract {
+    private BlobStore testee;
+    private S3BlobStoreDAO s3BlobStoreDAO;
 
-    private static S3ClientFactory s3ClientFactory;
+    private S3ClientFactory s3ClientFactory;
+    private DockerAwsS3Container dockerAwsS3;
 
-    @BeforeAll
-    static void setUpClass(DockerAwsS3Container dockerAwsS3) {
+    @BeforeEach
+    void setUpClass(DockerAwsS3Container dockerAwsS3) {
+        this.dockerAwsS3 = dockerAwsS3;
+        this.testee = createBlobStore();
+    }
+
+    @Override
+    public BlobStore createBlobStore() {
         AwsS3AuthConfiguration authConfiguration = AwsS3AuthConfiguration.builder()
-            .endpoint(dockerAwsS3.getEndpoint())
-            .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
-            .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
-            .build();
+                .endpoint(dockerAwsS3.getEndpoint())
+                .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
+                .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
+                .build();
 
         S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfiguration.builder()
-            .authConfiguration(authConfiguration)
-            .region(dockerAwsS3.dockerAwsS3().region())
-            .defaultBucketName(BucketName.of("namespace"))
-            .bucketPrefix("prefix")
-            .build();
+                .authConfiguration(authConfiguration)
+                .region(dockerAwsS3.dockerAwsS3().region())
+                .defaultBucketName(BucketName.of("namespace"))
+                .bucketPrefix("prefix")
+                .build();
 
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
         s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, blobIdFactory);
 
-        testee = BlobStoreFactory.builder()
-            .blobStoreDAO(s3BlobStoreDAO)
-            .blobIdFactory(blobIdFactory)
-            .bucket(BucketName.of("namespace"))
-            .deduplication();
+        return BlobStoreFactory.builder()
+                .blobStoreDAO(s3BlobStoreDAO)
+                .blobIdFactory(blobIdFactory)
+                .bucket(BucketName.of("namespace"))
+                .deduplication();
     }
 
     @AfterEach
     void tearDown() {
         s3BlobStoreDAO.deleteAllBuckets().block();
-    }
-
-    @AfterAll
-    static void tearDownClass() {
         s3ClientFactory.close();
     }
 
