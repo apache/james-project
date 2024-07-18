@@ -39,6 +39,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.DeduplicationBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.ObjectStoreException;
@@ -61,9 +62,15 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
+        this.cassandra = cassandra;
+        this.testee = createBlobStore();
+    }
+
+    @Override
+    public MetricableBlobStore createBlobStore() {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
-        CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, cassandra.getConf());
-        defaultBucketDAO = spy(new CassandraDefaultBucketDAO(cassandra.getConf(), blobIdFactory));
+        CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, this.cassandra.getConf());
+        defaultBucketDAO = spy(new CassandraDefaultBucketDAO(this.cassandra.getConf(), blobIdFactory));
         CassandraConfiguration cassandraConfiguration = CassandraConfiguration.builder()
             .blobPartSize(CHUNK_SIZE)
             .optimisticConsistencyLevel(true)

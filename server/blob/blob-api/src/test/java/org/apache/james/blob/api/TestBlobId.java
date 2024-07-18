@@ -21,23 +21,9 @@ package org.apache.james.blob.api;
 
 import java.util.Objects;
 
-import org.apache.commons.lang3.NotImplementedException;
-
-import com.google.common.io.ByteSource;
-
 public class TestBlobId implements BlobId {
 
     public static class Factory implements BlobId.Factory {
-        @Override
-        public BlobId forPayload(byte[] payload) {
-            throw new NotImplementedException("Use from(String) instead");
-        }
-
-        @Override
-        public BlobId forPayload(ByteSource payload) {
-            throw new NotImplementedException("Use from(String) instead");
-        }
-
         @Override
         public BlobId of(String id) {
             return new TestBlobId(id);
