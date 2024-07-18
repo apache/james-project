@@ -27,6 +27,8 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
@@ -72,18 +74,26 @@ public interface MailRepositoryContract {
     }
 
     default MailImpl createMail(MailKey key, String body) throws MessagingException {
+        return createMail(key.asString(), body);
+    }
+
+    default MailImpl createMail(String name) throws MessagingException {
+        return createMail(name, "original body");
+    }
+
+    default MailImpl createMail(String name, String body) throws MessagingException {
         return MailImpl.builder()
-            .name(key.asString())
-            .sender("sender@localhost")
-            .addRecipient("rec1@domain.com")
-            .addRecipient("rec2@domain.com")
-            .addAttribute(TEST_ATTRIBUTE)
-            .mimeMessage(MimeMessageBuilder
-                .mimeMessageBuilder()
-                .setSubject("test")
-                .setText(body)
-                .build())
-            .build();
+                .name(name)
+                .sender("sender@localhost")
+                .addRecipient("rec1@domain.com")
+                .addRecipient("rec2@domain.com")
+                .addAttribute(TEST_ATTRIBUTE)
+                .mimeMessage(MimeMessageBuilder
+                        .mimeMessageBuilder()
+                        .setSubject("test")
+                        .setText(body)
+                        .build())
+                .build();
     }
 
 
@@ -160,16 +170,16 @@ public interface MailRepositoryContract {
     default void storeRegularMailShouldNotFailWhenNullSender() throws Exception {
         MailRepository testee = retrieveRepository();
         Mail mail = FakeMail.builder()
-            .name(MAIL_1.asString())
-            .sender(MailAddress.nullSender())
-            .recipient(MailAddressFixture.RECIPIENT1)
-            .lastUpdated(new Date())
-            .state(Mail.DEFAULT)
-            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                .setSubject("test")
-                .setText("String body")
-                .build())
-            .build();
+                .name(MAIL_1.asString())
+                .sender(MailAddress.nullSender())
+                .recipient(MailAddressFixture.RECIPIENT1)
+                .lastUpdated(new Date())
+                .state(Mail.DEFAULT)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                        .setSubject("test")
+                        .setText("String body")
+                        .build())
+                .build();
 
         MailKey key = testee.store(mail);
 
@@ -217,12 +227,12 @@ public interface MailRepositoryContract {
     default void shouldPreserveDsnParameters() throws Exception {
         MailRepository testee = retrieveRepository();
         DsnParameters dsnParameters = DsnParameters.builder()
-            .envId(DsnParameters.EnvId.of("434554-55445-33443"))
-            .ret(DsnParameters.Ret.FULL)
-            .addRcptParameter(new MailAddress("bob@apache.org"), DsnParameters.RecipientDsnParameters.of(new MailAddress("andy@apache.org")))
-            .addRcptParameter(new MailAddress("cedric@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.SUCCESS)))
-            .addRcptParameter(new MailAddress("domi@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.FAILURE), new MailAddress("eric@apache.org")))
-            .build().get();
+                .envId(DsnParameters.EnvId.of("434554-55445-33443"))
+                .ret(DsnParameters.Ret.FULL)
+                .addRcptParameter(new MailAddress("bob@apache.org"), DsnParameters.RecipientDsnParameters.of(new MailAddress("andy@apache.org")))
+                .addRcptParameter(new MailAddress("cedric@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.SUCCESS)))
+                .addRcptParameter(new MailAddress("domi@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.FAILURE), new MailAddress("eric@apache.org")))
+                .build().get();
         Mail mail = createMail(MAIL_1);
         mail.setDsnParameters(dsnParameters);
 
@@ -278,8 +288,8 @@ public interface MailRepositoryContract {
 
         Mail actual = testee.retrieve(key1);
 
-        assertThat(Hashing.sha256().hashString((String)actual.getMessage().getContent(), StandardCharsets.UTF_8))
-            .isEqualTo(Hashing.sha256().hashString(bigString, StandardCharsets.UTF_8));
+        assertThat(Hashing.sha256().hashString((String) actual.getMessage().getContent(), StandardCharsets.UTF_8))
+                .isEqualTo(Hashing.sha256().hashString(bigString, StandardCharsets.UTF_8));
     }
 
 
@@ -292,10 +302,10 @@ public interface MailRepositoryContract {
         mail.setRemoteHost("smtp@domain.com");
         mail.setLastUpdated(new Date());
         mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder()
-            .name("name")
-            .value("value")
-            .build(),
-            new MailAddress("bob@domain.com"));
+                        .name("name")
+                        .value("value")
+                        .build(),
+                new MailAddress("bob@domain.com"));
 
         MailKey key = testee.store(mail);
 
@@ -307,8 +317,8 @@ public interface MailRepositoryContract {
         MailRepository testee = retrieveRepository();
 
         assertThat(testee.list())
-            .toIterable()
-            .isEmpty();
+                .toIterable()
+                .isEmpty();
     }
 
     @Test
@@ -333,8 +343,8 @@ public interface MailRepositoryContract {
         testee.remove(MAIL_1);
 
         assertThat(retrieveRepository().list())
-            .toIterable()
-            .doesNotContain(MAIL_1);
+                .toIterable()
+                .doesNotContain(MAIL_1);
         assertThat(retrieveRepository().retrieve(MAIL_1)).isNull();
     }
 
@@ -347,8 +357,8 @@ public interface MailRepositoryContract {
         testee.remove(key1);
 
         assertThat(retrieveRepository().list())
-            .toIterable()
-            .contains(key2);
+                .toIterable()
+                .contains(key2);
     }
 
     @Test
@@ -365,9 +375,9 @@ public interface MailRepositoryContract {
         testee.remove(ImmutableList.of(key1, key3));
 
         assertThat(retrieveRepository().list())
-            .toIterable()
-            .contains(key2)
-            .doesNotContain(key1, key3);
+                .toIterable()
+                .contains(key2)
+                .doesNotContain(key1, key3);
     }
 
     @Test
@@ -384,9 +394,9 @@ public interface MailRepositoryContract {
         testee.remove(key2);
 
         assertThat(retrieveRepository().list())
-            .toIterable()
-            .contains(key1, key3)
-            .doesNotContain(key2);
+                .toIterable()
+                .contains(key1, key3)
+                .doesNotContain(key2);
     }
 
     @Test
@@ -396,8 +406,8 @@ public interface MailRepositoryContract {
         testee.remove(ImmutableList.of(UNKNOWN_KEY));
 
         assertThat(retrieveRepository().list())
-            .toIterable()
-            .isEmpty();
+                .toIterable()
+                .isEmpty();
     }
 
     @Test
@@ -430,8 +440,8 @@ public interface MailRepositoryContract {
         testee.remove(UNKNOWN_KEY);
 
         assertThat(retrieveRepository().list())
-            .toIterable()
-            .isEmpty();
+                .toIterable()
+                .isEmpty();
     }
 
     @Test
@@ -442,37 +452,75 @@ public interface MailRepositoryContract {
         MailKey key2 = testee.store(createMail(MAIL_2));
 
         assertThat(testee.list())
-            .toIterable()
-            .containsOnly(key1, key2);
+                .toIterable()
+                .containsOnly(key1, key2);
+    }
+
+    @Test
+    default void storingMailWithSameNameTwiceShouldReturnTheSameMailKey() throws Exception {
+        MailRepository testee = retrieveRepository();
+        var uuid1 = UUID.randomUUID();
+        var sameMailName = "mail1";
+        var mail1 = MailImpl.builder()
+                .name(sameMailName)
+                .sender("sender" + uuid1 + "@localhost")
+                .addRecipient("rec1" + uuid1 + "@domain.com")
+                .addRecipient("rec2" + uuid1 + "@domain.com")
+                .addAttribute(Attribute.convertToAttribute("testAttribute", "testValue" + uuid1))
+                .mimeMessage(MimeMessageBuilder
+                        .mimeMessageBuilder()
+                        .setSubject("test" + uuid1)
+                        .setText(uuid1.toString())
+                        .build())
+                .build();
+        var uuid2 = UUID.randomUUID();
+        var mail2 = MailImpl.builder()
+                .name(sameMailName)
+                .sender("sender" + uuid2 + "@localhost")
+                .addRecipient("rec1" + uuid2 + "@domain.com")
+                .addRecipient("rec2" + uuid2 + "@domain.com")
+                .addAttribute(Attribute.convertToAttribute("testAttribute", "testValue" + uuid2))
+                .mimeMessage(MimeMessageBuilder
+                        .mimeMessageBuilder()
+                        .setSubject("test" + uuid2)
+                        .setText(uuid2.toString())
+                        .build())
+                .build();
+
+        var mailKey1 = testee.store(mail1);
+
+        var mailKey2 = testee.store(mail2);
+
+        assertThat(mailKey1).isEqualTo(mailKey2);
     }
 
     @Test
     default void storingMessageWithSameKeyTwiceShouldUpdateMessageContent() throws Exception {
         MailRepository testee = retrieveRepository();
-        testee.store(createMail(MAIL_1));
+        var mailKey = testee.store(createMail(MAIL_1));
 
         Mail updatedMail = createMail(MAIL_1, "modified content");
         testee.store(updatedMail);
 
         assertThat(testee.list())
-            .toIterable()
-            .hasSize(1);
-        assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, updatedMail));
+                .toIterable()
+                .hasSize(1);
+        assertThat(testee.retrieve(mailKey)).satisfies(actual -> checkMailEquality(actual, updatedMail));
     }
 
     @Test
     default void storingMessageWithSameKeyTwiceShouldUpdateMessageAttributes() throws Exception {
         MailRepository testee = retrieveRepository();
         Mail mail = createMail(MAIL_1);
-        testee.store(mail);
+        var mailKey = testee.store(mail);
 
         mail.setAttribute(new Attribute(TEST_ATTRIBUTE.getName(), AttributeValue.of("newValue")));
         testee.store(mail);
 
         assertThat(testee.list())
-            .toIterable()
-            .hasSize(1);
-        assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
+                .toIterable()
+                .hasSize(1);
+        assertThat(testee.retrieve(mailKey)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
 
@@ -487,9 +535,9 @@ public interface MailRepositoryContract {
         MailKey key = testee.store(mail);
 
         assertThat(testee.list())
-            .toIterable()
-            .hasSize(1)
-            .containsOnly(key);
+                .toIterable()
+                .hasSize(1)
+                .containsOnly(key);
         assertThat(testee.retrieve(key)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
@@ -497,43 +545,44 @@ public interface MailRepositoryContract {
     default void storingAndRemovingMessagesConcurrentlyShouldLeadToConsistentResult() throws Exception {
         MailRepository testee = retrieveRepository();
         int nbKeys = 20;
-        ConcurrentHashMap.KeySetView<MailKey, Boolean> expectedResult = ConcurrentHashMap.newKeySet();
-        List<Object> locks = IntStream.range(0, nbKeys)
-            .boxed()
-            .collect(ImmutableList.toImmutableList());
+        Map<Integer, MailKey> mailKeys = new ConcurrentHashMap<>();
+        List<Integer> locks = IntStream.range(0, nbKeys)
+                .boxed()
+                .collect(ImmutableList.toImmutableList());
 
         ThrowingRunnable add = () -> {
             int keyIndex = computeKeyIndex(nbKeys, Math.abs(ThreadLocalRandom.current().nextInt()));
-            MailKey key =  computeKey(keyIndex);
             synchronized (locks.get(keyIndex)) {
-                testee.store(createMail(key));
-                expectedResult.add(key);
+                MailKey key = testee.store(createMail("mail" + keyIndex));
+                mailKeys.put(keyIndex, key);
             }
         };
 
         ThrowingRunnable remove = () -> {
             int keyIndex = computeKeyIndex(nbKeys, Math.abs(ThreadLocalRandom.current().nextInt()));
-            MailKey key =  computeKey(keyIndex);
             synchronized (locks.get(keyIndex)) {
-                testee.remove(key);
-                expectedResult.remove(key);
+                MailKey key = mailKeys.get(keyIndex);
+                if (key != null) {
+                    testee.remove(key);
+                    mailKeys.remove(keyIndex);
+                }
             }
         };
 
         DiscreteDistribution<ThrowingRunnable> distribution = DiscreteDistribution.create(
-            ImmutableList.of(
-                new DistributionEntry<>(add, 0.25),
-                new DistributionEntry<>(remove, 0.75)));
+                ImmutableList.of(
+                        new DistributionEntry<>(add, 0.25),
+                        new DistributionEntry<>(remove, 0.75)));
 
         ConcurrentTestRunner.builder()
-            .operation((a, b) -> distribution.sample().run())
-            .threadCount(5)
-            .operationCount(20)
-            .runSuccessfullyWithin(Duration.ofMinutes(1));
+                .operation((a, b) -> distribution.sample().run())
+                .threadCount(5)
+                .operationCount(20)
+                .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         assertThat(testee.list())
-            .toIterable()
-            .containsOnly(expectedResult.toArray(new MailKey[0]));
+                .toIterable()
+                .containsExactlyInAnyOrderElementsOf(mailKeys.values());
     }
 
     default MailKey computeKey(int keyIndex) {
