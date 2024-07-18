@@ -43,13 +43,13 @@ class BlobMailRepositoryTest implements MailRepositoryContract {
     void setup() {
         blobIdFactory = new HashBlobId.Factory();
         blobStore = new MemoryBlobStoreDAO();
-        var mimeMessageBlobStore  = MemoryBlobStoreFactory.builder()
+        var mimeMessageBlobStore = MemoryBlobStoreFactory.builder()
                 .blobIdFactory(blobIdFactory)
                 .defaultBucketName()
                 .passthrough();
         mimeMessageStoreFactory = new MimeMessageStore.Factory(mimeMessageBlobStore);
-        MailRepositoryPath path = MailRepositoryPath.from("/foo");
-        blobMailRepositoryFactory = new BlobMailRepositoryFactory(blobStore, blobIdFactory, mimeMessageStoreFactory);
+        MailRepositoryPath path = MailRepositoryPath.from("var/mail/error");
+        blobMailRepositoryFactory = new BlobMailRepositoryFactory(blobStore, blobIdFactory, mimeMessageBlobStore.getDefaultBucketName());
         blobMailRepository = buildBlobMailRepository(path);
     }
 

@@ -19,20 +19,65 @@
 
 package org.apache.james.mailrepository.blob
 
-import org.apache.james.blob.api.{BlobId, BlobStoreDAO, BucketName}
-import org.apache.james.blob.mail.MimeMessageStore
+import jakarta.inject.Named
+import jakarta.mail.internet.MimeMessage
+import org.apache.james.blob.api._
+import org.apache.james.blob.mail.{MimeMessagePartsId, MimeMessageStore}
 import org.apache.james.mailrepository.api.{MailRepository, MailRepositoryFactory, MailRepositoryUrl}
+import org.apache.james.server.blob.deduplication.BlobStoreFactory
 
-class BlobMailRepositoryFactory(blobStore: BlobStoreDAO,
+class MailRepositoryBlobIdFactory(
+                                   blobIdFactory: BlobId.Factory,
+                                   url: MailRepositoryUrl
+                                 ) extends BlobId.Factory {
+  // Must wrap the default BlobId factory but inject a MailRepositoryUrl dependant prefix
+  override def from(id: String): BlobId =
+    blobIdFactory.from(id)
+
+  override def of(id: String): BlobId =
+    blobIdFactory.of(url.getPath.subPath(id).asString())
+
+}
+
+class BlobMailRepositoryFactory(blobStoreDao: BlobStoreDAO,
                                 blobIdFactory: BlobId.Factory,
-                                mimeFactory: MimeMessageStore.Factory) extends MailRepositoryFactory {
+                                @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) defaultBucketName: BucketName
+                               ) extends MailRepositoryFactory {
   override val mailRepositoryClass: Class[_ <: MailRepository] = classOf[BlobMailRepository]
 
   override def create(url: MailRepositoryUrl): MailRepository = {
-    val metadataBucketName = BucketName.of(url.getPath.asString() + "/mailMetadata")
-    val mailDataBucketName = BucketName.of(url.getPath.asString() + "/mimeMessageData")
-    val mimeMessageStore = mimeFactory.mimeMessageStore(mailDataBucketName)
+    val metadataUrl = url.subUrl("mailMetadata")
+    val metadataIdFactory = new MailRepositoryBlobIdFactory(
+      blobIdFactory = blobIdFactory,
+      url = metadataUrl
+    )
 
-    new BlobMailRepository(blobStore, blobIdFactory, mimeMessageStore, metadataBucketName)
+    val metadataBlobStore = BlobStoreFactory.builder()
+      .blobStoreDAO(blobStoreDao)
+      .blobIdFactory(
+        metadataIdFactory
+      )
+      .bucket(defaultBucketName)
+      .passthrough()
+
+    val mimeMessageStore: Store[MimeMessage, MimeMessagePartsId] = buildMimeMessageStore(url)
+
+    new BlobMailRepository(metadataBlobStore, metadataIdFactory, mimeMessageStore, metadataUrl)
+  }
+
+  private def buildMimeMessageStore(url: MailRepositoryUrl) = {
+    val mimeMessageIdFactory = new MailRepositoryBlobIdFactory(
+      blobIdFactory = blobIdFactory,
+      url = url.subUrl("mimeMessagedata")
+    )
+    val mimeMessageBlobStore = BlobStoreFactory.builder()
+      .blobStoreDAO(blobStoreDao)
+      .blobIdFactory(
+        mimeMessageIdFactory
+      )
+      .bucket(defaultBucketName)
+      .passthrough()
+    val mimeMessageStore = new MimeMessageStore.Factory(mimeMessageBlobStore).mimeMessageStore()
+    mimeMessageStore
   }
 }

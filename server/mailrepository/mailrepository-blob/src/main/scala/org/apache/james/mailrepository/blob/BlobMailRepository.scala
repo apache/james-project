@@ -19,10 +19,6 @@
 
 package org.apache.james.mailrepository.blob
 
-import java.util
-import java.util.Date
-import java.util.stream.Stream
-
 import com.google.common.collect.ImmutableMap
 import jakarta.mail.MessagingException
 import jakarta.mail.internet.MimeMessage
@@ -30,17 +26,22 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.tuple.Pair
 import org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED
 import org.apache.james.blob.api.Store.Impl
-import org.apache.james.blob.api.{BlobId, BlobPartsId, BlobStore, BlobStoreDAO, BlobType, BucketName, Store}
+import org.apache.james.blob.api._
 import org.apache.james.blob.mail.MimeMessagePartsId
 import org.apache.james.core.{MailAddress, MaybeSender}
-import org.apache.james.mailrepository.api.{MailKey, MailRepository}
-import org.apache.james.server.blob.deduplication.BlobStoreFactory
+import org.apache.james.mailrepository.api.{MailKey, MailRepository, MailRepositoryUrl}
 import org.apache.james.server.core.MailImpl
 import org.apache.james.util.AuditTrail
-import org.apache.mailet.{Attribute, AttributeName, AttributeValue, Mail, PerRecipientHeaders}
+import org.apache.mailet._
 import play.api.libs.json.{Format, Json}
 import reactor.core.publisher.{Flux, Mono}
+import reactor.core.scala.publisher.SMono
+import reactor.util.function.Tuples
 
+import java.io.{ByteArrayInputStream, InputStream}
+import java.util
+import java.util.Date
+import java.util.stream.Stream
 import scala.jdk.CollectionConverters.IterableHasAsJava
 import scala.jdk.StreamConverters._
 
@@ -69,7 +70,7 @@ object BlobMailRepository {
     def toMailKey: MailKey = new MailKey(metadataBlobId.asString())
   }
 
-  private[blob] class MailEncoder private[blob](blobStoreDAO: BlobStoreDAO, blobIdFactory: BlobId.Factory)
+  private[blob] class MailEncoder private[blob](blobIdFactory: MailRepositoryBlobIdFactory)
     extends Impl.Encoder[(Mail, MimeMessagePartsId)] {
 
     import serializers._
@@ -79,10 +80,16 @@ object BlobMailRepository {
       val mailMetadata = MailMetadata.of(mail, partsIds)
       val payload = Json.stringify(Json.toJson(mailMetadata))
       val mailKey = MailKey.forMail(mail)
-      val blobId = blobIdFactory.from(mailKey.asString())
-      val save: Impl.ValueToSave = (bucketName, _) =>
-        Mono.from(blobStoreDAO.save(bucketName, blobId, payload)).`then`(Mono.just(blobId))
 
+      val blobId = blobIdFactory.of(mailKey.asString())
+
+      val save: Impl.ValueToSave = (bucketName, blobStore) =>
+        Mono.from(blobStore.save(
+          bucketName,
+          new ByteArrayInputStream(payload.getBytes),
+          (data:InputStream)=>SMono.just(Tuples.of(blobId,data)).asJava(),
+          BlobStore.StoragePolicy.SIZE_BASED
+        ))
 
       LazyList(Pair.of(MailPartsId.METADATA_BLOB_TYPE, save)).asJavaSeqStream
     }
@@ -136,12 +143,14 @@ object BlobMailRepository {
   }
 }
 
-class BlobMailRepository(val blobStore: BlobStoreDAO,
-                         val blobIdFactory: BlobId.Factory,
+class BlobMailRepository(val mailMetaDataBlobStore: BlobStore,
+                         val mailMetadataBlobIdFactory: MailRepositoryBlobIdFactory,
                          val mimeMessageStore: Store[MimeMessage, MimeMessagePartsId],
-                         val metadataBucketName: BucketName
+                         val url: MailRepositoryUrl,
                         ) extends MailRepository {
+
   import BlobMailRepository._
+
 
   @throws[MessagingException]
   override def store(mc: Mail): MailKey =
@@ -161,17 +170,26 @@ class BlobMailRepository(val blobStore: BlobStoreDAO,
       .block()
 
   @throws[MessagingException]
-  override def size: Long = Flux.from(blobStore.listBlobs(metadataBucketName)).count().block()
+  override def size: Long =
+    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+    .filter(this.belongsToMailRepository)
+    .count()
+    .block()
 
   @throws[MessagingException]
-  override def list: util.Iterator[MailKey] = Flux.from(blobStore.listBlobs(metadataBucketName))
+  override def list: util.Iterator[MailKey] =
+    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+    .filter(this.belongsToMailRepository)
     .map[MailKey](blobId => new MailKey(blobId.asString))
     .toIterable
     .iterator
 
+  private def belongsToMailRepository(blobId: BlobId): Boolean =
+    blobId.asString().startsWith(url.getPath.asString())
+
   @throws[MessagingException]
   override def retrieve(key: MailKey): Mail = {
-    mailMetadataStore.read(MailPartsId(blobIdFactory.from(key.asString())))
+    mailMetadataStore.read(MailPartsId(mailMetadataBlobIdFactory.from(key.asString())))
       .flatMap {
         case (mail, mimeMessagePartsId) => mimeMessageStore.read(mimeMessagePartsId).map { mimeMessage =>
           mail.setMessage(mimeMessage)
@@ -183,29 +201,24 @@ class BlobMailRepository(val blobStore: BlobStoreDAO,
       .orNull
   }
 
+  // FIXME - on supprime les metadata mais pas les mimeMessages associés ?
   @throws[MessagingException]
   override def remove(key: MailKey): Unit = {
-    Mono.from(blobStore.delete(metadataBucketName, blobIdFactory.from(key.asString()))).block()
+    Mono.from(mailMetadataStore.delete( MailPartsId(mailMetadataBlobIdFactory.from(key.asString())))).block()
   }
-
+  // FIXME - on supprime les metadata mais pas les mimeMessages associés ?
   @throws[MessagingException]
   override def removeAll(): Unit = {
-    Flux.from(blobStore.listBlobs(metadataBucketName))
-      .flatMap(blobId => blobStore.delete(metadataBucketName, blobId))
+    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+      .flatMap(blobId => mailMetadataStore.delete(MailPartsId(blobId)))
       .blockLast()
   }
 
-  private val mailMetaDataBlobStore: BlobStore = BlobStoreFactory.builder()
-    .blobStoreDAO(blobStore)
-    .blobIdFactory(blobIdFactory)
-    .bucket(metadataBucketName)
-    .passthrough()
-
   private val mailMetadataStore = new Store.Impl[(Mail, MimeMessagePartsId), BlobMailRepository.MailPartsId](
     new MailPartsId.Factory,
-    new BlobMailRepository.MailEncoder(blobStore, blobIdFactory),
-    new BlobMailRepository.MailDecoder(blobIdFactory),
+    new BlobMailRepository.MailEncoder(mailMetadataBlobIdFactory),
+    new BlobMailRepository.MailDecoder(mailMetadataBlobIdFactory),
     mailMetaDataBlobStore,
-    metadataBucketName
+    mailMetaDataBlobStore.getDefaultBucketName
   )
 }
