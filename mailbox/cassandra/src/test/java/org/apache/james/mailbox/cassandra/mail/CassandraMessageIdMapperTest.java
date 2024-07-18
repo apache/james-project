@@ -31,7 +31,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.core.Username;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MailboxSession;
@@ -159,7 +159,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                 // ignoring expected error
             }
 
-            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new HashBlobId.Factory());
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new PlainBlobId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.METADATA))
                     .isEmpty();
@@ -183,7 +183,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                 // ignoring expected error
             }
 
-            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new HashBlobId.Factory());
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new PlainBlobId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.METADATA))
                     .isEmpty();
@@ -207,7 +207,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                 // ignoring expected error
             }
 
-            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new HashBlobId.Factory());
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new PlainBlobId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.METADATA))
                     .isEmpty();
@@ -231,7 +231,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                 // ignoring expected error
             }
 
-            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new HashBlobId.Factory());
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new PlainBlobId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.METADATA))
                     .isEmpty();
@@ -257,7 +257,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
 
             CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(
                 cassandra.getConf(),
-                new HashBlobId.Factory(),
+                new PlainBlobId.Factory(),
                 CassandraConfiguration.DEFAULT_CONFIGURATION);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {

@@ -35,7 +35,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.json.DTOConverter;
@@ -119,7 +119,7 @@ class Pop3MetaDataFixInconsistenciesRoutesTest {
     private static final String CONTENT_MESSAGE = "CONTENT 123 BLA BLA";
     private static final ModSeq MOD_SEQ_1 = ModSeq.of(1L);
     private static final ModSeq MOD_SEQ_2 = ModSeq.of(2L);
-    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().of("abc");
+    private static final PlainBlobId HEADER_BLOB_ID_1 = new PlainBlobId.Factory().of("abc");
     private static final CassandraMessageMetadata MESSAGE_1 = CassandraMessageMetadata.builder()
         .ids(ComposedMessageIdWithMetaData.builder()
             .composedMessageId(new ComposedMessageId(MAILBOX_ID, MESSAGE_ID_1, MESSAGE_UID_1))
@@ -178,7 +178,7 @@ class Pop3MetaDataFixInconsistenciesRoutesTest {
         Pop3MetadataStore pop3MetadataStore = new CassandraPop3MetadataStore(cassandra.getConf());
         imapUidDAO = new CassandraMessageIdToImapUidDAO(
             cassandra.getConf(),
-            new HashBlobId.Factory(),
+            new PlainBlobId.Factory(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
 
         cassandraMessageDAOV3 = new CassandraMessageDAOV3(
@@ -186,7 +186,7 @@ class Pop3MetaDataFixInconsistenciesRoutesTest {
             cassandra.getTypesProvider(),
             CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .passthrough(),
-            new HashBlobId.Factory());
+            new PlainBlobId.Factory());
         MetaDataFixInconsistenciesService fixInconsistenciesService = new MetaDataFixInconsistenciesService(imapUidDAO, pop3MetadataStore, cassandraMessageDAOV3);
 
         taskManager = new MemoryTaskManager(new Hostname("foo"));

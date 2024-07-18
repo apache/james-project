@@ -44,8 +44,8 @@ import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.server.blob.deduplication.BlobGCTaskAdditionalInformationDTO;
@@ -76,7 +76,7 @@ import reactor.core.publisher.Mono;
 
 class BlobRoutesTest {
     private static final String BASE_PATH = "/blobs";
-    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+    private static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
     private static final ZonedDateTime TIMESTAMP = ZonedDateTime.parse("2015-10-30T16:12:00Z");
     private static final BucketName DEFAULT_BUCKET = BucketName.of("default");
     private static final GenerationAwareBlobId.Configuration GENERATION_AWARE_BLOB_ID_CONFIGURATION = GenerationAwareBlobId.Configuration.DEFAULT;

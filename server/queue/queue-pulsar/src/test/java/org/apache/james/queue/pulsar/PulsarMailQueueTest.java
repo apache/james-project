@@ -36,7 +36,7 @@ import org.apache.james.backends.pulsar.DockerPulsarExtension;
 import org.apache.james.backends.pulsar.PulsarClients;
 import org.apache.james.backends.pulsar.PulsarConfiguration;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
@@ -78,7 +78,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     int maxConcurrency = 10;
     PulsarMailQueue mailQueue;
 
-    private HashBlobId.Factory blobIdFactory;
+    private PlainBlobId.Factory blobIdFactory;
     private Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
     private MailQueueItemDecoratorFactory factory;
     private MailQueueName mailQueueName;
@@ -91,7 +91,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     @BeforeEach
     void setUp(DockerPulsarExtension.DockerPulsar pulsar, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         this.metricTestSystem = metricTestSystem;
-        blobIdFactory = new HashBlobId.Factory();
+        blobIdFactory = new PlainBlobId.Factory();
 
         memoryBlobStore = new MemoryBlobStoreDAO();
         PassThroughBlobStore blobStore = new PassThroughBlobStore(memoryBlobStore, BucketName.DEFAULT, blobIdFactory);

@@ -23,7 +23,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
@@ -52,7 +52,7 @@ class S3NamespaceTest implements BlobStoreContract {
             .defaultBucketName(BucketName.of("namespace"))
             .build();
 
-        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
         s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, blobIdFactory);
 
@@ -80,6 +80,6 @@ class S3NamespaceTest implements BlobStoreContract {
 
     @Override
     public BlobId.Factory blobIdFactory() {
-        return new HashBlobId.Factory();
+        return new PlainBlobId.Factory();
     }
 }

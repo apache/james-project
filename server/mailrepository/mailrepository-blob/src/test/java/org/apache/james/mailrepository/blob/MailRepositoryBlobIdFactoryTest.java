@@ -22,7 +22,7 @@ package org.apache.james.mailrepository.blob;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.Protocol;
@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 class MailRepositoryBlobIdFactoryTest {
     static String MAIL_REPOSITORY_PATH = "/var/mail/error";
 
-    BlobId.Factory blobIdFactory = new HashBlobId.Factory();
+    BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
     MailRepositoryUrl url = MailRepositoryUrl.fromPathAndProtocol(
             new Protocol("blob"),
             MailRepositoryPath.from(MAIL_REPOSITORY_PATH)

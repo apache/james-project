@@ -29,8 +29,8 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.modules.blobstore.server.BlobRoutesModules;
 import org.apache.james.server.blob.deduplication.BlobGCTaskAdditionalInformationDTO;
 import org.apache.james.server.blob.deduplication.BlobGCTaskDTO;
@@ -57,7 +57,7 @@ public class BlobDeduplicationGCModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(HashBlobId.Factory.class).in(Scopes.SINGLETON);
+        bind(PlainBlobId.Factory.class).in(Scopes.SINGLETON);
         bind(BlobId.Factory.class).to(GenerationAwareBlobId.Factory.class);
 
         bind(MetricableBlobStore.class).in(Scopes.SINGLETON);
@@ -68,7 +68,7 @@ public class BlobDeduplicationGCModule extends AbstractModule {
 
     @Singleton
     @Provides
-    public GenerationAwareBlobId.Factory generationAwareBlobIdFactory(Clock clock, HashBlobId.Factory delegate, GenerationAwareBlobId.Configuration configuration) {
+    public GenerationAwareBlobId.Factory generationAwareBlobIdFactory(Clock clock, PlainBlobId.Factory delegate, GenerationAwareBlobId.Configuration configuration) {
         return new GenerationAwareBlobId.Factory(clock, delegate, configuration);
     }
 

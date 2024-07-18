@@ -20,7 +20,7 @@
 package org.apache.james.blob.file;
 
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.server.blob.deduplication.BloomFilterGCAlgorithmContract;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ public class FileBlobStoreGCAlgorithmTest implements BloomFilterGCAlgorithmContr
 
     @BeforeEach
     public void beforeEach() throws Exception {
-        blobStoreDAO = new FileBlobStoreDAO(FileSystemImpl.forTesting(), new HashBlobId.Factory());
+        blobStoreDAO = new FileBlobStoreDAO(FileSystemImpl.forTesting(), new PlainBlobId.Factory());
     }
 
     @Override

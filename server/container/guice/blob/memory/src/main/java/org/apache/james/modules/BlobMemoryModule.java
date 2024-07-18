@@ -23,7 +23,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 
@@ -35,8 +35,8 @@ public class BlobMemoryModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(HashBlobId.Factory.class).in(Scopes.SINGLETON);
-        bind(BlobId.Factory.class).to(HashBlobId.Factory.class);
+        bind(PlainBlobId.Factory.class).in(Scopes.SINGLETON);
+        bind(BlobId.Factory.class).to(PlainBlobId.Factory.class);
 
         bind(DeDuplicationBlobStore.class).in(Scopes.SINGLETON);
         bind(BlobStore.class).to(DeDuplicationBlobStore.class);

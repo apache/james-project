@@ -26,20 +26,20 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class HashBlobIdTest {
+class PlainBlobIdTest {
 
-    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+    private static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 
     @Test
     void shouldRespectBeanContract() {
-        EqualsVerifier.forClass(HashBlobId.class).verify();
+        EqualsVerifier.forClass(PlainBlobId.class).verify();
     }
 
     @Test
     void fromShouldConstructBlobId() {
         String id = "111";
         assertThat(BLOB_ID_FACTORY.parse(id))
-            .isEqualTo(new HashBlobId(id));
+            .isEqualTo(new PlainBlobId(id));
     }
 
     @Test

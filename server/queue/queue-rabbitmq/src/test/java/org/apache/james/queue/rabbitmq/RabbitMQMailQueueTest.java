@@ -60,7 +60,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.BlobTables;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
@@ -109,7 +109,7 @@ import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.Sender;
 
 class RabbitMQMailQueueTest {
-    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+    private static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
     private static final int THREE_BUCKET_COUNT = 3;
     private static final int UPDATE_BROWSE_START_PACE = 25;
     private static final Duration ONE_HOUR_SLICE_WINDOW = Duration.ofHours(1);
@@ -398,7 +398,7 @@ class RabbitMQMailQueueTest {
             dequeueMails(emailCount);
 
             // ensure slice 1 was cleaned
-            EnqueuedMailsDAO mailsDAO = new EnqueuedMailsDAO(cassandraCluster.getCassandraCluster().getConf(), new HashBlobId.Factory());
+            EnqueuedMailsDAO mailsDAO = new EnqueuedMailsDAO(cassandraCluster.getCassandraCluster().getConf(), new PlainBlobId.Factory());
             MailQueueName queueName = MailQueueName.fromString(mailQueue.getName().asString());
             Slice slice = Slice.of(currentSliceStartInstant(IN_SLICE_1));
 

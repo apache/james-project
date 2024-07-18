@@ -30,7 +30,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.blob.memory.MemoryBlobStoreFactory;
@@ -55,12 +55,12 @@ class LinshareBlobExportMechanismTest {
 
     private BlobStore blobStore;
     private LinshareBlobExportMechanism testee;
-    private HashBlobId.Factory blobIdFactory;
+    private PlainBlobId.Factory blobIdFactory;
     private LinshareAPIForUserTesting user2API;
 
     @BeforeEach
     void setUp() throws Exception {
-        blobIdFactory = new HashBlobId.Factory();
+        blobIdFactory = new PlainBlobId.Factory();
         blobStore = MemoryBlobStoreFactory.builder()
             .blobIdFactory(blobIdFactory)
             .defaultBucketName()

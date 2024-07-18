@@ -37,8 +37,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectStoreException;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.blob.export.file.LocalFileBlobExportMechanism.Configuration;
 import org.apache.james.blob.memory.MemoryBlobStoreFactory;
@@ -68,7 +68,7 @@ class LocalFileBlobExportMechanismTest {
     void setUp(FileSystem fileSystem) throws Exception {
         mailetContext = FakeMailContext.builder().postmaster(MailAddressFixture.POSTMASTER_AT_JAMES).build();
         blobStore = MemoryBlobStoreFactory.builder()
-            .blobIdFactory(new HashBlobId.Factory())
+            .blobIdFactory(new PlainBlobId.Factory())
             .defaultBucketName()
             .passthrough();
 
@@ -140,7 +140,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void shareShouldFailWhenBlobDoesNotExist() {
-        BlobId blobId = new HashBlobId.Factory().of("NOT_EXISTING_BLOB_ID");
+        BlobId blobId = new PlainBlobId.Factory().of("NOT_EXISTING_BLOB_ID");
 
         assertThatThrownBy(() ->
             testee.blobId(blobId)

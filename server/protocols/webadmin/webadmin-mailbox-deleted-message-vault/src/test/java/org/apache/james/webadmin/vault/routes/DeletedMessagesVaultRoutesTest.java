@@ -75,7 +75,7 @@ import java.util.stream.Stream;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Domain;
@@ -177,12 +177,12 @@ class DeletedMessagesVaultRoutesTest {
     private DeletedMessageZipper zipper;
     private MemoryUsersRepository usersRepository;
     private ExportService exportService;
-    private HashBlobId.Factory blobIdFactory;
+    private PlainBlobId.Factory blobIdFactory;
     private UpdatableTickingClock clock;
 
     @BeforeEach
     void beforeEach() throws Exception {
-        blobIdFactory = new HashBlobId.Factory();
+        blobIdFactory = new PlainBlobId.Factory();
         MemoryBlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
         blobStore = spy(BlobStoreFactory.builder()
             .blobStoreDAO(blobStoreDAO)

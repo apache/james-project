@@ -30,7 +30,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -50,7 +50,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Flux;
 
 class CassandraMessageIdDAOTest {
-    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().of("abc");
+    private static final PlainBlobId HEADER_BLOB_ID_1 = new PlainBlobId.Factory().of("abc");
     private static final CassandraModule MODULE = CassandraModule.aggregateModules(
         CassandraMessageModule.MODULE,
         CassandraSchemaVersionModule.MODULE);
@@ -64,7 +64,7 @@ class CassandraMessageIdDAOTest {
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         messageIdFactory = new CassandraMessageId.Factory();
-        testee = new CassandraMessageIdDAO(cassandra.getConf(), new HashBlobId.Factory());
+        testee = new CassandraMessageIdDAO(cassandra.getConf(), new PlainBlobId.Factory());
     }
 
     @Test

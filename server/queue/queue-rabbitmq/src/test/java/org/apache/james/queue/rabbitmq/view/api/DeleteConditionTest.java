@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
 
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -47,8 +47,8 @@ class DeleteConditionTest {
     private static final MailQueueName OUT_GOING_1 = MailQueueName.fromString("OUT_GOING_1");
     private static final Instant ENQUEUE_TIME = Instant.now();
     private static final MimeMessagePartsId MESSAGE_PARTS_ID = MimeMessagePartsId.builder()
-        .headerBlobId(new HashBlobId.Factory().parse("headerBlobId"))
-        .bodyBlobId(new HashBlobId.Factory().parse("bodyBlobId"))
+        .headerBlobId(new PlainBlobId.Factory().parse("headerBlobId"))
+        .bodyBlobId(new PlainBlobId.Factory().parse("bodyBlobId"))
         .build();
 
     @Nested

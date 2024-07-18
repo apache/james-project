@@ -25,7 +25,7 @@ import java.time.Instant;
 
 import jakarta.mail.MessagingException;
 
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
@@ -45,8 +45,8 @@ class EnqueuedItemTest {
         mail = FakeMail.defaultFakeMail();
         enqueuedTime = Instant.now();
         partsId = MimeMessagePartsId.builder()
-                .headerBlobId(new HashBlobId.Factory().parse("headerBlobId"))
-                .bodyBlobId(new HashBlobId.Factory().parse("bodyBlobId"))
+                .headerBlobId(new PlainBlobId.Factory().parse("headerBlobId"))
+                .bodyBlobId(new PlainBlobId.Factory().parse("bodyBlobId"))
                 .build();
     }
 

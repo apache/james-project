@@ -28,8 +28,8 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.DeleteBlobStoreContract;
-import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +44,7 @@ public class CassandraPassTroughBlobStoreTest implements DeleteBlobStoreContract
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, cassandra.getConf());
         defaultBucketDAO = spy(new CassandraDefaultBucketDAO(cassandra.getConf(), blobIdFactory));
         CassandraConfiguration cassandraConfiguration = CassandraConfiguration.builder()
@@ -67,7 +67,7 @@ public class CassandraPassTroughBlobStoreTest implements DeleteBlobStoreContract
 
     @Override
     public BlobId.Factory blobIdFactory() {
-        return new HashBlobId.Factory();
+        return new PlainBlobId.Factory();
     }
 
     @Override

@@ -30,7 +30,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.BlobTables;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
@@ -55,7 +55,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             CassandraSchemaVersionModule.MODULE));
 
     private static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
-    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+    private static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 
 
     CassandraMailRepository cassandraMailRepository;
