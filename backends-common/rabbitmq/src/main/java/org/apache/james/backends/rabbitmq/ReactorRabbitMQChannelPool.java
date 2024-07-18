@@ -818,9 +818,9 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     @Override
     public void close() {
         sender.close();
-       Flux.fromIterable(refs.values())
-           .flatMap(PooledRef::invalidate)
-           .blockLast();
+        Flux.fromIterable(refs.values())
+            .flatMap(PooledRef::invalidate)
+            .blockLast();
         refs.clear();
         newPool.dispose();
     }
