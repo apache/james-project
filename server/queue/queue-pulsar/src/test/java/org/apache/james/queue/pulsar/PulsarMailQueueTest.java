@@ -69,7 +69,6 @@ import com.github.fge.lambdas.Throwing;
 import com.sksamuel.pulsar4s.ConsumerMessage;
 
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import scala.jdk.javaapi.OptionConverters;
 
 @Tag(Unstable.TAG)
