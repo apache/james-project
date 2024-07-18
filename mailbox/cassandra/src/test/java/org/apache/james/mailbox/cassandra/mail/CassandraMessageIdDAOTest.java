@@ -50,7 +50,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Flux;
 
 class CassandraMessageIdDAOTest {
-    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().forPayload("abc".getBytes());
+    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().of("abc");
     private static final CassandraModule MODULE = CassandraModule.aggregateModules(
         CassandraMessageModule.MODULE,
         CassandraSchemaVersionModule.MODULE);

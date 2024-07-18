@@ -140,7 +140,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void shareShouldFailWhenBlobDoesNotExist() {
-        BlobId blobId = new HashBlobId.Factory().forPayload("not existing".getBytes(StandardCharsets.UTF_8));
+        BlobId blobId = new HashBlobId.Factory().of("NOT_EXISTING_BLOB_ID");
 
         assertThatThrownBy(() ->
             testee.blobId(blobId)

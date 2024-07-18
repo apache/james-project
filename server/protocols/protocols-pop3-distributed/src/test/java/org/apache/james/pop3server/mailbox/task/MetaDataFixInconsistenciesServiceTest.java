@@ -78,7 +78,7 @@ public class MetaDataFixInconsistenciesServiceTest {
     private static final ModSeq MOD_SEQ_2 = ModSeq.of(2L);
     private static final String CONTENT_MESSAGE = "CONTENT 123 BLA BLA";
 
-    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().forPayload("abc".getBytes());
+    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().of("abc");
     private static final CassandraMessageMetadata MESSAGE_1 = CassandraMessageMetadata.builder()
         .ids(ComposedMessageIdWithMetaData.builder()
             .composedMessageId(new ComposedMessageId(MAILBOX_ID, MESSAGE_ID_1, MESSAGE_UID_1))

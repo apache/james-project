@@ -57,7 +57,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class UidSearchOverrideTest {
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(Username.of("benwa"));
     private static final Mailbox MAILBOX = new Mailbox(MailboxPath.inbox(MAILBOX_SESSION), UidValidity.of(12), CassandraId.timeBased());
-    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().forPayload("abc".getBytes());
+    private static final HashBlobId HEADER_BLOB_ID_1 = new HashBlobId.Factory().of("abc");
     private static final CassandraModule MODULE = CassandraModule.aggregateModules(
         CassandraMessageModule.MODULE,
         CassandraSchemaVersionModule.MODULE);

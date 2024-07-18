@@ -105,8 +105,8 @@ class MimeMessageStoreTest {
     @Test
     void deleteShouldNotThrowWhenCalledOnNonExistingData() throws Exception {
         MimeMessagePartsId parts = MimeMessagePartsId.builder()
-            .headerBlobId(BLOB_ID_FACTORY.randomId())
-            .bodyBlobId(BLOB_ID_FACTORY.randomId())
+            .headerBlobId(BLOB_ID_FACTORY.of("NON_EXISTING_HEADER_BLOB_ID"))
+            .bodyBlobId(BLOB_ID_FACTORY.of("NON_EXISTING_BODY_BLOB_ID"))
             .build();
 
         assertThatCode(() -> Mono.from(testee.delete(parts)).block())
