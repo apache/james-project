@@ -66,9 +66,14 @@ public class HashBlobId implements BlobId {
         }
 
         @Override
-        public HashBlobId from(String id) {
+        public HashBlobId of(String id) {
             Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
             return new HashBlobId(id);
+        }
+
+        @Override
+        public HashBlobId from(String id) {
+            return of(id);
         }
 
         private static BaseEncoding baseEncodingFrom(String encodingType) {

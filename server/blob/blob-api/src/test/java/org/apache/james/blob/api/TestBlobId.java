@@ -39,8 +39,13 @@ public class TestBlobId implements BlobId {
         }
 
         @Override
-        public BlobId from(String id) {
+        public BlobId of(String id) {
             return new TestBlobId(id);
+        }
+
+        @Override
+        public BlobId from(String id) {
+            return of(id);
         }
     }
 

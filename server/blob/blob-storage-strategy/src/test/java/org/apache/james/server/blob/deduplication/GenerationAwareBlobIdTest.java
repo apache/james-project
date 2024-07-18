@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.blob.api.BlobId;
@@ -36,8 +37,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import com.google.common.io.ByteSource;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -58,46 +57,14 @@ class GenerationAwareBlobIdTest {
     @Nested
     class BlobIdGeneration {
         @Test
-        void randomIdShouldGenerateABlobIdOfTheRightGeneration() {
-            GenerationAwareBlobId actual = testee.randomId();
+        void ofShouldGenerateABlobIdOfTheRightGeneration() {
+            String key = UUID.randomUUID().toString();
+            GenerationAwareBlobId actual = testee.of(key);
 
             SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(actual.getFamily()).isEqualTo(GenerationAwareBlobId.Configuration.DEFAULT.getFamily());
                 soft.assertThat(actual.getGeneration()).isEqualTo(628L);
-            });
-        }
-
-        @Test
-        void randomIdShouldGenerateABlobIdOfTheRightFutureGeneration() {
-            clock.setInstant(NOW.plus(30, ChronoUnit.DAYS));
-
-            GenerationAwareBlobId actual = testee.randomId();
-
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(actual.getFamily()).isEqualTo(GenerationAwareBlobId.Configuration.DEFAULT.getFamily());
-                soft.assertThat(actual.getGeneration()).isEqualTo(629L);
-            });
-        }
-
-        @Test
-        void forPayloadShouldGenerateABlobIdOfTheRightGeneration() {
-            GenerationAwareBlobId actual = testee.forPayload("abc".getBytes());
-
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(actual.getFamily()).isEqualTo(GenerationAwareBlobId.Configuration.DEFAULT.getFamily());
-                soft.assertThat(actual.getGeneration()).isEqualTo(628L);
-                soft.assertThat(actual.getDelegate()).isEqualTo(delegate.forPayload("abc".getBytes()));
-            });
-        }
-
-        @Test
-        void forPayloadByteSourceShouldGenerateABlobIdOfTheRightGeneration() {
-            GenerationAwareBlobId actual = testee.forPayload(ByteSource.wrap("abc".getBytes()));
-
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(actual.getFamily()).isEqualTo(GenerationAwareBlobId.Configuration.DEFAULT.getFamily());
-                soft.assertThat(actual.getGeneration()).isEqualTo(628L);
-                soft.assertThat(actual.getDelegate()).isEqualTo(delegate.forPayload("abc".getBytes()));
+                soft.assertThat(actual.getDelegate()).isEqualTo(delegate.of(key));
             });
         }
     }
@@ -280,7 +247,7 @@ class GenerationAwareBlobIdTest {
 
         @Test
         void inActiveGenerationShouldReturnFalseWhenDistinctFamily() {
-            GenerationAwareBlobId blobId = new GenerationAwareBlobId(628L, 2, delegate.forPayload("abcd".getBytes()));
+            GenerationAwareBlobId blobId = new GenerationAwareBlobId(628L, 2, delegate.of("abcd"));
 
             assertThat(blobId.inActiveGeneration(GenerationAwareBlobId.Configuration.DEFAULT, NOW.plus(60, ChronoUnit.DAYS)))
                 .isFalse();
