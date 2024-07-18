@@ -693,7 +693,11 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
             })
             .destroyHandler(channel -> Mono.fromRunnable(Throwing.runnable(() -> {
                 if (channel.isOpen()) {
-                    channel.close();
+                    try {
+                        channel.close();
+                    } catch (ShutdownSignalException e) {
+                        // silent this error
+                    }
                 }
             }))
             .then()
