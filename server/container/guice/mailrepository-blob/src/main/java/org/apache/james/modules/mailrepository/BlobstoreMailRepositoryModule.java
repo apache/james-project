@@ -19,10 +19,13 @@
 
 package org.apache.james.modules.mailrepository;
 
+import jakarta.inject.Named;
+
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.mail.MimeMessageStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.mailrepository.api.MailRepositoryFactory;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.Protocol;
@@ -52,8 +55,9 @@ public class BlobstoreMailRepositoryModule extends AbstractModule {
     @ProvidesIntoSet()
     public MailRepositoryFactory blobMailRepository(BlobStoreDAO blobStore,
                                                     BlobId.Factory blobIdFactory,
-                                                    MimeMessageStore.Factory mimeFactory) {
-        return new BlobMailRepositoryFactory(blobStore, blobIdFactory, mimeFactory);
+                                                    @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) BucketName defaultBucketName
+                                                    ) {
+        return new BlobMailRepositoryFactory(blobStore, blobIdFactory, defaultBucketName);
     }
 
 }
