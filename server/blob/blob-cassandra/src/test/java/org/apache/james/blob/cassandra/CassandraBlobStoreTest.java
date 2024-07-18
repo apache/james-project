@@ -44,9 +44,15 @@ public class CassandraBlobStoreTest implements CassandraBlobStoreContract, Dedup
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
+        this.cassandra = cassandra;
+        this.testee = createBlobStore();
+    }
+
+    @Override
+    public MetricableBlobStore createBlobStore() {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
-        CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, cassandra.getConf());
-        defaultBucketDAO = spy(new CassandraDefaultBucketDAO(cassandra.getConf(), blobIdFactory));
+        CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, this.cassandra.getConf());
+        defaultBucketDAO = spy(new CassandraDefaultBucketDAO(this.cassandra.getConf(), blobIdFactory));
         CassandraConfiguration cassandraConfiguration = CassandraConfiguration.builder()
             .blobPartSize(CHUNK_SIZE)
             .build();

@@ -32,7 +32,6 @@ import org.apache.james.util.DurationParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.io.ByteSource;
 
 public class GenerationAwareBlobId implements BlobId {
 
@@ -123,16 +122,6 @@ public class GenerationAwareBlobId implements BlobId {
         }
 
         @Override
-        public GenerationAwareBlobId forPayload(byte[] payload) {
-            return decorate(delegate.forPayload(payload));
-        }
-
-        @Override
-        public GenerationAwareBlobId forPayload(ByteSource payload) {
-            return decorate(delegate.forPayload(payload));
-        }
-
-        @Override
         public GenerationAwareBlobId of(String id) {
             return decorate(delegate.of(id));
         }
@@ -152,11 +141,6 @@ public class GenerationAwareBlobId implements BlobId {
             BlobId wrapped = delegate.from(id.substring(separatorIndex2 + 1));
 
             return new GenerationAwareBlobId(generation, family, wrapped);
-        }
-
-        @Override
-        public GenerationAwareBlobId randomId() {
-            return decorate(delegate.randomId());
         }
 
         private GenerationAwareBlobId decorateWithoutGeneration(String id) {

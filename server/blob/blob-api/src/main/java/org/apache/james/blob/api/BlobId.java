@@ -19,24 +19,13 @@
 
 package org.apache.james.blob.api;
 
-import java.util.UUID;
-
-import com.google.common.io.ByteSource;
-
 public interface BlobId {
 
     interface Factory {
         BlobId of(String id);
 
-        BlobId forPayload(byte[] payload);
-
-        BlobId forPayload(ByteSource payload);
-
+        //FIXME (in later commit) - rename to parse or parseFrom this should only be used for deserialization
         BlobId from(String id);
-
-        default BlobId randomId() {
-            return from(UUID.randomUUID().toString());
-        }
     }
 
     String asString();

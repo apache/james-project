@@ -1,4 +1,4 @@
-/*****************************************************************
+/** ***************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -6,61 +6,90 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- *                                                              *
+ * *
  * http://www.apache.org/licenses/LICENSE-2.0                   *
- *                                                              *
+ * *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- *****************************************************************/
+ * *************************************************************** */
 
 package org.apache.james.server.blob.deduplication
-
-import java.io.InputStream
 
 import com.google.common.base.Preconditions
 import com.google.common.io.ByteSource
 import jakarta.inject.{Inject, Named}
+import org.apache.james.blob.api.BlobStore.BlobIdProvider
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
-import reactor.core.scala.publisher.SMono
+import reactor.core.scala.publisher.{SMono, tupleTwo2ScalaTuple2}
+import reactor.core.scheduler.Schedulers
+import reactor.util.function.{Tuple2, Tuples}
 
+import java.io.{ByteArrayInputStream, InputStream}
+import java.util.UUID
 
 class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
                                      @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) defaultBucketName: BucketName,
                                      blobIdFactory: BlobId.Factory) extends BlobStore {
 
   override def save(bucketName: BucketName, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    Preconditions.checkNotNull(bucketName)
-    Preconditions.checkNotNull(data)
-
-    val blobId = blobIdFactory.randomId()
-
-    SMono(blobStoreDAO.save(bucketName, blobId, data))
-      .`then`(SMono.just(blobId))
+    save(bucketName, data, withBlobId, storagePolicy)
   }
 
   override def save(bucketName: BucketName, data: InputStream, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    Preconditions.checkNotNull(bucketName)
-    Preconditions.checkNotNull(data)
-    val blobId = blobIdFactory.randomId()
-
-    SMono(blobStoreDAO.save(bucketName, blobId, data))
-      .`then`(SMono.just(blobId))
+    save(bucketName, data, withBlobId, storagePolicy)
   }
 
   override def save(bucketName: BucketName, data: ByteSource, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+    save(bucketName, data, withBlobId, storagePolicy)
+  }
+
+  override def save(bucketName: BucketName, data: Array[Byte], blobIdProvider: BlobIdProvider, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(data)
-    val blobId = blobIdFactory.randomId()
-
-    SMono(blobStoreDAO.save(bucketName, blobId, data))
-      .`then`(SMono.just(blobId))
+    save(bucketName, new ByteArrayInputStream(data), blobIdProvider, storagePolicy)
   }
+
+  override def save(bucketName: BucketName, data: ByteSource, blobIdProvider: BlobIdProvider, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+    Preconditions.checkNotNull(bucketName)
+    Preconditions.checkNotNull(data)
+
+    SMono.fromCallable(() => data.openStream())
+      .using(
+        use = stream => SMono(blobIdProvider.apply(stream))
+          .subscribeOn(Schedulers.boundedElastic())
+          .map(tupleTwo2ScalaTuple2)
+          .flatMap { case (blobId, inputStream) =>
+            SMono(blobStoreDAO.save(bucketName, blobId, inputStream))
+              .`then`(SMono.just(blobId))
+          })(
+        release = _.close())
+
+  }
+
+  override def save(
+                     bucketName: BucketName,
+                     data: InputStream,
+                     blobIdProvider: BlobIdProvider,
+                     storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+    Preconditions.checkNotNull(bucketName)
+    Preconditions.checkNotNull(data)
+
+    SMono(blobIdProvider(data))
+      .subscribeOn(Schedulers.boundedElastic())
+      .flatMap { tuple =>
+        SMono(blobStoreDAO.save(bucketName, tuple.getT1, tuple.getT2))
+          .`then`(SMono.just(tuple.getT1))
+      }
+  }
+
+  private def withBlobId(data: InputStream): Publisher[Tuple2[BlobId, InputStream]] =
+    SMono.just(Tuples.of(blobIdFactory.of(UUID.randomUUID.toString), data))
 
   override def readBytes(bucketName: BucketName, blobId: BlobId): Publisher[Array[Byte]] = {
     Preconditions.checkNotNull(bucketName)

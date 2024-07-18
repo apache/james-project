@@ -77,7 +77,9 @@ public interface DeduplicationBlobStoreContract {
         BucketName defaultBucketName = store.getDefaultBucketName();
 
         BlobId blobId = Mono.from(store.save(defaultBucketName, new ByteArrayInputStream(SHORT_BYTEARRAY), storagePolicy)).block();
-
-        assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
+        // This fix is ok because it will only affect deduplication, after this change the same content might be assigned a different blobid
+        // and thus might be duplicated in the store. No data can be lost since no api allows for externally deterministic blob id construction
+        // before this change.
+        assertThat(blobId).isEqualTo(blobIdFactory().of("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
     }
 }

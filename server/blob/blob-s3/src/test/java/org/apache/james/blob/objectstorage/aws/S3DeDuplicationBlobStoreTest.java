@@ -22,6 +22,7 @@ package org.apache.james.blob.objectstorage.aws;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreContract;
+import org.apache.james.blob.api.DeduplicationBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
