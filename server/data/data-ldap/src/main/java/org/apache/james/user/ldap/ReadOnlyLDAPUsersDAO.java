@@ -64,31 +64,24 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUsersDAO.class);
 
     private final GaugeRegistry gaugeRegistry;
-    private LdapRepositoryConfiguration ldapConfiguration;
+    private final LdapRepositoryConfiguration ldapConfiguration;
     private LDAPConnectionPool ldapConnectionPool;
     private Optional<Filter> userExtraFilter;
     private Filter objectClassFilter;
     private Filter listingFilter;
 
     @Inject
-    public ReadOnlyLDAPUsersDAO(GaugeRegistry gaugeRegistry) {
+    public ReadOnlyLDAPUsersDAO(GaugeRegistry gaugeRegistry,
+                                LDAPConnectionPool ldapConnectionPool,
+                                LdapRepositoryConfiguration configuration) {
         this.gaugeRegistry = gaugeRegistry;
+        this.ldapConnectionPool = ldapConnectionPool;
+        this.ldapConfiguration = configuration;
     }
 
-    /**
-     * Extracts the parameters required by the repository instance from the
-     * James server configuration data. The fields extracted include
-     *
-     * @param configuration
-     *            An encapsulation of the James server configuration data.
-     */
     @Override
-    public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
-        configure(LdapRepositoryConfiguration.from(configuration));
-    }
+    public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
 
-    public void configure(LdapRepositoryConfiguration configuration) {
-        ldapConfiguration = configuration;
     }
 
     /**
@@ -107,8 +100,6 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
                 + '\n' + "connectionTimeout: "
                 + ldapConfiguration.getConnectionTimeout() + '\n' + "readTimeout: " + ldapConfiguration.getReadTimeout());
         }
-
-        ldapConnectionPool = new LDAPConnectionFactory(ldapConfiguration).getLdapConnectionPool();
 
         userExtraFilter = Optional.ofNullable(ldapConfiguration.getFilter())
             .map(Throwing.function(Filter::create).sneakyThrow());

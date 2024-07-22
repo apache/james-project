@@ -59,9 +59,13 @@ public class SenderIsInLDAPGroup extends GenericMatcher {
     private String groupDN;
 
     @Inject
-    public SenderIsInLDAPGroup(LdapRepositoryConfiguration configuration) throws LDAPException {
+    public SenderIsInLDAPGroup(LDAPConnectionPool ldapConnectionPool, LdapRepositoryConfiguration configuration) {
         this.configuration = configuration;
-        ldapConnectionPool = new LDAPConnectionFactory(this.configuration).getLdapConnectionPool();
+        this.ldapConnectionPool = ldapConnectionPool;
+    }
+
+    public SenderIsInLDAPGroup(LdapRepositoryConfiguration configuration) throws LDAPException {
+        this(new LDAPConnectionFactory(configuration).getLdapConnectionPool(), configuration);
     }
 
     @Override
