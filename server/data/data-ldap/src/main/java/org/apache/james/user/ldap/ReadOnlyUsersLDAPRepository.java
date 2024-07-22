@@ -33,6 +33,9 @@ import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 
+import com.unboundid.ldap.sdk.LDAPConnectionPool;
+import com.unboundid.ldap.sdk.LDAPException;
+
 import reactor.core.publisher.Mono;
 
 /**
@@ -158,11 +161,22 @@ import reactor.core.publisher.Mono;
  *
  */
 public class ReadOnlyUsersLDAPRepository extends UsersRepositoryImpl<ReadOnlyLDAPUsersDAO> implements Configurable {
-    private LdapRepositoryConfiguration ldapConfiguration;
+    private final LdapRepositoryConfiguration ldapConfiguration;
 
     @Inject
-    public ReadOnlyUsersLDAPRepository(DomainList domainList, GaugeRegistry gaugeRegistry) {
-        super(domainList, new ReadOnlyLDAPUsersDAO(gaugeRegistry));
+    public ReadOnlyUsersLDAPRepository(DomainList domainList,
+                                       GaugeRegistry gaugeRegistry,
+                                       LDAPConnectionPool ldapConnectionPool,
+                                       LdapRepositoryConfiguration configuration) {
+        super(domainList, new ReadOnlyLDAPUsersDAO(gaugeRegistry, ldapConnectionPool, configuration));
+        this.ldapConfiguration = configuration;
+    }
+
+    public ReadOnlyUsersLDAPRepository(DomainList domainList,
+                                       GaugeRegistry gaugeRegistry,
+                                       LdapRepositoryConfiguration configuration) throws LDAPException {
+        super(domainList, new ReadOnlyLDAPUsersDAO(gaugeRegistry, new LDAPConnectionFactory(configuration).getLdapConnectionPool(), configuration));
+        this.ldapConfiguration = configuration;
     }
 
     /**
@@ -176,13 +190,7 @@ public class ReadOnlyUsersLDAPRepository extends UsersRepositoryImpl<ReadOnlyLDA
      */
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
-        configure(LdapRepositoryConfiguration.from(configuration));
         super.configure(configuration);
-    }
-
-    public void configure(LdapRepositoryConfiguration configuration) {
-        usersDAO.configure(configuration);
-        this.ldapConfiguration = configuration;
     }
 
     /**

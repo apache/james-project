@@ -290,10 +290,11 @@ public class ReadOnlyUsersLDAPRepositoryWithLocalPartAsLoginNameTest {
 
     }
 
-    private static ReadOnlyUsersLDAPRepository startUsersRepository(HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration,
+    private static ReadOnlyUsersLDAPRepository startUsersRepository(HierarchicalConfiguration<ImmutableNode> configuration,
                                                                     DomainList domainList) throws Exception {
-        ReadOnlyUsersLDAPRepository ldapRepository = new ReadOnlyUsersLDAPRepository(domainList, new NoopGaugeRegistry());
-        ldapRepository.configure(ldapRepositoryConfiguration);
+        ReadOnlyUsersLDAPRepository ldapRepository = new ReadOnlyUsersLDAPRepository(domainList, new NoopGaugeRegistry(),
+            LdapRepositoryConfiguration.from(configuration));
+        ldapRepository.configure(configuration);
         ldapRepository.init();
         return ldapRepository;
     }

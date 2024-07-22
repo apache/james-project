@@ -22,6 +22,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.ldap.LDAPConnectionFactory;
 import org.apache.james.user.ldap.LdapHealthCheck;
 import org.apache.james.user.ldap.LdapRepositoryConfiguration;
 import org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository;
@@ -34,6 +35,8 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
+import com.unboundid.ldap.sdk.LDAPConnectionPool;
+import com.unboundid.ldap.sdk.LDAPException;
 
 public class LdapUsersRepositoryModule extends AbstractModule {
     @Override
@@ -50,12 +53,18 @@ public class LdapUsersRepositoryModule extends AbstractModule {
             configurationProvider.getConfiguration("usersrepository"));
     }
 
+    @Provides
+    @Singleton
+    public LDAPConnectionPool provideConfiguration(LdapRepositoryConfiguration configuration) throws LDAPException {
+        return new LDAPConnectionFactory(configuration).getLdapConnectionPool();
+    }
+
     @ProvidesIntoSet
-    InitializationOperation configureLdap(LdapRepositoryConfiguration configuration, ReadOnlyUsersLDAPRepository usersRepository) {
+    InitializationOperation configureLdap(ConfigurationProvider configurationProvider, ReadOnlyUsersLDAPRepository usersRepository) {
         return InitilizationOperationBuilder
             .forClass(ReadOnlyUsersLDAPRepository.class)
             .init(() -> {
-                usersRepository.configure(configuration);
+                usersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
                 usersRepository.init();
             });
     }

@@ -78,13 +78,16 @@ public class SenderHasLDAPAttribute extends GenericMatcher {
     private String[] attributes;
 
     @Inject
-    public SenderHasLDAPAttribute(LdapRepositoryConfiguration configuration) throws LDAPException {
+    public SenderHasLDAPAttribute(LDAPConnectionPool ldapConnectionPool, LdapRepositoryConfiguration configuration) {
         this.configuration = configuration;
-        ldapConnectionPool = new LDAPConnectionFactory(this.configuration).getLdapConnectionPool();
-
-        userExtraFilter = Optional.ofNullable(configuration.getFilter())
+        this.ldapConnectionPool = ldapConnectionPool;
+        this.userExtraFilter = Optional.ofNullable(configuration.getFilter())
             .map(Throwing.function(Filter::create).sneakyThrow());
-        objectClassFilter = Filter.createEqualityFilter("objectClass", configuration.getUserObjectClass());
+        this.objectClassFilter = Filter.createEqualityFilter("objectClass", configuration.getUserObjectClass());
+    }
+
+    public SenderHasLDAPAttribute(LdapRepositoryConfiguration configuration) throws LDAPException {
+        this(new LDAPConnectionFactory(configuration).getLdapConnectionPool(), configuration);
     }
 
     @Override

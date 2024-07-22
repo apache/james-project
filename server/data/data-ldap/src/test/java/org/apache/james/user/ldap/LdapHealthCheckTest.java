@@ -45,8 +45,8 @@ class LdapHealthCheckTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        ReadOnlyUsersLDAPRepository ldapUserRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry());
-        ldapUserRepository.configure(ReadOnlyUsersLDAPRepositoryTest.ldapRepositoryConfigurationWithVirtualHosting(ldapContainer));
+        ReadOnlyUsersLDAPRepository ldapUserRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList(), new NoopGaugeRegistry(),
+            LdapRepositoryConfiguration.from(ReadOnlyUsersLDAPRepositoryTest.ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
         ldapUserRepository.init();
         ldapHealthCheck = new LdapHealthCheck(ldapUserRepository);
     }
