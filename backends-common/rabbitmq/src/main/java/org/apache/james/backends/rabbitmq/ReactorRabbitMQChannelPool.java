@@ -693,7 +693,11 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
             })
             .destroyHandler(channel -> Mono.fromRunnable(Throwing.runnable(() -> {
                 if (channel.isOpen()) {
-                    channel.close();
+                    try {
+                        channel.close();
+                    } catch (ShutdownSignalException e) {
+                        // silent this error
+                    }
                 }
             }))
             .then()
@@ -814,9 +818,9 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     @Override
     public void close() {
         sender.close();
-       Flux.fromIterable(refs.values())
-           .flatMap(PooledRef::invalidate)
-           .blockLast();
+        Flux.fromIterable(refs.values())
+            .flatMap(PooledRef::invalidate)
+            .blockLast();
         refs.clear();
         newPool.dispose();
     }
