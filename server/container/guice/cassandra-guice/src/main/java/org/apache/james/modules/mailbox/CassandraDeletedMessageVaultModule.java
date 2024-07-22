@@ -42,15 +42,15 @@ public class CassandraDeletedMessageVaultModule extends AbstractModule {
     protected void configure() {
         install(new BlobStoreDeletedMessageVaultModule());
 
-        bind(MetadataDAO.class).in(Scopes.SINGLETON);
-        bind(StorageInformationDAO.class).in(Scopes.SINGLETON);
-        bind(UserPerBucketDAO.class).in(Scopes.SINGLETON);
-        bind(DeletedMessageWithStorageInformationConverter.class).in(Scopes.SINGLETON);
-
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions
             .addBinding()
             .toInstance(DeletedMessageMetadataModule.MODULE);
+
+        bind(MetadataDAO.class).in(Scopes.SINGLETON);
+        bind(StorageInformationDAO.class).in(Scopes.SINGLETON);
+        bind(UserPerBucketDAO.class).in(Scopes.SINGLETON);
+        bind(DeletedMessageWithStorageInformationConverter.class).in(Scopes.SINGLETON);
 
         bind(CassandraDeletedMessageMetadataVault.class).in(Scopes.SINGLETON);
         bind(DeletedMessageMetadataVault.class)
