@@ -78,6 +78,8 @@ class QuotaRatioAsJsonTest {
         QuotaRatioAsJson quotaRatioAsJson = QuotaRatioAsJson.builder()
             .user("user")
             .quotaRatio(QuotaRatio.from(QUOTA_SIZE, QUOTA_COUNT))
+            .sizeUsed(1)
+            .countUsed(2)
             .build();
 
         assertThat(quotaRatioAsJson.getDomain()).isEmpty();
@@ -90,6 +92,8 @@ class QuotaRatioAsJsonTest {
             .user("user")
             .domain(Optional.of(domain))
             .quotaRatio(QuotaRatio.from(QUOTA_SIZE, QUOTA_COUNT))
+            .sizeUsed(1)
+            .countUsed(2)
             .build();
 
         assertThat(quotaRatioAsJson.getDomain()).contains(domain);
@@ -102,6 +106,8 @@ class QuotaRatioAsJsonTest {
             .user("user")
             .domain(Optional.of(domain))
             .quotaRatio(QuotaRatio.from(QUOTA_SIZE, QUOTA_COUNT))
+            .sizeUsed(1)
+            .countUsed(2)
             .build();
 
         assertThat(quotaRatioAsJson.getMaxQuotaRatio()).isEqualTo(0.5);

@@ -28,6 +28,13 @@ public interface QuotaLimitValue<T extends QuotaLimitValue<T>> {
 
     long asLong();
 
+    default Optional<Long> asLongOptional() {
+        if (isLimited()) {
+            return Optional.of(asLong());
+        }
+        return Optional.empty();
+    }
+
     boolean isLimited();
 
     default boolean isUnlimited() {
