@@ -28,5 +28,6 @@ public interface JsonMessageConstants {
     String COUNT_USED = "countUsed";
     String SIZE_LIMIT = "sizeLimit";
     String COUNT_LIMIT = "countLimit";
+    String DATE = "date";
 
 }

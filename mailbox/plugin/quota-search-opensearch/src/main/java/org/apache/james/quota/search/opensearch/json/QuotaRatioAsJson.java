@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.quota.search.opensearch.json;
 
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -143,6 +144,11 @@ public class QuotaRatioAsJson {
     @JsonProperty(JsonMessageConstants.COUNT_LIMIT)
     public Optional<Long> getCountLimit() {
         return countLimit;
+    }
+
+    @JsonProperty(JsonMessageConstants.DATE)
+    public Date getDate() {
+        return new Date();
     }
 
     @Override

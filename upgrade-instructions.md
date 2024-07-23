@@ -63,6 +63,10 @@ curl -X PUT \
 		},
 		\"countLimit\": {
 			\"type\": \"long\",
+		},
+		\"date\": {
+			\"type\": \"date\",
+			\"format\": \"uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX\"
 		}
 	}
 }"
