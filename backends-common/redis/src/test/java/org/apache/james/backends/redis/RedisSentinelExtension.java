@@ -56,17 +56,17 @@ import scala.jdk.javaapi.OptionConverters;
 public class RedisSentinelExtension implements GuiceModuleTestExtension {
     public static final int SENTINEL_PORT = 26379;
 
-    public static class RedisMasterReplicaContainer extends ArrayList<GenericContainer> {
-        public RedisMasterReplicaContainer(Collection<? extends GenericContainer> c) {
+    public static class RedisMasterReplicaContainerList extends ArrayList<GenericContainer> {
+        public RedisMasterReplicaContainerList(Collection<? extends GenericContainer> c) {
             super(c);
         }
 
-        public void pauseOne() {
+        public void pauseMasterNode() {
             GenericContainer container = this.get(0);
             container.getDockerClient().pauseContainerCmd(container.getContainerId()).exec();
         }
 
-        public void unPauseOne() {
+        public void unPauseMasterNode() {
             GenericContainer container = this.get(0);
             if (TRUE.equals(container.getDockerClient().inspectContainerCmd(container.getContainerId())
                 .exec()
@@ -77,13 +77,13 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
         }
     }
 
-    public static class RedisSentinelContainer extends ArrayList<GenericContainer> {
-        public RedisSentinelContainer(Collection<? extends GenericContainer> c) {
+    public static class RedisSentinelContainerList extends ArrayList<GenericContainer> {
+        public RedisSentinelContainerList(Collection<? extends GenericContainer> c) {
             super(c);
         }
 
         public MasterReplicaRedisConfiguration getRedisConfiguration() {
-            return MasterReplicaRedisConfiguration.from(ImmutableList.of(createRedisURI(this.stream().toList().subList(0,1)))
+            return MasterReplicaRedisConfiguration.from(ImmutableList.of(createRedisSentinelURI(this.stream().toList().subList(0,1)))
                     .toArray(String[]::new),
                 ReadFrom.MASTER,
                 OptionConverters.toScala(Optional.empty()),
@@ -91,8 +91,8 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
         }
     }
 
-    public record RedisSentinelCluster(RedisMasterReplicaContainer redisMasterReplicaContainer,
-                                       RedisSentinelContainer redisSentinelContainer) {
+    public record RedisSentinelCluster(RedisMasterReplicaContainerList redisMasterReplicaContainerList,
+                                       RedisSentinelContainerList redisSentinelContainerList) {
     }
 
     public static final Function2<String, Boolean, GenericContainer> redisContainerSupplier = (alias, isSlave) ->
@@ -124,8 +124,8 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
     static final GenericContainer sentinel2 = redisSentinelSupplier.apply("sentinel2");
     static final GenericContainer sentinel3 = redisSentinelSupplier.apply("sentinel3");
 
-    private RedisMasterReplicaContainer redisMasterReplicaContainer;
-    private RedisSentinelContainer redisSentinelContainer;
+    private RedisMasterReplicaContainerList redisMasterReplicaContainerList;
+    private RedisSentinelContainerList redisSentinelContainerList;
     private final Network network;
 
     public RedisSentinelExtension() {
@@ -150,8 +150,8 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
         sentinel1.start();
         sentinel2.start();
         sentinel3.start();
-        redisMasterReplicaContainer = new RedisMasterReplicaContainer(List.of(redis1, redis2, redis3));
-        redisSentinelContainer = new RedisSentinelContainer(List.of(sentinel1, sentinel2, sentinel3));
+        redisMasterReplicaContainerList = new RedisMasterReplicaContainerList(List.of(redis1, redis2, redis3));
+        redisSentinelContainerList = new RedisSentinelContainerList(List.of(sentinel1, sentinel2, sentinel3));
     }
 
     @Override
@@ -168,7 +168,7 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-        redisMasterReplicaContainer.forEach(Throwing.consumer(container -> container.execInContainer("redis-cli", "flushall")));
+        redisMasterReplicaContainerList.forEach(Throwing.consumer(container -> container.execInContainer("redis-cli", "flushall")));
     }
 
     @Override
@@ -177,7 +177,7 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
             @Provides
             @Singleton
             public RedisConfiguration provideRedisConfiguration() {
-                return redisSentinelContainer.getRedisConfiguration();
+                return redisSentinelContainerList.getRedisConfiguration();
             }
         };
     }
@@ -189,10 +189,10 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return new RedisSentinelCluster(redisMasterReplicaContainer, redisSentinelContainer);
+        return new RedisSentinelCluster(redisMasterReplicaContainerList, redisSentinelContainerList);
     }
 
-    private static String createRedisURI(List<GenericContainer> containers) {
+    private static String createRedisSentinelURI(List<GenericContainer> containers) {
         return new StringBuilder().append("redis-sentinel://1@")
             .append(containers.stream().map(container -> container.getHost() + ":" + container.getMappedPort(SENTINEL_PORT))
                 .collect(Collectors.joining(",")))

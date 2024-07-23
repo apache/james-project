@@ -35,12 +35,12 @@ class RedisSentinelHealthCheckTest {
 
   @BeforeEach
   def setup(redis: RedisSentinelCluster): Unit = {
-    redisHealthCheck = new RedisHealthCheck(redis.redisSentinelContainer.getRedisConfiguration)
+    redisHealthCheck = new RedisHealthCheck(redis.redisSentinelContainerList.getRedisConfiguration)
   }
 
   @AfterEach
   def afterEach(redis: RedisSentinelCluster): Unit = {
-    redis.redisMasterReplicaContainer.unPauseOne();
+    redis.redisMasterReplicaContainerList.unPauseMasterNode();
   }
 
   @Test
@@ -52,7 +52,7 @@ class RedisSentinelHealthCheckTest {
 
   @Test
   def checkShouldReturnDegradedWhenRedisIsDown(redis: RedisSentinelCluster): Unit = {
-    redis.redisMasterReplicaContainer.pauseOne()
+    redis.redisMasterReplicaContainerList.pauseMasterNode()
 
     Awaitility.await()
       .pollInterval(2, TimeUnit.SECONDS)
@@ -62,8 +62,8 @@ class RedisSentinelHealthCheckTest {
 
   @Test
   def checkShouldReturnHealthyWhenRedisIsRecovered(redis: RedisSentinelCluster): Unit = {
-    redis.redisMasterReplicaContainer.pauseOne()
-    redis.redisMasterReplicaContainer.unPauseOne()
+    redis.redisMasterReplicaContainerList.pauseMasterNode()
+    redis.redisMasterReplicaContainerList.unPauseMasterNode()
 
     Awaitility.await()
       .pollInterval(2, TimeUnit.SECONDS)
