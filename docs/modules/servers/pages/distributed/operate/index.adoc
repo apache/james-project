@@ -26,6 +26,8 @@ We also included a guide for xref:distributed/operate/migrating.adoc[migrating e
 
 Read more about xref:distributed/operate/cassandra-migration.adoc[Cassandra data migration].
 
+Additional functional visualisations can be set up using OpenSearch dashboards as documented in link:https://github.com/apache/james-project/tree/master/examples/opensearch-dahsboard[this example].
+
 == Upgrading
 
 This section sums up and links upgrade instructions for people willing to upgrade their Distributed server to newer versions.

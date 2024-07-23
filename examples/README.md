@@ -93,3 +93,7 @@ Of course alternative technologies can be used.
 
 [This example](proxy-smtp) demonstrate how to set up the proxy protocol to preserve client origin IP address despite the use
 of a proxy.
+
+## OpenSearch dashboards
+
+[This example](opensearch-dahsboard) demonstrate how to set up interesting visualizations using [OpenSearch dashboard](https://opensearch.org/docs/latest/dashboards/).
