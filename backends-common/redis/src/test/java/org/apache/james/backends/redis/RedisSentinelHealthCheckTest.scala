@@ -21,7 +21,6 @@ package org.apache.james.backends.redis
 
 import java.util.concurrent.TimeUnit
 
-import org.apache.james.backends.redis.RedisMasterReplicaExtension.RedisMasterReplicaContainer
 import org.apache.james.backends.redis.RedisSentinelExtension.RedisSentinelCluster
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
