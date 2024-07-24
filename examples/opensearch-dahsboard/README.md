@@ -57,3 +57,73 @@ It can be used to create interesting visualizations when used on top of Apache J
  - user flag heatmap
 
 ![img_10.png](img_10.png)
+
+ - People that reads the more mails
+
+![img_12.png](img_12.png)
+
+ - People that answers the more mails
+
+![img_11.png](img_11.png)
+
+ - People that generates the most data (by size)
+
+![img_13.png](img_13.png)
+
+ - Recipient count analysis
+
+![img_14.png](img_14.png)
+
+ - Estimated delivery times in second (differences between sentDate and savedDate)
+
+![img_15.png](img_15.png)
+
+## Scripted fields
+
+Some of the above visualizations relies on scripted fields.
+
+In order to create them navigate the following menus:
+
+> Dashboard management
+> Index pattern
+> mailbox_v2
+> scripted field
+
+Then create the following scripted fields:
+
+```
+language: painless
+type: number
+format: numer
+name: recipientCount
+Script:
+
+int count = 0;
+
+    for (nested in params._source.to) {
+        count += 1;
+    }   
+
+return count;
+```
+
+and 
+
+```
+> Dashboard management
+> Index pattern
+> mailbox_v2
+> scripted field
+
+language: painless
+type: number
+format: numer
+name: deliveryTime
+Script:
+
+if (doc.containsKey('saveDate') && doc.containsKey('sentDate')) {
+    return (doc['saveDate'].value.getMillis() - doc['sentDate'].value.getMillis()) / 1000;  
+} else {
+    return 0;
+}
+```
