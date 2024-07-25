@@ -28,6 +28,7 @@ import java.util.Date;
 import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -49,6 +50,9 @@ import com.google.common.base.Preconditions;
 import reactor.core.publisher.Mono;
 
 public class MessageToOpenSearchJson {
+    public enum IndexUser {
+        YES, NO
+    }
 
     private final ObjectMapper mapper;
     private final TextExtractor textExtractor;
@@ -56,12 +60,17 @@ public class MessageToOpenSearchJson {
     private final IndexAttachments indexAttachments;
     private final IndexHeaders indexHeaders;
     private final IndexBody indexBody;
+    private final IndexUser indexUser;
 
     public MessageToOpenSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments, IndexHeaders indexHeaders) {
         this(textExtractor, zoneId, indexAttachments, indexHeaders, IndexBody.YES);
     }
 
     public MessageToOpenSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments, IndexHeaders indexHeaders, IndexBody indexBody) {
+        this(textExtractor, zoneId, indexAttachments, indexHeaders, indexBody, IndexUser.YES);
+    }
+
+    public MessageToOpenSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments, IndexHeaders indexHeaders, IndexBody indexBody, IndexUser indexUser) {
         this.textExtractor = textExtractor;
         this.zoneId = zoneId;
         this.indexAttachments = indexAttachments;
@@ -70,11 +79,41 @@ public class MessageToOpenSearchJson {
         this.mapper.registerModule(new GuavaModule());
         this.mapper.registerModule(new Jdk8Module());
         this.indexBody = indexBody;
+        this.indexUser = indexUser;
     }
 
     @Inject
     public MessageToOpenSearchJson(TextExtractor textExtractor, OpenSearchMailboxConfiguration configuration) {
-        this(textExtractor, ZoneId.systemDefault(), configuration.getIndexAttachment(), configuration.getIndexHeaders(), configuration.getIndexBody());
+        this(textExtractor, ZoneId.systemDefault(), configuration.getIndexAttachment(), configuration.getIndexHeaders(),
+            configuration.getIndexBody(), configuration.getIndexUser());
+    }
+
+    public Mono<String> convertToJson(MailboxMessage message, MailboxSession session) {
+        Preconditions.checkNotNull(message);
+
+        return IndexableMessage.builder()
+            .message(message)
+            .extractor(textExtractor)
+            .zoneId(zoneId)
+            .indexAttachments(indexAttachments)
+            .indexHeaders(indexHeaders)
+            .indexBody(indexBody)
+            .user(indexUser, session.getUser().asString())
+            .build()
+            .map(Throwing.function(mapper::writeValueAsString));
+    }
+
+    public Mono<String> convertToJsonWithoutAttachment(MailboxMessage message, MailboxSession session) {
+        return IndexableMessage.builder()
+            .message(message)
+            .extractor(textExtractor)
+            .zoneId(zoneId)
+            .indexAttachments(IndexAttachments.NO)
+            .indexHeaders(indexHeaders)
+            .user(indexUser, session.getUser().asString())
+            .indexBody(indexBody)
+            .build()
+            .map(Throwing.function(mapper::writeValueAsString));
     }
 
     public Mono<String> convertToJson(MailboxMessage message) {

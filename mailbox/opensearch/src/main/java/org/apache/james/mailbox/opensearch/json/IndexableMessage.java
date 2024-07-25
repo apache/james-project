@@ -38,6 +38,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -64,6 +65,7 @@ public class IndexableMessage {
         private MailboxMessage message;
         private TextExtractor textExtractor;
         private ZoneId zoneId;
+        private String user = null;
 
         private Builder() {
         }
@@ -109,6 +111,13 @@ public class IndexableMessage {
 
         public Builder zoneId(ZoneId zoneId) {
             this.zoneId = zoneId;
+            return this;
+        }
+
+        public Builder user(MessageToOpenSearchJson.IndexUser indexUser, String user) {
+            if (indexUser == MessageToOpenSearchJson.IndexUser.YES) {
+                this.user = user;
+            }
             return this;
         }
 
@@ -175,6 +184,7 @@ public class IndexableMessage {
                         mediaType,
                         messageId,
                         threadId,
+                        user,
                         modSeq,
                         sentDate,
                         saveDate,
@@ -183,8 +193,7 @@ public class IndexableMessage {
                         subType,
                         to,
                         uid,
-                        userFlags,
-                        mimeMessageID);
+                        userFlags, mimeMessageID);
                 });
         }
 
@@ -236,6 +245,7 @@ public class IndexableMessage {
     private final String mediaType;
     private final String messageId;
     private final String threadId;
+    private final String user;
     private final long modSeq;
     private final String sentDate;
     private final Optional<String> saveDate;
@@ -264,7 +274,7 @@ public class IndexableMessage {
                              boolean isUnRead,
                              String mailboxId,
                              String mediaType, String messageId,
-                             String threadId,
+                             String threadId, String user,
                              ModSeq modSeq,
                              String sentDate,
                              Optional<String> saveDate, long size,
@@ -293,6 +303,7 @@ public class IndexableMessage {
         this.mediaType = mediaType;
         this.messageId = messageId;
         this.threadId = threadId;
+        this.user = user;
         this.modSeq = modSeq.asLong();
         this.sentDate = sentDate;
         this.saveDate = saveDate;
@@ -443,6 +454,12 @@ public class IndexableMessage {
     @JsonProperty(JsonMessageConstants.IS_UNREAD)
     public boolean isUnRead() {
         return isUnRead;
+    }
+
+    @JsonProperty(JsonMessageConstants.USER)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String getUser() {
+        return user;
     }
 
     @JsonProperty(JsonMessageConstants.MIME_MESSAGE_ID)

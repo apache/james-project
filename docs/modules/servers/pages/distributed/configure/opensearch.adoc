@@ -99,6 +99,10 @@ Default to false.
 
 | opensearch.indexBody
 | Indicates if you wish to index body or not (default: true). This can be used to decrease the performance cost associated with indexing.
+
+| opensearch.indexUser
+| Indicates if you wish to index user or not (default: false). This can be used to have per user reports in OpenSearch Dashboards.
+
 |===
 
 === Quota search
