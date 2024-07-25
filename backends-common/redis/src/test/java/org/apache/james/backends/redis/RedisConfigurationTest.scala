@@ -88,4 +88,32 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
       RedisConfiguration.from(config)
     }
   }
+
+  it should "parse redisURL when multiple sentinel endpoint" in {
+    val config = new PropertiesConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+    config.addProperty("redisURL", "redis-sentinel://secret1@redis-sentinel-1:26379,redis-sentinel-2:26379,redis-sentinel-3:26379?sentinelMasterId=mymaster")
+    config.addProperty("redis.topology", "master-replica")
+
+    val redisConfig: RedisConfiguration = RedisConfiguration.from(config)
+    redisConfig.isInstanceOf[MasterReplicaRedisConfiguration] shouldEqual (true)
+    val redisMasterReplicaRedisConfiguration = redisConfig.asInstanceOf[MasterReplicaRedisConfiguration]
+
+    redisMasterReplicaRedisConfiguration.redisURI.value.size shouldEqual 1
+    redisMasterReplicaRedisConfiguration.redisURI.value.head.toString shouldEqual "redis-sentinel://*******@redis-sentinel-1,redis-sentinel-2,redis-sentinel-3?sentinelMasterId=mymaster"
+  }
+
+  it should "parse redisURL when single sentinel endpoint" in {
+    val config = new PropertiesConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+    config.addProperty("redisURL", "redis-sentinel://secret1@redis-sentinel-1:26379?sentinelMasterId=mymaster")
+    config.addProperty("redis.topology", "master-replica")
+
+    val redisConfig: RedisConfiguration = RedisConfiguration.from(config)
+    redisConfig.isInstanceOf[MasterReplicaRedisConfiguration] shouldEqual (true)
+    val redisMasterReplicaRedisConfiguration = redisConfig.asInstanceOf[MasterReplicaRedisConfiguration]
+
+    redisMasterReplicaRedisConfiguration.redisURI.value.size shouldEqual 1
+    redisMasterReplicaRedisConfiguration.redisURI.value.head.toString shouldEqual "redis-sentinel://*******@redis-sentinel-1?sentinelMasterId=mymaster"
+  }
 }

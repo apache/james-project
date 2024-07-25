@@ -83,7 +83,7 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
         }
 
         public MasterReplicaRedisConfiguration getRedisConfiguration() {
-            return MasterReplicaRedisConfiguration.from(ImmutableList.of(createRedisSentinelURI(this.stream().toList().subList(0,1)))
+            return MasterReplicaRedisConfiguration.from(ImmutableList.of(createRedisSentinelURI(this))
                     .toArray(String[]::new),
                 ReadFrom.MASTER,
                 OptionConverters.toScala(Optional.empty()),
