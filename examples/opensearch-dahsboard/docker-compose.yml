@@ -1,0 +1,15 @@
+version: '3'
+services:
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.1
+    container_name: opensearch-dashboards
+    ports:
+      - 5601:5601
+    expose:
+      - "5601"
+    environment:
+      OPENSEARCH_HOSTS: '["https://xxxx:9200"]'
+      OPENSEARCH_USERNAME: username
+      OPENSEARCH_PASSWORD: xxxxx
+      OPENSEARCH_DASHBOARDS_OPENSEARCH_SSL_VERIFICATIONMODE: none
+      OPENSEARCH_DASHBOARD_PASSWORD: xxxxx
