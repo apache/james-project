@@ -31,7 +31,7 @@ import org.apache.james.rate.limiter.api._
 import org.apache.james.rate.limiter.redis.RedisRateLimiterFactory
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode}
 import org.awaitility.Awaitility
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.{AfterEach, Test}
 import org.junit.jupiter.api.extension.ExtendWith
 import reactor.core.scala.publisher.SMono
 
@@ -42,6 +42,12 @@ object RedisRateLimiterWithSentinelTest {
 
 @ExtendWith(Array(classOf[RedisSentinelExtension]))
 class RedisRateLimiterWithSentinelTest {
+
+  @AfterEach
+  def afterEach(redisClusterContainer: RedisSentinelCluster): Unit = {
+    redisClusterContainer.redisMasterReplicaContainerList.unPauseMasterNode()
+  }
+
   @Test
   def rateLimitShouldBeAcceptableWhenLimitIsAcceptable(redisClusterContainer: RedisSentinelCluster): Unit = {
     val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.redisSentinelContainerList.getRedisConfiguration)
