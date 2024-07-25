@@ -26,7 +26,6 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.james.backends.opensearch.IndexName;
 import org.apache.james.backends.opensearch.ReadAliasName;
 import org.apache.james.backends.opensearch.WriteAliasName;
-import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
 import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson.IndexUser;
 
 public class OpenSearchMailboxConfiguration {
