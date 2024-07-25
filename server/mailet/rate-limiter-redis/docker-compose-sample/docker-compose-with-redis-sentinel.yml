@@ -1,0 +1,120 @@
+version: '3'
+
+services:
+  redis-master:
+    image: redis:7.2.5
+    container_name: redis-master
+    restart: always
+    ports:
+      - "6379:6379"
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./config-template/master/redis.conf.template:/usr/local/etc/redis/redis.conf.template
+      - ./config-template/master/docker-entrypoint-master.sh:/usr/local/etc/redis/docker-entrypoint.sh
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping", "|", "grep", "PONG"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - emaily-net
+
+  redis-replica-1:
+    image: redis:7.2.5
+    container_name: redis-replica-1
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    ports:
+      - "6380:6379"
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./config-template/replica/redis.conf.template:/usr/local/etc/redis/redis.conf.template
+      - ./config-template/replica/docker-entrypoint-replica.sh:/usr/local/etc/redis/docker-entrypoint.sh
+    networks:
+      - emaily-net
+
+  redis-replica-2:
+    image: redis:7.2.5
+    container_name: redis-replica-2
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    ports:
+      - "6381:6379"
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./config-template/replica/redis.conf.template:/usr/local/etc/redis/redis.conf.template
+      - ./config-template/replica/docker-entrypoint-replica.sh:/usr/local/etc/redis/docker-entrypoint.sh
+    networks:
+      - emaily-net
+
+  sentinel-1:
+    image: redis:7.2.5
+    container_name: sentinel-1
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    ports:
+      - "26379:26379"
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./config-template/sentinel/sentinel.conf.template:/usr/local/etc/redis/sentinel.conf.template
+      - ./config-template/sentinel/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
+    networks:
+      - emaily-net
+
+  sentinel-2:
+    image: redis:7.2.5
+    container_name: sentinel-2
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    ports:
+      - "26380:26379"
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./config-template/sentinel/sentinel.conf.template:/usr/local/etc/redis/sentinel.conf.template
+      - ./config-template/sentinel/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
+    networks:
+      - emaily-net
+
+  sentinel-3:
+    image: redis:7.2.5
+    container_name: sentinel-3
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    ports:
+      - "26381:26379"
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./config-template/sentinel/sentinel.conf.template:/usr/local/etc/redis/sentinel.conf.template
+      - ./config-template/sentinel/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
+    networks:
+      - emaily-net
+
+  james:
+    image: apache/james:memory-latest
+    depends_on:
+      - sentinel-1
+      - sentinel-2
+      - sentinel-3
+    container_name: james
+    hostname: james.local
+    ports:
+      - "8000:8000"
+    command:
+      - --generate-keystore
+    volumes:
+      - ./redis.properties:/root/conf/redis.properties
+      - ../extensions.properties:/root/conf/extensions.properties
+      - ../target/james-server-rate-limiter-redis-jar-with-dependencies.jar:/root/extensions-jars/james-server-rate-limiter-redis.jar
+      - ../mailetcontainer.xml:/root/conf/mailetcontainer.xml
+      - ../healthcheck.properties:/root/conf/healthcheck.properties
+    networks:
+      - emaily-net
+
+networks:
+  emaily-net:
+    driver: bridge
