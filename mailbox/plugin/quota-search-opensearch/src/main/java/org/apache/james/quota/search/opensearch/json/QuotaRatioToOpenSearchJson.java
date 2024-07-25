@@ -46,6 +46,10 @@ public class QuotaRatioToOpenSearchJson {
                 .user(quotaRootResolver.associatedUsername(event.getQuotaRoot()).asString())
                 .domain(event.getQuotaRoot().getDomain().map(Domain::asString))
                 .quotaRatio(QuotaRatio.from(event.getSizeQuota(), event.getCountQuota()))
+                .sizeLimit(event.getSizeQuota().getLimit().asLongOptional())
+                .countLimit(event.getCountQuota().getLimit().asLongOptional())
+                .sizeUsed(event.getSizeQuota().getUsed().asLong())
+                .countUsed(event.getCountQuota().getUsed().asLong())
                 .build());
     }
 }

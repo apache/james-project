@@ -19,14 +19,19 @@
 
 package org.apache.james.quota.search.opensearch;
 
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.COUNT_LIMIT;
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.COUNT_USED;
 import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.DOMAIN;
 import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.QUOTA_RATIO;
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.SIZE_LIMIT;
+import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.SIZE_USED;
 import static org.apache.james.quota.search.opensearch.json.JsonMessageConstants.USER;
 
 import java.util.Map;
 
 import org.opensearch.client.opensearch._types.mapping.DoubleNumberProperty;
 import org.opensearch.client.opensearch._types.mapping.KeywordProperty;
+import org.opensearch.client.opensearch._types.mapping.LongNumberProperty;
 import org.opensearch.client.opensearch._types.mapping.Property;
 import org.opensearch.client.opensearch._types.mapping.RoutingField;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
@@ -53,6 +58,18 @@ class QuotaRatioMappingFactory {
                 .build())
             .put(QUOTA_RATIO, new Property.Builder()
                 .double_(new DoubleNumberProperty.Builder().build())
+                .build())
+            .put(SIZE_LIMIT, new Property.Builder()
+                .long_(new LongNumberProperty.Builder().build())
+                .build())
+            .put(SIZE_USED, new Property.Builder()
+                .long_(new LongNumberProperty.Builder().build())
+                .build())
+            .put(COUNT_LIMIT, new Property.Builder()
+                .long_(new LongNumberProperty.Builder().build())
+                .build())
+            .put(COUNT_USED, new Property.Builder()
+                .long_(new LongNumberProperty.Builder().build())
                 .build())
             .build();
     }

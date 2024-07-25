@@ -59,6 +59,7 @@ class QuotaRatioToOpenSearchJsonTest {
 
         assertThatJson(convertToJson)
             .when(IGNORING_ARRAY_ORDER)
+            .whenIgnoringPaths("date")
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("quotaRatio.json"));
     }
 
@@ -81,6 +82,7 @@ class QuotaRatioToOpenSearchJsonTest {
 
         assertThatJson(convertToJson)
             .when(IGNORING_ARRAY_ORDER)
+            .whenIgnoringPaths("date")
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("quotaRatioNoDomain.json"));
     }
 }

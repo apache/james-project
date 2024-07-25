@@ -24,5 +24,10 @@ public interface JsonMessageConstants {
     String USER = "user";
     String DOMAIN = "domain";
     String QUOTA_RATIO = "quotaRatio";
+    String SIZE_USED = "sizeUsed";
+    String COUNT_USED = "countUsed";
+    String SIZE_LIMIT = "sizeLimit";
+    String COUNT_LIMIT = "countLimit";
+    String DATE = "date";
 
 }

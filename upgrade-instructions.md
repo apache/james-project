@@ -33,6 +33,53 @@ Change list:
  - [Migrate RabbitMQ classic queues to version 2](#migrate-rabbitmq-classic-queues-to-version-2)
  - [JAMES-3946 White list removals](#james-3946-white-list-removals)
 
+### JAMES-4052 Details in quota index
+
+Date: 23/07/2024
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-4052
+
+In order to build a comprehensive view for quotas using OpenSearch dashboard, the quota document indexed was enriched 
+to include quota details.
+
+As the OpenSearch mapping was changed, one can either:
+
+ - Add the missing fields:
+
+```
+curl -X PUT \
+  http://ip:port/quota_ratio_v1/_mapping \
+  -H 'Content-Type: application/json' \
+  -d "{
+	\"properties\": {
+		\"sizeUsed\": {
+			\"type\": \"long\",
+		},
+		\"countUsed\": {
+			\"type\": \"long\",
+		},
+		\"sizeLimit\": {
+			\"type\": \"long\",
+		},
+		\"countLimit\": {
+			\"type\": \"long\",
+		},
+		\"date\": {
+			\"type\": \"date\",
+			\"format\": \"uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX\"
+		}
+	}
+}"
+```
+
+ - Or consider this non-critical data and just start with a fresh index, which could be achieved with the following configuration:
+
+```
+opensearch.index.quota.ratio.name=james-quota-ratio-v2
+opensearch.alias.read.quota.ratio.name=james-quota-ratio-read-v2
+opensearch.alias.write.quota.ratio.name=james-quota-ratio-write-v2
+```
+
 ### JAMES-3946 White list removals
 
 Date: 14/06/2024
