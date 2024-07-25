@@ -26,7 +26,7 @@ import eu.timepit.refined.collection.NonEmpty
 import io.lettuce.core.{ReadFrom, RedisURI}
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.backends.redis.RedisConfiguration.{CLUSTER_TOPOLOGY, MASTER_REPLICA_TOPOLOGY, STANDALONE_TOPOLOGY}
-import org.apache.james.backends.redis.RedisUris.RedisUris
+import org.apache.james.backends.redis.RedisUris.{REDIS_URL_PROPERTY_NAME, RedisUris}
 import org.slf4j.{Logger, LoggerFactory}
 
 object RedisConfiguration {
@@ -54,6 +54,7 @@ object RedisConfiguration {
 }
 
 object RedisUris {
+  val REDIS_URL_PROPERTY_NAME: String = "redisURL"
   type RedisUrisConstraint = NonEmpty
   type RedisUris = List[RedisURI] Refined RedisUrisConstraint
 
@@ -84,7 +85,7 @@ trait RedisConfiguration {
 
 object StandaloneRedisConfiguration {
   def from(config: Configuration): StandaloneRedisConfiguration = from(
-    config.getString("redisURL"),
+    config.getString(REDIS_URL_PROPERTY_NAME),
     RedisConfiguration.redisIoThreadsFrom(config),
     RedisConfiguration.redisWorkerThreadsFrom(config))
 
@@ -104,11 +105,17 @@ case class StandaloneRedisConfiguration(redisURI: RedisURI, ioThreads: Option[In
 }
 
 object MasterReplicaRedisConfiguration {
-  def from(config: Configuration): MasterReplicaRedisConfiguration =
-    from(config.getStringArray("redisURL"),
+  def from(config: Configuration): MasterReplicaRedisConfiguration = {
+    val redisUris: Array[String] = config.getString(REDIS_URL_PROPERTY_NAME) match {
+      case rawValue if rawValue.startsWith("redis-sentinel:") => Array(config.getStringArray(REDIS_URL_PROPERTY_NAME).mkString(","))
+      case _ => config.getStringArray(REDIS_URL_PROPERTY_NAME)
+    }
+
+    from(redisUris,
       Option(config.getString("redis.readFrom", null)).map(ReadFrom.valueOf).getOrElse(ReadFrom.MASTER),
       RedisConfiguration.redisIoThreadsFrom(config),
       RedisConfiguration.redisWorkerThreadsFrom(config))
+  }
 
   def from(redisUris: Array[String],
            readFrom: ReadFrom,
@@ -132,7 +139,7 @@ case class MasterReplicaRedisConfiguration(redisURI: RedisUris, readFrom: ReadFr
 
 object ClusterRedisConfiguration {
   def from(config: Configuration): ClusterRedisConfiguration =
-    from(config.getStringArray("redisURL"),
+    from(config.getStringArray(REDIS_URL_PROPERTY_NAME),
       RedisConfiguration.redisIoThreadsFrom(config),
       RedisConfiguration.redisWorkerThreadsFrom(config))
 
