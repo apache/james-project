@@ -243,12 +243,12 @@
   
   <section name="Apache jDKIM">
   
-    <p>Apache James jDKIM 0.3 is the latest jDKIM stable version.</p>
+    <p>Apache James jDKIM 0.4 is the latest jDKIM stable version.</p>
 
     <p>Sources:
-      <a href="https://www.apache.org/dyn/closer.lua/james/jdkim/apache-jdkim-project-0.3-source-release.zip">(Zip)</a>
-      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-project-0.3-source-release.zip.sha512">SHA-512</a>]
-      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-project-0.3-source-release.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/jdkim/apache-jdkim-project-0.4-source-release.zip">(Zip)</a>
+      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-project-0.4-source-release.zip.sha512">SHA-512</a>]
+      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-project-0.4-source-release.zip.asc">PGP</a>]
     </p>
 
     <p>You can directly use it with maven:</p>
@@ -258,15 +258,15 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james.jdkim&lt;/groupId&gt;
     &lt;artifactId&gt;apache-jdkim&lt;/artifactId&gt;
-    &lt;version&gt;0.3&lt;/version&gt;
+    &lt;version&gt;0.4&lt;/version&gt;
   &lt;/dependency&gt;
       </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dyn/closer.lua/james/jdkim/apache-jdkim-0.3-bin.zip">(Zip)</a>
-      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-0.3-bin.zip.sha512">SHA-512</a>]
-      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-0.3-bin.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/jdkim/apache-jdkim-0.4-bin.zip">(Zip)</a>
+      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-0.4-bin.zip.sha512">SHA-512</a>]
+      [<a href="https://downloads.apache.org/james/jdkim/apache-jdkim-0.4-bin.zip.asc">PGP</a>]
     </p>
   
   </section>
