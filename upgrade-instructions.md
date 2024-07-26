@@ -32,8 +32,9 @@ Change list:
  - [Make all queues on RabbitMQ quorum queue when `quorum.queues.enable=true`](#make-all-queues-on-rabbitmq-quorum-queue-when-quorumqueuesenabletrue)
  - [Migrate RabbitMQ classic queues to version 2](#migrate-rabbitmq-classic-queues-to-version-2)
  - [JAMES-3946 White list removals](#james-3946-white-list-removals)
+ - [JAMES-4052 Details in quota index](#james-4052-details-in-quota-index)
 
-### JAMES-4052 Details in quota index
+### JAMES-4052 Details in quota index and mailbox user
 
 Date: 23/07/2024
 
@@ -78,6 +79,29 @@ curl -X PUT \
 opensearch.index.quota.ratio.name=james-quota-ratio-v2
 opensearch.alias.read.quota.ratio.name=james-quota-ratio-read-v2
 opensearch.alias.write.quota.ratio.name=james-quota-ratio-write-v2
+```
+
+We also added an optional field to the mailbox mapping for `user`. It allows doing per user analysis in OpenSearch dashboards.
+
+In order to activate that field, include in `opensearch.properties`: 
+
+```
+opensearch.indexUser=true
+```
+
+And create the field:
+
+```
+curl -X PUT \
+  http://ip:port/mailbox_v2/_mapping \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "properties": {
+        "user": {
+            "type": "keyword"
+        }
+    }
+}'
 ```
 
 ### JAMES-3946 White list removals

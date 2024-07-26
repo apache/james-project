@@ -26,6 +26,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.james.backends.opensearch.IndexName;
 import org.apache.james.backends.opensearch.ReadAliasName;
 import org.apache.james.backends.opensearch.WriteAliasName;
+import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson.IndexUser;
 
 public class OpenSearchMailboxConfiguration {
 
@@ -37,6 +38,7 @@ public class OpenSearchMailboxConfiguration {
         private Optional<IndexHeaders> indexHeaders;
         private Optional<Boolean> optimiseMoves;
         private Optional<IndexBody> indexBody;
+        private Optional<IndexUser> indexUser;
 
         Builder() {
             indexMailboxName = Optional.empty();
@@ -46,6 +48,7 @@ public class OpenSearchMailboxConfiguration {
             indexHeaders = Optional.empty();
             optimiseMoves = Optional.empty();
             indexBody = Optional.empty();
+            indexUser = Optional.empty();
         }
 
         public Builder indexMailboxName(Optional<IndexName> indexMailboxName) {
@@ -83,6 +86,11 @@ public class OpenSearchMailboxConfiguration {
             return this;
         }
 
+        public Builder indexUser(IndexUser indexUser) {
+            this.indexUser = Optional.ofNullable(indexUser);
+            return this;
+        }
+
         public OpenSearchMailboxConfiguration build() {
             return new OpenSearchMailboxConfiguration(
                 indexMailboxName.orElse(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX),
@@ -91,7 +99,8 @@ public class OpenSearchMailboxConfiguration {
                 indexAttachment.orElse(IndexAttachments.YES),
                 indexHeaders.orElse(IndexHeaders.YES),
                 optimiseMoves.orElse(DEFAULT_OPTIMIZE_MOVES),
-                indexBody.orElse(IndexBody.YES));
+                indexBody.orElse(IndexBody.YES),
+                indexUser.orElse(IndexUser.NO));
         }
     }
 
@@ -109,10 +118,12 @@ public class OpenSearchMailboxConfiguration {
     private static final String OPENSEARCH_INDEX_HEADERS = "opensearch.indexHeaders";
     private static final String OPENSEARCH_MESSAGE_INDEX_OPTIMIZE_MOVE = "opensearch.message.index.optimize.move";
     private static final String OPENSEARCH_INDEX_BODY = "opensearch.indexBody";
+    private static final String OPENSEARCH_INDEX_USER = "opensearch.indexUser";
     private static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
     private static final boolean DEFAULT_INDEX_HEADERS = true;
     public static final boolean DEFAULT_OPTIMIZE_MOVES = false;
     public static final boolean DEFAULT_INDEX_BODY = true;
+    public static final boolean DEFAULT_INDEX_USER = false;
     public static final OpenSearchMailboxConfiguration DEFAULT_CONFIGURATION = builder().build();
 
     public static OpenSearchMailboxConfiguration fromProperties(Configuration configuration) {
@@ -124,6 +135,7 @@ public class OpenSearchMailboxConfiguration {
             .indexHeaders(provideIndexHeaders(configuration))
             .optimiseMoves(configuration.getBoolean(OPENSEARCH_MESSAGE_INDEX_OPTIMIZE_MOVE, null))
             .indexBody(provideIndexBody(configuration))
+            .indexUser(provideIndexUser(configuration))
             .build();
     }
 
@@ -169,6 +181,13 @@ public class OpenSearchMailboxConfiguration {
         return IndexBody.NO;
     }
 
+    private static IndexUser provideIndexUser(Configuration configuration) {
+        if (configuration.getBoolean(OPENSEARCH_INDEX_USER, DEFAULT_INDEX_USER)) {
+            return IndexUser.YES;
+        }
+        return IndexUser.NO;
+    }
+
     private final IndexName indexMailboxName;
     private final ReadAliasName readAliasMailboxName;
     private final WriteAliasName writeAliasMailboxName;
@@ -176,10 +195,12 @@ public class OpenSearchMailboxConfiguration {
     private final IndexHeaders indexHeaders;
     private final boolean optimiseMoves;
     private final IndexBody indexBody;
+    private final IndexUser indexUser;
 
     private OpenSearchMailboxConfiguration(IndexName indexMailboxName, ReadAliasName readAliasMailboxName,
                                            WriteAliasName writeAliasMailboxName, IndexAttachments indexAttachment,
-                                           IndexHeaders indexHeaders, boolean optimiseMoves, IndexBody indexBody) {
+                                           IndexHeaders indexHeaders, boolean optimiseMoves, IndexBody indexBody,
+                                           IndexUser indexUser) {
         this.indexMailboxName = indexMailboxName;
         this.readAliasMailboxName = readAliasMailboxName;
         this.writeAliasMailboxName = writeAliasMailboxName;
@@ -187,6 +208,7 @@ public class OpenSearchMailboxConfiguration {
         this.indexHeaders = indexHeaders;
         this.optimiseMoves = optimiseMoves;
         this.indexBody = indexBody;
+        this.indexUser = indexUser;
     }
 
     public IndexName getIndexMailboxName() {
@@ -217,6 +239,10 @@ public class OpenSearchMailboxConfiguration {
         return indexBody;
     }
 
+    public IndexUser getIndexUser() {
+        return indexUser;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof OpenSearchMailboxConfiguration) {
@@ -228,7 +254,8 @@ public class OpenSearchMailboxConfiguration {
                 && Objects.equals(this.readAliasMailboxName, that.readAliasMailboxName)
                 && Objects.equals(this.optimiseMoves, that.optimiseMoves)
                 && Objects.equals(this.writeAliasMailboxName, that.writeAliasMailboxName)
-                && Objects.equals(this.indexBody, that.indexBody);
+                && Objects.equals(this.indexBody, that.indexBody)
+                && Objects.equals(this.indexUser, that.indexUser);
         }
         return false;
     }
@@ -236,6 +263,6 @@ public class OpenSearchMailboxConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(indexMailboxName, readAliasMailboxName, writeAliasMailboxName, indexAttachment, indexHeaders,
-            writeAliasMailboxName, optimiseMoves, indexBody);
+            writeAliasMailboxName, optimiseMoves, indexBody, indexUser);
     }
 }

@@ -357,7 +357,7 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     }
 
     private Mono<String> generateIndexedJson(Mailbox mailbox, MailboxMessage message, MailboxSession session) {
-        return messageToOpenSearchJson.convertToJson(message)
+        return messageToOpenSearchJson.convertToJson(message, session)
             .onErrorResume(e -> {
                 LOGGER.warn("Indexing mailbox {}-{} of user {} on message {} without attachments ",
                     mailbox.getName(),
@@ -365,7 +365,7 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
                     session.getUser().asString(),
                     message.getUid(),
                     e);
-                return messageToOpenSearchJson.convertToJsonWithoutAttachment(message);
+                return messageToOpenSearchJson.convertToJsonWithoutAttachment(message, session);
             });
     }
 
