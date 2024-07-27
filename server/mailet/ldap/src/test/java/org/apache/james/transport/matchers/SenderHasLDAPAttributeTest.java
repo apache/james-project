@@ -104,6 +104,50 @@ class SenderHasLDAPAttributeTest {
     }
 
     @Test
+    void shouldMatchWhenCached() throws Exception {
+        SenderHasLDAPAttribute testee = new SenderHasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("SenderHasLDAPAttribute")
+            .condition("description?cacheEnabled=true")
+            .build();
+        testee.init(matcherConfig);
+
+        MailAddress sender = new MailAddress("james-user@james.org");
+        MailAddress recipient = new MailAddress("recipient@james.org");
+        FakeMail mail = FakeMail.builder()
+            .name("default-id")
+            .sender(sender)
+            .recipient(recipient)
+            .build();
+        testee.match(mail);
+        Collection<MailAddress> matched = testee.match(mail);
+
+        assertThat(matched).containsOnly(recipient);
+    }
+
+    @Test
+    void shouldAllowNoMatchWhenCached() throws Exception {
+        SenderHasLDAPAttribute testee = new SenderHasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("SenderHasLDAPAttribute")
+            .condition("description?cacheEnabled=true")
+            .build();
+        testee.init(matcherConfig);
+
+        MailAddress sender = new MailAddress("james-user2@james.org");
+        MailAddress recipient = new MailAddress("recipient@james.org");
+        FakeMail mail = FakeMail.builder()
+            .name("default-id")
+            .sender(sender)
+            .recipient(recipient)
+            .build();
+        testee.match(mail);
+        Collection<MailAddress> matched = testee.match(mail);
+
+        assertThat(matched).isEmpty();
+    }
+
+    @Test
     void shouldNotReturnRecipientWhenDoesNotHaveAttribute() throws Exception {
         SenderHasLDAPAttribute testee = new SenderHasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()

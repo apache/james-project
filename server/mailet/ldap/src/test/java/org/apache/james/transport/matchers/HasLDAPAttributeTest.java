@@ -77,6 +77,46 @@ class HasLDAPAttributeTest {
     }
 
     @Test
+    void shouldMatchWhenCached() throws Exception {
+        HasLDAPAttribute testee = new HasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("HasLDAPAttribute")
+            .condition("description:abcdef?cacheEnabled=true")
+            .build();
+        testee.init(matcherConfig);
+
+        MailAddress recipient = new MailAddress("james-user@james.org");
+        FakeMail mail = FakeMail.builder()
+            .name("default-id")
+            .recipient(recipient)
+            .build();
+        testee.match(mail);
+        Collection<MailAddress> matched = testee.match(mail);
+
+        assertThat(matched).containsOnly(recipient);
+    }
+
+    @Test
+    void shouldAllowNoMatchWhenCached() throws Exception {
+        HasLDAPAttribute testee = new HasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("HasLDAPAttribute")
+            .condition("description:abcdef?cacheEnabled=true")
+            .build();
+        testee.init(matcherConfig);
+
+        MailAddress recipient = new MailAddress("james-user2@james.org");
+        FakeMail mail = FakeMail.builder()
+            .name("default-id")
+            .recipient(recipient)
+            .build();
+        testee.match(mail);
+        Collection<MailAddress> matched = testee.match(mail);
+
+        assertThat(matched).isEmpty();
+    }
+
+    @Test
     void shouldThrowWhenPrefixedWithDelimiter() throws Exception {
         HasLDAPAttribute testee = new HasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
