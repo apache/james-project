@@ -64,7 +64,6 @@ or
 </mailet>
 ....
 
-
 For matching recipients against a specific LDAP group:
 
 ....xml
@@ -80,3 +79,16 @@ For matching a sender against a specific LDAP group:
     
 </mailet>
 ....
+
+=== Cache settings
+
+A cache can optionally be turned on in order to reduce LDAP calls for `SenderHasLDAPAttribute` and `HasLDAPAttribute`:
+
+....xml
+<!-- Matches sender that have the following attribute regardless of the actual value-->
+<mailet matcher="SenderHasLDAPAttribute=description?cacheEnabled=true&cacheSize=1000&cacheDuration=1hour" class="Null">
+
+</mailet>
+....
+
+The defaults are cache up to 10_000 entries for 1 day.
