@@ -19,8 +19,10 @@
 
 package org.apache.james.transport.matchers;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
@@ -36,7 +38,6 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.cache.Cache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
@@ -167,9 +168,9 @@ public class HasLDAPAttribute extends GenericMatcher {
 
     private boolean hasAttribute(SearchResultEntry entry) {
         return attributeValue.map(value -> Optional.ofNullable(entry.getAttribute(attributeName))
-            .map(Attribute::getValue)
-            .map(value::equals)
-            .orElse(false))
+                .map(attribute -> Arrays.stream(attribute.getValues()))
+                .orElse(Stream.empty())
+                .anyMatch(value::equals))
             .orElseGet(() -> entry.hasAttribute(attributeName));
     }
 
