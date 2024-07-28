@@ -338,14 +338,14 @@ public interface MailRepositoryContract {
     @Test
     default void retrieveShouldReturnNullWhenKeyWasRemoved() throws Exception {
         MailRepository testee = retrieveRepository();
-        testee.store(createMail(MAIL_1));
+        var mailKey = testee.store(createMail(MAIL_1));
 
-        testee.remove(MAIL_1);
+        testee.remove(mailKey);
 
         assertThat(retrieveRepository().list())
                 .toIterable()
-                .doesNotContain(MAIL_1);
-        assertThat(retrieveRepository().retrieve(MAIL_1)).isNull();
+                .doesNotContain(mailKey);
+        assertThat(retrieveRepository().retrieve(mailKey)).isNull();
     }
 
     @Test
