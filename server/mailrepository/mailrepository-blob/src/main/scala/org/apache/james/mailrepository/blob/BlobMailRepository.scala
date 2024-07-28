@@ -201,16 +201,26 @@ class BlobMailRepository(val mailMetaDataBlobStore: BlobStore,
       .orNull
   }
 
-  // FIXME - on supprime les metadata mais pas les mimeMessages associés ?
   @throws[MessagingException]
   override def remove(key: MailKey): Unit = {
-    Mono.from(mailMetadataStore.delete( MailPartsId(mailMetadataBlobIdFactory.parse(key.asString())))).block()
+    val mailMetadataId: MailPartsId = MailPartsId(mailMetadataBlobIdFactory.parse(key.asString()))
+    remove(mailMetadataId).block()
   }
-  // FIXME - on supprime les metadata mais pas les mimeMessages associés ?
+
+  private def remove(mailMetadataId: MailPartsId): SMono[Unit] =
+    for {
+      maybeMimeMessagePartsId <- SMono(mailMetadataStore.read(mailMetadataId))
+        .map { case ((_, mimeMessagePartsId)) => Some(mimeMessagePartsId) }
+        .onErrorRecover(_ => None)
+      _ <- SMono(mailMetadataStore.delete(mailMetadataId))
+      _ <- SMono(maybeMimeMessagePartsId.map(mimeMessagePartsId => mimeMessageStore.delete(mimeMessagePartsId)).getOrElse(SMono.empty))
+    } yield ()
+
+
   @throws[MessagingException]
   override def removeAll(): Unit = {
     Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
-      .flatMap(blobId => mailMetadataStore.delete(MailPartsId(blobId)))
+      .flatMap(blobId => this.remove(MailPartsId(blobId)))
       .blockLast()
   }
 
