@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.ByteArrayInputStream;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -58,13 +59,18 @@ public interface DeduplicationBlobStoreContract {
         System.clearProperty("james.blob.id.hash.encoding");
     }
 
+    @AfterEach
+    default void afterEach() {
+        System.clearProperty("james.blob.id.hash.encoding");
+    }
+
     @Test
     default void deduplicationBlobstoreCreationShouldFailOnInvalidProperty() {
-        System.setProperty("james.blob.id.hash.encoding", "invalid");
+        System.setProperty("james.blob.id.hash.encoding", "deduplicationBlobstoreCreationShouldFailOnInvalidProperty");
 
         assertThatThrownBy(this::createBlobStore)
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Unknown encoding type: invalid");
+                .hasMessage("Unknown encoding type: deduplicationBlobstoreCreationShouldFailOnInvalidProperty");
     }
 
     @ParameterizedTest
