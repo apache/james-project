@@ -120,8 +120,6 @@ include::partial$WithStorageDirective.adoc[]
 
 == Experimental mailets
 
-include::partial$AddHabeasWarrantMark.adoc[]
-
 include::partial$ClamAVScan.adoc[]
 
 include::partial$ClassifyBounce.adoc[]
