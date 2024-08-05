@@ -452,5 +452,16 @@ Download performance with 8 MB objects (b2-30)
 We believe that the actual OVH Swift S3' throughput should be at least about 100 MB/s. This was not fully achieved due to
 network limitations of the client machine performing the benchmark.
 
+=== Benchmark Redis
 
+==== Benchmark methodology
+
+We can use the built-in https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/[redis-benchmark utility].
+
+The tool is easy to use with good documentation. Just to be sure that you specify the redis-benchmark to use multi-thread if it runs against a multi-thread Redis instance.
+
+Example:
+```
+redis-benchmark -n 1000000 --threads 4
+```
 
