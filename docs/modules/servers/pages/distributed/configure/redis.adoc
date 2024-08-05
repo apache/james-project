@@ -29,3 +29,19 @@ Reference: https://github.com/redis/lettuce/wiki/ReadFrom-Settings
 | redis.workerThreads
 | Worker threads to be using for the underlying driver. If unspecified driver defaults applies.
 |===
+
+== Enabling Multithreading in Redis
+
+Redis 6 and later versions support multithreading, but by default, Redis operates as a single-threaded process.
+
+On a virtual machine with multiple CPU cores, you can enhance Redis performance by enabling multithreading. This can significantly improve I/O operations, particularly for workloads with high concurrency or large data volumes.
+
+See link:https://redis.io/docs/latest/operate/oss_and_stack/management/config-file/[THREADED I/O section].
+
+Example if you have a 4 cores CPU, you can enable the following lines in the `redis.conf` file:
+....
+io-threads 3
+io-threads-do-reads yes
+....
+
+However, if your machine has only 1 CPU core or your Redis usage is not intensive, you will not benefit from this.
