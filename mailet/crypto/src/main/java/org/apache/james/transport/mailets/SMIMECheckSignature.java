@@ -107,6 +107,8 @@ import org.slf4j.LoggerFactory;
 public class SMIMECheckSignature extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(SMIMECheckSignature.class);
 
+    private static final String SMIME_STATUS_HEADER = "X-SMIME-Status";
+
     private KeyStoreHolder trustedCertificateStore;
     private boolean stripSignature = false;
     private boolean onlyTrusted = true;
@@ -160,6 +162,9 @@ public class SMIMECheckSignature extends GenericMailet {
         MimeBodyPart strippedMessage = null;
         
         List<SMIMESignerInfo> signers = null;
+
+        boolean isMessageSigned = false;
+        boolean isSignatureGood = false;
         
         try {
             SMIMESigned signed = asSMIMESigned(message);
@@ -167,6 +172,7 @@ public class SMIMECheckSignature extends GenericMailet {
             if (signed != null) {
                 signers = trustedCertificateStore.verifySignatures(signed);
                 strippedMessage = signed.getContent();
+                isMessageSigned = true;
             } else {
                 LOGGER.info("Content not identified as signed");
             }
@@ -191,14 +197,27 @@ public class SMIMECheckSignature extends GenericMailet {
 
             if (!signerinfolist.isEmpty()) {
                 mail.setAttribute(new Attribute(mailAttribute, AttributeValue.of(signerinfolist)));
+                isSignatureGood = true;
             } else {
                 // if no valid signers are found the message is not modified.
                 strippedMessage = null;
             }
         }
 
+        setSMIMEStatus(mail, isMessageSigned, isSignatureGood);
+
         if (stripSignature && strippedMessage != null) {
             stripSignature(mail, message, strippedMessage);
+        }
+    }
+
+    private void setSMIMEStatus(Mail mail, boolean isMessageSigned, boolean isSignatureGood) throws MessagingException {
+        if (!isMessageSigned) {
+            mail.getMessage().setHeader(SMIME_STATUS_HEADER, "Not signed");
+        } else if (isSignatureGood) {
+            mail.getMessage().setHeader(SMIME_STATUS_HEADER, "Good signature");
+        } else {
+            mail.getMessage().setHeader(SMIME_STATUS_HEADER, "Bad signature");
         }
     }
 
