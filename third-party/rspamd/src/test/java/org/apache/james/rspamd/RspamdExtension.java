@@ -40,7 +40,7 @@ public class RspamdExtension implements GuiceModuleTestExtension {
     public static final Duration STARTUP_TIMEOUT = Duration.ofMinutes(5);
     public static final String PASSWORD = "admin";
 
-    private static final DockerImageName RSPAMD_IMAGE = DockerImageName.parse("a16bitsysop/rspamd").withTag("3.8.4-r0-alpine3.20.0-r0");
+    private static final DockerImageName RSPAMD_IMAGE = DockerImageName.parse("rspamd/rspamd").withTag("3.9.1");
     private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis").withTag("7.2.5");
     private static final DockerImageName CLAMAV_IMAGE = DockerImageName.parse("clamav/clamav").withTag("1.3");
     private static final int RSPAMD_DEFAULT_PORT = 11334;
