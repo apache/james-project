@@ -39,7 +39,7 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.store.ByteBuffersDirectory;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -64,7 +64,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             .defaultAnnotationLimits()
             .defaultMessageParser()
             .listeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
-                preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new RAMDirectory(),
+                preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new ByteBuffersDirectory(),
                 new InMemoryMessageId.Factory(),
                 preInstanciationStage.getSessionProvider())))
             .noPreDeletionHooks()
