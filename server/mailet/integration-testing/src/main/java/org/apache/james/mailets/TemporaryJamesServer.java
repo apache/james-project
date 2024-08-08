@@ -139,7 +139,8 @@ public class TemporaryJamesServer {
         "pop3server.xml",
         "recipientrewritetable.xml",
         "usersrepository.xml",
-        "smime.p12");
+        "smime.p12",
+        "smime_cert_keystore");
 
     private final GuiceJamesServer jamesServer;
 
