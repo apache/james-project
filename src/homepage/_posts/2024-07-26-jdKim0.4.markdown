@@ -1,0 +1,18 @@
+---
+layout: post
+title:  "Apache James jDKIM 0.4"
+date:   20024-07-26 16:13:22 +0200
+categories: james update
+---
+
+The Apache James Project is happy to announce
+the release of version 0.4of the Apache James jDKIM library.
+
+jDKIM is a DKIM implementation library written in Java. It provides
+both verification and signing.
+
+This release updates DNS Java to a non-vulnerable version.
+
+
+
+
