@@ -30,6 +30,9 @@ defines the location, the format and the password of the keystore containing
 the certificates that are considered trusted. Note: only the trusted certificate
 entries are read, the key ones are not.
 
+* fileType (default: keystore): type of file that is used to construct keystore object. Possible values: keystore, pem.
+
+If fileType is "keystore". The following configuration parameters would be used:
 
 * keyStoreType (default: jks): Certificate store format . "jks" is the
 standard java certificate store format, but pkcs12 is also quite common and
@@ -37,6 +40,10 @@ compatible with standard email clients like Outlook Express and Thunderbird.
 * keyStoreFileName (default: JAVA_HOME/jre/lib/security/cacert): Certificate
 store path.
 * keyStorePassword (default: ""): Certificate store password.
+
+If fileType is "pem". The following configuration parameters would be used:
+
+* pemFileName: pem file path.
 
 Other parameters configure the behavior of the mailet:
 
