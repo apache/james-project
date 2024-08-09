@@ -33,6 +33,8 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.james.transport.KeyStoreHolder;
+import org.apache.james.transport.KeyStoreHolderConfiguration;
+import org.apache.james.transport.KeyStoreHolderFactory;
 import org.apache.james.transport.SMIMESignerInfo;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -132,23 +134,8 @@ public class SMIMECheckSignature extends GenericMailet {
         if (mailAttributeConf != null) {
             mailAttribute = AttributeName.of(mailAttributeConf);
         }
-        
-        
-        String type = config.getInitParameter("keyStoreType");
-        String file = config.getInitParameter("keyStoreFileName");
-        String password = config.getInitParameter("keyStorePassword");
-        
-        try {
-            if (file != null) {
-                trustedCertificateStore = new KeyStoreHolder(file, password, type);
-            } else {
-                LOGGER.info("No trusted store path specified, using default store.");
-                trustedCertificateStore = new KeyStoreHolder(password);
-            }
-        } catch (Exception e) {
-            throw new MessagingException("Error loading the trusted certificate store", e);
-        }
 
+        trustedCertificateStore = KeyStoreHolderFactory.createKeyStoreHolder(KeyStoreHolderConfiguration.from(config));
     }
 
     @Override
