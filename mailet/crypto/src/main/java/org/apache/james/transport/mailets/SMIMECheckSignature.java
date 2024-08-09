@@ -33,6 +33,7 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.james.transport.KeyStoreHolder;
+import org.apache.james.transport.KeyStoreHolderConfiguration;
 import org.apache.james.transport.KeyStoreHolderFactory;
 import org.apache.james.transport.SMIMESignerInfo;
 import org.apache.mailet.Attribute;
@@ -134,7 +135,7 @@ public class SMIMECheckSignature extends GenericMailet {
             mailAttribute = AttributeName.of(mailAttributeConf);
         }
 
-        trustedCertificateStore = KeyStoreHolderFactory.createKeyStoreHolder(config);
+        trustedCertificateStore = KeyStoreHolderFactory.createKeyStoreHolder(KeyStoreHolderConfiguration.from(config));
     }
 
     @Override

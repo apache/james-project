@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -33,46 +32,39 @@ import java.security.cert.CertificateException;
 import jakarta.mail.MessagingException;
 
 import org.apache.commons.io.input.UnsynchronizedBufferedInputStream;
-import org.apache.mailet.MailetConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
 public class KeyStoreHolderFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyStoreHolderFactory.class);
-    private static final String KEYSTORE_FILE_TYPE = "keystore";
-    private static final String PEM_FILE_TYPE = "pem";
 
-    public static KeyStoreHolder createKeyStoreHolder(MailetConfig config) throws MessagingException {
+    public static KeyStoreHolder createKeyStoreHolder(KeyStoreHolderConfiguration config) throws MessagingException {
         try {
             initJCE();
-            String fileType = config.getInitParameter("fileType");
-            if (fileType == null) {
-                return createFromKeyStoreFile(config);
-            }
-            switch (fileType) {
-                case KEYSTORE_FILE_TYPE:
+            switch (config.getFileType()) {
+                case KEYSTORE:
                     return createFromKeyStoreFile(config);
-                case PEM_FILE_TYPE:
+                case PEM:
                     return createFromPemFile(config);
                 default:
-                    throw new RuntimeException("Unsupported file type " + fileType);
+                    throw new RuntimeException("Unsupported file type " + config.getFileType().name().toLowerCase());
             }
         } catch (Exception e) {
             throw new MessagingException("Error loading the trusted certificate store", e);
         }
     }
 
-    private static KeyStoreHolder createFromKeyStoreFile(MailetConfig config) throws Exception {
-        String type = config.getInitParameter("keyStoreType");
-        String fileName = config.getInitParameter("keyStoreFileName");
-        String password = config.getInitParameter("keyStorePassword");
-
-        if (fileName != null) {
-            return createFromKeyStoreFile(fileName, password, type);
-        } else {
-            LOGGER.info("No trusted store path specified, using default store.");
-            return createFromKeyStoreFile(password);
-        }
+    private static KeyStoreHolder createFromKeyStoreFile(KeyStoreHolderConfiguration config) {
+        return config.getKeyStoreFileName()
+            .map(Throwing.function(fileName -> createFromKeyStoreFile(fileName, config.getKeyStorePassword(), config.getKeyStoreType())))
+            .orElseGet(Throwing.supplier(() -> {
+                LOGGER.info("No trusted store path specified, using default store.");
+                return createFromKeyStoreFile(System.getProperty("java.home") + "/lib/security/cacerts".replace('/', File.separatorChar),
+                    config.getKeyStorePassword(),
+                    KeyStore.getDefaultType());
+            }));
     }
 
     private static void initJCE() throws NoSuchProviderException {
@@ -85,20 +77,8 @@ public class KeyStoreHolderFactory {
         }
     }
 
-    private static KeyStoreHolder createFromKeyStoreFile(String password) throws GeneralSecurityException, IOException {
-        return createFromKeyStoreFile(System.getProperty("java.home") + "/lib/security/cacerts".replace('/', File.separatorChar), password, KeyStore.getDefaultType());
-    }
-
     private static KeyStoreHolder createFromKeyStoreFile(String keyStoreFileName, String keyStorePassword, String keyStoreType)
         throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-
-        if (keyStorePassword == null) {
-            keyStorePassword = "";
-        }
-
-        if (keyStoreType == null) {
-            keyStoreType = KeyStore.getDefaultType();
-        }
 
         KeyStore keyStore = KeyStore.getInstance(keyStoreType);
         keyStore.load(UnsynchronizedBufferedInputStream
@@ -111,15 +91,15 @@ public class KeyStoreHolderFactory {
         return new KeyStoreHolder(keyStore);
     }
 
-    private static KeyStoreHolder createFromPemFile(MailetConfig config) throws Exception {
-        String fileName = config.getInitParameter("pemFileName");
-        if (fileName == null) {
+    private static KeyStoreHolder createFromPemFile(KeyStoreHolderConfiguration config) throws Exception {
+        if (config.getPemFileName().isEmpty()) {
             throw new RuntimeException("pemFileName must not be empty");
+        } else {
+            KeyStore keyStore = PemReader.loadTrustStore(config.getPemFileName().get());
+            if (keyStore.size() == 0) {
+                throw new KeyStoreException("The keystore must be not empty");
+            }
+            return new KeyStoreHolder(keyStore);
         }
-        KeyStore keyStore = PemReader.loadTrustStore(fileName);
-        if (keyStore.size() == 0) {
-            throw new KeyStoreException("The keystore must be not empty");
-        }
-        return new KeyStoreHolder(keyStore);
     }
 }
