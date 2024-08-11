@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Stream;
 
+import com.google.common.annotations.VisibleForTesting;
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.mail.Flags;
@@ -124,6 +125,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -131,6 +134,8 @@ import reactor.core.publisher.Mono;
  * Lucene based {@link ListeningMessageSearchIndex} which offers message searching via a Lucene index
  */
 public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
+    private static final Logger log = LoggerFactory.getLogger(LuceneMessageSearchIndex.class);
+
     public static class LuceneMessageSearchIndexGroup extends org.apache.james.events.Group {
 
     }
@@ -162,7 +167,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * {@link Field} which will contain uid of the {@link MailboxMessage}
      */
-    private static final String UID_FIELD = "uid";
+    static final String UID_FIELD = "uid";
     
     /**
      * {@link Field} boolean field that say if the message as an attachment or not
@@ -172,7 +177,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * {@link Field} which will contain the {@link Flags} of the {@link MailboxMessage}
      */
-    private static final String FLAGS_FIELD = "flags";
+    static final String FLAGS_FIELD = "flags";
   
     /**
      * {@link Field} which will contain the size of the {@link MailboxMessage}
@@ -307,7 +312,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * {@link Field} which will contain the id of the {@link Mailbox}
      */
-    private static final String MAILBOX_ID_FIELD = "mailboxid";
+    static final String MAILBOX_ID_FIELD = "mailboxid";
 
     /**
      * {@link Field} which will contain the user of the {@link MailboxSession}
@@ -388,7 +393,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageId.Factory messageIdFactory;
-    private final IndexWriter writer;
+
+    @VisibleForTesting
+    final IndexWriter writer;
     private final Directory directory;
 
     private int maxQueryResults = DEFAULT_MAX_QUERY_RESULTS;
@@ -1242,6 +1249,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             Document doc = createMessageDocument(session, membership);
             Document flagsDoc = createFlagsDocument(membership);
 
+            log.trace("Adding document: uid:'{}' with flags: {}", doc.get("uid"), flagsDoc);
+
             writer.addDocument(doc);
             writer.addDocument(flagsDoc);
         }));
@@ -1267,7 +1276,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             TopDocs docs = searcher.search(queryBuilder.build(), 100000);
             ScoreDoc[] sDocs = docs.scoreDocs;
             for (ScoreDoc sDoc : sDocs) {
-                Document doc = searcher.doc(sDoc.doc);
+                Document doc = reader.storedFields().document(sDoc.doc);
 
                 doc.removeFields(FLAGS_FIELD);
                 indexFlags(doc, f);
@@ -1279,7 +1288,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 doc.add(new LongPoint(UID_FIELD, uidValue));
                 doc.add(new StoredField(UID_FIELD, uidValue));
 
-                writer.updateDocument(new Term(ID_FIELD, doc.get(ID_FIELD)), doc);
+                log.trace("Updating flags document, mailboxId:{}, message uid: {}, flags:'{}', new document: {}",
+                        mailboxId, uid, f, doc);
+                writer.updateDocuments(queryBuilder.build(), List.of(doc));
             }
         }
     }
@@ -1289,7 +1300,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      */
     private Document createFlagsDocument(MailboxMessage message) {
         Document doc = new Document();
-        doc.add(new StringField(ID_FIELD, "flags-" + message.getMailboxId().serialize() + "-" + Long.toString(message.getUid().asLong()), Store.YES));
         doc.add(new StringField(MAILBOX_ID_FIELD, message.getMailboxId().serialize(), Store.YES));
 
         doc.add(new NumericDocValuesField(UID_FIELD, message.getUid().asLong()));
