@@ -40,31 +40,58 @@ import com.github.fge.lambdas.Throwing;
 public class KeyStoreHolderFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyStoreHolderFactory.class);
 
-    public static KeyStoreHolder createKeyStoreHolder(KeyStoreHolderConfiguration config) throws MessagingException {
-        try {
-            initJCE();
-            switch (config.getFileType()) {
-                case KEYSTORE:
-                    return createFromKeyStoreFile(config);
-                case PEM:
-                    return createFromPemFile(config);
-                default:
-                    throw new RuntimeException("Unsupported file type " + config.getFileType().name().toLowerCase());
+    interface FileLoader {
+        KeyStoreHolder load(KeyStoreHolderConfiguration config) throws Exception;
+    }
+
+    static class KeyStoreFileLoader implements FileLoader {
+        @Override
+        public KeyStoreHolder load(KeyStoreHolderConfiguration config) {
+            KeyStoreHolderConfiguration.KeyStoreConfiguration keyStoreConfig = (KeyStoreHolderConfiguration.KeyStoreConfiguration) config;
+            return keyStoreConfig.getKeyStoreFileName()
+                .map(Throwing.function(fileName -> createFromKeyStoreFile(fileName, keyStoreConfig.getKeyStorePassword(), keyStoreConfig.getKeyStoreType())))
+                .orElseGet(Throwing.supplier(() -> {
+                    LOGGER.info("No trusted store path specified, using default store.");
+                    return createFromKeyStoreFile(System.getProperty("java.home") + "/lib/security/cacerts".replace('/', File.separatorChar),
+                        keyStoreConfig.getKeyStorePassword(),
+                        KeyStore.getDefaultType());
+                }));
+        }
+
+        private KeyStoreHolder createFromKeyStoreFile(String keyStoreFileName, String keyStorePassword, String keyStoreType)
+            throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+
+            KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+            keyStore.load(UnsynchronizedBufferedInputStream
+                .builder()
+                .setInputStream(new FileInputStream(keyStoreFileName))
+                .get(), keyStorePassword.toCharArray());
+            if (keyStore.size() == 0) {
+                throw new KeyStoreException("The keystore must be not empty");
             }
-        } catch (Exception e) {
-            throw new MessagingException("Error loading the trusted certificate store", e);
+            return new KeyStoreHolder(keyStore);
         }
     }
 
-    private static KeyStoreHolder createFromKeyStoreFile(KeyStoreHolderConfiguration config) {
-        return config.getKeyStoreFileName()
-            .map(Throwing.function(fileName -> createFromKeyStoreFile(fileName, config.getKeyStorePassword(), config.getKeyStoreType())))
-            .orElseGet(Throwing.supplier(() -> {
-                LOGGER.info("No trusted store path specified, using default store.");
-                return createFromKeyStoreFile(System.getProperty("java.home") + "/lib/security/cacerts".replace('/', File.separatorChar),
-                    config.getKeyStorePassword(),
-                    KeyStore.getDefaultType());
-            }));
+    static class PemFileLoader implements FileLoader {
+        @Override
+        public KeyStoreHolder load(KeyStoreHolderConfiguration config) throws Exception {
+            KeyStoreHolderConfiguration.PemConfiguration pemConfig = (KeyStoreHolderConfiguration.PemConfiguration) config;
+            KeyStore keyStore = PemReader.loadTrustStore(pemConfig.getPemFileName());
+            if (keyStore.size() == 0) {
+                throw new KeyStoreException("The keystore must be not empty");
+            }
+            return new KeyStoreHolder(keyStore);
+        }
+    }
+
+    public static KeyStoreHolder createKeyStoreHolder(KeyStoreHolderConfiguration config) throws MessagingException {
+        try {
+            initJCE();
+            return config.getFileLoader().load(config);
+        } catch (Exception e) {
+            throw new MessagingException("Error loading the trusted certificate store", e);
+        }
     }
 
     private static void initJCE() throws NoSuchProviderException {
@@ -74,32 +101,6 @@ public class KeyStoreHolderFactory {
             NoSuchProviderException ex = new NoSuchProviderException("Error during cryptography provider initialization. Has bcprov-jdkxx-yyy.jar been copied in the lib directory or installed in the system?");
             ex.initCause(e);
             throw ex;
-        }
-    }
-
-    private static KeyStoreHolder createFromKeyStoreFile(String keyStoreFileName, String keyStorePassword, String keyStoreType)
-        throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-
-        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-        keyStore.load(UnsynchronizedBufferedInputStream
-            .builder()
-            .setInputStream(new FileInputStream(keyStoreFileName))
-            .get(), keyStorePassword.toCharArray());
-        if (keyStore.size() == 0) {
-            throw new KeyStoreException("The keystore must be not empty");
-        }
-        return new KeyStoreHolder(keyStore);
-    }
-
-    private static KeyStoreHolder createFromPemFile(KeyStoreHolderConfiguration config) throws Exception {
-        if (config.getPemFileName().isEmpty()) {
-            throw new RuntimeException("pemFileName must not be empty");
-        } else {
-            KeyStore keyStore = PemReader.loadTrustStore(config.getPemFileName().get());
-            if (keyStore.size() == 0) {
-                throw new KeyStoreException("The keystore must be not empty");
-            }
-            return new KeyStoreHolder(keyStore);
         }
     }
 }

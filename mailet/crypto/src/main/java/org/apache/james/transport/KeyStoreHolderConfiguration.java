@@ -24,7 +24,9 @@ import java.util.Optional;
 
 import org.apache.mailet.MailetConfig;
 
-public class KeyStoreHolderConfiguration {
+import com.google.common.base.Preconditions;
+
+public abstract class KeyStoreHolderConfiguration {
     public static final String FILE_TYPE = "fileType";
     public static final String KEY_STORE_TYPE = "keyStoreType";
     public static final String KEY_STORE_FILE_NAME = "keyStoreFileName";
@@ -34,13 +36,13 @@ public class KeyStoreHolderConfiguration {
     public static final String KEY_STORE_PASSWORD_DEFAULT_VALUE = "";
 
     public static class Builder {
-        private Optional<String> fileType;
+        private KeyFileType fileType;
         private Optional<String> keyStoreType;
         private Optional<String> keyStoreFileName;
         private Optional<String> keyStorePassword;
         private Optional<String> pemFileName;
 
-        public Builder setFileType(Optional<String> fileType) {
+        public Builder setFileType(KeyFileType fileType) {
             this.fileType = fileType;
             return this;
         }
@@ -66,11 +68,16 @@ public class KeyStoreHolderConfiguration {
         }
 
         public KeyStoreHolderConfiguration build() {
-            return new KeyStoreHolderConfiguration(this.fileType.map(type -> KeyFileType.valueOf(type.toUpperCase())).orElse(KeyFileType.KEYSTORE),
-                keyStoreType.orElse(KEY_STORE_TYPE_DEFAULT_VALUE),
-                keyStoreFileName,
-                keyStorePassword.orElse(KEY_STORE_PASSWORD_DEFAULT_VALUE),
-                pemFileName);
+            switch (this.fileType) {
+                case KEYSTORE:
+                    return new KeyStoreConfiguration(keyStoreType.orElse(KEY_STORE_TYPE_DEFAULT_VALUE),
+                        keyStoreFileName,
+                        keyStorePassword.orElse(KEY_STORE_PASSWORD_DEFAULT_VALUE));
+                case PEM:
+                    Preconditions.checkArgument(pemFileName.isPresent() && !pemFileName.get().isBlank(), "pemFileName must not be empty");
+                    return new PemConfiguration(pemFileName.get());
+                default: throw new RuntimeException("Unsupported file type " + this.fileType);
+            }
         }
     }
 
@@ -79,7 +86,7 @@ public class KeyStoreHolderConfiguration {
     }
 
     public static KeyStoreHolderConfiguration from(MailetConfig config) {
-        return builder().setFileType(Optional.ofNullable(config.getInitParameter(FILE_TYPE)))
+        return builder().setFileType(KeyFileType.parse(Optional.ofNullable(config.getInitParameter(FILE_TYPE))))
             .setKeyStoreType(Optional.ofNullable(config.getInitParameter(KEY_STORE_TYPE)))
             .setKeyStoreFileName(Optional.ofNullable(config.getInitParameter(KEY_STORE_FILE_NAME)))
             .setKeyStorePassword(Optional.ofNullable(config.getInitParameter(KEY_STORE_PASSWORD)))
@@ -87,37 +94,51 @@ public class KeyStoreHolderConfiguration {
             .build();
     }
 
-    private final KeyFileType fileType;
-    private final String keyStoreType;
-    private final Optional<String> keyStoreFileName;
-    private final String keyStorePassword;
-    private final Optional<String> pemFileName;
+    public static class KeyStoreConfiguration extends KeyStoreHolderConfiguration {
+        private final String keyStoreType;
+        private final Optional<String> keyStoreFileName;
+        private final String keyStorePassword;
 
-    private KeyStoreHolderConfiguration(KeyFileType fileType, String keyStoreType, Optional<String> keyStoreFileName, String keyStorePassword, Optional<String> pemFileName) {
-        this.fileType = fileType;
-        this.keyStoreType = keyStoreType;
-        this.keyStoreFileName = keyStoreFileName;
-        this.keyStorePassword = keyStorePassword;
-        this.pemFileName = pemFileName;
+        private KeyStoreConfiguration(String keyStoreType, Optional<String> keyStoreFileName, String keyStorePassword) {
+            this.keyStoreType = keyStoreType;
+            this.keyStoreFileName = keyStoreFileName;
+            this.keyStorePassword = keyStorePassword;
+        }
+
+        public String getKeyStoreType() {
+            return keyStoreType;
+        }
+
+        public Optional<String> getKeyStoreFileName() {
+            return keyStoreFileName;
+        }
+
+        public String getKeyStorePassword() {
+            return keyStorePassword;
+        }
+
+        @Override
+        public KeyStoreHolderFactory.FileLoader getFileLoader() {
+            return new KeyStoreHolderFactory.KeyStoreFileLoader();
+        }
     }
 
-    public KeyFileType getFileType() {
-        return fileType;
+    public static class PemConfiguration extends KeyStoreHolderConfiguration {
+        private final String pemFileName;
+
+        private PemConfiguration(String pemFileName) {
+            this.pemFileName = pemFileName;
+        }
+
+        public String getPemFileName() {
+            return pemFileName;
+        }
+
+        @Override
+        public KeyStoreHolderFactory.FileLoader getFileLoader() {
+            return new KeyStoreHolderFactory.PemFileLoader();
+        }
     }
 
-    public String getKeyStoreType() {
-        return keyStoreType;
-    }
-
-    public Optional<String> getKeyStoreFileName() {
-        return keyStoreFileName;
-    }
-
-    public String getKeyStorePassword() {
-        return keyStorePassword;
-    }
-
-    public Optional<String> getPemFileName() {
-        return pemFileName;
-    }
+    public abstract KeyStoreHolderFactory.FileLoader getFileLoader();
 }

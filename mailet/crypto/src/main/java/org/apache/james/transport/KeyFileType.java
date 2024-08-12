@@ -19,7 +19,13 @@
 
 package org.apache.james.transport;
 
+import java.util.Optional;
+
 public enum KeyFileType {
     KEYSTORE,
-    PEM
+    PEM;
+
+    static KeyFileType parse(Optional<String> maybeString) {
+        return maybeString.map(type -> KeyFileType.valueOf(type.toUpperCase())).orElse(KeyFileType.KEYSTORE);
+    }
 }
