@@ -62,6 +62,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.FLAGS_FIELD;
+import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.ID_FIELD;
 import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.MAILBOX_ID_FIELD;
 import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.UID_FIELD;
 import static org.apache.james.mailbox.lucene.search.LuceneTestsUtils.documentStringFormatter;
@@ -96,11 +97,10 @@ class LuceneMailboxMessageFlagSearchTest {
     private ComposedMessageId m3;
     private ComposedMessageId m4;
 
-    private static BooleanQuery.Builder getQueryBuilder(long fromUid, long toUid) {
+    private static BooleanQuery.Builder getQueryBuilderFlagId(long mailboxId, long messageId) {
         BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-        queryBuilder.add(new TermQuery(new Term(MAILBOX_ID_FIELD, "1")), BooleanClause.Occur.MUST);
-        queryBuilder.add(new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST);
-        queryBuilder.add(LongPoint.newRangeQuery(UID_FIELD, fromUid, toUid), BooleanClause.Occur.MUST);
+        var flagsId = "flags-" + mailboxId + "-" + messageId;
+        queryBuilder.add(new TermQuery(new Term(ID_FIELD, flagsId)), BooleanClause.Occur.MUST);
         return queryBuilder;
     }
 
@@ -181,7 +181,7 @@ class LuceneMailboxMessageFlagSearchTest {
 
             IndexSearcher searcher = new IndexSearcher(reader);
 
-            var queryBuilder = getQueryBuilder(1, 1);
+            var queryBuilder = getQueryBuilderFlagId(1, 1);
             var scoreDocs = searcher.search(queryBuilder.build(), 50).scoreDocs;
             assertThat(scoreDocs.length).isEqualTo(1);
         }
@@ -200,7 +200,7 @@ class LuceneMailboxMessageFlagSearchTest {
 
             IndexSearcher searcher = new IndexSearcher(reader);
 
-            var queryBuilder = getQueryBuilder(1, 1);
+            var queryBuilder = getQueryBuilderFlagId(1, 1);
             var scoreDocs = searcher.search(queryBuilder.build(), 50).scoreDocs;
             assertThat(scoreDocs.length).isEqualTo(1);
         }
@@ -218,7 +218,7 @@ class LuceneMailboxMessageFlagSearchTest {
 
             IndexSearcher searcher = new IndexSearcher(reader);
 
-            var queryBuilder = getQueryBuilder(1, 1);
+            var queryBuilder = getQueryBuilderFlagId(1, 1);
             var scoreDocs = searcher.search(queryBuilder.build(), 50).scoreDocs;
             assertThat(scoreDocs.length).isEqualTo(1);
         }
@@ -237,7 +237,7 @@ class LuceneMailboxMessageFlagSearchTest {
 
             IndexSearcher searcher = new IndexSearcher(reader);
 
-            var queryBuilder = getQueryBuilder(1, 1);
+            var queryBuilder = getQueryBuilderFlagId(1, 1);
             var scoreDocs = searcher.search(queryBuilder.build(), 50).scoreDocs;
             assertThat(scoreDocs.length).isEqualTo(1);
         }
@@ -255,7 +255,7 @@ class LuceneMailboxMessageFlagSearchTest {
 
             IndexSearcher searcher = new IndexSearcher(reader);
 
-            var queryBuilder = getQueryBuilder(1, 1);
+            var queryBuilder = getQueryBuilderFlagId(1, 1);
             var scoreDocs = searcher.search(queryBuilder.build(), 50).scoreDocs;
             assertThat(scoreDocs.length).isEqualTo(1);
         }
@@ -325,6 +325,23 @@ class LuceneMailboxMessageFlagSearchTest {
         assertThat(messageSearchIndex.search(session, mailbox, SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.SEEN))).toStream()).containsExactly(m1.getUid(), m2.getUid());
 
 
+        log.trace("[4] re-adding SEEN to m3 & m4 (expected seen: 4, not-seen: 0, empty query: 4");
+
+        inboxMessageManager.setFlags(
+                new Flags(Flags.Flag.SEEN),
+                MessageManager.FlagsUpdateMode.ADD,
+                MessageRange.range(m3.getUid(), m4.getUid()),
+                session);
+
+        assertThat(messageSearchIndex.search(session, mailbox, SearchQuery.of()).toStream().count()).isEqualTo(4);
+        assertThat(messageSearchIndex.search(session, mailbox, SearchQuery.of()).toStream()).containsExactly(m1.getUid(), m2.getUid(), m3.getUid(), m4.getUid());
+
+        assertThat(messageSearchIndex.search(session, mailbox, SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.SEEN))).toStream().count()).isEqualTo(4);
+        assertThat(messageSearchIndex.search(session, mailbox, SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.SEEN))).toStream()).containsExactly(m1.getUid(), m2.getUid(), m3.getUid(), m4.getUid());
+
+        assertThat(messageSearchIndex.search(session, mailbox, SearchQuery.of(SearchQuery.flagIsUnSet(Flags.Flag.SEEN))).toStream().count()).isZero();
+        assertThat(messageSearchIndex.search(session, mailbox, SearchQuery.of(SearchQuery.flagIsUnSet(Flags.Flag.SEEN))).toStream()).isEmpty();
+
         // checking internal Lucene state
         try (IndexReader reader = DirectoryReader.open(luceneMessageSearchIndex.writer)) {
             final List<Document> allDocumentsFromRepository = getAllDocumentsFromRepository(reader);
@@ -332,28 +349,21 @@ class LuceneMailboxMessageFlagSearchTest {
 
             IndexSearcher searcher = new IndexSearcher(reader);
 
-            var queryBuilder = getQueryBuilder(1, 1);
+            var queryBuilder = getQueryBuilderFlagId(1, 1);
             var scoreDocs = searcher.search(queryBuilder.build(), 50).scoreDocs;
             assertThat(scoreDocs.length).isEqualTo(1);
 
-            queryBuilder = getQueryBuilder(2, 2);
+            queryBuilder = getQueryBuilderFlagId(1, 2);
             scoreDocs = searcher.search(queryBuilder.build(), 50).scoreDocs;
             assertThat(scoreDocs.length).isEqualTo(1);
 
-            queryBuilder = getQueryBuilder(3, 3);
+            queryBuilder = getQueryBuilderFlagId(1, 3);
             scoreDocs = searcher.search(queryBuilder.build(), 50).scoreDocs;
             assertThat(scoreDocs.length).isEqualTo(1);
 
-            queryBuilder = getQueryBuilder(4, 4);
+            queryBuilder = getQueryBuilderFlagId(1, 4);
             scoreDocs = searcher.search(queryBuilder.build(), 50).scoreDocs;
             assertThat(scoreDocs.length).isEqualTo(1);
-
-            queryBuilder = getQueryBuilder(1, 4);
-            scoreDocs = searcher.search(queryBuilder.build(), 50).scoreDocs;
-            assertThat(scoreDocs.length).isEqualTo(4);
-
-
-
 
             // we should only have 8 documents in the repository in the end
             // TODO: this fails but I have no idea why… regular searches return correct number of messages

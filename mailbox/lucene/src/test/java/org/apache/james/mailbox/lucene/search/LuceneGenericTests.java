@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.function.Function;
 
 import static org.apache.james.mailbox.lucene.search.LuceneTestsUtils.documentStringFormatter;
 import static org.apache.james.mailbox.lucene.search.LuceneTestsUtils.getAllDocumentsFromRepository;
@@ -28,8 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class LuceneGenericTests {
 
-    private static final String TITLE_FIELD = "title";
-    private static final String BODY_FIELD = "body";
+    private static final String ID_FIELD = "id";
+    private static final String FLAGS_FIELD = "flags";
     private final static Logger log = LoggerFactory.getLogger(LuceneGenericTests.class);
     private static IndexWriter writer;
 
@@ -43,95 +42,91 @@ public class LuceneGenericTests {
 
     @Test
     void testAddingAndUpdatingDocument() throws IOException {
-        var originalTitle1 = "title1";
-        var newSuperFancyNewTitle = "super fancy new title";
-        var secondBoringTitle = "boring new title";
+        var flags_1_1_id = "flags-1-1";
+        var seenFlag = "flags:/SEEN";
+        var answeredFlag = "flags:/ANSWERED";
 
         var document = new Document();
-        document.add(new StringField(TITLE_FIELD, "title1", Field.Store.YES));
-        document.add(new StringField(BODY_FIELD, "body1", Field.Store.YES));
+        document.add(new StringField(ID_FIELD, flags_1_1_id, Field.Store.YES));
+        document.add(new StringField(FLAGS_FIELD, "", Field.Store.YES));
+        log.trace("Writing initial document for flags-1-1: {}", document);
         writer.addDocument(document);
 
         var document2 = new Document();
-        document2.add(new StringField(TITLE_FIELD, "title2", Field.Store.YES));
-        document2.add(new StringField(BODY_FIELD, "body2", Field.Store.YES));
+        document2.add(new StringField(ID_FIELD, "flags-1-2", Field.Store.YES));
+        document2.add(new StringField(FLAGS_FIELD, "flags:/SEEN", Field.Store.YES));
+        log.trace("Writing initial document for flags-1-2: {}", document);
         writer.addDocument(document2);
 
-
-
         try (IndexReader reader = DirectoryReader.open(writer)) {
-            log.trace("Repository initial state: {}", getAllDocumentsFromRepository(reader).stream().map(documentStringFormatter).toList());
-            assertEquals(2, reader.maxDoc());
-
             var indexSearcher = new IndexSearcher(reader);
-
-            var term = new Term(TITLE_FIELD, originalTitle1);
+            var term = new Term(ID_FIELD, flags_1_1_id);
             var termQuery = new TermQuery(term);
             var foundDocuments = indexSearcher.search(termQuery, 50);
 
+            log.trace("Repository initial state, total: {}, docs: {}",
+                    reader.maxDoc(), getAllDocumentsFromRepository(reader).stream().map(documentStringFormatter).toList());
+
+            assertEquals(2, reader.maxDoc());
             assertEquals(1, foundDocuments.scoreDocs.length);
 
             for (ScoreDoc foundDocument : foundDocuments.scoreDocs) {
-                var doc = reader.storedFields().document(foundDocument.doc);
-                log.trace("Found document before first edit: \n\t* {}", doc);
-
-                assertEquals(originalTitle1, doc.get(TITLE_FIELD));
-
-                doc.removeField(TITLE_FIELD);
-                doc.add(new StringField(TITLE_FIELD, newSuperFancyNewTitle, Field.Store.YES));
-                writer.updateDocument(term, doc);
+                var foundDoc = reader.storedFields().document(foundDocument.doc);
+                log.trace("[1] Found document for first edit: \n\t* {}", foundDoc);
             }
+
+            var doc = new Document();
+            doc.add(new StringField(ID_FIELD, flags_1_1_id, Field.Store.YES));
+            doc.add(new StringField(FLAGS_FIELD, seenFlag, Field.Store.YES));
+            writer.updateDocument(term, doc);
         }
 
         try (IndexReader reader = DirectoryReader.open(writer)) {
-            assertEquals(2, reader.maxDoc());
-
             var indexSearcher = new IndexSearcher(reader);
+            var term = new Term(ID_FIELD, flags_1_1_id);
+            var termQuery = new TermQuery(term);
+            var foundDocuments = indexSearcher.search(termQuery, 50);
 
-            // let's search for old one (expect not found)
-            var term = new Term(TITLE_FIELD, originalTitle1);
-            var foundDocuments = indexSearcher.search(new TermQuery(term), 50);
+            log.trace("After first edit, total: {}, found: {} docs matching term: '{}', all documents after first update: {}",
+                    reader.maxDoc(),
+                    foundDocuments.scoreDocs.length,
+                    term,
+                    getAllDocumentsFromRepository(reader).stream().map(documentStringFormatter).toList());
 
-            assertEquals(0, foundDocuments.scoreDocs.length);
-
-            log.trace("All documents after first update: {}", getAllDocumentsFromRepository(reader).stream().map(documentStringFormatter).toList());
-
-            // let's search for the new one
-            term = new Term(TITLE_FIELD, newSuperFancyNewTitle);
-            TopDocs foundDocuments2 = indexSearcher.search(new TermQuery(term), 5);
-
-            assertEquals(1, foundDocuments2.scoreDocs.length);
-
-            for (ScoreDoc foundDocument : foundDocuments2.scoreDocs) {
-                var doc = reader.storedFields().document(foundDocument.doc);
-                log.trace("Found document before second edit: \n\t* {}", doc);
-                assertEquals(newSuperFancyNewTitle, doc.get(TITLE_FIELD));
-
-                doc.removeField(TITLE_FIELD);
-                doc.add(new StringField(TITLE_FIELD, secondBoringTitle, Field.Store.YES));
-                writer.updateDocument(term, doc);
-            }
-        }
-
-        try (IndexReader reader = DirectoryReader.open(writer)) {
-            IndexSearcher indexSearcher = new IndexSearcher(reader);
-
-            // let's search for old one (expect not found)
-            var term = new Term(TITLE_FIELD, newSuperFancyNewTitle);
-            var foundDocuments = indexSearcher.search(new TermQuery(term), 5);
-
-            assertEquals(0, foundDocuments.scoreDocs.length);
-
-            log.trace("All documents after second update: {}", getAllDocumentsFromRepository(reader).stream().map(documentStringFormatter).toList());
-
-            // let's search for the new boring one
-            term = new Term(TITLE_FIELD, secondBoringTitle);
-            foundDocuments = indexSearcher.search(new TermQuery(term), 5);
+            assertEquals(2, reader.maxDoc());
+            assertEquals(1, foundDocuments.scoreDocs.length);
 
             for (ScoreDoc foundDocument : foundDocuments.scoreDocs) {
-                final Document doc = reader.storedFields().document(foundDocument.doc);
-                log.trace("Found document after second edit: \n\t* {}", doc);
-                assertEquals(secondBoringTitle, doc.get(TITLE_FIELD));
+                var foundDoc = reader.storedFields().document(foundDocument.doc);
+                log.trace("[1] Found document for second edit: \n\t* {}", foundDoc);
+            }
+
+            var newDoc = new Document();
+            newDoc.add(new StringField(ID_FIELD, flags_1_1_id, Field.Store.YES));
+            newDoc.add(new StringField(FLAGS_FIELD, answeredFlag, Field.Store.YES));
+            writer.updateDocument(term, newDoc);
+
+            log.trace("[2] Updated document for second edit (with term '{}'): \n\t* {}", term, newDoc);
+        }
+
+        try (IndexReader reader = DirectoryReader.open(writer)) {
+            var indexSearcher = new IndexSearcher(reader);
+            var term = new Term(ID_FIELD, flags_1_1_id);
+            var termQuery = new TermQuery(term);
+            var foundDocuments = indexSearcher.search(termQuery, 50);
+
+            log.trace("After second edit, total: {}, found: {} docs matching term: '{}', all documents after first update: {}",
+                    reader.maxDoc(),
+                    foundDocuments.scoreDocs.length,
+                    term,
+                    getAllDocumentsFromRepository(reader).stream().map(documentStringFormatter).toList());
+
+            assertEquals(2, reader.maxDoc());
+            assertEquals(1, foundDocuments.scoreDocs.length);
+
+            for (ScoreDoc foundDocument : foundDocuments.scoreDocs) {
+                var foundDoc = reader.storedFields().document(foundDocument.doc);
+                log.trace("Found document *after* second edit: \n\t* {}", foundDoc);
             }
         }
     }

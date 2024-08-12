@@ -161,7 +161,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * {@link Field} which will contain the unique index of the {@link Document}
      */
-    private static final String ID_FIELD = "id";
+    @VisibleForTesting
+    static final String ID_FIELD = "id";
     
     
     /**
@@ -1266,50 +1267,58 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private void update(MailboxId mailboxId, MessageUid uid, Flags f) throws IOException {
+        var flagsID = createFlagsIdField(mailboxId, uid);
+        var term = new Term(ID_FIELD, flagsID);
+
+
+
+
+        // TODO: remove! just for debugging purposes
         try (IndexReader reader = DirectoryReader.open(writer)) {
             IndexSearcher searcher = new IndexSearcher(reader);
-            BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-            queryBuilder.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailboxId.serialize())), BooleanClause.Occur.MUST);
-            queryBuilder.add(createQuery(MessageRange.one(uid)), BooleanClause.Occur.MUST);
-            queryBuilder.add(new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST);
-
-            TopDocs docs = searcher.search(queryBuilder.build(), 100000);
+            TopDocs docs = searcher.search(new TermQuery(term), 100000);
             ScoreDoc[] sDocs = docs.scoreDocs;
             for (ScoreDoc sDoc : sDocs) {
                 Document doc = reader.storedFields().document(sDoc.doc);
-
-                doc.removeFields(FLAGS_FIELD);
-                indexFlags(doc, f);
-
-                // somehow the document getting from the search lost DocValues data for the uid field, we need to re-define the field with proper DocValues.
-                long uidValue = doc.getField("uid").numericValue().longValue();
-                doc.removeField("uid");
-                doc.add(new NumericDocValuesField(UID_FIELD, uidValue));
-                doc.add(new LongPoint(UID_FIELD, uidValue));
-                doc.add(new StoredField(UID_FIELD, uidValue));
-
-                log.trace("Updating flags document, mailboxId:{}, message uid: {}, flags:'{}', new document: {}",
-                        mailboxId, uid, f, doc);
-                writer.updateDocuments(queryBuilder.build(), List.of(doc));
+                log.trace("Found {} documents matching term: '{}' to update document, doc: {}",
+                        docs.scoreDocs.length, term, doc);
             }
         }
+
+
+
+
+
+        var doc = createFlagsDocument(mailboxId, uid, f);
+        log.trace("Updating flags document, mailboxId:{}, message uid: {}, flags:'{}', term: {}, new document: {}",
+                mailboxId, uid, f, term, doc);
+        writer.updateDocument(term, doc);
     }
 
     /**
      * Index the {@link Flags} and add it to the {@link Document}
      */
     private Document createFlagsDocument(MailboxMessage message) {
+        return createFlagsDocument(message.getMailboxId(), message.getUid(), message.createFlags());
+    }
+
+    private Document createFlagsDocument(MailboxId mailboxId, final MessageUid messageUid, Flags flags) {
         Document doc = new Document();
-        doc.add(new StringField(MAILBOX_ID_FIELD, message.getMailboxId().serialize(), Store.YES));
+        doc.add(new StringField(ID_FIELD, createFlagsIdField(mailboxId, messageUid), Store.YES));
+        doc.add(new StringField(MAILBOX_ID_FIELD, mailboxId.serialize(), Store.YES));
 
-        doc.add(new NumericDocValuesField(UID_FIELD, message.getUid().asLong()));
-        doc.add(new LongPoint(UID_FIELD, message.getUid().asLong()));
-        doc.add(new StoredField(UID_FIELD, message.getUid().asLong()));
+        doc.add(new NumericDocValuesField(UID_FIELD, messageUid.asLong()));
+        doc.add(new LongPoint(UID_FIELD, messageUid.asLong()));
+        doc.add(new StoredField(UID_FIELD, messageUid.asLong()));
 
-        indexFlags(doc, message.createFlags());
+        indexFlags(doc, flags);
         return doc;
     }
-    
+
+    private static String createFlagsIdField(MailboxId mailboxId, MessageUid messageUid) {
+        return "flags-" + mailboxId.serialize() + "-" + messageUid.asLong();
+    }
+
     /**
      * Add the given {@link Flags} to the {@link Document}
      */
