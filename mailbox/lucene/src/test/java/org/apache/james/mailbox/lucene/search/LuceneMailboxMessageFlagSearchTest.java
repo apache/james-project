@@ -18,8 +18,18 @@
  ****************************************************************/
 package org.apache.james.mailbox.lucene.search;
 
-import com.github.fge.lambdas.Throwing;
+import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.ID_FIELD;
+import static org.apache.james.mailbox.lucene.search.LuceneTestsUtils.documentStringFormatter;
+import static org.apache.james.mailbox.lucene.search.LuceneTestsUtils.getAllDocumentsFromRepository;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+
 import jakarta.mail.Flags;
+
 import org.apache.james.core.Username;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;
@@ -40,14 +50,12 @@ import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.awaitility.Awaitility;
@@ -57,18 +65,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-
-import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.FLAGS_FIELD;
-import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.ID_FIELD;
-import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.MAILBOX_ID_FIELD;
-import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.UID_FIELD;
-import static org.apache.james.mailbox.lucene.search.LuceneTestsUtils.documentStringFormatter;
-import static org.apache.james.mailbox.lucene.search.LuceneTestsUtils.getAllDocumentsFromRepository;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
+import com.github.fge.lambdas.Throwing;
 
 class LuceneMailboxMessageFlagSearchTest {
     protected static final ConditionFactory CALMLY_AWAIT = Awaitility
@@ -367,7 +364,7 @@ class LuceneMailboxMessageFlagSearchTest {
 
             // we should only have 8 documents in the repository in the end
             // TODO: this fails but I have no idea why… regular searches return correct number of messages
-//            assertThat(allDocumentsFromRepository.size()).isEqualTo(8);
+            // assertThat(allDocumentsFromRepository.size()).isEqualTo(8);
 
 
         }
