@@ -1270,26 +1270,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private void update(MailboxId mailboxId, MessageUid uid, Flags f) throws IOException {
         var flagsID = createFlagsIdField(mailboxId, uid);
         var term = new Term(ID_FIELD, flagsID);
-
-
-
-
-        // TODO: remove! just for debugging purposes
-        try (IndexReader reader = DirectoryReader.open(writer)) {
-            IndexSearcher searcher = new IndexSearcher(reader);
-            TopDocs docs = searcher.search(new TermQuery(term), 100000);
-            ScoreDoc[] sDocs = docs.scoreDocs;
-            for (ScoreDoc sDoc : sDocs) {
-                Document doc = reader.storedFields().document(sDoc.doc);
-                log.trace("Found {} documents matching term: '{}' to update document, doc: {}",
-                        docs.scoreDocs.length, term, doc);
-            }
-        }
-
-
-
-
-
         var doc = createFlagsDocument(mailboxId, uid, f);
         log.trace("Updating flags document, mailboxId:{}, message uid: {}, flags:'{}', term: {}, new document: {}",
                 mailboxId, uid, f, term, doc);
