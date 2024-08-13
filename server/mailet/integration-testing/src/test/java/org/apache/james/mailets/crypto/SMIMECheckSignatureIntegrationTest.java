@@ -61,6 +61,20 @@ public abstract class SMIMECheckSignatureIntegrationTest {
     }
 
     @Test
+    public void checkSMIMESignatureShouldAddGoodSMIMEStatusWhenSignatureIsGoodAndContentTypeIsXPkcs7Mime() throws Exception {
+        messageSender().connect(LOCALHOST_IP, jamesServer().getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessageWithHeaders(FROM, RECIPIENT,
+                ClassLoaderUtils.getSystemResourceAsString("smime-test-resource-set/mail_with_signature_and_content_type_xpkcs7mime"));
+
+        testIMAPClient().connect(LOCALHOST_IP, jamesServer().getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(testIMAPClient().readFirstMessage()).containsSequence("X-SMIME-Status: Good signature");
+    }
+
+    @Test
     public void checkSMIMESignatureShouldAddBadSMIMEStatusWhenSignatureIsBad() throws Exception {
         messageSender().connect(LOCALHOST_IP, jamesServer().getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort())
             .authenticate(FROM, PASSWORD)

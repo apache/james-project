@@ -45,6 +45,7 @@ import org.apache.mailet.base.GenericMailet;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.mail.smime.SMIMEException;
 import org.bouncycastle.mail.smime.SMIMESigned;
+import org.eclipse.angus.mail.util.BASE64DecoderStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -246,7 +247,7 @@ public class SMIMECheckSignature extends GenericMailet {
             signed = new SMIMESigned((MimeMultipart) message.getContent());
         } else if (obj instanceof SMIMESigned) {
             signed = (SMIMESigned) obj;
-        } else if (obj instanceof byte[]) {
+        } else if (obj instanceof byte[] || obj instanceof BASE64DecoderStream) {
             signed = new SMIMESigned(message);
         } else {
             signed = null;
