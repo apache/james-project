@@ -103,10 +103,22 @@ public class FeedMessageRouteTest {
     private InMemoryMailboxManager mailboxManager;
     private WebAdminServer webAdminServer;
     private MemoryTaskManager taskManager;
+    private UpdatableTickingClock clock;
 
     @BeforeEach
     void setUp() throws Exception {
-        InMemoryIntegrationResources inMemoryIntegrationResources = InMemoryIntegrationResources.defaultResources();
+        clock = new UpdatableTickingClock(NOW);
+        InMemoryIntegrationResources inMemoryIntegrationResources = InMemoryIntegrationResources.builder()
+            .preProvisionnedFakeAuthenticator()
+            .fakeAuthorizator()
+            .inVmEventBus()
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
+            .scanningSearchIndex()
+            .noPreDeletionHooks()
+            .storeQuotaManager()
+            .updatableClock(clock)
+            .build();
         mailboxManager = inMemoryIntegrationResources.getMailboxManager();
         DomainList domainList = mock(DomainList.class);
         Mockito.when(domainList.containsDomain(any())).thenReturn(true);
@@ -119,7 +131,6 @@ public class FeedMessageRouteTest {
         mailboxManager.createMailbox(ALICE_INBOX_MAILBOX, mailboxManager.createSystemSession(ALICE));
 
         taskManager = new MemoryTaskManager(new Hostname("foo"));
-        UpdatableTickingClock clock = new UpdatableTickingClock(NOW);
         JsonTransformer jsonTransformer = new JsonTransformer();
         RspamdClientConfiguration rspamdConfiguration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(rspamdConfiguration);
@@ -213,7 +224,10 @@ public class FeedMessageRouteTest {
 
         @Test
         void taskShouldCountAndReportOnlyMailInPeriod() throws MailboxException {
+            clock.setInstant(NOW.minusSeconds(THREE_DAYS_IN_SECOND));
             appendMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
+
+            clock.setInstant(NOW.minusSeconds(ONE_DAY_IN_SECOND));
             appendMessage(ALICE_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
 
             String taskId = given()
@@ -490,7 +504,10 @@ public class FeedMessageRouteTest {
 
         @Test
         void taskShouldCountAndReportOnlyMailInPeriod() throws MailboxException {
+            clock.setInstant(NOW.minusSeconds(THREE_DAYS_IN_SECOND));
             appendMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
+
+            clock.setInstant(NOW.minusSeconds(ONE_DAY_IN_SECOND));
             appendMessage(ALICE_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
 
             String taskId = given()
