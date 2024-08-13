@@ -18,35 +18,39 @@
  ****************************************************************/
 package org.apache.james.mailbox.lucene.search;
 
+import java.io.IOException;
+
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.core.WhitespaceTokenizer;
-import org.apache.lucene.analysis.shingle.ShingleFilter;
+import org.apache.lucene.analysis.core.UpperCaseFilterFactory;
+import org.apache.lucene.analysis.core.WhitespaceTokenizerFactory;
+import org.apache.lucene.analysis.custom.CustomAnalyzer;
+import org.apache.lucene.analysis.shingle.ShingleFilterFactory;
 
 /**
  * This {@link Analyzer} is not 100% conform with RFC3501 but does
- * most times exactly what the user would expect. 
- *
+ * most times exactly what the user would expect.
  */
-public final class LenientImapSearchAnalyzer extends Analyzer {
+public final class LenientImapSearchAnalyzer {
 
     public static final int DEFAULT_MAX_TOKEN_LENGTH = 4;
-    
-    private final int maxTokenLength;
-    
 
-    public LenientImapSearchAnalyzer(int maxTokenLength) {
-        this.maxTokenLength = maxTokenLength;
+    static Analyzer getAnalyzer() {
+        return getAnalyzer(DEFAULT_MAX_TOKEN_LENGTH);
     }
-    
-    public LenientImapSearchAnalyzer() {
-        this(DEFAULT_MAX_TOKEN_LENGTH);
-    }
-    
-    @Override
-    protected TokenStreamComponents createComponents(String fieldName) {
-        WhitespaceTokenizer source = new WhitespaceTokenizer();
-        TokenStream filter = new ShingleFilter(new UpperCaseFilter(source), 2, maxTokenLength);
-        return new TokenStreamComponents(source, filter);
+
+    static Analyzer getAnalyzer(int maxTokenLength) {
+        try {
+            return CustomAnalyzer.builder()
+                    .withTokenizer(WhitespaceTokenizerFactory.NAME)
+                    .addTokenFilter(UpperCaseFilterFactory.NAME)
+                    .addTokenFilter(ShingleFilterFactory.NAME,
+                            "minShingleSize", "2", "maxShingleSize", String.valueOf(maxTokenLength),
+                            "outputUnigrams", "true",
+                            "outputUnigramsIfNoShingles", "false",
+                            "tokenSeparator", " ", "fillerToken", "_"
+                    ).build();
+        } catch (IOException e) {
+            throw new RuntimeException("Can't instantiate custom (lenient) analyzer", e);
+        }
     }
 }

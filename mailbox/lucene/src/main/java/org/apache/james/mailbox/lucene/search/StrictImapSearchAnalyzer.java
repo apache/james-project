@@ -18,44 +18,40 @@
  ****************************************************************/
 package org.apache.james.mailbox.lucene.search;
 
+import java.io.IOException;
+
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.core.WhitespaceTokenizer;
-import org.apache.lucene.analysis.ngram.NGramTokenFilter;
+import org.apache.lucene.analysis.core.UpperCaseFilterFactory;
+import org.apache.lucene.analysis.core.WhitespaceTokenizerFactory;
+import org.apache.lucene.analysis.custom.CustomAnalyzer;
+import org.apache.lucene.analysis.ngram.NGramFilterFactory;
 
 /**
-*
-* {@link Analyzer} which match substrings. This is needed because of RFC 3501.
-* 
-* From RFC:
-* 
-*      In all search keys that use strings, a message matches the key if
-*      the string is a substring of the field.  The matching is
-*      case-insensitive.
-*
-*/
-public final class StrictImapSearchAnalyzer extends Analyzer {
-
-    private final int minTokenLength;
-    private final int maxTokenLength;
-    
-    public StrictImapSearchAnalyzer() {
-        this(3, 40);
-    }
-    
-    public StrictImapSearchAnalyzer(int minTokenLength, int maxTokenLength) {
-        this.minTokenLength = minTokenLength;
-        this.maxTokenLength = maxTokenLength;
+ * {@link Analyzer} which match substrings. This is needed because of RFC 3501.
+ * <p>
+ * From RFC:
+ * <p>
+ * In all search keys that use strings, a message matches the key if
+ * the string is a substring of the field.  The matching is
+ * case-insensitive.
+ */
+public final class StrictImapSearchAnalyzer {
+    static Analyzer getAnalyzer() {
+        return getAnalyzer(3, 40);
     }
 
-    /**
-     * @see org.apache.lucene.analysis.Analyzer#tokenStream(java.lang.String, java.io.Reader)
-     */
-    @Override
-    protected TokenStreamComponents createComponents(String fieldName) {
-        WhitespaceTokenizer source = new WhitespaceTokenizer();
-        TokenStream filter = new NGramTokenFilter(new UpperCaseFilter(source), minTokenLength, maxTokenLength, true);
-        return new TokenStreamComponents(source, filter);
+    static Analyzer getAnalyzer(int minTokenLength, int maxTokenLength) {
+        try {
+            return CustomAnalyzer.builder()
+                    .withTokenizer(WhitespaceTokenizerFactory.NAME)
+                    .addTokenFilter(UpperCaseFilterFactory.NAME)
+                    .addTokenFilter(NGramFilterFactory.NAME,
+                            "minGramSize", String.valueOf(minTokenLength),
+                            "maxGramSize", String.valueOf(maxTokenLength),
+                            "preserveOriginal", "true"
+                    ).build();
+        } catch (IOException e) {
+            throw new RuntimeException("Can't instantiate custom (strict) analyzer", e);
+        }
     }
-   
 }

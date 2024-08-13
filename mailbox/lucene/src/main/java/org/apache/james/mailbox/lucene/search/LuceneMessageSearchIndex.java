@@ -144,33 +144,33 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final Date MAX_DATE;
     private static final Date MIN_DATE;
     public static final org.apache.james.events.Group GROUP = new LuceneMessageSearchIndexGroup();
-    
+
     static {
         Calendar cal = Calendar.getInstance();
         cal.set(9999, 11, 31);
         MAX_DATE = cal.getTime();
-        
+
         cal.set(0000, 0, 1);
         MIN_DATE = cal.getTime();
     }
-    
+
     /**
      * Default max queryBuilder results
      */
     private static final int DEFAULT_MAX_QUERY_RESULTS = 100000;
-    
+
     /**
      * {@link Field} which will contain the unique index of the {@link Document}
      */
     @VisibleForTesting
     static final String ID_FIELD = "id";
-    
-    
+
+
     /**
      * {@link Field} which will contain uid of the {@link MailboxMessage}
      */
     static final String UID_FIELD = "uid";
-    
+
     /**
      * {@link Field} boolean field that say if the message as an attachment or not
      */
@@ -180,7 +180,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * {@link Field} which will contain the {@link Flags} of the {@link MailboxMessage}
      */
     static final String FLAGS_FIELD = "flags";
-  
+
     /**
      * {@link Field} which will contain the size of the {@link MailboxMessage}
      */
@@ -190,13 +190,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * {@link Field} which will contain the body of the {@link MailboxMessage}
      */
     private static final String BODY_FIELD = "body";
-    
-    
+
+
     /**
      * Prefix which will be used for each message header to store it also in a seperate {@link Field}
      */
     private static final String PREFIX_HEADER_FIELD = "header_";
-    
+
     /**
      * {@link Field} which will contain the whole message header of the {@link MailboxMessage}
      */
@@ -216,7 +216,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * {@link Field} which will contain the TO-Address of the message
      */
     private static final String TO_FIELD = "to";
-    
+
     private static final String FIRST_TO_MAILBOX_NAME_FIELD = "firstToMailboxName";
     private static final String FIRST_TO_MAILBOX_DISPLAY_FIELD = "firstToMailboxDisplay";
 
@@ -226,13 +226,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final String CC_FIELD = "cc";
 
     private static final String FIRST_CC_MAILBOX_NAME_FIELD = "firstCcMailboxName";
-    
+
 
     /**
      * {@link Field} which will contain the FROM-Address of the message
      */
     private static final String FROM_FIELD = "from";
-    
+
     private static final String FIRST_FROM_MAILBOX_NAME_FIELD = "firstFromMailboxName";
     private static final String FIRST_FROM_MAILBOX_DISPLAY_FIELD = "firstFromMailboxDisplay";
 
@@ -240,42 +240,42 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * {@link Field} which will contain the BCC-Address of the message
      */
     private static final String BCC_FIELD = "bcc";
-    
-    
+
+
     private static final String BASE_SUBJECT_FIELD = "baseSubject";
-    
+
     /**
      * {@link Field} which contain the internalDate of the message with YEAR-Resolution
      */
     private static final String INTERNAL_DATE_FIELD_YEAR_RESOLUTION = "internaldateYearResolution";
-    
-    
+
+
     /**
      * {@link Field} which contain the internalDate of the message with MONTH-Resolution
      */
     private static final String INTERNAL_DATE_FIELD_MONTH_RESOLUTION = "internaldateMonthResolution";
-    
+
     /**
      * {@link Field} which contain the internalDate of the message with DAY-Resolution
      */
     private static final String INTERNAL_DATE_FIELD_DAY_RESOLUTION = "internaldateDayResolution";
-    
+
     /**
      * {@link Field} which contain the internalDate of the message with HOUR-Resolution
      */
     private static final String INTERNAL_DATE_FIELD_HOUR_RESOLUTION = "internaldateHourResolution";
-    
+
     /**
      * {@link Field} which contain the internalDate of the message with MINUTE-Resolution
      */
     private static final String INTERNAL_DATE_FIELD_MINUTE_RESOLUTION = "internaldateMinuteResolution";
-    
+
     /**
      * {@link Field} which contain the internalDate of the message with SECOND-Resolution
      */
     private static final String INTERNAL_DATE_FIELD_SECOND_RESOLUTION = "internaldateSecondResolution";
-    
-    
+
+
     /**
      * {@link Field} which contain the internalDate of the message with MILLISECOND-Resolution
      */
@@ -329,34 +329,34 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * {@link Field} which contain the Date header of the message with YEAR-Resolution
      */
     private static final String SENT_DATE_FIELD_YEAR_RESOLUTION = "sentdateYearResolution";
-    
-    
+
+
     /**
      * {@link Field} which contain the Date header of the message with MONTH-Resolution
      */
     private static final String SENT_DATE_FIELD_MONTH_RESOLUTION = "sentdateMonthResolution";
-    
+
     /**
      * {@link Field} which contain the Date header of the message with DAY-Resolution
      */
     private static final String SENT_DATE_FIELD_DAY_RESOLUTION = "sentdateDayResolution";
-    
+
     /**
      * {@link Field} which contain the Date header of the message with HOUR-Resolution
      */
     private static final String SENT_DATE_FIELD_HOUR_RESOLUTION = "sentdateHourResolution";
-    
+
     /**
      * {@link Field} which contain the Date header of the message with MINUTE-Resolution
      */
     private static final String SENT_DATE_FIELD_MINUTE_RESOLUTION = "sentdateMinuteResolution";
-    
+
     /**
      * {@link Field} which contain the Date header of the message with SECOND-Resolution
      */
     private static final String SENT_DATE_FIELD_SECOND_RESOLUTION = "sentdateSecondResolution";
-    
-    
+
+
     /**
      * {@link Field} which contain the Date header of the message with MILLISECOND-Resolution
      */
@@ -367,7 +367,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final String MEDIA_TYPE_TEXT = "text";
     private static final String MEDIA_TYPE_MESSAGE = "message";
     private static final String DEFAULT_ENCODING = "US-ASCII";
-    
+
     private static final SortField UID_SORT = new SortField(UID_FIELD, SortField.Type.LONG);
     private static final SortField UID_SORT_REVERSE = new SortField(UID_FIELD, SortField.Type.LONG, true);
 
@@ -383,13 +383,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final SortField FIRST_FROM_MAILBOX_SORT = new SortedSetSortField(FIRST_FROM_MAILBOX_NAME_FIELD, false);
     private static final SortField FIRST_FROM_MAILBOX_SORT_REVERSE = new SortedSetSortField(FIRST_FROM_MAILBOX_NAME_FIELD, true);
 
-    
+
     private static final SortField ARRIVAL_MAILBOX_SORT = new SortField(INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION, SortField.Type.LONG);
     private static final SortField ARRIVAL_MAILBOX_SORT_REVERSE = new SortField(INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION, SortField.Type.LONG, true);
 
     private static final SortField BASE_SUBJECT_SORT = new SortedSetSortField(BASE_SUBJECT_FIELD, false);
     private static final SortField BASE_SUBJECT_SORT_REVERSE = new SortedSetSortField(BASE_SUBJECT_FIELD, true);
-    
+
     private static final SortField SENT_DATE_SORT = new SortField(SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION, SortField.Type.LONG);
     private static final SortField SENT_DATE_SORT_REVERSE = new SortField(SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION, SortField.Type.LONG, true);
 
@@ -444,14 +444,14 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         return EnumSet.of(SearchCapabilities.MultimailboxSearch);
 
     }
-    
+
     /**
      * Set the max count of results which will get returned from a query. The default is {@link #DEFAULT_MAX_QUERY_RESULTS}
      */
     public void setMaxQueryResults(int maxQueryResults) {
         this.maxQueryResults = maxQueryResults;
     }
-    
+
     protected IndexWriterConfig createConfig(Analyzer analyzer, boolean dropIndexOnStart) {
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
         if (dropIndexOnStart) {
@@ -461,31 +461,31 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         }
         return config;
     }
-    
+
     /**
      * Create a {@link Analyzer} which is used to index the {@link MailboxMessage}'s
      */
     protected Analyzer createAnalyzer(boolean lenient) {
         if (lenient) {
-           return new LenientImapSearchAnalyzer();
+            return LenientImapSearchAnalyzer.getAnalyzer();
         } else {
-            return new StrictImapSearchAnalyzer();
+            return StrictImapSearchAnalyzer.getAnalyzer();
         }
     }
-    
+
     /**
      * If set to true this implementation will use {@link WildcardQuery} to match suffix and prefix. This is what RFC3501 expects but is often not what the user does.
      * It also slow things a lot if you have complex queries which use many "TEXT" arguments. If you want the implementation to behave strict like RFC3501 says, you should
-     * set this to true. 
-     * 
+     * set this to true.
+     *
      * The default is false for performance reasons
      */
     public void setEnableSuffixMatch(boolean suffixMatch) {
         this.suffixMatch = suffixMatch;
     }
-    
-    
-    
+
+
+
     @Override
     public Flux<MessageUid> doSearch(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
@@ -508,7 +508,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             .limit(Long.valueOf(limit).intValue())
             .collect(ImmutableList.toImmutableList()));
     }
-    
+
     private List<SearchResult> searchMultimap(Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {
         ImmutableList.Builder<SearchResult> results = ImmutableList.builder();
 
@@ -560,7 +560,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     /**
      * Create a new {@link Document} for the given {@link MailboxMessage}. This Document does not contain any flags data. The {@link Flags} are stored in a seperate Document.
-     * 
+     *
      * See {@link #createFlagsDocument(MailboxMessage)}
      */
     private Document createMessageDocument(final MailboxSession session, final MailboxMessage membership) throws IOException, MimeException {
@@ -607,11 +607,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
         // content handler which will index the headers and the body of the message
         SimpleContentHandler handler = new SimpleContentHandler() {
-            
+
 
             @Override
             public void headers(Header header) {
-                
+
                 Date sentDate = null;
                 String firstFromMailbox = "";
                 String firstToMailbox = "";
@@ -706,7 +706,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 if (sentDate == null) {
                     sentDate = membership.getInternalDate();
                 } else {
-                    
+
                     doc.add(new StringField(SENT_DATE_FIELD_YEAR_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.YEAR), Store.NO));
                     doc.add(new StringField(SENT_DATE_FIELD_MONTH_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.MONTH), Store.NO));
                     doc.add(new StringField(SENT_DATE_FIELD_DAY_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.DAY), Store.NO));
@@ -714,7 +714,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                     doc.add(new StringField(SENT_DATE_FIELD_MINUTE_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.MINUTE), Store.NO));
                     doc.add(new StringField(SENT_DATE_FIELD_SECOND_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.SECOND), Store.NO));
                     doc.add(new StringField(SENT_DATE_FIELD_MILLISECOND_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.MILLISECOND), Store.NO));
-                    
+
                 }
                 // Remove existing SENT_DATE_SORT_FIELD field if it exists
                 doc.removeField(SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION);
@@ -728,7 +728,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 doc.add(new SortedSetDocValuesField(FIRST_CC_MAILBOX_NAME_FIELD, new BytesRef(firstCcMailbox)));
                 doc.add(new StringField(FIRST_FROM_MAILBOX_DISPLAY_FIELD, firstFromDisplay, Store.YES));
                 doc.add(new StringField(FIRST_TO_MAILBOX_DISPLAY_FIELD, firstToDisplay, Store.YES));
-           
+
             }
 
             @Override
@@ -746,7 +746,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                         // Invalid charset found so fallback toe the DEFAULT_ENCODING
                         charset = Charset.forName(DEFAULT_ENCODING);
                     }
-                    
+
                     // Read the content one line after the other and add it to the document
                     try (BufferedReader bodyReader = new BufferedReader(new InputStreamReader(in, charset))) {
                         String line = null;
@@ -754,10 +754,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                             doc.add(new TextField(BODY_FIELD, line.toUpperCase(Locale.US), Store.NO));
                         }
                     }
-                    
+
                 }
             }
- 
+
         };
         //config.setStrictParsing(false);
         MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
@@ -835,7 +835,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 throw new RuntimeException(String.format("Not support search for the %s date resolution", res));
         }
     }
-    
+
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.InternalDateCriterion}
      */
@@ -855,7 +855,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         String field = toSaveDateField(res);
         return createQuery(field, dop);
     }
-    
+
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.SizeCriterion}
      */
@@ -872,7 +872,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 throw new UnsupportedSearchException();
         }
     }
-    
+
     /**
      * This method will return the right {@link Query} depending if {@link #suffixMatch} is enabled
      */
@@ -883,7 +883,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return new PrefixQuery(new Term(fieldName, value));
         }
     }
-    
+
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.HeaderCriterion}
      */
@@ -908,8 +908,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             throw new UnsupportedSearchException();
         }
     }
-    
-    
+
+
     private Query createQuery(String field, DateOperator dop) throws UnsupportedSearchException {
         Date date = dop.getDate();
         DateResolution res = dop.getDateResultion();
@@ -926,7 +926,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             throw new UnsupportedSearchException();
         }
     }
-    
+
     private DateTools.Resolution toResolution(DateResolution res) {
         switch (res) {
         case Year:
@@ -945,7 +945,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return DateTools.Resolution.MILLISECOND;
         }
     }
-    
+
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.UidCriterion}
      */
@@ -962,8 +962,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return rangesQuery.build();
         }
     }
-    
-    
+
+
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.UidCriterion}
      */
@@ -980,7 +980,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 throw new UnsupportedSearchException();
         }
     }
-    
+
     private Query createAttachmentQuery(boolean isSet) throws MailboxException {
         return new TermQuery(new Term(HAS_ATTACHMENT_FIELD, Boolean.toString(isSet)));
     }
@@ -991,15 +991,15 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      */
     private Query createFlagQuery(String flag, boolean isSet, Query inMailboxes, Collection<MessageUid> recentUids) throws MailboxException {
         BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-        
-        if (isSet) {   
+
+        if (isSet) {
             queryBuilder.add(new TermQuery(new Term(FLAGS_FIELD, flag)), BooleanClause.Occur.MUST);
         } else {
             // lucene does not support simple NOT queries so we do some nasty hack here
             BooleanQuery.Builder bQuery = new BooleanQuery.Builder();
             bQuery.add(new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST);
             bQuery.add(new TermQuery(new Term(FLAGS_FIELD, flag)),BooleanClause.Occur.MUST_NOT);
-            
+
             queryBuilder.add(bQuery.build(), BooleanClause.Occur.MUST);
         }
         queryBuilder.add(inMailboxes, BooleanClause.Occur.MUST);
@@ -1016,7 +1016,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 MessageUid uid = MessageUid.of(searcher.doc(sDoc.doc).getField(UID_FIELD).numericValue().longValue());
                 uids.add(uid);
             }
-            
+
             // add or remove recent uids
             if (flag.equalsIgnoreCase("\\RECENT")) {
                 if (isSet) {
@@ -1025,7 +1025,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                     uids.removeAll(recentUids);
                 }
             }
-            
+
             List<MessageRange> ranges = MessageRange.toRanges(new ArrayList<>(uids));
             UidRange[] nRanges = new UidRange[ranges.size()];
             for (int i = 0; i < ranges.size(); i++) {
@@ -1037,7 +1037,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             throw new MailboxException("Unable to search mailbox " + inMailboxes, e);
         }
     }
-    
+
     private Sort createSort(List<SearchQuery.Sort> sorts) {
         List<SortField> fields = new ArrayList<>();
 
@@ -1128,7 +1128,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return flag.toString();
         }
     }
-    
+
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.TextCriterion}
      */
@@ -1137,7 +1137,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         switch (crit.getType()) {
         case BODY:
             return createTermQuery(BODY_FIELD, value);
-        case FULL: 
+        case FULL:
             BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
             queryBuilder.add(createTermQuery(BODY_FIELD, value), BooleanClause.Occur.SHOULD);
             queryBuilder.add(createTermQuery(HEADERS_FIELD,value), BooleanClause.Occur.SHOULD);
@@ -1146,7 +1146,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             throw new UnsupportedSearchException();
         }
     }
-    
+
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.AllCriterion}
      */
@@ -1155,10 +1155,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
         queryBuilder.add(createQuery(MessageRange.all()), BooleanClause.Occur.MUST);
         queryBuilder.add(new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST_NOT);
-        
+
         return queryBuilder.build();
     }
-    
+
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.ConjunctionCriterion}
      */
@@ -1190,7 +1190,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         }
 
     }
-    
+
     /**
      * Return a {@link Query} which is builded based on the given {@link Criterion}
      */
@@ -1310,28 +1310,28 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             fString.add(toString(flag));
             doc.add(new StringField(FLAGS_FIELD, toString(flag), Store.YES));
         }
-        
+
         String[] userFlags = f.getUserFlags();
         for (String userFlag : userFlags) {
             doc.add(new StringField(FLAGS_FIELD, userFlag, Store.YES));
         }
-        
+
         // if no flags are there we just use a empty field
         if (flags.length == 0 && userFlags.length == 0) {
             doc.add(new StringField(FLAGS_FIELD, "",Store.NO));
         }
-        
+
     }
-    
+
     private Query createQuery(MessageRange range) {
         switch (range.getType()) {
         case ONE:
             return LongPoint.newRangeQuery(UID_FIELD,
-                    range.getUidFrom().asLong(), 
+                    range.getUidFrom().asLong(),
                     range.getUidTo().asLong());
         case FROM:
             return LongPoint.newRangeQuery(UID_FIELD,
-                    range.getUidFrom().asLong(), 
+                    range.getUidFrom().asLong(),
                     MessageUid.MAX_VALUE.asLong());
         default:
             return LongPoint.newRangeQuery(UID_FIELD, MessageUid.MIN_VALUE.asLong(), MessageUid.MAX_VALUE.asLong());
