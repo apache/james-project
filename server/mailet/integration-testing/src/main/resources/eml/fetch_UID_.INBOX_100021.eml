@@ -1,0 +1,138 @@
+Return-Path: <victor.berhault@gmail.com>
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_1903_1597811465.1721666175317"
+Received: from mail-wr1-f48.google.com (EHLO mail-wr1-f48.google.com) ([209.85.221.48])
+          (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256)
+          by smtp.preprod-avocat.fr (JAMES SMTP Server ) with ESMTP ID e734a3a8
+          for <sonde-supervision-preprod.linagora@preprod-avocat.fr>;
+          Mon, 22 Jul 2024 16:35:59 +0000 (UTC)
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-36865a516f1so3216220f8f.0
+        for <sonde-supervision-preprod.linagora@preprod-avocat.fr>; Mon, 22 Jul 2024 09:35:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1721666159; x=1722270959; darn=preprod-avocat.fr;
+        h=disposition-notification-to:msip_labels:content-class
+         :content-language:thread-index:content-transfer-encoding
+         :mime-version:message-id:date:subject:cc:to:from:return-receipt-to
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=a1H7DrqlqLxrq+aZytFspjyUU1Q7phokIn2dVJ6LnwQ=;
+        b=SGrBU1MUY3pJp4lm9sEHI/fiCLPG7QamxEAA5PmEhJSKuSltOT8Vl1EgCekLsYTkzK
+         Dp2hdQ1zsdVoIy0p9OZdNXIV5SFpgNqz049PUAJiB8Bj16+lZAbVY0IzxOxHKkSd+PcV
+         Cu6ZLC4ZPojW6oK6QjriQHEHYBAeb9v1moDfb5S6iKAODTsTnoI/7EavW94og/uFemjn
+         YmdjXFesBYLpT6/Rj1/6a/d+AwqBoZD/8E1+HXMHo6bNCd+QCdDE1CI8nbGS0RBYf7bE
+         MbuYUBx2ahMfMxzJYUJNu1YpsBSMIxkTU6IW+aELzn2EHjYIx4/5ThF0ai/W8NOm1C9D
+         zKwg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1721666159; x=1722270959;
+        h=disposition-notification-to:msip_labels:content-class
+         :content-language:thread-index:content-transfer-encoding
+         :mime-version:message-id:date:subject:cc:to:from:return-receipt-to
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=a1H7DrqlqLxrq+aZytFspjyUU1Q7phokIn2dVJ6LnwQ=;
+        b=B0zEXFYzui8a34O7LTyMxeGqah6nG+XAemlk9AsCveoQRrzNWZlhvLwQlKNgNGC6Dv
+         vfvM6BSXbjSV5ZVMuwpCsmTaxhRduQKiXn+Fme6aln9er2rJzd9FCmqzo8ISpdX4CVxt
+         prAjG4yZsPILRnRqtEnQXz5BiMZG3dhrpkeL/BGVg6aIlbIyh9HrRa0KFCXvKx6fjaoW
+         esRMd9RilqfUv6iAGJSDhdO1u7L9QjgNCMsz+/YgEMCXRpyFfAQK4tkN6rdC8wmqnpyz
+         nOT3kli85OZdPTxvYTa5Uv+mZaUpYEzcKYrYJQCoprn0S3NXcpzidQlaamEeCGMQemum
+         P2Uw==
+X-Gm-Message-State: AOJu0YxE4Yby+wkCfe/uNoKsWEBvLzPxp+O7X2jX3suBAbyPuioSTwvc
+	uD49gUSb7XczaVHMa5scZUsjpAfELbjbFYOtkA88j1lCX9AkC56H
+X-Google-Smtp-Source: AGHT+IF3SrRItRzXulb/OEB1znMFFBDvUB5grjesuJJNleG99kNp7dqQTgDDm8WGA6D9Le45sUbrXQ==
+X-Received: by 2002:adf:b1c2:0:b0:368:4489:8efb with SMTP id ffacd0b85a97d-369bae6744fmr6241883f8f.40.1721666159008;
+        Mon, 22 Jul 2024 09:35:59 -0700 (PDT)
+Received: from DESKTOPCSQD2B3 (vpn3.linagora.com. [54.36.52.8])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-368787ebab0sm9060753f8f.92.2024.07.22.09.35.58
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 22 Jul 2024 09:35:58 -0700 (PDT)
+Return-Receipt-To: "Victor Berhault" <victor.berhault@gmail.com>
+From: "Victor Berhault" <victor.berhault@gmail.com>
+To: <sonde-supervision-preprod.linagora@preprod-avocat.fr>,
+	"'Victor Berhault'" <victor.berhault@gmail.com>
+Cc: <patrick.pereira@free.fr>
+Subject: test
+Date: Mon, 22 Jul 2024 18:35:48 +0200
+Message-ID: <!&!AAAAAAAAAAAuAAAAAAAAAGt8jN8J49pGnqUhCAyEBHwBAMO2jhD3dRHOtM0AqgC7tuYAAAAAAA4AABAAAADWgrEs5CO7S7B26ToVSq+KAQAAAAA=@gmail.com>
+MIME-Version: 1.0
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AdrcVODq/3GbwNkYRMOCCHPPKern9AAAFPhQ
+content-class: 
+msip_labels: 
+Disposition-Notification-To: "Victor Berhault" <victor.berhault@gmail.com>
+
+------=_Part_1903_1597811465.1721666175317
+Content-Type: text/calendar; method=REQUEST;
+	charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Language: fr
+Content-Disposition: attachment
+
+BEGIN:VCALENDAR
+PRODID:-//Microsoft Corporation//Outlook 16.0 MIMEDIR//EN
+VERSION:2.0
+METHOD:REQUEST
+X-MS-OLK-FORCEINSPECTOROPEN:TRUE
+BEGIN:VTIMEZONE
+TZID:Romance Standard Time
+BEGIN:STANDARD
+DTSTART:16011028T030000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:16010325T020000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+ATTENDEE;CN=sonde-supervision-preprod.linagora@preprod-avocat.fr;RSVP=TRUE:
+	mailto:sonde-supervision-preprod.linagora@preprod-avocat.fr
+ATTENDEE;CN="Victor Berhault";RSVP=TRUE:mailto:victor.berhault@gmail.com
+ATTENDEE;CN=patrick.pereira@free.fr;ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:p
+	atrick.pereira@free.fr
+CLASS:PUBLIC
+CREATED:20240722T163547Z
+DESCRIPTION: \n\n
+DTEND;TZID="Romance Standard Time":20240722T083000
+DTSTAMP:20240722T163547Z
+DTSTART;TZID="Romance Standard Time":20240722T080000
+LAST-MODIFIED:20240722T163547Z
+ORGANIZER;CN="Victor Berhault":mailto:victor.berhault@gmail.com
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=fr:test
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000A083969F65DCDA01000000000000000
+	0100000008FDBCDB265265C48AA18F5D73923C077
+X-ALT-DESC;FMTTYPE=text/html:<html xmlns:v="urn:schemas-microsoft-com:vml" 
+	xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-mic
+	rosoft-com:office:word" xmlns:m="http://schemas.microsoft.com/office/2004/
+	12/omml" xmlns="http://www.w3.org/TR/REC-html40"><head><meta http-equiv=Co
+	ntent-Type content="text/html\; charset=iso-8859-1"><meta name=Generator c
+	ontent="Microsoft Word 15 (filtered medium)"><style><!--\n/* Font Definiti
+	ons */\n@font-face\n	{font-family:"Cambria Math"\;\n	panose-1:2 4 5 3 5 4 
+	6 3 2 4\;}\n@font-face\n	{font-family:Aptos\;}\n/* Style Definitions */\np
+	.MsoNormal\, li.MsoNormal\, div.MsoNormal\n	{margin:0cm\;\n	font-size:11.0
+	pt\;\n	font-family:"Aptos"\,sans-serif\;\n	mso-ligatures:standardcontextua
+	l\;\n	mso-fareast-language:EN-US\;}\nspan.EmailStyle18\n	{mso-style-type:p
+	ersonal-compose\;}\n.MsoChpDefault\n	{mso-style-type:export-only\;\n	font-
+	size:10.0pt\;\n	mso-ligatures:none\;}\n@page WordSection1\n	{size:612.0pt 
+	792.0pt\;\n	margin:70.85pt 70.85pt 70.85pt 70.85pt\;}\ndiv.WordSection1\n	
+	{page:WordSection1\;}\n--></style><!--[if gte mso 9]><xml>\n<o:shapedefaul
+	ts v:ext="edit" spidmax="1026" />\n</xml><![endif]--><!--[if gte mso 9]><x
+	ml>\n<o:shapelayout v:ext="edit">\n<o:idmap v:ext="edit" data="1" />\n</o:
+	shapelayout></xml><![endif]--></head><body lang=FR link="#467886" vlink="#
+	96607D" style='word-wrap:break-word'><div class=WordSection1><p class=MsoN
+	ormal><o:p>&nbsp\;</o:p></p></div></body></html>
+X-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-CDO-INTENDEDSTATUS:BUSY
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-AUTOSTARTCHECK:FALSE
+X-MS-OLK-CONFTYPE:0
+END:VEVENT
+END:VCALENDAR
+
+------=_Part_1903_1597811465.1721666175317--
+

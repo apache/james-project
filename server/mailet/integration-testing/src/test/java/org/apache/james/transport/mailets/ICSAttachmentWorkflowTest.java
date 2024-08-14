@@ -44,6 +44,7 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.amqp.AmqpExtension;
 import org.apache.james.transport.matchers.All;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -800,5 +801,24 @@ public class ICSAttachmentWorkflowTest {
             .awaitMessage(awaitAtMostOneMinute);
         assertThat(testIMAPClient.readFirstMessage())
             .containsSubsequence("Content-Type: multipart/mixed", "Content-Disposition: attachment");
+    }
+
+    @Test
+    void headersShouldBeAddedInMailWhenIcsAttached() throws Exception {
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessageWithHeaders(FROM, RECIPIENT,
+                ClassLoaderUtils.getSystemResourceAsString("eml/fetch_UID_.INBOX_100021.eml"));
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        String receivedHeaders = testIMAPClient.readFirstMessageHeaders();
+        assertThat(receivedHeaders).contains("X-MEETING-UID: " + "040000008200E00074C5B7101A82E00800000000A083969F65DCDA010000000000000000100000008FDBCDB265265C48AA18F5D73923C077");
+        assertThat(receivedHeaders).contains("X-MEETING-METHOD: " + ICS_METHOD);
+        assertThat(receivedHeaders).contains("X-MEETING-SEQUENCE: " + ICS_SEQUENCE);
+        assertThat(receivedHeaders).contains("X-MEETING-DTSTAMP: " + "20240722T163547Z");
     }
 }
