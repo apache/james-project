@@ -156,7 +156,7 @@ class RspamdHttpClientTest {
         AnalysisResult analysisResult = client.checkV2(hamMessage).block();
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.NO_ACTION);
-            softly.assertThat(analysisResult.getRequiredScore()).isEqualTo(14.0F);
+            softly.assertThat(analysisResult.getRequiredScore()).isEqualTo(13.5F);
             softly.assertThat(analysisResult.getDesiredRewriteSubject()).isEqualTo(Optional.empty());
             softly.assertThat(analysisResult.hasVirus()).isEqualTo(false);
         });

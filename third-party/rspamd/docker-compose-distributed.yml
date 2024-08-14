@@ -108,14 +108,14 @@ services:
       redis:
         condition: service_started
     container_name: rspamd
-    image: a16bitsysop/rspamd:3.8.4-r0-alpine3.20.0-r0
+    image: rspamd/rspamd:3.9.1
     environment:
-      - REDIS=redis
-      - CLAMAV=clamav
-      - PASSWORD=admin
+      - RSPAMD_PASSWORD=admin
     volumes:
-      - $PWD/sample-configuration/antivirus.conf:/etc/rspamd/override.d/antivirus.conf
-      - $PWD/sample-configuration/statistic.conf:/etc/rspamd/statistic.conf
+      - $PWD/sample-configuration/antivirus.conf:/etc/rspamd/local.d/antivirus.conf
+      - $PWD/sample-configuration/statistic.conf:/etc/rspamd/local.d/statistic.conf
+      - $PWD/sample-configuration/redis.conf:/etc/rspamd/local.d/redis.conf
+      - $PWD/sample-configuration/worker-controller.inc:/etc/rspamd/local.d/worker-controller.inc
     ports:
       - 11334:11334
     networks:

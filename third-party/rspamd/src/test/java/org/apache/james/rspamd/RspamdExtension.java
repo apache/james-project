@@ -40,7 +40,7 @@ public class RspamdExtension implements GuiceModuleTestExtension {
     public static final Duration STARTUP_TIMEOUT = Duration.ofMinutes(5);
     public static final String PASSWORD = "admin";
 
-    private static final DockerImageName RSPAMD_IMAGE = DockerImageName.parse("a16bitsysop/rspamd").withTag("3.8.4-r0-alpine3.20.0-r0");
+    private static final DockerImageName RSPAMD_IMAGE = DockerImageName.parse("rspamd/rspamd").withTag("3.9.1");
     private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis").withTag("7.2.5");
     private static final DockerImageName CLAMAV_IMAGE = DockerImageName.parse("clamav/clamav").withTag("1.3");
     private static final int RSPAMD_DEFAULT_PORT = 11334;
@@ -80,16 +80,18 @@ public class RspamdExtension implements GuiceModuleTestExtension {
     public GenericContainer<?> rspamdContainer(Network network) {
         return new GenericContainer<>(RSPAMD_IMAGE)
             .withExposedPorts(RSPAMD_DEFAULT_PORT)
-            .withEnv("REDIS", "redis")
-            .withEnv("CLAMAV", "clamav")
-            .withEnv("PASSWORD", PASSWORD)
-            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/antivirus.conf"), "/etc/rspamd/override.d/")
-            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/actions.conf"), "/etc/rspamd/")
-            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/statistic.conf"), "/etc/rspamd/")
+            .withEnv("RSPAMD_REDIS_SERVERS", "redis")
+            .withEnv("RSPAMD_CLAMAV_SERVERS", "clamav")
+            .withEnv("RSPAMD_PASSWORD", PASSWORD)
+            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/antivirus.conf"), "/etc/rspamd/override.d/antivirus.conf")
+            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/actions.conf"), "/etc/rspamd/local.d/actions.conf")
+            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/statistic.conf"), "/etc/rspamd/local.d/statistic.conf")
+            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/redis.conf"), "/etc/rspamd/local.d/redis.conf")
+            .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/worker-controller.inc"), "/etc/rspamd/local.d/worker-controller.inc")
             .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-rspamd-test-" + UUID.randomUUID()))
             .withNetwork(network)
             .dependsOn(redisContainer, clamAVContainer)
-            .waitingFor(Wait.forHealthcheck())
+            .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(STARTUP_TIMEOUT);
     }
 
