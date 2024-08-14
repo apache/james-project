@@ -34,23 +34,23 @@ public final class LenientImapSearchAnalyzer {
 
     public static final int DEFAULT_MAX_TOKEN_LENGTH = 4;
 
-    static Analyzer getAnalyzer() {
-        return getAnalyzer(DEFAULT_MAX_TOKEN_LENGTH);
-    }
+    static final Analyzer INSTANCE = getAnalyzer();
 
-    static Analyzer getAnalyzer(int maxTokenLength) {
+    private static Analyzer getAnalyzer() {
         try {
             return CustomAnalyzer.builder()
                     .withTokenizer(WhitespaceTokenizerFactory.NAME)
                     .addTokenFilter(UpperCaseFilterFactory.NAME)
                     .addTokenFilter(ShingleFilterFactory.NAME,
-                            "minShingleSize", "2", "maxShingleSize", String.valueOf(maxTokenLength),
+                            "minShingleSize", "2", "maxShingleSize", String.valueOf(DEFAULT_MAX_TOKEN_LENGTH),
                             "outputUnigrams", "true",
                             "outputUnigramsIfNoShingles", "false",
                             "tokenSeparator", " ", "fillerToken", "_"
                     ).build();
         } catch (IOException e) {
-            throw new RuntimeException("Can't instantiate custom (lenient) analyzer", e);
+            // The IOException comes from the resource files.
+            // If there are no resources, the CustomAnalyzer won't throw UOE, so can be warped with an AssertionError.
+            throw new AssertionError("Can't instantiate custom (lenient) analyzer", e);
         }
     }
 }

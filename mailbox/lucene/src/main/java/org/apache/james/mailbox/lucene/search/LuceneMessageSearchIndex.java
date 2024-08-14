@@ -411,7 +411,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         Directory directory,
         MessageId.Factory messageIdFactory,
         SessionProvider sessionProvider) throws IOException {
-        this(factory, mailboxIdFactory, directory, false, true, messageIdFactory, sessionProvider);
+        this(factory, mailboxIdFactory, directory, false, messageIdFactory, sessionProvider);
     }
 
     public LuceneMessageSearchIndex(
@@ -419,14 +419,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             MailboxId.Factory mailboxIdFactory,
             Directory directory,
             boolean dropIndexOnStart,
-            boolean lenient,
             MessageId.Factory messageIdFactory,
             SessionProvider sessionProvider) throws IOException {
         super(factory, ImmutableSet.of(), sessionProvider);
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
         this.directory = directory;
-        this.writer = new IndexWriter(this.directory,  createConfig(createAnalyzer(lenient), dropIndexOnStart));
+        this.writer = new IndexWriter(this.directory,  createConfig(LenientImapSearchAnalyzer.INSTANCE, dropIndexOnStart));
     }
 
     @PreDestroy
@@ -460,17 +459,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             config.setOpenMode(OpenMode.CREATE_OR_APPEND);
         }
         return config;
-    }
-
-    /**
-     * Create a {@link Analyzer} which is used to index the {@link MailboxMessage}'s
-     */
-    protected Analyzer createAnalyzer(boolean lenient) {
-        if (lenient) {
-            return LenientImapSearchAnalyzer.getAnalyzer();
-        } else {
-            return StrictImapSearchAnalyzer.getAnalyzer();
-        }
     }
 
     /**
