@@ -30,11 +30,13 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.HeaderOperator;
+import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
 import org.apache.james.mailbox.opensearch.json.HeaderCollection;
 import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
 import org.opensearch.client.json.JsonData;
@@ -49,17 +51,39 @@ import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
 import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class CriterionConverter {
 
     private final Map<Class<?>, Function<Criterion, Query>> criterionConverterMap;
     private final Map<Class<?>, BiFunction<String, HeaderOperator, Query>> headerOperatorConverterMap;
+    private final String textFuzzinessSearchValue;
 
-    public CriterionConverter() {
-        criterionConverterMap = new HashMap<>();
-        headerOperatorConverterMap = new HashMap<>();
+    @Inject
+    public CriterionConverter(OpenSearchMailboxConfiguration openSearchMailboxConfiguration) {
+        this.criterionConverterMap = new HashMap<>();
+        this.headerOperatorConverterMap = new HashMap<>();
+        this.textFuzzinessSearchValue = evaluateFuzzinessValue(openSearchMailboxConfiguration.textFuzzinessSearchEnable());
         
         registerCriterionConverters();
         registerHeaderOperatorConverters();
+    }
+
+    @VisibleForTesting
+    public CriterionConverter() {
+        this.criterionConverterMap = new HashMap<>();
+        this.headerOperatorConverterMap = new HashMap<>();
+        this.textFuzzinessSearchValue = evaluateFuzzinessValue(true);
+
+        registerCriterionConverters();
+        registerHeaderOperatorConverters();
+    }
+
+    private String evaluateFuzzinessValue(boolean textFuzzinessSearchEnable) {
+        if (textFuzzinessSearchEnable) {
+            return "AUTO";
+        }
+        return "0";
     }
 
     private void registerCriterionConverters() {
@@ -197,12 +221,14 @@ public class CriterionConverter {
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.TEXT_BODY)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .fuzziness(textFuzzinessSearchValue)
                     .operator(Operator.And)
                     .build()
                     .toQuery())
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.HTML_BODY)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .fuzziness(textFuzzinessSearchValue)
                     .operator(Operator.And)
                     .build()
                     .toQuery())
@@ -213,18 +239,21 @@ public class CriterionConverter {
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.TEXT_BODY)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .fuzziness(textFuzzinessSearchValue)
                     .operator(Operator.And)
                     .build()
                     .toQuery())
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.HTML_BODY)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .fuzziness(textFuzzinessSearchValue)
                     .operator(Operator.And)
                     .build()
                     .toQuery())
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .fuzziness(textFuzzinessSearchValue)
                     .operator(Operator.And)
                     .build()
                     .toQuery())
@@ -235,6 +264,7 @@ public class CriterionConverter {
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .fuzziness(textFuzzinessSearchValue)
                     .operator(Operator.And)
                     .build()
                     .toQuery())
@@ -245,6 +275,7 @@ public class CriterionConverter {
                 .should(new MatchQuery.Builder()
                     .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILENAME)
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                    .fuzziness(textFuzzinessSearchValue)
                     .operator(Operator.And)
                     .build()
                     .toQuery())
@@ -439,6 +470,7 @@ public class CriterionConverter {
             .query(new FieldValue.Builder()
                 .stringValue(headerCriterion.getSubject())
                 .build())
+            .fuzziness(textFuzzinessSearchValue)
             .operator(Operator.And)
             .build()
             .toQuery();
