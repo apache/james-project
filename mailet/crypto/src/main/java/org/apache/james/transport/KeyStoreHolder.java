@@ -21,22 +21,14 @@
 
 package org.apache.james.transport;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathBuilder;
 import java.security.cert.CertPathBuilderException;
 import java.security.cert.CertPathBuilderResult;
 import java.security.cert.CertStore;
-import java.security.cert.CertificateException;
 import java.security.cert.PKIXBuilderParameters;
 import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
@@ -46,7 +38,6 @@ import java.util.List;
 
 import jakarta.mail.MessagingException;
 
-import org.apache.commons.io.input.UnsynchronizedBufferedInputStream;
 import org.bouncycastle.cert.jcajce.JcaCertStoreBuilder;
 import org.bouncycastle.cert.selector.X509CertificateHolderSelector;
 import org.bouncycastle.cert.selector.jcajce.JcaX509CertSelectorConverter;
@@ -71,43 +62,9 @@ public class KeyStoreHolder {
     private static final String BC = BouncyCastleProvider.PROVIDER_NAME;
 
     protected KeyStore keyStore;
-    
-    public KeyStoreHolder() throws IOException, GeneralSecurityException {
-        // this is the default password of the sun trusted certificate store.
-        this("changeit");
-    }
-    
-    public KeyStoreHolder(String password) throws IOException, GeneralSecurityException {
-        this(System.getProperty("java.home") + "/lib/security/cacerts".replace('/', File.separatorChar), password, KeyStore.getDefaultType());
-    }
-    
-    public KeyStoreHolder(String keyStoreFileName, String keyStorePassword, String keyStoreType) 
-        throws KeyStoreException, NoSuchAlgorithmException, CertificateException, NoSuchProviderException, IOException {
-        
-        if (keyStorePassword == null) {
-            keyStorePassword = "";
-        }
 
-        try {
-            InitJCE.init();
-        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | InvocationTargetException | NoSuchMethodException e) {
-            NoSuchProviderException ex = new NoSuchProviderException("Error during cryptography provider initialization. Has bcprov-jdkxx-yyy.jar been copied in the lib directory or installed in the system?");
-            ex.initCause(e);
-            throw ex;
-        }
-
-        if (keyStoreType == null) {
-            keyStoreType = KeyStore.getDefaultType();
-        }
-        
-        keyStore = KeyStore.getInstance(keyStoreType);        
-        keyStore.load(UnsynchronizedBufferedInputStream
-            .builder()
-            .setInputStream(new FileInputStream(keyStoreFileName))
-            .get(), keyStorePassword.toCharArray());
-        if (keyStore.size() == 0) {
-            throw new KeyStoreException("The keystore must be not empty");
-        }
+    public KeyStoreHolder(KeyStore keyStore) {
+        this.keyStore = keyStore;
     }
     
     /**
