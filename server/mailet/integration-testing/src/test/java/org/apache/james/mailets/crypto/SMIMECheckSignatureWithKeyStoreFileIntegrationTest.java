@@ -59,7 +59,7 @@ public class SMIMECheckSignatureWithKeyStoreFileIntegrationTest extends SMIMEChe
                     .mailet(SMIMECheckSignature.class)
                     .matcher(All.class)
                     .addProperty("fileType", "keystore")
-                    .addProperty("keyStoreFileName", temporaryFolder.toPath().resolve("conf").resolve("smime_cert_keystore").toAbsolutePath().toString())
+                    .addProperty("keyStoreFileName", temporaryFolder.toPath().resolve("conf").resolve("trusted_cert_keystore").toAbsolutePath().toString())
                     .addProperty("keyStorePassword", "secret")
                     .addProperty("keyStoreType", "PKCS12")
                     .addProperty("debug", "true"))

@@ -140,7 +140,7 @@ public class TemporaryJamesServer {
         "recipientrewritetable.xml",
         "usersrepository.xml",
         "smime.p12",
-        "smime_cert_keystore",
+        "trusted_cert_keystore",
         "trusted_certificate.pem");
 
     private final GuiceJamesServer jamesServer;
