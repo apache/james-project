@@ -30,89 +30,6 @@ link:http://logback.qos.ch/manual/configuration.html[here].
 
 == Structured logging
 
-=== Pushing logs to ElasticSearch
-Distributed Server leverages the use of MDC in order to achieve structured logging,
-and better add context to the logged information. We furthermore ship
-link:https://github.com/linagora/logback-elasticsearch-appender[Logback Elasticsearch Appender]
-on the classpath to easily allow direct log indexation in
-link:https://www.elastic.co/elasticsearch[ElasticSearch].
-
-Here is a sample `conf/logback.xml` configuration file for logback with the following
-pre-requisites:
-
-* Logging both in an unstructured fashion on the console and in a structured fashion in ElasticSearch
-* Logging ElasticSearch Log appender logs in the console
-
-Configuration for pushing log direct to ElasticSearch
-
-* Logging ElasticSearch Log appender logs in the console
-
-....
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration scan="true" scanPeriod="30 seconds">
-
-        <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
-                <resetJUL>true</resetJUL>
-        </contextListener>
-
-        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-                <encoder>
-                        <pattern>%d{yyyy.MM.dd HH:mm:ss.SSS} %highlight([%-5level]) %logger{15} - %msg%n%rEx</pattern>
-                        <immediateFlush>false</immediateFlush>
-                </encoder>
-        </appender>
-
-        <appender name="ELASTIC" class="com.linagora.logback.elasticsearch.ElasticsearchAppender">
-            <url>http://elasticsearch:9200/_bulk</url>
-            <index>logs-james-%date{yyyy.MM.dd}</index>
-            <type>tester</type>
-            <includeMdc>true</includeMdc>
-            <excludedMdcKeys>host</excludedMdcKeys>
-            <errorLoggerName>es-error-logger</errorLoggerName>
-            <properties>
-                <property>
-                    <name>host</name>
-                    <value>${HOSTNAME}</value>
-                    <allowEmpty>false</allowEmpty>
-                </property>
-                <property>
-                    <name>severity</name>
-                    <value>%level</value>
-                </property>
-                <property>
-                    <name>thread</name>
-                    <value>%thread</value>
-                </property>
-                <property>
-                    <name>stacktrace</name>
-                    <value>%ex</value>
-                </property>
-                <property>
-                    <name>logger</name>
-                    <value>%logger</value>
-                </property>
-            </properties>
-            <headers>
-                <header>
-                    <name>Content-Type</name>
-                    <value>application/json</value>
-                </header>
-            </headers>
-        </appender>
-
-        <root level="WARN">
-                <appender-ref ref="ELASTIC" />
-        </root>
-
-        <logger name="es-error-logger" level="DEBUG" additivity="false">
-            <appender-ref ref="CONSOLE" />
-        </logger>
-
-        <logger name="org.apache.james" level="INFO" />
-
-</configuration>
-....
-
 === Using FluentBit as a log forwarder
 
 ==== Using Docker
@@ -121,7 +38,7 @@ Distributed Server leverages the use of MDC in order to achieve structured loggi
 Here is a sample conf/logback.xml configuration file for logback with the following pre-requisites:
 
 Logging in a structured json fashion and write to file for centralizing logging.
-Centralize logging third party like FluentBit can tail from logging’s file then filter/process and put in to ElastichSearch
+Centralize logging third party like FluentBit can tail from logging’s file then filter/process and put in to OpenSearch
 
 ....
 <?xml version="1.0" encoding="UTF-8"?>
@@ -170,7 +87,7 @@ version: "3"
 services:
   james:
     depends_on:
-      - elasticsearch
+      - opensearch
       - cassandra
       - rabbitmq
       - s3
@@ -192,8 +109,8 @@ services:
       - "993:993"
       - "8080:8000"
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+  opensearch:
+    image: opensearchproject/opensearch:2.14.0
     ports:
       - "9200:9200"
     environment:
@@ -230,20 +147,20 @@ services:
       - "24224:24224"
       - "24224:24224/udp"
     depends_on:
-      - elasticsearch
+      - opensearch
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.10.2
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.16.0
     environment:
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      OPENSEARCH_HOSTS: http://opensearch:9200
     ports:
       - "5601:5601"
     depends_on:
-      - elasticsearch
+      - opensearch
 ....
 
 FluentBit config as:
-the `Host elasticsearch` pointing to `elasticsearch` service in docker-compose file.
+the `Host opensearch` pointing to `opensearch` service in docker-compose file.
 ....
 [SERVICE]
     Parsers_File    /fluent-bit/etc/parsers.conf
@@ -266,7 +183,7 @@ the `Host elasticsearch` pointing to `elasticsearch` service in docker-compose f
 [OUTPUT]
     Name  es
     Match *
-    Host elasticsearch
+    Host opensearch
     Port 9200
     Index fluentbit
     Logstash_Format On
@@ -326,7 +243,7 @@ Here is a sample conf/logback.xml configuration file for achieving this:
 ....
 
 Regarding FluentBit on Kubernetes, you need to install it as a DaemonSet. Some official template exist 
-with FluentBit outputting logs to ElasticSearch. For more information on how to install it,
+with FluentBit outputting logs to OpenSearch. For more information on how to install it,
 with your cluster, you can look at this https://docs.fluentbit.io/manual/installation/kubernetes[documentation].
 
 As stated by the https://docs.fluentbit.io/manual/installation/kubernetes#details[detail] of the
