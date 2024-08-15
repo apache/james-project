@@ -65,7 +65,7 @@ public abstract class SMIMECheckSignatureIntegrationTest {
         messageSender().connect(LOCALHOST_IP, jamesServer().getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort())
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, RECIPIENT,
-                ClassLoaderUtils.getSystemResourceAsString("smime-test-resource-set/mail_with_signature_and_content_type_xpkcs7mime"));
+                ClassLoaderUtils.getSystemResourceAsString("smime-test-resource-set/mail_with_signature_and_content_type_xpkcs7mime.eml"));
 
         testIMAPClient().connect(LOCALHOST_IP, jamesServer().getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
