@@ -131,7 +131,7 @@ public class OpenSearchMailboxConfiguration {
     private static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
     private static final boolean DEFAULT_INDEX_HEADERS = true;
     public static final boolean DEFAULT_OPTIMIZE_MOVES = false;
-    public static final boolean DEFAULT_TEXT_FUZZINESS_SEARCH = true;
+    public static final boolean DEFAULT_TEXT_FUZZINESS_SEARCH = false;
     public static final boolean DEFAULT_INDEX_BODY = true;
     public static final boolean DEFAULT_INDEX_USER = false;
     public static final OpenSearchMailboxConfiguration DEFAULT_CONFIGURATION = builder().build();

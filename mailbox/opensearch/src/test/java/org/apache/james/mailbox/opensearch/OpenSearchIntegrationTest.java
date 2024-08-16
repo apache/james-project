@@ -130,7 +130,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     protected OpenSearchMailboxConfiguration openSearchMailboxConfiguration() {
         return OpenSearchMailboxConfiguration.builder()
             .optimiseMoves(false)
-            .textFuzzinessSearch(true)
+            .textFuzzinessSearch(false)
             .build();
     }
 
@@ -275,50 +275,6 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session)).toStream())
-            .containsExactly(composedMessageId.getUid());
-    }
-
-    @Test
-    void searchShouldBeLenientOnUserTypo() throws Exception {
-        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxSession session = MailboxSessionUtil.create(USERNAME);
-        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
-
-        String recipient = "benwa@linagora.com";
-        ComposedMessageId composedMessageId = messageManager.appendMessage(MessageManager.AppendCommand.from(
-                Message.Builder.of()
-                    .setTo(recipient)
-                    .setSubject("fuzzy subject")
-                    .setBody("fuzzy body", StandardCharsets.UTF_8)),
-            session).getId();
-
-        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 14);
-
-        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.subject("fuzzi")), session)).toStream())
-            .containsExactly(composedMessageId.getUid());
-        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("fuzzi")), session)).toStream())
-            .containsExactly(composedMessageId.getUid());
-    }
-
-    @Test
-    void searchShouldBeLenientOnAdjacentCharactersTranspositions() throws Exception {
-        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxSession session = MailboxSessionUtil.create(USERNAME);
-        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
-
-        String recipient = "benwa@linagora.com";
-        ComposedMessageId composedMessageId = messageManager.appendMessage(MessageManager.AppendCommand.from(
-                Message.Builder.of()
-                    .setTo(recipient)
-                    .setSubject("subject")
-                    .setBody("body", StandardCharsets.UTF_8)),
-            session).getId();
-
-        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 14);
-
-        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.subject("subjetc")), session)).toStream())
-            .containsExactly(composedMessageId.getUid());
-        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("boyd")), session)).toStream())
             .containsExactly(composedMessageId.getUid());
     }
 
@@ -690,7 +646,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .addField(new RawField("Subject", subject)));
     }
 
-    private void awaitForOpenSearch(Query query, long totalHits) {
+    protected void awaitForOpenSearch(Query query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
                 .untilAsserted(() -> assertThat(client.search(
                         new SearchRequest.Builder()

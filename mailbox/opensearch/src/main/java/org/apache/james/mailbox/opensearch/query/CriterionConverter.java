@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.opensearch.query;
 
 import static org.apache.james.backends.opensearch.IndexCreationFactory.RAW;
+import static org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration.DEFAULT_TEXT_FUZZINESS_SEARCH;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -73,7 +74,7 @@ public class CriterionConverter {
     public CriterionConverter() {
         this.criterionConverterMap = new HashMap<>();
         this.headerOperatorConverterMap = new HashMap<>();
-        this.textFuzzinessSearchValue = evaluateFuzzinessValue(true);
+        this.textFuzzinessSearchValue = evaluateFuzzinessValue(DEFAULT_TEXT_FUZZINESS_SEARCH);
 
         registerCriterionConverters();
         registerHeaderOperatorConverters();

@@ -278,10 +278,10 @@ class OpenSearchMailboxConfigurationTest {
     }
 
     @Test
-    void textFuzzinessSearchShouldReturnTrueByDefault() {
+    void textFuzzinessSearchShouldReturnFalseByDefault() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
         assertThat(OpenSearchMailboxConfiguration.fromProperties(configuration).textFuzzinessSearchEnable())
-            .isTrue();
+            .isFalse();
     }
 }
