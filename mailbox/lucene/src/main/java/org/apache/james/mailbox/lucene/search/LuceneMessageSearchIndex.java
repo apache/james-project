@@ -435,6 +435,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @PreDestroy
     public void close() throws IOException {
+        log.trace("Closing Lucene index");
         writer.commit();
         writer.close();
     }
