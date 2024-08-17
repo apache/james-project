@@ -22,9 +22,12 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
@@ -51,6 +54,8 @@ import io.netty.util.concurrent.ImmediateEventExecutor;
  * Abstract base class for Servers which want to use async io
  */
 public abstract class AbstractAsyncServer implements ProtocolServer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAsyncServer.class);
 
     public static final int DEFAULT_IO_WORKER_COUNT = Runtime.getRuntime().availableProcessors() * 2;
     public static final int DEFAULT_BOSS_WORKER_COUNT = 2;
@@ -175,6 +180,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     
     @Override
     public synchronized void unbind() {
+        LOGGER.trace("Unbinding service: {}", this);
         if (!started) {
             return;
         }
@@ -184,13 +190,15 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         bossGroup.ifPresent(boss -> futures.add(boss.shutdownGracefully()));
 
         if (workerGroup != null) {
-            futures.add(workerGroup.shutdownGracefully());
+            futures.add(workerGroup.shutdownGracefully(100, 3000, TimeUnit.MILLISECONDS));
         }
 
         futures.add(channels.close());
 
         if (gracefulShutdown) {
-            futures.forEach(Throwing.<Future<?>>consumer(Future::await).sneakyThrow());
+            futures.stream()
+                    .parallel()
+                    .forEach(Throwing.<Future<?>>consumer(Future::await).sneakyThrow());
         }
 
         started = false;

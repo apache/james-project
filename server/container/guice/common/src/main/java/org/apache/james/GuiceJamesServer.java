@@ -21,6 +21,7 @@ package org.apache.james;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.annotation.PreDestroy;
 
@@ -84,6 +85,7 @@ public class GuiceJamesServer {
 
     public void start() throws Exception {
         try {
+            var start = System.currentTimeMillis();
             Injector injector = Guice.createInjector(module);
             guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
             preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {
@@ -92,7 +94,7 @@ public class GuiceJamesServer {
             injector.getInstance(StartUpChecksPerformer.class).performCheck();
             injector.getInstance(InitializationOperations.class).initModules();
             isStartedProbe.notifyStarted();
-            LOGGER.info("JAMES server started");
+            LOGGER.info("JAMES server started in: {}s", ((System.currentTimeMillis() - start) / 1000d));
         } catch (Throwable e) {
             LOGGER.error("Fatal error while starting James", e);
             if (SHOULD_EXIT_ON_STARTUP_ERROR) {
@@ -104,11 +106,13 @@ public class GuiceJamesServer {
     }
 
     public void stop() {
+        final double shutdownStart = System.currentTimeMillis();
+        LOGGER.trace("Stopping JAMES server");
         isStartedProbe.notifyStoped();
         if (preDestroy != null) {
             preDestroy.stage();
         }
-        LOGGER.info("JAMES server stopped");
+        LOGGER.info("JAMES server stopped in: {}s", ((System.currentTimeMillis() - shutdownStart) / 1000d));
     }
 
     public boolean isStarted() {
