@@ -89,7 +89,52 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(5))
             .build());
 
-        Iterable<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).take(10)
+        getMailQueue().enQueue(defaultMail()
+            .name("name-3")
+            .attribute(mailPriority(-3))
+            .build());
+
+        getMailQueue().enQueue(defaultMail()
+            .name("name-9")
+            .attribute(mailPriority(-9))
+            .build());
+
+        getMailQueue().enQueue(defaultMail()
+            .name("name-1")
+            .attribute(mailPriority(-1))
+            .build());
+
+        getMailQueue().enQueue(defaultMail()
+            .name("name-8")
+            .attribute(mailPriority(-8))
+            .build());
+
+        getMailQueue().enQueue(defaultMail()
+            .name("name-6")
+            .attribute(mailPriority(-6))
+            .build());
+
+        getMailQueue().enQueue(defaultMail()
+            .name("name-7")
+            .attribute(mailPriority(-7))
+            .build());
+
+        getMailQueue().enQueue(defaultMail()
+            .name("name-4")
+            .attribute(mailPriority(-4))
+            .build());
+
+        getMailQueue().enQueue(defaultMail()
+            .name("name-2")
+            .attribute(mailPriority(-2))
+            .build());
+
+        getMailQueue().enQueue(defaultMail()
+            .name("name-5")
+            .attribute(mailPriority(-5))
+            .build());
+
+        Iterable<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).take(19)
             .flatMap(item -> {
                 try {
                     item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
@@ -103,7 +148,8 @@ public interface PriorityMailQueueContract {
         assertThat(items)
             .extracting(MailQueue.MailQueueItem::getMail)
             .extracting(Mail::getName)
-            .containsExactly("name9", "name8", "name7", "name6", "name5", "name4", "name3", "name2", "name1", "name0");
+            .containsExactly("name9", "name8", "name7", "name6", "name5", "name4", "name3", "name2", "name1", "name0",
+                "name-3", "name-9", "name-1", "name-8", "name-6", "name-7", "name-4", "name-2", "name-5");
     }
 
     @Test
@@ -169,8 +215,8 @@ public interface PriorityMailQueueContract {
         MailQueue.MailQueueItem mailQueueItem3 = mailQueueItems.next();
         mailQueueItem3.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name3");
-        assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name1");
-        assertThat(mailQueueItem3.getMail().getName()).isEqualTo("name2");
+        assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name2");
+        assertThat(mailQueueItem3.getMail().getName()).isEqualTo("name1");
     }
 
     @Test
@@ -195,8 +241,8 @@ public interface PriorityMailQueueContract {
         MailQueue.MailQueueItem mailQueueItem3 = mailQueueItems.next();
         mailQueueItem3.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
         assertThat(mailQueueItem1.getMail().getName()).isEqualTo("name3");
-        assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name1");
-        assertThat(mailQueueItem3.getMail().getName()).isEqualTo("name2");
+        assertThat(mailQueueItem2.getMail().getName()).isEqualTo("name2");
+        assertThat(mailQueueItem3.getMail().getName()).isEqualTo("name1");
     }
 
     @Test

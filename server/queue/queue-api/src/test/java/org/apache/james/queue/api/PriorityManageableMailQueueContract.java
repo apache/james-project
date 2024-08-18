@@ -84,11 +84,57 @@ public interface PriorityManageableMailQueueContract extends ManageableMailQueue
             .attribute(mailPriority(5))
             .build());
 
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name-3")
+            .attribute(mailPriority(-3))
+            .build());
+
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name-9")
+            .attribute(mailPriority(-9))
+            .build());
+
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name-1")
+            .attribute(mailPriority(-1))
+            .build());
+
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name-8")
+            .attribute(mailPriority(-8))
+            .build());
+
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name-6")
+            .attribute(mailPriority(-6))
+            .build());
+
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name-7")
+            .attribute(mailPriority(-7))
+            .build());
+
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name-4")
+            .attribute(mailPriority(-4))
+            .build());
+
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name-2")
+            .attribute(mailPriority(-2))
+            .build());
+
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name-5")
+            .attribute(mailPriority(-5))
+            .build());
+
         assertThat(getManageableMailQueue().browse())
             .toIterable()
             .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
-            .containsExactly("name9", "name8", "name7", "name6", "name5", "name4", "name3", "name2", "name1", "name0");
+            .containsExactly("name9", "name8", "name7", "name6", "name5", "name4", "name3", "name2", "name1", "name0",
+                "name-3", "name-9", "name-1", "name-8", "name-6", "name-7", "name-4", "name-2", "name-5");
     }
 
     default Attribute mailPriority(Integer priority) {

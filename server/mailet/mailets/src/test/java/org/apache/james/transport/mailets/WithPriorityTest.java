@@ -67,7 +67,7 @@ class WithPriorityTest {
     void initShouldThrowWhenInvalidPriority() {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
             .mailetContext(FakeMailContext.defaultContext())
-            .setProperty("priority", "-1")
+            .setProperty("priority", "-10")
             .build();
 
         assertThatThrownBy(() -> mailet.init(mockedMailetConfig))
