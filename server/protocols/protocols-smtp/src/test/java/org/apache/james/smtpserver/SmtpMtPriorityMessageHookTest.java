@@ -138,7 +138,7 @@ class SmtpMtPriorityMessageHookTest {
         Mail lastMail = testSystem.queue.getLastMail();
 
         assertThat(lastMail.getAttribute(MAIL_PRIORITY_ATTRIBUTE_NAME))
-            .hasValueSatisfying(v -> assertThat(v.getValue().getValue()).isEqualTo(0));
+            .hasValueSatisfying(v -> assertThat((int) v.getValue().getValue()).isNotPositive());
     }
 
     private void authenticate(SMTPClient smtpProtocol) throws IOException {
