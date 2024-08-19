@@ -74,6 +74,11 @@ public class DisabledListeningMessageSearchIndex extends ListeningMessageSearchI
     }
 
     @Override
+    public void postReindexing() {
+        // do nothing
+    }
+
+    @Override
     public boolean isHandling(Event event) {
         return INTERESTING_EVENTS.contains(event.getClass());
     }

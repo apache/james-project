@@ -274,6 +274,11 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     }
 
     @Override
+    public void postReindexing() {
+        // no need to explicitly commit after reindexing
+    }
+
+    @Override
     public Mono<Void> reactiveEvent(Event event) {
         MailboxSession systemSession = sessionProvider.createSystemSession(event.getUsername());
         return handleMailboxEvent(event, systemSession, (MailboxEvents.MailboxEvent) event)

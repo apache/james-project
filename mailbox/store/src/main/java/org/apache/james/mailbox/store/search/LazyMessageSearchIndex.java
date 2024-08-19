@@ -104,6 +104,11 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
         return index.deleteAll(session, mailboxId);
     }
 
+    @Override
+    public void postReindexing() {
+        index.postReindexing();
+    }
+
     /**
      * Lazy index the mailbox on first search request if it was not indexed before. After indexing is done it delegate the search request to the wrapped
      * {@link MessageSearchIndex}. Be aware that concurrent search requests are blocked on the same "not-yet-indexed" mailbox till it the index process was 

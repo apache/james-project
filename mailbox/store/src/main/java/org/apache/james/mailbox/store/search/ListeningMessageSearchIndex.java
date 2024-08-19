@@ -61,6 +61,8 @@ import reactor.core.scheduler.Schedulers;
 public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, EventListener.ReactiveGroupEventListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListeningMessageSearchIndex.class);
 
+    public abstract void postReindexing();
+
     public interface SearchOverride {
         boolean applicable(SearchQuery searchQuery, MailboxSession session);
 

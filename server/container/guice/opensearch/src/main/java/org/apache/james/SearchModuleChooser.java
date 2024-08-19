@@ -103,6 +103,11 @@ public class SearchModuleChooser {
         }
 
         @Override
+        public void postReindexing() {
+            throw new NotImplementedException("not implemented");
+        }
+
+        @Override
         public Flux<MessageUid> doSearch(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
             throw new NotImplementedException("not implemented");
         }
