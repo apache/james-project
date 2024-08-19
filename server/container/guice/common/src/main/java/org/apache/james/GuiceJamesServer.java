@@ -108,7 +108,7 @@ public class GuiceJamesServer {
 
     public void stop() {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        LOGGER.trace("Stopping JAMES server");
+        LOGGER.info("Stopping JAMES server");
         isStartedProbe.notifyStoped();
         if (preDestroy != null) {
             preDestroy.stage();
