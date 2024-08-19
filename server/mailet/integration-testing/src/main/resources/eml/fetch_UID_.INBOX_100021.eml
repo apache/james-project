@@ -4,10 +4,10 @@ Content-Type: multipart/mixed;
 Received: from mail-wr1-f48.google.com (EHLO mail-wr1-f48.google.com) ([209.85.221.48])
           (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256)
           by smtp.preprod-avocat.fr (JAMES SMTP Server ) with ESMTP ID e734a3a8
-          for <sonde-supervision-preprod.linagora@preprod-avocat.fr>;
+          for <touser@james.org>;
           Mon, 22 Jul 2024 16:35:59 +0000 (UTC)
 Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-36865a516f1so3216220f8f.0
-        for <sonde-supervision-preprod.linagora@preprod-avocat.fr>; Mon, 22 Jul 2024 09:35:59 -0700 (PDT)
+        for <touser@james.org>; Mon, 22 Jul 2024 09:35:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20230601; t=1721666159; x=1722270959; darn=preprod-avocat.fr;
         h=disposition-notification-to:msip_labels:content-class
@@ -43,11 +43,10 @@ Received: from DESKTOPCSQD2B3 (vpn3.linagora.com. [54.36.52.8])
         by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-368787ebab0sm9060753f8f.92.2024.07.22.09.35.58
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
         Mon, 22 Jul 2024 09:35:58 -0700 (PDT)
-Return-Receipt-To: "Victor Berhault" <victor.berhault@gmail.com>
-From: "Victor Berhault" <victor.berhault@gmail.com>
-To: <sonde-supervision-preprod.linagora@preprod-avocat.fr>,
-	"'Victor Berhault'" <victor.berhault@gmail.com>
-Cc: <patrick.pereira@free.fr>
+Return-Receipt-To: fromUser@james.org
+From: fromUser@james.org
+To: touser@james.org
+Cc: userCC@james.org
 Subject: test
 Date: Mon, 22 Jul 2024 18:35:48 +0200
 Message-ID: <!&!AAAAAAAAAAAuAAAAAAAAAGt8jN8J49pGnqUhCAyEBHwBAMO2jhD3dRHOtM0AqgC7tuYAAAAAAA4AABAAAADWgrEs5CO7S7B26ToVSq+KAQAAAAA=@gmail.com>
@@ -86,11 +85,10 @@ TZOFFSETTO:+0200
 END:DAYLIGHT
 END:VTIMEZONE
 BEGIN:VEVENT
-ATTENDEE;CN=sonde-supervision-preprod.linagora@preprod-avocat.fr;RSVP=TRUE:
-	mailto:sonde-supervision-preprod.linagora@preprod-avocat.fr
-ATTENDEE;CN="Victor Berhault";RSVP=TRUE:mailto:victor.berhault@gmail.com
-ATTENDEE;CN=patrick.pereira@free.fr;ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:p
-	atrick.pereira@free.fr
+ATTENDEE;CN=touser@james.org;RSVP=TRUE:
+	mailto:touser@james.org
+ATTENDEE;CN=fromUser@james.org;RSVP=TRUE:mailto:fromUser@james.org
+ATTENDEE;CN=userCC@james.org;ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:userCC@james.org
 CLASS:PUBLIC
 CREATED:20240722T163547Z
 DESCRIPTION: \n\n
@@ -98,7 +96,7 @@ DTEND;TZID="Romance Standard Time":20240722T083000
 DTSTAMP:20240722T163547Z
 DTSTART;TZID="Romance Standard Time":20240722T080000
 LAST-MODIFIED:20240722T163547Z
-ORGANIZER;CN="Victor Berhault":mailto:victor.berhault@gmail.com
+ORGANIZER;CN=fromUser@james.org
 PRIORITY:5
 SEQUENCE:0
 SUMMARY;LANGUAGE=fr:test
