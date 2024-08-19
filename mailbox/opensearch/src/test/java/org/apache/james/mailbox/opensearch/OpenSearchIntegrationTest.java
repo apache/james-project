@@ -130,6 +130,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     protected OpenSearchMailboxConfiguration openSearchMailboxConfiguration() {
         return OpenSearchMailboxConfiguration.builder()
             .optimiseMoves(false)
+            .textFuzzinessSearch(false)
             .build();
     }
 
@@ -157,7 +158,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 ImmutableSet.of(),
                 new OpenSearchIndexer(client,
                     writeAliasName),
-                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
+                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter(openSearchMailboxConfiguration())), SEARCH_SIZE,
                     readAliasName, routingKeyFactory),
                 new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory,
@@ -645,7 +646,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .addField(new RawField("Subject", subject)));
     }
 
-    private void awaitForOpenSearch(Query query, long totalHits) {
+    protected void awaitForOpenSearch(Query query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
                 .untilAsserted(() -> assertThat(client.search(
                         new SearchRequest.Builder()

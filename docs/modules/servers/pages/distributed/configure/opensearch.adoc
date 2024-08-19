@@ -97,6 +97,11 @@ turning off headers indexing result in non-strict compliance with the IMAP / JMA
 If the message is not found, it will fall back to the old behavior (The message will be indexed from the blobStore source)
 Default to false.
 
+| opensearch.text.fuzziness.search
+| Use fuzziness on text searches. This option helps to correct user typing mistakes and makes the result a bit more flexible.
+
+Default to false.
+
 | opensearch.indexBody
 | Indicates if you wish to index body or not (default: true). This can be used to decrease the performance cost associated with indexing.
 

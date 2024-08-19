@@ -259,4 +259,29 @@ class OpenSearchMailboxConfigurationTest {
             .isEqualTo(IndexBody.YES);
     }
 
+    @Test
+    void textFuzzinessSearchShouldReturnConfiguredValueWhenTrue() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("opensearch.text.fuzziness.search", "true");
+
+        assertThat(OpenSearchMailboxConfiguration.fromProperties(configuration).textFuzzinessSearchEnable())
+            .isTrue();
+    }
+
+    @Test
+    void textFuzzinessSearchShouldReturnConfiguredValueWhenFalse() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("opensearch.text.fuzziness.search", "false");
+
+        assertThat(OpenSearchMailboxConfiguration.fromProperties(configuration).textFuzzinessSearchEnable())
+            .isFalse();
+    }
+
+    @Test
+    void textFuzzinessSearchShouldReturnFalseByDefault() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+
+        assertThat(OpenSearchMailboxConfiguration.fromProperties(configuration).textFuzzinessSearchEnable())
+            .isFalse();
+    }
 }

@@ -122,6 +122,9 @@
           <dd>When set to true, James will attempt to reindex from the indexed message when moved.
               If the message is not found, it will fall back to the old behavior (The message will be indexed from the blobStore source).
               Default to false.</dd>
+          <dt><strong>opensearch.text.fuzziness.search</strong></dt>
+          <dd>Use fuzziness on text searches. This option helps to correct user typing mistakes and makes the result a bit more flexible.
+              Default to false.</dd>
           <dt><strong>opensearch.indexBody</strong></dt>
           <dd>Indicates if you wish to index body or not (default: true). This can be used to decrease the performance cost associated with indexing.</dd>
           <dt><strong>opensearch.indexUser</strong></dt>
