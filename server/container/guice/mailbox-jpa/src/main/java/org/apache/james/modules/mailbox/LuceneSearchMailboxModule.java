@@ -53,6 +53,6 @@ public class LuceneSearchMailboxModule extends AbstractModule {
     @Provides
     @Singleton
     Directory provideDirectory(FileSystem fileSystem) throws IOException {
-        return FSDirectory.open(fileSystem.getBasedir());
+        return FSDirectory.open(fileSystem.getBasedir().toPath());
     }
 }

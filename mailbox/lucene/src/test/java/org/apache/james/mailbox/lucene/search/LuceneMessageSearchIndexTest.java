@@ -28,7 +28,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
-import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.store.ByteBuffersDirectory;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -49,7 +49,7 @@ class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
             .defaultAnnotationLimits()
             .defaultMessageParser()
             .listeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
-                preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new RAMDirectory(),
+                preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new ByteBuffersDirectory(),
                 new InMemoryMessageId.Factory(),
                 preInstanciationStage.getSessionProvider())))
             .noPreDeletionHooks()

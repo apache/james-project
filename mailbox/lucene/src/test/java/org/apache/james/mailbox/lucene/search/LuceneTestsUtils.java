@@ -18,11 +18,30 @@
  ****************************************************************/
 package org.apache.james.mailbox.lucene.search;
 
-class StrictLuceneMessageSearchIndexText extends LuceneMailboxMessageSearchIndexTest {
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
-    @Override
-    protected boolean useLenient() {
-        return false;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+class LuceneTestsUtils {
+
+    static final Function<Document, String> documentStringFormatter = field -> "\n\t * " + field;
+    private static final Logger log = LoggerFactory.getLogger(LuceneTestsUtils.class);
+
+    static List<Document> getAllDocumentsFromRepository(IndexReader reader) {
+        List<Document> result = new ArrayList<>(reader.maxDoc());
+        for (int i = 0; i < reader.maxDoc(); i++) {
+            try {
+                result.add(reader.storedFields().document(i));
+            } catch (IOException e) {
+                log.error("Problem getting document for index: {}", i);
+            }
+        }
+        return result;
     }
-
 }

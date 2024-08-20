@@ -18,36 +18,39 @@
  ****************************************************************/
 package org.apache.james.mailbox.lucene.search;
 
-import java.io.Reader;
+import java.io.IOException;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.WhitespaceTokenizer;
-import org.apache.lucene.analysis.shingle.ShingleFilter;
-import org.apache.lucene.util.Version;
+import org.apache.lucene.analysis.core.UpperCaseFilterFactory;
+import org.apache.lucene.analysis.core.WhitespaceTokenizerFactory;
+import org.apache.lucene.analysis.custom.CustomAnalyzer;
+import org.apache.lucene.analysis.shingle.ShingleFilterFactory;
 
 /**
  * This {@link Analyzer} is not 100% conform with RFC3501 but does
- * most times exactly what the user would expect. 
- *
+ * most times exactly what the user would expect.
  */
-public final class LenientImapSearchAnalyzer extends Analyzer {
+public final class LenientImapSearchAnalyzer {
 
     public static final int DEFAULT_MAX_TOKEN_LENGTH = 4;
-    
-    private final int maxTokenLength;
-    
 
-    public LenientImapSearchAnalyzer(int maxTokenLength) {
-        this.maxTokenLength = maxTokenLength;
-    }
-    
-    public LenientImapSearchAnalyzer() {
-        this(DEFAULT_MAX_TOKEN_LENGTH);
-    }
-    
-    @Override
-    public TokenStream tokenStream(String arg0, Reader reader) {
-        return new ShingleFilter(new UpperCaseFilter(new WhitespaceTokenizer(Version.LUCENE_31, reader)), 2, maxTokenLength);
+    static final Analyzer INSTANCE = getAnalyzer();
+
+    private static Analyzer getAnalyzer() {
+        try {
+            return CustomAnalyzer.builder()
+                    .withTokenizer(WhitespaceTokenizerFactory.NAME)
+                    .addTokenFilter(UpperCaseFilterFactory.NAME)
+                    .addTokenFilter(ShingleFilterFactory.NAME,
+                            "minShingleSize", "2", "maxShingleSize", String.valueOf(DEFAULT_MAX_TOKEN_LENGTH),
+                            "outputUnigrams", "true",
+                            "outputUnigramsIfNoShingles", "false",
+                            "tokenSeparator", " ", "fillerToken", "_"
+                    ).build();
+        } catch (IOException e) {
+            // The IOException comes from the resource files.
+            // If there are no resources, the CustomAnalyzer won't throw UOE, so can be warped with an AssertionError.
+            throw new AssertionError("Can't instantiate custom (lenient) analyzer", e);
+        }
     }
 }

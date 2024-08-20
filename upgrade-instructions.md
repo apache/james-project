@@ -17,6 +17,7 @@ Changes to apply between 3.8.x and 3.9.0 will be reported here.
 
 Change list:
 
+ - [JAMES-4046 Refactor and update apache-james-mailbox-lucene](#james-4046-refactor-and-update-apache-james-mailbox-lucene)
  - [Imap Packages](#imap-packages)
  - [Jmap uploads](#jmap-uploads)
  - [Mutualize quota table](#mutualize-quota-table)
@@ -103,6 +104,16 @@ curl -X PUT \
     }
 }'
 ```
+
+### JAMES-4046 Refactor and update apache-james-mailbox-lucene
+
+Date: 16/08/2024
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-4046
+
+Lucene was upgraded from version 3 to version 9. Automatic upgrade is not supported with such a big upgrade thus it's required to delete/drop Lucene (file) index altogether and recreate it. 
+
+Index recreation can be done with [ReIndexing all mails REST API](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails)
 
 ### JAMES-3946 White list removals
 
