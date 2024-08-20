@@ -117,6 +117,9 @@ public class TextCalendarBodyToAttachmentTest {
         mailet.service(mail);
 
         assertThat(mail.getMessage().isMimeType("multipart/*")).isTrue();
+        assertThat(MimeMessageUtil.asString(mail.getMessage())).contains("Content-Disposition: attachment\r\n" +
+            "\r\n" +
+            "BEGIN:VCALENDAR\r\n");
     }
 
     @Test
@@ -157,22 +160,6 @@ public class TextCalendarBodyToAttachmentTest {
         int firstBodyPartIndex = 0;
         BodyPart firstBodyPart = multipart.getBodyPart(firstBodyPartIndex);
         assertThat(firstBodyPart.getContentType()).isEqualTo("text/calendar; method=REPLY; charset=UTF-8");
-    }
-
-    @Test
-    public void contentTransferEncodingOfAttachmentShouldBeTakenFromOriginalMessage() throws Exception {
-        Mail mail = FakeMail.builder()
-            .name("name")
-            .mimeMessage(calendarMessage)
-            .build();
-
-        mailet.service(mail);
-
-        Multipart multipart = (Multipart)mail.getMessage().getContent();
-
-        int firstBodyPartIndex = 0;
-        BodyPart firstBodyPart = multipart.getBodyPart(firstBodyPartIndex);
-        assertThat(firstBodyPart.getHeader("Content-transfer-encoding")).containsExactly("8BIT");
     }
 
     @Test
