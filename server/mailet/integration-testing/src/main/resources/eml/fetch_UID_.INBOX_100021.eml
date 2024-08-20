@@ -1,4 +1,4 @@
-Return-Path: <victor.berhault@gmail.com>
+Return-Path: <fromUser@james.org>
 Content-Type: multipart/mixed; 
 	boundary="----=_Part_1903_1597811465.1721666175317"
 Received: from mail-wr1-f48.google.com (EHLO mail-wr1-f48.google.com) ([209.85.221.48])
@@ -55,7 +55,7 @@ X-Mailer: Microsoft Outlook 16.0
 Thread-Index: AdrcVODq/3GbwNkYRMOCCHPPKern9AAAFPhQ
 content-class: 
 msip_labels: 
-Disposition-Notification-To: "Victor Berhault" <victor.berhault@gmail.com>
+Disposition-Notification-To: "Victor Berhault" <fromUser@james.org>
 
 ------=_Part_1903_1597811465.1721666175317
 Content-Type: text/calendar; method=REQUEST;
