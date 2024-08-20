@@ -158,6 +158,9 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
      */
     @Override
     public void destroy() {
-        getHandlers(ProtocolHandler.class).stream().parallel().forEach(ProtocolHandler::destroy);
+        LinkedList<ProtocolHandler> lHandlers = getHandlers(ProtocolHandler.class);
+        for (ProtocolHandler handler : lHandlers) {
+            handler.destroy();
+        }
     }
 }

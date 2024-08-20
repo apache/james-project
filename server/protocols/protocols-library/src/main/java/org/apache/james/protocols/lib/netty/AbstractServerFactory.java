@@ -31,6 +31,9 @@ import org.apache.james.lifecycle.api.Configurable;
 
 import com.github.fge.lambdas.Throwing;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 /**
  * Abstract base class for Factories that need to create {@link AbstractConfigurableAsyncServer}'s via configuration files
  */
@@ -66,7 +69,10 @@ public abstract class AbstractServerFactory implements Configurable, Certificate
     
     @PreDestroy
     public void destroy() {
-        servers.parallelStream().forEach(AbstractConfigurableAsyncServer::destroy);
+        Flux.fromIterable(servers)
+                .flatMap(asyncServer -> Mono.fromRunnable(asyncServer::destroy))
+                .then()
+                .block();
     }
 
     @Override
