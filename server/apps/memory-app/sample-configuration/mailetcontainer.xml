@@ -70,7 +70,11 @@
             </matcher>
 
             <mailet match="All" class="RemoveMimeHeader">
-                <name>bcc,X-SMIME-Status</name>
+                <name>bcc</name>
+                <onMailetException>ignore</onMailetException>
+            </mailet>
+            <mailet match="All" class="RemoveMimeHeader">
+                <name>X-SMIME-Status</name>
                 <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="All" class="RecipientRewriteTable">
