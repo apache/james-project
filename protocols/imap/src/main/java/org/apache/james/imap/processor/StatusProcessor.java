@@ -128,6 +128,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
                     if (response.getHighestModSeq() != null) {
                         condstoreEnablingCommand(session, responder, metaData, false);
                     }
+                    LOGGER.trace("Status on mailbox named {}, response: {}", mailbox, response);
                     responder.respond(response);
                 }));
     }

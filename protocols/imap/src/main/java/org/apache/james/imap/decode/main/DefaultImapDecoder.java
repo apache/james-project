@@ -75,7 +75,6 @@ public class DefaultImapDecoder implements ImapDecoder {
     }
 
     private ImapMessage decodeCommandTagged(ImapRequestLineReader request, Tag tag, ImapSession session) {
-        LOGGER.debug("Got <tag>: {}", tag);
         try {
             String commandName = request.atom();
             return decodeCommandNamed(request, tag, commandName, session);
@@ -110,7 +109,6 @@ public class DefaultImapDecoder implements ImapDecoder {
     }
 
     private ImapMessage decodeCommandNamed(ImapRequestLineReader request, Tag tag, String commandName, ImapSession session) {
-        LOGGER.debug("Got <command>: {}", commandName);
         ImapCommandParser command = imapCommands.getParser(commandName);
         if (command == null) {
             LOGGER.info("Missing command implementation for commmand {}", commandName);
@@ -121,6 +119,7 @@ public class DefaultImapDecoder implements ImapDecoder {
         if (count == null || (int) count > 0) {
             session.setAttribute(INVALID_COMMAND_COUNT, 0);
         }
+        LOGGER.trace("Processing {} {} {}", tag.asString(), commandName, message.toString());
         return message;
     }
 }

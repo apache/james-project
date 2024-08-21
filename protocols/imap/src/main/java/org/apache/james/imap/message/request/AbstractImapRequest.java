@@ -52,4 +52,11 @@ public abstract class AbstractImapRequest implements ImapRequest {
         return tag;
     }
 
+    @Override
+    public String toString() {
+        return "AbstractImapRequest{" +
+                "tag=" + getTag() +
+                ", command=" + getCommand() +
+                '}';
+    }
 }
