@@ -201,9 +201,6 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         List<MessageRange> ranges = new ArrayList<>();
 
         for (IdRange range : request.getIdSet()) {
-            if (session.getSelected().getLastUid().isEmpty()) {
-                continue;
-            }
             Optional<MessageRange> messageSet = messageRange(session.getSelected(), range, request.isUseUids());
             if (messageSet.isPresent()) {
                 MessageRange normalizedMessageSet = normalizeMessageRange(selected, messageSet.orElse(null));
