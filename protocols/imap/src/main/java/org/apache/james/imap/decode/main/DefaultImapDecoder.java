@@ -119,7 +119,7 @@ public class DefaultImapDecoder implements ImapDecoder {
         if (count == null || (int) count > 0) {
             session.setAttribute(INVALID_COMMAND_COUNT, 0);
         }
-        LOGGER.trace("Processing {} {} {}", tag.asString(), commandName, message.toString());
+        LOGGER.trace("Processing {} {} {}", tag, commandName, message);
         return message;
     }
 }
