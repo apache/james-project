@@ -29,6 +29,11 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 
+import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 /**
  * Abstract base class for Factories that need to create {@link AbstractConfigurableAsyncServer}'s via configuration files
  */
@@ -52,9 +57,7 @@ public abstract class AbstractServerFactory implements Configurable, Certificate
     @PostConstruct
     public void init() throws Exception {
         servers = createServers(config);
-        for (AbstractConfigurableAsyncServer server: servers) {
-            server.init();
-        }
+        servers.parallelStream().forEach(Throwing.consumer(AbstractConfigurableAsyncServer::init).sneakyThrow());
     }
     
     /**
@@ -66,9 +69,10 @@ public abstract class AbstractServerFactory implements Configurable, Certificate
     
     @PreDestroy
     public void destroy() {
-        for (AbstractConfigurableAsyncServer server: servers) {
-            server.destroy();
-        }
+        Flux.fromIterable(servers)
+                .flatMap(asyncServer -> Mono.fromRunnable(asyncServer::destroy))
+                .then()
+                .block();
     }
 
     @Override

@@ -27,12 +27,16 @@ import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Default {@link Stager} implementation.
  */
 public class DefaultStager<A extends Annotation> implements DisposingStager<A> {
     private final Class<A> stage;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultStager.class);
     /**
      * Stack of elements have to be disposed.
      */
@@ -141,6 +145,7 @@ public class DefaultStager<A extends Annotation> implements DisposingStager<A> {
 
         @Override
         protected void doStage() throws Exception {
+            LOGGER.trace("Closing object: {}", object);
             object.close();
         }
 
@@ -154,6 +159,7 @@ public class DefaultStager<A extends Annotation> implements DisposingStager<A> {
 
         @Override
         protected void doStage() throws Exception {
+            LOGGER.trace("Closing object: {}", object);
             object.shutdown();
             try {
                 if (!object.awaitTermination(1, TimeUnit.MINUTES)) {

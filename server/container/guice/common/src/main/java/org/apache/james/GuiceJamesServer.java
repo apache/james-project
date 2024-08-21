@@ -21,6 +21,7 @@ package org.apache.james;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PreDestroy;
 
@@ -34,6 +35,7 @@ import org.apache.james.utils.InitializationOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -84,6 +86,7 @@ public class GuiceJamesServer {
 
     public void start() throws Exception {
         try {
+            Stopwatch stopwatch = Stopwatch.createStarted();
             Injector injector = Guice.createInjector(module);
             guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
             preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {
@@ -92,7 +95,7 @@ public class GuiceJamesServer {
             injector.getInstance(StartUpChecksPerformer.class).performCheck();
             injector.getInstance(InitializationOperations.class).initModules();
             isStartedProbe.notifyStarted();
-            LOGGER.info("JAMES server started");
+            LOGGER.info("JAMES server started in: {}ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
         } catch (Throwable e) {
             LOGGER.error("Fatal error while starting James", e);
             if (SHOULD_EXIT_ON_STARTUP_ERROR) {
@@ -104,11 +107,13 @@ public class GuiceJamesServer {
     }
 
     public void stop() {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        LOGGER.info("Stopping JAMES server");
         isStartedProbe.notifyStoped();
         if (preDestroy != null) {
             preDestroy.stage();
         }
-        LOGGER.info("JAMES server stopped");
+        LOGGER.info("JAMES server stopped in: {}ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
 
     public boolean isStarted() {

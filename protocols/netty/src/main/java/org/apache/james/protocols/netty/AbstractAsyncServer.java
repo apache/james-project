@@ -22,9 +22,12 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +47,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.ImmediateEventExecutor;
-
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 
 /**
@@ -52,17 +56,22 @@ import io.netty.util.concurrent.ImmediateEventExecutor;
  */
 public abstract class AbstractAsyncServer implements ProtocolServer {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAsyncServer.class);
+
     public static final int DEFAULT_IO_WORKER_COUNT = Runtime.getRuntime().availableProcessors() * 2;
     public static final int DEFAULT_BOSS_WORKER_COUNT = 2;
+    public static final int SHUTDOWN_QUIET_PERIOD = 500;
+    public static final int SHUTDOWN_TIMEOUT = 3000;
+
     private volatile int backlog = 250;
-    
+
     private volatile int timeout = 120;
 
     private Optional<EventLoopGroup> bossGroup;
     private EventLoopGroup workerGroup;
 
     private volatile boolean started;
-    
+
     private final ChannelGroup channels = new DefaultChannelGroup(ImmediateEventExecutor.INSTANCE);
 
     private volatile int ioWorker = DEFAULT_IO_WORKER_COUNT;
@@ -172,9 +181,10 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         bootstrap.option(ChannelOption.SO_REUSEADDR, true);
         bootstrap.childOption(ChannelOption.TCP_NODELAY, true);
     }
-    
+
     @Override
     public synchronized void unbind() {
+        LOGGER.trace("Unbinding service: {}", this);
         if (!started) {
             return;
         }
@@ -184,13 +194,16 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         bossGroup.ifPresent(boss -> futures.add(boss.shutdownGracefully()));
 
         if (workerGroup != null) {
-            futures.add(workerGroup.shutdownGracefully());
+            futures.add(workerGroup.shutdownGracefully(SHUTDOWN_QUIET_PERIOD, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS));
         }
 
         futures.add(channels.close());
 
         if (gracefulShutdown) {
-            futures.forEach(Throwing.<Future<?>>consumer(Future::await).sneakyThrow());
+            Flux.fromIterable(futures)
+                    .flatMap(future -> Mono.fromRunnable(Throwing.runnable(future::await).sneakyThrow()))
+                    .then()
+                    .block();
         }
 
         started = false;
@@ -202,7 +215,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
             .map(channel -> (InetSocketAddress) channel.localAddress())
             .collect(ImmutableList.toImmutableList());
     }
-    
+
     /**
      * Create ChannelPipelineFactory to use by this Server implementation
      */
@@ -218,8 +231,8 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         }
         this.timeout = timeout;
     }
-    
-    
+
+
     /**
      * Set the Backlog for the socket. This will throw a {@link IllegalStateException} if the server is running.
      */
@@ -229,13 +242,13 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         }
         this.backlog = backlog;
     }
-    
+
 
     @Override
     public int getBacklog() {
         return backlog;
     }
-    
+
 
     @Override
     public int getTimeout() {

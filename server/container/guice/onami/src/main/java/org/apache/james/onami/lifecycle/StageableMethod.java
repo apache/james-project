@@ -24,6 +24,9 @@ import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A {@link StageableMethod} is a reference to a stageable injectee
  * and related method to release resources.
@@ -34,6 +37,8 @@ final class StageableMethod extends AbstractBasicStageable<Object> {
      * The method to be invoked to stage resources.
      */
     private final Method stageMethod;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultStager.class);
 
     /**
      * Creates a new {@link StageableMethod} reference.
@@ -48,6 +53,7 @@ final class StageableMethod extends AbstractBasicStageable<Object> {
 
     @Override
     public final void stage(StageHandler stageHandler) {
+        LOGGER.trace("Closing object: {}", object);
         try {
             AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
                 stageMethod.setAccessible(true);
