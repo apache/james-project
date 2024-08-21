@@ -21,7 +21,6 @@ package org.apache.james.imap.api;
 
 import java.util.Objects;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class Tag {
