@@ -19,9 +19,11 @@
 
 package org.apache.james.jmap.mailet;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import jakarta.activation.DataHandler;
 import jakarta.mail.Header;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
@@ -29,6 +31,7 @@ import jakarta.mail.Part;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.util.ByteArrayDataSource;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -90,7 +93,12 @@ public class TextCalendarBodyToAttachment extends GenericMailet {
     }
 
     private MimeBodyPart createMimeBodyPartWithContentHeadersFromMimeMessage(MimeMessage mimeMessage, List<Header> contentHeaders) throws MessagingException {
-        MimeBodyPart fileBody = new MimeBodyPart(mimeMessage.getRawInputStream());
+        MimeBodyPart fileBody = new MimeBodyPart();
+        try {
+            fileBody.setDataHandler(new DataHandler(new ByteArrayDataSource(mimeMessage.getRawInputStream(), mimeMessage.getContentType())));
+        } catch (IOException e) {
+            throw new MessagingException("Error converting message to mime multipart", e);
+        }
         for (Header header : contentHeaders) {
             fileBody.setHeader(header.getName(), header.getValue());
         }
