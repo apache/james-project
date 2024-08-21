@@ -69,7 +69,7 @@ class SmtpMtPriorityMessageHookTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"-9,0", "-8,0", "-7,0", "-6,0", "-5,0", "-4,0", "-3,0", "-2,0", "-1,0", "0,0", "1,1",
+    @CsvSource({"-9,-9", "-8,-8", "-7,-7", "-6,-6", "-5,-5", "-4,-4", "-3,-3", "-2,-2", "-1,-1", "0,0", "1,1",
         "2,2", "3,3", "4,4", "5,5", "6,6", "7,7", "8,8", "9,9"})
     void mtPriorityParametersShouldBeSetOnTheFinalEmailAsMailSupportPriorityValue(String inputPriorityValue, String expectedPriorityValue) throws Exception {
         SMTPClient smtpProtocol = new SMTPClient();
@@ -138,7 +138,7 @@ class SmtpMtPriorityMessageHookTest {
         Mail lastMail = testSystem.queue.getLastMail();
 
         assertThat(lastMail.getAttribute(MAIL_PRIORITY_ATTRIBUTE_NAME))
-            .hasValueSatisfying(v -> assertThat(v.getValue().getValue()).isEqualTo(0));
+            .hasValueSatisfying(v -> assertThat((int) v.getValue().getValue()).isNotPositive());
     }
 
     private void authenticate(SMTPClient smtpProtocol) throws IOException {

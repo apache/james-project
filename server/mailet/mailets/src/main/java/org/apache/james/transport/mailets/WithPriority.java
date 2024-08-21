@@ -53,8 +53,8 @@ public class WithPriority extends GenericMailet {
             .map(Integer::valueOf)
             .orElseThrow(() -> new IllegalArgumentException("'priority' init parameter is compulsory"));
 
-        if (priorityRaw < 0 || priorityRaw > 9) {
-            throw new IllegalArgumentException("Invalid priority: Priority should be from 0 to 9");
+        if (priorityRaw < -9 || priorityRaw > 9) {
+            throw new IllegalArgumentException("Invalid priority: Priority should be from -9 to 9");
         }
         priority = new Attribute(MailPrioritySupport.MAIL_PRIORITY, AttributeValue.of(priorityRaw));
     }

@@ -35,15 +35,15 @@ public interface MailPrioritySupport {
      */
     AttributeName MAIL_PRIORITY = AttributeName.of("MAIL_PRIORITY");
 
-    /** Handle mail with lowest priority */
-    int LOW_PRIORITY = 0;
+    /** Handle mail with the lowest priority */
+    int LOW_PRIORITY = -9;
     Attribute LOW_PRIORITY_ATTRIBUTE = new Attribute(MAIL_PRIORITY, AttributeValue.of(LOW_PRIORITY));
 
     /** Handle mail with normal priority (this is the default) */
-    int NORMAL_PRIORITY = 5;
+    int NORMAL_PRIORITY = 0;
     Attribute NORMAL_PRIORITY_ATTRIBUTE = new Attribute(MAIL_PRIORITY, AttributeValue.of(NORMAL_PRIORITY));
 
-    /** Handle mail with highest priority */
+    /** Handle mail with the highest priority */
     int HIGH_PRIORITY = 9;
     Attribute HIGH_PRIORITY_ATTRIBUTE = new Attribute(MAIL_PRIORITY, AttributeValue.of(HIGH_PRIORITY));
 }
