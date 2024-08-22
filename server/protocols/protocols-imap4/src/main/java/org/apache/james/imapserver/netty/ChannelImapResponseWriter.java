@@ -20,7 +20,6 @@
 package org.apache.james.imapserver.netty;
 
 import static org.apache.james.imapserver.netty.ImapChannelUpstreamHandler.retrieveUsername;
-import static org.apache.james.imapserver.netty.NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -36,7 +35,6 @@ import org.slf4j.LoggerFactory;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.handler.codec.compression.ZlibEncoder;
@@ -58,11 +56,11 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
     private final Channel channel;
     private final boolean zeroCopy;
     private FlushCallback flushCallback;
-    private ChannelHandlerContext ctx = null;
+    private ImapSession imapSession = null;
 
-    public ChannelImapResponseWriter(ChannelHandlerContext ctx) {
-        this(ctx.channel());
-        this.ctx = ctx;
+    public ChannelImapResponseWriter(Channel channel, ImapSession imapSession) {
+        this(channel);
+        this.imapSession = imapSession;
     }
 
     public ChannelImapResponseWriter(Channel channel) {
@@ -84,11 +82,9 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
     @Override
     public void write(byte[] buffer) {
         if (LOGGER.isTraceEnabled()) {
-            if (ctx != null) {
-                ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-                String username = retrieveUsername(imapSession);
+            if (imapSession != null) {
                 new MDCStructuredLogger(LOGGER)
-                        .field("username", username)
+                        .field("username", retrieveUsername(imapSession))
                         .log(logger -> logger.trace("Writing IMAP response: {}", new String(buffer)));
             }
         }
