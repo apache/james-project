@@ -17,8 +17,6 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport;
 
 import java.security.InvalidAlgorithmParameterException;
@@ -34,6 +32,7 @@ import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import jakarta.mail.MessagingException;
@@ -98,8 +97,9 @@ public class KeyStoreHolder {
             X509CertSelector certSelector = new JcaX509CertSelectorConverter().getCertSelector(x509CertificateHolderSelector);
             @SuppressWarnings("unchecked")
             Collection<X509Certificate> certCollection = (Collection<X509Certificate>) certs.getCertificates(certSelector);
-            if (!certCollection.isEmpty()) {
-                X509Certificate signerCert = certCollection.iterator().next();
+            Iterator<X509Certificate> iterator = certCollection.iterator();
+            while (iterator.hasNext()) {
+                X509Certificate signerCert = iterator.next();
                 // The issuer's certifcate is searched in the list of trusted certificate.
                 CertPath path = verifyCertificate(signerCert, certs, keyStore);
 
