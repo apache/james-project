@@ -31,6 +31,7 @@ import org.apache.james.imap.decode.ImapCommandParser;
 import org.apache.james.imap.decode.ImapCommandParserFactory;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.ImapRequestLineReader;
+import org.apache.james.util.MDCStructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,7 +120,12 @@ public class DefaultImapDecoder implements ImapDecoder {
         if (count == null || (int) count > 0) {
             session.setAttribute(INVALID_COMMAND_COUNT, 0);
         }
-        LOGGER.trace("Processing {} {} {} [{}] ", tag, commandName, message, session.getUserName());
+        // Avoid cost of initializing MDC locally
+        if (LOGGER.isTraceEnabled()) {
+            new MDCStructuredLogger(LOGGER)
+                    .field("username", String.valueOf(session.getUserName()))
+                    .log(logger -> logger.trace("Processing {} {} {} ", tag, commandName, message));
+        }
         return message;
     }
 }
