@@ -35,9 +35,7 @@ public class UnpooledStatusResponseFactory extends AbstractStatusResponseFactory
 
     @Override
     protected StatusResponse createResponse(Type type, Tag tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code) {
-        var response = new ImmutableStatusResponse(type, tag, command, displayTextKey, code);
-        LOGGER.trace("Created IMAP response: {}",  response);
-        return response;
+        return new ImmutableStatusResponse(type, tag, command, displayTextKey, code);
     }
 
 }

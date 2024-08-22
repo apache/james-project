@@ -19,16 +19,24 @@
 
 package org.apache.james.imapserver.netty;
 
+import static org.apache.james.imapserver.netty.ImapChannelUpstreamHandler.retrieveUsername;
+import static org.apache.james.imapserver.netty.NettyConstants.IMAP_SESSION_ATTRIBUTE_KEY;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 
+import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.ImapResponseWriter;
 import org.apache.james.imap.message.Literal;
+import org.apache.james.util.MDCStructuredLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.handler.codec.compression.ZlibEncoder;
@@ -46,9 +54,16 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
         void run() throws IOException;
     }
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChannelImapResponseWriter.class);
     private final Channel channel;
     private final boolean zeroCopy;
     private FlushCallback flushCallback;
+    private ChannelHandlerContext ctx = null;
+
+    public ChannelImapResponseWriter(ChannelHandlerContext ctx) {
+        this(ctx.channel());
+        this.ctx = ctx;
+    }
 
     public ChannelImapResponseWriter(Channel channel) {
         this(channel, true);
@@ -68,6 +83,15 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
 
     @Override
     public void write(byte[] buffer) {
+        if (LOGGER.isTraceEnabled()) {
+            if (ctx != null) {
+                ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+                String username = retrieveUsername(imapSession);
+                new MDCStructuredLogger(LOGGER)
+                        .field("username", username)
+                        .log(logger -> logger.trace("Writing IMAP response: {}", new String(buffer)));
+            }
+        }
         if (channel.isActive()) {
             channel.writeAndFlush(Unpooled.wrappedBuffer(buffer));
         }
