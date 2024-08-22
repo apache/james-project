@@ -38,6 +38,14 @@ S: \* 2 FETCH \(UID 3\)
 S: \* 3 FETCH \(UID 4\)
 S: a2 OK FETCH completed.
 
+C: a21 FETCH * (UID)
+S: \* 3 FETCH \(UID 4\)
+S: a21 OK FETCH completed.
+
+C: a22 FETCH *:* (UID)
+S: \* 3 FETCH \(UID 4\)
+S: a22 OK FETCH completed.
+
 #UID fetch
 C: a UID FETCH 2:3 (INTERNALDATE)
 S: \* 1 FETCH \(INTERNALDATE "[^"]*" UID 2\)
