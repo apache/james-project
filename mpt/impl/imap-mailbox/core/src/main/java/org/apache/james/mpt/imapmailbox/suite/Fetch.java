@@ -47,6 +47,13 @@ public abstract class Fetch implements ImapTestConstants {
     }
     
     @Test
+    public void testFetchAllEmptyMailboxUS() throws Exception {
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("FetchAllEmptyMailbox");
+    }
+
+    @Test
     public void testFetchEnvelopeUS() throws Exception {
         simpleScriptedTestProtocol
             .withLocale(Locale.US)

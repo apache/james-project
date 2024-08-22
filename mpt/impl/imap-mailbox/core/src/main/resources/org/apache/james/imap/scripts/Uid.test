@@ -98,12 +98,11 @@ S: \* OK \[HIGHESTMODSEQ \d+\].*
 S: \* OK \[UIDNEXT 1\].*
 S: b2 OK \[READ-WRITE\] SELECT completed.
 
-C: b3 FETCH 1:* (UID)
+C: b3 UID FETCH 1:* (UID)
 S: b3 OK FETCH completed.
 
-C: b4 UID FETCH 1:* (UID)
+C: b4 UID FETCH *:* (UID)
 S: b4 OK FETCH completed.
 
-
-
-
+C: b5 UID FETCH * (UID)
+S: b5 OK FETCH completed.
