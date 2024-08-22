@@ -24,6 +24,8 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 
+import com.google.common.base.MoreObjects;
+
 /**
  * Immutable status response. Suitable for unpooled usage.
  */
@@ -68,8 +70,7 @@ public class ImmutableStatusResponse implements StatusResponse {
         return command;
     }
 
-    @Override
-    public String toString() {
+    public String asString() {
         final StringBuilder sb = new StringBuilder();
         if (getResponseCode() != null) {
             sb.append(' ').append(getResponseCode());
@@ -87,5 +88,16 @@ public class ImmutableStatusResponse implements StatusResponse {
             sb.append(' ').append(getCommand());
         }
         return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("responseCode", responseCode)
+                .add("serverResponseType", serverResponseType)
+                .add("tag", tag)
+                .add("textKey", textKey)
+                .add("command", command)
+                .toString();
     }
 }
