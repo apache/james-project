@@ -26,6 +26,11 @@ mail_with_signaturemail_with_signature_and_content_type_xpkcs7mime.eml was based
 openssl smime -sign -in message -out signed-message -signer certificate.crt  -inkey private.key -text -nodetach
 ```
 
+mail-with-signature-and-multi-certs.eml was based on the result of the following command:
+```
+openssl smime -sign -in message -out signed-message-multi-cert -signer certificate.crt -inkey private.key -certfile rootCA.crt -nodetach
+```
+
 For more detail: https://certificate.nikhef.nl/info/smime-manual.html
 
 password for everything: secret
