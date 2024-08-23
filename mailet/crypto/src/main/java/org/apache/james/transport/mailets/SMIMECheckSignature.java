@@ -26,12 +26,14 @@ import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.transport.KeyStoreHolder;
 import org.apache.james.transport.KeyStoreHolderConfiguration;
 import org.apache.james.transport.KeyStoreHolderFactory;
@@ -112,10 +114,16 @@ public class SMIMECheckSignature extends GenericMailet {
 
     private static final String SMIME_STATUS_HEADER = "X-SMIME-Status";
 
+    private final FileSystem fileSystem;
     private KeyStoreHolder trustedCertificateStore;
     private boolean stripSignature = false;
     private boolean onlyTrusted = true;
     private AttributeName mailAttribute = AttributeName.of("org.apache.james.SMIMECheckSignature");
+
+    @Inject
+    public SMIMECheckSignature(FileSystem fileSystem) {
+        this.fileSystem = fileSystem;
+    }
 
     @Override
     public void init() throws MessagingException {
@@ -136,7 +144,7 @@ public class SMIMECheckSignature extends GenericMailet {
             mailAttribute = AttributeName.of(mailAttributeConf);
         }
 
-        trustedCertificateStore = KeyStoreHolderFactory.createKeyStoreHolder(KeyStoreHolderConfiguration.from(config));
+        trustedCertificateStore = KeyStoreHolderFactory.from(fileSystem).createKeyStoreHolder(KeyStoreHolderConfiguration.from(config));
     }
 
     @Override

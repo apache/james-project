@@ -22,6 +22,7 @@ package org.apache.james.transport;
 import java.security.KeyStore;
 import java.util.Optional;
 
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.mailet.MailetConfig;
 
 import com.google.common.base.Preconditions;
@@ -118,8 +119,8 @@ public abstract class KeyStoreHolderConfiguration {
         }
 
         @Override
-        public KeyStoreHolderFactory.FileLoader getFileLoader() {
-            return new KeyStoreHolderFactory.KeyStoreFileLoader();
+        public KeyStoreHolderFactory.FileLoader getFileLoader(FileSystem fileSystem) {
+            return new KeyStoreHolderFactory.KeyStoreFileLoader(fileSystem);
         }
     }
 
@@ -135,10 +136,10 @@ public abstract class KeyStoreHolderConfiguration {
         }
 
         @Override
-        public KeyStoreHolderFactory.FileLoader getFileLoader() {
-            return new KeyStoreHolderFactory.PemFileLoader();
+        public KeyStoreHolderFactory.FileLoader getFileLoader(FileSystem fileSystem) {
+            return new KeyStoreHolderFactory.PemFileLoader(fileSystem);
         }
     }
 
-    public abstract KeyStoreHolderFactory.FileLoader getFileLoader();
+    public abstract KeyStoreHolderFactory.FileLoader getFileLoader(FileSystem fileSystem);
 }
