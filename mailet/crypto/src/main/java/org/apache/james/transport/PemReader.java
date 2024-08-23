@@ -68,11 +68,11 @@ public class PemReader {
             "-+END\\s+.*PRIVATE\\s+KEY[^-]*-+",            // Footer
         CASE_INSENSITIVE);
 
-    public static KeyStore loadTrustStore(String certificateChainFile) throws IOException, GeneralSecurityException {
+    public static KeyStore loadTrustStore(File certificateChainFile) throws IOException, GeneralSecurityException {
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(null, null);
 
-        List<X509Certificate> certificateChain = readCertificateChain(new File(certificateChainFile));
+        List<X509Certificate> certificateChain = readCertificateChain(certificateChainFile);
         for (X509Certificate certificate : certificateChain) {
             X500Principal principal = certificate.getSubjectX500Principal();
             keyStore.setCertificateEntry(principal.getName("RFC2253"), certificate);

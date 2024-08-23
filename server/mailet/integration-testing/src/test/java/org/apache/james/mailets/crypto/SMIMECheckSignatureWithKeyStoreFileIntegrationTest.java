@@ -24,6 +24,7 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import java.io.File;
 
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -59,7 +60,7 @@ public class SMIMECheckSignatureWithKeyStoreFileIntegrationTest extends SMIMEChe
                     .mailet(SMIMECheckSignature.class)
                     .matcher(All.class)
                     .addProperty("fileType", "keystore")
-                    .addProperty("keyStoreFileName", temporaryFolder.toPath().resolve("conf").resolve("trusted_cert_keystore").toAbsolutePath().toString())
+                    .addProperty("keyStoreFileName", FileSystem.CLASSPATH_PROTOCOL + "trusted_cert_keystore")
                     .addProperty("keyStorePassword", "secret")
                     .addProperty("keyStoreType", "PKCS12")
                     .addProperty("debug", "true"))

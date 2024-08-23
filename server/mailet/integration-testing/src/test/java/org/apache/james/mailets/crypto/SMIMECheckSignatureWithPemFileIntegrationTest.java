@@ -24,6 +24,7 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import java.io.File;
 
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -59,7 +60,7 @@ public class SMIMECheckSignatureWithPemFileIntegrationTest extends SMIMECheckSig
                     .mailet(SMIMECheckSignature.class)
                     .matcher(All.class)
                     .addProperty("fileType", "pem")
-                    .addProperty("pemFileName", temporaryFolder.toPath().resolve("conf").resolve("trusted_certificate.pem").toAbsolutePath().toString())
+                    .addProperty("pemFileName", FileSystem.CLASSPATH_PROTOCOL + "trusted_certificate.pem")
                     .addProperty("debug", "true"))
                 .addMailet(MailetConfiguration.LOCAL_DELIVERY))
             .build();
