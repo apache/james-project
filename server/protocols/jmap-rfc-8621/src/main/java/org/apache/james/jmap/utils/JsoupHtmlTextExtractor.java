@@ -26,7 +26,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import jakarta.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.jmap.core.JmapRfc8621Configuration;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.streams.Iterators;
 import org.jsoup.Jsoup;
@@ -40,8 +43,24 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Strings;
 
 public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(JsoupHtmlTextExtractor.class);
+
+    private static class Context {
+        private final long limit;
+        private long outputSize = 0;
+
+        private Context(JmapRfc8621Configuration configuration) {
+            this.limit = configuration.maxSizeAttachmentsPerEmail().asLong();
+        }
+
+        void add(String s) {
+            outputSize += s.length();
+            if (outputSize > limit) {
+                throw new IllegalStateException("text/plain redering exceeds message limit");
+            }
+        }
+    }
+
     public static final String BR_TAG = "br";
     public static final String UL_TAG = "ul";
     public static final String OL_TAG = "ol";
@@ -51,6 +70,17 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
     public static final String ALT_TAG = "alt";
     public static final int INITIAL_LIST_NESTED_LEVEL = 0;
 
+    private final JmapRfc8621Configuration configuration;
+
+    @Inject
+    public JsoupHtmlTextExtractor(JmapRfc8621Configuration configuration) {
+        this.configuration = configuration;
+    }
+
+    public JsoupHtmlTextExtractor() {
+        this.configuration = JmapRfc8621Configuration.LOCALHOST_CONFIGURATION();
+    }
+
     @Override
     public String toPlainText(String html) {
         try {
@@ -58,8 +88,10 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
 
             Element body = Optional.ofNullable(document.body()).orElse(document);
 
+            Context context = new Context(configuration);
             return flatten(body)
                 .map(this::convertNodeToText)
+                .peek(context::add)
                 .collect(Collectors.joining());
         } catch (Exception e) {
             LOGGER.warn("Failed extracting text from html", e);
