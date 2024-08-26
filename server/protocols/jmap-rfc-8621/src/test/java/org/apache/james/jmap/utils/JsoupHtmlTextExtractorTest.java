@@ -66,6 +66,16 @@ public class JsoupHtmlTextExtractorTest {
     }
 
     @Test
+    public void asymmetricOutputShouldNotThrowOOM() {
+        int count = 20000;
+        String html = "<ul><li>a</li><li>a</li>".repeat(count) + "</ul>".repeat(count);
+
+        // Computation aborted
+        assertThat(textExtractor.toPlainText(html))
+            .isEqualTo(html);
+    }
+
+    @Test
     public void deeplyNestedHtmlShouldNotThrowStackOverflow() {
         final int count = 2048;
         String html = Strings.repeat("<div>", count) +  "<p>para1</p><p>para2</p>" + Strings.repeat("</div>", count);
