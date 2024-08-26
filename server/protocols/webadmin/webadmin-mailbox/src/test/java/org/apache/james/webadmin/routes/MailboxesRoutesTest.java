@@ -704,6 +704,7 @@ class MailboxesRoutesTest {
 
                 verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxIdCaptor.capture());
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
+                verify(searchIndex).postReindexing();
                 verifyNoMoreInteractions(searchIndex);
 
                 assertThat(mailboxIdCaptor.getValue()).matches(capturedMailboxId -> capturedMailboxId.equals(mailboxId));
@@ -1127,6 +1128,7 @@ class MailboxesRoutesTest {
 
                 verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxIdCaptor.capture());
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
+                verify(searchIndex).postReindexing();
                 verifyNoMoreInteractions(searchIndex);
 
                 assertThat(mailboxIdCaptor.getValue()).matches(capturedMailboxId -> capturedMailboxId.equals(mailboxId));
@@ -1623,6 +1625,7 @@ class MailboxesRoutesTest {
                 ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
                 ArgumentCaptor<Mailbox> mailboxCaptor = ArgumentCaptor.forClass(Mailbox.class);
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
+                verify(searchIndex).postReindexing();
                 verifyNoMoreInteractions(searchIndex);
 
                 assertThat(mailboxCaptor.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
