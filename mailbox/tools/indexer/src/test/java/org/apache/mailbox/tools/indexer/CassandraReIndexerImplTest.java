@@ -114,6 +114,7 @@ public class CassandraReIndexerImplTest {
         verify(messageSearchIndex).deleteAll(any(MailboxSession.class), any(MailboxId.class));
         verify(messageSearchIndex, times(threadCount * operationCount))
             .add(any(MailboxSession.class), any(Mailbox.class),any(MailboxMessage.class));
+        verify(messageSearchIndex).postReindexing();
         verifyNoMoreInteractions(messageSearchIndex);
     }
 

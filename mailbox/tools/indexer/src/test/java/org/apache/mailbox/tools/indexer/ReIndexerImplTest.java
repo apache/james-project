@@ -87,6 +87,7 @@ public class ReIndexerImplTest {
 
         verify(messageSearchIndex).deleteAll(any(MailboxSession.class), mailboxCaptor1.capture());
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
+        verify(messageSearchIndex).postReindexing();
         verifyNoMoreInteractions(messageSearchIndex);
 
         assertThat(mailboxCaptor1.getValue()).satisfies(capturedMailboxId -> assertThat(capturedMailboxId).isEqualTo(mailboxId));
@@ -113,6 +114,7 @@ public class ReIndexerImplTest {
 
         verify(messageSearchIndex).deleteAll(any(MailboxSession.class), mailboxCaptor1.capture());
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
+        verify(messageSearchIndex).postReindexing();
         verifyNoMoreInteractions(messageSearchIndex);
 
         assertThat(mailboxCaptor1.getValue()).satisfies(capturedMailboxId -> assertThat(capturedMailboxId).isEqualTo(mailboxId));
@@ -139,6 +141,7 @@ public class ReIndexerImplTest {
 
         verify(messageSearchIndex).deleteAll(any(MailboxSession.class), mailboxCaptor1.capture());
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
+        verify(messageSearchIndex).postReindexing();
         verifyNoMoreInteractions(messageSearchIndex);
 
         assertThat(mailboxCaptor1.getValue()).satisfies(capturedMailboxId -> assertThat(capturedMailboxId).isEqualTo(mailboxId));
@@ -231,6 +234,7 @@ public class ReIndexerImplTest {
 
         verify(messageSearchIndex).deleteAll(any(MailboxSession.class), mailboxIdCaptor.capture());
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
+        verify(messageSearchIndex).postReindexing();
         verifyNoMoreInteractions(messageSearchIndex);
 
         assertThat(mailboxCaptor.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
@@ -262,6 +266,7 @@ public class ReIndexerImplTest {
 
         verify(messageSearchIndex).retrieveIndexedFlags(any(), any());
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
+        verify(messageSearchIndex).postReindexing();
         verifyNoMoreInteractions(messageSearchIndex);
 
         assertThat(mailboxCaptor.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
@@ -280,6 +285,7 @@ public class ReIndexerImplTest {
         ArgumentCaptor<MailboxId> mailboxCaptor = ArgumentCaptor.forClass(MailboxId.class);
 
         verify(messageSearchIndex).deleteAll(any(MailboxSession.class), mailboxCaptor.capture());
+        verify(messageSearchIndex).postReindexing();
         verifyNoMoreInteractions(messageSearchIndex);
 
         assertThat(mailboxCaptor.getValue()).satisfies(capturedMailboxId -> assertThat(capturedMailboxId).isEqualTo(mailboxId));

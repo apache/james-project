@@ -295,6 +295,7 @@ public class ReIndexerPerformer {
                 .per(Duration.ofSeconds(1))
                 .forOperation(entry -> reIndex(entry, reIndexingContext, runningOptions)))
             .reduce(Task::combine)
+            .doFinally(signalType -> messageSearchIndex.postReindexing())
             .switchIfEmpty(Mono.just(Result.COMPLETED));
     }
 

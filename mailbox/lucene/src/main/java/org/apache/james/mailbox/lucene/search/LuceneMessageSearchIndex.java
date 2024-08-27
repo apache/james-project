@@ -1358,6 +1358,15 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
+    public void postReindexing() {
+        try {
+            commit();
+        } catch (IOException e) {
+            throw new RuntimeException("Error while commiting to index", e);
+        }
+    }
+
+    @Override
     public Mono<Flags> retrieveIndexedFlags(Mailbox mailbox, MessageUid uid) {
         return Mono.fromCallable(() -> retrieveFlags(mailbox, uid));
     }
