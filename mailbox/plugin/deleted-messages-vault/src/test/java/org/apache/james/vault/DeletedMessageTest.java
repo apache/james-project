@@ -34,6 +34,7 @@ import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.MaybeSender;
@@ -73,16 +74,15 @@ class DeletedMessageTest {
     }
 
     @Test
-    void buildShouldThrowWhenPassingZeroSize() {
-        assertThatThrownBy(() -> SIZE_STAGE.size(0L).build())
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("'size' is required to be a strictly positive number");
+    void buildShouldNotThrowWhenPassingZeroSize() {
+        assertThatCode(() -> SIZE_STAGE.size(0L).build())
+            .doesNotThrowAnyException();
     }
 
     @Test
     void buildShouldThrowWhenPassingNegativeSize() {
         assertThatThrownBy(() -> SIZE_STAGE.size(-1L).build())
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("'size' is required to be a strictly positive number");
+            .hasMessage("'size' is required to be a non negative number");
     }
 }
