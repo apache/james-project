@@ -374,10 +374,26 @@ class MailboxPathTest {
     }
 
     @Test
+    void assertAcceptableShouldNotThrowOnPercentWhenRelaxMode() {
+        System.setProperty("james.relaxed.mailbox.name.validation", "true");
+
+        assertThatCode(() -> MailboxPath.forUser(USER, "a%b"))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
     void assertAcceptableShouldThrowOnWildcard() {
         assertThatThrownBy(() -> MailboxPath.forUser(USER, "a*b")
             .assertAcceptable('.'))
             .isInstanceOf(MailboxNameException.class);
+    }
+
+    @Test
+    void assertAcceptableShouldNotThrowOnWildcardWhenRelaxMode() {
+        System.setProperty("james.relaxed.mailbox.name.validation", "true");
+
+        assertThatCode(() -> MailboxPath.forUser(USER, "a*b"))
+            .doesNotThrowAnyException();
     }
 
     @Test

@@ -1,0 +1,67 @@
+# Test creating and searching mailboxes with literal '*' and '%' characters in their names
+C: B01 CREATE "star*mailbox"
+S: B01 OK \[MAILBOXID \(.+\)\] CREATE completed.
+C: B011 CREATE "starmailbox"
+S: B011 OK \[MAILBOXID \(.+\)\] CREATE completed.
+C: B02 CREATE "percent%mailbox"
+S: B02 OK \[MAILBOXID \(.+\)\] CREATE completed.
+C: B021 CREATE "percentmailbox"
+S: B021 OK \[MAILBOXID \(.+\)\] CREATE completed.
+
+C: B03 LIST "" "star*mailbox"
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"star\*mailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"starmailbox\"
+}
+S: B03 OK LIST completed.
+
+C: B04 LIST "" "percent%mailbox"
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"percent%mailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"percentmailbox\"
+}
+S: B04 OK LIST completed.
+
+C: B05 LIST "" %
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"star\*mailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"starmailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"percent%mailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"percentmailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+}
+S: B05 OK LIST completed.
+
+C: B06 LIST "" *
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"star\*mailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"starmailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"percent%mailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"percentmailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+}
+S: B06 OK LIST completed.
+
+C: B07 LIST "" "star*mail%"
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"star\*mailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"starmailbox\"
+}
+S: B07 OK LIST completed.
+
+C: B08 LIST "" "percent%mail*"
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"percent%mailbox\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"percentmailbox\"
+}
+S: B08 OK LIST completed.
+
+# Cleanup
+C: D9 DELETE "star*mailbox"
+S: D9 OK DELETE completed.
+C: D10 DELETE "starmailbox"
+S: D10 OK DELETE completed.
+C: D11 DELETE "percent%mailbox"
+S: D11 OK DELETE completed.
+C: D12 DELETE "percentmailbox"
+S: D12 OK DELETE completed.

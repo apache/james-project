@@ -119,3 +119,15 @@ Ex in `jvm.properties`
 james.mailet.container.check.enabled=false
 ----
 To disable the mailet container check at James startup.
+
+== Relax mailbox name validation
+
+The property `james.relaxed.mailbox.name.validation` allows to accept `*` and `%` characters in mailbox name.
+
+Optional. Boolean. Default to false.
+
+Ex in `jvm.properties`
+----
+james.relaxed.mailbox.name.validation=true
+----
+To relax validating `\*` and `%` characters in the mailbox name. Be careful as `%` and `*` are ambiguous for the LIST / LSUB commands that interpret those as wildcard thus returning all mailboxes matching the pattern.
