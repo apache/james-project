@@ -589,6 +589,8 @@
         -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <target.jdk>21</target.jdk>
+        <maven.compiler.source>${target.jdk}</maven.compiler.source>
+        <maven.compiler.target>${target.jdk}</maven.compiler.target>
         <james-skin.version>1.9-SNAPSHOT</james-skin.version>
         <!--
             This property contains the directory where to deploy when running using "-Psite-reports" profile
