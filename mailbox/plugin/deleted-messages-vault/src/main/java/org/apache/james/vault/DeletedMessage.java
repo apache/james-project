@@ -172,7 +172,7 @@ public class DeletedMessage {
     public DeletedMessage(MessageId messageId, List<MailboxId> originMailboxes, Username owner,
                           ZonedDateTime deliveryDate, ZonedDateTime deletionDate, MaybeSender sender, List<MailAddress> recipients,
                           Optional<String> subject, boolean hasAttachment, long size) {
-        Preconditions.checkArgument(size > 0, "'size' is required to be a strictly positive number");
+        Preconditions.checkArgument(size >= 0, "'size' is required to be a non negative number");
 
         this.messageId = messageId;
         this.originMailboxes = originMailboxes;
