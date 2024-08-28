@@ -31,6 +31,7 @@ import org.apache.james.imap.decode.ImapCommandParser;
 import org.apache.james.imap.decode.ImapCommandParserFactory;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.ImapRequestLineReader;
+import org.apache.james.util.MDCStructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +76,6 @@ public class DefaultImapDecoder implements ImapDecoder {
     }
 
     private ImapMessage decodeCommandTagged(ImapRequestLineReader request, Tag tag, ImapSession session) {
-        LOGGER.debug("Got <tag>: {}", tag);
         try {
             String commandName = request.atom();
             return decodeCommandNamed(request, tag, commandName, session);
@@ -110,7 +110,6 @@ public class DefaultImapDecoder implements ImapDecoder {
     }
 
     private ImapMessage decodeCommandNamed(ImapRequestLineReader request, Tag tag, String commandName, ImapSession session) {
-        LOGGER.debug("Got <command>: {}", commandName);
         ImapCommandParser command = imapCommands.getParser(commandName);
         if (command == null) {
             LOGGER.info("Missing command implementation for commmand {}", commandName);
@@ -120,6 +119,12 @@ public class DefaultImapDecoder implements ImapDecoder {
         Object count = session.getAttribute(INVALID_COMMAND_COUNT);
         if (count == null || (int) count > 0) {
             session.setAttribute(INVALID_COMMAND_COUNT, 0);
+        }
+        // Avoid cost of initializing MDC locally
+        if (LOGGER.isTraceEnabled()) {
+            new MDCStructuredLogger(LOGGER)
+                    .field("username", String.valueOf(session.getUserName()))
+                    .log(logger -> logger.trace("Processing {} {} {} ", tag, commandName, message));
         }
         return message;
     }

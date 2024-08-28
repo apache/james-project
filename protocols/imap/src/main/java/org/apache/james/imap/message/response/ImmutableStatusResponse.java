@@ -70,14 +70,34 @@ public class ImmutableStatusResponse implements StatusResponse {
         return command;
     }
 
+    public String asString() {
+        final StringBuilder sb = new StringBuilder();
+        if (getResponseCode() != null) {
+            sb.append(' ').append(getResponseCode());
+        }
+        if (getServerResponseType() != null) {
+            sb.append(' ').append(getServerResponseType());
+        }
+        if (getTag() != null) {
+            sb.append(' ').append(getTag());
+        }
+        if (getTextKey() != null) {
+            sb.append(' ').append(getTextKey());
+        }
+        if (getCommand() != null) {
+            sb.append(' ').append(getCommand());
+        }
+        return sb.toString();
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("responseCode", responseCode)
-            .add("serverResponseType", serverResponseType)
-            .add("tag", tag)
-            .add("textKey", textKey)
-            .add("command", command)
-            .toString();
+                .add("responseCode", responseCode)
+                .add("serverResponseType", serverResponseType)
+                .add("tag", tag)
+                .add("textKey", textKey)
+                .add("command", command)
+                .toString();
     }
 }

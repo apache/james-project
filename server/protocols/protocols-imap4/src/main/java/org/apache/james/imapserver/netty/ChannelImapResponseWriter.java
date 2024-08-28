@@ -19,13 +19,19 @@
 
 package org.apache.james.imapserver.netty;
 
+import static org.apache.james.imapserver.netty.ImapChannelUpstreamHandler.retrieveUsername;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 
+import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.ImapResponseWriter;
 import org.apache.james.imap.message.Literal;
+import org.apache.james.util.MDCStructuredLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -46,9 +52,16 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
         void run() throws IOException;
     }
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChannelImapResponseWriter.class);
     private final Channel channel;
     private final boolean zeroCopy;
     private FlushCallback flushCallback;
+    private ImapSession imapSession = null;
+
+    public ChannelImapResponseWriter(Channel channel, ImapSession imapSession) {
+        this(channel);
+        this.imapSession = imapSession;
+    }
 
     public ChannelImapResponseWriter(Channel channel) {
         this(channel, true);
@@ -68,6 +81,13 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
 
     @Override
     public void write(byte[] buffer) {
+        if (LOGGER.isTraceEnabled()) {
+            if (imapSession != null) {
+                new MDCStructuredLogger(LOGGER)
+                        .field("username", retrieveUsername(imapSession))
+                        .log(logger -> logger.trace("Writing IMAP response: {}", new String(buffer)));
+            }
+        }
         if (channel.isActive()) {
             channel.writeAndFlush(Unpooled.wrappedBuffer(buffer));
         }

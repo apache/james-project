@@ -444,14 +444,12 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
 
     private MessageRange msnRangeToMessageRange(SelectedMailbox selected, long lowVal, long highVal)
             throws MessageRangeException {
-        // Take care of "*" and "*:*" values by return the last message in
-        // the mailbox. See IMAP-289
         if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
-            Optional<MessageUid> last = selected.getLastUid();
-            if (!last.isPresent()) {
-                throw new MessageRangeException("Mailbox is empty");
-            }
-            return last.get().toRange();
+            // Take care of "*" and "*:*" values by returning the last message in the mailbox. See IMAP-289
+            return selected.getLastUid().map(MessageRange::one).orElseGet(MessageRange::all);
+        } else if (lowVal == 1 && highVal == Long.MAX_VALUE) {
+            // Take care of "1:*" values by returning all messages in the mailbox. See IMAP-289
+            return MessageRange.all();
         }
 
         MessageUid lowUid = msnlowValToUid(selected, lowVal);

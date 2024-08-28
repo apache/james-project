@@ -26,8 +26,12 @@ import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponse.Type;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UnpooledStatusResponseFactory extends AbstractStatusResponseFactory implements StatusResponseFactory {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(UnpooledStatusResponseFactory.class);
 
     @Override
     protected StatusResponse createResponse(Type type, Tag tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code) {

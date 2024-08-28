@@ -32,6 +32,20 @@ S: \* 2 FETCH \(UID 3\)
 S: \* 3 FETCH \(UID 4\)
 S: a OK FETCH completed.
 
+C: a2 FETCH 1:* (UID)
+S: \* 1 FETCH \(UID 2\)
+S: \* 2 FETCH \(UID 3\)
+S: \* 3 FETCH \(UID 4\)
+S: a2 OK FETCH completed.
+
+C: a21 FETCH * (UID)
+S: \* 3 FETCH \(UID 4\)
+S: a21 OK FETCH completed.
+
+C: a22 FETCH *:* (UID)
+S: \* 3 FETCH \(UID 4\)
+S: a22 OK FETCH completed.
+
 #UID fetch
 C: a UID FETCH 2:3 (INTERNALDATE)
 S: \* 1 FETCH \(INTERNALDATE "[^"]*" UID 2\)
@@ -78,5 +92,25 @@ S: a OK SEARCH completed.
 C: a1 DELETE copied
 S: a1 OK DELETE completed.
 
+C: b1 CREATE box
+S: b1 OK \[MAILBOXID \(.*\)\] CREATE completed.
 
+C: b2 SELECT box
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\].*
+S: b2 OK \[READ-WRITE\] SELECT completed.
 
+C: b3 UID FETCH 1:* (UID)
+S: b3 OK FETCH completed.
+
+C: b4 UID FETCH *:* (UID)
+S: b4 OK FETCH completed.
+
+C: b5 UID FETCH * (UID)
+S: b5 OK FETCH completed.

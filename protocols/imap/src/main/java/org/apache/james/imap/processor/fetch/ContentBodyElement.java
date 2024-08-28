@@ -62,4 +62,12 @@ class ContentBodyElement implements BodyElement {
     public InputStream getInputStream() throws IOException {
         return content.getInputStream();
     }
+
+    @Override
+    public String toString() {
+        return "ContentBodyElement{" +
+                "name='" + getName() + '\'' +
+                ", content=" + content +
+                '}';
+    }
 }

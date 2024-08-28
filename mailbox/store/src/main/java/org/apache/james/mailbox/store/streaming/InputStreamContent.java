@@ -86,4 +86,13 @@ public final class InputStreamContent implements Content {
                 return m.getBodyContentReactive();
         }
     }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("InputStreamContent{");
+        sb.append("m=").append(m);
+        sb.append(", type=").append(type);
+        sb.append('}');
+        return sb.toString();
+    }
 }

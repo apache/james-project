@@ -61,7 +61,6 @@ public class UidCommandParser extends AbstractImapCommandParser {
         if (!(helperCommand instanceof AbstractUidCommandParser)) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid UID command: '" + commandName + "'");
         }
-        LOGGER.debug("Got <command>: UID {}", commandName);
         final AbstractUidCommandParser uidEnabled = (AbstractUidCommandParser) helperCommand;
         return uidEnabled.decode(request, tag, true, session);
     }
