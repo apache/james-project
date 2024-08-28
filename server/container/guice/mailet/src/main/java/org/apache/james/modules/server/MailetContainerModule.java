@@ -80,6 +80,7 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 public class MailetContainerModule extends AbstractModule {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailetContainerModule.class);
+    private static final boolean MAILET_CONTAINER_CHECK_ENABLED = Boolean.parseBoolean(System.getProperty("james.mailet.container.check.enabled", "true"));
 
     public static final ProcessorsCheck.Impl BCC_Check = new ProcessorsCheck.Impl(
         "transport",
@@ -114,7 +115,10 @@ public class MailetContainerModule extends AbstractModule {
         initialisationOperations.addBinding().to(MailetModuleInitializationOperation.class);
 
         Multibinder<ProcessorsCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), ProcessorsCheck.class);
-        transportProcessorChecks.addBinding().toInstance(BCC_Check);
+
+        if (MAILET_CONTAINER_CHECK_ENABLED) {
+            transportProcessorChecks.addBinding().toInstance(BCC_Check);
+        }
     }
 
     @Provides
