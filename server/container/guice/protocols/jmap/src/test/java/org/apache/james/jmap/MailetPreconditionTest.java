@@ -191,5 +191,19 @@ class MailetPreconditionTest {
             assertThatCode(() -> MailetContainerModule.BCC_Check.check(pairs))
                 .doesNotThrowAnyException();
         }
+
+        @Test
+        void bccMailetCheckShouldNotThrowOnValidPairWithOtherNames() throws Exception {
+            RemoveMimeHeader removeMimeHeader = new RemoveMimeHeader();
+            removeMimeHeader.init(FakeMailetConfig.builder()
+                .mailetName(BCC)
+                .mailetContext(MAILET_CONTEXT)
+                .setProperty("name", "header1,bcc,header2")
+                .build());
+
+            ImmutableMultimap<String, MatcherMailetPair> pairs = ImmutableMultimap.of("transport", new MatcherMailetPair(new All(), removeMimeHeader));
+            assertThatCode(() -> MailetContainerModule.BCC_Check.check(pairs))
+                .doesNotThrowAnyException();
+        }
     }
 }

@@ -85,7 +85,7 @@ public class MailetContainerModule extends AbstractModule {
         "transport",
         All.class,
         RemoveMimeHeader.class,
-        pair -> pair.getMailet().getMailetConfig().getInitParameter("name").equals("bcc"),
+        pair -> pair.getMailet().getMailetConfig().getInitParameter("name").contains("bcc"),
         "Should be configured to remove Bcc header");
 
     @Override
