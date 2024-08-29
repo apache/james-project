@@ -37,6 +37,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -108,7 +109,11 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
 
     // CF JAMES-4046 https://issues.apache.org/jira/projects/JAMES/issues/JAMES-4066
     private boolean isAlphanumeric(String hostname) {
-        return hostname.matches("^[a-zA-Z0-9]+$");
+        return !hostname.isEmpty() &&
+            CharMatcher.inRange('a', 'z')
+                .or(CharMatcher.inRange('A', 'Z'))
+                .or(CharMatcher.inRange('0', '9'))
+                .matchesAllOf(hostname);
     }
 
     // CF JAMES-4040 IPv6v4-full https://datatracker.ietf.org/doc/html/rfc5321
