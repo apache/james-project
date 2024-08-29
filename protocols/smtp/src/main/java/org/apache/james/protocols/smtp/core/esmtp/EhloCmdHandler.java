@@ -58,6 +58,9 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
     private static final List<String> ESMTP_FEATURES = ImmutableList.of("PIPELINING", "ENHANCEDSTATUSCODES", "8BITMIME");
     private static final Response DOMAIN_ADDRESS_REQUIRED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Domain address required: " + COMMAND_NAME).immutable();
     private static final Logger LOGGER = LoggerFactory.getLogger(EhloCmdHandler.class);
+    private static final CharMatcher ALPHANUMERIC_MATCHER = CharMatcher.inRange('a', 'z')
+        .or(CharMatcher.inRange('A', 'Z'))
+        .or(CharMatcher.inRange('0', '9'));
 
     private List<EhloExtension> ehloExtensions;
 
@@ -109,11 +112,7 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
 
     // CF JAMES-4046 https://issues.apache.org/jira/projects/JAMES/issues/JAMES-4066
     private boolean isAlphanumeric(String hostname) {
-        return !hostname.isEmpty() &&
-            CharMatcher.inRange('a', 'z')
-                .or(CharMatcher.inRange('A', 'Z'))
-                .or(CharMatcher.inRange('0', '9'))
-                .matchesAllOf(hostname);
+        return !hostname.isEmpty() && ALPHANUMERIC_MATCHER.matchesAllOf(hostname);
     }
 
     // CF JAMES-4040 IPv6v4-full https://datatracker.ietf.org/doc/html/rfc5321
