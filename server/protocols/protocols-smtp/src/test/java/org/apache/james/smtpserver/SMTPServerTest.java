@@ -1424,6 +1424,20 @@ public class SMTPServerTest {
     }
 
     @Test
+    void ehloShouldAcceptAlphanumericHostname() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", "7kO2OrE");
+        assertThat(smtpProtocol.getReplyString()).contains("250");
+    }
+
+    @Test
     public void testAuthSendMailFromDomainAlias() throws Exception {
         smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
         smtpConfiguration.setAuthorizingAnnounce();

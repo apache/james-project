@@ -102,7 +102,13 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
             // Guava tries parsing IPv6 if and only if wrapped by []
             || InetAddresses.isUriInetAddress("[" + removeEmIPV6Prefix(hostname) + "]")
             || InternetDomainName.isValid(hostname)
-            || emClientCompatibility(hostname);
+            || emClientCompatibility(hostname)
+            || isAlphanumeric(hostname);
+    }
+
+    // CF JAMES-4046 https://issues.apache.org/jira/projects/JAMES/issues/JAMES-4066
+    private boolean isAlphanumeric(String hostname) {
+        return hostname.matches("^[a-zA-Z0-9]+$");
     }
 
     // CF JAMES-4040 IPv6v4-full https://datatracker.ietf.org/doc/html/rfc5321
