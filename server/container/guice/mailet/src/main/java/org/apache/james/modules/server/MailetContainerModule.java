@@ -115,10 +115,7 @@ public class MailetContainerModule extends AbstractModule {
         initialisationOperations.addBinding().to(MailetModuleInitializationOperation.class);
 
         Multibinder<ProcessorsCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), ProcessorsCheck.class);
-
-        if (MAILET_CONTAINER_CHECK_ENABLED) {
-            transportProcessorChecks.addBinding().toInstance(BCC_Check);
-        }
+        transportProcessorChecks.addBinding().toInstance(BCC_Check);
     }
 
     @Provides
@@ -183,7 +180,9 @@ public class MailetContainerModule extends AbstractModule {
         @Override
         public void initModule() throws Exception {
             configureProcessors();
-            checkProcessors();
+            if (MAILET_CONTAINER_CHECK_ENABLED) {
+                checkProcessors();
+            }
         }
 
         private void configureProcessors() throws Exception {

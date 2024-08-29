@@ -105,10 +105,11 @@ Ex in `jvm.properties`
 
 == Disable mailet container check at James startup
 
-James is doing a check on startup making sure that the `bcc` header is being removed via
+James is doing checks on startup for validating mailet container configuration against a set of
+business rules, for instance making sure that the `bcc` header is being removed via
 `RemoveMimeHeader` mailet in the mail processing pipeline defined in `mailetcontainer.xml` file.
 
-It could be useful for some administrators that know what they are doing to disable such a check
+It could be useful for some administrators that know what they are doing to disable such checks
 during James startup.
 
 Optional. Boolean. Defaults to true.
