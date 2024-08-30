@@ -80,12 +80,13 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 public class MailetContainerModule extends AbstractModule {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailetContainerModule.class);
+    private static final boolean MAILET_CONTAINER_CHECK_ENABLED = Boolean.parseBoolean(System.getProperty("james.mailet.container.check.enabled", "true"));
 
     public static final ProcessorsCheck.Impl BCC_Check = new ProcessorsCheck.Impl(
         "transport",
         All.class,
         RemoveMimeHeader.class,
-        pair -> pair.getMailet().getMailetConfig().getInitParameter("name").equals("bcc"),
+        pair -> Arrays.asList(pair.getMailet().getMailetConfig().getInitParameter("name").toLowerCase().split(",")).contains("bcc"),
         "Should be configured to remove Bcc header");
 
     @Override
@@ -179,7 +180,9 @@ public class MailetContainerModule extends AbstractModule {
         @Override
         public void initModule() throws Exception {
             configureProcessors();
-            checkProcessors();
+            if (MAILET_CONTAINER_CHECK_ENABLED) {
+                checkProcessors();
+            }
         }
 
         private void configureProcessors() throws Exception {

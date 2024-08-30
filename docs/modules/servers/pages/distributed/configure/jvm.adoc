@@ -103,3 +103,19 @@ Ex in `jvm.properties`
 # james.reactor.inputstream.prefetch=4
 ----
 
+== Disable mailet container check at James startup
+
+James is doing checks on startup for validating mailet container configuration against a set of
+business rules, for instance making sure that the `bcc` header is being removed via
+`RemoveMimeHeader` mailet in the mail processing pipeline defined in `mailetcontainer.xml` file.
+
+It could be useful for some administrators that know what they are doing to disable such checks
+during James startup.
+
+Optional. Boolean. Defaults to true.
+
+Ex in `jvm.properties`
+----
+james.mailet.container.check.enabled=false
+----
+To disable the mailet container check at James startup.
