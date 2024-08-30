@@ -1,0 +1,60 @@
+This files enables an operator to define additional bindings used to instantiate others extensions
+
+*guice.extension.module*:  come separated list of fully qualified class name. These classes need to implement Guice modules.
+
+Here is an example of such a class :
+
+[source,java]
+....
+public class MyServiceModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        bind(MyServiceImpl.class).in(Scopes.SINGLETON);
+        bind(MyService.class).to(MyServiceImpl.class);
+    }
+}
+....
+
+Recording it in extensions.properties :
+
+....
+guice.extension.module=com.project.MyServiceModule
+....
+
+Enables to inject MyService into your extensions.
+
+
+*guice.extension.tasks*: come separated list of fully qualified class name.
+
+The extension can rely on the Task manager to supervise long-running task execution (progress, await, cancellation, scheduling...).
+These extensions need to implement Task extension modules.
+
+Here is an example of such a class :
+
+[source,java]
+....
+public class RspamdTaskExtensionModule implements TaskExtensionModule {
+
+    @Inject
+    public RspamdTaskExtensionModule() {
+    }
+
+    @Override
+    public Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> taskDTOModules() {
+        return Set.of(...);
+    }
+
+    @Override
+    public Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> taskAdditionalInformationDTOModules() {
+        return Set.of(...);
+    }
+}
+....
+
+Recording it in extensions.properties :
+
+....
+guice.extension.tasks=com.project.RspamdTaskExtensionModule
+....
+
+Read xref:customization:index.adoc#_defining_custom_injections_for_your_extensions[this page] for more details.

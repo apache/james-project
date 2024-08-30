@@ -1,0 +1,7 @@
+= Postgresql James Server &mdash; jmap.properties
+:navtitle: jmap.properties
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:server-name: Postgresql James server
+:backend-name: Postgresql
+include::partial$configure/jmap.adoc[]

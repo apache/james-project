@@ -1,0 +1,23 @@
+== System properties
+
+Some tuning can be done via system properties. This includes:
+
+.System properties
+|===
+| Property name | explanation
+
+| james.message.memory.threshold
+| (Optional). String (size, integer + size units, example: `12 KIB`, supported units are bytes KIB MIB GIB TIB). Defaults to 100KIB.
+This governs the threshold MimeMessageInputStreamSource relies on for storing MimeMessage content on disk.
+Below, data is stored in memory. Above data is stored on disk.
+Lower values will lead to longer processing time but will minimize heap memory usage. Modern SSD hardware
+should however support a high throughput. Higher values will lead to faster single mail processing at the cost
+of higher heap usage.
+
+
+| james.message.usememorycopy
+|Optional. Boolean. Defaults to false. Recommended value is false.
+Should MimeMessageWrapper use a copy of the message in memory? Or should bigger message exceeding james.message.memory.threshold
+be copied to temporary files?
+
+|===

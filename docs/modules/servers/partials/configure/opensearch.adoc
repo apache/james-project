@@ -1,0 +1,319 @@
+== Search overrides
+
+*Search overrides* allow resolution of predefined search queries against alternative sources of data
+and allow bypassing OpenSearch. This is useful to handle most resynchronisation queries that
+are simple enough to be resolved against {package-tag}.
+
+Possible values are:
+
+- `org.apache.james.mailbox.{package-tag}.search.AllSearchOverride` Some IMAP clients uses SEARCH ALL to fully list messages in
+a mailbox and detect deletions. This is typically done by clients not supporting QRESYNC and from an IMAP perspective
+is considered an optimisation as less data is transmitted compared to a FETCH command. Resolving such requests against
+Cassandra is enabled by this search override and likely desirable.
+- `org.apache.james.mailbox.{package-tag}.search.UidSearchOverride`. Same as above but restricted by ranges.
+- `org.apache.james.mailbox.{package-tag}.search.DeletedSearchOverride`. Find deleted messages by looking up in the relevant Cassandra
+table.
+- `org.apache.james.mailbox.{package-tag}.search.DeletedWithRangeSearchOverride`. Same as above but limited by ranges.
+- `org.apache.james.mailbox.{package-tag}.search.NotDeletedWithRangeSearchOverride`. List non deleted messages in a given range.
+Lists all messages and filters out deleted message thus this is based on the following heuristic: most messages are not marked as deleted.
+- `org.apache.james.mailbox.{package-tag}.search.UnseenSearchOverride`. List unseen messages in the corresponding cassandra projection.
+
+Please note that custom overrides can be defined here. `opensearch.search.overrides` allow specifying search overrides and is a
+coma separated list of search override FQDNs. Default to none.
+
+EG:
+
+[subs=attributes+]
+----
+opensearch.search.overrides=org.apache.james.mailbox.{package-tag}.search.AllSearchOverride,org.apache.james.mailbox.{package-tag}.search.DeletedSearchOverride, org.apache.james.mailbox.{package-tag}.search.DeletedWithRangeSearchOverride,org.apache.james.mailbox.{package-tag}.search.NotDeletedWithRangeSearchOverride,org.apache.james.mailbox.{package-tag}.search.UidSearchOverride,org.apache.james.mailbox.{package-tag}.search.UnseenSearchOverride
+----
+
+Consult this link:{sample-configuration-prefix-url}/opensearch.properties[example]
+to get some examples and hints.
+
+If you want more explanation about OpenSearch configuration, you should visit the dedicated https://opensearch.org/[documentation].
+
+== OpenSearch Configuration
+
+This file section is used to configure the connection tp an OpenSearch cluster.
+
+Here are the properties allowing to do so :
+
+.opensearch.properties content
+|===
+| Property name | explanation
+
+| opensearch.clusterName
+| Is the name of the cluster used by James.
+
+| opensearch.nb.shards
+| Number of shards for index provisionned by James
+
+| opensearch.nb.replica
+| Number of replica for index provisionned by James (default: 0)
+
+| opensearch.index.waitForActiveShards
+| Wait for a certain number of active shard copies before proceeding with the operation. Defaults to 1.
+You may consult the https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docs-index_.html#active-shards[documentation] for more information.
+
+| opensearch.retryConnection.maxRetries
+| Number of retries when connecting the cluster
+
+| opensearch.retryConnection.minDelay
+| Minimum delay between connection attempts
+
+| opensearch.max.connections
+| Maximum count of HTTP connections allowed for the OpenSearch driver. Optional integer, if unspecified driver defaults
+applies (30 connections).
+
+| opensearch.max.connections.per.hosts
+| Maximum count of HTTP connections per host allowed for the OpenSearch driver. Optional integer, if unspecified driver defaults
+applies (10 connections).
+
+|===
+
+=== Mailbox search
+
+The main use of OpenSearch within the {server-name} is indexing the mailbox content of users in order to enable
+powerful and efficient full-text search of the mailbox content.
+
+Data indexing is performed asynchronously in a reliable fashion via a MailboxListener.
+
+Here are the properties related to the use of OpenSearch for Mailbox Search:
+
+.opensearch.properties content
+|===
+| Property name | explanation
+
+| opensearch.index.mailbox.name
+| Name of the mailbox index backed by the alias. It will be created if missing.
+
+| opensearch.index.name
+| *Deprecated* Use *opensearch.index.mailbox.name* instead.
+Name of the mailbox index backed by the alias. It will be created if missing.
+
+| opensearch.alias.read.mailbox.name
+| Name of the alias to use by Apache James for mailbox reads. It will be created if missing.
+The target of the alias is the index name configured above.
+
+| opensearch.alias.read.name
+| *Deprecated* Use *opensearch.alias.read.mailbox.name* instead.
+Name of the alias to use by Apache James for mailbox reads. It will be created if missing.
+The target of the alias is the index name configured above.
+
+| opensearch.alias.write.mailbox.name
+| Name of the alias to use by Apache James for mailbox writes. It will be created if missing.
+The target of the alias is the index name configured above.
+
+| opensearch.alias.write.name
+| *Deprecated* Use *opensearch.alias.write.mailbox.name* instead.
+Name of the alias to use by Apache James for mailbox writes. It will be created if missing.
+The target of the alias is the index name configured above.
+
+| opensearch.indexAttachments
+| Indicates if you wish to index attachments or not (default: true).
+
+| opensearch.indexHeaders
+| Indicates if you wish to index headers or not (default: true). Note that specific headers
+(From, To, Cc, Bcc, Subject, Message-Id, Date, Content-Type) are still indexed in their dedicated type.
+Header indexing is expensive as each header currently need to be stored as a nested document but
+turning off headers indexing result in non-strict compliance with the IMAP / JMAP standards.
+
+| opensearch.message.index.optimize.move
+| When set to true, James will attempt to reindex from the indexed message when moved.
+If the message is not found, it will fall back to the old behavior (The message will be indexed from the blobStore source)
+Default to false.
+
+| opensearch.text.fuzziness.search
+| Use fuzziness on text searches. This option helps to correct user typing mistakes and makes the result a bit more flexible.
+
+Default to false.
+
+| opensearch.indexBody
+| Indicates if you wish to index body or not (default: true). This can be used to decrease the performance cost associated with indexing.
+
+| opensearch.indexUser
+| Indicates if you wish to index user or not (default: false). This can be used to have per user reports in OpenSearch Dashboards.
+
+|===
+
+=== Quota search
+
+Users are indexed by quota usage, allowing operators a quick audit of users quota occupation.
+
+Users quota are asynchronously indexed upon quota changes via a dedicated MailboxListener.
+
+The following properties affect quota search :
+
+.opensearch.properties content
+|===
+| Property name | explanation
+
+| opensearch.index.quota.ratio.name
+| Specify the OpenSearch alias name used for quotas
+
+| opensearch.alias.read.quota.ratio.name
+| Specify the OpenSearch alias name used for reading quotas
+
+| opensearch.alias.write.quota.ratio.name
+| Specify the OpenSearch alias name used for writing quotas
+|===
+
+=== Disabling OpenSearch
+
+OpenSearch component can be disabled but consider it would make search feature to not work. In particular it will break JMAP protocol and SEARCH IMAP comment in an nondeterministic way.
+This is controlled in the `search.properties` file via the `implementation` property (defaults
+to `OpenSearch`). Setting this configuration parameter to `scanning` will effectively disable OpenSearch, no
+further indexation will be done however searches will rely on the scrolling search, leading to expensive and longer
+searches. Disabling OpenSearch requires no extra action, however
+xref:{pages-path}/operate/webadmin.adoc#_reindexing_all_mails[a full re-indexing]needs to be carried out when enabling OpenSearch.
+
+== SSL Trusting Configuration
+
+By default, James will use the system TrustStore to validate https server certificates, if the certificate on
+ES side is already in the system TrustStore, you can leave the sslValidationStrategy property empty or set it to default.
+
+.opensearch.properties content
+|===
+| Property name | explanation
+
+| opensearch.hostScheme.https.sslValidationStrategy
+| Optional. Accept only *default*, *ignore*, *override*. Default is *default*. default: Use the default SSL TrustStore of the system.
+ignore: Ignore SSL Validation check (not recommended).
+override: Override the SSL Context to use a custom TrustStore containing ES server's certificate.
+
+|===
+
+In some cases, you want to secure the connection from clients to ES by setting up a *https* protocol
+with a self signed certificate. And you prefer to left the system ca-certificates un touch.
+There are possible solutions to let the ES RestHighLevelClient to trust your self signed certificate.
+
+Second solution: importing a TrustStore containing the certificate into SSL context.
+A certificate normally contains two parts: a public part in .crt file, another private part in .key file.
+To trust the server, the client needs to be acknowledged that the server's certificate is in the list of
+client's TrustStore. Basically, you can create a local TrustStore file containing the public part of a remote server
+by execute this command:
+
+....
+keytool -import -v -trustcacerts -file certificatePublicFile.crt -keystore trustStoreFileName.jks -keypass fillThePassword -storepass fillThePassword
+....
+
+When there is a TrustStore file and the password to read, fill two options *trustStorePath*
+and *trustStorePassword* with the TrustStore location and the password. ES client will accept
+the certificate of ES service.
+
+.opensearch.properties content
+|===
+| Property name | explanation
+
+| opensearch.hostScheme.https.trustStorePath
+| Optional. Use it when https is configured in opensearch.hostScheme, and sslValidationStrategy is *override*
+Configure OpenSearch rest client to use this trustStore file to recognize nginx's ssl certificate.
+Once you chose *override*, you need to specify both trustStorePath and trustStorePassword.
+
+| opensearch.hostScheme.https.trustStorePassword
+| Optional. Use it when https is configured in opensearch.hostScheme, and sslValidationStrategy is *override*
+Configure OpenSearch rest client to use this trustStore file with the specified password.
+Once you chose *override*, you need to specify both trustStorePath and trustStorePassword.
+
+|===
+
+During SSL handshaking, the client can determine whether accept or reject connecting to a remote server by its hostname.
+You can configure to use which HostNameVerifier in the client.
+
+.opensearch.properties content
+|===
+| Property name | explanation
+
+| opensearch.hostScheme.https.hostNameVerifier
+| Optional. Default is *default*. default: using the default hostname verifier provided by apache http client.
+accept_any_hostname: accept any host (not recommended).
+
+|===
+
+== Configure dedicated language analyzers for mailbox index
+
+OpenSearch supports various language analyzers out of the box: https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html.
+
+James could utilize this to improve the user searching experience upon his language.
+
+While one could modify mailbox index mapping programmatically to customize this behavior, here we should just document a manual way to archive this without breaking our common index' mapping code.
+
+The idea is modifying mailbox index mappings with the target language analyzer as a JSON file, then submit it directly
+to OpenSearch via cURL command to create the mailbox index before James start. Let's adapt dedicated language analyzers
+where appropriate for the following fields:
+
+.Language analyzers propose change
+|===
+| Field | Analyzer change
+
+| from.name
+| `keep_mail_and_url` analyzer -> `keep_mail_and_url_language_a` analyzer
+
+| subject
+| `keep_mail_and_url` analyzer -> `keep_mail_and_url_language_a` analyzer
+
+| to.name
+| `keep_mail_and_url` analyzer -> `keep_mail_and_url_language_a` analyzer
+
+| cc.name
+| `keep_mail_and_url` analyzer -> `keep_mail_and_url_language_a` analyzer
+
+| bcc.name
+| `keep_mail_and_url` analyzer -> `keep_mail_and_url_language_a` analyzer
+
+| textBody
+| `standard` analyzer -> `language_a` analyzer
+
+| htmlBody
+| `standard` analyzer -> `language_a` analyzer
+
+| attachments.fileName
+| `standard` analyzer -> `language_a` analyzer
+
+| attachments.textContent
+| `standard` analyzer -> `language_a` analyzer
+
+|===
+
+In there:
+
+  - `keep_mail_and_url` and `standard` are our current analyzers for mailbox index.
+  - `language_a` analyzer: the built-in analyzer of OpenSearch. EG: `french`
+  - `keep_mail_and_url_language_a` analyzer: a custom of `keep_mail_and_url` analyzer with some language filters.Every language has
+their own filters so please have a look at filters which your language need to add. EG which need to be added for French:
+----
+"filter": {
+	"french_elision": {
+		"type": "elision",
+		"articles_case": true,
+		"articles": [
+			"l", "m", "t", "qu", "n", "s",
+			"j", "d", "c", "jusqu", "quoiqu",
+			"lorsqu", "puisqu"
+		]
+	},
+	"french_stop": {
+		"type": "stop",
+		"stopwords": "_french_"
+	},
+	"french_stemmer": {
+		"type": "stemmer",
+		"language": "light_french"
+	}
+}
+----
+
+After modifying above proposed change, you should have a JSON file that contains new setting and mapping of mailbox index. Here
+we provide https://github.com/apache/james-project/blob/master/mailbox/opensearch/example_french_index.json[a sample JSON for French language].
+If you want to customize that JSON file for your own language need, please make these modifications:
+
+  - Replace the `french` analyzer with your built-in language (have a look at https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html[built-in language analyzers])
+  - Modify `keep_mail_and_url_french` analyzer' filters with your language filters, and customize the analyzer' name.
+
+Please change also `number_of_shards`, `number_of_replicas` and `index.write.wait_for_active_shards` values in the sample file according to your need.
+
+Run this cURL command with above JSON file to create `mailbox_v1` (Mailbox index' default name) index before James start:
+----
+curl -X PUT ES_IP:ES_PORT/mailbox_v1 -H "Content-Type: application/json" -d @example_french_index.json
+----

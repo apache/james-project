@@ -38,7 +38,6 @@ import jakarta.mail.Flags;
 import jakarta.mail.internet.SharedInputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedCriteriaException;
@@ -441,7 +440,6 @@ public interface MessageManager {
      */
     Mailbox getMailboxEntity() throws MailboxException;
 
-    EnumSet<MessageCapabilities> getSupportedMessageCapabilities();
 
     /**
      * Gets the id of the referenced mailbox

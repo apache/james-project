@@ -49,6 +49,7 @@
 
         <module>plugin/deleted-messages-vault</module>
         <module>plugin/deleted-messages-vault-cassandra</module>
+        <module>plugin/deleted-messages-vault-postgres</module>
 
         <module>plugin/quota-mailing</module>
         <module>plugin/quota-mailing-cassandra</module>
@@ -57,6 +58,8 @@
         <module>plugin/quota-search</module>
         <module>plugin/quota-search-opensearch</module>
         <module>plugin/quota-search-scanning</module>
+
+        <module>postgres</module>
 
         <module>scanning-search</module>
         <module>spring</module>

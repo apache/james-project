@@ -1,0 +1,101 @@
+This document provides benchmark methodology and basic performance of {server-name} as a basis for a James administrator who
+can test and evaluate if his {server-name} is performing well.
+
+It includes:
+
+* A sample {server-name} deployment topology
+* Propose benchmark methodology
+* Sample performance results
+
+This aims to help operators quickly identify performance issues.
+
+== Sample deployment topology
+
+We deploy a sample topology of {server-name} with these following components:
+
+- {server-name}: 3 Kubernetes pods, each pod has 2 OVH vCore CPU and 4 GB memory limit.
+- OpenDistro 1.13.1 as search engine: 3 nodes, each node has 8 OVH vCores CPU and 30 GB memory limit (OVH b2-30 instance).
+- RabbitMQ 3.8.17 as message queue: 3 Kubernetes pods, each pod has 0.6 OVH vCore CPU and 2 GB memory limit.
+- OVH Swift S3 as an object storage
+- {backend-database-extend-sample}
+
+== Benchmark methodology and base performance
+
+include::{benchmark_prepare_extend}[]
+
+=== Provision testing data
+
+Before doing the performance test, you should make sure you have a {server-name} up and running with some provisioned testing
+data so that it is representative of reality.
+
+Please follow these steps to provision testing data:
+
+* Prepare James with a custom `mailetcontainer.xml` having Random storing mailet. This help us easily setting a good amount of
+provisioned emails.
+
+Add this under transport processor
+
+[source,xml]
+----
+<mailet match="All" class="RandomStoring"/>
+----
+
+* Modify {provision_file_url}[provision.sh]
+upon your need (number of users, mailboxes, emails to be provisioned).
+
+Currently, this script provisions 10 users, 15 mailboxes and hundreds of emails for example. Normally to make the performance test representative, you
+should provision thousands of users, thousands of mailboxes and millions of emails.
+
+* Add the permission to execute the script:
+----
+chmod +x provision.sh
+----
+
+* Install postfix (to get the smtp-source command):
+----
+sudo apt-get install postfix
+----
+
+* Run the provision script:
+----
+./provision.sh
+----
+
+After provisioning once, you should remove the Random storing mailet and move on to performance testing phase.
+
+=== Provide performance testing method
+
+We introduce the tailored https://github.com/linagora/james-gatling[James Gatling] which bases on https://gatling.io/[Gatling - Load testing framework]
+for performance testing against IMAP/JMAP servers. Other testing method is welcome as long as you feel it is appropriate.
+
+Here are steps to do performance testing with James Gatling:
+
+* Setup James Gatling with `sbt` build tool
+
+* Configure the `Configuration.scala` to point to your {server-name} IMAP/JMAP server(s). For more configuration details, please read
+https://github.com/linagora/james-gatling#readme[James Gatling Readme].
+
+* Run the performance testing simulation:
+----
+$ sbt
+> gatling:testOnly SIMULATION_FQDN
+----
+
+In there: `SIMULATION_FQDN` is fully qualified class name of a performance test simulation.
+
+We did provide a lot of simulations in `org.apache.james.gatling.simulation` path. You can have a look and choose the suitable simulation.
+`sbt gatling:testOnly org.apache.james.gatling.simulation.imap.PlatformValidationSimulation` is a good starting point. Or you can even customize your simulation also!
+
+Some symbolic simulations we often use:
+
+* IMAP: `org.apache.james.gatling.simulation.imap.PlatformValidationSimulation`
+* JMAP rfc8621: `org.apache.james.gatling.simulation.jmap.rfc8621.PushPlatformValidationSimulation`
+
+=== Base performance result
+
+A sample IMAP performance testing result (PlatformValidationSimulation):
+
+image::{james-imap-base-performance-picture}[]
+
+If you get a IMAP performance far below this base performance, you should consider investigating for performance issues.
+

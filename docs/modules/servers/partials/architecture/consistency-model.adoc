@@ -1,0 +1,70 @@
+This page presents the consistency model used by the {server-name} and
+points to the tools built around it.
+
+== Data Replication
+
+The {server-name} relies on different storage technologies, all having their own
+consistency models.
+
+These data stores replicate data in order to enforce some level of availability.
+
+By consistency, we mean the ability for all replica to hold the same data.
+
+By availability, we mean the ability for a replica to answer a request.
+
+In distributed systems, link:https://en.wikipedia.org/wiki/CAP_theorem[according to the CAP theorem],
+as we will necessarily encounter network partitions, then trade-offs need to be made between
+consistency and availability.
+
+This section details this trade-off for data stores used by the {server-name}.
+
+=== OpenSearch consistency model
+
+OpenSearch relies on link:https://opensearch.org/docs/latest/tuning-your-cluster/[strong consistency]
+with home-grown algorithm.
+
+The 2.x release line, that the distributed server is using, is known to provide faster recovery.
+
+Be aware that data is asynchronously indexed in OpenSearch, changes will be eventually visible.
+
+=== RabbitMQ consistency model
+
+The {server-name} can be set up to rely on a RabbitMQ cluster. All queues can be set up in an high availability
+fashion using link:https://www.rabbitmq.com/docs/quorum-queues[quorum queues] - those are replicated queues using the link:https://raft.github.io/[RAFT] consensus protocol and thus are
+strongly consistent.
+
+include::{data_replication_extend}[]
+
+== Consistency across data stores
+
+The {server-name} leverages several data stores:
+
+ - {backend-name} is used for metadata storage
+ - OpenSearch for search
+ - Object Storage for large object storage
+
+Thus the {server-name} also offers mechanisms to enforce consistency across data stores.
+
+=== Write path organisation
+
+The primary data stores are composed of {backend-name} for metadata and Object storage for binary data.
+
+To ensure the data referenced in {backend-name} is pointing to a valid object in the object store, we write
+the object store payload first, then write the corresponding metadata in {backend-name}.
+
+Similarly, metadata is destroyed first before the corresponding object is deleted.
+
+Such a procedure avoids metadata pointing to un existing blobs, however might lead to some unreferenced
+blobs.
+
+=== {backend-name-cap} ↔ OpenSearch
+
+After being written to the primary stores (namely {backend-name} & Object Storage), email content is
+asynchronously indexed into OpenSearch.
+
+This process, called the EventBus, which retries temporary errors, and stores transient errors for
+later admin-triggered retries is described further xref:{xref-base}/operate/guide.adoc#_mailbox_event_bus[here].
+His role is to spread load and limit inconsistencies.
+
+Furthermore, some xref:{xref-base}/operate/guide.adoc#_usual_troubleshooting_procedures[re-indexing tasks]
+enables to re-synchronise OpenSearch content with the primary data stores

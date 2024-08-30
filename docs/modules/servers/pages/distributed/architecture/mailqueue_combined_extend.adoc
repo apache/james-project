@@ -1,0 +1,4 @@
+* Cassandra enables administrative operations such as browsing, deleting
+using a time series which might require fine performance tuning (see
+http://cassandra.apache.org/doc/latest/operating/index.html[Operating
+Cassandra documentation]).

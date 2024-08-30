@@ -41,6 +41,7 @@
         <module>blob-export-file</module>
         <module>blob-file</module>
         <module>blob-memory</module>
+        <module>blob-postgres</module>
         <module>blob-s3</module>
         <module>blob-storage-strategy</module>
 

@@ -1,0 +1,138 @@
+User repositories are required to store James user information and authentication data.
+
+Consult this link:{sample-configuration-prefix-url}/usersrepository.xml[example]
+to get some examples and hints.
+
+== The user data model
+
+A user has two attributes: username and password.
+
+A valid user should satisfy these criteria:
+
+* username and password cannot be null or empty
+* username should not be longer than 255 characters
+* username can not contain '/'
+* username can not contain multiple domain delimiter('@')
+* A username can have only a local part when virtualHosting is disabled. E.g.'myUser'
+* When virtualHosting is enabled, a username should have a domain part, and the domain part should be concatenated
+after a domain delimiter('@'). E.g. 'myuser@james.org'
+
+A user is always considered as lower cased, so 'myUser' and 'myuser' are the same user, and can be used as well as
+recipient local part than as login for different protocols.
+
+== Configuration
+
+.usersrepository.xml content
+|===
+| Property name | explanation
+
+| enableVirtualHosting
+| true or false. Add domain support for users (default: false, except for Cassandra Users Repository)
+
+| administratorId
+|user's name. Allow a user to access to the https://tools.ietf.org/html/rfc4616#section-2[impersonation command],
+acting on the behalf of any user.
+
+| verifyFailureDelay
+| Delay after a failed authentication attempt with an invalid user name or password. Duration string defaulting to seconds, e.g. `2`, `2s`, `2000ms`. Default `0s` (disabled).
+
+| algorithm
+| use a specific hash algorithm to compute passwords, with optional mode `plain` (default) or `salted`; e.g. `SHA-512`,  `SHA-512/plain`, `SHA-512/salted`, `PBKDF2`, `PBKDF2-SHA512` (default).
+Note: When using `PBKDF2` or `PBKDF2-SHA512` one can specify the iteration count and the key size in bytes. You can specify it as part of the algorithm. EG: `PBKDF2-SHA512-2000-512` will use
+2000 iterations with a key size of 512 bytes.
+
+| hashingMode
+| specify the hashing mode to use if there is none recorded in the database: `plain` (default) for newer installations or `legacy` for older ones
+
+|===
+
+== Configuring a LDAP
+
+Alternatively you can authenticate your users against a LDAP server. You need to configure
+the properties for accessing your LDAP server in this file.
+
+Consult this link:{sample-configuration-prefix-url}/usersrepository.xml[example]
+to get some examples and hints.
+
+Example:
+
+[source,xml]
+....
+<usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid">
+    <enableVirtualHosting>true</enableVirtualHosting>
+</usersrepository>
+....
+
+SSL can be enabled by using `ldaps` scheme. `trustAllCerts` option can be used to trust all LDAP client certificates
+(optional, defaults to false).
+
+Example:
+
+[source,xml]
+....
+<usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldaps://myldapserver:636"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"
+    trustAllCerts="true">
+    <enableVirtualHosting>true</enableVirtualHosting>
+</usersrepository>
+....
+
+Moreover, per domain base DN can be configured:
+
+[source,xml]
+....
+<usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"
+    <enableVirtualHosting>true</enableVirtualHosting>
+    <domains>
+        <domain.tld>ou=People,o=other.com,ou=system</domain.tld>
+    </domains>
+</usersrepository>
+....
+
+You can connect to multiple LDAP servers for better availability by using `ldapHosts` option (fallback to `ldapHost` is supported) to specify the list of LDAP Server URL with the comma `,` delimiter. We do support different schemas for LDAP servers.
+
+Example:
+
+[source,xml]
+....
+<usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHosts="ldap://ldapServer1:389,ldaps://ldapServer2:636"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid" trustAllCerts="true">
+    <enableVirtualHosting>true</enableVirtualHosting>
+</usersrepository>
+....
+
+When VirtualHosting is on, you can enable local part as login username by configure the `resolveLocalPartAttribute`.
+This is the LDAP attribute that allows to retrieve the local part of users. Optional, default to empty, which disables login with local part as username.
+
+Example:
+
+[source,xml]
+....
+<usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHosts="ldap://ldapServer1:389,ldaps://ldapServer2:636"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" resolveLocalPartAttribute="uid" userIdAttribute="mail" trustAllCerts="true">
+    <enableVirtualHosting>true</enableVirtualHosting>
+</usersrepository>
+....
+
+The "userListBase" configuration option is used to differentiate users that can login from those that are listed
+ as regular users. This is useful for dis-activating users, for instance.
+
+A different values from &quot;userBase&quot; can be used for setting up virtual logins,
+for instance in conjunction with "resolveLocalPartAttribute". This can also be used to manage
+disactivated users (in "userListBase" but not in "userBase").
+
+Note that "userListBase" can not be specified on a per-domain-basis.
+
+=== LDAP connection pool size tuning
+
+Apache James offers some options for configuring the LDAP connection pool used by unboundid:
+
+* *poolSize*: (optional, default = 4) The maximum number of connection in the pool. Note that if the pool is exhausted,
+extra connections will be created on the fly as needed.
+* *maxWaitTime*: (optional, default = 1000) the number of milli seconds to wait before creating off-pool connections,
+using a pool connection if released in time. This effectively smooth out traffic burst, thus in some case can help
+not overloading the LDAP
+* *connectionTimeout:* (optional) Sets the connection timeout on the underlying  to the specified integer value
+* *readTimeout:* (optional) Sets property the read timeout to the specified integer value.

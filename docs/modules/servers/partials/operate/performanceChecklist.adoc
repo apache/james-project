@@ -1,0 +1,80 @@
+This guide aims to help James operators refine their James configuration and set up to achieve better performance.
+
+== Database setup
+
+{backend-name}, OpenSearch, RabbitMQ is a large topic in itself that we do not intend to cover here. Yet, here are some
+very basic recommendation that are always beneficial to keep in mind.
+
+We recommend:
+
+* Running {backend-name}, OpenSearch on commodity hardware with attached SSD. SAN disks are known to cause performance
+issues for these technologies. HDD disks are to be banned for these performance related applications.
+* We recommend getting an Object Storage SaaS offering that suites your needs. Most generalist S3 offers will suite
+James needs.
+* We do provide a guide on xref:[Database benchmarks] that can help identify and fix issues.
+
+== James configuration
+
+=== JMAP protocol
+
+If you are not using JMAP, disabling it will avoid you the cost of populating related projections and thus is recommended.
+Within `jmap.properties`:
+
+....
+enabled=false
+....
+
+We recommend turning on EmailQueryView as it enables resolution of mailbox listing against {backend-name}, thus unlocking massive
+stability / performance gains. Within `jmap.properties`:
+
+....
+view.email.query.enabled=true
+....
+
+=== IMAP / SMTP
+
+We recommend against resolving client connection DNS names. This behaviour can be disabled via a system property within
+`jvm.properties`:
+
+....
+james.protocols.mdc.hostname=false
+....
+
+Concurrent IMAP request count is the critical setting. In `imapServer.xml`:
+
+....
+<concurrentRequests>200</concurrentRequests>
+<maxQueueSize>4096</maxQueueSize>
+....
+
+Other recommendation includes avoiding unecessary work upon IMAP IDLE, not starting dedicated BOSS threads:
+
+....
+<ignoreIDLEUponProcessing>false</ignoreIDLEUponProcessing>
+<bossWorkerCount>0</bossWorkerCount>
+....
+
+=== Other generic recommendations
+
+* Remove unneeded listeners / mailets
+* Reduce duplication of Matchers within mailetcontainer.xml
+* Limit usage of "DEBUG" loglevel. INFO should be more than decent in most cases.
+* While GC tunning is a science in itself, we had good results with G1GC and a low pause time:
+
+....
+-Xlog:gc*:file=/root/gc.log -XX:MaxGCPauseMillis=20 -XX:ParallelGCThreads=2
+....
+
+* We recommand tunning bach sizes: `batchsizes.properties`. This allows, limiting parallel S3 reads, while loading many
+messages concurrently on {backend-name}, and improves IMAP massive operations support.
+
+....
+fetch.metadata=200
+fetch.headers=30
+fetch.body=30
+fetch.full=30
+
+copy=8192
+
+move=8192
+....

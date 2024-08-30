@@ -47,6 +47,7 @@ public class InitializationOperations {
         return startables.get().stream()
             .flatMap(this::configurationPerformerFor)
             .distinct()
+            .sorted((a, b) -> Integer.compare(b.priority(), a.priority()))
             .peek(Throwing.consumer(InitializationOperation::initModule).sneakyThrow())
             .collect(Collectors.toSet());
     }

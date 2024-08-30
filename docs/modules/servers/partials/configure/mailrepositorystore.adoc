@@ -1,0 +1,34 @@
+A `mail repository` allows storage of a mail as part of its
+processing. Standard configuration relies on the following mail
+repository.
+
+A mail repository is identified by its *url*, constituted of a *protocol* and a *path*.
+
+For instance in the url `{mailet-repository-path-prefix}://var/mail/error/` `{mail-repository-protocol}` is the protocol and `var/mail/error` the path.
+
+The *mailrepositorystore.xml* file allows registration of available protocols, and their binding to actual MailRepository
+implementation. Note that extension developers can write their own MailRepository implementations, load them via the
+`extensions-jars` mechanism as documented in xref:customization:index.adoc['writing your own extensions'], and finally
+associated to a protocol in *mailrepositorystore.xml* for a usage in *mailetcontainer.xml*.
+
+== Configuration
+
+Consult this link:{sample-configuration-prefix-url}/mailrepositorystore.xml[example]
+to get some examples and hints.
+
+[subs=attributes+,xml]
+----
+<mailrepositorystore>
+    <defaultProtocol>{mail-repository-protocol}</defaultProtocol>
+    <mailrepositories>
+        <mailrepository class="{mail-repository-class}">
+            <protocols>
+                <protocol>{mail-repository-protocol}</protocol>
+            </protocols>
+        </mailrepository>
+    </mailrepositories>
+</mailrepositorystore>
+----
+
+Only the *{mail-repository-class}* is available by default for the {server-name}. Mails metadata are stored in
+{mail-repository-protocol} while the headers and bodies are stored within the xref:{pages-path}/architecture/index.adoc#_blobstore[BlobStore].

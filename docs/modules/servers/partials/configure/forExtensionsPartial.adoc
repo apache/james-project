@@ -1,0 +1,14 @@
+== For extensions
+
+By omitting these files, no extra behaviour is added.
+
+** xref:{xref-base}/vault.adoc[*deletedMessageVault.properties*] allows to configure the DeletedMessageVault link:{sample-configuration-prefix-url}/sample-configuration/deletedMessageVault.properties[example]
+** xref:{xref-base}/listeners.adoc[*listeners.xml*] enables configuration of Mailbox Listeners link:{sample-configuration-prefix-url}/sample-configuration/listeners.xml[example]
+** xref:{xref-base}/extensions.adoc[*extensions.properties*] allows to extend James behaviour by loading your extensions in it link:{sample-configuration-prefix-url}/sample-configuration/extensions.properties[example]
+** xref:{xref-base}/jvm.adoc[*jvm.properties*] lets you specify additional system properties without cluttering your command line
+** xref:{xref-base}/spam.adoc[This page] documents Anti-Spam setup with SpamAssassin, Rspamd.
+** xref:{xref-base}/remote-delivery-error-handling.adoc[This page] proposes a simple strategy for RemoteDelivery error handling.
+** xref:{xref-base}/collecting-contacts.adoc[This page] documents contact collection
+** xref:{xref-base}/collecting-events.adoc[This page] documents event collection
+** xref:{xref-base}/dsn.adoc[This page] specified how to support SMTP Delivery Submission Notification (link:https://tools.ietf.org/html/rfc3461[RFC-3461])
+** xref:{xref-base}/droplists.adoc[This page] allows configuring drop lists.

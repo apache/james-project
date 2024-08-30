@@ -32,6 +32,7 @@ import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.Limits;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 
 import com.google.common.collect.ImmutableMap;

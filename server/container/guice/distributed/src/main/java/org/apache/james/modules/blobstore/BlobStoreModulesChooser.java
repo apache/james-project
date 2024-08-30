@@ -31,6 +31,7 @@ import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
 import org.apache.james.blob.file.FileBlobStoreDAO;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
+import org.apache.james.blob.postgres.PostgresBlobStoreDAO;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.modules.blobstore.validation.BlobStoreConfigurationValidationStartUpCheck.StorageStrategySupplier;
 import org.apache.james.modules.blobstore.validation.StoragePolicyConfigurationSanityEnforcementModule;
@@ -52,6 +53,8 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+
+import modules.BlobPostgresModule;
 
 public class BlobStoreModulesChooser {
     private static final String UNENCRYPTED = "unencrypted";
@@ -84,6 +87,17 @@ public class BlobStoreModulesChooser {
             install(new DefaultBucketModule());
 
             bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(FileBlobStoreDAO.class);
+        }
+    }
+
+    static class PostgresBlobStoreDAODeclarationModule extends AbstractModule {
+        @Override
+        protected void configure() {
+            install(new BlobPostgresModule());
+
+            install(new DefaultBucketModule());
+
+            bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(PostgresBlobStoreDAO.class);
         }
     }
 
@@ -133,6 +147,8 @@ public class BlobStoreModulesChooser {
                 return new ObjectStorageBlobStoreDAODeclarationModule();
             case FILE:
                 return new FileBlobStoreDAODeclarationModule();
+            case POSTGRES:
+                return new PostgresBlobStoreDAODeclarationModule();
             default:
                 throw new RuntimeException("Unsupported blobStore implementation " + implementation);
         }

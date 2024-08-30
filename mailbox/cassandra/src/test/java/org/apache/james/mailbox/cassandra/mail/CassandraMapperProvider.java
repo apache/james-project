@@ -40,8 +40,8 @@ import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
-import org.apache.james.mailbox.store.mail.model.MessageUidProvider;
 import org.apache.james.utils.UpdatableTickingClock;
 
 import com.google.common.collect.ImmutableList;
@@ -51,7 +51,7 @@ public class CassandraMapperProvider implements MapperProvider {
     private static final Factory MESSAGE_ID_FACTORY = new CassandraMessageId.Factory();
 
     private final CassandraCluster cassandra;
-    private final MessageUidProvider messageUidProvider;
+    private final UidProvider messageUidProvider;
     private final CassandraModSeqProvider cassandraModSeqProvider;
     private final UpdatableTickingClock updatableTickingClock;
     private final MailboxSession mailboxSession = MailboxSessionUtil.create(Username.of("benwa"));
@@ -60,7 +60,7 @@ public class CassandraMapperProvider implements MapperProvider {
     public CassandraMapperProvider(CassandraCluster cassandra,
                                    CassandraConfiguration cassandraConfiguration) {
         this.cassandra = cassandra;
-        messageUidProvider = new MessageUidProvider();
+        messageUidProvider = new CassandraUidProvider(this.cassandra.getConf(), cassandraConfiguration);
         cassandraModSeqProvider = new CassandraModSeqProvider(
                 this.cassandra.getConf(),
                 cassandraConfiguration);
@@ -116,8 +116,12 @@ public class CassandraMapperProvider implements MapperProvider {
     }
 
     @Override
-    public MessageUid generateMessageUid() {
-        return messageUidProvider.next();
+    public MessageUid generateMessageUid(Mailbox mailbox) {
+        try {
+            return messageUidProvider.nextUid(mailbox);
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

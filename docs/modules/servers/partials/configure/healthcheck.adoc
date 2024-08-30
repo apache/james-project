@@ -1,0 +1,22 @@
+Consult this link:{sample-configuration-prefix-url}/healthcheck.properties[example]
+to get some examples and hints.
+
+Use this configuration to define the initial delay and period for the PeriodicalHealthChecks. It is only applicable with Guice products.
+
+.healthcheck.properties content
+|===
+| Property name | explanation
+
+| healthcheck.period
+| Define the period between two periodical health checks (default: 60s). Units supported are (ms - millisecond, s - second, m - minute, h - hour, d - day). Default unit is millisecond.
+
+| reception.check.user
+| User to be using for running the "mail reception" health check. The user must exist.
+If not specified, the mail reception check is a noop.
+
+| reception.check.timeout
+| Period after which mail reception is considered faulty. Defaults to one minute.
+
+| additional.healthchecks
+| List of fully qualified HealthCheck class names in addition to James' default healthchecks. Default to empty list.
+|===

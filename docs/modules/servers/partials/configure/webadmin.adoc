@@ -1,0 +1,104 @@
+The web administration supports for now the CRUD operations on:
+
+- The domains
+- The users
+- Their mailboxes
+- Their quotas
+- Managing mail repositories
+- Performing cassandra migrations [small]*_(only for Distributed James Server that uses cassandra as backend)_*
+- And much more, as described in the following sections.
+
+*WARNING*: This API allows authentication only via the use of JWT. If not
+configured with JWT, an administrator should ensure an attacker can not
+use this API.
+
+By the way, some endpoints are not filtered by authentication. Those endpoints are not related to data stored in James,
+for example: Swagger documentation & James health checks.
+
+== Configuration
+
+Consult this link:{sample-configuration-prefix-url}/webadmin.properties[example]
+to get some examples and hints.
+
+.webadmin.properties content
+|===
+| Property name | explanation
+
+| enabled
+| Define if WebAdmin is launched (default: false)
+
+| port
+| Define WebAdmin's port (default: 8080)
+
+| host
+| Define WebAdmin's host (default: localhost, use 0.0.0.0 to listen on all addresses)
+
+| cors.enable
+| Allow the Cross-origin resource sharing (default: false)
+
+| cors.origin
+| Specify ths CORS origin (default: null)
+
+| jwt.enable
+| Allow JSON Web Token as an authentication mechanism (default: false)
+
+| https.enable
+| Use https (default: false)
+
+| https.keystore
+| Specify a keystore file for https (default: null)
+
+| https.password
+| Specify the keystore password (default: null)
+
+| https.trust.keystore
+| Specify a truststore file for https (default: null)
+
+| https.trust.password
+| Specify the truststore password (default: null)
+
+| jwt.publickeypem.url
+| Optional. JWT tokens allow request to bypass authentication. Path to the JWT public key.
+Defaults to the `jwt.publickeypem.url` value of `jmap.properties` file if unspecified
+(legacy behaviour)
+
+| extensions.routes
+| List of Routes specified as fully qualified class name that should be loaded in addition to your product routes list. Routes
+needs to be on the classpath or in the ./extensions-jars folder. Read mode about
+xref:customization:webadmin-routes.adoc[creating you own webadmin routes].
+
+| maxThreadCount
+| Maximum threads used by the underlying Jetty server. Optional.
+
+| minThreadCount
+| Minimum threads used by the underlying Jetty server. Optional.
+
+|===
+
+== Generating a JWT key pair
+
+The {server-name} enforces the use of RSA-SHA-256.
+
+One can use OpenSSL to generate a JWT key pair :
+
+    # private key
+    openssl genrsa -out rs256-4096-private.rsa 4096
+    # public key
+    openssl rsa -in rs256-4096-private.rsa -pubout > rs256-4096-public.pem
+
+The private key can be used to generate JWT tokens, for instance
+using link:https://github.com/vandium-io/jwtgen[jwtgen]:
+
+    jwtgen -a RS256 -p rs256-4096-private.rsa 4096 -c "sub=bob@domain.tld" -c "admin=true" -e 3600 -V
+
+This token can then be passed as `Bearer` of the `Authorization` header :
+
+    curl -H "Authorization: Bearer $token" -XGET http://127.0.0.1:8000/domains
+
+The public key can be referenced as `jwt.publickeypem.url` of the `jmap.properties` configuration file.
+
+== Reverse-proxy set up
+
+WebAdmin adds the value of `X-Real-IP` header as part of the logging MDC.
+
+This allows for reverse proxies to cary other the IP address of the client down to the JMAP server for diagnostic purpose.

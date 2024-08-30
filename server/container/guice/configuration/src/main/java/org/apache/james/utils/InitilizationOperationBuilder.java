@@ -19,6 +19,8 @@
 
 package org.apache.james.utils;
 
+import static org.apache.james.utils.InitializationOperation.DEFAULT_PRIORITY;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,7 +43,11 @@ public class InitilizationOperationBuilder {
     }
 
     public static RequireInit forClass(Class<? extends Startable> type) {
-        return init -> new PrivateImpl(init, type);
+        return init -> new PrivateImpl(init, type, DEFAULT_PRIORITY);
+    }
+
+    public static RequireInit forClass(Class<? extends Startable> type, int priority) {
+        return init -> new PrivateImpl(init, type, priority);
     }
 
     public static class PrivateImpl implements InitializationOperation {
@@ -49,9 +55,12 @@ public class InitilizationOperationBuilder {
         private final Class<? extends Startable> type;
         private List<Class<?>> requires;
 
-        private PrivateImpl(Init init, Class<? extends Startable> type) {
+        private final int priority;
+
+        private PrivateImpl(Init init, Class<? extends Startable> type, int priority) {
             this.init = init;
             this.type = type;
+            this.priority = priority;
             /*
             Class requirements are by default infered from the parameters of the first @Inject annotated constructor.
 
@@ -84,6 +93,11 @@ public class InitilizationOperationBuilder {
         @Override
         public List<Class<?>> requires() {
             return requires;
+        }
+
+        @Override
+        public int priority() {
+            return priority;
         }
     }
 }

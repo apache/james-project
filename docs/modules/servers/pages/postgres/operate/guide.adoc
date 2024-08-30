@@ -1,0 +1,9 @@
+= Postgresql James Server &mdash; Operator guide
+:navtitle: Operator guide
+
+:xref-base: postgres
+:mailet-repository-path-prefix: postgres
+:backend-name: postgres
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/postgres-app/sample-configuration
+:server-name: Postgresql James Server
+include::partial$operate/guide.adoc[]

@@ -1,0 +1,7 @@
+The following pages detail how to do performance testing for the {server-name} also its database.
+
+Once you have a {server-name} up and running you then need to ensure it operates correctly and has a decent performance.
+You may need to do performance testings periodically to make sure your James performs well.
+
+We introduced xref:{xref-base}/benchmark/james-benchmark.adoc[tools and base benchmark result for {server-name}] also xref:{xref-base}/benchmark/db-benchmark.adoc[James database's base performance and how to benchmark them]
+to cover this topic.

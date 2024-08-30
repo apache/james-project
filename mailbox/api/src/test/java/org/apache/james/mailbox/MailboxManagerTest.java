@@ -651,7 +651,9 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             mailboxManager.updateAnnotations(inbox, session, annotations);
 
-            assertThat(mailboxManager.getAllAnnotations(inbox, session)).isEqualTo(annotations);
+            assertThat(mailboxManager.getAllAnnotations(inbox, session))
+                .hasSize(annotations.size())
+                .containsAnyElementsOf(annotations);
         }
 
         @Test

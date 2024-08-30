@@ -1,0 +1,24 @@
+The following pages detail how to operate the {server-name}.
+
+Once you have a {server-name} up and running you then need to ensure it operates correctly and has a decent performance.
+You may also need to perform some operation maintenance or recover from incidents. This section covers
+these topics.
+
+Read more about xref:{xref-base}/operate/logging.adoc[Logging].
+
+The xref:{xref-base}/operate/webadmin.adoc[WebAdmin Restfull administration API] is the
+recommended way to operate the {server-name}. It allows managing and interacting with most
+server components.
+
+The xref:{xref-base}/operate/cli.adoc[Command line interface] allows to interact with some
+server components. However it relies on JMX technologies and its use is discouraged.
+
+The xref:{xref-base}/operate/metrics.adoc[metrics] allows to build latency and throughput
+graphs, that can be visualized, for instance in *Grafana*.
+
+We did put together a xref:{xref-base}/operate/guide.adoc[detailed guide] for
+{server-tag} James operators. We also propose a xref:{xref-base}/operate/performanceChecklist.adoc[performance checklist].
+
+We also included a guide for xref:{xref-base}/operate/migrating.adoc[migrating existing data] into the {server-tag} server.
+
+Additional functional visualisations can be set up using OpenSearch dashboards as documented in link:https://github.com/apache/james-project/tree/master/examples/opensearch-dahsboard[this example].

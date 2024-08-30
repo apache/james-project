@@ -1,0 +1,7 @@
+= Postgresql James Server &mdash; Operate the Distributed server
+:navtitle: Operate the Distributed server
+
+:xref-base: postgres
+:server-name: Postgresql James Server
+:server-tag: postgres
+include::partial$operate/index.adoc[]
