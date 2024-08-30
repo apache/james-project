@@ -12,7 +12,9 @@ link:https://cassandra.apache.org/doc/latest/operating/read_repair.html[Read rep
 
 The {server-name} tries to mitigate inconsistencies by relying on
 link:https://docs.datastax.com/en/archived/cassandra/3.0/cassandra/dml/dmlConfigConsistency.html[QUORUM] read and write levels.
-This means that a majority of replica are needed for read and write operations to be performed.
+This means that a majority of replica are needed for read and write operations to be performed. This guaranty is needed
+as the Mailbox is a complex datamodel with several layers of metadata, and needs "read-your-writes" guaranties that QUORUM
+read+writes delivers.
 
 Critical business operations, like UID allocation, rely on strong consistency mechanisms brought by
 link:https://www.datastax.com/blog/2013/07/lightweight-transactions-cassandra-20[lightweight transaction].
