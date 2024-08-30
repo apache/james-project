@@ -5,7 +5,7 @@ version: "3"
 services:
   james:
     depends_on:
-      - elasticsearch
+      - opensearch
       - cassandra
       - rabbitmq
       - s3
@@ -27,8 +27,8 @@ services:
       - "993:993"
       - "8080:8000"
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+  opensearch:
+    image: opensearchproject/opensearch:2.14.0
     ports:
       - "9200:9200"
     environment:
@@ -65,14 +65,14 @@ services:
       - "24224:24224"
       - "24224:24224/udp"
     depends_on:
-      - elasticsearch
+      - opensearch
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.10.2
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.16.0
     environment:
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      OPENSEARCH_HOSTS: http://opensearch:9200
     ports:
       - "5601:5601"
     depends_on:
-      - elasticsearch
+      - opensearch
 ----
