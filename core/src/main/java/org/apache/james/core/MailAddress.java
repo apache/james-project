@@ -109,6 +109,10 @@ public class MailAddress implements java.io.Serializable {
 
     };
 
+    public static MailAddress of(String localPart, Domain domain) throws AddressException {
+        return new MailAddress(new InternetAddress(localPart + "@" + domain.name()));
+    }
+
     public static MailAddress nullSender() {
         return NULL_SENDER;
     }
@@ -297,8 +301,9 @@ public class MailAddress implements java.io.Serializable {
         this(new InternetAddress(localPart + "@" + domain));
     }
 
-    public MailAddress(String localPart, Domain domain) throws AddressException {
-        this(new InternetAddress(localPart + "@" + domain.name()));
+    private MailAddress(String localPart, Domain domain) {
+        this.localPart = localPart;
+        this.domain = domain;
     }
 
     /**
@@ -383,9 +388,9 @@ public class MailAddress implements java.io.Serializable {
         return localPart.substring(0, separatorPosition);
     }
 
-    public MailAddress stripDetails(String separatorDelimiterSequence) throws AddressException{
-        String localPartWithoutDetails = getLocalPartWithoutDetails(separatorDelimiterSequence) ;
-        return new MailAddress(localPartWithoutDetails+"@"+getDomain().asString());
+    public MailAddress stripDetails(String separatorDelimiterSequence) {
+        String localPartWithoutDetails = getLocalPartWithoutDetails(separatorDelimiterSequence);
+        return new MailAddress(localPartWithoutDetails, domain);
     }
 
     public String asString() {
