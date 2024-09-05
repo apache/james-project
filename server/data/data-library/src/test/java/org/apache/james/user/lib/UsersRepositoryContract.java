@@ -652,7 +652,7 @@ public interface UsersRepositoryContract {
 
         @Test
         default void getUserShouldBeCaseInsensitive() throws Exception {
-            assertThat(testee().getUsername(new MailAddress("lowerUPPER", TestSystem.DOMAIN)))
+            assertThat(testee().getUsername(MailAddress.of("lowerUPPER", TestSystem.DOMAIN)))
                 .isEqualTo(Username.fromLocalPartWithDomain("lowerupper", TestSystem.DOMAIN));
         }
 
@@ -699,12 +699,12 @@ public interface UsersRepositoryContract {
 
             String username = "user";
             assertThat(testee().getMailAddressFor(Username.of(username)))
-                .isEqualTo(new MailAddress(username, testSystem.domainList.getDefaultDomain()));
+                .isEqualTo(MailAddress.of(username, testSystem.domainList.getDefaultDomain()));
         }
 
         @Test
         default void getUserShouldBeCaseInsensitive() throws Exception {
-            assertThat(testee().getUsername(new MailAddress("lowerUPPER", TestSystem.DOMAIN)))
+            assertThat(testee().getUsername(MailAddress.of("lowerUPPER", TestSystem.DOMAIN)))
                 .isEqualTo(Username.fromLocalPartWithoutDomain("lowerupper"));
         }
 

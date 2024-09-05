@@ -264,7 +264,7 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
             if (supportVirtualHosting()) {
                 return new MailAddress(username.asString());
             }
-            return new MailAddress(username.getLocalPart(), domainList.getDefaultDomain());
+            return MailAddress.of(username.getLocalPart(), domainList.getDefaultDomain());
         } catch (Exception e) {
             throw new UsersRepositoryException("Failed to compute mail address associated with the user", e);
         }
