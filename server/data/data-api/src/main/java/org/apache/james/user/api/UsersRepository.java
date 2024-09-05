@@ -149,9 +149,9 @@ public interface UsersRepository {
      */
     default Username getUsername(MailAddress mailAddress) throws UsersRepositoryException {
         if (supportVirtualHosting()) {
-            return Username.of(mailAddress.asString());
+            return Username.of(mailAddress.stripDetails("+").asString());
         } else {
-            return Username.of(mailAddress.getLocalPart());
+            return Username.of(mailAddress.stripDetails("+").getLocalPart());
         }
     }
 

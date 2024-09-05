@@ -641,6 +641,14 @@ public interface UsersRepositoryContract {
         }
 
         @Test
+        default void virtualHostedUsersRepositoryShouldUseFullMailAddressAsUsernameButStripSubAddressingDetails() throws Exception {
+            // Some implementations do not support changing virtual hosting value
+            Assumptions.assumeTrue(testee().supportVirtualHosting());
+
+            assertThat(testee().getUsername(new MailAddress("local+details@domain"))).isEqualTo(Username.of("local@domain"));
+        }
+
+        @Test
         default void getMailAddressForShouldBeIdentityWhenVirtualHosting() throws Exception {
             // Some implementations do not support changing virtual hosting value
             Assumptions.assumeTrue(testee().supportVirtualHosting());
@@ -690,6 +698,14 @@ public interface UsersRepositoryContract {
             Assumptions.assumeFalse(testee().supportVirtualHosting());
 
             assertThat(testee().getUsername(new MailAddress("local@domain"))).isEqualTo(Username.of("local"));
+        }
+
+        @Test
+        default void nonVirtualHostedUsersRepositoryShouldUseLocalPartWithoutSubAddressingDetailsAsUsername() throws Exception {
+            // Some implementations do not support changing virtual hosting value
+            Assumptions.assumeFalse(testee().supportVirtualHosting());
+
+            assertThat(testee().getUsername(new MailAddress("local+details@domain"))).isEqualTo(Username.of("local"));
         }
 
         @Test
