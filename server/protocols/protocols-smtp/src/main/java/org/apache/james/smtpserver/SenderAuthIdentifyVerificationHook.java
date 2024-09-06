@@ -141,7 +141,13 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
                     .findFirst()
                     .orElse(HookResult.DECLINED);
             } catch (MessagingException e) {
-                throw new RuntimeException(e);
+                if (session.getUsername() == null) {
+                    // Ignore invalid from header for relays
+                    return HookResult.DECLINED;
+                } else {
+                    LOGGER.warn("Local user {} attempted to use an invalid From header", e);
+                    throw new RuntimeException(e);
+                }
             }
         } else {
             return HookResult.DECLINED;
