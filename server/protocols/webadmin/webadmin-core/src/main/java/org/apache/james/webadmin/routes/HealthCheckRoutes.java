@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -89,7 +90,7 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     public Object validateHealthChecks(Request request, Response response) {
         Set<ComponentName> selectedComponentNames =
-            Arrays.stream(Optional.ofNullable(request.queryParamsValues(QUERY_PARAM_COMPONENT_NAMES)).orElse(new String[0]))
+            Optional.ofNullable(request.queryParamsValues(QUERY_PARAM_COMPONENT_NAMES)).map(Stream::of).orElse(Stream.empty())
                 .map(ComponentName::new)
                 .collect(ImmutableSet.toImmutableSet());
         Collection<HealthCheck> selectedHealthChecks;
