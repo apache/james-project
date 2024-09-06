@@ -40,7 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 class WithStorageDirectiveTest {
-    private static final DomainList NO_DOMAIN_LIST = null;
+    static final DomainList NO_DOMAIN_LIST = null;
 
     private WithStorageDirective testee;
 
