@@ -21,7 +21,6 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -89,10 +88,7 @@ public class HealthCheckRoutes implements PublicRoutes {
     }
 
     public Object validateHealthChecks(Request request, Response response) {
-        Set<ComponentName> selectedComponentNames =
-            Optional.ofNullable(request.queryParamsValues(QUERY_PARAM_COMPONENT_NAMES)).map(Stream::of).orElse(Stream.empty())
-                .map(ComponentName::new)
-                .collect(ImmutableSet.toImmutableSet());
+        Set<ComponentName> selectedComponentNames = getComponentNames(request);
         Collection<HealthCheck> selectedHealthChecks;
         if (selectedComponentNames.isEmpty()) {
             selectedHealthChecks = healthChecks;
@@ -123,6 +119,14 @@ public class HealthCheckRoutes implements PublicRoutes {
         return healthChecks.stream()
             .map(healthCheck -> new HealthCheckDto(healthCheck.componentName()))
             .collect(ImmutableList.toImmutableList());
+    }
+
+    private Set<ComponentName> getComponentNames(Request request) {
+        return Optional.ofNullable(request.queryParamsValues(QUERY_PARAM_COMPONENT_NAMES))
+            .stream()
+            .flatMap(Stream::of)
+            .map(ComponentName::new)
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private Collection<HealthCheck> getHealthChecks(Set<ComponentName> selectedComponentNames) {
