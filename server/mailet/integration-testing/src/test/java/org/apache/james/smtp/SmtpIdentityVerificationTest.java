@@ -185,6 +185,26 @@ class SmtpIdentityVerificationTest {
     }
 
     @Test
+    void errorsShouldBeIgnoredWhenUnAuthed(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        String message = """
+            FROM: \r
+            subject: test\r
+            \r
+            content\r
+            .\r
+            """;
+
+        assertThatCode(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
     void spoofingInternalAddressAttemptsShouldBeRejectedInFromField(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
