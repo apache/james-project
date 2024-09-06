@@ -100,7 +100,7 @@ Performs health checks for the given components. Components are
 referenced by their URL encoded names.
 
 ....
-curl -XGET http://ip:port/healthcheck?checks={backend-name-1}+{backend-name}%20backend
+curl -XGET http://ip:port/healthcheck?check=HealthCheck1$check=HealthCheck%20two
 ....
 
 Will return a list of healthChecks execution result, with an aggregated
@@ -111,14 +111,14 @@ result:
   "status": "healthy",
   "checks": [
     {
-      "componentName": "{backend-name-1}",
-      "escapedComponentName": "{backend-name-1}",
+      "componentName": "HealthCheck1",
+      "escapedComponentName": "HealthCheck1",
       "status": "healthy"
       "cause": null
     },
     {
-      "componentName": "{backend-name} backend",
-      "escapedComponentName": "{backend-name}%20backend",
+      "componentName": "HealthCheck two",
+      "escapedComponentName": "HealthCheck%20two",
       "status": "healthy"
       "cause": null
     }
