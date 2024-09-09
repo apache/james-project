@@ -21,13 +21,18 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.core.healthcheck.ResultStatus;
@@ -42,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -56,8 +62,9 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     public static final String HEALTHCHECK = "/healthcheck";
     public static final String CHECKS = "/checks";
-    
+
     private static final String PARAM_COMPONENT_NAME = "componentName";
+    private static final String QUERY_PARAM_COMPONENT_NAMES = "check";
 
     private final JsonTransformer jsonTransformer;
     private final Set<HealthCheck> healthChecks;
@@ -81,7 +88,9 @@ public class HealthCheckRoutes implements PublicRoutes {
     }
 
     public Object validateHealthChecks(Request request, Response response) {
-        List<Result> results = executeHealthChecks().collectList().block();
+        Set<ComponentName> selectedComponentNames = getComponentNames(request);
+        Collection<HealthCheck> selectedHealthChecks = selectHealthChecks(selectedComponentNames);
+        List<Result> results = executeHealthChecks(selectedHealthChecks).collectList().block();
         ResultStatus status = retrieveAggregationStatus(results);
         response.status(getCorrespondingStatusCode(status));
         return new HeathCheckAggregationExecutionResultDto(status, mapResultToDto(results));
@@ -102,10 +111,40 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     public Object getHealthChecks(Request request, Response response) {
         return healthChecks.stream()
-                .map(healthCheck -> new HealthCheckDto(healthCheck.componentName()))
-                .collect(ImmutableList.toImmutableList());
+            .map(healthCheck -> new HealthCheckDto(healthCheck.componentName()))
+            .collect(ImmutableList.toImmutableList());
     }
-    
+
+    private Collection<HealthCheck> selectHealthChecks(Set<ComponentName> selectedComponentNames) {
+        if (selectedComponentNames.isEmpty()) {
+            return healthChecks;
+        } else {
+            return getHealthChecks(selectedComponentNames);
+        }
+    }
+
+    private Set<ComponentName> getComponentNames(Request request) {
+        return Optional.ofNullable(request.queryParamsValues(QUERY_PARAM_COMPONENT_NAMES))
+            .stream()
+            .flatMap(Stream::of)
+            .map(ComponentName::new)
+            .collect(ImmutableSet.toImmutableSet());
+    }
+
+    private Collection<HealthCheck> getHealthChecks(Set<ComponentName> selectedComponentNames) {
+        Set<ComponentName> componentNames = healthChecks.stream().map(HealthCheck::componentName).collect(ImmutableSet.toImmutableSet());
+        List<ComponentName> nonExistedComponentNames = selectedComponentNames.stream()
+            .filter(selectedComponentName -> !componentNames.contains(selectedComponentName))
+            .toList();
+        if (!nonExistedComponentNames.isEmpty()) {
+            throw throw404(nonExistedComponentNames.stream().map(ComponentName::getName).toList());
+        }
+
+        return healthChecks.stream()
+            .filter(healthCheck -> selectedComponentNames.contains(healthCheck.componentName()))
+            .toList();
+    }
+
     private int getCorrespondingStatusCode(ResultStatus resultStatus) {
         switch (resultStatus) {
             case HEALTHY:
@@ -151,6 +190,10 @@ public class HealthCheckRoutes implements PublicRoutes {
     }
 
     private Flux<Result> executeHealthChecks() {
+        return executeHealthChecks(healthChecks);
+    }
+
+    private Flux<Result> executeHealthChecks(Collection<HealthCheck> healthChecks) {
         return Flux.fromIterable(healthChecks)
             .flatMap(HealthCheck::check, DEFAULT_CONCURRENCY)
             .doOnNext(this::logFailedCheck);
@@ -168,10 +211,19 @@ public class HealthCheckRoutes implements PublicRoutes {
             .map(HealthCheckExecutionResultDto::new)
             .collect(ImmutableList.toImmutableList());
     }
-    
+
     private HaltException throw404(String componentName) {
+        return throw404("Component with name %s cannot be found", componentName);
+    }
+
+    private HaltException throw404(Collection<String> componentNames) {
+        return throw404("Components with name %s cannot be found",
+            componentNames.stream().collect(Collectors.joining(", ")));
+    }
+
+    private HaltException throw404(String message, String componentNames) {
         return ErrorResponder.builder()
-            .message("Component with name %s cannot be found", componentName)
+            .message(message, componentNames)
             .statusCode(HttpStatus.NOT_FOUND_404)
             .type(ErrorResponder.ErrorType.NOT_FOUND)
             .haltError();
