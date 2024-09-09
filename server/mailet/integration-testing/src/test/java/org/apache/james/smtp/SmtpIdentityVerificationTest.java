@@ -200,7 +200,7 @@ class SmtpIdentityVerificationTest {
 
         assertThatCode(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-                .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
+                .sendMessageWithHeaders("user@domain.tld", ImmutableList.of(USER), message))
             .doesNotThrowAnyException();
     }
 
