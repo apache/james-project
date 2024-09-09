@@ -1,3 +1,4 @@
 #!/bin/bash
 
+unset JAVA_TOOL_OPTIONS
 java -jar target/james-cli.jar "$@"
