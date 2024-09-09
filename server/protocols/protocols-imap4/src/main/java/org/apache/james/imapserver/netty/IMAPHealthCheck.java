@@ -45,11 +45,15 @@ public class IMAPHealthCheck implements HealthCheck {
     @Override
     public Mono<Result> check() {
         return Mono.fromCallable(() -> {
-            if (imapServerFactory.getImapServers().stream().map(IMAPServer::getReactiveThrottler).anyMatch(ReactiveThrottler::isQueueFull)) {
+            if (isAnyQueueFull()) {
                 return Result.degraded(COMPONENT_NAME, "ReactiveThrottler queue is full");
             } else {
                 return Result.healthy(COMPONENT_NAME);
             }
         });
+    }
+
+    private boolean isAnyQueueFull() {
+        return imapServerFactory.getImapServers().stream().map(IMAPServer::getReactiveThrottler).anyMatch(ReactiveThrottler::isQueueFull);
     }
 }

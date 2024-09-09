@@ -37,7 +37,6 @@ import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 
 import com.github.fge.lambdas.functions.ThrowingFunction;
-import com.google.common.collect.ImmutableList;
 
 public class IMAPServerFactory extends AbstractServerFactory {
 
@@ -46,7 +45,6 @@ public class IMAPServerFactory extends AbstractServerFactory {
     protected final ImapMetrics imapMetrics;
     protected final GaugeRegistry gaugeRegistry;
     protected final ConnectionCheckFactory connectionCheckFactory;
-    protected List<IMAPServer> imapServers = ImmutableList.of();
 
     @Inject
     @Deprecated
@@ -85,12 +83,14 @@ public class IMAPServerFactory extends AbstractServerFactory {
             server.configure(serverConfig);
             servers.add(server);
         }
-        imapServers = servers.stream().map(IMAPServer.class::cast).toList();
 
         return servers;
     }
 
     public List<IMAPServer> getImapServers() {
-        return imapServers;
+        return getServers()
+            .stream()
+            .map(IMAPServer.class::cast)
+            .toList();
     }
 }

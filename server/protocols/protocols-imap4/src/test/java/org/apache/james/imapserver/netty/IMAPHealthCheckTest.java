@@ -42,6 +42,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.ClassLoaderUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -52,6 +53,7 @@ public class IMAPHealthCheckTest {
     }
 
     private IMAPHealthCheck imapHealthCheck;
+    private IMAPServerFactory imapServerFactory;
     private List<ReactiveThrottler> reactiveThrottlers;
 
     @BeforeEach
@@ -72,7 +74,7 @@ public class IMAPHealthCheckTest {
 
         RecordingMetricFactory metricFactory = new RecordingMetricFactory();
 
-        IMAPServerFactory imapServerFactory = new IMAPServerFactory(
+        imapServerFactory = new IMAPServerFactory(
             FileSystemImpl.forTestingWithConfigurationFromClasspath(),
             DefaultImapDecoderFactory.createDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
@@ -91,8 +93,15 @@ public class IMAPHealthCheckTest {
             new DefaultConnectionCheckFactory());
 
         HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("imapServerHealthCheck.xml"));
-        reactiveThrottlers = imapServerFactory.createServers(config).stream().map(IMAPServer.class::cast).map(IMAPServer::getReactiveThrottler).toList();
+        imapServerFactory.configure(config);
+        imapServerFactory.init();
+        reactiveThrottlers = imapServerFactory.getImapServers().stream().map(IMAPServer::getReactiveThrottler).toList();
         imapHealthCheck = new IMAPHealthCheck(imapServerFactory);
+    }
+
+    @AfterEach
+    void afterEach() {
+        imapServerFactory.destroy();
     }
 
     @Test
