@@ -89,13 +89,7 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     public Object validateHealthChecks(Request request, Response response) {
         Set<ComponentName> selectedComponentNames = getComponentNames(request);
-        Collection<HealthCheck> selectedHealthChecks;
-        if (selectedComponentNames.isEmpty()) {
-            selectedHealthChecks = healthChecks;
-        } else {
-            selectedHealthChecks = getHealthChecks(selectedComponentNames);
-        }
-
+        Collection<HealthCheck> selectedHealthChecks = selectHealthChecks(selectedComponentNames);
         List<Result> results = executeHealthChecks(selectedHealthChecks).collectList().block();
         ResultStatus status = retrieveAggregationStatus(results);
         response.status(getCorrespondingStatusCode(status));
@@ -119,6 +113,14 @@ public class HealthCheckRoutes implements PublicRoutes {
         return healthChecks.stream()
             .map(healthCheck -> new HealthCheckDto(healthCheck.componentName()))
             .collect(ImmutableList.toImmutableList());
+    }
+
+    private Collection<HealthCheck> selectHealthChecks(Set<ComponentName> selectedComponentNames) {
+        if (selectedComponentNames.isEmpty()) {
+            return healthChecks;
+        } else {
+            return getHealthChecks(selectedComponentNames);
+        }
     }
 
     private Set<ComponentName> getComponentNames(Request request) {

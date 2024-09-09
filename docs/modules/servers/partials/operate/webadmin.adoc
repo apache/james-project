@@ -100,7 +100,7 @@ Performs health checks for the given components. Components are
 referenced by their URL encoded names.
 
 ....
-curl -XGET http://ip:port/healthcheck?check=HealthCheck1$check=HealthCheck%20two
+curl -XGET http://ip:port/healthcheck?check=HealthCheck1&check=HealthCheck%20two
 ....
 
 Will return a list of healthChecks execution result, with an aggregated
