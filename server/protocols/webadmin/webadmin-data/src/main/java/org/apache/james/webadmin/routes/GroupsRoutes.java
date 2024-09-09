@@ -70,11 +70,13 @@ public class GroupsRoutes implements Routes {
     public static final String ADD_GROUP = "address/groups/add-groups";
 
     private static final String GROUP_ADDRESS = "groupAddress";
+    private static final String USER_ADDRESS = "userAddress";
     private static final String GROUP_ADDRESS_PATH = ROOT_PATH + SEPARATOR + ":" + GROUP_ADDRESS;
 
     private static final String GROUP_MULTIPLE_PATH = "address/groups";
     private static final String GROUP_MULTIPLE_PATH_IS_EXIST = "address/groups/isExist";
-    private static final String USER_ADDRESS = "userAddress";
+    private static final String GROUP_MEMBER_IS_EXIST = "address/groups/:groupAddress/:userAddress";
+
     private static final String USER_IN_GROUP_ADDRESS_PATH = GROUP_ADDRESS_PATH + SEPARATOR + ":" + USER_ADDRESS;
     private static final String GROUP_ADDRESS_TYPE = "group";
     private static final String USER_ADDRESS_TYPE = "group member";
@@ -100,6 +102,7 @@ public class GroupsRoutes implements Routes {
 
     @Override
     public void define(Service service) {
+        service.get(GROUP_MEMBER_IS_EXIST, this::isMemberExist);
         service.get(ROOT_PATH, this::listGroups, jsonTransformer);
         service.get(GROUP_MULTIPLE_PATH_IS_EXIST, this::isExist);
         service.get(GROUP_ADDRESS_PATH, this::listGroupMembers, jsonTransformer);
@@ -266,7 +269,7 @@ public class GroupsRoutes implements Routes {
         } catch (SourceDomainIsNotInDomainListException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .type(ErrorType.INVALID_ARGUMENT)
                 .message(e.getMessage())
                 .haltError();
         } catch (RecipientRewriteTableException e) {
@@ -328,6 +331,31 @@ public class GroupsRoutes implements Routes {
             }
         }
         return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    public HaltException isMemberExist(Request request, Response response) throws RecipientRewriteTableException {
+        MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
+        Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress))
+                .select(Mapping.Type.Group);
+        ensureNonEmptyMappings(mappings, groupAddress.toString());
+        var list = mappings
+                .asStream()
+                .map(Mapping::asMailAddress)
+                .flatMap(Optional::stream)
+                .map(MailAddress::asString)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(String::compareTo));
+
+        MailAddress userAddress = MailAddressParser.parseMailAddress(request.params(USER_ADDRESS), USER_ADDRESS_TYPE);
+        for (String user : list) {
+            if (user.equals(userAddress.asString())) {
+                return halt(HttpStatus.OK_200);
+            }
+        }
+        return ErrorResponder.builder()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("%s does not exist", userAddress)
+                .haltError();
     }
 
     public String isExist(Request request, Response response) throws RecipientRewriteTableException, JsonProcessingException {
@@ -401,7 +429,7 @@ public class GroupsRoutes implements Routes {
     public ImmutableSortedSet<String> listGroupMembers(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
         Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress))
-            .select(Mapping.Type.Group);
+                .select(Mapping.Type.Group);
 
         ensureNonEmptyMappings(mappings, groupAddress.toString());
 
@@ -434,3 +462,4 @@ public class GroupsRoutes implements Routes {
         }
     }
 }
+
