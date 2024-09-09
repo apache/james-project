@@ -66,7 +66,7 @@ public class IMAPServerFactory extends AbstractServerFactory {
         this.connectionCheckFactory = connectionCheckFactory;
     }
 
-    private IMAPServer createServer(HierarchicalConfiguration<ImmutableNode> config) {
+    protected IMAPServer createServer(HierarchicalConfiguration<ImmutableNode> config) {
         ImapSuite imapSuite = imapSuiteProvider.apply(config);
 
         return new IMAPServer(imapSuite.getDecoder(), imapSuite.getEncoder(), imapSuite.getProcessor(), imapMetrics, gaugeRegistry, connectionCheckFactory.create(config));
