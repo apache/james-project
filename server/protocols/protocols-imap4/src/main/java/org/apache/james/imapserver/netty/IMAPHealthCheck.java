@@ -28,7 +28,7 @@ import org.apache.james.core.healthcheck.Result;
 import reactor.core.publisher.Mono;
 
 public class IMAPHealthCheck implements HealthCheck {
-    private static final ComponentName COMPONENT_NAME = new ComponentName("Cassandra backend");
+    private static final ComponentName COMPONENT_NAME = new ComponentName("IMAPHealthCheck");
 
     private final IMAPServerFactory imapServerFactory;
 

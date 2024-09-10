@@ -61,6 +61,6 @@ class MemoryWebAdminServerIntegrationImmutableTest extends WebAdminServerIntegra
                 .getList("checks.componentName", String.class);
 
         assertThat(listComponentNames).containsOnly("Guice application lifecycle", "MailReceptionCheck",
-            "EventDeadLettersHealthCheck", "EmptyErrorMailRepository", "MessageFastViewProjection");
+            "EventDeadLettersHealthCheck", "EmptyErrorMailRepository", "MessageFastViewProjection", "IMAPHealthCheck");
     }
 }
