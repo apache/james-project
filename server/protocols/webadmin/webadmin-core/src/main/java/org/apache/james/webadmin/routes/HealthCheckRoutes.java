@@ -23,6 +23,7 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -65,6 +66,7 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     private static final String PARAM_COMPONENT_NAME = "componentName";
     private static final String QUERY_PARAM_COMPONENT_NAMES = "check";
+    private static final String QUERY_PARAM_STRICT = "strict";
 
     private final JsonTransformer jsonTransformer;
     private final Set<HealthCheck> healthChecks;
@@ -89,15 +91,17 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     public Object validateHealthChecks(Request request, Response response) {
         Set<ComponentName> selectedComponentNames = getComponentNames(request);
+        boolean isStrict = isStrictMode(request);
         Collection<HealthCheck> selectedHealthChecks = selectHealthChecks(selectedComponentNames);
         List<Result> results = executeHealthChecks(selectedHealthChecks).collectList().block();
         ResultStatus status = retrieveAggregationStatus(results);
-        response.status(getCorrespondingStatusCode(status));
+        response.status(getCorrespondingStatusCode(status, isStrict));
         return new HeathCheckAggregationExecutionResultDto(status, mapResultToDto(results));
     }
 
     public Object performHealthCheckForComponent(Request request, Response response) {
         String componentName = request.params(PARAM_COMPONENT_NAME);
+        boolean isStrict = isStrictMode(request);
         HealthCheck healthCheck = healthChecks.stream()
             .filter(c -> c.componentName().getName().equals(componentName))
             .findFirst()
@@ -105,7 +109,7 @@ public class HealthCheckRoutes implements PublicRoutes {
 
         Result result = Mono.from(healthCheck.check()).block();
         logFailedCheck(result);
-        response.status(getCorrespondingStatusCode(result.getStatus()));
+        response.status(getCorrespondingStatusCode(result.getStatus(), isStrict));
         return new HealthCheckExecutionResultDto(result);
     }
 
@@ -131,6 +135,10 @@ public class HealthCheckRoutes implements PublicRoutes {
             .collect(ImmutableSet.toImmutableSet());
     }
 
+    private boolean isStrictMode(Request request) {
+        return !Objects.isNull(request.queryParamsValues(QUERY_PARAM_STRICT));
+    }
+
     private Collection<HealthCheck> getHealthChecks(Set<ComponentName> selectedComponentNames) {
         Set<ComponentName> componentNames = healthChecks.stream().map(HealthCheck::componentName).collect(ImmutableSet.toImmutableSet());
         List<ComponentName> nonExistedComponentNames = selectedComponentNames.stream()
@@ -145,11 +153,16 @@ public class HealthCheckRoutes implements PublicRoutes {
             .toList();
     }
 
-    private int getCorrespondingStatusCode(ResultStatus resultStatus) {
+    private int getCorrespondingStatusCode(ResultStatus resultStatus, boolean isStrict) {
         switch (resultStatus) {
             case HEALTHY:
-            case DEGRADED:
                 return HttpStatus.OK_200;
+            case DEGRADED:
+                if (isStrict) {
+                    return HttpStatus.SERVICE_UNAVAILABLE_503;
+                } else {
+                    return HttpStatus.OK_200;
+                }
             case UNHEALTHY:
                 return HttpStatus.SERVICE_UNAVAILABLE_503;
             default:
