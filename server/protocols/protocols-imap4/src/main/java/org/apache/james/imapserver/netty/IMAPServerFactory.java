@@ -90,6 +90,7 @@ public class IMAPServerFactory extends AbstractServerFactory {
     public List<IMAPServer> getImapServers() {
         return getServers()
             .stream()
+            .filter(AbstractConfigurableAsyncServer::isEnabled)
             .map(IMAPServer.class::cast)
             .toList();
     }

@@ -54,6 +54,6 @@ public class IMAPHealthCheck implements HealthCheck {
     }
 
     private boolean isAnyQueueFull() {
-        return imapServerFactory.getImapServers().stream().map(IMAPServer::getReactiveThrottler).anyMatch(ReactiveThrottler::isQueueFull);
+        return imapServerFactory.getImapServers().stream().anyMatch(IMAPServer::isReactiveThrottlerQueueFull);
     }
 }
