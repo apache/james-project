@@ -86,8 +86,8 @@ public class HealthCheckRoutes implements PublicRoutes {
             this.converter = converter;
         }
 
-        public Function<ResultStatus, Integer> getConverter() {
-            return converter;
+        public int getCorrespondingStatusCode(ResultStatus result) {
+            return converter.apply(result);
         }
     }
 
@@ -127,7 +127,7 @@ public class HealthCheckRoutes implements PublicRoutes {
         Collection<HealthCheck> selectedHealthChecks = selectHealthChecks(selectedComponentNames);
         List<Result> results = executeHealthChecks(selectedHealthChecks).collectList().block();
         ResultStatus status = retrieveAggregationStatus(results);
-        response.status(getCorrespondingStatusCode(status, convertMode));
+        response.status(convertMode.getCorrespondingStatusCode(status));
         return new HeathCheckAggregationExecutionResultDto(status, mapResultToDto(results));
     }
 
@@ -141,7 +141,7 @@ public class HealthCheckRoutes implements PublicRoutes {
 
         Result result = Mono.from(healthCheck.check()).block();
         logFailedCheck(result);
-        response.status(getCorrespondingStatusCode(result.getStatus(), convertMode));
+        response.status(convertMode.getCorrespondingStatusCode(result.getStatus()));
         return new HealthCheckExecutionResultDto(result);
     }
 
@@ -185,10 +185,6 @@ public class HealthCheckRoutes implements PublicRoutes {
         return healthChecks.stream()
             .filter(healthCheck -> selectedComponentNames.contains(healthCheck.componentName()))
             .toList();
-    }
-
-    private int getCorrespondingStatusCode(ResultStatus resultStatus, StatusCodeConvertMode convertMode) {
-        return convertMode.getConverter().apply(resultStatus);
     }
 
     private void logFailedCheck(Result result) {
