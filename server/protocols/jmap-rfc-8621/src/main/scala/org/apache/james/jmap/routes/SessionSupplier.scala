@@ -25,14 +25,14 @@ import cats.instances.list._
 import jakarta.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, CapabilityFactory, IsPersonal, IsReadOnly, Session, URL, UrlPrefixes}
+import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, CapabilityFactory, IsPersonal, IsReadOnly, JmapRfc8621Configuration, Session, URL, UrlPrefixes}
 
 import scala.jdk.CollectionConverters._
 
-class SessionSupplier(capabilityFactories: Set[CapabilityFactory]) {
+class SessionSupplier(capabilityFactories: Set[CapabilityFactory], configuration: JmapRfc8621Configuration) {
   @Inject
-  def this(defaultCapabilities: java.util.Set[CapabilityFactory]) = {
-    this(defaultCapabilities.asScala.toSet)
+  def this(defaultCapabilities: java.util.Set[CapabilityFactory], configuration: JmapRfc8621Configuration) = {
+    this(defaultCapabilities.asScala.toSet, configuration)
   }
 
   def validate(username: Username, accountId: AccountId): Boolean = AccountId.from(username)
@@ -44,6 +44,7 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory]) {
     val urlEndpointResolver: JmapUrlEndpointResolver = new JmapUrlEndpointResolver(urlPrefixes)
     val capabilities: Set[Capability] = capabilityFactories
       .map(cf => cf.create(urlPrefixes))
+      .filter(capability => !configuration.disabledCapabilities.contains(capability.identifier()))
 
     for {
       account <- accounts(username, capabilities)

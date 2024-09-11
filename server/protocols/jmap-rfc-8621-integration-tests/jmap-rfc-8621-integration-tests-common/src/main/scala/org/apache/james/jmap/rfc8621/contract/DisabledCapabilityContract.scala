@@ -29,6 +29,7 @@ import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.{CapabilityIdentifier, JmapRfc8621Configuration}
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
+import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.expected_session_object
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 
@@ -36,6 +37,88 @@ object DisabledCapabilityContract {
   val configuration: JmapRfc8621Configuration = JmapRfc8621Configuration(urlPrefixString = "http://127.0.0.1",
     websocketPrefixString = "ws://127.0.0.1",
     disabledCapabilities = Set(CapabilityIdentifier.JMAP_MAIL))
+  val expected_session_object: String =
+    """{
+      |  "capabilities" : {
+      |    "urn:ietf:params:jmap:submission": {
+      |      "maxDelayedSend": 0,
+      |      "submissionExtensions": {}
+      |    },
+      |    "urn:ietf:params:jmap:core" : {
+      |      "maxSizeUpload" : 31457280,
+      |      "maxConcurrentUpload" : 4,
+      |      "maxSizeRequest" : 10000000,
+      |      "maxConcurrentRequests" : 4,
+      |      "maxCallsInRequest" : 16,
+      |      "maxObjectsInGet" : 500,
+      |      "maxObjectsInSet" : 500,
+      |      "collationAlgorithms" : [ "i;unicode-casemap" ]
+      |    },
+      |    "urn:ietf:params:jmap:websocket": {
+      |      "supportsPush": true,
+      |      "url": "ws://127.0.0.1/jmap/ws"
+      |    },
+      |    "urn:apache:james:params:jmap:mail:quota": {},
+      |    "urn:ietf:params:jmap:quota": {},
+      |    "urn:apache:james:params:jmap:mail:identity:sortorder": {},
+      |    "urn:apache:james:params:jmap:delegation": {},
+      |    "urn:apache:james:params:jmap:mail:shares": {},
+      |    "urn:ietf:params:jmap:vacationresponse":{},
+      |    "urn:ietf:params:jmap:mdn":{}
+      |  },
+      |  "accounts" : {
+      |    "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6" : {
+      |      "name" : "bob@domain.tld",
+      |      "isPersonal" : true,
+      |      "isReadOnly" : false,
+      |      "accountCapabilities" : {
+      |        "urn:ietf:params:jmap:submission": {
+      |          "maxDelayedSend": 0,
+      |          "submissionExtensions": {}
+      |        },
+      |        "urn:ietf:params:jmap:websocket": {
+      |            "supportsPush": true,
+      |            "url": "ws://127.0.0.1/jmap/ws"
+      |        },
+      |        "urn:ietf:params:jmap:core" : {
+      |          "maxSizeUpload" : 31457280,
+      |          "maxConcurrentUpload" : 4,
+      |          "maxSizeRequest" : 10000000,
+      |          "maxConcurrentRequests" : 4,
+      |          "maxCallsInRequest" : 16,
+      |          "maxObjectsInGet" : 500,
+      |          "maxObjectsInSet" : 500,
+      |          "collationAlgorithms" : [ "i;unicode-casemap" ]
+      |        },
+      |        "urn:apache:james:params:jmap:mail:quota": {},
+      |        "urn:ietf:params:jmap:quota": {},
+      |        "urn:apache:james:params:jmap:mail:identity:sortorder": {},
+      |        "urn:apache:james:params:jmap:delegation": {},
+      |        "urn:apache:james:params:jmap:mail:shares": {},
+      |        "urn:ietf:params:jmap:vacationresponse":{},
+      |        "urn:ietf:params:jmap:mdn":{}
+      |      }
+      |    }
+      |  },
+      |  "primaryAccounts" : {
+      |    "urn:ietf:params:jmap:submission": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:ietf:params:jmap:websocket": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:ietf:params:jmap:core" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:apache:james:params:jmap:mail:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:ietf:params:jmap:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:apache:james:params:jmap:mail:identity:sortorder": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:apache:james:params:jmap:delegation": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:apache:james:params:jmap:mail:shares": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:ietf:params:jmap:vacationresponse": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:ietf:params:jmap:mdn": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+      |  },
+      |  "username" : "bob@domain.tld",
+      |  "apiUrl" : "http://127.0.0.1/jmap",
+      |  "downloadUrl" : "http://127.0.0.1/download/{accountId}/{blobId}?type={type}&name={name}",
+      |  "uploadUrl" : "http://127.0.0.1/upload/{accountId}",
+      |  "eventSourceUrl" : "http://127.0.0.1/eventSource?types={types}&closeAfter={closeafter}&ping={ping}",
+      |  "state" : "2c9f1b12-b35a-43e6-9af2-0106fb53a943"
+      |}""".stripMargin
 }
 
 trait DisabledCapabilityContract {
@@ -91,5 +174,21 @@ trait DisabledCapabilityContract {
          |    },
          |    "c1"]]
          |}""".stripMargin)
+  }
+
+  @Test
+  def getShouldReturnCorrectSession(): Unit = {
+    val sessionJson: String = `given`()
+      .when()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .get("/session")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract()
+      .body()
+      .asString()
+
+    assertThatJson(sessionJson).isEqualTo(DisabledCapabilityContract.expected_session_object)
   }
 }
