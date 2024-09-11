@@ -29,12 +29,19 @@ import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
 import java.io.File;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 
+import org.apache.james.core.Username;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
@@ -59,41 +66,7 @@ class SubAddressingTest {
 
     private TemporaryJamesServer jamesServer;
 
-    void setup() throws Exception {
-        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(RECIPIENT, PASSWORD);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        jamesServer.getProbe(MailboxProbeImpl.class)
-            .createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, TARGETED_MAILBOX);
-    }
-
-    @AfterEach
-    void tearDown() {
-        if (jamesServer != null) {
-            jamesServer.shutdown();
-        }
-    }
-
-    @Test
-    void subAddressedEmailShouldBeReceivedByDefault(@TempDir File temporaryFolder) throws Exception {
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
-        jamesServer.start();
-        setup();
-
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .authenticate(FROM, PASSWORD)
-            .sendMessage(FROM, "user2+detail-test@" + DEFAULT_DOMAIN);
-
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(RECIPIENT, PASSWORD)
-            .select(MailboxConstants.INBOX)
-            .awaitMessage(awaitAtMostOneMinute);
-    }
-
-    @Test
-    void subAddressedEmailShouldBeDeliveredInSpecifiedFolder(@TempDir File temporaryFolder) throws Exception {
+    void setup(File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(TemporaryJamesServer.defaultMailetContainerConfiguration()
                 .postmaster(POSTMASTER)
@@ -104,15 +77,79 @@ class SubAddressingTest {
                     .addMailetsFrom(CommonProcessors.transport())))
             .build(temporaryFolder);
         jamesServer.start();
-        setup();
 
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .authenticate(FROM, PASSWORD)
-            .sendMessage(FROM, "user2+any@" + DEFAULT_DOMAIN);
+        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(FROM, PASSWORD);
+    }
 
+    @AfterEach
+    void tearDown() throws IOException {
+        if (jamesServer != null) {
+            jamesServer.shutdown();
+        }
+        testIMAPClient.close();
+        messageSender.close();
+    }
+
+    @Test
+    void subAddressedEmailShouldBeDeliveredInINBOXWhenSpecifiedFolderDoesNotExist(@TempDir File temporaryFolder) throws Exception {
+        setup(temporaryFolder);
+
+        //do not create mailbox
+
+        sendSubAddressedMail();
+        awaitSubAddressedMail(MailboxConstants.INBOX);
+    }
+
+    @Test
+    void subAddressedEmailShouldBeDeliveredInINBOXWhenNoRights(@TempDir File temporaryFolder) throws Exception {
+        setup(temporaryFolder);
+
+        // create mailbox
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
-            .select("any")
+            .create(TARGETED_MAILBOX);
+
+        //do not give posting rights
+
+        sendSubAddressedMail();
+        awaitSubAddressedMail(MailboxConstants.INBOX);
+    }
+
+    @Test
+    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenRights(@TempDir File temporaryFolder) throws Exception {
+        setup(temporaryFolder);
+
+        // create mailbox
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .create(TARGETED_MAILBOX);
+
+        //give posting rights
+        jamesServer.getProbe(ACLProbeImpl.class).executeCommand(
+            MailboxPath.forUser(Username.of(RECIPIENT), TARGETED_MAILBOX),
+            MailboxACL.command()
+                .key(MailboxACL.ANYBODY_KEY)
+                .rights(MailboxACL.Right.Post)
+                .asAddition());
+
+        sendSubAddressedMail();
+        awaitSubAddressedMail(TARGETED_MAILBOX);
+    }
+
+    private void sendSubAddressedMail() throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidKeySpecException {
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, "user2+" + TARGETED_MAILBOX + "@" + DEFAULT_DOMAIN);
+    }
+
+    private void awaitSubAddressedMail(String expectedMailbox) throws IOException {
+        testIMAPClient
+            .connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(expectedMailbox)
             .awaitMessage(awaitAtMostOneMinute);
     }
 }
