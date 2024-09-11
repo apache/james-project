@@ -142,7 +142,7 @@ public class AmqpForwardAttribute extends GenericMailet {
                 metricFactory, new NoopGaugeRegistry());
             reactorRabbitMQChannelPool.start();
             sender = reactorRabbitMQChannelPool.getSender();
-            sender.declareExchange(ExchangeSpecification.exchange(exchange));
+            sender.declareExchange(ExchangeSpecification.exchange(exchange)).block();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
