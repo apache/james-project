@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -57,6 +58,38 @@ import spark.Response;
 import spark.Service;
 
 public class HealthCheckRoutes implements PublicRoutes {
+    public enum StatusCodeConvertMode {
+        STRICT(resultStatus -> {
+            switch (resultStatus) {
+                case HEALTHY:
+                    return HttpStatus.OK_200;
+                case DEGRADED, UNHEALTHY:
+                    return HttpStatus.SERVICE_UNAVAILABLE_503;
+                default:
+                    throw new NotImplementedException(resultStatus + " is not supported");
+            }
+        }),
+        RELAXED(resultStatus -> {
+            switch (resultStatus) {
+                case HEALTHY, DEGRADED:
+                    return HttpStatus.OK_200;
+                case UNHEALTHY:
+                    return HttpStatus.SERVICE_UNAVAILABLE_503;
+                default:
+                    throw new NotImplementedException(resultStatus + " is not supported");
+            }
+        });
+
+        private Function<ResultStatus, Integer> converter;
+
+        StatusCodeConvertMode(Function<ResultStatus, Integer> converter) {
+            this.converter = converter;
+        }
+
+        public int getCorrespondingStatusCode(ResultStatus result) {
+            return converter.apply(result);
+        }
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HealthCheckRoutes.class);
 
@@ -65,6 +98,7 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     private static final String PARAM_COMPONENT_NAME = "componentName";
     private static final String QUERY_PARAM_COMPONENT_NAMES = "check";
+    private static final String QUERY_PARAM_STRICT = "strict";
 
     private final JsonTransformer jsonTransformer;
     private final Set<HealthCheck> healthChecks;
@@ -89,15 +123,17 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     public Object validateHealthChecks(Request request, Response response) {
         Set<ComponentName> selectedComponentNames = getComponentNames(request);
+        StatusCodeConvertMode convertMode = getStatusCodeConvertMode(request);
         Collection<HealthCheck> selectedHealthChecks = selectHealthChecks(selectedComponentNames);
         List<Result> results = executeHealthChecks(selectedHealthChecks).collectList().block();
         ResultStatus status = retrieveAggregationStatus(results);
-        response.status(getCorrespondingStatusCode(status));
+        response.status(convertMode.getCorrespondingStatusCode(status));
         return new HeathCheckAggregationExecutionResultDto(status, mapResultToDto(results));
     }
 
     public Object performHealthCheckForComponent(Request request, Response response) {
         String componentName = request.params(PARAM_COMPONENT_NAME);
+        StatusCodeConvertMode convertMode = getStatusCodeConvertMode(request);
         HealthCheck healthCheck = healthChecks.stream()
             .filter(c -> c.componentName().getName().equals(componentName))
             .findFirst()
@@ -105,7 +141,7 @@ public class HealthCheckRoutes implements PublicRoutes {
 
         Result result = Mono.from(healthCheck.check()).block();
         logFailedCheck(result);
-        response.status(getCorrespondingStatusCode(result.getStatus()));
+        response.status(convertMode.getCorrespondingStatusCode(result.getStatus()));
         return new HealthCheckExecutionResultDto(result);
     }
 
@@ -131,6 +167,12 @@ public class HealthCheckRoutes implements PublicRoutes {
             .collect(ImmutableSet.toImmutableSet());
     }
 
+    private StatusCodeConvertMode getStatusCodeConvertMode(Request request) {
+        return Optional.ofNullable(request.queryParamsValues(QUERY_PARAM_STRICT))
+            .map(s -> StatusCodeConvertMode.STRICT)
+            .orElse(StatusCodeConvertMode.RELAXED);
+    }
+
     private Collection<HealthCheck> getHealthChecks(Set<ComponentName> selectedComponentNames) {
         Set<ComponentName> componentNames = healthChecks.stream().map(HealthCheck::componentName).collect(ImmutableSet.toImmutableSet());
         List<ComponentName> nonExistedComponentNames = selectedComponentNames.stream()
@@ -143,18 +185,6 @@ public class HealthCheckRoutes implements PublicRoutes {
         return healthChecks.stream()
             .filter(healthCheck -> selectedComponentNames.contains(healthCheck.componentName()))
             .toList();
-    }
-
-    private int getCorrespondingStatusCode(ResultStatus resultStatus) {
-        switch (resultStatus) {
-            case HEALTHY:
-            case DEGRADED:
-                return HttpStatus.OK_200;
-            case UNHEALTHY:
-                return HttpStatus.SERVICE_UNAVAILABLE_503;
-            default:
-                throw new NotImplementedException(resultStatus + " is not supported");
-        }
     }
 
     private void logFailedCheck(Result result) {
@@ -187,10 +217,6 @@ public class HealthCheckRoutes implements PublicRoutes {
                 // Here only to fix a warning, such cases are already filtered
                 break;
         }
-    }
-
-    private Flux<Result> executeHealthChecks() {
-        return executeHealthChecks(healthChecks);
     }
 
     private Flux<Result> executeHealthChecks(Collection<HealthCheck> healthChecks) {
