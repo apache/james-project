@@ -45,8 +45,7 @@ public class IsSMIMESigned extends GenericMatcher {
         if (message == null) {
             return null;
         }
-        
-        
+
         if (message.isMimeType("multipart/signed") 
                 || message.isMimeType("application/pkcs7-signature")
                 || message.isMimeType("application/x-pkcs7-signature")

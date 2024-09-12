@@ -3,6 +3,5 @@ To: user2@james.org
 Subject: test
 Message-ID: <df73c05a-2e18-3e22-040c-9eda6abe02ae@open-paas.org>
 Date: Fri, 1 Nov 2019 10:21:39 +0700
-Content-Type: application/x-pkcs7-mime; smime-type=signed-data; name="smime.p7m"
 
 test SMIME

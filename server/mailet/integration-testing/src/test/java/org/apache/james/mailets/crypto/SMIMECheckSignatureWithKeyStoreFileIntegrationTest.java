@@ -31,7 +31,7 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.transport.mailets.SMIMECheckSignature;
-import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matcher.IsSMIMESigned;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -58,7 +58,7 @@ public class SMIMECheckSignatureWithKeyStoreFileIntegrationTest extends SMIMEChe
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.builder()
                     .mailet(SMIMECheckSignature.class)
-                    .matcher(All.class)
+                    .matcher(IsSMIMESigned.class)
                     .addProperty("fileType", "keystore")
                     .addProperty("keyStoreFileName", FileSystem.CLASSPATH_PROTOCOL + "trusted_cert_keystore")
                     .addProperty("keyStorePassword", "secret")
