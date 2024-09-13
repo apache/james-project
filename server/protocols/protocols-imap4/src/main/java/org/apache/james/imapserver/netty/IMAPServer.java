@@ -312,4 +312,13 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     public Set<ConnectionCheck> getConnectionChecks() {
         return this.connectionChecks;
     }
+
+    public boolean isReactiveThrottlerQueueFull() {
+        return reactiveThrottler.isQueueFull();
+    }
+
+    @VisibleForTesting
+    ReactiveThrottler getReactiveThrottler() {
+        return reactiveThrottler;
+    }
 }

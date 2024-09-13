@@ -114,6 +114,10 @@ public class ReactiveThrottler {
         }
     }
 
+    public boolean isQueueFull() {
+        return maxQueueSize <= queue.size();
+    }
+
     private void onRequestDone() {
         concurrentRequests.getAndDecrement();
         TaskHolder throttled = queue.poll();

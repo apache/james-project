@@ -76,7 +76,7 @@ public class IMAPServerFactory extends AbstractServerFactory {
     protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("imapserver");
-        
+
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
             IMAPServer server = createServer(serverConfig);
             server.setFileSystem(fileSystem);
@@ -85,7 +85,13 @@ public class IMAPServerFactory extends AbstractServerFactory {
         }
 
         return servers;
-
     }
 
+    public List<IMAPServer> getImapServers() {
+        return getServers()
+            .stream()
+            .filter(AbstractConfigurableAsyncServer::isEnabled)
+            .map(IMAPServer.class::cast)
+            .toList();
+    }
 }
