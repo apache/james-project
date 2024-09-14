@@ -56,22 +56,6 @@ import java.util.stream.IntStream;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-<<<<<<< HEAD
-=======
-
-import jakarta.mail.FetchProfile;
-import jakarta.mail.Flags;
-import jakarta.mail.Folder;
-import jakarta.mail.Message;
-import jakarta.mail.Session;
-import jakarta.mail.Store;
-import jakarta.mail.search.AndTerm;
-import jakarta.mail.search.BodyTerm;
-import jakarta.mail.search.FromStringTerm;
-import jakarta.mail.search.RecipientStringTerm;
-import jakarta.mail.search.SearchTerm;
-import jakarta.mail.search.SubjectTerm;
->>>>>>> 423e377e9f (merged with chibenwa/fix-and)
 
 import jakarta.mail.FetchProfile;
 import jakarta.mail.Flags;

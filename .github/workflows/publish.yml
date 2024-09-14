@@ -1,0 +1,38 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+        cache-dependency-path: 'server/apps/distributed-app/pom.xml'
+    - uses: docker/setup-qemu-action@v3
+    - uses: docker/setup-buildx-action@v3
+    - uses: imjasonh/setup-crane@v0.1
+    - name: Build
+      run: |
+        mvn clean install -DskipTests
+    - name: Publish to GitHub Container Registry
+      env:
+        REGISTRY: ghcr.io/appscode
+        DOCKER_TOKEN: ${{ secrets.LGTM_GITHUB_TOKEN }}
+        USERNAME: 1gtm
+        APPSCODE_ENV: prod
+      run: |
+        docker login ghcr.io --username ${USERNAME} --password ${DOCKER_TOKEN}
+        cd server/apps/distributed-app/
+        docker image load -i target/jib-image.tar
+        crane cp shn27/distributed-james-test ghcr.io/appscode/inbox-server:latest
