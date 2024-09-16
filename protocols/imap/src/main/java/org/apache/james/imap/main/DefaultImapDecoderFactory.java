@@ -27,20 +27,35 @@ import org.apache.james.imap.decode.parser.ImapParserFactory;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 
 /**
- * TODO: this is temporary: should let the container do the coupling. TODO:
- * convert to POJO
+ * Factory class for creating `ImapDecoder` instances.
+ *
+ * This class is a POJO that manually manages its dependencies.
+ * Dependencies are injected through the constructor, which allows for
+ * better decoupling and easier testing.
+ *
+ * The creation of `ImapCommandParserFactory` is handled internally by
+ * this factory, based on the provided `UnpooledStatusResponseFactory`.
  */
 public class DefaultImapDecoderFactory implements ImapDecoderFactory {
 
-    public static ImapDecoder createDecoder() {
-        final UnpooledStatusResponseFactory unpooledStatusResponseFactory = new UnpooledStatusResponseFactory();
-        final ImapCommandParserFactory imapCommands = new ImapParserFactory(unpooledStatusResponseFactory);
-        return new DefaultImapDecoder(unpooledStatusResponseFactory, imapCommands);
+    private final UnpooledStatusResponseFactory unpooledStatusResponseFactory;
+    private final ImapCommandParserFactory imapCommandParserFactory;
+
+    /**
+     * Constructs `DefaultImapDecoderFactory` with the given
+     * `UnpooledStatusResponseFactory`. The `ImapCommandParserFactory`
+     * is created internally using the provided `UnpooledStatusResponseFactory`.
+     *
+     * @param unpooledStatusResponseFactory The factory for creating status responses.
+     */
+    public DefaultImapDecoderFactory(UnpooledStatusResponseFactory unpooledStatusResponseFactory) {
+        this.unpooledStatusResponseFactory = unpooledStatusResponseFactory;
+        this.imapCommandParserFactory = new ImapParserFactory(unpooledStatusResponseFactory);
     }
 
     @Override
     public ImapDecoder buildImapDecoder() {
-        return createDecoder();
+        return new DefaultImapDecoder(unpooledStatusResponseFactory, imapCommandParserFactory);
     }
 
 }
