@@ -27,6 +27,8 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class IsSMIMESignedTest {
     private IsSMIMESigned isSMIMESigned;
@@ -36,55 +38,16 @@ public class IsSMIMESignedTest {
         isSMIMESigned = new IsSMIMESigned();
     }
 
-    @Test
-    void matchShouldReturnNonEmptyListWhenMessageContentTypeIsMultipartSigned() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"multipart/signed",
+        "application/pkcs7-signature",
+        "application/x-pkcs7-signature",
+        "application/pkcs7-mime; smime-type=signed-data; name=\"smime.p7m\"",
+        "application/x-pkcs7-mime; smime-type=signed-data; name=\"smime.p7m\""})
+    void matchShouldReturnNonEmptyListWhenMessageContentTypeIsSMIMERelated(String contentType) throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("mail")
-            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().addHeader("Content-Type", "multipart/signed"))
-            .sender(SENDER)
-            .recipient(RECIPIENT1)
-            .build();
-        assertThat(isSMIMESigned.match(mail)).isNotEmpty();
-    }
-
-    @Test
-    void matchShouldReturnNonEmptyListWhenMessageContentTypeIsPkcs7Signature() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .name("mail")
-            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().addHeader("Content-Type", "application/pkcs7-signature"))
-            .sender(SENDER)
-            .recipient(RECIPIENT1)
-            .build();
-        assertThat(isSMIMESigned.match(mail)).isNotEmpty();
-    }
-
-    @Test
-    void matchShouldReturnNonEmptyListWhenMessageContentTypeIsXPkcs7Signature() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .name("mail")
-            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().addHeader("Content-Type", "application/x-pkcs7-signature"))
-            .sender(SENDER)
-            .recipient(RECIPIENT1)
-            .build();
-        assertThat(isSMIMESigned.match(mail)).isNotEmpty();
-    }
-
-    @Test
-    void matchShouldReturnNonEmptyListWhenMessageContentTypeIsPkcs7Mime() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .name("mail")
-            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().addHeader("Content-Type", "application/pkcs7-mime; smime-type=signed-data; name=\"smime.p7m\""))
-            .sender(SENDER)
-            .recipient(RECIPIENT1)
-            .build();
-        assertThat(isSMIMESigned.match(mail)).isNotEmpty();
-    }
-
-    @Test
-    void matchShouldReturnNonEmptyListWhenMessageContentTypeIsXPkcs7Mime() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .name("mail")
-            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().addHeader("Content-Type", "application/x-pkcs7-mime; smime-type=signed-data; name=\"smime.p7m\""))
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().addHeader("Content-Type", contentType))
             .sender(SENDER)
             .recipient(RECIPIENT1)
             .build();
