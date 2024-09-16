@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.main;
 
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.ImapCommandParserFactory;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.ImapDecoderFactory;
@@ -27,20 +28,49 @@ import org.apache.james.imap.decode.parser.ImapParserFactory;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 
 /**
- * TODO: this is temporary: should let the container do the coupling. TODO:
- * convert to POJO
+ * Factory class for creating `ImapDecoder` instances.
+ *
+ * This class is a POJO that manually manages its dependencies.
+ * Dependencies are injected through the constructor, which allows for
+ * better decoupling and easier testing.
+ *
+ * The creation of `ImapCommandParserFactory` is handled internally by
+ * this factory, based on the provided `UnpooledStatusResponseFactory`.
  */
-public class DefaultImapDecoderFactory implements ImapDecoderFactory {
+public class DefaultImapDecoderFactory<T extends StatusResponseFactory> implements ImapDecoderFactory {
 
-    public static ImapDecoder createDecoder() {
-        final UnpooledStatusResponseFactory unpooledStatusResponseFactory = new UnpooledStatusResponseFactory();
-        final ImapCommandParserFactory imapCommands = new ImapParserFactory(unpooledStatusResponseFactory);
-        return new DefaultImapDecoder(unpooledStatusResponseFactory, imapCommands);
+    private final T statusResponseFactory;
+    private final ImapCommandParserFactory imapCommandParserFactory;
+
+    /**
+     * Default constructor.
+     * This constructor creates an instance of DefaultImapDecoderFactory with an UnpooledStatusResponseFactory as the default implementation.
+     * Since the type T is not known at runtime due to type erasure, we cast the new UnpooledStatusResponseFactory to T.
+     * It internally calls the other constructor to set up the necessary dependencies.
+     */
+    public DefaultImapDecoderFactory() {
+        this((T) new UnpooledStatusResponseFactory());
     }
 
+    /**
+     * Constructor that accepts a specific implementation of StatusResponseFactory.
+     * This constructor allows for flexibility by enabling different implementations of StatusResponseFactory to be used.
+     *
+     * @param statusResponseFactory An implementation of StatusResponseFactory to be used for creating IMAP command parsers and decoders.
+     */
+    public DefaultImapDecoderFactory(T statusResponseFactory) {
+        this.statusResponseFactory = statusResponseFactory;
+        this.imapCommandParserFactory = new ImapParserFactory(statusResponseFactory);
+    }
+
+    /**
+     * Builds and returns an instance of ImapDecoder.
+     * This method uses the statusResponseFactory and the imapCommandParserFactory to create a new DefaultImapDecoder instance.
+     *
+     * @return A new instance of DefaultImapDecoder.
+     */
     @Override
     public ImapDecoder buildImapDecoder() {
-        return createDecoder();
+        return new DefaultImapDecoder(statusResponseFactory, imapCommandParserFactory);
     }
-
 }

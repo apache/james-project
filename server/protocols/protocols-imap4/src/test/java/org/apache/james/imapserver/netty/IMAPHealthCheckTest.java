@@ -76,7 +76,7 @@ public class IMAPHealthCheckTest {
 
         imapServerFactory = new IMAPServerFactory(
             FileSystemImpl.forTestingWithConfigurationFromClasspath(),
-            DefaultImapDecoderFactory.createDecoder(),
+            new DefaultImapDecoderFactory().buildImapDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
             DefaultImapProcessorFactory.createXListSupportingProcessor(
                 mailboxManager,
