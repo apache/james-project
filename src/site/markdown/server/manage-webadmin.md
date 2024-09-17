@@ -124,7 +124,7 @@ Response codes:
 
 Additional query parameters are supported:
 
-- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 500. If omitted, degraded checks would be reported with status code 200.
+- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 503. If omitted, degraded checks would be reported with status code 200.
 
 ```
 curl -XGET http://ip:port/healthcheck?strict
@@ -173,7 +173,7 @@ Response codes:
 
 Additional query parameters are supported:
 
-- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 500. If omitted, degraded checks would be reported with status code 200.
+- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 503. If omitted, degraded checks would be reported with status code 200.
 
 ```
 curl -XGET http://ip:port/healthcheck?strict&check=HealthCheck1&check=HealthCheck%20two
@@ -206,7 +206,7 @@ Response codes:
 
 Additional query parameters are supported:
 
-- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 500. If omitted, degraded checks would be reported with status code 200.
+- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 503. If omitted, degraded checks would be reported with status code 200.
 
 ```
 curl -XGET http://ip:port/healthcheck/checks/{backend-name}%20backend?strict
