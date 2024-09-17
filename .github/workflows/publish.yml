@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Set up JDK 21
+    - name: Set up JDK 11
       uses: actions/setup-java@v4
       with:
-        java-version: '21'
+        java-version: '11'
         distribution: 'temurin'
         cache: maven
         cache-dependency-path: 'server/apps/distributed-app/pom.xml'
