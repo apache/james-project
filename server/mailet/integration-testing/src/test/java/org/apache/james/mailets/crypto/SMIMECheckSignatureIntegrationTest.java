@@ -115,4 +115,18 @@ public abstract class SMIMECheckSignatureIntegrationTest {
             .awaitMessage(awaitAtMostOneMinute);
         assertThat(testIMAPClient().readFirstMessage()).containsSequence("X-SMIME-Status: Not signed");
     }
+
+    @Test
+    public void checkSMIMESignatureShouldDoNothingWhenItIsNonSMIMEMail() throws Exception {
+        messageSender().connect(LOCALHOST_IP, jamesServer().getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessageWithHeaders(FROM, RECIPIENT,
+                ClassLoaderUtils.getSystemResourceAsString("eml/non_smime_mail.eml"));
+
+        testIMAPClient().connect(LOCALHOST_IP, jamesServer().getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(testIMAPClient().readFirstMessage()).doesNotContain("X-SMIME-Status");
+    }
 }
