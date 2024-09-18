@@ -455,9 +455,9 @@
                         <image>eclipse-temurin:11-jre-jammy</image>
                     </from>
                     <to>
-                        <image>sami7786/distributed-james-test</image>
+                        <image>ghcr.io/appscode/inbox-server</image>
                         <tags>
-                            <tag>revertmerge</tag>
+                            <tag>latest</tag>
                         </tags>
                     </to>
                     <container>
