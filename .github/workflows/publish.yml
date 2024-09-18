@@ -35,4 +35,4 @@ jobs:
         docker login ghcr.io --username ${USERNAME} --password ${DOCKER_TOKEN}
         cd server/apps/distributed-app/
         docker image load -i target/jib-image.tar
-        crane cp shn27/distributed-james-test ghcr.io/appscode/inbox-server:latest
+        docker push ghcr.io/appscode/inbox-server:latest
