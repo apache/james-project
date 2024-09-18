@@ -50,13 +50,14 @@ public class AmqpExtension implements BeforeAllCallback, AfterAllCallback, After
 
     private final DockerContainer rabbitMqContainer;
     private final String exchangeName;
+    private final BuiltinExchangeType exchangeType;
     private final String routingKey;
     private Channel channel;
     private String queueName;
     private Connection connection;
     private String amqpUri;
 
-    public AmqpExtension(String exchangeName, String routingKey) {
+    public AmqpExtension(String exchangeName, String routingKey, BuiltinExchangeType exchangeType) {
         this.rabbitMqContainer = DockerContainer.fromName(Images.RABBITMQ)
             .withAffinityToContainer()
             .waitingFor(new HostPortWaitStrategy()
@@ -64,6 +65,11 @@ public class AmqpExtension implements BeforeAllCallback, AfterAllCallback, After
                 .withLogConsumer(AmqpExtension::displayDockerLog);
         this.exchangeName = exchangeName;
         this.routingKey = routingKey;
+        this.exchangeType = exchangeType;
+    }
+
+    public AmqpExtension(String exchangeName, String routingKey) {
+        this(exchangeName, routingKey, BuiltinExchangeType.DIRECT);
     }
 
     private static void displayDockerLog(OutputFrame outputFrame) {
@@ -79,7 +85,7 @@ public class AmqpExtension implements BeforeAllCallback, AfterAllCallback, After
         waitingForRabbitToBeReady(factory);
         connection = factory.newConnection();
         channel = connection.createChannel();
-        channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT);
+        channel.exchangeDeclare(exchangeName, exchangeType);
         queueName = channel.queueDeclare().getQueue();
         channel.queueBind(queueName, exchangeName, routingKey);
     }
