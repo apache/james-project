@@ -142,3 +142,5 @@ include::partial$UnwrapText.adoc[]
 include::partial$UseHeaderRecipients.adoc[]
 
 include::partial$WrapText.adoc[]
+
+include::partial$SubAddressing.adoc[]
