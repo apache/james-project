@@ -114,11 +114,11 @@ public class SubAddressing extends GenericMailet {
             .getACL();
     }
 
-    private boolean resolvePostRight(MailboxACL acl, MaybeSender maybeSender, MailAddress recipient) throws UnsupportedRightException {
+    private boolean resolvePostRight(MailboxACL acl, MaybeSender maybeSender, MailAddress recipient) throws UnsupportedRightException, UsersRepositoryException {
         return new UnionMailboxACLResolver().resolveRights(
                 maybeSender.asOptional()
                     .map(Throwing.function(usersRepository::getUsername))
-                    .orElse(NO_ASSOCIATED_USER), acl, recipient.asString())
+                    .orElse(NO_ASSOCIATED_USER), acl, usersRepository.getUsername(recipient))
             .contains(MailboxACL.Right.Post);
     }
 }
