@@ -76,6 +76,7 @@ public class GroupsRoutes implements Routes {
     private static final String GROUP_MULTIPLE_PATH = "address/groups";
     private static final String GROUP_MULTIPLE_PATH_IS_EXIST = "address/groups/isExist";
     private static final String GROUP_MEMBER_IS_EXIST = "address/groups/:groupAddress/:userAddress";
+    private static final String GROUP_MEMBER_ASSOCIATIONS = "address/groups/associations";
 
     private static final String USER_IN_GROUP_ADDRESS_PATH = GROUP_ADDRESS_PATH + SEPARATOR + ":" + USER_ADDRESS;
     private static final String GROUP_ADDRESS_TYPE = "group";
@@ -102,6 +103,7 @@ public class GroupsRoutes implements Routes {
 
     @Override
     public void define(Service service) {
+        service.get(GROUP_MEMBER_ASSOCIATIONS, this::checkGroupMemberAssociations);
         service.get(GROUP_MEMBER_IS_EXIST, this::isMemberExist);
         service.get(ROOT_PATH, this::listGroups, jsonTransformer);
         service.get(GROUP_MULTIPLE_PATH_IS_EXIST, this::isExist);
@@ -127,6 +129,18 @@ public class GroupsRoutes implements Routes {
         MappingSource source = MappingSource.fromUser(Username.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
         addGroupMember(source, dummyUser);
         return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    public static class GroupAssociationStatus {
+        public String groupAddr;
+        public String memberAddr;
+        public String status;
+
+        public GroupAssociationStatus(String groupAddress, String userAddress, String status) {
+            this.groupAddr = groupAddress;
+            this.memberAddr = userAddress;
+            this.status = status;
+        }
     }
 
     public static class GroupStatusInfo {
@@ -331,6 +345,44 @@ public class GroupsRoutes implements Routes {
             }
         }
         return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    public String checkGroupMemberAssociations(Request request, Response response) throws RecipientRewriteTableException, AddressException, JsonProcessingException {
+        String jsonString = request.body();
+        JSONArray groupsMembersPairArray = new JSONArray(jsonString);
+        List<GroupAssociationStatus> results = new ArrayList<>();
+        for (int i = 0; i < groupsMembersPairArray.length(); i++) {
+            JSONObject groupsMembersPairObject = groupsMembersPairArray.getJSONObject(i);
+            try {
+                MailAddress groupAddress = new MailAddress(groupsMembersPairObject.getString("groupAddr"));
+                MailAddress memberAddress = new MailAddress(groupsMembersPairObject.getString("memberAddr"));
+                Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress))
+                        .select(Mapping.Type.Group);
+                ensureNonEmptyMappings(mappings, groupAddress.toString());
+
+                var list = mappings
+                        .asStream()
+                        .map(Mapping::asMailAddress)
+                        .flatMap(Optional::stream)
+                        .map(MailAddress::asString)
+                        .collect(ImmutableSortedSet.toImmutableSortedSet(String::compareTo));
+                boolean flag = false;
+                for (String user : list) {
+                    if (user.equals(memberAddress.asString())) {
+                        results.add(new GroupAssociationStatus(groupsMembersPairObject.getString("groupAddr"), groupsMembersPairObject.getString("memberAddr"), "Found"));
+                        flag = true;
+                        break;
+                    }
+                }
+                if (!flag) {
+                    results.add(new GroupAssociationStatus(groupsMembersPairObject.getString("groupAddr"), groupsMembersPairObject.getString("memberAddr"), "NotFound"));
+                }
+            } catch (Exception e) {
+                results.add(new GroupAssociationStatus(groupsMembersPairObject.getString("groupAddr"), groupsMembersPairObject.getString("memberAddr"), "NotFound"));
+            }
+        }
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        return ow.writeValueAsString(results);
     }
 
     public HaltException isMemberExist(Request request, Response response) throws RecipientRewriteTableException {
