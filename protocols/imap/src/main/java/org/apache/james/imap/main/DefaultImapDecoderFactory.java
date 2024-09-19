@@ -56,11 +56,10 @@ public class DefaultImapDecoderFactory implements ImapDecoderFactory {
      *
      * @param statusResponseFactory An implementation of StatusResponseFactory to be used for creating IMAP command parsers and decoders.
      */
-    public <T extends StatusResponseFactory> DefaultImapDecoderFactory(T statusResponseFactory) {
+    public DefaultImapDecoderFactory(StatusResponseFactory statusResponseFactory) {
         this.statusResponseFactory = statusResponseFactory;
         this.imapCommandParserFactory = new ImapParserFactory(statusResponseFactory);
     }
-
     /**
      * Builds and returns an instance of ImapDecoder.
      * This method uses the statusResponseFactory and the imapCommandParserFactory to create a new DefaultImapDecoder instance.
