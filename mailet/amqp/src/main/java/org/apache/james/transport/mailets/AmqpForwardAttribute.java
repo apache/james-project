@@ -59,8 +59,10 @@ import com.google.common.collect.ImmutableList;
 import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.ShutdownSignalException;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.Sender;
@@ -154,7 +156,13 @@ public class AmqpForwardAttribute extends GenericMailet {
                 .map(type -> ExchangeSpecification.exchange(exchange).type(type))
                 .orElse(ExchangeSpecification.exchange(exchange));
 
-            sender.declareExchange(exchangeSpecification).block();
+            sender.declareExchange(exchangeSpecification)
+                .onErrorResume(error -> error instanceof ShutdownSignalException && error.getMessage().contains("reply-code=406, reply-text=PRECONDITION_FAILED"),
+                    error -> {
+                        LOGGER.warn("Exchange `{}` already exists but with different configuration. Ignoring this error. \nError message: {}", exchange, error.getMessage());
+                        return Mono.empty();
+                    })
+                .block();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
