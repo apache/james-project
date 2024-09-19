@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets;
 
 import static org.apache.james.transport.mailets.AmqpForwardAttribute.DEFAULT_MANAGEMENT_CREDENTIAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -43,6 +44,8 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 
 class AmqpForwardAttributeTest {
@@ -151,6 +154,35 @@ class AmqpForwardAttributeTest {
 
         assertThatThrownBy(() -> mailet.service(mail))
             .isInstanceOf(MailetException.class);
+    }
+
+    @Test
+    void initShouldThrowWhenInvalidExchangeType() {
+        FakeMailetConfig customMailetConfig = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .mailetContext(mailetContext)
+            .setProperty("uri", AMQP_URI)
+            .setProperty("exchange", EXCHANGE_NAME)
+            .setProperty("exchange_type", "invalid")
+            .setProperty("attribute", MAIL_ATTRIBUTE.asString())
+            .build();
+        assertThatThrownBy(() -> mailet.preInit(customMailetConfig))
+            .isInstanceOf(MailetException.class)
+            .hasMessageContaining("Invalid value for exchange_type parameter was provided: invalid");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"direct", "fanout", "topic", "headers"})
+    void initShouldNotThrowWhenValidExchangeType(String exchangeType) {
+        assertThatCode(() -> mailet.preInit(FakeMailetConfig.builder()
+            .mailetName("Test")
+            .mailetContext(mailetContext)
+            .setProperty("uri", AMQP_URI)
+            .setProperty("exchange", EXCHANGE_NAME)
+            .setProperty("exchange_type", exchangeType)
+            .setProperty("attribute", MAIL_ATTRIBUTE.asString())
+            .build()))
+            .doesNotThrowAnyException();
     }
 
     @Nested

@@ -17,43 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
+package org.apache.james.webadmin.routes;
 
-package org.apache.james.transport.matcher;
 
-import java.util.Collection;
+import jakarta.inject.Inject;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenciesService;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenciesService.TargetFlag;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistencyTask;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
-import org.apache.james.core.MailAddress;
-import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMatcher;
+public class SolveMessageRecentInconsistenciesRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+    private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("SolveMessageRecentInconsistencies");
 
-/**
- * checks if a mail is smime signed. 
+    @Inject
+    public SolveMessageRecentInconsistenciesRequestToTask(SolveMailboxFlagInconsistenciesService service) {
+        super(REGISTRATION_KEY, request -> toTask(service));
+    }
 
- */
-public class IsSMIMESigned extends GenericMatcher {
-
-    @Override
-    public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        if (mail == null) {
-            return null;
-        }
-        
-        MimeMessage message = mail.getMessage();
-        if (message == null) {
-            return null;
-        }
-
-        if (message.isMimeType("multipart/signed") 
-                || message.isMimeType("application/pkcs7-signature")
-                || message.isMimeType("application/x-pkcs7-signature")
-                || ((message.isMimeType("application/pkcs7-mime") || message.isMimeType("application/x-pkcs7-mime")) 
-                        && message.getContentType().contains("signed-data"))) {
-            return mail.getRecipients();
-        } else {
-            return null;
-        }
+    private static SolveMailboxFlagInconsistencyTask toTask(SolveMailboxFlagInconsistenciesService service) {
+        return new SolveMailboxFlagInconsistencyTask(service, TargetFlag.RECENT);
     }
 }
