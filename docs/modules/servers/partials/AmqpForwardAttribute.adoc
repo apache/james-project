@@ -9,6 +9,7 @@ where the byte[] content is issued from a MimeBodyPart.
 It is typically generated from the StripAttachment mailet.
 * uri (mandatory): AMQP URI defining the server where to send the attachment.
 * exchange (mandatory): name of the AMQP exchange.
+* exchange_type (optional, default to "direct"): type of the exchange. Can be "direct", "fanout", "topic", "headers".
 * routing_key (optional, default to empty string): name of the routing key on this exchange.
 
 This mailet will sent the data attached to the mail as an attribute holding a map.

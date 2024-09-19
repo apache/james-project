@@ -124,7 +124,7 @@ Response codes:
 
 Additional query parameters are supported:
 
-- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 500. If omitted, degraded checks would be reported with status code 200.
+- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 503. If omitted, degraded checks would be reported with status code 200.
 
 ```
 curl -XGET http://ip:port/healthcheck?strict
@@ -173,7 +173,7 @@ Response codes:
 
 Additional query parameters are supported:
 
-- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 500. If omitted, degraded checks would be reported with status code 200.
+- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 503. If omitted, degraded checks would be reported with status code 200.
 
 ```
 curl -XGET http://ip:port/healthcheck?strict&check=HealthCheck1&check=HealthCheck%20two
@@ -206,7 +206,7 @@ Response codes:
 
 Additional query parameters are supported:
 
-- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 500. If omitted, degraded checks would be reported with status code 200.
+- `strict` allows you enable the strict mode. In this mode, if any checks have the result of Degraded or Unhealthy status, the response code will be 503. If omitted, degraded checks would be reported with status code 200.
 
 ```
 curl -XGET http://ip:port/healthcheck/checks/{backend-name}%20backend?strict
@@ -856,6 +856,69 @@ firewall rules.
 
 Due to all of those risks, a `I-KNOW-WHAT-I-M-DOING` header should be positioned to `ALL-SERVICES-ARE-OFFLINE` in order 
 to prevent accidental calls.
+
+
+#### Fixing mailboxes flag inconsistencies
+
+##### Fixing mailbox messages deleted flag inconsistencies
+
+This task is only available on top of Guice Cassandra products.
+
+```bash
+curl -XPOST /messages?task=SolveMessageDeletedInconsistencies
+```
+
+Will schedule a task for fixing mailbox messages `deleted` flag inconsistencies created by the
+mailbox denormalization process.
+
+Response codes:
+
+* 201: Success. Corresponding task id is returned.
+* 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type
+`solve-mailbox-flag-inconsistencies` and the following
+`additionalInformation` example:
+
+```json
+{
+"timestamp": "2024-09-17T04:58:33.683813161Z",
+"type": "solve-mailbox-flag-inconsistencies",
+"processedMailboxEntries": 1,
+"errors": ["551f0580-82fb-11ea-970e-f9c83d4cf8c2"],
+"targetFlag": "DELETED"
+}
+```
+
+##### Fixing mailbox messages recent flag inconsistencies
+
+This task is only available on top of Guice Cassandra products.
+
+```bash
+curl -XPOST /messages?task=SolveMessageRecentInconsistencies
+```
+
+Will schedule a task for fixing mailbox messages `recent` flag inconsistencies created by the
+mailbox denormalization process.
+
+Response codes:
+
+* 201: Success. Corresponding task id is returned.
+* 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type
+`solve-mailbox-flag-inconsistencies` and the following
+`additionalInformation` example:
+
+```json
+{
+"timestamp": "2024-09-17T04:59:10.042097161Z",
+"type": "solve-mailbox-flag-inconsistencies",
+"processedMailboxEntries": 2,
+"errors": ["551f0580-82fb-11ea-970e-f9c83d4cf8c2"],
+"targetFlag": "RECENT"
+}
+```
 
 #### Recomputing mailbox counters
 
