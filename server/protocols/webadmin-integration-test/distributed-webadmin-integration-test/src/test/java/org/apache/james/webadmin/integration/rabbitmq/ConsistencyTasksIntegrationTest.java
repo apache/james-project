@@ -34,6 +34,7 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
@@ -543,5 +544,84 @@ class ConsistencyTasksIntegrationTest {
             .get(solveInconsistenciesTaskId + "/await");
 
         assertThat(testIMAPClient.readFirstMessage()).contains(MESSAGE);
+    }
+
+    @Test
+    void shouldExposeSolveMessagesDeletedInconsistency(GuiceJamesServer server) throws Exception {
+        String solveInconsistenciesTaskId = with()
+            .queryParam("task", "SolveMessageDeletedInconsistencies")
+            .post("/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(solveInconsistenciesTaskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("type", is("solve-mailbox-flag-inconsistencies"))
+            .body("additionalInformation.processedMailboxEntries", is(0))
+            .body("additionalInformation.targetFlag", is("DELETED"))
+            .body("additionalInformation.errors", hasSize(0));
+    }
+
+    @Test
+    void shouldSolveMessagesDeletedInconsistency(GuiceJamesServer server) throws Exception {
+        // Given a message and a messageDeleted inconsistency
+        smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
+
+        Thread.sleep(1000);
+        TestingSession testingSession = server.getProbe(TestingSessionProbe.class).getTestingSession();
+
+        testIMAPClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB, BOB_PASSWORD)
+            .select(MailboxConstants.INBOX)
+            .awaitMessage(Awaitility.await());
+
+        testIMAPClient.setFlagsForAllMessagesInMailbox("\\Deleted");
+
+        // Make sure messageDeleted inconsistency is present
+        testingSession.execute("TRUNCATE messagedeleted");
+
+        // When we run solveInconsistenciesTask
+        String solveInconsistenciesTaskId = with()
+            .queryParam("task", "SolveMessageDeletedInconsistencies")
+            .post("/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
+        // Then task details should be as expected
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(solveInconsistenciesTaskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("type", is("solve-mailbox-flag-inconsistencies"))
+            .body("additionalInformation.targetFlag", is("DELETED"))
+            .body("additionalInformation.processedMailboxEntries", is(1));
+
+        // And messageDeleted inconsistency should be solved
+        assertThat(testingSession.execute("SELECT * FROM messageDeleted").getAvailableWithoutFetching())
+            .isEqualTo(1);
+    }
+
+    @Test
+    void shouldExposeSolveMessagesRecentInconsistency(GuiceJamesServer server) throws Exception {
+        String solveInconsistenciesTaskId = with()
+            .queryParam("task", "SolveMessageRecentInconsistencies")
+            .post("/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(solveInconsistenciesTaskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("type", is("solve-mailbox-flag-inconsistencies"))
+            .body("additionalInformation.targetFlag", is("RECENT"))
+            .body("additionalInformation.processedMailboxEntries", is(0))
+            .body("additionalInformation.errors", hasSize(0));
     }
 }

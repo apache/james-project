@@ -19,7 +19,10 @@
 
 package org.apache.james.modules.webadmin;
 
+import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenciesService;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService;
 import org.apache.james.webadmin.Routes;
@@ -28,12 +31,16 @@ import org.apache.james.webadmin.routes.MailboxesRoutes;
 import org.apache.james.webadmin.routes.MessagesRoutes;
 import org.apache.james.webadmin.routes.RecomputeMailboxCountersRequestToTask;
 import org.apache.james.webadmin.routes.SolveMailboxInconsistenciesRequestToTask;
+import org.apache.james.webadmin.routes.SolveMessageDeletedInconsistenciesRequestToTask;
 import org.apache.james.webadmin.routes.SolveMessageInconsistenciesRequestToTask;
+import org.apache.james.webadmin.routes.SolveMessageRecentInconsistenciesRequestToTask;
 import org.apache.james.webadmin.service.CassandraMappingsService;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
@@ -60,6 +67,8 @@ public class InconsistencySolvingRoutesModule extends AbstractModule {
 
             multiBinder.addBinding().to(SolveMailboxInconsistenciesRequestToTask.class);
             multiBinder.addBinding().to(RecomputeMailboxCountersRequestToTask.class);
+            multiBinder.addBinding().to(SolveMessageDeletedInconsistenciesRequestToTask.class);
+            multiBinder.addBinding().to(SolveMessageRecentInconsistenciesRequestToTask.class);
         }
     }
 
@@ -75,10 +84,34 @@ public class InconsistencySolvingRoutesModule extends AbstractModule {
         }
     }
 
+    public static class MailboxFlagInconsistencyModule extends AbstractModule {
+
+        @Override
+        public void configure() {
+            Multibinder<SolveMailboxFlagInconsistenciesService.SolveMessageFlagInconsistencyStrategy> solveMailboxFlagInconsistenciesServiceMultibinder = Multibinder.newSetBinder(binder(), SolveMailboxFlagInconsistenciesService.SolveMessageFlagInconsistencyStrategy.class);
+            solveMailboxFlagInconsistenciesServiceMultibinder.addBinding().to(SolveMailboxFlagInconsistenciesService.SolveMailboxDeletedFlagInconsistenciesStrategy.class);
+            solveMailboxFlagInconsistenciesServiceMultibinder.addBinding().to(SolveMailboxFlagInconsistenciesService.SoleMailboxRecentFlagInconsistenciesStrategy.class);
+        }
+
+        @Provides
+        @Singleton
+        public SolveMailboxFlagInconsistenciesService.SolveMailboxDeletedFlagInconsistenciesStrategy provideSolveMailboxDeletedFlagInconsistenciesStrategy(CassandraDeletedMessageDAO dao) {
+            return new SolveMailboxFlagInconsistenciesService.SolveMailboxDeletedFlagInconsistenciesStrategy(dao);
+        }
+
+
+        @Provides
+        @Singleton
+        public SolveMailboxFlagInconsistenciesService.SoleMailboxRecentFlagInconsistenciesStrategy provideSoleMailboxRecentFlagInconsistenciesStrategy(CassandraMailboxRecentsDAO dao) {
+            return new SolveMailboxFlagInconsistenciesService.SoleMailboxRecentFlagInconsistenciesStrategy(dao);
+        }
+    }
+
     @Override
     protected void configure() {
         install(new SolveRRTInconsistenciesModules());
         install(new SolveMailboxInconsistenciesModules());
         install(new SolveMessageInconsistenciesModules());
+        install(new MailboxFlagInconsistencyModule());
     }
 }

@@ -27,6 +27,9 @@ import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskRunner;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersTaskAdditionalInformationDTO;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersTaskDTO;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenciesService;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenciesTaskAdditionalInformationDTO;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenciesTaskDTO;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesTaskAdditionalInformationDTO;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesTaskDTO;
@@ -146,4 +149,21 @@ public class CassandraConsistencyTaskSerializationModule extends AbstractModule 
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminSolveMessageInconsistenciesAdditionalInformation() {
         return SolveMessageInconsistenciesTaskAdditionalInformationDTO.module();
     }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> solveMailboxFlagInconsistenciesAdditionalInformation() {
+        return SolveMailboxFlagInconsistenciesTaskAdditionalInformationDTO.module();
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminSolveMailboxFlagInconsistenciesAdditionalInformation() {
+        return SolveMailboxFlagInconsistenciesTaskAdditionalInformationDTO.module();
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> solveMailboxFlagInconsistenciesTask(SolveMailboxFlagInconsistenciesService solveMailboxFlagInconsistenciesService) {
+        return SolveMailboxFlagInconsistenciesTaskDTO.module(solveMailboxFlagInconsistenciesService);
+    }
+
 }
