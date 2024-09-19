@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -516,6 +517,12 @@ public interface MailQueueContract {
             .hasSize(totalDequeuedMessages);
     }
 
+    enum EnqueueDequeueSteps {
+        RETRY,
+        DEQUEUE,
+        END
+    }
+
     @Test
     default void concurrentEnqueueDequeueWithAckNackShouldNotFail() throws Exception {
         MailQueue testee = getMailQueue();
@@ -526,22 +533,34 @@ public interface MailQueueContract {
         int operationCount = 15;
         int totalDequeuedMessages = 50;
         LinkedBlockingDeque<MailQueue.MailQueueItem> deque = new LinkedBlockingDeque<>();
+        var mailStates = new ConcurrentHashMap<String, EnqueueDequeueSteps>();
         Flux.from(testee.deQueue()).subscribeOn(SCHEDULER).doOnNext(deque::addFirst).subscribe();
         ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> {
                 if (step % 3 == 0) {
+                    String name = "name" + threadNumber + "-" + step;
+                    mailStates.put(name, EnqueueDequeueSteps.RETRY);
                     testee.enQueue(defaultMail()
-                        .name("name" + threadNumber + "-" + step)
+                        .name(name)
                         .build());
-                }
-                if (step % 3 == 1) {
+                } else {
                     MailQueue.MailQueueItem mailQueueItem = deque.takeLast();
-                    mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.RETRY);
-                }
-                if (step % 3 == 2) {
-                    MailQueue.MailQueueItem mailQueueItem = deque.takeLast();
-                    dequeuedMails.add(mailQueueItem.getMail());
-                    mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
+                    var name = mailQueueItem.getMail().getName();
+                    var currentState = mailStates.get(mailQueueItem.getMail().getName());
+                    var nextState = switch (currentState) {
+                        case RETRY -> EnqueueDequeueSteps.DEQUEUE;
+                        case DEQUEUE -> EnqueueDequeueSteps.END;
+                        case END ->
+                                throw new IllegalStateException("trying to dequeue mail " + name + " multiple times !");
+                    };
+                    mailStates.put(name, nextState);
+                    if (currentState == EnqueueDequeueSteps.RETRY) {
+                        mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.RETRY);
+                    } else {
+                        dequeuedMails.add(mailQueueItem.getMail());
+                        mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
+                    }
+
                 }
             })
             .threadCount(threadCount)
