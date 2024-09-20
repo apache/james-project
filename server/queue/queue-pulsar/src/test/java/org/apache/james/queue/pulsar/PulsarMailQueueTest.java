@@ -41,7 +41,6 @@ import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
-import org.apache.james.junit.categories.Unstable;
 import org.apache.james.queue.api.DelayedMailQueueContract;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
@@ -61,7 +60,6 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -71,7 +69,6 @@ import com.sksamuel.pulsar4s.ConsumerMessage;
 import reactor.core.publisher.Flux;
 import scala.jdk.javaapi.OptionConverters;
 
-@Tag(Unstable.TAG)
 @ExtendWith(DockerPulsarExtension.class)
 public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricContract, ManageableMailQueueContract, DelayedMailQueueContract, DelayedManageableMailQueueContract {
 
@@ -108,15 +105,6 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
         mailQueue.close();
         system.terminate();
         pulsarClients.stop();
-    }
-
-    @Override
-    public void awaitRemove() {
-        try {
-            Thread.sleep(50);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
@@ -272,13 +260,13 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
         //this won't delete the mail from the store until we try a dequeue
         getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name2");
 
-        awaitRemove();
-
-        assertThat(getManageableMailQueue().browse())
-                .toIterable()
-                .extracting(ManageableMailQueue.MailQueueItemView::getMail)
-                .extracting(Mail::getName)
-                .containsExactly("name1", "name3");
+        Awaitility.await().untilAsserted(() ->
+                assertThat(getManageableMailQueue().browse())
+                        .toIterable()
+                        .extracting(ManageableMailQueue.MailQueueItemView::getMail)
+                        .extracting(Mail::getName)
+                        .containsExactly("name1", "name3")
+        );
 
         Flux.from(getMailQueue().deQueue()).take(2).doOnNext(Throwing.consumer(x -> x.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS))).blockLast();
         Awaitility.await().untilAsserted(this::assertThatStoreIsEmpty);

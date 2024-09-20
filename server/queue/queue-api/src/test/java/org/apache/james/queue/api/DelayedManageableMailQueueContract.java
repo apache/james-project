@@ -123,11 +123,11 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
 
         getManageableMailQueue().remove(ManageableMailQueue.Type.Recipient, RECIPIENT2.asString());
 
-        awaitRemove();
-
-        assertThat(getManageableMailQueue().browse()).toIterable()
-                .extracting(mail -> mail.getMail().getName())
-                .containsExactly("name2");
+        Awaitility.await().untilAsserted(() ->
+                assertThat(getManageableMailQueue().browse()).toIterable()
+                        .extracting(mail -> mail.getMail().getName())
+                        .containsExactly("name2")
+        );
     }
 
     @Test
