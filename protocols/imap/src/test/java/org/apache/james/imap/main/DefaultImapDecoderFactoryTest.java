@@ -33,12 +33,12 @@ class DefaultImapDecoderFactoryTest {
         // Create an instance using the default constructor
         DefaultImapDecoderFactory factory = new DefaultImapDecoderFactory();
 
-        // Assert that the factory is not null
-        assertThat(factory).isNotEqualTo(null);
+        // Assert that the factory is not null with a custom message
+        assertThat(factory).as("DefaultImapDecoderFactory should not be null when created with default constructor").isNotNull();
 
-        // Build an ImapDecoder using the factory and assert it's not null
+        // Build an ImapDecoder using the factory and assert it's not null with a custom message
         ImapDecoder decoder = factory.buildImapDecoder();
-        assertThat(decoder).isNotEqualTo(null);
+        assertThat(decoder).as("ImapDecoder should not be null when built from DefaultImapDecoderFactory").isNotNull();
     }
 
     @Test
@@ -49,11 +49,11 @@ class DefaultImapDecoderFactoryTest {
         // Create an instance using the custom StatusResponseFactory
         DefaultImapDecoderFactory factory = new DefaultImapDecoderFactory(customStatusResponseFactory);
 
-        // Assert that the factory is not null
-        assertThat(factory).isNotEqualTo(null);
+        // Assert that the factory is not null with a custom message
+        assertThat(factory).as("DefaultImapDecoderFactory should not be null when created with a custom StatusResponseFactory").isNotNull();
 
-        // Build an ImapDecoder using the factory and assert it's not null
+        // Build an ImapDecoder using the factory and assert it's not null with a custom message
         ImapDecoder decoder = factory.buildImapDecoder();
-        assertThat(decoder).isNotEqualTo(null);
+        assertThat(decoder).as("ImapDecoder should not be null when built from DefaultImapDecoderFactory with a custom StatusResponseFactory").isNotNull();
     }
 }
