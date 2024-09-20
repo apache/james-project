@@ -39,35 +39,35 @@ import org.apache.james.mpt.host.JamesImapHostSystem;
 public class InMemoryHostSystem extends JamesImapHostSystem {
 
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
-        Feature.MOVE_SUPPORT,
-        Feature.USER_FLAGS_SUPPORT,
-        Feature.QUOTA_SUPPORT,
-        Feature.ANNOTATION_SUPPORT,
-        Feature.MOD_SEQ_SEARCH);
+            Feature.MOVE_SUPPORT,
+            Feature.USER_FLAGS_SUPPORT,
+            Feature.QUOTA_SUPPORT,
+            Feature.ANNOTATION_SUPPORT,
+            Feature.MOD_SEQ_SEARCH);
 
     private StoreMailboxManager mailboxManager;
     private InMemoryPerUserMaxQuotaManager perUserMaxQuotaManager;
-    
+
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
-            .authenticator(authenticator)
-            .authorizator(authorizator)
-            .inVmEventBus()
-            .defaultAnnotationLimits()
-            .defaultMessageParser()
-            .scanningSearchIndex()
-            .noPreDeletionHooks()
-            .storeQuotaManager()
-            .build();
+                .authenticator(authenticator)
+                .authorizator(authorizator)
+                .inVmEventBus()
+                .defaultAnnotationLimits()
+                .defaultMessageParser()
+                .scanningSearchIndex()
+                .noPreDeletionHooks()
+                .storeQuotaManager()
+                .build();
         this.mailboxManager = resources.getMailboxManager();
         this.perUserMaxQuotaManager = resources.getMaxQuotaManager();
 
-        ImapProcessor defaultImapProcessorFactory = DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager,  mailboxManager.getEventBus(), new StoreSubscriptionManager(mailboxManager.getMapperFactory(),
-                mailboxManager.getMapperFactory(),
-                mailboxManager.getEventBus()),
-            mailboxManager.getQuotaComponents().getQuotaManager(), mailboxManager.getQuotaComponents().getQuotaRootResolver(), new DefaultMetricFactory());
+        ImapProcessor defaultImapProcessorFactory = DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, mailboxManager.getEventBus(), new StoreSubscriptionManager(mailboxManager.getMapperFactory(),
+                        mailboxManager.getMapperFactory(),
+                        mailboxManager.getEventBus()),
+                mailboxManager.getQuotaComponents().getQuotaManager(), mailboxManager.getQuotaComponents().getQuotaRootResolver(), new DefaultMetricFactory());
 
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),

@@ -75,22 +75,22 @@ import com.google.common.collect.ImmutableList;
 public class JPAHostSystem extends JamesImapHostSystem {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(
-        ImmutableList.<Class<?>>builder()
-            .addAll(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES)
-            .addAll(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES)
-            .build());
+            ImmutableList.<Class<?>>builder()
+                    .addAll(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES)
+                    .addAll(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES)
+                    .build());
 
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
-        Feature.USER_FLAGS_SUPPORT,
-        Feature.ANNOTATION_SUPPORT,
-        Feature.QUOTA_SUPPORT,
-        Feature.MOVE_SUPPORT,
-        Feature.MOD_SEQ_SEARCH);
+            Feature.USER_FLAGS_SUPPORT,
+            Feature.ANNOTATION_SUPPORT,
+            Feature.QUOTA_SUPPORT,
+            Feature.MOVE_SUPPORT,
+            Feature.MOD_SEQ_SEARCH);
 
     static JamesImapHostSystem build() {
         return new JPAHostSystem();
     }
-    
+
     private JPAPerUserMaxQuotaManager maxQuotaManager;
     private OpenJPAMailboxManager mailboxManager;
 
@@ -101,9 +101,9 @@ public class JPAHostSystem extends JamesImapHostSystem {
         JPAUidProvider uidProvider = new JPAUidProvider(entityManagerFactory);
         JPAModSeqProvider modSeqProvider = new JPAModSeqProvider(entityManagerFactory);
         JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
-            .driverName("driverName")
-            .driverURL("driverUrl")
-            .build();
+                .driverName("driverName")
+                .driverURL("driverUrl")
+                .build();
         JPAMailboxSessionMapperFactory mapperFactory = new JPAMailboxSessionMapperFactory(entityManagerFactory, uidProvider, modSeqProvider, jpaConfiguration);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
@@ -124,18 +124,18 @@ public class JPAHostSystem extends JamesImapHostSystem {
         MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), attachmentContentLoader);
 
         mailboxManager = new OpenJPAMailboxManager(mapperFactory, sessionProvider, messageParser, new DefaultMessageId.Factory(),
-            eventBus, annotationManager, storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(), new UpdatableTickingClock(Instant.now()));
+                eventBus, annotationManager, storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(), new UpdatableTickingClock(Instant.now()));
 
         eventBus.register(quotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));
 
         SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory, mapperFactory, eventBus);
-        
+
         ImapProcessor defaultImapProcessorFactory =
                 DefaultImapProcessorFactory.createDefaultProcessor(
                         mailboxManager,
                         eventBus,
-                        subscriptionManager, 
+                        subscriptionManager,
                         storeQuotaManager,
                         quotaRootResolver,
                         new DefaultMetricFactory());
@@ -148,9 +148,9 @@ public class JPAHostSystem extends JamesImapHostSystem {
     @Override
     public void afterTest() {
         JPA_TEST_CLUSTER.clear(ImmutableList.<String>builder()
-            .addAll(JPAMailboxFixture.MAILBOX_TABLE_NAMES)
-            .addAll(JPAMailboxFixture.QUOTA_TABLES_NAMES)
-            .build());
+                .addAll(JPAMailboxFixture.MAILBOX_TABLE_NAMES)
+                .addAll(JPAMailboxFixture.QUOTA_TABLES_NAMES)
+                .build());
     }
 
     @Override

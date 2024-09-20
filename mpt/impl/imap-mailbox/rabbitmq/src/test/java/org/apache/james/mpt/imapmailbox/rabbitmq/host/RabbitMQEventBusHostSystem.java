@@ -58,11 +58,11 @@ import com.google.common.collect.ImmutableSet;
 
 public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
-        Feature.MOVE_SUPPORT,
-        Feature.USER_FLAGS_SUPPORT,
-        Feature.QUOTA_SUPPORT,
-        Feature.ANNOTATION_SUPPORT,
-        Feature.MOD_SEQ_SEARCH);
+            Feature.MOVE_SUPPORT,
+            Feature.USER_FLAGS_SUPPORT,
+            Feature.QUOTA_SUPPORT,
+            Feature.ANNOTATION_SUPPORT,
+            Feature.MOD_SEQ_SEARCH);
 
     private final DockerRabbitMQ dockerRabbitMQ;
     private RabbitMQEventBus eventBus;
@@ -82,35 +82,35 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
                 .retries(2)
                 .initialDelay(Duration.ofMillis(5)));
         reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(),
-            ReactorRabbitMQChannelPool.Configuration.DEFAULT,
-            new DefaultMetricFactory(), new NoopGaugeRegistry());
+                ReactorRabbitMQChannelPool.Configuration.DEFAULT,
+                new DefaultMetricFactory(), new NoopGaugeRegistry());
         reactorRabbitMQChannelPool.start();
         eventBus = createEventBus();
         eventBus.start();
 
         resources = InMemoryIntegrationResources.builder()
-            .authenticator(authenticator)
-            .authorizator(authorizator)
-            .eventBus(eventBus)
-            .defaultAnnotationLimits()
-            .defaultMessageParser()
-            .scanningSearchIndex()
-            .noPreDeletionHooks()
-            .storeQuotaManager()
-            .build();
+                .authenticator(authenticator)
+                .authorizator(authorizator)
+                .eventBus(eventBus)
+                .defaultAnnotationLimits()
+                .defaultMessageParser()
+                .scanningSearchIndex()
+                .noPreDeletionHooks()
+                .storeQuotaManager()
+                .build();
 
         ImapProcessor defaultImapProcessorFactory =
-            DefaultImapProcessorFactory.createDefaultProcessor(
-                resources.getMailboxManager(),
-                eventBus,
-                new StoreSubscriptionManager(resources.getMailboxManager().getMapperFactory(), resources.getMailboxManager().getMapperFactory(), resources.getMailboxManager().getEventBus()),
-                resources.getQuotaManager(),
-                resources.getDefaultUserQuotaRootResolver(),
-                new DefaultMetricFactory());
+                DefaultImapProcessorFactory.createDefaultProcessor(
+                        resources.getMailboxManager(),
+                        eventBus,
+                        new StoreSubscriptionManager(resources.getMailboxManager().getMapperFactory(), resources.getMailboxManager().getMapperFactory(), resources.getMailboxManager().getEventBus()),
+                        resources.getQuotaManager(),
+                        resources.getDefaultUserQuotaRootResolver(),
+                        new DefaultMetricFactory());
 
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
-            new DefaultImapEncoderFactory().buildImapEncoder(),
-            defaultImapProcessorFactory);
+                new DefaultImapEncoderFactory().buildImapEncoder(),
+                defaultImapProcessorFactory);
     }
 
     private RabbitMQEventBus createEventBus() throws Exception {
@@ -119,9 +119,9 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         MailboxEventSerializer eventSerializer = new MailboxEventSerializer(mailboxIdFactory, messageIdFactory, new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         RoutingKeyConverter routingKeyConverter = new RoutingKeyConverter(ImmutableSet.of(new MailboxIdRegistrationKey.Factory(mailboxIdFactory)));
         return new RabbitMQEventBus(MAILBOX_EVENT_NAMING_STRATEGY, reactorRabbitMQChannelPool.getSender(), reactorRabbitMQChannelPool::createReceiver,
-            eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, new MemoryEventDeadLetters(),
-            new RecordingMetricFactory(),
-            reactorRabbitMQChannelPool, EventBusId.random(), dockerRabbitMQ.getConfiguration());
+                eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, new MemoryEventDeadLetters(),
+                new RecordingMetricFactory(),
+                reactorRabbitMQChannelPool, EventBusId.random(), dockerRabbitMQ.getConfiguration());
     }
 
     @Override

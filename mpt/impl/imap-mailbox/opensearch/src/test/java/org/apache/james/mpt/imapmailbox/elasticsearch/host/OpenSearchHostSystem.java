@@ -63,7 +63,7 @@ import com.google.common.collect.ImmutableSet;
 public class OpenSearchHostSystem extends JamesImapHostSystem {
 
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
-        Feature.MOD_SEQ_SEARCH);
+            Feature.MOD_SEQ_SEARCH);
 
     private DockerOpenSearch dockerOpenSearch;
     private StoreMailboxManager mailboxManager;
@@ -85,46 +85,46 @@ public class OpenSearchHostSystem extends JamesImapHostSystem {
 
     private void initFields() throws Exception {
         client = MailboxIndexCreationUtil.prepareDefaultClient(
-            dockerOpenSearch.clientProvider().get(),
-            OpenSearchConfiguration.builder()
-                .addHost(dockerOpenSearch.getHttpHost())
-                .build());
+                dockerOpenSearch.clientProvider().get(),
+                OpenSearchConfiguration.builder()
+                        .addHost(dockerOpenSearch.getHttpHost())
+                        .build());
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
 
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
-            .authenticator(authenticator)
-            .authorizator(authorizator)
-            .inVmEventBus()
-            .defaultAnnotationLimits()
-            .defaultMessageParser()
-            .listeningSearchIndex(preInstanciationStage -> new OpenSearchListeningMessageSearchIndex(
-                preInstanciationStage.getMapperFactory(),
-                ImmutableSet.of(),
-                new OpenSearchIndexer(client,
-                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
-                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), OpenSearchSearcher.DEFAULT_SEARCH_SIZE,
-                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
-                new MessageToOpenSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
-                preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory,
-                OpenSearchMailboxConfiguration.builder().build(), new RecordingMetricFactory()))
-            .noPreDeletionHooks()
-            .storeQuotaManager()
-            .build();
+                .authenticator(authenticator)
+                .authorizator(authorizator)
+                .inVmEventBus()
+                .defaultAnnotationLimits()
+                .defaultMessageParser()
+                .listeningSearchIndex(preInstanciationStage -> new OpenSearchListeningMessageSearchIndex(
+                        preInstanciationStage.getMapperFactory(),
+                        ImmutableSet.of(),
+                        new OpenSearchIndexer(client,
+                                MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
+                        new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), OpenSearchSearcher.DEFAULT_SEARCH_SIZE,
+                                MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
+                        new MessageToOpenSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
+                        preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory,
+                        OpenSearchMailboxConfiguration.builder().build(), new RecordingMetricFactory()))
+                .noPreDeletionHooks()
+                .storeQuotaManager()
+                .build();
 
         mailboxManager = resources.getMailboxManager();
 
         ImapProcessor defaultImapProcessorFactory =
-            DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager,
-                resources.getMailboxManager().getEventBus(),
-                new StoreSubscriptionManager(mailboxManager.getMapperFactory(), mailboxManager.getMapperFactory(), mailboxManager.getEventBus()),
-                new NoQuotaManager(),
-                resources.getDefaultUserQuotaRootResolver(),
-                new DefaultMetricFactory());
+                DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager,
+                        resources.getMailboxManager().getEventBus(),
+                        new StoreSubscriptionManager(mailboxManager.getMapperFactory(), mailboxManager.getMapperFactory(), mailboxManager.getEventBus()),
+                        new NoQuotaManager(),
+                        resources.getDefaultUserQuotaRootResolver(),
+                        new DefaultMetricFactory());
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
-            new DefaultImapEncoderFactory().buildImapEncoder(),
-            defaultImapProcessorFactory);
+                new DefaultImapEncoderFactory().buildImapEncoder(),
+                defaultImapProcessorFactory);
     }
 
     @Override

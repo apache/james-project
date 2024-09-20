@@ -61,36 +61,36 @@ public class IMAPHealthCheckTest {
         FakeAuthenticator authenticator = new FakeAuthenticator();
 
         InMemoryIntegrationResources memoryIntegrationResources = InMemoryIntegrationResources.builder()
-            .authenticator(authenticator)
-            .authorizator(FakeAuthorizator.defaultReject())
-            .inVmEventBus()
-            .defaultAnnotationLimits()
-            .defaultMessageParser()
-            .scanningSearchIndex()
-            .noPreDeletionHooks()
-            .storeQuotaManager()
-            .build();
+                .authenticator(authenticator)
+                .authorizator(FakeAuthorizator.defaultReject())
+                .inVmEventBus()
+                .defaultAnnotationLimits()
+                .defaultMessageParser()
+                .scanningSearchIndex()
+                .noPreDeletionHooks()
+                .storeQuotaManager()
+                .build();
         InMemoryMailboxManager mailboxManager = memoryIntegrationResources.getMailboxManager();
 
         RecordingMetricFactory metricFactory = new RecordingMetricFactory();
 
         imapServerFactory = new IMAPServerFactory(
-            FileSystemImpl.forTestingWithConfigurationFromClasspath(),
-            new DefaultImapDecoderFactory().buildImapDecoder(),
-            new DefaultImapEncoderFactory().buildImapEncoder(),
-            DefaultImapProcessorFactory.createXListSupportingProcessor(
-                mailboxManager,
-                memoryIntegrationResources.getEventBus(),
-                new StoreSubscriptionManager(mailboxManager.getMapperFactory(),
-                    mailboxManager.getMapperFactory(),
-                    mailboxManager.getEventBus()),
-                null,
-                memoryIntegrationResources.getQuotaManager(),
-                memoryIntegrationResources.getQuotaRootResolver(),
-                metricFactory),
-            new RecordingMetricFactory(),
-            new NoopGaugeRegistry(),
-            new DefaultConnectionCheckFactory());
+                FileSystemImpl.forTestingWithConfigurationFromClasspath(),
+                new DefaultImapDecoderFactory().buildImapDecoder(),
+                new DefaultImapEncoderFactory().buildImapEncoder(),
+                DefaultImapProcessorFactory.createXListSupportingProcessor(
+                        mailboxManager,
+                        memoryIntegrationResources.getEventBus(),
+                        new StoreSubscriptionManager(mailboxManager.getMapperFactory(),
+                                mailboxManager.getMapperFactory(),
+                                mailboxManager.getEventBus()),
+                        null,
+                        memoryIntegrationResources.getQuotaManager(),
+                        memoryIntegrationResources.getQuotaRootResolver(),
+                        metricFactory),
+                new RecordingMetricFactory(),
+                new NoopGaugeRegistry(),
+                new DefaultConnectionCheckFactory());
 
         HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("imapServerHealthCheck.xml"));
         imapServerFactory.configure(config);
