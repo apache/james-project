@@ -19,12 +19,12 @@
 
 package org.apache.james.imap.main;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class DefaultImapDecoderFactoryTest {
 
@@ -34,11 +34,11 @@ class DefaultImapDecoderFactoryTest {
         DefaultImapDecoderFactory factory = new DefaultImapDecoderFactory();
 
         // Assert that the factory is not null
-        assertNotNull(factory, "Factory instance should not be null");
+        assertThat(factory).isNotEqualTo(null);
 
         // Build an ImapDecoder using the factory and assert it's not null
         ImapDecoder decoder = factory.buildImapDecoder();
-        assertNotNull(decoder, "ImapDecoder instance should not be null");
+        assertThat(decoder).isNotEqualTo(null);
     }
 
     @Test
@@ -50,10 +50,10 @@ class DefaultImapDecoderFactoryTest {
         DefaultImapDecoderFactory factory = new DefaultImapDecoderFactory(customStatusResponseFactory);
 
         // Assert that the factory is not null
-        assertNotNull(factory, "Factory instance should not be null");
+        assertThat(factory).isNotEqualTo(null);
 
         // Build an ImapDecoder using the factory and assert it's not null
         ImapDecoder decoder = factory.buildImapDecoder();
-        assertNotNull(decoder, "ImapDecoder instance should not be null");
+        assertThat(decoder).isNotEqualTo(null);
     }
 }
