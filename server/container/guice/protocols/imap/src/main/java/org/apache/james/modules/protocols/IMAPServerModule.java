@@ -49,6 +49,7 @@ import org.apache.james.imap.encode.ImapResponseEncoder;
 import org.apache.james.imap.encode.base.EndImapEncoder;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.encode.main.DefaultLocalizer;
+import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.imap.processor.AuthenticateProcessor;
 import org.apache.james.imap.processor.CapabilityImplementingProcessor;
@@ -187,7 +188,7 @@ public class IMAPServerModule extends AbstractModule {
     }
 
     ImapDecoder provideImapDecoder(ImapCommandParserFactory imapCommandParserFactory, StatusResponseFactory statusResponseFactory) {
-        return new DefaultImapDecoder(statusResponseFactory, imapCommandParserFactory);
+        return new DefaultImapDecoderFactory(imapCommandParserFactory, statusResponseFactory).buildImapDecoder();
     }
 
     ImapEncoder provideImapEncoder(ImapPackage imapPackage, GuiceGenericLoader loader) {

@@ -29,11 +29,11 @@ import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 
 /**
  * Factory class for creating `ImapDecoder` instances.
- *
+ * <p>
  * This class is a POJO that manually manages its dependencies.
  * Dependencies are injected through the constructor, which allows for
  * better decoupling and easier testing.
- *
+ * <p>
  * The creation of `ImapCommandParserFactory` is handled internally by
  * this factory, based on the provided `UnpooledStatusResponseFactory`.
  */
@@ -60,6 +60,20 @@ public class DefaultImapDecoderFactory implements ImapDecoderFactory {
         this.statusResponseFactory = statusResponseFactory;
         this.imapCommandParserFactory = new ImapParserFactory(statusResponseFactory);
     }
+
+    /**
+     * Constructor that accepts specific implementations of both ImapCommandParserFactory and StatusResponseFactory.
+     * This constructor allows full customization by enabling the injection of specific implementations for both the
+     * IMAP command parser factory and the status response factory.
+     *
+     * @param imapCommandParserFactory An implementation of ImapCommandParserFactory, used to create command parsers for the IMAP protocol.
+     * @param statusResponseFactory    An implementation of StatusResponseFactory, used to create status responses within the IMAP protocol.
+     */
+    public DefaultImapDecoderFactory(ImapCommandParserFactory imapCommandParserFactory, StatusResponseFactory statusResponseFactory) {
+        this.statusResponseFactory = statusResponseFactory;
+        this.imapCommandParserFactory = imapCommandParserFactory;
+    }
+
     /**
      * Builds and returns an instance of ImapDecoder.
      * This method uses the statusResponseFactory and the imapCommandParserFactory to create a new DefaultImapDecoder instance.

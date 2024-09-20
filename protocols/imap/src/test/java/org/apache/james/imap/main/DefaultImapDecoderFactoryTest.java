@@ -20,6 +20,7 @@
 package org.apache.james.imap.main;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
