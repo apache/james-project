@@ -1,0 +1,22 @@
+=== SubAddressing
+
+SubAddressing positions a storage directive for the folder this email will be delivered in if the following criteria are met:
+
+* the sender has requested the storage directive by sending the mail to <strong> `recipient+folder@domain` </strong> instead of just `recipient@domain` ;
+* the folder <strong>exists</strong> and the recipient has <strong>allowed</strong> the sender to send a mail to that specific folder.
+
+These directives are used by <strong>LocalDelivery</strong> mailet when adding the email to the recipients mailboxes.
+
+The storage directive is recognized when a specific character or character sequence is present in the local part of the recipient address. <strong>By default, it is "+"</strong>.
+
+If the sender is not allowed to send a mail to the specified folder, then the mail is delivered in the recipient's inbox.
+Likewise, if the storage directive is empty or absent, the mail will simply be delivered in the recipient's inbox.
+
+Thus,
+
+ * a mail sent to `recipient+folder@domain` will be delivered to recipient's folder `folder` if allowed ;
+ * a mail sent to `recipient+my-super-folder@domain` will be delivered to recipient's folder `my-super-folder` if allowed ;
+ * a mail sent to `recipient@domain` or `recipient+@domain` will be delivered to recipient's inbox.
+
+Any user can position rights for other users and for its different folders. They may create whitelists or blacklists, for one or several folders.
+In the case where the sender is unknown, the mail will be delivered in the specified folder only if the recipient has allowed everyone for that folder.

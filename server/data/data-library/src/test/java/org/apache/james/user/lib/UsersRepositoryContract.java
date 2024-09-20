@@ -641,6 +641,14 @@ public interface UsersRepositoryContract {
         }
 
         @Test
+        default void virtualHostedUsersRepositoryShouldUseFullMailAddressAsUsernameButStripSubAddressingDetails() throws Exception {
+            // Some implementations do not support changing virtual hosting value
+            Assumptions.assumeTrue(testee().supportVirtualHosting());
+
+            assertThat(testee().getUsername(new MailAddress("local+details@domain"))).isEqualTo(Username.of("local@domain"));
+        }
+
+        @Test
         default void getMailAddressForShouldBeIdentityWhenVirtualHosting() throws Exception {
             // Some implementations do not support changing virtual hosting value
             Assumptions.assumeTrue(testee().supportVirtualHosting());
@@ -652,7 +660,7 @@ public interface UsersRepositoryContract {
 
         @Test
         default void getUserShouldBeCaseInsensitive() throws Exception {
-            assertThat(testee().getUsername(new MailAddress("lowerUPPER", TestSystem.DOMAIN)))
+            assertThat(testee().getUsername(MailAddress.of("lowerUPPER", TestSystem.DOMAIN)))
                 .isEqualTo(Username.fromLocalPartWithDomain("lowerupper", TestSystem.DOMAIN));
         }
 
@@ -693,18 +701,26 @@ public interface UsersRepositoryContract {
         }
 
         @Test
+        default void nonVirtualHostedUsersRepositoryShouldUseLocalPartWithoutSubAddressingDetailsAsUsername() throws Exception {
+            // Some implementations do not support changing virtual hosting value
+            Assumptions.assumeFalse(testee().supportVirtualHosting());
+
+            assertThat(testee().getUsername(new MailAddress("local+details@domain"))).isEqualTo(Username.of("local"));
+        }
+
+        @Test
         default void getMailAddressForShouldAppendDefaultDomainWhenNoVirtualHosting(TestSystem testSystem) throws Exception {
             // Some implementations do not support changing virtual hosting value
             Assumptions.assumeFalse(testee().supportVirtualHosting());
 
             String username = "user";
             assertThat(testee().getMailAddressFor(Username.of(username)))
-                .isEqualTo(new MailAddress(username, testSystem.domainList.getDefaultDomain()));
+                .isEqualTo(MailAddress.of(username, testSystem.domainList.getDefaultDomain()));
         }
 
         @Test
         default void getUserShouldBeCaseInsensitive() throws Exception {
-            assertThat(testee().getUsername(new MailAddress("lowerUPPER", TestSystem.DOMAIN)))
+            assertThat(testee().getUsername(MailAddress.of("lowerUPPER", TestSystem.DOMAIN)))
                 .isEqualTo(Username.fromLocalPartWithoutDomain("lowerupper"));
         }
 

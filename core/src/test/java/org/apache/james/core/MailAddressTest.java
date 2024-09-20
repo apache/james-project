@@ -47,7 +47,9 @@ class MailAddressTest {
                 GOOD_ADDRESS,
                 GOOD_QUOTED_LOCAL_PART,
                 "server-dev@james-apache.org",
+                "local-part+details@example.com",
                 "a&b@james-apache.org",
+                "+details@example.com",
                 "server-dev@[127.0.0.1]",
                 "server.dev@james.apache.org",
                 "\\.server-dev@james.apache.org",
@@ -93,6 +95,7 @@ class MailAddressTest {
                 "server-dev@#123.apache.org",
                 "server-dev@[127.0.1.1.1]",
                 "server-dev@[127.0.1.-1]",
+                "test@dom+ain.com",
                 "\"a..b\"@domain.com", // jakarta.mail is unable to handle this so we better reject it
                 "server-dev\\.@james.apache.org", // jakarta.mail is unable to handle this so we better reject it
                 "a..b@domain.com",
@@ -225,4 +228,89 @@ class MailAddressTest {
         EqualsVerifier.forClass(MailAddress.class)
             .verify();
     }
+
+    @Test
+    void getLocalPartDetailsShouldReturnDetails() throws AddressException {
+        MailAddress mailAddress = new MailAddress("address+details@example.com");
+        assertThat(mailAddress.getLocalPartDetails("+")).contains("details");
+    }
+
+    @Test
+    void getLocalPartDetailsShouldReturnEmptyWhenNone() throws AddressException {
+        MailAddress mailAddress = new MailAddress("address@example.com");
+        assertThat(mailAddress.getLocalPartDetails("+")).isEmpty();
+    }
+
+    @Test
+    void getLocalPartDetailsShouldReturnEmptyWhenEmpty() throws AddressException {
+        MailAddress mailAddress = new MailAddress("address+@example.com");
+        assertThat(mailAddress.getLocalPartDetails("+")).contains("");
+    }
+
+    @Test
+    void getLocalPartDetailsShouldReturnDetailsIncludingOtherOccurencesOfDelimiter() throws AddressException {
+        MailAddress mailAddress = new MailAddress("address+de+tails@example.com");
+        assertThat(mailAddress.getLocalPartDetails("+")).contains("de+tails");
+    }
+
+    @Test
+    void getLocalPartDetailsShouldReturnEmptyWhenAddressStartsWithDelimiter() throws AddressException {
+        MailAddress mailAddress = new MailAddress("+details@example.com");
+        assertThat(mailAddress.getLocalPartDetails("+")).isEmpty();
+    }
+
+    @Test
+    void getLocalPartDetailsShouldReturnDetailsWhenMultipleCharacterDelimiter() throws AddressException {
+        MailAddress mailAddress = new MailAddress("localpart--details@example.com");
+        assertThat(mailAddress.getLocalPartDetails("--")).contains("details");
+    }
+
+    @Test
+    void getLocalPartDetailsShouldBePreciseWithMultipleCharacterDelimiter() throws AddressException {
+        MailAddress mailAddress = new MailAddress("localpart---details@example.com");
+        assertThat(mailAddress.getLocalPartDetails("--")).contains("-details");
+    }
+
+    @Test
+    void stripDetailsShouldWork() throws AddressException {
+        MailAddress mailAddress = new MailAddress("localpart+details@example.com");
+        assertThat(mailAddress.stripDetails("+")).isEqualTo("localpart@example.com");
+    }
+
+    @Test
+    void stripDetailsShouldReturnTheSameWhenNoDetails() throws AddressException {
+        MailAddress mailAddress = new MailAddress("address@example.com");
+        assertThat(mailAddress.stripDetails("+")).isEqualTo("address@example.com");
+    }
+
+    @Test
+    void stripDetailsShouldRemoveSeparatorWhenEmptyDetails() throws AddressException {
+        MailAddress mailAddress = new MailAddress("address+@example.com");
+        assertThat(mailAddress.stripDetails("+")).isEqualTo("address@example.com");
+    }
+
+    @Test
+    void stripDetailsShouldStripAllDetailsWhenSeveralOccurencesOfSeparator() throws AddressException {
+        MailAddress mailAddress = new MailAddress("address+de+tails@example.com");
+        assertThat(mailAddress.stripDetails("+")).isEqualTo("address@example.com");
+    }
+
+    @Test
+    void stripDetailsShouldReturnTheSameWhenAddressStartsWithDelimiter() throws AddressException {
+        MailAddress mailAddress = new MailAddress("+details@example.com");
+        assertThat(mailAddress.stripDetails("+")).isEqualTo("+details@example.com");
+    }
+
+    @Test
+    void stripDetailsShouldWorkWhenMultipleCharacterDelimiter() throws AddressException {
+        MailAddress mailAddress = new MailAddress("localpart--details@example.com");
+        assertThat(mailAddress.stripDetails("--")).isEqualTo("localpart@example.com");
+    }
+
+    @Test
+    void stripDetailsShouldBePreciseWithMultipleCharacterDelimiter() throws AddressException {
+        MailAddress mailAddress = new MailAddress("localpart---details@example.com");
+        assertThat(mailAddress.stripDetails("--")).isEqualTo("localpart@example.com");
+    }
+
 }

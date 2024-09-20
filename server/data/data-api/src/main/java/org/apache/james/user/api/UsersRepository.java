@@ -41,6 +41,8 @@ import reactor.core.publisher.Mono;
  */
 public interface UsersRepository {
 
+    String LOCALPART_DETAIL_DELIMITER = "+";
+
     /**
      * Adds a user to the repository with the specified password
      * 
@@ -149,9 +151,9 @@ public interface UsersRepository {
      */
     default Username getUsername(MailAddress mailAddress) throws UsersRepositoryException {
         if (supportVirtualHosting()) {
-            return Username.of(mailAddress.asString());
+            return Username.of(mailAddress.stripDetails(LOCALPART_DETAIL_DELIMITER).asString());
         } else {
-            return Username.of(mailAddress.getLocalPart());
+            return Username.of(mailAddress.stripDetails(LOCALPART_DETAIL_DELIMITER).getLocalPart());
         }
     }
 

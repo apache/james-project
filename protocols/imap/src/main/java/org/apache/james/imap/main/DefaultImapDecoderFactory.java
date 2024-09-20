@@ -42,44 +42,20 @@ public class DefaultImapDecoderFactory implements ImapDecoderFactory {
     private final StatusResponseFactory statusResponseFactory;
     private final ImapCommandParserFactory imapCommandParserFactory;
 
-    /**
-     * Default constructor.
-     * This constructor creates an instance of DefaultImapDecoderFactory with an UnpooledStatusResponseFactory as the default implementation.
-     */
     public DefaultImapDecoderFactory() {
         this(new UnpooledStatusResponseFactory());
     }
 
-    /**
-     * Constructor that accepts a specific implementation of StatusResponseFactory.
-     * This constructor allows for flexibility by enabling different implementations of StatusResponseFactory to be used.
-     *
-     * @param statusResponseFactory An implementation of StatusResponseFactory to be used for creating IMAP command parsers and decoders.
-     */
     public DefaultImapDecoderFactory(StatusResponseFactory statusResponseFactory) {
         this.statusResponseFactory = statusResponseFactory;
         this.imapCommandParserFactory = new ImapParserFactory(statusResponseFactory);
     }
 
-    /**
-     * Constructor that accepts specific implementations of both ImapCommandParserFactory and StatusResponseFactory.
-     * This constructor allows full customization by enabling the injection of specific implementations for both the
-     * IMAP command parser factory and the status response factory.
-     *
-     * @param imapCommandParserFactory An implementation of ImapCommandParserFactory, used to create command parsers for the IMAP protocol.
-     * @param statusResponseFactory    An implementation of StatusResponseFactory, used to create status responses within the IMAP protocol.
-     */
     public DefaultImapDecoderFactory(ImapCommandParserFactory imapCommandParserFactory, StatusResponseFactory statusResponseFactory) {
         this.statusResponseFactory = statusResponseFactory;
         this.imapCommandParserFactory = imapCommandParserFactory;
     }
 
-    /**
-     * Builds and returns an instance of ImapDecoder.
-     * This method uses the statusResponseFactory and the imapCommandParserFactory to create a new DefaultImapDecoder instance.
-     *
-     * @return A new instance of DefaultImapDecoder.
-     */
     @Override
     public ImapDecoder buildImapDecoder() {
         return new DefaultImapDecoder(statusResponseFactory, imapCommandParserFactory);

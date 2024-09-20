@@ -375,6 +375,10 @@ public class MailboxACL {
             return new EntryKey(name.asString(), NameType.user, false);
         }
 
+        public static EntryKey createNegativeUserEntryKey(Username name) {
+            return new EntryKey(name.asString(), NameType.user, true);
+        }
+
         public static EntryKey createUserEntryKey(Username name, boolean negative) {
             return new EntryKey(name.asString(), NameType.user, negative);
         }

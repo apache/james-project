@@ -127,7 +127,7 @@ public class Username {
 
     public MailAddress asMailAddress() throws AddressException {
         Preconditions.checkState(hasDomainPart());
-        return new MailAddress(localPart, domainPart.get());
+        return MailAddress.of(localPart, domainPart.get());
     }
 
     @Override
