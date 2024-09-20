@@ -130,7 +130,7 @@ public class StoreRightManager implements RightManager {
                 aclResolver.resolveRights(
                     username,
                     mailbox.getACL(),
-                    mailbox.getUser().asString()))
+                    mailbox.getUser()))
                 .sneakyThrow())
             .orElse(MailboxACL.NO_RIGHTS);
     }
@@ -142,13 +142,13 @@ public class StoreRightManager implements RightManager {
             .orElseThrow(() -> new MailboxNotFoundException(mailboxPath));
 
         return aclResolver.listRights(key,
-            mailbox.getUser().asString());
+            mailbox.getUser());
     }
 
     @Override
     public List<Rfc4314Rights> listRights(Mailbox mailbox, EntryKey key, MailboxSession session) throws MailboxException {
         return aclResolver.listRights(key,
-            mailbox.getUser().asString());
+            mailbox.getUser());
     }
 
     @Override

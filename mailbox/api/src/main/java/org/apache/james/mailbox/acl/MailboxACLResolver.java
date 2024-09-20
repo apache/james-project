@@ -67,7 +67,7 @@ public interface MailboxACLResolver {
      *         explicitly for the given identifier. Further elements are groups
      *         of rights which can be set for the given identifier and resource.
      */
-    List<MailboxACL.Rfc4314Rights> listRights(MailboxACL.EntryKey key, String resourceOwner) throws UnsupportedRightException;
+    List<MailboxACL.Rfc4314Rights> listRights(MailboxACL.EntryKey key, Username resourceOwner) throws UnsupportedRightException;
 
     /**
      * Computes the rights which apply to the given user and resource. Global
@@ -85,6 +85,6 @@ public interface MailboxACLResolver {
      *            holder in the resourceACL.
      * @return the rights applicable for the given user and resource.
      */
-    MailboxACL.Rfc4314Rights resolveRights(Username requestUser, MailboxACL resourceACL, String resourceOwner) throws UnsupportedRightException;
+    MailboxACL.Rfc4314Rights resolveRights(Username requestUser, MailboxACL resourceACL, Username resourceOwner) throws UnsupportedRightException;
 
 }

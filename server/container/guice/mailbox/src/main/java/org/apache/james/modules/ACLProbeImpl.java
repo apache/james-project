@@ -60,6 +60,11 @@ public class ACLProbeImpl implements GuiceProbe, ACLProbe {
         mailboxManager.applyRightsCommand(mailboxPath, command, mailboxSession);
     }
 
+    public void executeCommand(MailboxPath mailboxPath, ACLCommand command) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
+        mailboxManager.applyRightsCommand(mailboxPath, command, mailboxSession);
+    }
+
     @Override
     public MailboxACL retrieveRights(MailboxPath mailboxPath) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());

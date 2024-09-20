@@ -65,6 +65,7 @@ class ValidRcptHandlerTest {
     private MailAddress validUserEmail;
     private MailAddress user1mail;
     private MailAddress invalidUserEmail;
+    private MailAddress validUserEmailWithSubAddressing;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -84,6 +85,7 @@ class ValidRcptHandlerTest {
         validUserEmail = new MailAddress(VALID_USER.asString() + "@localhost");
         user1mail = new MailAddress(USER1 + "@localhost");
         invalidUserEmail = new MailAddress(INVALID_USER + "@localhost");
+        validUserEmailWithSubAddressing = new MailAddress(VALID_USER.asString() + "+detail@localhost");
     }
 
     private SMTPSession setupMockedSMTPSession(boolean relayingAllowed) {
@@ -243,5 +245,14 @@ class ValidRcptHandlerTest {
         HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, new MailAddress("\"abc@\"@localhost")).getResult();
 
         assertThat(rCode).isEqualTo(HookReturnCode.deny());
+    }
+
+    @Test
+    void doRcptShouldDeclineValidUsersWhenSubAddressingInLocalPart() throws Exception {
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, validUserEmailWithSubAddressing).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
     }
 }

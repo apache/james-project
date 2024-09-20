@@ -49,7 +49,7 @@ public class SpecialAddress {
 
         private static MailAddress mailAddressUncheckedException(SpecialAddressKind kind, Domain domain) {
             try {
-                return new MailAddress(kind.getValue(), domain);
+                return MailAddress.of(kind.getValue(), domain);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

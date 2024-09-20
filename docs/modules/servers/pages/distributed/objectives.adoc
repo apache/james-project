@@ -10,7 +10,7 @@ Scaling emails infrastructure is a notoriously hard problem. The intent of the D
 to implement a mail server using modern NoSQL technologies. It relies on:
 
 * Object Storage enables scalable yet cheap storage of large amount of data
-* The use of NoSQL for metadata storage enables vertical scalability
+* The use of NoSQL for metadata storage enables horizontal scalability
 * Finally a Distributed search engine enables quick and efficient search
 
 Replication, data availability are thus handled by battle tested technologies.
