@@ -27,6 +27,7 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,6 +83,9 @@ class SubAddressingTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(FROM, PASSWORD);
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(RECIPIENT, PASSWORD);
     }
 
     @AfterEach
@@ -97,7 +101,8 @@ class SubAddressingTest {
     void subAddressedEmailShouldBeDeliveredInINBOXWhenSpecifiedFolderDoesNotExist(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder);
 
-        //do not create mailbox
+        // do not create mailbox
+        assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("Mailbox not found");
 
         sendSubAddressedMail();
         awaitSubAddressedMail(MailboxConstants.INBOX);
@@ -108,11 +113,11 @@ class SubAddressingTest {
         setup(temporaryFolder);
 
         // create mailbox
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(RECIPIENT, PASSWORD)
-            .create(TARGETED_MAILBOX);
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
+        assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("OK GETACL");
 
-        //do not give posting rights
+        // do not give posting rights
+        assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("\"any\" \"owner\"");
 
         sendSubAddressedMail();
         awaitSubAddressedMail(MailboxConstants.INBOX);
@@ -123,17 +128,12 @@ class SubAddressingTest {
         setup(temporaryFolder);
 
         // create mailbox
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(RECIPIENT, PASSWORD)
-            .create(TARGETED_MAILBOX);
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
+        assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("OK GETACL");
 
         //give posting rights
-        jamesServer.getProbe(ACLProbeImpl.class).executeCommand(
-            MailboxPath.forUser(Username.of(RECIPIENT), TARGETED_MAILBOX),
-            MailboxACL.command()
-                .key(MailboxACL.ANYBODY_KEY)
-                .rights(MailboxACL.Right.Post)
-                .asAddition());
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + FROM + " +p");
+        assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("\"user@james.org\" \"p\"");
 
         sendSubAddressedMail();
         awaitSubAddressedMail(TARGETED_MAILBOX);
