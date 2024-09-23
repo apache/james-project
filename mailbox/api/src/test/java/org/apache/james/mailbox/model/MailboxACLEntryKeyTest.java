@@ -68,15 +68,15 @@ class MailboxACLEntryKeyTest {
     }
 
     @Test
-    void testAnybody() {
-        assertThat(EntryKey.deserialize(SpecialName.anybody.toString()))
-            .isEqualTo(new EntryKey(SpecialName.anybody.toString(), NameType.special, false));
+    void testAnyone() {
+        assertThat(EntryKey.deserialize(SpecialName.anyone.toString()))
+            .isEqualTo(new EntryKey(SpecialName.anyone.toString(), NameType.special, false));
     }
 
     @Test
-    void testNegativeAnybody() {
-        assertThat(EntryKey.deserialize(MailboxACL.DEFAULT_NEGATIVE_MARKER + SpecialName.anybody.toString()))
-            .isEqualTo(new EntryKey(SpecialName.anybody.toString(), NameType.special, true));
+    void testNegativeAnyone() {
+        assertThat(EntryKey.deserialize(MailboxACL.DEFAULT_NEGATIVE_MARKER + SpecialName.anyone.toString()))
+            .isEqualTo(new EntryKey(SpecialName.anyone.toString(), NameType.special, true));
     }
 
     @Test
@@ -128,15 +128,15 @@ class MailboxACLEntryKeyTest {
     }
 
     @Test
-    void testSerializeAnybody() {
-        assertThat(new EntryKey(SpecialName.anybody.toString(), NameType.special, false).serialize())
-            .isEqualTo(SpecialName.anybody.toString());
+    void testSerializeAnyone() {
+        assertThat(new EntryKey(SpecialName.anyone.toString(), NameType.special, false).serialize())
+            .isEqualTo(SpecialName.anyone.toString());
     }
 
     @Test
-    void testSerializeNegativeAnybody() {
-        assertThat(new EntryKey(SpecialName.anybody.toString(), NameType.special, true).serialize())
-            .isEqualTo(MailboxACL.DEFAULT_NEGATIVE_MARKER + SpecialName.anybody.toString());
+    void testSerializeNegativeAnyone() {
+        assertThat(new EntryKey(SpecialName.anyone.toString(), NameType.special, true).serialize())
+            .isEqualTo(MailboxACL.DEFAULT_NEGATIVE_MARKER + SpecialName.anyone.toString());
     }
 
     @Test

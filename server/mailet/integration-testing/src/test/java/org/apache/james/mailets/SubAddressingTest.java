@@ -115,7 +115,7 @@ class SubAddressingTest {
         assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("OK GETACL");
 
         // do not give posting rights
-        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anybody" + " -p");
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " -p");
         assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("\"any\" \"owner\"");
 
         sendSubAddressedMail();
@@ -123,13 +123,13 @@ class SubAddressingTest {
     }
 
     @Test
-    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenAnybodyHasRight(@TempDir File temporaryFolder) throws Exception {
+    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenAnyoneHasRight(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder);
 
         testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
 
-        // give posting rights for anybody
-        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anybody" + " +p");
+        // give posting rights for anyone
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " +p");
 
         sendSubAddressedMail();
         awaitSubAddressedMail(TARGETED_MAILBOX);

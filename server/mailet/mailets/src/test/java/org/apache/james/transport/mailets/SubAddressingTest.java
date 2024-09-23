@@ -93,7 +93,7 @@ public class SubAddressingTest {
 
     @Test
     void shouldNotAddStorageDirectiveWhenNobodyHasRight() throws Exception {
-        removePostRightForKey(MailboxACL.ANYBODY_KEY);
+        removePostRightForKey(MailboxACL.ANYONE_KEY);
 
         Mail mail = mailBuilder(TARGET).sender(SENDER1).build();
         testee.service(mail);
@@ -105,8 +105,8 @@ public class SubAddressingTest {
 
 
     @Test
-    void shouldAddStorageDirectiveWhenAnybodyHasRight() throws Exception {
-        givePostRightForKey(MailboxACL.ANYBODY_KEY);
+    void shouldAddStorageDirectiveWhenAnyoneHasRight() throws Exception {
+        givePostRightForKey(MailboxACL.ANYONE_KEY);
 
         Mail mail = mailBuilder(TARGET).sender(SENDER1).build();
         testee.service(mail);
@@ -120,7 +120,7 @@ public class SubAddressingTest {
     @Test
     void shouldAddStorageDirectiveWhenSenderIsWhiteListed() throws Exception {
         // whitelist sender 1 and send from sender 1
-        removePostRightForKey(MailboxACL.ANYBODY_KEY);
+        removePostRightForKey(MailboxACL.ANYONE_KEY);
         givePostRightForKey(MailboxACL.EntryKey.createUserEntryKey(sender1Username));
 
         Mail mail = mailBuilder(TARGET).sender(SENDER1).build();
@@ -134,7 +134,7 @@ public class SubAddressingTest {
     @Test
     void shouldNotAddStorageDirectiveWhenSenderIsNotWhiteListed() throws Exception {
         // whitelist sender 1 and send from sender 2
-        removePostRightForKey(MailboxACL.ANYBODY_KEY);
+        removePostRightForKey(MailboxACL.ANYONE_KEY);
         givePostRightForKey(MailboxACL.EntryKey.createUserEntryKey(sender1Username));
 
         Mail mail = mailBuilder(TARGET).sender(SENDER2).build();
@@ -148,7 +148,7 @@ public class SubAddressingTest {
     @Test
     void shouldNotAddStorageDirectiveWhenSenderIsBlackListed() throws Exception {
         // blacklist sender 1 and send from sender 1
-        givePostRightForKey(MailboxACL.ANYBODY_KEY);
+        givePostRightForKey(MailboxACL.ANYONE_KEY);
         givePostRightForKey(MailboxACL.EntryKey.createNegativeUserEntryKey(sender1Username));
 
         Mail mail = mailBuilder(TARGET).sender(SENDER1).build();
@@ -162,7 +162,7 @@ public class SubAddressingTest {
     @Test
     void shouldAddStorageDirectiveWhenSenderIsNotBlackListed() throws Exception {
         // blacklist sender 1 and send from sender 2
-        givePostRightForKey(MailboxACL.ANYBODY_KEY);
+        givePostRightForKey(MailboxACL.ANYONE_KEY);
         removePostRightForKey(MailboxACL.EntryKey.createUserEntryKey(sender1Username));
 
         Mail mail = mailBuilder(TARGET).sender(SENDER2).build();
@@ -174,8 +174,8 @@ public class SubAddressingTest {
     }
 
     @Test
-    void shouldAddStorageDirectiveWhenAnybodyHasRightAndSenderIsUnknown() throws Exception {
-        givePostRightForKey(MailboxACL.ANYBODY_KEY);
+    void shouldAddStorageDirectiveWhenAnyoneHasRightAndSenderIsUnknown() throws Exception {
+        givePostRightForKey(MailboxACL.ANYONE_KEY);
 
         Mail mail = mailBuilder(TARGET).build();
         testee.service(mail);
@@ -187,7 +187,7 @@ public class SubAddressingTest {
 
     @Test
     void shouldNotAddStorageDirectiveWhenNobodyHasRightAndSenderIsUnknown() throws Exception {
-        removePostRightForKey(MailboxACL.ANYBODY_KEY);
+        removePostRightForKey(MailboxACL.ANYONE_KEY);
 
         Mail mail = mailBuilder(TARGET).build();
         testee.service(mail);

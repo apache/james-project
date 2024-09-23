@@ -129,7 +129,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     protected static boolean applies(EntryKey aclKey, EntryKey queryKey, Username resourceOwner) {
         final String aclKeyName = aclKey.getName();
         final NameType aclKeyNameType = aclKey.getNameType();
-        if (SpecialName.anybody.name().equals(aclKeyName)) {
+        if (SpecialName.anyone.name().equals(aclKeyName)) {
             /* this works also for unauthenticated users */
             return true;
         } else if (queryKey != null) {
@@ -208,7 +208,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
                 throw new IllegalStateException("Unexpected " + NameType.class.getName() + "." + queryKey.getNameType());
             }
         } else {
-            /* non-anybody ACL keys do not match non-authenticated queries */
+            /* non-anyone ACL keys do not match non-authenticated queries */
             return false;
         }
     }
@@ -231,7 +231,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
      * <li>if the given user is the owner of the given mailbox also the "owner"
      * entry is included</li>
      * <li>the "authenticated" entry</li>
-     * <li>the "anybody" entry</li>
+     * <li>the "anyone" entry</li>
      * </ul>
      * 
      * (2) if {@code queryKey} is a group key, the rights included come from the
@@ -241,7 +241,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
      * <li>if the given group is the owner of the given mailbox also the "owner"
      * entry is included</li>
      * <li>the "authenticated" entry (*)</li>
-     * <li>the "anybody" entry</li>
+     * <li>the "anyone" entry</li>
      * </ul>
      * 
      * (3) if {@code queryKey} is a special key, the rights included come from
@@ -250,7 +250,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
      * <li>the entry literally matching the given special name</li>
      * <li>the "authenticated" entry if the {@code queryKey} is the "owner"
      * query key (*)</li>
-     * <li>the "anybody" entry</li>
+     * <li>the "anyone" entry</li>
      * </ul>
      * 
      * (*) This is the most questionable case: should "authenticated" ACL
@@ -259,7 +259,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
      * to be set explicitly for the members of "group1". And secondly the group
      * rights are actually queried and applied only for authenticated users. To
      * put it in other words, the hasRight(user, right, ...) call can be
-     * performed only either with user == null (only "anybody" rights will
+     * performed only either with user == null (only "anyone" rights will
      * apply) or with a user name which is there only after the user was
      * authenticated.
      */

@@ -35,8 +35,8 @@ class UnionMailboxACLResolverTest {
     private static final Username USER_1 = Username.of("user1");
     private static final Username USER_2 = Username.of("user2");
 
-    private MailboxACL anybodyRead;
-    private MailboxACL anybodyReadNegative;
+    private MailboxACL anyoneRead;
+    private MailboxACL anyoneReadNegative;
     private UnionMailboxACLResolver anyoneReadListGlobal;
     private MailboxACL authenticatedRead;
     private UnionMailboxACLResolver authenticatedReadListWriteGlobal;
@@ -57,7 +57,7 @@ class UnionMailboxACLResolverTest {
 
         MailboxACL acl = new MailboxACL(new Entry(MailboxACL.AUTHENTICATED_KEY, MailboxACL.FULL_RIGHTS));
         authenticatedReadListWriteGlobal = new UnionMailboxACLResolver(acl, acl);
-        acl = new MailboxACL(new Entry(MailboxACL.ANYBODY_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("rl")));
+        acl = new MailboxACL(new Entry(MailboxACL.ANYONE_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("rl")));
         anyoneReadListGlobal = new UnionMailboxACLResolver(acl, acl);
         acl = new MailboxACL(new Entry(MailboxACL.OWNER_KEY, MailboxACL.FULL_RIGHTS));
         ownerFullGlobal = new UnionMailboxACLResolver(acl, acl);
@@ -66,8 +66,8 @@ class UnionMailboxACLResolverTest {
         user1Read = new MailboxACL(new Entry(user1Key, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
         user1ReadNegative = new MailboxACL(new Entry(EntryKey.createUserEntryKey(USER_1, true), Rfc4314Rights.fromSerializedRfc4314Rights("r")));
 
-        anybodyRead = new MailboxACL(new Entry(MailboxACL.ANYBODY_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
-        anybodyReadNegative = new MailboxACL(new Entry(MailboxACL.ANYBODY_NEGATIVE_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
+        anyoneRead = new MailboxACL(new Entry(MailboxACL.ANYONE_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
+        anyoneReadNegative = new MailboxACL(new Entry(MailboxACL.ANYONE_NEGATIVE_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
 
         authenticatedRead = new MailboxACL(new Entry(MailboxACL.AUTHENTICATED_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
         authenticatedReadNegative = new MailboxACL(new Entry(MailboxACL.AUTHENTICATED_NEGATIVE_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
@@ -82,7 +82,7 @@ class UnionMailboxACLResolverTest {
 
         assertThat(UnionMailboxACLResolver.applies(user1Key, null, USER_1)).isFalse();
         assertThat(UnionMailboxACLResolver.applies(user2Key, null, USER_1)).isFalse();
-        assertThat(UnionMailboxACLResolver.applies(MailboxACL.ANYBODY_KEY, null, USER_1)).isTrue();
+        assertThat(UnionMailboxACLResolver.applies(MailboxACL.ANYONE_KEY, null, USER_1)).isTrue();
         assertThat(UnionMailboxACLResolver.applies(MailboxACL.AUTHENTICATED_KEY, null, USER_1)).isFalse();
         assertThat(UnionMailboxACLResolver.applies(MailboxACL.OWNER_KEY, null, USER_1)).isFalse();
     }
@@ -92,21 +92,21 @@ class UnionMailboxACLResolverTest {
         /* requester is the resource owner */
         assertThat(UnionMailboxACLResolver.applies(user1Key, user1Key, USER_1)).isTrue();
         assertThat(UnionMailboxACLResolver.applies(user2Key, user1Key, USER_1)).isFalse();
-        assertThat(UnionMailboxACLResolver.applies(MailboxACL.ANYBODY_KEY, user1Key, USER_1)).isTrue();
+        assertThat(UnionMailboxACLResolver.applies(MailboxACL.ANYONE_KEY, user1Key, USER_1)).isTrue();
         assertThat(UnionMailboxACLResolver.applies(MailboxACL.AUTHENTICATED_KEY, user1Key, USER_1)).isTrue();
         assertThat(UnionMailboxACLResolver.applies(MailboxACL.OWNER_KEY, user1Key, USER_1)).isTrue();
 
         /* requester is not the resource user */
         assertThat(UnionMailboxACLResolver.applies(user1Key, user1Key, USER_2)).isTrue();
         assertThat(UnionMailboxACLResolver.applies(user2Key, user1Key, USER_2)).isFalse();
-        assertThat(UnionMailboxACLResolver.applies(MailboxACL.ANYBODY_KEY, user1Key, USER_2)).isTrue();
+        assertThat(UnionMailboxACLResolver.applies(MailboxACL.ANYONE_KEY, user1Key, USER_2)).isTrue();
         assertThat(UnionMailboxACLResolver.applies(MailboxACL.AUTHENTICATED_KEY, user1Key, USER_2)).isTrue();
         assertThat(UnionMailboxACLResolver.applies(MailboxACL.OWNER_KEY, user1Key, USER_2)).isFalse();
 
         /* owner query */
         assertThat(UnionMailboxACLResolver.applies(user1Key, MailboxACL.OWNER_KEY, USER_1)).isFalse();
         assertThat(UnionMailboxACLResolver.applies(user2Key, MailboxACL.OWNER_KEY, USER_1)).isFalse();
-        assertThat(UnionMailboxACLResolver.applies(MailboxACL.ANYBODY_KEY, MailboxACL.OWNER_KEY, USER_1)).isTrue();
+        assertThat(UnionMailboxACLResolver.applies(MailboxACL.ANYONE_KEY, MailboxACL.OWNER_KEY, USER_1)).isTrue();
         assertThat(UnionMailboxACLResolver.applies(MailboxACL.AUTHENTICATED_KEY, MailboxACL.OWNER_KEY, USER_1)).isTrue();
         assertThat(UnionMailboxACLResolver.applies(MailboxACL.OWNER_KEY, MailboxACL.OWNER_KEY, USER_1)).isTrue();
     }
@@ -156,38 +156,38 @@ class UnionMailboxACLResolverTest {
             .isFalse();
 
         assertThat(
-            anyoneReadListGlobal.resolveRights(null, anybodyRead, USER_1)
+            anyoneReadListGlobal.resolveRights(null, anyoneRead, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            anyoneReadListGlobal.resolveRights(null, anybodyReadNegative, USER_1)
+            anyoneReadListGlobal.resolveRights(null, anyoneReadNegative, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 
         assertThat(
-            authenticatedReadListWriteGlobal.resolveRights(null, anybodyRead, USER_1)
+            authenticatedReadListWriteGlobal.resolveRights(null, anyoneRead, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            authenticatedReadListWriteGlobal.resolveRights(null, anybodyReadNegative, USER_1)
+            authenticatedReadListWriteGlobal.resolveRights(null, anyoneReadNegative, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 
         assertThat(
-            ownerFullGlobal.resolveRights(null, anybodyRead, USER_1)
+            ownerFullGlobal.resolveRights(null, anyoneRead, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            ownerFullGlobal.resolveRights(null, anybodyReadNegative, USER_1)
+            ownerFullGlobal.resolveRights(null, anyoneReadNegative, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 
         assertThat(
-            noGlobals.resolveRights(null, anybodyRead, USER_1)
+            noGlobals.resolveRights(null, anyoneRead, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            noGlobals.resolveRights(null, anybodyReadNegative, USER_1)
+            noGlobals.resolveRights(null, anyoneReadNegative, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 
@@ -326,38 +326,38 @@ class UnionMailboxACLResolverTest {
             .isFalse();
 
         assertThat(
-            anyoneReadListGlobal.resolveRights(USER_1, anybodyRead, USER_1)
+            anyoneReadListGlobal.resolveRights(USER_1, anyoneRead, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            anyoneReadListGlobal.resolveRights(USER_1, anybodyReadNegative, USER_1)
+            anyoneReadListGlobal.resolveRights(USER_1, anyoneReadNegative, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 
         assertThat(
-            authenticatedReadListWriteGlobal.resolveRights(USER_1, anybodyRead, USER_1)
+            authenticatedReadListWriteGlobal.resolveRights(USER_1, anyoneRead, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            authenticatedReadListWriteGlobal.resolveRights(USER_1, anybodyReadNegative, USER_1)
+            authenticatedReadListWriteGlobal.resolveRights(USER_1, anyoneReadNegative, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 
         assertThat(
-            ownerFullGlobal.resolveRights(USER_1, anybodyRead, USER_1)
+            ownerFullGlobal.resolveRights(USER_1, anyoneRead, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            ownerFullGlobal.resolveRights(USER_1, anybodyReadNegative, USER_1)
+            ownerFullGlobal.resolveRights(USER_1, anyoneReadNegative, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 
         assertThat(
-            noGlobals.resolveRights(USER_1, anybodyRead, USER_1)
+            noGlobals.resolveRights(USER_1, anyoneRead, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            noGlobals.resolveRights(USER_1, anybodyReadNegative, USER_1)
+            noGlobals.resolveRights(USER_1, anyoneReadNegative, USER_1)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 
@@ -476,38 +476,38 @@ class UnionMailboxACLResolverTest {
             .isFalse();
 
         assertThat(
-            anyoneReadListGlobal.resolveRights(USER_1, anybodyRead, USER_2)
+            anyoneReadListGlobal.resolveRights(USER_1, anyoneRead, USER_2)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            anyoneReadListGlobal.resolveRights(USER_1, anybodyReadNegative, USER_2)
+            anyoneReadListGlobal.resolveRights(USER_1, anyoneReadNegative, USER_2)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 
         assertThat(
-            authenticatedReadListWriteGlobal.resolveRights(USER_1, anybodyRead, USER_2)
+            authenticatedReadListWriteGlobal.resolveRights(USER_1, anyoneRead, USER_2)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            authenticatedReadListWriteGlobal.resolveRights(USER_1, anybodyReadNegative, USER_2)
+            authenticatedReadListWriteGlobal.resolveRights(USER_1, anyoneReadNegative, USER_2)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 
         assertThat(
-            ownerFullGlobal.resolveRights(USER_1, anybodyRead, USER_2)
+            ownerFullGlobal.resolveRights(USER_1, anyoneRead, USER_2)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            ownerFullGlobal.resolveRights(USER_1, anybodyReadNegative, USER_2)
+            ownerFullGlobal.resolveRights(USER_1, anyoneReadNegative, USER_2)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 
         assertThat(
-            noGlobals.resolveRights(USER_1, anybodyRead, USER_2)
+            noGlobals.resolveRights(USER_1, anyoneRead, USER_2)
                 .contains(MailboxACL.Right.Read))
             .isTrue();
         assertThat(
-            noGlobals.resolveRights(USER_1, anybodyReadNegative, USER_2)
+            noGlobals.resolveRights(USER_1, anyoneReadNegative, USER_2)
                 .contains(MailboxACL.Right.Read))
             .isFalse();
 

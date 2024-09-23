@@ -39,10 +39,10 @@ S: a6 NO DELETEACL failed. Mailbox not found.
 C: a7 SETACL INBOX bob lr
 S: a7 OK SETACL completed.
 
-C: a8 SETACL INBOX anybody p
+C: a8 SETACL INBOX anyone p
 S: a8 OK SETACL completed.
 
-C: a8 SETACL INBOX anybody -p
+C: a8 SETACL INBOX anyone -p
 S: a8 OK SETACL completed.
 
 C: a8 SETACL INBOX -bob p
