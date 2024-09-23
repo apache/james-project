@@ -23,6 +23,7 @@ package org.apache.james.mailets;
 import static org.apache.james.mailets.SPFIntegrationTests.POSTMASTER;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.FROM;
+import static org.apache.james.mailets.configuration.Constants.FROM2;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
@@ -35,14 +36,10 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
-import org.apache.james.core.Username;
-import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
@@ -83,6 +80,7 @@ class SubAddressingTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(FROM, PASSWORD);
+        dataProbe.addUser(FROM2, PASSWORD);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(RECIPIENT, PASSWORD);
@@ -109,7 +107,7 @@ class SubAddressingTest {
     }
 
     @Test
-    void subAddressedEmailShouldBeDeliveredInINBOXWhenNoRights(@TempDir File temporaryFolder) throws Exception {
+    void subAddressedEmailShouldBeDeliveredInINBOXWhenNobodyHasRight(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder);
 
         // create mailbox
@@ -117,6 +115,7 @@ class SubAddressingTest {
         assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("OK GETACL");
 
         // do not give posting rights
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anybody" + " -p");
         assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("\"any\" \"owner\"");
 
         sendSubAddressedMail();
@@ -124,16 +123,13 @@ class SubAddressingTest {
     }
 
     @Test
-    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenRights(@TempDir File temporaryFolder) throws Exception {
+    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenAnybodyHasRight(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder);
 
-        // create mailbox
         testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
-        assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("OK GETACL");
 
-        //give posting rights
-        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + FROM + " +p");
-        assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("\"user@james.org\" \"p\"");
+        // give posting rights for anybody
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anybody" + " +p");
 
         sendSubAddressedMail();
         awaitSubAddressedMail(TARGETED_MAILBOX);
