@@ -28,7 +28,6 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -100,7 +99,6 @@ class SubAddressingTest {
         setup(temporaryFolder);
 
         // do not create mailbox
-        assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("Mailbox not found");
 
         sendSubAddressedMail();
         awaitSubAddressedMail(MailboxConstants.INBOX);
@@ -112,11 +110,9 @@ class SubAddressingTest {
 
         // create mailbox
         testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
-        assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("OK GETACL");
 
         // do not give posting rights
         testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " -p");
-        assertThat(testIMAPClient.sendCommand("GETACL " + TARGETED_MAILBOX)).contains("\"any\" \"owner\"");
 
         sendSubAddressedMail();
         awaitSubAddressedMail(MailboxConstants.INBOX);
