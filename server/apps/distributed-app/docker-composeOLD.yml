@@ -18,7 +18,7 @@ services:
     container_name: james
     hostname: james.local
     volumes:
-      - $PWD/jmap.properties:/root/conf/jmap.properties
+      - $PWD/webadmin.properties:/root/conf/webadmin.properties
     command:
       - --generate-keystore
     networks:
