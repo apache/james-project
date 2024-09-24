@@ -1,5 +1,3 @@
-version: '3'
-
 services:
 
   james:
@@ -17,8 +15,8 @@ services:
     image: ghcr.io/appscode/inbox-server:latest
     container_name: james
     hostname: james.local
-    volumes:
-      - $PWD/webadmin.properties:/root/conf/webadmin.properties
+   # volumes:
+     # - $PWD/webadmin.properties:/root/conf/webadmin.properties
     command:
       - --generate-keystore
     networks:
