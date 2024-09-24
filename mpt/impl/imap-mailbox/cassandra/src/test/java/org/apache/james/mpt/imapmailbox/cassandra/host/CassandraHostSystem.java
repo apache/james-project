@@ -73,16 +73,16 @@ import com.datastax.oss.driver.api.core.CqlSession;
 public class CassandraHostSystem extends JamesImapHostSystem {
 
     private static final ImapFeatures IMAP_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
-            Feature.MOVE_SUPPORT,
-            Feature.USER_FLAGS_SUPPORT,
-            Feature.QUOTA_SUPPORT,
-            Feature.ANNOTATION_SUPPORT,
-            Feature.MOD_SEQ_SEARCH);
+        Feature.MOVE_SUPPORT,
+        Feature.USER_FLAGS_SUPPORT,
+        Feature.QUOTA_SUPPORT,
+        Feature.ANNOTATION_SUPPORT,
+        Feature.MOD_SEQ_SEARCH);
 
     private final CassandraCluster cassandra;
     private CassandraMailboxManager mailboxManager;
     private CassandraPerUserMaxQuotaManagerV2 perUserMaxQuotaManager;
-
+    
     public CassandraHostSystem(CassandraCluster cluster) {
         this.cassandra = cluster;
     }
@@ -99,7 +99,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithm();
         UpdatableTickingClock clock = new UpdatableTickingClock(Instant.now());
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
-                cassandra, messageIdFactory);
+            cassandra, messageIdFactory);
 
 
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
@@ -121,9 +121,9 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), attachmentManager);
 
         mailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
-                new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
-                eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT,
-                PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm, clock);
+            new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
+            eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT,
+            PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm, clock);
 
         eventBus.register(quotaUpdater);
 

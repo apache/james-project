@@ -45,7 +45,7 @@ import com.github.fge.lambdas.Throwing;
 
 public class LuceneSearchHostSystem extends JamesImapHostSystem {
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
-            Feature.MOD_SEQ_SEARCH);
+        Feature.MOD_SEQ_SEARCH);
 
     private InMemoryMailboxManager mailboxManager;
     private LuceneMessageSearchIndex searchIndex;
@@ -58,18 +58,18 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
 
     private void initFields() {
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
-                .authenticator(authenticator)
-                .authorizator(authorizator)
-                .inVmEventBus()
-                .defaultAnnotationLimits()
-                .defaultMessageParser()
-                .listeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
-                        preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new ByteBuffersDirectory(),
-                        new InMemoryMessageId.Factory(),
-                        preInstanciationStage.getSessionProvider())))
-                .noPreDeletionHooks()
-                .storeQuotaManager()
-                .build();
+            .authenticator(authenticator)
+            .authorizator(authorizator)
+            .inVmEventBus()
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
+            .listeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
+                preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new ByteBuffersDirectory(),
+                new InMemoryMessageId.Factory(),
+                preInstanciationStage.getSessionProvider())))
+            .noPreDeletionHooks()
+            .storeQuotaManager()
+            .build();
 
         mailboxManager = resources.getMailboxManager();
 
@@ -78,17 +78,17 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
         SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory(), mailboxManager.getMapperFactory(), mailboxManager.getEventBus());
 
         ImapProcessor defaultImapProcessorFactory =
-                DefaultImapProcessorFactory.createDefaultProcessor(
-                        mailboxManager,
-                        resources.getMailboxManager().getEventBus(),
-                        subscriptionManager,
-                        new NoQuotaManager(),
-                        resources.getDefaultUserQuotaRootResolver(),
-                        new DefaultMetricFactory());
+            DefaultImapProcessorFactory.createDefaultProcessor(
+                mailboxManager,
+                resources.getMailboxManager().getEventBus(),
+                subscriptionManager,
+                new NoQuotaManager(),
+                resources.getDefaultUserQuotaRootResolver(),
+                new DefaultMetricFactory());
 
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
-                new DefaultImapEncoderFactory().buildImapEncoder(),
-                defaultImapProcessorFactory);
+            new DefaultImapEncoderFactory().buildImapEncoder(),
+            defaultImapProcessorFactory);
     }
 
     @Override

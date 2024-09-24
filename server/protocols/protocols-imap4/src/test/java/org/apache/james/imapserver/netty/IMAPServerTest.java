@@ -166,20 +166,20 @@ class IMAPServerTest {
         Set<ConnectionCheck> connectionChecks = defaultConnectionChecks();
         mailboxManager = spy(memoryIntegrationResources.getMailboxManager());
         IMAPServer imapServer = new IMAPServer(
-                new DefaultImapDecoderFactory().buildImapDecoder(),
-                new DefaultImapEncoderFactory().buildImapEncoder(),
-                DefaultImapProcessorFactory.createXListSupportingProcessor(
-                        mailboxManager,
-                        memoryIntegrationResources.getEventBus(),
-                        new StoreSubscriptionManager(mailboxManager.getMapperFactory(),
-                                mailboxManager.getMapperFactory(),
-                                mailboxManager.getEventBus()),
-                        null,
-                        memoryIntegrationResources.getQuotaManager(),
-                        memoryIntegrationResources.getQuotaRootResolver(),
-                        metricFactory),
-                new ImapMetrics(metricFactory),
-                new NoopGaugeRegistry(), connectionChecks);
+            new DefaultImapDecoderFactory().buildImapDecoder(),
+            new DefaultImapEncoderFactory().buildImapEncoder(),
+            DefaultImapProcessorFactory.createXListSupportingProcessor(
+                mailboxManager,
+                memoryIntegrationResources.getEventBus(),
+                new StoreSubscriptionManager(mailboxManager.getMapperFactory(),
+                    mailboxManager.getMapperFactory(),
+                    mailboxManager.getEventBus()),
+                null,
+                memoryIntegrationResources.getQuotaManager(),
+                memoryIntegrationResources.getQuotaRootResolver(),
+                metricFactory),
+            new ImapMetrics(metricFactory),
+            new NoopGaugeRegistry(), connectionChecks);
 
         FileSystemImpl fileSystem = FileSystemImpl.forTestingWithConfigurationFromClasspath();
         imapServer.setFileSystem(fileSystem);
@@ -197,15 +197,15 @@ class IMAPServerTest {
         authenticator.addUser(USER3, USER_PASS);
 
         memoryIntegrationResources = InMemoryIntegrationResources.builder()
-                .authenticator(authenticator)
-                .authorizator(FakeAuthorizator.defaultReject())
-                .inVmEventBus()
-                .defaultAnnotationLimits()
-                .defaultMessageParser()
-                .scanningSearchIndex()
-                .noPreDeletionHooks()
-                .storeQuotaManager()
-                .build();
+            .authenticator(authenticator)
+            .authorizator(FakeAuthorizator.defaultReject())
+            .inVmEventBus()
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
+            .scanningSearchIndex()
+            .noPreDeletionHooks()
+            .storeQuotaManager()
+            .build();
 
         return createImapServer(config, memoryIntegrationResources);
     }
@@ -240,30 +240,30 @@ class IMAPServerTest {
         @Test
         void banIpWhenBannedIpConnect() {
             imapServer.getConnectionChecks().stream()
-                    .filter(check -> check instanceof IpConnectionCheck)
-                    .map(check -> (IpConnectionCheck) check)
-                    .forEach(ipCheck -> ipCheck.setBannedIps(Set.of("127.0.0.1")));
+                .filter(check -> check instanceof IpConnectionCheck)
+                .map(check -> (IpConnectionCheck) check)
+                .forEach(ipCheck -> ipCheck.setBannedIps(Set.of("127.0.0.1")));
 
             assertThatThrownBy(() -> testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS)
-                    .append("INBOX", SMALL_MESSAGE));
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE));
         }
 
         @Test
         void allowConnectWithUnbannedIp() throws IOException {
             imapServer.getConnectionChecks().stream()
-                    .filter(check -> check instanceof IpConnectionCheck)
-                    .map(check -> (IpConnectionCheck) check)
-                    .forEach(ipCheck -> ipCheck.setBannedIps(Set.of("127.0.0.2")));
+                .filter(check -> check instanceof IpConnectionCheck)
+                .map(check -> (IpConnectionCheck) check)
+                .forEach(ipCheck -> ipCheck.setBannedIps(Set.of("127.0.0.2")));
 
             testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS)
-                    .append("INBOX", SMALL_MESSAGE);
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
 
             assertThat(testIMAPClient
-                    .select("INBOX")
-                    .readFirstMessage())
-                    .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[] {21}\r\nheader: value\r\n\r\nBODY)\r\n");
+                .select("INBOX")
+                .readFirstMessage())
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[] {21}\r\nheader: value\r\n\r\nBODY)\r\n");
         }
     }
 
@@ -286,61 +286,61 @@ class IMAPServerTest {
         @Test
         void fetchShouldRetrieveMessage() throws Exception {
             testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS)
-                    .append("INBOX", SMALL_MESSAGE);
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
 
             assertThat(testIMAPClient
-                    .select("INBOX")
-                    .readFirstMessage())
-                    .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[] {21}\r\nheader: value\r\n\r\nBODY)\r\n");
+                .select("INBOX")
+                .readFirstMessage())
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[] {21}\r\nheader: value\r\n\r\nBODY)\r\n");
         }
 
         @Test
         void fetchShouldRetrieveMessageWhenOffsetAndLimitExceedingMessageSize() throws Exception {
             testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS)
-                    .append("INBOX", SMALL_MESSAGE);
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
 
             assertThat(testIMAPClient
-                    .select("INBOX")
-                    .readFirstMessageInMailbox("BODY[]<8.20>"))
-                    .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
+                .select("INBOX")
+                .readFirstMessageInMailbox("BODY[]<8.20>"))
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
         }
 
         @Test
         void fetchShouldRetrieveMessageWhenOffsetAndLimitEqualMessageSize() throws Exception {
             testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS)
-                    .append("INBOX", SMALL_MESSAGE);
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
 
             assertThat(testIMAPClient
-                    .select("INBOX")
-                    .readFirstMessageInMailbox("BODY[]<8.13>"))
-                    .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
+                .select("INBOX")
+                .readFirstMessageInMailbox("BODY[]<8.13>"))
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
         }
 
         @Test
         void fetchShouldRetrieveMessageWhenOffsetAndLimitBelowMessageSize() throws Exception {
             testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS)
-                    .append("INBOX", SMALL_MESSAGE);
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
 
             assertThat(testIMAPClient
-                    .select("INBOX")
-                    .readFirstMessageInMailbox("BODY[]<8.12>"))
-                    .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {12}\r\nvalue\r\n\r\nBOD)\r\n");
+                .select("INBOX")
+                .readFirstMessageInMailbox("BODY[]<8.12>"))
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {12}\r\nvalue\r\n\r\nBOD)\r\n");
         }
 
         @Test
         void fetchShouldRetrieveMessageWhenOffsetAndNoLimitSpecified() throws Exception {
             testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS)
-                    .append("INBOX", SMALL_MESSAGE);
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
 
             assertThat(testIMAPClient
-                    .select("INBOX")
-                    .readFirstMessageInMailbox("BODY[]<8>"))
-                    .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
+                .select("INBOX")
+                .readFirstMessageInMailbox("BODY[]<8>"))
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
         }
     }
 
@@ -363,78 +363,78 @@ class IMAPServerTest {
         @Test
         void smallAppendsShouldWork() throws Exception {
             assertThatCode(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS)
-                            .append("INBOX", SMALL_MESSAGE))
-                    .doesNotThrowAnyException();
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .append("INBOX", SMALL_MESSAGE))
+                .doesNotThrowAnyException();
 
             assertThat(testIMAPClient.select("INBOX")
-                    .readFirstMessage())
-                    .contains("\r\n" + SMALL_MESSAGE + ")\r\n");
+                .readFirstMessage())
+                .contains("\r\n" + SMALL_MESSAGE + ")\r\n");
         }
 
         @Test
         void capabilityAdvertizeAppendLimit() throws Exception {
             assertThat(
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS)
-                            .capability())
-                    .contains("APPENDLIMIT")
-                    .doesNotContain("APPENDLIMIT=");
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .capability())
+                .contains("APPENDLIMIT")
+                .doesNotContain("APPENDLIMIT=");
         }
 
         @Test
         void statusAdvertizeAppendLimit() throws Exception {
             assertThat(
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS)
-                            .sendCommand("STATUS \"INBOX\" (APPENDLIMIT)"))
-                    .contains("* STATUS \"INBOX\" (APPENDLIMIT NIL)");
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .sendCommand("STATUS \"INBOX\" (APPENDLIMIT)"))
+                .contains("* STATUS \"INBOX\" (APPENDLIMIT NIL)");
         }
 
         @Test
         void mediumAppendsShouldWork() throws Exception {
             assertThatCode(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS)
-                            .append("INBOX", _65K_MESSAGE))
-                    .doesNotThrowAnyException();
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .append("INBOX", _65K_MESSAGE))
+                .doesNotThrowAnyException();
 
             assertThat(testIMAPClient.select("INBOX")
-                    .readFirstMessage())
-                    .contains("\r\n" + _65K_MESSAGE + ")\r\n");
+                .readFirstMessage())
+                .contains("\r\n" + _65K_MESSAGE + ")\r\n");
         }
 
         @Test
         void loginFixationShouldBeRejected() throws Exception {
             InMemoryMailboxManager mailboxManager = memoryIntegrationResources.getMailboxManager();
             mailboxManager.createMailbox(
-                    MailboxPath.forUser(USER, "pwnd"),
-                    mailboxManager.createSystemSession(USER));
+                MailboxPath.forUser(USER, "pwnd"),
+                mailboxManager.createSystemSession(USER));
             mailboxManager.createMailbox(
-                    MailboxPath.forUser(USER2, "notvuln"),
-                    mailboxManager.createSystemSession(USER2));
+                MailboxPath.forUser(USER2, "notvuln"),
+                mailboxManager.createSystemSession(USER2));
 
             testIMAPClient.connect("127.0.0.1", port)
-                    // Injected by a man in the middle attacker
-                    .rawLogin(USER.asString(), USER_PASS);
+                // Injected by a man in the middle attacker
+                .rawLogin(USER.asString(), USER_PASS);
 
             assertThatThrownBy(() -> testIMAPClient.rawLogin(USER2.asString(), USER_PASS))
-                    .isInstanceOf(IOException.class)
-                    .hasMessage("Login failed");
+                .isInstanceOf(IOException.class)
+                .hasMessage("Login failed");
         }
 
         @RepeatedTest(200)
         void largeAppendsShouldWork() throws Exception {
             assertThatCode(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS)
-                            .append("INBOX", _129K_MESSAGE))
-                    .doesNotThrowAnyException();
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .append("INBOX", _129K_MESSAGE))
+                .doesNotThrowAnyException();
 
             assertThat(testIMAPClient.select("INBOX")
-                    .readFirstMessage())
-                    .contains("\r\n" + _129K_MESSAGE + ")\r\n");
+                .readFirstMessage())
+                .contains("\r\n" + _129K_MESSAGE + ")\r\n");
         }
     }
 
@@ -448,7 +448,7 @@ class IMAPServerTest {
             imapServer = createImapServer("imapServerNoLimits.xml");
             int port = imapServer.getListenAddresses().get(0).getPort();
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), memoryIntegrationResources.getMailboxManager().createSystemSession(USER));
+                .createMailbox(MailboxPath.inbox(USER), memoryIntegrationResources.getMailboxManager().createSystemSession(USER));
             clientConnection = SocketChannel.open();
             clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
             readBytes(clientConnection);
@@ -466,16 +466,16 @@ class IMAPServerTest {
             readBytes(clientConnection);
 
             String msg = "Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)\r\n" +
-                    "From: Fred Foobar <foobar@Blurdybloop.COM>\r\n" +
-                    "Subject: afternoon meeting 2\r\n" +
-                    "To: mooch@owatagu.siam.edu\r\n" +
-                    "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
-                    "MIME-Version: 1.0\r\n" +
-                    "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
-                    "\r\n" +
-                    "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
+                "From: Fred Foobar <foobar@Blurdybloop.COM>\r\n" +
+                "Subject: afternoon meeting 2\r\n" +
+                "To: mooch@owatagu.siam.edu\r\n" +
+                "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
+                "MIME-Version: 1.0\r\n" +
+                "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
+                "\r\n" +
+                "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
             clientConnection.write(ByteBuffer.wrap(("A004 APPEND INBOX {" + msg.length() + "+}\r\n" +
-                    msg + "\r\n").getBytes(StandardCharsets.UTF_8)));
+                msg + "\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII)).contains("APPEND completed.");
 
@@ -487,26 +487,26 @@ class IMAPServerTest {
             readBytes(clientConnection);
 
             String msg = "Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)\r\n" +
-                    "From: Fred Foobar <foobar@Blurdybloop.COM>\r\n" +
-                    "Subject: afternoon meeting 2\r\n" +
-                    "To: mooch@owatagu.siam.edu\r\n" +
-                    "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
-                    "MIME-Version: 1.0\r\n" +
-                    "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
-                    "\r\n" +
-                    "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
+                "From: Fred Foobar <foobar@Blurdybloop.COM>\r\n" +
+                "Subject: afternoon meeting 2\r\n" +
+                "To: mooch@owatagu.siam.edu\r\n" +
+                "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
+                "MIME-Version: 1.0\r\n" +
+                "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
+                "\r\n" +
+                "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
             clientConnection.write(ByteBuffer.wrap(("A004 APPEND INBOX {" + msg.length() + "+}\r\n" +
-                    msg + "\r\n").getBytes(StandardCharsets.UTF_8)));
+                msg + "\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII)).contains("APPEND completed.");
 
 
             for (int i = 0; i < 1000; i++) {
                 clientConnection.write(ByteBuffer.wrap(("A005 SELECT INBOX\r\n")
-                        .getBytes(StandardCharsets.UTF_8)));
+                    .getBytes(StandardCharsets.UTF_8)));
                 readStringUntil(clientConnection, s -> s.contains("A005 OK"));
                 clientConnection.write(ByteBuffer.wrap(("A006 UID FETCH 1:1 FLAGS\r\nA007 UNSELECT\r\n")
-                        .getBytes(StandardCharsets.UTF_8)));
+                    .getBytes(StandardCharsets.UTF_8)));
                 readStringUntil(clientConnection, s -> s.contains("FETCH completed."));
             }
 
@@ -518,16 +518,16 @@ class IMAPServerTest {
             readBytes(clientConnection);
 
             String msg = "Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)\r\n" +
-                    "From: Fred Foobar <foobar@Blurdybloop.COM>\r\n" +
-                    "Subject: afternoon meeting 2\r\n" +
-                    "To: mooch@owatagu.siam.edu\r\n" +
-                    "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
-                    "MIME-Version: 1.0\r\n" +
-                    "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
-                    "\r\n" +
-                    "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
+                "From: Fred Foobar <foobar@Blurdybloop.COM>\r\n" +
+                "Subject: afternoon meeting 2\r\n" +
+                "To: mooch@owatagu.siam.edu\r\n" +
+                "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
+                "MIME-Version: 1.0\r\n" +
+                "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
+                "\r\n" +
+                "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
             clientConnection.write(ByteBuffer.wrap(("A004 APPEND INBOX {" + msg.length() + "+}\r\n" +
-                    msg + "\r\nA005 NOOP").getBytes(StandardCharsets.UTF_8)));
+                msg + "\r\nA005 NOOP").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII)).contains("APPEND completed.");
         }
@@ -538,14 +538,14 @@ class IMAPServerTest {
             readBytes(clientConnection);
 
             String msg = " Mon, 7 Feb 1994 21:52:25 -0800 (PST)\r\n" +
-                    "From: Fred Foobar <foobar@Blurdybloop.COM>\r\n" +
-                    "Subject: afternoon meeting 2\r\n" +
-                    "To: mooch@owatagu.siam.edu\r\n" +
-                    "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
-                    "MIME-Version: 1.0\r\n" +
-                    "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
-                    "\r\n" +
-                    "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
+                "From: Fred Foobar <foobar@Blurdybloop.COM>\r\n" +
+                "Subject: afternoon meeting 2\r\n" +
+                "To: mooch@owatagu.siam.edu\r\n" +
+                "Message-Id: <B27397-0100000@Blurdybloop.COM>\r\n" +
+                "MIME-Version: 1.0\r\n" +
+                "Content-Type: TEXT/PLAIN; CHARSET=US-ASCII\r\n" +
+                "\r\n" +
+                "Hello Joe, could we change that to 4:00pm tomorrow?\r\n";
             clientConnection.write(ByteBuffer.wrap(("A004 APPEND INBOX {" + (msg.length() + 4) + "+}\r\nDATE").getBytes(StandardCharsets.UTF_8)));
 
             Thread.sleep(100); // Forces separate TCP messages
@@ -574,7 +574,7 @@ class IMAPServerTest {
             imapServer = createImapServer("imapServerProxy.xml");
             int port = imapServer.getListenAddresses().get(0).getPort();
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), memoryIntegrationResources.getMailboxManager().createSystemSession(USER));
+                .createMailbox(MailboxPath.inbox(USER), memoryIntegrationResources.getMailboxManager().createSystemSession(USER));
             clientConnection = SocketChannel.open();
             clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
             readBytes(clientConnection);
@@ -588,19 +588,19 @@ class IMAPServerTest {
 
         private void addBannedIps(String clientIp) {
             imapServer.getConnectionChecks().stream()
-                    .filter(check -> check instanceof IpConnectionCheck)
-                    .map(check -> (IpConnectionCheck) check)
-                    .forEach(ipCheck -> ipCheck.setBannedIps(Set.of(clientIp)));
+                .filter(check -> check instanceof IpConnectionCheck)
+                .map(check -> (IpConnectionCheck) check)
+                .forEach(ipCheck -> ipCheck.setBannedIps(Set.of(clientIp)));
         }
 
         @Test
         void shouldNotFailOnProxyInformation() throws Exception {
             clientConnection.write(ByteBuffer.wrap(String.format("PROXY %s %s %s %d %d\r\na0 LOGIN %s %s\r\n",
-                    "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
-                    USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+                "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
+                USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII))
-                    .startsWith("a0 OK");
+                .startsWith("a0 OK");
         }
 
         @Test
@@ -609,12 +609,12 @@ class IMAPServerTest {
 
             // WHEN connect as CLIENT_IP to PROXY_DESTINATION via PROXY_IP
             clientConnection.write(ByteBuffer.wrap(String.format("PROXY %s %s %s %d %d\r\na0 LOGIN %s %s\r\n",
-                    "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
-                    USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+                "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
+                USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
 
             // THEN LOGIN should be rejected
             assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII))
-                    .doesNotStartWith("a0 OK");
+                .doesNotStartWith("a0 OK");
         }
 
         @Test
@@ -623,12 +623,12 @@ class IMAPServerTest {
             addBannedIps(PROXY_IP);
 
             clientConnection.write(ByteBuffer.wrap(String.format("PROXY %s %s %s %d %d\r\na0 LOGIN %s %s\r\n",
-                    "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
-                    USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+                "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
+                USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
 
             // THEN CLIENT_IP still can connect
             assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII))
-                    .startsWith("a0 OK");
+                .startsWith("a0 OK");
         }
 
         @Test
@@ -636,11 +636,11 @@ class IMAPServerTest {
             addBannedIps(RANDOM_IP);
 
             clientConnection.write(ByteBuffer.wrap(String.format("PROXY %s %s %s %d %d\r\na0 LOGIN %s %s\r\n",
-                    "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
-                    USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+                "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
+                USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII))
-                    .startsWith("a0 OK");
+                .startsWith("a0 OK");
         }
     }
 
@@ -665,10 +665,10 @@ class IMAPServerTest {
             InMemoryMailboxManager mailboxManager = memoryIntegrationResources.getMailboxManager();
             MailboxSession mailboxSession = mailboxManager.createSystemSession(USER);
             mailboxManager.createMailbox(
-                    MailboxPath.inbox(USER),
-                    mailboxSession);
+                MailboxPath.inbox(USER),
+                mailboxSession);
             mailboxManager.getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .appendMessage(MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession);
+                .appendMessage(MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession);
 
             Properties props = new Properties();
             props.put("mail.imap.user", USER.asString());
@@ -689,8 +689,8 @@ class IMAPServerTest {
         @Test
         void compressShouldFailWhenUnknownCompressionAlgorithm() throws Exception {
             String reply = testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS)
-                    .sendCommand("COMPRESS BAD");
+                .login(USER.asString(), USER_PASS)
+                .sendCommand("COMPRESS BAD");
 
             assertThat(reply).contains("AAAB BAD COMPRESS failed. Illegal arguments.");
         }
@@ -717,10 +717,10 @@ class IMAPServerTest {
             InMemoryMailboxManager mailboxManager = memoryIntegrationResources.getMailboxManager();
             MailboxSession mailboxSession = mailboxManager.createSystemSession(USER);
             mailboxManager.createMailbox(
-                    MailboxPath.inbox(USER),
-                    mailboxSession);
+                MailboxPath.inbox(USER),
+                mailboxSession);
             mailboxManager.getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .appendMessage(MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession);
+                .appendMessage(MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession);
 
             Properties props = new Properties();
             props.put("mail.imaps.user", USER.asString());
@@ -781,15 +781,15 @@ class IMAPServerTest {
             imapServer = createImapServer("imapServerStartTLS.xml");
             port = imapServer.getListenAddresses().get(0).getPort();
             connection = TcpClient.create()
-                    .noSSL()
-                    .remoteAddress(() -> new InetSocketAddress(LOCALHOST_IP, port))
-                    .option(ChannelOption.TCP_NODELAY, true)
-                    .connectNow();
+                .noSSL()
+                .remoteAddress(() -> new InetSocketAddress(LOCALHOST_IP, port))
+                .option(ChannelOption.TCP_NODELAY, true)
+                .connectNow();
             responses = new ConcurrentLinkedDeque<>();
             connection.inbound().receive().asString()
-                    .doOnNext(responses::addLast)
-                    .subscribeOn(Schedulers.newSingle("imap-test"))
-                    .subscribe();
+                .doOnNext(responses::addLast)
+                .subscribeOn(Schedulers.newSingle("imap-test"))
+                .subscribe();
         }
 
         @AfterEach
@@ -802,8 +802,8 @@ class IMAPServerTest {
             IMAPSClient imapClient = new IMAPSClient();
             imapClient.connect("127.0.0.1", port);
             assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS\r\nA1 NOOP\r\n"))
-                    .isInstanceOf(EOFException.class)
-                    .hasMessage("Connection closed without indication.");
+                .isInstanceOf(EOFException.class)
+                .hasMessage("Connection closed without indication.");
         }
 
         @Test
@@ -811,8 +811,8 @@ class IMAPServerTest {
             IMAPSClient imapClient = new IMAPSClient();
             imapClient.connect("127.0.0.1", port);
             assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS\nA1 NOOP\r\n"))
-                    .isInstanceOf(EOFException.class)
-                    .hasMessage("Connection closed without indication.");
+                .isInstanceOf(EOFException.class)
+                .hasMessage("Connection closed without indication.");
         }
 
         @Test
@@ -820,8 +820,8 @@ class IMAPServerTest {
             IMAPSClient imapClient = new IMAPSClient();
             imapClient.connect("127.0.0.1", port);
             assertThatThrownBy(() -> imapClient.sendCommand("NOOP\r\n A1 STARTTLS\r\nA2 NOOP"))
-                    .isInstanceOf(EOFException.class)
-                    .hasMessage("Connection closed without indication.");
+                .isInstanceOf(EOFException.class)
+                .hasMessage("Connection closed without indication.");
         }
 
         @Test
@@ -829,8 +829,8 @@ class IMAPServerTest {
             IMAPSClient imapClient = new IMAPSClient();
             imapClient.connect("127.0.0.1", port);
             assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS A1 NOOP\r\n"))
-                    .isInstanceOf(EOFException.class)
-                    .hasMessage("Connection closed without indication.");
+                .isInstanceOf(EOFException.class)
+                .hasMessage("Connection closed without indication.");
         }
 
         @Test
@@ -848,10 +848,10 @@ class IMAPServerTest {
 
         private void send(String format) {
             connection.outbound()
-                    .send(Mono.just(Unpooled.wrappedBuffer(format
-                            .getBytes(StandardCharsets.UTF_8))))
-                    .then()
-                    .subscribe();
+                .send(Mono.just(Unpooled.wrappedBuffer(format
+                    .getBytes(StandardCharsets.UTF_8))))
+                .then()
+                .subscribe();
         }
 
         @RepeatedTest(10)
@@ -864,8 +864,8 @@ class IMAPServerTest {
             Thread.sleep(50);
 
             assertThat(listAppender.list)
-                    .filteredOn(event -> event.getFormattedMessage().contains("Processing org.apache.james.imap.message.request.NoopRequest"))
-                    .isEmpty();
+                .filteredOn(event -> event.getFormattedMessage().contains("Processing org.apache.james.imap.message.request.NoopRequest"))
+                .isEmpty();
         }
     }
 
@@ -883,85 +883,85 @@ class IMAPServerTest {
         @Test
         void initShouldAcceptJKSFormat() {
             assertThatCode(() -> imapServer = createImapServer("imapServerSslJKS.xml"))
-                    .doesNotThrowAnyException();
+                .doesNotThrowAnyException();
         }
 
         @Test
         void initShouldAcceptPKCS12Format() {
             assertThatCode(() -> imapServer = createImapServer("imapServerSslPKCS12.xml"))
-                    .doesNotThrowAnyException();
+                .doesNotThrowAnyException();
         }
 
         @Test
         void initShouldAcceptPEMKeysWithPassword() {
             assertThatCode(() -> imapServer = createImapServer("imapServerSslPEM.xml"))
-                    .doesNotThrowAnyException();
+                .doesNotThrowAnyException();
         }
 
         @Test
         void initShouldAcceptPEMKeysWithoutPassword() {
             assertThatCode(() -> imapServer = createImapServer("imapServerSslPEMNoPass.xml"))
-                    .doesNotThrowAnyException();
+                .doesNotThrowAnyException();
         }
 
         @Test
         void initShouldAcceptJKSByDefault() {
             assertThatCode(() -> imapServer = createImapServer("imapServerSslDefaultJKS.xml"))
-                    .doesNotThrowAnyException();
+                .doesNotThrowAnyException();
         }
 
         @Test
         void initShouldThrowWhenSslEnabledWithoutKeys() {
             assertThatThrownBy(() -> createImapServer("imapServerSslNoKeys.xml"))
-                    .isInstanceOf(ConfigurationException.class)
-                    .hasMessageContaining("keystore or (privateKey and certificates) needs to get configured");
+                .isInstanceOf(ConfigurationException.class)
+                .hasMessageContaining("keystore or (privateKey and certificates) needs to get configured");
         }
 
         @Test
         void initShouldThrowWhenJKSWithBadPassword() {
             assertThatThrownBy(() -> createImapServer("imapServerSslJKSBadPassword.xml"))
-                    .isInstanceOf(GenericKeyStoreException.class)
-                    .hasMessageContaining("keystore password was incorrect");
+                .isInstanceOf(GenericKeyStoreException.class)
+                .hasMessageContaining("keystore password was incorrect");
         }
 
         @Test
         void initShouldThrowWhenPEMWithBadPassword() {
             assertThatThrownBy(() -> createImapServer("imapServerSslPEMBadPass.xml"))
-                    .isInstanceOf(PrivateKeyParseException.class);
+                .isInstanceOf(PrivateKeyParseException.class);
         }
 
         @Test
         void initShouldThrowWhenPEMWithMissingPassword() {
             assertThatThrownBy(() -> createImapServer("imapServerSslPEMMissingPass.xml"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("A password is mandatory with an encrypted key");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("A password is mandatory with an encrypted key");
         }
 
         @Test
         void initShouldNotThrowWhenPEMWithExtraPassword() {
             assertThatCode(() -> imapServer = createImapServer("imapServerSslPEMExtraPass.xml"))
-                    .doesNotThrowAnyException();
+                .doesNotThrowAnyException();
         }
 
         @Test
         void initShouldThrowWhenJKSWenNotFound() {
             assertThatThrownBy(() -> createImapServer("imapServerSslJKSNotFound.xml"))
-                    .isInstanceOf(FileNotFoundException.class)
-                    .hasMessage("class path resource [keystore.notfound.jks] cannot be resolved to URL because it does not exist");
+                .isInstanceOf(FileNotFoundException.class)
+                .hasMessage("class path resource [keystore.notfound.jks] cannot be resolved to URL because it does not exist");
         }
 
         @Test
         void initShouldThrowWhenPKCS12WithBadPassword() {
             assertThatThrownBy(() -> createImapServer("imapServerSslPKCS12WrongPassword.xml"))
-                    .isInstanceOf(GenericKeyStoreException.class)
-                    .hasMessageContaining("keystore password was incorrect");
+                .isInstanceOf(GenericKeyStoreException.class)
+                .hasMessageContaining("keystore password was incorrect");
         }
 
         @Test
         void initShouldThrowWhenPKCS12WithMissingPassword() {
             assertThatThrownBy(() -> createImapServer("imapServerSslPKCS12MissingPassword.xml"))
-                    .isInstanceOf(GenericKeyStoreException.class)
-                    .hasMessageContaining("keystore password was incorrect");
+                .isInstanceOf(GenericKeyStoreException.class)
+                .hasMessageContaining("keystore password was incorrect");
         }
     }
 
@@ -984,55 +984,55 @@ class IMAPServerTest {
         @Test
         void smallAppendsShouldWork() throws Exception {
             assertThatCode(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS)
-                            .append("INBOX", SMALL_MESSAGE))
-                    .doesNotThrowAnyException();
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .append("INBOX", SMALL_MESSAGE))
+                .doesNotThrowAnyException();
 
             assertThat(testIMAPClient.select("INBOX")
-                    .readFirstMessage())
-                    .contains("\r\n" + SMALL_MESSAGE + ")\r\n");
+                .readFirstMessage())
+                .contains("\r\n" + SMALL_MESSAGE + ")\r\n");
         }
 
         @Test
         void mediumAppendsShouldWork() throws Exception {
             assertThatCode(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS)
-                            .append("INBOX", _65K_MESSAGE))
-                    .doesNotThrowAnyException();
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .append("INBOX", _65K_MESSAGE))
+                .doesNotThrowAnyException();
 
             assertThat(testIMAPClient.select("INBOX")
-                    .readFirstMessage())
-                    .contains("\r\n" + _65K_MESSAGE + ")\r\n");
+                .readFirstMessage())
+                .contains("\r\n" + _65K_MESSAGE + ")\r\n");
         }
 
         @Test
         void largeAppendsShouldBeRejected() {
             assertThatThrownBy(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS)
-                            .append("INBOX", _129K_MESSAGE))
-                    .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("BAD APPEND failed.");
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .append("INBOX", _129K_MESSAGE))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("BAD APPEND failed.");
         }
 
         @Test
         void capabilityAdvertizeAppendLimit() throws Exception {
             assertThat(
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS)
-                            .capability())
-                    .contains("APPENDLIMIT=131072");
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .capability())
+                .contains("APPENDLIMIT=131072");
         }
 
         @Test
         void statusAdvertizeAppendLimit() throws Exception {
             assertThat(
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS)
-                            .sendCommand("STATUS \"INBOX\" (APPENDLIMIT)"))
-                    .contains("* STATUS \"INBOX\" (APPENDLIMIT 131072)");
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .sendCommand("STATUS \"INBOX\" (APPENDLIMIT)"))
+                .contains("* STATUS \"INBOX\" (APPENDLIMIT 131072)");
         }
     }
 
@@ -1055,17 +1055,17 @@ class IMAPServerTest {
         @Test
         void loginShouldFail() {
             assertThatThrownBy(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS))
-                    .hasMessage("Login failed");
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .hasMessage("Login failed");
         }
 
         @Test
         void authenticatePlainShouldFail() {
             assertThatThrownBy(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .authenticatePlain(USER.asString(), USER_PASS))
-                    .hasMessage("Login failed");
+                testIMAPClient.connect("127.0.0.1", port)
+                    .authenticatePlain(USER.asString(), USER_PASS))
+                .hasMessage("Login failed");
         }
 
         @Test
@@ -1073,8 +1073,8 @@ class IMAPServerTest {
             testIMAPClient.connect("127.0.0.1", port);
 
             assertThat(testIMAPClient.capability())
-                    .contains("LOGINDISABLED")
-                    .doesNotContain("AUTH=PLAIN");
+                .contains("LOGINDISABLED")
+                .doesNotContain("AUTH=PLAIN");
         }
     }
 
@@ -1097,17 +1097,17 @@ class IMAPServerTest {
         @Test
         void loginShouldSucceed() {
             assertThatCode(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS))
-                    .doesNotThrowAnyException();
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .doesNotThrowAnyException();
         }
 
         @RepeatedTest(100)
         void authenticatePlainShouldSucceed() {
             assertThatCode(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .authenticatePlain(USER.asString(), USER_PASS))
-                    .doesNotThrowAnyException();
+                testIMAPClient.connect("127.0.0.1", port)
+                    .authenticatePlain(USER.asString(), USER_PASS))
+                .doesNotThrowAnyException();
         }
 
         @Test
@@ -1115,8 +1115,8 @@ class IMAPServerTest {
             testIMAPClient.connect("127.0.0.1", port);
 
             assertThat(testIMAPClient.capability())
-                    .doesNotContain("LOGINDISABLED")
-                    .contains("AUTH=PLAIN");
+                .doesNotContain("LOGINDISABLED")
+                .contains("AUTH=PLAIN");
         }
 
         @Test
@@ -1125,9 +1125,9 @@ class IMAPServerTest {
             String user1Password = "1".repeat(300);
             authenticator.addUser(user1, user1Password);
             assertThatCode(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .authenticatePlain(user1.asString(), user1Password))
-                    .doesNotThrowAnyException();
+                testIMAPClient.connect("127.0.0.1", port)
+                    .authenticatePlain(user1.asString(), user1Password))
+                .doesNotThrowAnyException();
         }
     }
 
@@ -1150,9 +1150,9 @@ class IMAPServerTest {
         @Test
         void loginShouldFailOnUnEncryptedChannel() {
             assertThatThrownBy(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS))
-                    .hasMessage("Login failed");
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .hasMessage("Login failed");
         }
 
         @Test
@@ -1160,8 +1160,8 @@ class IMAPServerTest {
             testIMAPClient.connect("127.0.0.1", port);
 
             assertThat(testIMAPClient.capability())
-                    .contains("LOGINDISABLED")
-                    .doesNotContain("AUTH=PLAIN");
+                .contains("LOGINDISABLED")
+                .doesNotContain("AUTH=PLAIN");
         }
     }
 
@@ -1184,9 +1184,9 @@ class IMAPServerTest {
         @Test
         void loginShouldSucceedOnUnEncryptedChannel() {
             assertThatCode(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS))
-                    .doesNotThrowAnyException();
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .doesNotThrowAnyException();
         }
 
         @Test
@@ -1194,8 +1194,8 @@ class IMAPServerTest {
             testIMAPClient.connect("127.0.0.1", port);
 
             assertThat(testIMAPClient.capability())
-                    .doesNotContain("LOGINDISABLED")
-                    .contains("AUTH=PLAIN");
+                .doesNotContain("LOGINDISABLED")
+                .contains("AUTH=PLAIN");
         }
     }
 
@@ -1216,9 +1216,9 @@ class IMAPServerTest {
             int port = imapServer.getListenAddresses().get(0).getPort();
 
             assertThatThrownBy(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS))
-                    .hasMessage("Login failed");
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS))
+                .hasMessage("Login failed");
 
         }
 
@@ -1242,10 +1242,10 @@ class IMAPServerTest {
             int port = imapServer.getListenAddresses().get(0).getPort();
 
             assertThatCode(() ->
-                    testIMAPClient.connect("127.0.0.1", port)
-                            .login(USER.asString(), USER_PASS)
-                            .append("INBOX", SMALL_MESSAGE))
-                    .doesNotThrowAnyException();
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .append("INBOX", SMALL_MESSAGE))
+                .doesNotThrowAnyException();
         }
 
         @Test
@@ -1276,25 +1276,25 @@ class IMAPServerTest {
         void authSetup() throws Exception {
             authServer = ClientAndServer.startClientAndServer(0);
             authServer
-                    .when(HttpRequest.request().withPath(JWKS_URI_PATH))
-                    .respond(HttpResponse.response().withStatusCode(200)
-                            .withHeader("Content-Type", "application/json")
-                            .withBody(OidcTokenFixture.JWKS_RESPONSE, StandardCharsets.UTF_8));
+                .when(HttpRequest.request().withPath(JWKS_URI_PATH))
+                .respond(HttpResponse.response().withStatusCode(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(OidcTokenFixture.JWKS_RESPONSE, StandardCharsets.UTF_8));
 
             FakeAuthenticator authenticator = new FakeAuthenticator();
             authenticator.addUser(USER, USER_PASS);
             authenticator.addUser(USER2, USER_PASS);
 
             InMemoryIntegrationResources integrationResources = InMemoryIntegrationResources.builder()
-                    .authenticator(authenticator)
-                    .authorizator(FakeAuthorizator.forGivenUserAndDelegatedUser(USER, USER2))
-                    .inVmEventBus()
-                    .defaultAnnotationLimits()
-                    .defaultMessageParser()
-                    .scanningSearchIndex()
-                    .noPreDeletionHooks()
-                    .storeQuotaManager()
-                    .build();
+                .authenticator(authenticator)
+                .authorizator(FakeAuthorizator.forGivenUserAndDelegatedUser(USER, USER2))
+                .inVmEventBus()
+                .defaultAnnotationLimits()
+                .defaultMessageParser()
+                .scanningSearchIndex()
+                .noPreDeletionHooks()
+                .storeQuotaManager()
+                .build();
 
             HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
             config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
@@ -1408,10 +1408,10 @@ class IMAPServerTest {
             imapServer.destroy();
 
             authServer
-                    .when(HttpRequest.request().withPath(INTROSPECT_TOKEN_URI_PATH))
-                    .respond(HttpResponse.response().withStatusCode(200)
-                            .withHeader("Content-Type", "application/json")
-                            .withBody("{\"active\": false}", StandardCharsets.UTF_8));
+                .when(HttpRequest.request().withPath(INTROSPECT_TOKEN_URI_PATH))
+                .respond(HttpResponse.response().withStatusCode(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("{\"active\": false}", StandardCharsets.UTF_8));
 
             HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
             config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
@@ -1435,10 +1435,10 @@ class IMAPServerTest {
             imapServer.destroy();
 
             authServer
-                    .when(HttpRequest.request().withPath(INTROSPECT_TOKEN_URI_PATH))
-                    .respond(HttpResponse.response().withStatusCode(200)
-                            .withHeader("Content-Type", "application/json")
-                            .withBody(INTROSPECTION_RESPONSE, StandardCharsets.UTF_8));
+                .when(HttpRequest.request().withPath(INTROSPECT_TOKEN_URI_PATH))
+                .respond(HttpResponse.response().withStatusCode(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(INTROSPECTION_RESPONSE, StandardCharsets.UTF_8));
 
             HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
             config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
@@ -1462,8 +1462,8 @@ class IMAPServerTest {
             imapServer.destroy();
             String invalidURI = "/invalidURI";
             authServer
-                    .when(HttpRequest.request().withPath(invalidURI))
-                    .respond(HttpResponse.response().withStatusCode(401));
+                .when(HttpRequest.request().withPath(invalidURI))
+                .respond(HttpResponse.response().withStatusCode(401));
 
             HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
             config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
@@ -1487,10 +1487,10 @@ class IMAPServerTest {
             imapServer.destroy();
 
             authServer
-                    .when(HttpRequest.request().withPath(USERINFO_URI_PATH))
-                    .respond(HttpResponse.response().withStatusCode(200)
-                            .withHeader("Content-Type", "application/json")
-                            .withBody(OidcTokenFixture.USERINFO_RESPONSE, StandardCharsets.UTF_8));
+                .when(HttpRequest.request().withPath(USERINFO_URI_PATH))
+                .respond(HttpResponse.response().withStatusCode(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(OidcTokenFixture.USERINFO_RESPONSE, StandardCharsets.UTF_8));
 
             HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
             config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
@@ -1514,9 +1514,9 @@ class IMAPServerTest {
             imapServer.destroy();
 
             authServer
-                    .when(HttpRequest.request().withPath(USERINFO_URI_PATH))
-                    .respond(HttpResponse.response().withStatusCode(401)
-                            .withHeader("Content-Type", "application/json"));
+                .when(HttpRequest.request().withPath(USERINFO_URI_PATH))
+                .respond(HttpResponse.response().withStatusCode(401)
+                    .withHeader("Content-Type", "application/json"));
 
             HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("oauth.xml"));
             config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
@@ -1556,7 +1556,7 @@ class IMAPServerTest {
             // USER2: append a message
             try (TestIMAPClient client = new TestIMAPClient(imapsClient(port))) {
                 client.login(USER2.asString(), USER_PASS)
-                        .append("INBOX", SMALL_MESSAGE);
+                    .append("INBOX", SMALL_MESSAGE);
             }
 
             // USER1 authenticate and impersonate as USER2
@@ -1566,7 +1566,7 @@ class IMAPServerTest {
                 assertThat(authenticateResponse).contains("OK AUTHENTICATE completed.");
 
                 assertThat(client.select("INBOX")
-                        .readFirstMessage()).contains(SMALL_MESSAGE);
+                    .readFirstMessage()).contains(SMALL_MESSAGE);
             }
         }
     }
@@ -1606,21 +1606,21 @@ class IMAPServerTest {
         void imapSearchShouldSupportThreadId() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
             MessageManager.AppendResult appendResult = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .appendMessage(MessageManager.AppendCommand.builder().build("MIME-Version: 1.0\r\n" +
-                            "Content-Type: text/html; charset=UTF-8\r\n" +
-                            "Content-Transfer-Encoding: quoted-printable\r\n" +
-                            "From: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
-                            "Sender: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
-                            "Reply-To: b@linagora.com\r\n" +
-                            "To: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
-                            "Subject: Test utf-8 charset\r\n" +
-                            "Message-ID: <Mime4j.5f1.9a40f68264d6f2fa.17876fb5605@linagora.com>\r\n" +
-                            "Date: Sun, 28 Mar 2021 03:58:06 +0000\r\n" +
-                            "\r\n" +
-                            "<p>=E5=A4=A9=E5=A4=A9=E5=90=91=E4=B8=8A<br></p>\r\n"), mailboxSession);
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .appendMessage(MessageManager.AppendCommand.builder().build("MIME-Version: 1.0\r\n" +
+                    "Content-Type: text/html; charset=UTF-8\r\n" +
+                    "Content-Transfer-Encoding: quoted-printable\r\n" +
+                    "From: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Sender: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Reply-To: b@linagora.com\r\n" +
+                    "To: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Subject: Test utf-8 charset\r\n" +
+                    "Message-ID: <Mime4j.5f1.9a40f68264d6f2fa.17876fb5605@linagora.com>\r\n" +
+                    "Date: Sun, 28 Mar 2021 03:58:06 +0000\r\n" +
+                    "\r\n" +
+                    "<p>=E5=A4=A9=E5=A4=A9=E5=90=91=E4=B8=8A<br></p>\r\n"), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readStringUntil(clientConnection, s -> s.contains("a0 OK"));
@@ -1636,21 +1636,21 @@ class IMAPServerTest {
         void imapSearchShouldSupportEmailId() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
             MessageManager.AppendResult appendResult = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .appendMessage(MessageManager.AppendCommand.builder().build("MIME-Version: 1.0\r\n" +
-                            "Content-Type: text/html; charset=UTF-8\r\n" +
-                            "Content-Transfer-Encoding: quoted-printable\r\n" +
-                            "From: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
-                            "Sender: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
-                            "Reply-To: b@linagora.com\r\n" +
-                            "To: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
-                            "Subject: Test utf-8 charset\r\n" +
-                            "Message-ID: <Mime4j.5f1.9a40f68264d6f2fa.17876fb5605@linagora.com>\r\n" +
-                            "Date: Sun, 28 Mar 2021 03:58:06 +0000\r\n" +
-                            "\r\n" +
-                            "<p>=E5=A4=A9=E5=A4=A9=E5=90=91=E4=B8=8A<br></p>\r\n"), mailboxSession);
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .appendMessage(MessageManager.AppendCommand.builder().build("MIME-Version: 1.0\r\n" +
+                    "Content-Type: text/html; charset=UTF-8\r\n" +
+                    "Content-Transfer-Encoding: quoted-printable\r\n" +
+                    "From: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Sender: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Reply-To: b@linagora.com\r\n" +
+                    "To: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Subject: Test utf-8 charset\r\n" +
+                    "Message-ID: <Mime4j.5f1.9a40f68264d6f2fa.17876fb5605@linagora.com>\r\n" +
+                    "Date: Sun, 28 Mar 2021 03:58:06 +0000\r\n" +
+                    "\r\n" +
+                    "<p>=E5=A4=A9=E5=A4=A9=E5=90=91=E4=B8=8A<br></p>\r\n"), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readStringUntil(clientConnection, s -> s.contains("a0 OK"));
@@ -1665,7 +1665,7 @@ class IMAPServerTest {
         void shouldConsiderCumulativeSizeForLiterals() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readStringUntil(clientConnection, s -> s.contains("a0 OK"));
@@ -1677,18 +1677,18 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(("a2 SEARCH CHARSET UTF-8 TO {" + literal.length() + "+}\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThatThrownBy(() -> {
-                for (int i = 0; i < 7000; i++) {
-                    clientConnection.write(ByteBuffer.wrap((literal + " TO {" + literal.length() + "+}\r\n").getBytes(StandardCharsets.UTF_8)));
-                }
-                clientConnection.write(ByteBuffer.wrap((literal + " ALL\r\n").getBytes(StandardCharsets.UTF_8)));
-            }).isInstanceOf(IOException.class);
+                    for (int i = 0; i < 7000; i++) {
+                        clientConnection.write(ByteBuffer.wrap((literal + " TO {" + literal.length() + "+}\r\n").getBytes(StandardCharsets.UTF_8)));
+                    }
+                    clientConnection.write(ByteBuffer.wrap((literal + " ALL\r\n").getBytes(StandardCharsets.UTF_8)));
+                }).isInstanceOf(IOException.class);
         }
 
         @Test
         void shouldRejectTooManyLiterals() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readStringUntil(clientConnection, s -> s.contains("a0 OK"));
@@ -1714,7 +1714,7 @@ class IMAPServerTest {
         void shouldRejectLongLineAfterLiteral() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readStringUntil(clientConnection, s -> s.contains("a0 OK"));
@@ -1733,7 +1733,7 @@ class IMAPServerTest {
         void passing2literalOnDifferentNetworkPackage() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readStringUntil(clientConnection, s -> s.contains("a0 OK"));
@@ -1752,7 +1752,7 @@ class IMAPServerTest {
         void passing2literalOnSameNetworkPackage() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readStringUntil(clientConnection, s -> s.contains("a0 OK"));
@@ -1761,7 +1761,7 @@ class IMAPServerTest {
 
             String literal = "a".repeat(16);
             String s1 = "a2 SEARCH CHARSET UTF-8 TO {" + literal.length() + "+}\r\n" +
-                    literal + " TO {" + literal.length() + "+}\r\n" + literal + " ALL\r\n";
+                literal + " TO {" + literal.length() + "+}\r\n" + literal + " ALL\r\n";
             clientConnection.write(ByteBuffer.wrap(s1.getBytes()));
 
             readStringUntil(clientConnection, s -> s.contains(("a2 OK ")));
@@ -1771,7 +1771,7 @@ class IMAPServerTest {
         void passing2literalOnSameNetworkPackageWhenMoreThan16Chars() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readStringUntil(clientConnection, s -> s.contains("a0 OK"));
@@ -1780,7 +1780,7 @@ class IMAPServerTest {
 
             String literal = "a".repeat(17);
             String s1 = "a2 SEARCH CHARSET UTF-8 TO {" + literal.length() + "+}\r\n" +
-                    literal + " TO {" + literal.length() + "+}\r\n" + literal + " ALL\r\n";
+                literal + " TO {" + literal.length() + "+}\r\n" + literal + " ALL\r\n";
             clientConnection.write(ByteBuffer.wrap(s1.getBytes()));
 
             readStringUntil(clientConnection, s -> s.contains(("a2 OK ")));
@@ -1791,7 +1791,7 @@ class IMAPServerTest {
         void shouldAcceptSeveralFileLiteral() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readStringUntil(clientConnection, s -> s.contains("a0 OK"));
@@ -1810,7 +1810,7 @@ class IMAPServerTest {
         void shouldRejectLongLineAfterLiteralWhenLogin() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(("a0 LOGIN {" + USER.asString().length() + "+}\r\n").getBytes(StandardCharsets.UTF_8)));
             clientConnection.write(ByteBuffer.wrap((USER.asString() + " " + "0123456789".repeat(1024 * 1024)).getBytes()));
@@ -1821,7 +1821,7 @@ class IMAPServerTest {
         void shouldRejectLongLiteralsWhenUnauthenticated() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(("a0 LOGIN " + USER.asString() + " {" + (10 * 1024) + "+}\r\n").getBytes(StandardCharsets.UTF_8)));
             clientConnection.write(ByteBuffer.wrap(("0123456789".repeat(1024) + " \r\n").getBytes()));
@@ -1865,21 +1865,21 @@ class IMAPServerTest {
         void searchingASingleUTF8CriterionShouldComplete() throws Exception {
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
             memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .appendMessage(MessageManager.AppendCommand.builder().build("MIME-Version: 1.0\r\n" +
-                            "Content-Type: text/html; charset=UTF-8\r\n" +
-                            "Content-Transfer-Encoding: quoted-printable\r\n" +
-                            "From: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
-                            "Sender: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
-                            "Reply-To: b@linagora.com\r\n" +
-                            "To: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
-                            "Subject: Test utf-8 charset\r\n" +
-                            "Message-ID: <Mime4j.5f1.9a40f68264d6f2fa.17876fb5605@linagora.com>\r\n" +
-                            "Date: Sun, 28 Mar 2021 03:58:06 +0000\r\n" +
-                            "\r\n" +
-                            "<p>=E5=A4=A9=E5=A4=A9=E5=90=91=E4=B8=8A<br></p>\r\n"), mailboxSession);
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .appendMessage(MessageManager.AppendCommand.builder().build("MIME-Version: 1.0\r\n" +
+                    "Content-Type: text/html; charset=UTF-8\r\n" +
+                    "Content-Transfer-Encoding: quoted-printable\r\n" +
+                    "From: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Sender: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Reply-To: b@linagora.com\r\n" +
+                    "To: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <b@linagora.com>\r\n" +
+                    "Subject: Test utf-8 charset\r\n" +
+                    "Message-ID: <Mime4j.5f1.9a40f68264d6f2fa.17876fb5605@linagora.com>\r\n" +
+                    "Date: Sun, 28 Mar 2021 03:58:06 +0000\r\n" +
+                    "\r\n" +
+                    "<p>=E5=A4=A9=E5=A4=A9=E5=90=91=E4=B8=8A<br></p>\r\n"), mailboxSession);
 
             String host = "127.0.0.1";
             Properties props = new Properties();
@@ -1912,7 +1912,7 @@ class IMAPServerTest {
             int port = imapServer.getListenAddresses().get(0).getPort();
             mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
             inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             SSLContext ctx = SSLContext.getInstance("TLS");
@@ -1940,8 +1940,8 @@ class IMAPServerTest {
             clientConnection.getOutputStream().write("a3 IDLE\r\n".getBytes(StandardCharsets.UTF_8));
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("+ Idling")))
-                            .isNotNull());
+                assertThat(readStringUntil(clientConnection, s -> s.contains("+ Idling")))
+                    .isNotNull());
         }
 
         @Test
@@ -1958,8 +1958,8 @@ class IMAPServerTest {
             clientConnection.getOutputStream().write("DONE\r\n".getBytes(StandardCharsets.UTF_8));
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
-                            .isNotNull());
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
+                    .isNotNull());
         }
 
         @Test
@@ -1973,8 +1973,8 @@ class IMAPServerTest {
             clientConnection.getOutputStream().write("a3 IDLE\r\nDONE\r\n".getBytes(StandardCharsets.UTF_8));
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
-                            .isNotNull());
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
+                    .isNotNull());
         }
 
         @Test
@@ -1989,9 +1989,9 @@ class IMAPServerTest {
 
             // Assert continuation is sent before IDLE completion result
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
-                            .filteredOn(s -> s.contains("+ Idling"))
-                            .hasSize(1));
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
+                    .filteredOn(s -> s.contains("+ Idling"))
+                    .hasSize(1));
         }
 
         @Test
@@ -2005,8 +2005,8 @@ class IMAPServerTest {
             clientConnection.getOutputStream().write("a3 IDLE\r\nBAD\r\n".getBytes(StandardCharsets.UTF_8));
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("a3 BAD IDLE failed. Continuation for IMAP IDLE was not understood. Expected 'DONE', got 'BAD'.")))
-                            .isNotNull());
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 BAD IDLE failed. Continuation for IMAP IDLE was not understood. Expected 'DONE', got 'BAD'.")))
+                    .isNotNull());
         }
 
         // Repeated run to detect more reliably data races
@@ -2024,8 +2024,8 @@ class IMAPServerTest {
             inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("* 1 EXISTS")))
-                            .isNotNull());
+                assertThat(readStringUntil(clientConnection, s -> s.contains("* 1 EXISTS")))
+                    .isNotNull());
         }
 
         private byte[] readBytes(Socket channel) throws IOException {
@@ -2060,7 +2060,7 @@ class IMAPServerTest {
             int port = imapServer.getListenAddresses().get(0).getPort();
             mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
             inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             SSLContext ctx = SSLContext.getInstance("TLS");
@@ -2108,12 +2108,12 @@ class IMAPServerTest {
             int port = imapServer.getListenAddresses().get(0).getPort();
             MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             connection = TcpClient.create()
-                    .secure(ssl -> ssl.sslContext(SslContextBuilder.forClient().trustManager(new BlindTrustManager())))
-                    .remoteAddress(() -> new InetSocketAddress(LOCALHOST_IP, port))
-                    .connectNow();
+                .secure(ssl -> ssl.sslContext(SslContextBuilder.forClient().trustManager(new BlindTrustManager())))
+                .remoteAddress(() -> new InetSocketAddress(LOCALHOST_IP, port))
+                .connectNow();
             responses = new ConcurrentLinkedDeque<>();
             readBytes(connection);
         }
@@ -2155,17 +2155,17 @@ class IMAPServerTest {
 
         private void send(String format) {
             connection.outbound()
-                    .send(Mono.just(Unpooled.wrappedBuffer(format
-                            .getBytes(StandardCharsets.UTF_8))))
-                    .then()
-                    .subscribe();
+                .send(Mono.just(Unpooled.wrappedBuffer(format
+                    .getBytes(StandardCharsets.UTF_8))))
+                .then()
+                .subscribe();
         }
 
         private void readBytes(Connection connection) {
             connection.inbound().receive().asString()
-                    .doOnNext(responses::addLast)
-                    .subscribeOn(Schedulers.newSingle("test"))
-                    .subscribe();
+                .doOnNext(responses::addLast)
+                .subscribeOn(Schedulers.newSingle("test"))
+                .subscribe();
         }
     }
 
@@ -2183,7 +2183,7 @@ class IMAPServerTest {
             port = imapServer.getListenAddresses().get(0).getPort();
             mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
             inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             clientConnection = SocketChannel.open();
@@ -2209,8 +2209,8 @@ class IMAPServerTest {
 
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("+ Idling")))
-                            .isNotNull());
+                assertThat(readStringUntil(clientConnection, s -> s.contains("+ Idling")))
+                    .isNotNull());
         }
 
         @Test
@@ -2227,8 +2227,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(("DONE\r\n").getBytes(StandardCharsets.UTF_8)));
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
-                            .isNotNull());
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
+                    .isNotNull());
         }
 
         @Test
@@ -2242,8 +2242,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\nDONE\r\n").getBytes(StandardCharsets.UTF_8)));
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
-                            .isNotNull());
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
+                    .isNotNull());
         }
 
         @Test
@@ -2258,9 +2258,9 @@ class IMAPServerTest {
 
             // Assert continuation is sent before IDLE completion result
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
-                            .filteredOn(s -> s.contains("+ Idling"))
-                            .hasSize(1));
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
+                    .filteredOn(s -> s.contains("+ Idling"))
+                    .hasSize(1));
         }
 
         @Test
@@ -2274,8 +2274,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\nBAD\r\n").getBytes(StandardCharsets.UTF_8)));
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("a3 BAD IDLE failed. Continuation for IMAP IDLE was not understood. Expected 'DONE', got 'BAD'.")))
-                            .isNotNull());
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 BAD IDLE failed. Continuation for IMAP IDLE was not understood. Expected 'DONE', got 'BAD'.")))
+                    .isNotNull());
         }
 
         // Repeated run to detect more reliably data races
@@ -2293,8 +2293,8 @@ class IMAPServerTest {
             inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
-                    assertThat(readStringUntil(clientConnection, s -> s.contains("* 1 EXISTS")))
-                            .isNotNull());
+                assertThat(readStringUntil(clientConnection, s -> s.contains("* 1 EXISTS")))
+                    .isNotNull());
         }
     }
 
@@ -2311,7 +2311,7 @@ class IMAPServerTest {
             int port = imapServer.getListenAddresses().get(0).getPort();
             mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
             inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
             setUpTestingData();
 
@@ -2328,8 +2328,8 @@ class IMAPServerTest {
 
         private void setUpTestingData() {
             IntStream.range(0, 37)
-                    .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
-                            .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
+                .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
+                    .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
         }
 
         @Test
@@ -2358,21 +2358,21 @@ class IMAPServerTest {
             List<String> replies = readStringUntil(clientConnection, s -> s.contains("a3 OK FETCH completed."));
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(replies)
-                        .filteredOn(s -> s.contains("* 2 FETCH (MODSEQ (41) FLAGS (\\Answered \\Recent) UID 2)"))
-                        .hasSize(1);
+                    .filteredOn(s -> s.contains("* 2 FETCH (MODSEQ (41) FLAGS (\\Answered \\Recent) UID 2)"))
+                    .hasSize(1);
                 softly.assertThat(replies)
-                        .filteredOn(s -> s.contains("* 25 FETCH (MODSEQ (42) FLAGS (\\Answered \\Recent) UID 25)"))
-                        .hasSize(1);
+                    .filteredOn(s -> s.contains("* 25 FETCH (MODSEQ (42) FLAGS (\\Answered \\Recent) UID 25)"))
+                    .hasSize(1);
                 softly.assertThat(replies)
-                        .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (43) FLAGS (\\Answered \\Recent) UID 35)"))
-                        .hasSize(1);
+                    .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (43) FLAGS (\\Answered \\Recent) UID 35)"))
+                    .hasSize(1);
 
                 softly.assertThat(replies)
-                        .filteredOn(s -> s.contains("* 14 FETCH (MODSEQ (39) FLAGS (\\Answered \\Recent) UID 14)"))
-                        .isEmpty();
+                    .filteredOn(s -> s.contains("* 14 FETCH (MODSEQ (39) FLAGS (\\Answered \\Recent) UID 14)"))
+                    .isEmpty();
                 softly.assertThat(replies)
-                        .filteredOn(s -> s.contains("* 31 FETCH (MODSEQ (40) FLAGS (\\Answered \\Recent) UID 31)"))
-                        .isEmpty();
+                    .filteredOn(s -> s.contains("* 31 FETCH (MODSEQ (40) FLAGS (\\Answered \\Recent) UID 31)"))
+                    .isEmpty();
             });
         }
 
@@ -2400,8 +2400,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(String.format("A150 SEARCH MODSEQ %d\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("A150 OK SEARCH completed.")))
-                    .filteredOn(s -> s.contains("* SEARCH 2 25 31 35 (MODSEQ 43)"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* SEARCH 2 25 31 35 (MODSEQ 43)"))
+                .hasSize(1);
         }
 
         @Test
@@ -2429,8 +2429,8 @@ class IMAPServerTest {
 
             // Restrictions are not applied however
             assertThat(readStringUntil(clientConnection, s -> s.contains("a OK SEARCH completed.")))
-                    .filteredOn(s -> s.contains("* SEARCH 2 25 31 35 (MODSEQ 43)"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* SEARCH 2 25 31 35 (MODSEQ 43)"))
+                .hasSize(1);
         }
 
         @Test
@@ -2446,8 +2446,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(("A042 STATUS INBOX (HIGHESTMODSEQ)\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("A042 OK STATUS completed.")))
-                    .filteredOn(s -> s.contains(String.format("* STATUS \"INBOX\" (HIGHESTMODSEQ %d)", highestModSeq.asLong())))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains(String.format("* STATUS \"INBOX\" (HIGHESTMODSEQ %d)", highestModSeq.asLong())))
+                .hasSize(1);
         }
 
         @Test
@@ -2458,7 +2458,7 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(("A142 SELECT INBOX (CONDSTORE)\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("A142 OK [READ-WRITE] SELECT completed.")))
-                    .isNotNull();
+                .isNotNull();
         }
 
         @Test
@@ -2474,8 +2474,8 @@ class IMAPServerTest {
 
             clientConnection.write(ByteBuffer.wrap(("a2 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
             assertThat(readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed.")))
-                    .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (39) FLAGS (\\Answered \\Recent))"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (39) FLAGS (\\Answered \\Recent))"))
+                .hasSize(1);
         }
 
         @Test
@@ -2495,8 +2495,8 @@ class IMAPServerTest {
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE %d) +FLAGS.SILENT (\\Seen)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8))));
             assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK STORE completed.")))
-                    .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (40) UID 35)"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (40) UID 35)"))
+                .hasSize(1);
         }
 
         @Test
@@ -2516,8 +2516,8 @@ class IMAPServerTest {
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE %d) +FLAGS (\\Seen)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8))));
             assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK STORE completed.")))
-                    .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (40) FLAGS (\\Answered \\Recent \\Seen) UID 35)"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (40) FLAGS (\\Answered \\Recent \\Seen) UID 35)"))
+                .hasSize(1);
         }
 
         @Test
@@ -2537,7 +2537,7 @@ class IMAPServerTest {
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE %d) +FLAGS.SILENT (\\Seen)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
             assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 35] STORE failed.")))
-                    .isNotNull();
+                .isNotNull();
         }
 
         @Test
@@ -2557,7 +2557,7 @@ class IMAPServerTest {
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE 0) +FLAGS.SILENT (dcustom)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
             assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 35] STORE failed.")))
-                    .isNotNull();
+                .isNotNull();
         }
 
         @Test
@@ -2577,7 +2577,7 @@ class IMAPServerTest {
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 STORE 35 (UNCHANGEDSINCE 0) +FLAGS.SILENT (dcustom)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
             assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 35] STORE failed.")))
-                    .isNotNull();
+                .isNotNull();
         }
 
         @Test
@@ -2597,7 +2597,7 @@ class IMAPServerTest {
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE 0) +FLAGS.SILENT (\\Answered)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
             assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 35] STORE failed.")))
-                    .isNotNull();
+                .isNotNull();
         }
 
         @Test
@@ -2619,8 +2619,8 @@ class IMAPServerTest {
 
             clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 5,7,9 (UNCHANGEDSINCE %d) +FLAGS.SILENT (\\Seen)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
             assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 5,7,9] STORE failed.")))
-                    .filteredOn(s -> s.contains("FETCH"))
-                    .isEmpty();
+                .filteredOn(s -> s.contains("FETCH"))
+                .isEmpty();
         }
     }
 
@@ -2637,7 +2637,7 @@ class IMAPServerTest {
             int port = imapServer.getListenAddresses().get(0).getPort();
             mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
             inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
             setUpTestingData();
 
@@ -2654,15 +2654,15 @@ class IMAPServerTest {
 
         private void setUpTestingData() {
             IntStream.range(0, 37)
-                    .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
-                            .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
+                .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
+                    .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
         }
 
         @Test
         void compressShouldFailWhenNotEnabled() throws Exception {
             String reply = testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().get(0).getPort())
-                    .login(USER.asString(), USER_PASS)
-                    .sendCommand("COMPRESS DEFLATE");
+                .login(USER.asString(), USER_PASS)
+                .sendCommand("COMPRESS DEFLATE");
 
             assertThat(reply).contains("AAAB BAD COMPRESS failed. Unknown command.");
         }
@@ -2670,8 +2670,8 @@ class IMAPServerTest {
         @Test
         void ensureSequentialExecutionOfImapRequests() throws Exception {
             IntStream.range(0, 100)
-                    .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
-                            .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
+                .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
+                    .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2688,14 +2688,14 @@ class IMAPServerTest {
         void fetchShouldBackPressureWhenNoRead() throws Exception {
             String msgIn = "MIME-Version: 1.0\r\n\r\nCONTENT\r\n\r\n" + "0123456789\r\n0123456789\r\n0123456789\r\n".repeat(1024);
             IntStream.range(0, 500)
-                    .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
-                            .build(msgIn), mailboxSession)));
+                .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
+                    .build(msgIn), mailboxSession)));
             AtomicInteger loaded = new AtomicInteger(0);
             MessageManager inboxSpy = spy(inbox);
             doReturn(Mono.just(inboxSpy)).when(mailboxManager).getMailboxReactive(eq(MailboxPath.inbox(USER)), any());
             doReturn(Mono.just(inboxSpy)).when(mailboxManager).getMailboxReactive(eq(inbox.getMailboxEntity().getMailboxId()), any());
             doAnswer((Answer<Object>) invocationOnMock -> Flux.from(inbox.getMessagesReactive(invocationOnMock.getArgument(0), invocationOnMock.getArgument(1), invocationOnMock.getArgument(2)))
-                    .doOnNext(any -> loaded.incrementAndGet())).when(inboxSpy).getMessagesReactive(any(), any(), any());
+                .doOnNext(any -> loaded.incrementAndGet())).when(inboxSpy).getMessagesReactive(any(), any(), any());
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2745,7 +2745,7 @@ class IMAPServerTest {
             int port = imapServer.getListenAddresses().get(0).getPort();
             mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
             inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             clientConnection = SocketChannel.open();
@@ -2766,11 +2766,11 @@ class IMAPServerTest {
         @Test
         void selectShouldNotAnswerEmptyVanishedResponses() throws Exception {
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
+                .delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMailboxEntity().getUidValidity();
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2779,8 +2779,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d 88 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
-                    .filteredOn(s -> s.contains("VANISHED"))
-                    .isEmpty();
+                .filteredOn(s -> s.contains("VANISHED"))
+                .isEmpty();
         }
 
         @Test
@@ -2788,15 +2788,15 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMailboxEntity().getUidValidity();
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
+                .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2805,8 +2805,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
+                .hasSize(1);
         }
 
         @Test
@@ -2814,15 +2814,15 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMailboxEntity().getUidValidity();
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
+                .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2831,8 +2831,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
+                .hasSize(1);
         }
 
         @Test
@@ -2840,16 +2840,16 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMailboxEntity().getUidValidity();
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
 
             inbox.delete(ImmutableList.of(MessageUid.of(10), MessageUid.of(11), MessageUid.of(12),
-                    MessageUid.of(25), MessageUid.of(26),
-                    MessageUid.of(32)), mailboxSession);
+                MessageUid.of(25), MessageUid.of(26),
+                MessageUid.of(32)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2858,8 +2858,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 5:11,28:36 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10:11,32"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10:11,32"))
+                .hasSize(1);
         }
 
         @Test
@@ -2867,16 +2867,16 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMailboxEntity().getUidValidity();
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
 
             inbox.delete(ImmutableList.of(MessageUid.of(10), MessageUid.of(11), MessageUid.of(12),
-                    MessageUid.of(25), MessageUid.of(26),
-                    MessageUid.of(32)), mailboxSession);
+                MessageUid.of(25), MessageUid.of(26),
+                MessageUid.of(32)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2889,8 +2889,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 1:37 (1,13,28 2,17,30)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED (EARLIER) 25:26,32"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 25:26,32"))
+                .hasSize(1);
         }
 
         @Test
@@ -2898,16 +2898,16 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMailboxEntity().getUidValidity();
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
 
             inbox.delete(ImmutableList.of(MessageUid.of(10), MessageUid.of(11), MessageUid.of(12),
-                    MessageUid.of(25), MessageUid.of(26),
-                    MessageUid.of(32)), mailboxSession);
+                MessageUid.of(25), MessageUid.of(26),
+                MessageUid.of(32)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2920,8 +2920,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 1:37 (1,13,28 2,17,32)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED (EARLIER) 25:26,32"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 25:26,32"))
+                .hasSize(1);
         }
 
         @Test
@@ -2929,15 +2929,15 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMailboxEntity().getUidValidity();
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
+                .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2946,8 +2946,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
+                .hasSize(1);
         }
 
         @Test
@@ -2955,15 +2955,15 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMailboxEntity().getUidValidity();
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
+                .delete(ImmutableList.of(MessageUid.of(10)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2972,8 +2972,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10"))
+                .hasSize(1);
         }
 
         @Test
@@ -2981,16 +2981,16 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMailboxEntity().getUidValidity();
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
 
             inbox.delete(ImmutableList.of(MessageUid.of(10), MessageUid.of(11), MessageUid.of(12),
-                    MessageUid.of(25), MessageUid.of(26),
-                    MessageUid.of(32)), mailboxSession);
+                MessageUid.of(25), MessageUid.of(26),
+                MessageUid.of(32)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2999,8 +2999,8 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 SELECT INBOX (QRESYNC (%d %d 2:37 (1,10,28 2,11,29)))\r\n", uidValidity.asLong(), highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [READ-WRITE] SELECT completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10:12,25:26,32"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 10:12,25:26,32"))
+                .hasSize(1);
         }
 
         @Test
@@ -3008,16 +3008,16 @@ class IMAPServerTest {
             inbox.delete(ImmutableList.of(MessageUid.MIN_VALUE), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
 
             UidValidity uidValidity = memoryIntegrationResources.getMailboxManager()
-                    .getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMailboxEntity().getUidValidity();
+                .getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMailboxEntity().getUidValidity();
 
             inbox.delete(ImmutableList.of(MessageUid.of(10), MessageUid.of(11), MessageUid.of(12),
-                    MessageUid.of(25), MessageUid.of(26),
-                    MessageUid.of(32)), mailboxSession);
+                MessageUid.of(25), MessageUid.of(26),
+                MessageUid.of(32)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -3029,18 +3029,18 @@ class IMAPServerTest {
             List<String> replies = readStringUntil(clientConnection, s -> s.contains("a2 OK ENABLE completed."));
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(replies)
-                        .filteredOn(s -> s.contains("* OK [HIGHESTMODSEQ 41] Highest"))
-                        .hasSize(1);
+                    .filteredOn(s -> s.contains("* OK [HIGHESTMODSEQ 41] Highest"))
+                    .hasSize(1);
                 softly.assertThat(replies)
-                        .filteredOn(s -> s.contains("* ENABLED QRESYNC"))
-                        .hasSize(1);
+                    .filteredOn(s -> s.contains("* ENABLED QRESYNC"))
+                    .hasSize(1);
             });
         }
 
         private void setUpTestingData() {
             IntStream.range(0, 37)
-                    .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
-                            .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
+                .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
+                    .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
         }
 
         @Test
@@ -3053,16 +3053,16 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 1:37 (FLAGS) (CHANGEDSINCE %d)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK FETCH completed.")))
-                    .filteredOn(s -> s.contains("* 10 FETCH (MODSEQ (39) FLAGS (\\Answered \\Recent) UID 10)"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* 10 FETCH (MODSEQ (39) FLAGS (\\Answered \\Recent) UID 10)"))
+                .hasSize(1);
         }
 
         @Test
@@ -3077,13 +3077,13 @@ class IMAPServerTest {
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK FETCH completed.")))
-                    .filteredOn(s -> s.contains("FLAGS")) // No FLAGS FETCH responses
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("FLAGS")) // No FLAGS FETCH responses
+                .hasSize(1);
         }
 
         @Test
@@ -3098,18 +3098,18 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d VANISHED)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK FETCH completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED (EARLIER) 14"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED (EARLIER) 14"))
+                .hasSize(1);
         }
 
         @Test
@@ -3124,13 +3124,13 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (VANISHED)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(readBytes(clientConnection))).contains("I00104 BAD FETCH VANISHED used without CHANGEDSINCE");
@@ -3146,13 +3146,13 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
             clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d VANISHED)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(readBytes(clientConnection))).contains("I00104 BAD FETCH QRESYNC not enabled.");
@@ -3168,20 +3168,20 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
 
             inbox.delete(ImmutableList.of(MessageUid.of(14)), mailboxSession);
 
             ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .getMetaData(IGNORE, mailboxSession, NO_COUNT)
-                    .getHighestModSeq();
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
             clientConnection.write(ByteBuffer.wrap("I00104 NOOP\r\n".getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK NOOP completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED 14"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED 14"))
+                .hasSize(1);
         }
 
         @Test
@@ -3194,23 +3194,23 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(11)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(11)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(12)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(12)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(26)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(26)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(("I00104 EXPUNGE\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 44] EXPUNGE completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
+                .hasSize(1);
         }
 
         @Test
@@ -3223,29 +3223,29 @@ class IMAPServerTest {
             readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
 
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(11)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(11)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(12)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(12)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(26)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(26)), mailboxSession);
             memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                    .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
+                .setFlags(new Flags(Flags.Flag.DELETED), REPLACE, MessageRange.one(MessageUid.of(31)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(("I00104 UID EXPUNGE 1:37\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("I00104 OK [HIGHESTMODSEQ 44] EXPUNGE completed.")))
-                    .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* VANISHED 10:12,25:26,31"))
+                .hasSize(1);
         }
 
         @Test
         void implicitMailboxSelectionChangesShouldReturnClosedNotifications() throws Exception {
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.forUser(USER, "other"), mailboxSession);
+                .createMailbox(MailboxPath.forUser(USER, "other"), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -3257,15 +3257,15 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(("a3 SELECT other\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK [READ-WRITE] SELECT completed.")))
-                    .filteredOn(s -> s.contains("* OK [CLOSED]"))
-                    .hasSize(1);
+                .filteredOn(s -> s.contains("* OK [CLOSED]"))
+                .hasSize(1);
         }
 
         @Test
         void closeShouldNotReturnHighestModseqWhenUsingQResync() throws Exception {
             // See https://www.rfc-editor.org/errata_search.php?rfc=5162
             memoryIntegrationResources.getMailboxManager()
-                    .createMailbox(MailboxPath.forUser(USER, "other"), mailboxSession);
+                .createMailbox(MailboxPath.forUser(USER, "other"), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -3278,7 +3278,7 @@ class IMAPServerTest {
             clientConnection.write(ByteBuffer.wrap(("a3 CLOSE\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK CLOSE completed.")))
-                    .isNotNull();
+                .isNotNull();
         }
     }
 
@@ -3305,15 +3305,15 @@ class IMAPServerTest {
         void shouldSupportManyConcurrentSSLConnections() throws Exception {
             //Failed for 3.7.0, this serves as a non regression test
             ConcurrentTestRunner.builder()
-                    .operation((a, b) -> {
-                        IMAPSClient imapsClient = imapsImplicitClient(port);
-                        boolean capability = imapsClient.capability();
-                        assertThat(capability).isTrue();
-                        imapsClient.close();
-                    })
-                    .threadCount(10)
-                    .operationCount(200)
-                    .runSuccessfullyWithin(Duration.ofMinutes(10));
+                .operation((a, b) -> {
+                    IMAPSClient imapsClient = imapsImplicitClient(port);
+                    boolean capability = imapsClient.capability();
+                    assertThat(capability).isTrue();
+                    imapsClient.close();
+                })
+                .threadCount(10)
+                .operationCount(200)
+                .runSuccessfullyWithin(Duration.ofMinutes(10));
         }
 
         private IMAPSClient imapsImplicitClient(int port) throws Exception {
