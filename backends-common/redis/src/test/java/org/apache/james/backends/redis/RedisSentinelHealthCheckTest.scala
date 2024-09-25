@@ -20,7 +20,6 @@
 package org.apache.james.backends.redis
 
 import org.apache.james.backends.redis.RedisSentinelExtension.RedisSentinelCluster
-import org.apache.james.server.core.filesystem.FileSystemImpl
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.{AfterEach, BeforeEach}
 

@@ -22,6 +22,9 @@ Reference: https://github.com/redis/lettuce/wiki/Redis-URI-and-connection-detail
 
 Reference: https://github.com/redis/lettuce/wiki/ReadFrom-Settings
 
+| redis.sentinelPassword
+| Redis sentinel password. If not specified, the redis driver will not set password for sentinel.
+
 | redis.ioThreads
 | IO threads to be using for the underlying Netty networking resources. If unspecified driver defaults applies.
 

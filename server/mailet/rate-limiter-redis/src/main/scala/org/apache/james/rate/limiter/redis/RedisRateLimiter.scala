@@ -21,6 +21,7 @@ package org.apache.james.rate.limiter.redis
 
 import java.time.Duration
 
+import com.google.common.collect.ImmutableList
 import com.google.inject.{AbstractModule, Provides, Scopes}
 import es.moki.ratelimitj.core.limiter.request.{AbstractRequestRateLimiterFactory, ReactiveRequestRateLimiter, RequestLimitRule}
 import es.moki.ratelimitj.redis.request.{RedisClusterRateLimiterFactory, RedisSlidingWindowRequestRateLimiter, RedisRateLimiterFactory => RedisSingleInstanceRateLimitjFactory}
@@ -67,7 +68,11 @@ class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisConfiguration) 
       masterReplicaRedisConfiguration.redisURI.value.asJava,
       masterReplicaRedisConfiguration.readFrom)
 
-    case sentinelRedisConfiguration: SentinelRedisConfiguration => new RedisSingleInstanceRateLimitjFactory(RedisClient.create(sentinelRedisConfiguration.redisURI))
+    case sentinelRedisConfiguration: SentinelRedisConfiguration =>
+      new RedisMasterReplicaRateLimiterFactory(RedisClient.create(),
+        ImmutableList.of(sentinelRedisConfiguration.redisURI),
+        sentinelRedisConfiguration.readFrom
+      )
 
     case _ => throw new NotImplementedError()
   }
