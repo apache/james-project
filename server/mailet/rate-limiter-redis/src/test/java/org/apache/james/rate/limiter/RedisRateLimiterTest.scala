@@ -21,7 +21,7 @@ package org.apache.james.rate.limiter
 
 import java.time.Duration
 
-import org.apache.james.backends.redis.{RedisConfiguration, DockerRedis, RedisExtension, StandaloneRedisConfiguration}
+import org.apache.james.backends.redis.{DockerRedis, RedisConfiguration, RedisExtension, StandaloneRedisConfiguration}
 import org.apache.james.rate.limiter.api.{RateLimiterContract, RateLimiterFactory}
 import org.apache.james.rate.limiter.redis.RedisRateLimiterFactory
 import org.junit.jupiter.api.BeforeEach

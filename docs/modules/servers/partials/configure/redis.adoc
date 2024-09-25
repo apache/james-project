@@ -10,10 +10,12 @@ to get some examples and hints.
 | Property name | explanation
 
 | redisURL
-| the Redis URI pointing to Redis server. Compulsory.
+| the Redis URI pointing to Redis server. Compulsory. The value must fit redis.topology
+
+Reference: https://github.com/redis/lettuce/wiki/Redis-URI-and-connection-details
 
 | redis.topology
-| Redis server topology. Defaults to standalone. Possible values: standalone, cluster, master-replica
+| Redis server topology. Defaults to standalone. Possible values: standalone, cluster, master-replica, sentinel
 
 | redis.readFrom
 | The property to determine how Lettuce routes read operations to Redis server with topologies other than standalone. Defaults to master. Possible values: master, masterPreferred, replica, replicaPreferred, any

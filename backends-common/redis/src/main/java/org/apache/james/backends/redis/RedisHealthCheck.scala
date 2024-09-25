@@ -21,7 +21,7 @@ package org.apache.james.backends.redis
 
 import java.time.Duration
 
-import io.lettuce.core.RedisClient
+import io.lettuce.core.{ReadFrom, RedisClient, RedisURI}
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.cluster.api.reactive.RedisAdvancedClusterReactiveCommands
@@ -50,6 +50,8 @@ class RedisHealthCheck @Inject()(redisConfiguration: RedisConfiguration) extends
     case standaloneConfiguration: StandaloneRedisConfiguration => new RedisStandaloneHealthCheckPerform(standaloneConfiguration, healthcheckTimeout)
     case clusterConfiguration: ClusterRedisConfiguration => new RedisClusterHealthCheckPerform(clusterConfiguration, healthcheckTimeout)
     case masterReplicaConfiguration: MasterReplicaRedisConfiguration => new RedisMasterReplicaHealthCheckPerform(masterReplicaConfiguration, healthcheckTimeout)
+    case sentinelRedisConfiguration: SentinelRedisConfiguration =>
+      new RedisSentinelHealthCheckPerform(sentinelRedisConfiguration.redisURI, sentinelRedisConfiguration.readFrom, healthcheckTimeout)
     case _ => throw new NotImplementedError()
   }
 
@@ -140,6 +142,33 @@ class RedisMasterReplicaHealthCheckPerform(val redisConfiguration: MasterReplica
         rURI
       }).asJava)
     .reactive()
+
+  override def check(): SMono[Result] =
+    SMono(redisCommand.ping())
+      .timeout(healthcheckTimeout.toScala)
+      .filter(_ == PING_SUCCESS_RESPONSE)
+      .map(_ => Result.healthy(redisComponent))
+      .switchIfEmpty(SMono.just(Result.degraded(redisComponent, "Can not PING to Redis.")))
+
+  override def close(): Unit =
+    Mono.fromCompletionStage(redisClient.shutdownAsync())
+      .subscribeOn(Schedulers.boundedElastic())
+      .subscribe()
+
+}
+
+class RedisSentinelHealthCheckPerform(val redisURI: RedisURI,
+                                      val readFrom: ReadFrom,
+                                      val healthcheckTimeout: Duration) extends RedisHealthcheckPerform {
+
+  private val PING_SUCCESS_RESPONSE = "PONG"
+
+  private val redisClient: RedisClient = {
+    redisURI.setTimeout(healthcheckTimeout)
+    RedisClient.create(redisURI)
+  }
+
+  private val redisCommand: RedisReactiveCommands[String, String] = redisClient.connect().reactive()
 
   override def check(): SMono[Result] =
     SMono(redisCommand.ping())

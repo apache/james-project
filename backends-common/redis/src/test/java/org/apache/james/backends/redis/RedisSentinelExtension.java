@@ -19,7 +19,6 @@
 
 package org.apache.james.backends.redis;
 
-import static java.lang.Boolean.TRUE;
 import static org.apache.james.backends.redis.DockerRedis.DEFAULT_IMAGE_NAME;
 
 import java.time.Duration;
@@ -44,14 +43,12 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 
 import io.lettuce.core.ReadFrom;
 import scala.Function2;
-import scala.jdk.javaapi.OptionConverters;
 
 public class RedisSentinelExtension implements GuiceModuleTestExtension {
     public static final int SENTINEL_PORT = 26379;
@@ -68,10 +65,10 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
 
         public void unPauseMasterNode() {
             GenericContainer container = this.get(0);
-            if (TRUE.equals(container.getDockerClient().inspectContainerCmd(container.getContainerId())
+            if (container.getDockerClient().inspectContainerCmd(container.getContainerId())
                 .exec()
                 .getState()
-                .getPaused())) {
+                .getPaused()) {
                 container.getDockerClient().unpauseContainerCmd(container.getContainerId()).exec();
             }
         }
@@ -82,12 +79,9 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
             super(c);
         }
 
-        public MasterReplicaRedisConfiguration getRedisConfiguration() {
-            return MasterReplicaRedisConfiguration.from(ImmutableList.of(createRedisSentinelURI(this))
-                    .toArray(String[]::new),
-                ReadFrom.MASTER,
-                OptionConverters.toScala(Optional.empty()),
-                OptionConverters.toScala(Optional.empty()));
+        public SentinelRedisConfiguration getRedisConfiguration() {
+            return SentinelRedisConfiguration.from(createRedisSentinelURI(this),
+                ReadFrom.MASTER);
         }
     }
 

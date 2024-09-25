@@ -19,35 +19,19 @@
 
 package org.apache.james.rate.limiter
 
-import java.time.Duration
-
-import eu.timepit.refined.auto._
-import org.apache.james.backends.redis.RedisMasterReplicaExtension
 import org.apache.james.backends.redis.RedisMasterReplicaExtension.RedisMasterReplicaContainer
-import org.apache.james.rate.limiter.RedisRateLimiterWithMasterReplicaTopologyTest.{RULES, SLIDING_WIDOW_PRECISION}
-import org.apache.james.rate.limiter.api.{AcceptableRate, RateLimitingKey, RateLimitingResult, Rule, Rules}
-import org.apache.james.rate.limiter.redis.RedisRateLimiterFactory
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
+import org.apache.james.backends.redis.{RedisConfiguration, RedisMasterReplicaExtension}
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
-import reactor.core.scala.publisher.SMono
-
-object RedisRateLimiterWithMasterReplicaTopologyTest {
-  val SLIDING_WIDOW_PRECISION: Option[Duration] = Some(Duration.ofSeconds(1))
-  val RULES = Rules(Seq(Rule(4L, Duration.ofSeconds(2))))
-}
 
 @ExtendWith(Array(classOf[RedisMasterReplicaExtension]))
-class RedisRateLimiterWithMasterReplicaTopologyTest {
-  @Test
-  def rateLimitShouldWorkNormally(redisClusterContainer: RedisMasterReplicaContainer): Unit = {
-    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.getRedisConfiguration)
-    val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
-    val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key1"), 4)).block()
-    assertThat(actual).isEqualTo(AcceptableRate)
-  }
-}
+class RedisRateLimiterWithMasterReplicaTopologyTest extends TopologyRedisRateLimiterTest {
+  var redisMasterReplicaContainer: RedisMasterReplicaContainer = _
 
-case class TestKey(value: String) extends RateLimitingKey {
-  override def asString: String = value
+  def getRedisConfiguration(): RedisConfiguration = redisMasterReplicaContainer.getRedisConfiguration
+
+  @BeforeEach
+  def beforeEach(redisMasterReplicaContainer: RedisMasterReplicaContainer): Unit = {
+    this.redisMasterReplicaContainer = redisMasterReplicaContainer
+  }
 }

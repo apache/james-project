@@ -19,53 +19,36 @@
 
 package org.apache.james.backends.redis
 
-import java.util.concurrent.TimeUnit
 import org.apache.james.backends.redis.RedisMasterReplicaExtension.RedisMasterReplicaContainer
-import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.Awaitility
 import org.junit.jupiter.api.extension.ExtendWith
-import org.junit.jupiter.api.{AfterEach, BeforeEach, Test}
-import reactor.core.scala.publisher.SMono
+import org.junit.jupiter.api.{AfterEach, BeforeEach}
 
 @ExtendWith(Array(classOf[RedisMasterReplicaExtension]))
-class RedisMasterReplicaHealthCheckTest {
+class RedisMasterReplicaHealthCheckTest extends RedisHealthCheckTest {
   var redisHealthCheck: RedisHealthCheck = _
+  var redisMasterReplicaContainer: RedisMasterReplicaContainer = _
 
   @BeforeEach
   def setup(redis: RedisMasterReplicaContainer): Unit = {
     redisHealthCheck = new RedisHealthCheck(redis.getRedisConfiguration)
+    redisMasterReplicaContainer = redis
   }
 
   @AfterEach
-  def afterEach(redis: RedisMasterReplicaContainer): Unit = {
-    redis.unPauseOne();
+  def afterEach(): Unit = {
+    redisMasterReplicaContainer.unPauseOne();
   }
 
-  @Test
-  def checkShouldReturnHealthyWhenRedisIsRunning(): Unit = {
-    val result = SMono.fromPublisher(redisHealthCheck.check()).block()
+  @Override
+  def getRedisHealthCheck(): RedisHealthCheck = redisHealthCheck
 
-    assertThat(result.isHealthy).isTrue
+  @Override
+  def pauseRedis(): Unit = {
+    redisMasterReplicaContainer.pauseOne()
   }
 
-  @Test
-  def checkShouldReturnDegradedWhenRedisIsDown(redis: RedisMasterReplicaContainer): Unit = {
-    redis.pauseOne()
-
-    Awaitility.await()
-      .pollInterval(2, TimeUnit.SECONDS)
-      .atMost(20, TimeUnit.SECONDS)
-      .untilAsserted(() => assertThat(SMono.fromPublisher(redisHealthCheck.check()).block().isDegraded).isTrue)
-  }
-
-  @Test
-  def checkShouldReturnHealthyWhenRedisIsRecovered(redis: RedisMasterReplicaContainer): Unit = {
-    redis.pauseOne()
-    redis.unPauseOne()
-
-    Awaitility.await()
-      .pollInterval(2, TimeUnit.SECONDS)
-      .atMost(20, TimeUnit.SECONDS)
-      .untilAsserted(() => assertThat(SMono.fromPublisher(redisHealthCheck.check()).block().isHealthy).isTrue)
+  @Override
+  def unpauseRedis(): Unit = {
+    redisMasterReplicaContainer.unPauseOne()
   }
 }

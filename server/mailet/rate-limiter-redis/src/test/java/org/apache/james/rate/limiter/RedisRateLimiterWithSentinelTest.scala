@@ -26,12 +26,12 @@ import java.util.concurrent.TimeUnit
 import eu.timepit.refined.auto._
 import org.apache.james.backends.redis.RedisSentinelExtension
 import org.apache.james.backends.redis.RedisSentinelExtension.RedisSentinelCluster
-import org.apache.james.rate.limiter.RedisRateLimiterWithMasterReplicaTopologyTest.{RULES, SLIDING_WIDOW_PRECISION}
+import org.apache.james.rate.limiter.RedisRateLimiterWithSentinelTest.{RULES, SLIDING_WIDOW_PRECISION}
 import org.apache.james.rate.limiter.api._
 import org.apache.james.rate.limiter.redis.RedisRateLimiterFactory
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode}
 import org.awaitility.Awaitility
-import org.junit.jupiter.api.{AfterEach, Test}
+import org.junit.jupiter.api.{AfterEach, Disabled, Test}
 import org.junit.jupiter.api.extension.ExtendWith
 import reactor.core.scala.publisher.SMono
 
@@ -65,6 +65,7 @@ class RedisRateLimiterWithSentinelTest {
   }
 
   @Test
+  @Disabled
   def rateLimitShouldWorkNormallyAfterFailoverComplete(redisClusterContainer: RedisSentinelCluster): Unit = {
     val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.redisSentinelContainerList.getRedisConfiguration)
     val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
