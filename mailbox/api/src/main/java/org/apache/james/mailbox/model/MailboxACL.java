@@ -383,6 +383,11 @@ public class MailboxACL {
             return new EntryKey(name.asString(), NameType.user, negative);
         }
 
+        public static EntryKey createUserOrSpecialEntryKey(Username name)  {
+            NameType nameType = computeImplicitNameType(name.asString());
+            return new EntryKey(name.asString(), nameType, false);
+        }
+
         private final String name;
         private final NameType nameType;
         private final boolean negative;

@@ -21,15 +21,20 @@ package org.apache.james.imap.decode.parser;
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.SetACLRequest;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
+import org.apache.james.mailbox.model.MailboxACL;
 
 /**
  * SETACL Parser
@@ -43,10 +48,29 @@ public class SetACLCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        final String mailboxName = request.mailbox();
-        final String identifier = request.astring();
-        final String rights = request.astring();
-        request.eol();
-        return new SetACLRequest(tag, mailboxName, identifier, rights);
+        try {
+            final SetACLRequest.MailboxName mailboxName = new SetACLRequest.MailboxName(request.mailbox());
+            final Username identifier = Username.of(request.astring());
+            final String editModeAndRights = request.astring();
+            request.eol();
+
+            MailboxACL.EditMode editMode = MailboxACL.EditMode.REPLACE;
+            if (StringUtils.isNotEmpty(editModeAndRights)) {
+                switch (editModeAndRights.charAt(0)) {
+                    case MailboxACL.ADD_RIGHTS_MARKER:
+                        editMode = MailboxACL.EditMode.ADD;
+                        break;
+                    case MailboxACL.REMOVE_RIGHTS_MARKER:
+                        editMode = MailboxACL.EditMode.REMOVE;
+                        break;
+                }
+            }
+
+            MailboxACL.Rfc4314Rights rights = MailboxACL.Rfc4314Rights.deserialize(editModeAndRights.substring(1));
+
+            return new SetACLRequest(tag, mailboxName, identifier, editMode, rights);
+        } catch (UnsupportedRightException e) {
+            throw new DecodingException(HumanReadableText.UNSUPPORTED, e.getMessage(), e.getCause());
+        }
     }
 }

@@ -19,35 +19,59 @@
 
 package org.apache.james.imap.message.request;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.mailbox.model.MailboxACL;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 /**
  * SETACL Request.
  */
 public class SetACLRequest extends AbstractImapRequest {
-    private final String identifier;
-    private final String mailboxName;
-    private final String rights;
+    private final Username identifier;
+    private final MailboxACL.EditMode editMode;
+    private final MailboxACL.Rfc4314Rights rights;
 
-    public SetACLRequest(Tag tag, String mailboxName, String identifier, String rights) {
+    public static class MailboxName {
+        private final String mailboxName;
+
+        public MailboxName(String mailboxName) {
+            Preconditions.checkArgument(!Strings.isNullOrEmpty(mailboxName), "MailboxName must not be null or empty");
+            this.mailboxName = mailboxName;
+        }
+
+        public String asString() {
+            return mailboxName;
+        }
+    }
+
+    private final MailboxName mailboxName;
+
+    public SetACLRequest(Tag tag, MailboxName mailboxName, Username identifier, MailboxACL.EditMode editMode, MailboxACL.Rfc4314Rights rights) {
         super(tag, ImapConstants.SETACL_COMMAND);
         this.mailboxName = mailboxName;
         this.identifier = identifier;
+        this.editMode = editMode;
         this.rights = rights;
     }
 
-    public String getIdentifier() {
+    public Username getIdentifier() {
         return identifier;
     }
 
-    public String getMailboxName() {
+    public MailboxName getMailboxName() {
         return mailboxName;
     }
 
-    public String getRights() {
+    public MailboxACL.EditMode getEditMode() {
+        return editMode;
+    }
+
+    public MailboxACL.Rfc4314Rights getRights() {
         return rights;
     }
 
@@ -56,6 +80,7 @@ public class SetACLRequest extends AbstractImapRequest {
         return MoreObjects.toStringHelper(this)
             .add("identifier", identifier)
             .add("mailboxName", mailboxName)
+            .add("edit mode", editMode)
             .add("rights", rights)
             .toString();
     }
