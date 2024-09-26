@@ -212,6 +212,8 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
         Awaitility.await().untilAsserted(() ->
                 assertThat(Flux.merge(Flux.from(secondQueue.deQueue()), Flux.from(getManageableMailQueue().deQueue())).blockFirst().getMail().getName())
                         .isEqualTo("namez"));
+
+        secondQueue.close();
     }
 
     @Test
