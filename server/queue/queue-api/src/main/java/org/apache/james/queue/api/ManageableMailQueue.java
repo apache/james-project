@@ -31,6 +31,20 @@ import reactor.core.publisher.Mono;
 
 /**
  * {@link MailQueue} which is manageable
+ *
+ * <h3>Implementation notes:</h3>
+ * <p>{@link ManageableMailQueue#remove}:</p>
+ * <ul>
+ *     <li><b>MUST</b> be eventually consistent</li>
+ *     <li><b>CAN</b> be immediately consistent</li>
+ * </ul>
+ *
+ * <p>{@link ManageableMailQueue#browse()}</p>
+ * <ul>
+ *  <li><b>MUST</b> tolerate other threads changing the content in the actual queue</li>
+ *  <li><b>CAN</b> return queue items that have been removed or dequeued since the browse has started.
+ *  This can happen in snapshot-based implementations (the snapshot is fixed before the removal or dequeue) or in
+ *  eventually consistent distributed implementations</li>
  */
 public interface ManageableMailQueue extends MailQueue {
 
