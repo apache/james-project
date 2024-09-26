@@ -46,7 +46,7 @@ import org.apache.james.queue.pulsar.EnqueueId.EnqueueId
 import org.apache.james.server.core.MailImpl
 import org.apache.mailet._
 import org.apache.pulsar.client.admin.PulsarAdminException.NotFoundException
-import org.apache.pulsar.client.api.{DeadLetterPolicy, Schema, SubscriptionInitialPosition, SubscriptionType}
+import org.apache.pulsar.client.api.{DeadLetterPolicy, Schema, SubscriptionInitialPosition, SubscriptionMode, SubscriptionType}
 import org.reactivestreams.Publisher
 import org.slf4j.LoggerFactory
 
@@ -307,16 +307,20 @@ class PulsarMailQueue(
   private lazy val (dequeueControl: Control, dequeuePublisher: Publisher[MailQueueItem], scheduledConsumerControl: Control) = startDequeuing()
   private val enqueue: SourceQueueWithComplete[(Mail, Duration, Promise[Done])] = enqueueFlow.run()
   private val requeue: SourceQueueWithComplete[ProducerMessage[MessageAsJson]] = requeueFlow.run()
+
+  private val filterSubscription = Subscription("filter-subscription-" + config.name.asString() + "-" + UUID.randomUUID().toString)
+  private val scheduledFilterSubscription = Subscription("filter-scheduled-subscription-" + config.name.asString() + "-" + UUID.randomUUID().toString)
+
   private val filtersCommandFlowControl: Control =
     filtersCommandFlow(
       filterTopic,
-      Subscription("filter-subscription-" + config.name.asString() + "-" + UUID.randomUUID().toString),
+      filterSubscription,
       filterStage
     ).run()
   private val scheduledFiltersCommandFlowControl: Control =
     filtersCommandFlow(
       filterScheduledTopic,
-      Subscription("filter-scheduled-subscription-" + config.name.asString() + "-" + UUID.randomUUID().toString),
+      scheduledFilterSubscription,
       filterScheduledStage
     ).run()
 
@@ -344,14 +348,15 @@ class PulsarMailQueue(
 
     streams.source(() =>
       client.consumer(
-        ConsumerConfig(
-          subscriptionName = filterSubscription,
-          topics = Seq(topic),
-          subscriptionType = Some(SubscriptionType.Shared),
-          subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest),
+          ConsumerConfig(
+            subscriptionName = filterSubscription,
+            topics = Seq(topic),
+            subscriptionType = Some(SubscriptionType.Shared),
+            subscriptionInitialPosition = Some(SubscriptionInitialPosition.Earliest),
+            subscriptionMode = Some(SubscriptionMode.NonDurable)
+          )
         )
-      )
-    ).map(message => decode[Filter](message.value))
+      ).map(message => decode[Filter](message.value))
       .divertTo(logInvalidFilterPayload, when = _.isLeft)
       .map(_.toOption.get)
       .via(debugLogger("filterFlow"))
