@@ -31,7 +31,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.time.Duration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,12 +41,10 @@ import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
-import org.apache.james.junit.categories.Unstable;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.awaitility.Awaitility;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -56,6 +53,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -219,7 +217,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         Flux.from(getManageableMailQueue().deQueue());
 
-        assertThatCode(() ->  consumeIterator(items)).doesNotThrowAnyException();
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
 
     @Test
@@ -268,7 +266,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         Flux.from(getManageableMailQueue().deQueue());
 
-        assertThatCode(() ->  consumeIterator(items)).doesNotThrowAnyException();
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
 
     @Test
@@ -309,7 +307,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .name("name4")
             .build());
 
-        assertThatCode(() ->  consumeIterator(items)).doesNotThrowAnyException();
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
 
     @Test
@@ -354,7 +352,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .name("name2")
             .build());
 
-        assertThatCode(() ->  consumeIterator(items)).doesNotThrowAnyException();
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
 
     @Test
@@ -394,7 +392,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().clear();
 
-        assertThatCode(() ->  consumeIterator(items)).doesNotThrowAnyException();
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
 
     @Test
@@ -434,7 +432,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().flush();
 
-        assertThatCode(() ->  consumeIterator(items)).doesNotThrowAnyException();
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
 
     @Test
@@ -476,7 +474,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         awaitRemove();
 
-        assertThatCode(() ->  consumeIterator(items)).doesNotThrowAnyException();
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
 
     @Test
@@ -738,15 +736,6 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         assertThat(getManageableMailQueue().browse()).toIterable()
             .extracting(mail -> mail.getMail().getName())
             .containsExactly("name2");
-    }
-
-    default <T> int consumeIterator(Iterator<T> iterator) {
-        var i = 0;
-        while (iterator.hasNext()) {
-            iterator.next();
-            i++;
-        }
-        return i;
     }
 
 }
