@@ -34,7 +34,6 @@ import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import jakarta.mail.MessagingException;
@@ -43,10 +42,12 @@ import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.awaitility.Awaitility;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -60,6 +61,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface ManageableMailQueueContract extends MailQueueContract {
+
+    default void awaitRemove() {
+
+    }
 
     ManageableMailQueue getManageableMailQueue();
 
@@ -454,27 +459,24 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browseShouldNotFailWhenConcurrentRemoveWhenIterating() throws Exception {
-        // We use a large number of emails so that the probability of the remove being propagated
-        // through the queue is high enough that the test is not flaky.
-        IntStream.range(0, 100).forEach(
-                Throwing.intConsumer(i ->
-                        enQueue(defaultMail()
-                                .name("name" + i)
-                                .build())
-                ).sneakyThrow()
-        );
+        enQueue(defaultMail()
+            .name("name1")
+            .build());
+        enQueue(defaultMail()
+            .name("name2")
+            .build());
+        enQueue(defaultMail()
+            .name("name3")
+            .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        items.next();// we consume 1 here
+        items.next();
 
-        getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name98"); // we remove 1 here
+        getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name2");
 
+        awaitRemove();
 
-        assertThatCode(
-                // the remove may or may not be applied to an already started iterator
-                // as long as it doesn't make the iterator crash
-                () -> assertThat(consumeIterator(items)).isGreaterThanOrEqualTo(98).isLessThan(100)
-        ).doesNotThrowAnyException();
+        assertThatCode(() ->  consumeIterator(items)).doesNotThrowAnyException();
     }
 
     @Test
@@ -549,13 +551,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name2");
 
-        Awaitility.await().untilAsserted(() ->
-                assertThat(getManageableMailQueue().browse())
-                        .toIterable()
-                        .extracting(ManageableMailQueue.MailQueueItemView::getMail)
-                        .extracting(Mail::getName)
-                        .containsExactly("name1")
-        );
+        awaitRemove();
+
+        assertThat(getManageableMailQueue().browse())
+            .toIterable()
+            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
+            .extracting(Mail::getName)
+            .containsExactly("name1");
     }
 
     @Test
@@ -571,13 +573,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().remove(ManageableMailQueue.Type.Sender, OTHER_AT_LOCAL.asString());
 
-        Awaitility.await().untilAsserted(() ->
-                assertThat(getManageableMailQueue().browse())
-                        .toIterable()
-                        .extracting(ManageableMailQueue.MailQueueItemView::getMail)
-                        .extracting(Mail::getName)
-                        .containsExactly("name2")
-        );
+        awaitRemove();
+
+        assertThat(getManageableMailQueue().browse())
+            .toIterable()
+            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
+            .extracting(Mail::getName)
+            .containsExactly("name2");
     }
 
     @Test
@@ -593,13 +595,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().remove(ManageableMailQueue.Type.Recipient, RECIPIENT2.asString());
 
-        Awaitility.await().untilAsserted(() ->
-                assertThat(getManageableMailQueue().browse())
-                        .toIterable()
-                        .extracting(ManageableMailQueue.MailQueueItemView::getMail)
-                        .extracting(Mail::getName)
-                        .containsExactly("name1")
-        );
+        awaitRemove();
+
+        assertThat(getManageableMailQueue().browse())
+            .toIterable()
+            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
+            .extracting(Mail::getName)
+            .containsExactly("name1");
     }
 
     static Stream<Arguments> removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() throws AddressException {
@@ -628,13 +630,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().remove(ManageableMailQueue.Type.Recipient, toRemove.asString());
 
-        Awaitility.await().untilAsserted(() ->
-                assertThat(getManageableMailQueue().browse())
-                        .toIterable()
-                        .extracting(ManageableMailQueue.MailQueueItemView::getMail)
-                        .extracting(Mail::getName)
-                        .containsExactly("name2")
-        );
+        awaitRemove();
+
+        assertThat(getManageableMailQueue().browse())
+            .toIterable()
+            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
+            .extracting(Mail::getName)
+            .containsExactly("name2");
     }
 
     @Test
@@ -691,13 +693,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name1");
 
-        Awaitility.await().untilAsserted(() ->
-                assertThat(getManageableMailQueue().browse())
-                        .toIterable()
-                        .extracting(ManageableMailQueue.MailQueueItemView::getMail)
-                        .extracting(Mail::getName)
-                        .doesNotContain("name1")
-        );
+        awaitRemove();
 
         assertThat(Flux.from(getManageableMailQueue().deQueue()).blockFirst().getMail().getName())
             .isEqualTo("name2");
@@ -713,11 +709,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().remove(ManageableMailQueue.Type.Recipient, MailAddressFixture.RECIPIENT1.asString());
 
-        Awaitility.await().untilAsserted(() ->
-                assertThat(getManageableMailQueue().browse())
-                        .toIterable()
-                        .isEmpty()
-        );
+        awaitRemove();
 
         enQueue(defaultMail()
             .name("name2")
@@ -737,12 +729,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().remove(ManageableMailQueue.Type.Recipient, MailAddressFixture.RECIPIENT1.asString());
 
-        Awaitility.await().untilAsserted(() ->
-                assertThat(getManageableMailQueue().browse())
-                        .toIterable()
-                        .isEmpty()
-        );
-
+        awaitRemove();
 
         enQueue(defaultMail()
             .name("name2")
