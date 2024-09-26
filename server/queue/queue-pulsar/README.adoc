@@ -1,0 +1,32 @@
+= Apache James Pulsar MailQueue
+
+This project offers an implementation of the james mailqueue backed by https://pulsar.apache.org/[apache pulsar].
+
+== Overview
+
+This implementation honors both
+
+- MailQueue
+- ManageableMailQueue.
+
+== Implementation notes
+=== Reactive
+
+The implementation is built on top of reactive streams and is therefore natively reactive. The blocking dequeue semantics are achieved by an explicit await on the reactive version of the method.
+
+=== Storage
+
+Pulsar is not well suited to store arbitrarily large messages. Since email sizes can quickly inflate, especially with attachments, we chose to store the actual content of the mail in a blob storage of some kind, while only storing metadata in Pulsar.
+
+When browsing or dequeueing, the implementation will fetch the corresponding blob and combine it with the necessary metadata to rebuild the whole mail.
+
+The initial implementation stores both MimeMessage and headers in separate storages. This can definitely be improved to store the whole blob in one place and simplify the read logic (both dequeue and browse)
+
+=== Remove
+
+We chose to implement the storage and distribution of the removals through a mechanism of filters which are themselves distributed through pulsar. This choice means that this implementation is only eventually consistent on removals and not strongly consistent.
+
+=== Browse
+
+The iterator for browse is dynamically backed by the pulsar queue it pulls items from the queue as they are asked applying any removal filters as needed.
+This means that dequeued items will not be returned by the iterator even if the iterator was retrieved before the dequeue happens. It also means that once filters have reached eventual consistency they will automatically apply to the ongoing iterator.
