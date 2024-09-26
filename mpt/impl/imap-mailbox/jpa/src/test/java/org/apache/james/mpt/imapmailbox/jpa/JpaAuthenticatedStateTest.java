@@ -38,5 +38,6 @@ public class JpaAuthenticatedStateTest extends AuthenticatedState {
     @Disabled("Jpa does not implement right storing for mailboxes so this test can be ignored")
     @Test
     @Override
-    public void rightsCommandsShouldBeSupported() {}
+    public void rightsCommandsShouldBeSupported() {
+    }
 }
