@@ -166,7 +166,7 @@ class IMAPServerTest {
         Set<ConnectionCheck> connectionChecks = defaultConnectionChecks();
         mailboxManager = spy(memoryIntegrationResources.getMailboxManager());
         IMAPServer imapServer = new IMAPServer(
-            DefaultImapDecoderFactory.createDecoder(),
+            new DefaultImapDecoderFactory().buildImapDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
             DefaultImapProcessorFactory.createXListSupportingProcessor(
                 mailboxManager,

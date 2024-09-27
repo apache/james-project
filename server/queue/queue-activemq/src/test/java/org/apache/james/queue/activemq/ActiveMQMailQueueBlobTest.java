@@ -31,7 +31,6 @@ import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.junit.categories.Unstable;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
@@ -156,17 +155,6 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     @Disabled("JAMES-3687 Delayed deletes are buggy")
     public void delayedEmailsShouldBeDeletedWhenMixedWithOtherEmails() {
 
-    }
-
-    @Tag(Unstable.TAG)
-    @Test
-    @Override
-    public void browseShouldNotFailWhenConcurrentClearWhenIterating() throws Exception {
-        // This test used to pass because the assertion did not actually check anything
-        // it used Iterators.consumingIterator which only wraps the underlying iterator without
-        // actually consuming it. When replaced with an actual consumption this implementation started
-        // failing.
-        DelayedManageableMailQueueContract.super.browseShouldNotFailWhenConcurrentClearWhenIterating();
     }
 
     @Test

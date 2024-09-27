@@ -644,7 +644,7 @@
         <maven-plugin-api.version>3.9.3</maven-plugin-api.version>
         <maven-reporting-impl.version>3.1.0</maven-reporting-impl.version>
         <maven-reporting-api.version>3.1.1</maven-reporting-api.version>
-        <maven-surefire-plugin.version>3.5.0</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.3.0</maven-surefire-plugin.version>
         <maven-enforcer-plugin.version>3.5.0</maven-enforcer-plugin.version>
         <qdox.version>2.0.3</qdox.version>
         <jaxb.version>2.3.1</jaxb.version>
@@ -3326,7 +3326,7 @@
                         <reuseForks>true</reuseForks>
                         <!-- Fail tests longer than 30 minutes, prevent form random locking tests -->
                         <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
-                        <groups>none()</groups>
+                        <excludedGroups>unstable</excludedGroups>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -3778,6 +3778,7 @@
                             <artifactId>maven-surefire-plugin</artifactId>
                             <version>${maven-surefire-plugin.version}</version>
                             <configuration>
+                                <excludedGroups />
                                 <groups>unstable</groups>
                             </configuration>
                         </plugin>

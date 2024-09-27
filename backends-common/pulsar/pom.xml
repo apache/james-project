@@ -30,8 +30,8 @@
     <artifactId>apache-james-backends-pulsar</artifactId>
     <name>Apache James :: Backends Common :: Pulsar</name>
     <properties>
-        <pulsar-client.version>3.3.1</pulsar-client.version>
-        <clever-cloud.pulsar4s.version>2.10.0</clever-cloud.pulsar4s.version>
+        <pulsar-client.version>2.11.0</pulsar-client.version>
+        <clever-cloud.pulsar4s.version>2.9.1</clever-cloud.pulsar4s.version>
         <pekko-stream.version>1.0.2</pekko-stream.version>
     </properties>
 
