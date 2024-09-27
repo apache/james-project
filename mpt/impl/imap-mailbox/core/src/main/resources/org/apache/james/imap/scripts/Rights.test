@@ -36,5 +36,41 @@ S: a5 OK DELETEACL completed.
 C: a6 DELETEACL BAD bob
 S: a6 NO DELETEACL failed. Mailbox not found.
 
-C: a7 SETACL INBOX bob lr
-S: a7 OK SETACL completed.
+C: a7 GETACL INBOX
+S: \* ACL "INBOX" "owner" "aeiklprstwx"
+S: a7 OK GETACL completed.
+
+C: a8 SETACL INBOX bob l
+S: a8 OK SETACL completed.
+
+C: a9 GETACL INBOX
+S: \* ACL "INBOX" "bob" "l" "owner" "aeiklprstwx"
+S: a9 OK GETACL completed.
+
+C: a10 SETACL INBOX anyone r
+S: a10 OK SETACL completed.
+
+C: a11 GETACL INBOX
+S: \* ACL "INBOX" "bob" "l" "anyone" "r" "owner" "aeiklprstwx"|\* ACL "INBOX" "anyone" "r" "bob" "l" "owner" "aeiklprstwx"
+S: a11 OK GETACL completed.
+
+C: a12 SETACL INBOX -bob r
+S: a12 OK SETACL completed.
+
+C: a13 GETACL INBOX
+S: \* ACL "INBOX" "bob" "l" "anyone" "r" "-bob" "r" "owner" "aeiklprstwx"|\* ACL "INBOX" "-bob" "r" "anyone" "r" "bob" "l" "owner" "aeiklprstwx"
+S: a13 OK GETACL completed.
+
+C: a14 SETACL INBOX -bob -r
+S: a14 OK SETACL completed.
+
+C: a15 GETACL INBOX
+S: \* ACL "INBOX" "bob" "l" "anyone" "r" "owner" "aeiklprstwx"|\* ACL "INBOX" "anyone" "r" "bob" "l" "owner" "aeiklprstwx"
+S: a15 OK GETACL completed.
+
+C: a16 SETACL INBOX anyone -r
+S: a16 OK SETACL completed.
+
+C: a17 GETACL INBOX
+S: \* ACL "INBOX" "bob" "l" "owner" "aeiklprstwx"
+S: a17 OK GETACL completed.

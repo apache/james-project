@@ -86,7 +86,7 @@ public class MailboxACL {
      * Special name literals.
      */
     public enum SpecialName {
-        anybody, authenticated, owner
+        anyone, authenticated, owner
     }
 
     /**
@@ -634,8 +634,8 @@ public class MailboxACL {
         }
     }
 
-    public static final EntryKey ANYBODY_KEY;
-    public static final EntryKey ANYBODY_NEGATIVE_KEY;
+    public static final EntryKey ANYONE_KEY;
+    public static final EntryKey ANYONE_NEGATIVE_KEY;
     public static final EntryKey AUTHENTICATED_KEY;
     public static final EntryKey AUTHENTICATED_NEGATIVE_KEY;
     public static final MailboxACL EMPTY;
@@ -651,8 +651,8 @@ public class MailboxACL {
 
     static {
         try {
-            ANYBODY_KEY = new EntryKey(SpecialName.anybody.name(), NameType.special, false);
-            ANYBODY_NEGATIVE_KEY = new EntryKey(SpecialName.anybody.name(), NameType.special, true);
+            ANYONE_KEY = new EntryKey(SpecialName.anyone.name(), NameType.special, false);
+            ANYONE_NEGATIVE_KEY = new EntryKey(SpecialName.anyone.name(), NameType.special, true);
             AUTHENTICATED_KEY = new EntryKey(SpecialName.authenticated.name(), NameType.special, false);
             AUTHENTICATED_NEGATIVE_KEY = new EntryKey(SpecialName.authenticated.name(), NameType.special, true);
             EMPTY = new MailboxACL();

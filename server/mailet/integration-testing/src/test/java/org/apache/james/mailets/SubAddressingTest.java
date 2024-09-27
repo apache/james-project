@@ -23,6 +23,7 @@ package org.apache.james.mailets;
 import static org.apache.james.mailets.SPFIntegrationTests.POSTMASTER;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.FROM;
+import static org.apache.james.mailets.configuration.Constants.FROM2;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
@@ -34,14 +35,10 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
-import org.apache.james.core.Username;
-import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
@@ -82,6 +79,10 @@ class SubAddressingTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(FROM, PASSWORD);
+        dataProbe.addUser(FROM2, PASSWORD);
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(RECIPIENT, PASSWORD);
     }
 
     @AfterEach
@@ -97,43 +98,34 @@ class SubAddressingTest {
     void subAddressedEmailShouldBeDeliveredInINBOXWhenSpecifiedFolderDoesNotExist(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder);
 
-        //do not create mailbox
+        // do not create mailbox
 
         sendSubAddressedMail();
         awaitSubAddressedMail(MailboxConstants.INBOX);
     }
 
     @Test
-    void subAddressedEmailShouldBeDeliveredInINBOXWhenNoRights(@TempDir File temporaryFolder) throws Exception {
+    void subAddressedEmailShouldBeDeliveredInINBOXWhenNobodyHasRight(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder);
 
         // create mailbox
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(RECIPIENT, PASSWORD)
-            .create(TARGETED_MAILBOX);
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
 
-        //do not give posting rights
+        // do not give posting rights
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " -p");
 
         sendSubAddressedMail();
         awaitSubAddressedMail(MailboxConstants.INBOX);
     }
 
     @Test
-    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenRights(@TempDir File temporaryFolder) throws Exception {
+    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenAnyoneHasRight(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder);
 
-        // create mailbox
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(RECIPIENT, PASSWORD)
-            .create(TARGETED_MAILBOX);
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
 
-        //give posting rights
-        jamesServer.getProbe(ACLProbeImpl.class).executeCommand(
-            MailboxPath.forUser(Username.of(RECIPIENT), TARGETED_MAILBOX),
-            MailboxACL.command()
-                .key(MailboxACL.ANYBODY_KEY)
-                .rights(MailboxACL.Right.Post)
-                .asAddition());
+        // give posting rights for anyone
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " +p");
 
         sendSubAddressedMail();
         awaitSubAddressedMail(TARGETED_MAILBOX);
