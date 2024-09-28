@@ -46,7 +46,6 @@ class MailboxACLTest {
     private static final String USER_2 = "user2";
     private static final Username USERNAME_1 = Username.of("user1");
     private static final Username USERNAME_2 = Username.of("user2");
-    private static final boolean NEGATIVE = true;
 
     private static final String ae = "ae";
     private static final String ik = "ik";
@@ -272,7 +271,7 @@ class MailboxACLTest {
     @Test
     void ofPositiveNameTypeShouldFilterOutNegativeEntries() throws Exception {
         MailboxACL mailboxACL = new MailboxACL(
-            ImmutableMap.of(EntryKey.createUserEntryKey(Username.of("user1"), NEGATIVE), MailboxACL.FULL_RIGHTS));
+            ImmutableMap.of(EntryKey.createUserEntryKey(Username.of("user1"), MailboxACL.NEGATIVE_KEY), MailboxACL.FULL_RIGHTS));
         assertThat(mailboxACL.ofPositiveNameType(NameType.user))
             .isEmpty();
     }

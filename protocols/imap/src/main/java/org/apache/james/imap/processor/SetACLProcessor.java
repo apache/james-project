@@ -25,8 +25,6 @@ import java.util.List;
 
 import jakarta.inject.Inject;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -40,9 +38,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxACL.EditMode;
-import org.apache.james.mailbox.model.MailboxACL.EntryKey;
-import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.FunctionalUtils;
@@ -73,14 +68,13 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
         final SetACLRequest.MailboxName mailboxName = request.getMailboxName();
-        final Username identifier = request.getIdentifier();
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName.asString());
 
         return checkLookupRight(request, responder, mailboxManager, mailboxSession, mailboxPath)
             .filter(FunctionalUtils.identityPredicate())
             .flatMap(hasLookupRight -> checkAdminRight(request, responder, mailboxManager, mailboxSession, mailboxName, mailboxPath))
             .filter(FunctionalUtils.identityPredicate())
-            .flatMap(hasAdminRight -> applyRight(mailboxManager, mailboxSession, identifier, request, mailboxPath)
+            .flatMap(hasAdminRight -> applyRight(mailboxManager, mailboxSession, request, mailboxPath)
                 .then(Mono.fromRunnable(() -> okComplete(request, responder)))
                 .then())
             .onErrorResume(UnsupportedRightException.class,
@@ -96,27 +90,14 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
                 error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING)));
     }
 
-    /* parsing the rights is the cheapest thing to begin with */
-    private Pair<Rfc4314Rights, EditMode> parsingRightAndEditMode(SetACLRequest request) throws UnsupportedRightException {
-        EditMode editMode = request.getEditMode();
-        MailboxACL.Rfc4314Rights rights = request.getRights();
-        return Pair.of(rights, editMode);
-    }
-
     private Mono<Void> applyRight(MailboxManager mailboxManager,
                                   MailboxSession mailboxSession,
-                                  Username identifier,
                                   SetACLRequest request,
                                   MailboxPath mailboxPath) {
-        return Mono.fromCallable(() -> parsingRightAndEditMode(request))
-            .flatMap(rightAndEditMode -> Mono.from(mailboxManager.applyRightsCommandReactive(
+        return Mono.from(mailboxManager.applyRightsCommandReactive(
                 mailboxPath,
-                MailboxACL.command()
-                    .key(EntryKey.createUserOrSpecialEntryKey(identifier))
-                    .mode(rightAndEditMode.getRight())
-                    .rights(rightAndEditMode.getLeft())
-                    .build(),
-                mailboxSession)));
+                request.getAclCommand(),
+                mailboxSession));
     }
 
     private Mono<Boolean> checkAdminRight(SetACLRequest request, Responder responder, MailboxManager mailboxManager, MailboxSession mailboxSession, SetACLRequest.MailboxName mailboxName, MailboxPath mailboxPath) {
@@ -153,8 +134,6 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "SET_ACL")
             .addToContext("mailbox", request.getMailboxName().asString())
-            .addToContext("identifier", request.getIdentifier().asString())
-            .addToContext("edit mode", request.getEditMode().toString())
-            .addToContext("rights", request.getRights().serialize());
+            .addToContext("ACL command", request.getAclCommand().toString());
     }
 }

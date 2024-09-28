@@ -39,7 +39,7 @@ class ACLUpdatedDTOTest {
         "    \"newAcl\":{\"entries\":{\"$any\":\"l\"}}" +
         "  }" +
         "}";
-    private static final MailboxACL.EntryKey ENTRY_KEY = MailboxACL.EntryKey.createGroupEntryKey("any", false);
+    private static final MailboxACL.EntryKey ENTRY_KEY = MailboxACL.EntryKey.createGroupEntryKey("any", MailboxACL.POSITIVE_KEY);
     private static final MailboxACL.Rfc4314Rights RIGHTS = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Administer);
     private static final ACLUpdated EVENT = aclUpdated();
 

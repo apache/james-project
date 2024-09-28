@@ -320,7 +320,7 @@ public class PropagateLookupRightListenerTest {
 
     @Test
     public void eventShouldDoNothingWhenNegativeACLEntry() throws Exception {
-        EntryKey negativeUserKey = EntryKey.createUserEntryKey(SHARED_USER, true);
+        EntryKey negativeUserKey = EntryKey.createUserEntryKey(SHARED_USER, MailboxACL.NEGATIVE_KEY);
         storeRightManager.applyRightsCommand(
             GRAND_CHILD_MAILBOX,
             MailboxACL.command()

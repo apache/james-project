@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.message.request;
 
-import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -32,16 +31,10 @@ import com.google.common.base.Strings;
  * SETACL Request.
  */
 public class SetACLRequest extends AbstractImapRequest {
-    private final Username identifier;
-    private final MailboxACL.EditMode editMode;
-    private final MailboxACL.Rfc4314Rights rights;
 
-    public static class MailboxName {
-        private final String mailboxName;
-
-        public MailboxName(String mailboxName) {
+    public record MailboxName(String mailboxName) {
+        public MailboxName {
             Preconditions.checkArgument(!Strings.isNullOrEmpty(mailboxName), "MailboxName must not be null or empty");
-            this.mailboxName = mailboxName;
         }
 
         public String asString() {
@@ -50,38 +43,27 @@ public class SetACLRequest extends AbstractImapRequest {
     }
 
     private final MailboxName mailboxName;
+    private final MailboxACL.ACLCommand aclCommand;
 
-    public SetACLRequest(Tag tag, MailboxName mailboxName, Username identifier, MailboxACL.EditMode editMode, MailboxACL.Rfc4314Rights rights) {
+    public SetACLRequest(Tag tag, MailboxName mailboxName, MailboxACL.ACLCommand aclCommand) {
         super(tag, ImapConstants.SETACL_COMMAND);
         this.mailboxName = mailboxName;
-        this.identifier = identifier;
-        this.editMode = editMode;
-        this.rights = rights;
-    }
-
-    public Username getIdentifier() {
-        return identifier;
+        this.aclCommand = aclCommand;
     }
 
     public MailboxName getMailboxName() {
         return mailboxName;
     }
 
-    public MailboxACL.EditMode getEditMode() {
-        return editMode;
-    }
-
-    public MailboxACL.Rfc4314Rights getRights() {
-        return rights;
+    public MailboxACL.ACLCommand getAclCommand() {
+        return aclCommand;
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("identifier", identifier)
             .add("mailboxName", mailboxName)
-            .add("edit mode", editMode)
-            .add("rights", rights)
+            .add("ACL command", aclCommand)
             .toString();
     }
 }

@@ -22,7 +22,6 @@ package org.apache.james.imap.decode.parser;
 import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -36,6 +35,8 @@ import org.apache.james.imap.message.request.SetACLRequest;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 
+import com.google.common.base.CharMatcher;
+
 /**
  * SETACL Parser
  */
@@ -48,27 +49,44 @@ public class SetACLCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+        SetACLRequest.MailboxName mailboxName = new SetACLRequest.MailboxName(request.mailbox());
+        MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.deserialize(request.astring());
+        String editModeAndRights = request.astring();
+        request.eol();
+
+        MailboxACL.ACLCommand aclCommand = MailboxACL.command()
+                .key(entryKey)
+                .mode(parseEditMode(editModeAndRights))
+                .rights(parseRights(editModeAndRights))
+                .build();
+
+        return new SetACLRequest(tag, mailboxName, aclCommand);
+    }
+
+    private MailboxACL.EditMode parseEditMode(String editModeAndRights) {
+        if (StringUtils.isEmpty(editModeAndRights)) {
+            return MailboxACL.EditMode.REPLACE;
+        }
+
+        return switch (editModeAndRights.charAt(0)) {
+            case MailboxACL.ADD_RIGHTS_MARKER -> MailboxACL.EditMode.ADD;
+            case MailboxACL.REMOVE_RIGHTS_MARKER -> MailboxACL.EditMode.REMOVE;
+            default -> MailboxACL.EditMode.REPLACE;
+        };
+    }
+
+    private MailboxACL.Rfc4314Rights parseRights(String editModeAndRights) throws DecodingException {
+        if (StringUtils.isEmpty(editModeAndRights)) {
+            throw new DecodingException(HumanReadableText.INVALID_COMMAND, "SETACL command must include rights. If you want to remove rights for that user, please use a DELETEACL command.");
+        }
         try {
-            final SetACLRequest.MailboxName mailboxName = new SetACLRequest.MailboxName(request.mailbox());
-            final Username identifier = Username.of(request.astring());
-            final String editModeAndRights = request.astring();
-            request.eol();
-
-            MailboxACL.EditMode editMode = MailboxACL.EditMode.REPLACE;
-            if (StringUtils.isNotEmpty(editModeAndRights)) {
-                switch (editModeAndRights.charAt(0)) {
-                    case MailboxACL.ADD_RIGHTS_MARKER:
-                        editMode = MailboxACL.EditMode.ADD;
-                        break;
-                    case MailboxACL.REMOVE_RIGHTS_MARKER:
-                        editMode = MailboxACL.EditMode.REMOVE;
-                        break;
-                }
+            if (CharMatcher.anyOf("" + MailboxACL.ADD_RIGHTS_MARKER + MailboxACL.REMOVE_RIGHTS_MARKER).matches(editModeAndRights.charAt(0))) {
+                // first character is the edit mode, to be excluded here
+                return MailboxACL.Rfc4314Rights.deserialize(editModeAndRights.substring(1));
+            } else {
+                // no edit mode
+                return MailboxACL.Rfc4314Rights.deserialize(editModeAndRights);
             }
-
-            MailboxACL.Rfc4314Rights rights = MailboxACL.Rfc4314Rights.deserialize(editModeAndRights.substring(1));
-
-            return new SetACLRequest(tag, mailboxName, identifier, editMode, rights);
         } catch (UnsupportedRightException e) {
             throw new DecodingException(HumanReadableText.UNSUPPORTED, e.getMessage(), e.getCause());
         }

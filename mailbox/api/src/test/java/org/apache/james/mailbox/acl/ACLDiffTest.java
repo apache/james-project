@@ -26,7 +26,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.junit.jupiter.api.Test;
 
 class ACLDiffTest {
-    private static final MailboxACL.EntryKey ENTRY_KEY = MailboxACL.EntryKey.createGroupEntryKey("any", false);
+    private static final MailboxACL.EntryKey ENTRY_KEY = MailboxACL.EntryKey.createGroupEntryKey("any", MailboxACL.POSITIVE_KEY);
     private static final MailboxACL.Rfc4314Rights RIGHTS = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Administer);
 
     @Test

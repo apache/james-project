@@ -39,8 +39,6 @@ import com.google.common.collect.ImmutableMap;
 
 public abstract class MailboxMapperACLTest {
     private static final UidValidity UID_VALIDITY = UidValidity.of(42);
-    private static final boolean POSITIVE = true;
-    private static final boolean NEGATIVE = !POSITIVE;
     private static final Username USER = Username.of("user");
     private static final Username USER_1 = Username.of("user1");
     private static final Username USER_2 = Username.of("user2");
@@ -103,8 +101,8 @@ public abstract class MailboxMapperACLTest {
 
     @Test
     void updateAclShouldTreatNegativeAndPositiveRightSeparately() {
-        EntryKey key1 = EntryKey.createUserEntryKey(USER, NEGATIVE);
-        EntryKey key2 = EntryKey.createUserEntryKey(USER, POSITIVE);
+        EntryKey key1 = EntryKey.createUserEntryKey(USER, MailboxACL.POSITIVE_KEY);
+        EntryKey key2 = EntryKey.createUserEntryKey(USER, MailboxACL.NEGATIVE_KEY);
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
         Rfc4314Rights newRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
         mailboxMapper.updateACL(benwaInboxMailbox, MailboxACL.command().key(key1).rights(rights).asReplacement()).block();

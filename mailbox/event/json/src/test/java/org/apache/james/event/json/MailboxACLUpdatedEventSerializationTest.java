@@ -41,11 +41,11 @@ import org.junit.jupiter.api.Test;
 class MailboxACLUpdatedEventSerializationTest {
 
     private static final Username USERNAME = Username.of("user");
-    private static final MailboxACL.EntryKey ENTRY_KEY = org.apache.james.mailbox.model.MailboxACL.EntryKey.createGroupEntryKey("any", false);
+    private static final MailboxACL.EntryKey ENTRY_KEY = org.apache.james.mailbox.model.MailboxACL.EntryKey.createGroupEntryKey("any", MailboxACL.POSITIVE_KEY);
     private static final MailboxACL.Rfc4314Rights RIGHTS = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Administer, MailboxACL.Right.Read);
     private static final MailboxACL MAILBOX_ACL = new MailboxACL(
         new MailboxACL.Entry(ENTRY_KEY, RIGHTS),
-        new MailboxACL.Entry(MailboxACL.EntryKey.createUserEntryKey(Username.of("alice"), true),
+        new MailboxACL.Entry(MailboxACL.EntryKey.createUserEntryKey(Username.of("alice"), MailboxACL.NEGATIVE_KEY),
             new MailboxACL.Rfc4314Rights(MailboxACL.Right.Insert)));
 
     private static final MailboxACLUpdated MAILBOX_ACL_UPDATED = new MailboxACLUpdated(

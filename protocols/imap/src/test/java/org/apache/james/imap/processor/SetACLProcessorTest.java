@@ -103,8 +103,12 @@ class SetACLProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
 
-        MailboxACL.Rfc4314Rights rights = MailboxACL.Rfc4314Rights.deserialize(SET_RIGHTS);
-        replaceAclRequest = new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), USER_1, EditMode.REPLACE, rights);
+        MailboxACL.ACLCommand aclCommand = MailboxACL.command()
+                .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                .mode(EditMode.REPLACE)
+                .rights(MailboxACL.Rfc4314Rights.deserialize(SET_RIGHTS))
+                .build();
+        replaceAclRequest = new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), aclCommand);
 
         user1Key = EntryKey.deserialize(USER_1.asString());
         setRights = Rfc4314Rights.fromSerializedRfc4314Rights(SET_RIGHTS);
@@ -114,7 +118,13 @@ class SetACLProcessorTest {
     void testUnsupportedRight() {
         assertThrows(UnsupportedRightException.class, () -> {
             MailboxACL.Rfc4314Rights unsupportedRight = MailboxACL.Rfc4314Rights.deserialize(UNSUPPORTED_RIGHT);
-            SetACLRequest setACLRequest = new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), USER_1, EditMode.REPLACE, unsupportedRight);
+            MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.createUserEntryKey(USER_1);
+            MailboxACL.ACLCommand aclCommand = MailboxACL.command()
+                    .key(entryKey)
+                    .mode(EditMode.REPLACE)
+                    .rights(unsupportedRight)
+                    .build();
+            new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), aclCommand);
         });
     }
     
@@ -178,9 +188,13 @@ class SetACLProcessorTest {
             mailboxSession))
             .thenReturn(Mono.empty());
 
-        MailboxACL.Rfc4314Rights rights = MailboxACL.Rfc4314Rights.deserialize(SET_RIGHTS);
-        SetACLRequest r = new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), USER_1, editMode, rights);
-        subject.doProcess(r, responder, imapSession).block();
+        MailboxACL.ACLCommand aclCommand = MailboxACL.command()
+                .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                .mode(editMode)
+                .rights(MailboxACL.Rfc4314Rights.deserialize(SET_RIGHTS))
+                .build();
+        SetACLRequest setACLRequest = new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), aclCommand);
+        subject.doProcess(setACLRequest, responder, imapSession).block();
 
         verify(mailboxManager).applyRightsCommandReactive(path,
             MailboxACL.command().key(user1Key).rights(setRights).mode(editMode).build(),

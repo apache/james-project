@@ -64,7 +64,7 @@ class UnionMailboxACLResolverTest {
         noGlobals = new UnionMailboxACLResolver(MailboxACL.EMPTY, MailboxACL.EMPTY);
 
         user1Read = new MailboxACL(new Entry(user1Key, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
-        user1ReadNegative = new MailboxACL(new Entry(EntryKey.createUserEntryKey(USER_1, true), Rfc4314Rights.fromSerializedRfc4314Rights("r")));
+        user1ReadNegative = new MailboxACL(new Entry(EntryKey.createUserEntryKey(USER_1, MailboxACL.NEGATIVE_KEY), Rfc4314Rights.fromSerializedRfc4314Rights("r")));
 
         anyoneRead = new MailboxACL(new Entry(MailboxACL.ANYONE_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
         anyoneReadNegative = new MailboxACL(new Entry(MailboxACL.ANYONE_NEGATIVE_KEY, Rfc4314Rights.fromSerializedRfc4314Rights("r")));
