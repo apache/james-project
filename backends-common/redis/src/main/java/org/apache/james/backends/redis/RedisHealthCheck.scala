@@ -21,11 +21,11 @@ package org.apache.james.backends.redis
 
 import java.time.Duration
 
+import io.lettuce.core.RedisClient
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.cluster.api.reactive.RedisAdvancedClusterReactiveCommands
 import io.lettuce.core.codec.StringCodec
-import io.lettuce.core.{RedisClient, RedisURI}
 import jakarta.annotation.PreDestroy
 import jakarta.inject.Inject
 import org.apache.commons.lang3.StringUtils
@@ -51,7 +51,7 @@ class RedisHealthCheck @Inject()(redisConfiguration: RedisConfiguration) extends
     case clusterConfiguration: ClusterRedisConfiguration => new RedisClusterHealthCheckPerform(clusterConfiguration, healthcheckTimeout)
     case masterReplicaConfiguration: MasterReplicaRedisConfiguration => new RedisMasterReplicaHealthCheckPerform(masterReplicaConfiguration, healthcheckTimeout)
     case sentinelRedisConfiguration: SentinelRedisConfiguration =>
-      new RedisSentinelHealthCheckPerform(sentinelRedisConfiguration.redisURI, healthcheckTimeout)
+      new RedisSentinelHealthCheckPerform(sentinelRedisConfiguration, healthcheckTimeout)
     case _ => throw new NotImplementedError()
   }
 
@@ -71,16 +71,35 @@ sealed trait RedisHealthcheckPerform {
   def close(): Unit
 }
 
+class RedisStandaloneHealthCheckPerform(val redisConfiguration: StandaloneRedisConfiguration,
+                                        val healthcheckTimeout: Duration) extends RedisHealthcheckPerform {
+
+  private val PING_SUCCESS_RESPONSE = "PONG"
+
+  private val redisClient: RedisClient =
+    RedisClientFactory.createStandaloneClient(redisConfiguration, healthcheckTimeout)
+
+  private val redisCommand: RedisReactiveCommands[String, String] = redisClient.connect().reactive()
+
+  override def check(): SMono[Result] =
+    SMono(redisCommand.ping())
+      .timeout(healthcheckTimeout.toScala)
+      .filter(_ == PING_SUCCESS_RESPONSE)
+      .map(_ => Result.healthy(redisComponent))
+      .switchIfEmpty(SMono.just(Result.degraded(redisComponent, "Can not PING to Redis.")))
+
+  override def close(): Unit =
+    Mono.fromCompletionStage(redisClient.shutdownAsync())
+      .subscribeOn(Schedulers.boundedElastic())
+      .subscribe()
+
+}
+
 class RedisClusterHealthCheckPerform(val redisConfiguration: ClusterRedisConfiguration,
                                      val healthcheckTimeout: Duration) extends RedisHealthcheckPerform {
 
   private val CLUSTER_STATUS_OK: String = "ok"
-  private val redisClusterClient: RedisClusterClient = RedisClusterClient.create(
-    redisConfiguration.redisURI.value
-      .map(rURI => {
-        rURI.setTimeout(healthcheckTimeout)
-        rURI
-      }).asJava)
+  private val redisClusterClient: RedisClusterClient = RedisClientFactory.createClusterClient(redisConfiguration, healthcheckTimeout)
 
   private val redisCommand: RedisAdvancedClusterReactiveCommands[String, String] = {
     redisClusterClient.getPartitions
@@ -101,38 +120,12 @@ class RedisClusterHealthCheckPerform(val redisConfiguration: ClusterRedisConfigu
     .subscribe()
 }
 
-class RedisStandaloneHealthCheckPerform(val redisConfiguration: StandaloneRedisConfiguration,
-                                        val healthcheckTimeout: Duration) extends RedisHealthcheckPerform {
-
-  private val PING_SUCCESS_RESPONSE = "PONG"
-
-  private val redisClient: RedisClient = {
-    redisConfiguration.redisURI.setTimeout(healthcheckTimeout)
-    RedisClient.create(redisConfiguration.redisURI)
-  }
-
-  private val redisCommand: RedisReactiveCommands[String, String] = redisClient.connect().reactive()
-
-  override def check(): SMono[Result] =
-    SMono(redisCommand.ping())
-      .timeout(healthcheckTimeout.toScala)
-      .filter(_ == PING_SUCCESS_RESPONSE)
-      .map(_ => Result.healthy(redisComponent))
-      .switchIfEmpty(SMono.just(Result.degraded(redisComponent, "Can not PING to Redis.")))
-
-  override def close(): Unit =
-    Mono.fromCompletionStage(redisClient.shutdownAsync())
-      .subscribeOn(Schedulers.boundedElastic())
-      .subscribe()
-
-}
-
 class RedisMasterReplicaHealthCheckPerform(val redisConfiguration: MasterReplicaRedisConfiguration,
                                            val healthcheckTimeout: Duration) extends RedisHealthcheckPerform {
 
   private val PING_SUCCESS_RESPONSE = "PONG"
 
-  private val redisClient: RedisClient = RedisClient.create
+  private val redisClient: RedisClient = RedisClientFactory.createMasterReplicaClient(redisConfiguration)
 
   private val redisCommand: RedisReactiveCommands[String, String] = io.lettuce.core.masterreplica.MasterReplica.connect(redisClient,
     StringCodec.UTF8,
@@ -157,18 +150,18 @@ class RedisMasterReplicaHealthCheckPerform(val redisConfiguration: MasterReplica
 
 }
 
-class RedisSentinelHealthCheckPerform(val redisURI: RedisURI,
+class RedisSentinelHealthCheckPerform(val redisConfiguration: SentinelRedisConfiguration,
                                       val healthcheckTimeout: Duration) extends RedisHealthcheckPerform {
 
   private val PING_SUCCESS_RESPONSE = "PONG"
 
-  private val redisClient: RedisClient = RedisClient.create
+  private val redisClient: RedisClient = RedisClientFactory.createSentinelClient(redisConfiguration)
 
   private val redisCommand: RedisReactiveCommands[String, String] = {
-    redisURI.setTimeout(healthcheckTimeout)
+    redisConfiguration.redisURI.setTimeout(healthcheckTimeout)
     io.lettuce.core.masterreplica.MasterReplica.connect(redisClient,
         StringCodec.UTF8,
-        redisURI)
+        redisConfiguration.redisURI)
       .reactive()
   }
 
