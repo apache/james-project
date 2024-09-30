@@ -1,8 +1,8 @@
 == Motivation
 
-Many calendar application do add events invitation received by email directly in ones calendar.
+Calendar applications typically add event invitations received via email directly to a user’s calendar.
 
-Such behaviours requires the calendar application to be aware of the ICalendar related emails a user received.
+This behavior requires the calendar application to recognize and process ICalendar-related emails.
 
 == Design
 
@@ -10,7 +10,6 @@ The idea is to write a portion of mailet pipeline extracting Icalendar attachmen
 can later be sent to other applications over AMQP to be treated in an asynchronous, decoupled fashion.
 
 == Configuration
-
 We can achieve this goal by combining simple mailets building blocks.
 
 Here is a sample pipeline achieving aforementioned objectives :
@@ -45,7 +44,9 @@ Here is a sample pipeline achieving aforementioned objectives :
 <!-- End of ICAL pipeline -->
 ....
 
-A sample message looks like:
+The input of this pipeline is an ICS (ICalendar) file attached to an email. The pipeline processes the calendar attachment by decoding and parsing it, then transforming it into JSON format. This JSON data is added to the email object as an attribute named icalendarAsJson. Finally, it is published via AMQP for further processing by the Calendar app.
+
+The `icalendarAsJson` attribute will look like the following:
 
 ....
 {
