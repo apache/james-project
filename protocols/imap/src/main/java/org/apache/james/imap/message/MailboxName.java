@@ -17,42 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.imap.message.request;
+package org.apache.james.imap.message;
 
-import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.Tag;
-import org.apache.james.imap.message.MailboxName;
-import org.apache.james.mailbox.model.MailboxACL;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
-import com.google.common.base.MoreObjects;
+public class MailboxName {
+    private final String mailboxName;
 
-/**
- * SETACL Request.
- */
-public class SetACLRequest extends AbstractImapRequest {
+    public MailboxName(String mailboxName) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(mailboxName), "MailboxName must not be null or empty");
 
-    private final MailboxName mailboxName;
-    private final MailboxACL.ACLCommand aclCommand;
-
-    public SetACLRequest(Tag tag, MailboxName mailboxName, MailboxACL.ACLCommand aclCommand) {
-        super(tag, ImapConstants.SETACL_COMMAND);
         this.mailboxName = mailboxName;
-        this.aclCommand = aclCommand;
     }
 
-    public MailboxName getMailboxName() {
+    public String asString() {
         return mailboxName;
-    }
-
-    public MailboxACL.ACLCommand getAclCommand() {
-        return aclCommand;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("mailboxName", mailboxName)
-            .add("ACL command", aclCommand)
-            .toString();
     }
 }

@@ -31,6 +31,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.SetACLRequest;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -49,7 +50,7 @@ public class SetACLCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        SetACLRequest.MailboxName mailboxName = new SetACLRequest.MailboxName(request.mailbox());
+        MailboxName mailboxName = new MailboxName(request.mailbox());
         MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.deserialize(request.astring());
         String editModeAndRights = request.astring();
         request.eol();

@@ -34,6 +34,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.SetACLRequest;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.mailbox.MailboxManager;
@@ -103,15 +104,15 @@ class SetACLProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
 
-        MailboxACL.ACLCommand aclCommand = MailboxACL.command()
-                .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
-                .mode(EditMode.REPLACE)
-                .rights(MailboxACL.Rfc4314Rights.deserialize(SET_RIGHTS))
-                .build();
-        replaceAclRequest = new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), aclCommand);
-
-        user1Key = EntryKey.deserialize(USER_1.asString());
+        user1Key = EntryKey.createUserEntryKey(USER_1);
         setRights = Rfc4314Rights.fromSerializedRfc4314Rights(SET_RIGHTS);
+
+        MailboxACL.ACLCommand aclCommand = MailboxACL.command()
+                .key(user1Key)
+                .mode(EditMode.REPLACE)
+                .rights(setRights)
+                .build();
+        replaceAclRequest = new SetACLRequest(TAG, new MailboxName(MAILBOX_NAME), aclCommand);
     }
 
     @Test
@@ -124,7 +125,7 @@ class SetACLProcessorTest {
                     .mode(EditMode.REPLACE)
                     .rights(unsupportedRight)
                     .build();
-            new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), aclCommand);
+            new SetACLRequest(TAG, new MailboxName(MAILBOX_NAME), aclCommand);
         });
     }
     
@@ -193,7 +194,7 @@ class SetACLProcessorTest {
                 .mode(editMode)
                 .rights(MailboxACL.Rfc4314Rights.deserialize(SET_RIGHTS))
                 .build();
-        SetACLRequest setACLRequest = new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), aclCommand);
+        SetACLRequest setACLRequest = new SetACLRequest(TAG, new MailboxName(MAILBOX_NAME), aclCommand);
         subject.doProcess(setACLRequest, responder, imapSession).block();
 
         verify(mailboxManager).applyRightsCommandReactive(path,
