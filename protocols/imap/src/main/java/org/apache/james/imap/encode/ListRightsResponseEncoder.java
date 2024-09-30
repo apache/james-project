@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.response.ListRightsResponse;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 
 /**
@@ -40,11 +42,11 @@ public class ListRightsResponseEncoder implements ImapResponseEncoder<ListRights
         composer.untagged();
         composer.commandName(ImapConstants.LISTRIGHTS_COMMAND);
         
-        String mailboxName = listRightsResponse.getMailboxName();
-        composer.mailbox(mailboxName == null ? "" : mailboxName);
+        MailboxName mailboxName = listRightsResponse.getMailboxName();
+        composer.mailbox(mailboxName == null ? "" : mailboxName.asString());
         
-        String identifier = listRightsResponse.getIdentifier();
-        composer.quote(identifier);
+        MailboxACL.EntryKey entryKey = listRightsResponse.getEntryKey();
+        composer.quote(entryKey.toString());
         
         List<Rfc4314Rights> rights = listRightsResponse.getRights();
         

@@ -21,6 +21,8 @@ package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.message.MailboxName;
+import org.apache.james.mailbox.model.MailboxACL;
 
 import com.google.common.base.MoreObjects;
 
@@ -28,27 +30,27 @@ import com.google.common.base.MoreObjects;
  * LISTRIGHTS Request.
  */
 public class ListRightsRequest extends AbstractImapRequest {
-    private final String identifier;
-    private final String mailboxName;
+    private final MailboxACL.EntryKey entryKey;
+    private final MailboxName mailboxName;
 
-    public ListRightsRequest(Tag tag, String mailboxName, String identifier) {
+    public ListRightsRequest(Tag tag, MailboxName mailboxName, MailboxACL.EntryKey entryKey) {
         super(tag, ImapConstants.LISTRIGHTS_COMMAND);
         this.mailboxName = mailboxName;
-        this.identifier = identifier;
+        this.entryKey = entryKey;
     }
 
-    public String getIdentifier() {
-        return identifier;
+    public MailboxACL.EntryKey getEntryKey() {
+        return entryKey;
     }
 
-    public String getMailboxName() {
+    public MailboxName getMailboxName() {
         return mailboxName;
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("identifier", identifier)
+            .add("entryKey", entryKey)
             .add("mailboxName", mailboxName)
             .toString();
     }
