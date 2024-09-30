@@ -17,47 +17,50 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.redis
+package org.apache.james.backends.redis;
 
-import java.util.concurrent.TimeUnit
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.Awaitility
-import org.junit.jupiter.api.Test
-import reactor.core.scala.publisher.SMono
+import java.util.concurrent.TimeUnit;
 
-trait RedisHealthCheckTest {
-  def getRedisHealthCheck(): RedisHealthCheck
+import org.apache.james.core.healthcheck.Result;
+import org.awaitility.Awaitility;
+import org.junit.jupiter.api.Test;
 
-  def pauseRedis(): Unit
+import reactor.core.publisher.Mono;
 
-  def unpauseRedis(): Unit
+public abstract class RedisHealthCheckTest {
+
+  protected abstract RedisHealthCheck getRedisHealthCheck();
+
+  protected abstract void pauseRedis();
+
+  protected abstract void unpauseRedis();
 
   @Test
-  def checkShouldReturnHealthyWhenRedisIsRunning(): Unit = {
-    val result = SMono.fromPublisher(getRedisHealthCheck().check()).block()
-
-    assertThat(result.isHealthy).isTrue
+  public void checkShouldReturnHealthyWhenRedisIsRunning() {
+    Result result = Mono.from(getRedisHealthCheck().check()).block();
+    assertThat(result.isHealthy()).isTrue();
   }
 
   @Test
-  def checkShouldReturnDegradedWhenRedisIsDown(): Unit = {
-    pauseRedis()
+  public void checkShouldReturnDegradedWhenRedisIsDown() {
+    pauseRedis();
 
     Awaitility.await()
-      .pollInterval(2, TimeUnit.SECONDS)
-      .atMost(20, TimeUnit.SECONDS)
-      .untilAsserted(() => assertThat(SMono.fromPublisher(getRedisHealthCheck().check()).block().isDegraded).isTrue)
+        .pollInterval(2, TimeUnit.SECONDS)
+        .atMost(20, TimeUnit.SECONDS)
+        .untilAsserted(() -> assertThat(Mono.from(getRedisHealthCheck().check()).block().isDegraded()).isTrue());
   }
 
   @Test
-  def checkShouldReturnHealthyWhenRedisIsRecovered(): Unit = {
-    pauseRedis()
-    unpauseRedis()
+  public void checkShouldReturnHealthyWhenRedisIsRecovered() {
+    pauseRedis();
+    unpauseRedis();
 
     Awaitility.await()
-      .pollInterval(2, TimeUnit.SECONDS)
-      .atMost(20, TimeUnit.SECONDS)
-      .untilAsserted(() => assertThat(SMono.fromPublisher(getRedisHealthCheck().check()).block().isHealthy).isTrue)
+        .pollInterval(2, TimeUnit.SECONDS)
+        .atMost(20, TimeUnit.SECONDS)
+        .untilAsserted(() -> assertThat(Mono.from(getRedisHealthCheck().check()).block().isHealthy()).isTrue());
   }
 }
