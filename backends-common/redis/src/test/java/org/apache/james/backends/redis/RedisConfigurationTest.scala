@@ -56,7 +56,7 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
     config.addProperty("redisURL", "redis://localhost:6379")
 
     val redisConfig = RedisConfiguration.from(config)
-    redisConfig shouldEqual StandaloneRedisConfiguration(RedisURI.create("redis://localhost:6379"), None, None)
+    redisConfig shouldEqual StandaloneRedisConfiguration(RedisURI.create("redis://localhost:6379"), useSSL = false, mayBeSSLConfiguration = None, None, None)
   }
 
   it should "throw exception for invalid Redis URI" in {
@@ -115,5 +115,71 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
 
     redisConfiguration.redisURI.toString shouldEqual "redis-sentinel://*******@redis-sentinel-1?sentinelMasterId=mymaster"
     redisConfiguration.redisURI.getSentinels.get(0).getCredentialsProvider.resolveCredentials().block().getPassword shouldEqual "sentinelpass".toCharArray
+  }
+
+  it should "parse tls redisURL" in {
+    val config = new PropertiesConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+    config.addProperty("redisURL", "rediss://secret1@redis-1:6379?verifyPeer=NONE")
+    config.addProperty("redis.topology", "standalone")
+    config.addProperty("redis.ssl.enabled", true)
+
+    val redisConfig: RedisConfiguration = RedisConfiguration.from(config)
+    redisConfig.isInstanceOf[StandaloneRedisConfiguration] shouldEqual (true)
+    val redisConfiguration = redisConfig.asInstanceOf[StandaloneRedisConfiguration]
+
+    redisConfiguration.redisURI.toString shouldEqual "rediss://*******@redis-1:6379?verifyPeer=NONE"
+    redisConfiguration.useSSL shouldEqual true
+    redisConfiguration.mayBeSSLConfiguration.get.ignoreCertificateCheck shouldEqual true
+    redisConfiguration.mayBeSSLConfiguration.get.maybeKeyStore shouldEqual None
+  }
+
+  it should "parse tls redisURL when master replica topology" in {
+    val config = new PropertiesConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+    config.addProperty("redisURL", "rediss://secret1@redis-1:6379?verifyPeer=NONE")
+    config.addProperty("redis.topology", "master-replica")
+    config.addProperty("redis.ssl.enabled", true)
+
+    val redisConfig: RedisConfiguration = RedisConfiguration.from(config)
+    redisConfig.isInstanceOf[MasterReplicaRedisConfiguration] shouldEqual (true)
+    val redisConfiguration = redisConfig.asInstanceOf[MasterReplicaRedisConfiguration]
+
+    redisConfiguration.redisURI.value.size shouldEqual 1
+    redisConfiguration.redisURI.value.head.toString shouldEqual "rediss://*******@redis-1:6379?verifyPeer=NONE"
+  }
+
+  it should "parse tls redisURL when multiple sentinel endpoint" in {
+    val config = new PropertiesConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+    config.addProperty("redisURL", "rediss-sentinel://secret1@redis-sentinel-1:26379,redis-sentinel-2:26379,redis-sentinel-3:26379?sentinelMasterId=mymaster&verifyPeer=NONE")
+    config.addProperty("redis.topology", "sentinel")
+    config.addProperty("redis.ssl.enabled", true)
+    config.addProperty("redis.ignoreCertificateCheck", false)
+    config.addProperty("redis.keystore.file.path", "/etc/redis/file.p12")
+    config.addProperty("redis.keystore.password", "123")
+
+    val redisConfig: RedisConfiguration = RedisConfiguration.from(config)
+    redisConfig.isInstanceOf[SentinelRedisConfiguration] shouldEqual (true)
+    val redisConfiguration = redisConfig.asInstanceOf[SentinelRedisConfiguration]
+
+    redisConfiguration.redisURI.toString shouldEqual "rediss-sentinel://*******@redis-sentinel-1,redis-sentinel-2,redis-sentinel-3?verifyPeer=NONE&sentinelMasterId=mymaster"
+    redisConfiguration.mayBeSSLConfiguration.get.ignoreCertificateCheck shouldEqual false
+    redisConfiguration.mayBeSSLConfiguration.get.maybeKeyStore.get.keyStoreFilePath shouldEqual "/etc/redis/file.p12"
+    redisConfiguration.mayBeSSLConfiguration.get.maybeKeyStore.get.keyStorePassword shouldEqual "123"
+  }
+
+  it should "parse tls redisURL when single sentinel endpoint" in {
+    val config = new PropertiesConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+    config.addProperty("redisURL", "rediss-sentinel://secret1@redis-sentinel-1:26379?sentinelMasterId=mymaster&verifyPeer=NONE")
+    config.addProperty("redis.topology", "sentinel")
+    config.addProperty("redis.ssl.enabled", true)
+
+    val redisConfig: RedisConfiguration = RedisConfiguration.from(config)
+    redisConfig.isInstanceOf[SentinelRedisConfiguration] shouldEqual (true)
+    val redisConfiguration = redisConfig.asInstanceOf[SentinelRedisConfiguration]
+
+    redisConfiguration.redisURI.toString shouldEqual "rediss-sentinel://*******@redis-sentinel-1?verifyPeer=NONE&sentinelMasterId=mymaster"
   }
 }

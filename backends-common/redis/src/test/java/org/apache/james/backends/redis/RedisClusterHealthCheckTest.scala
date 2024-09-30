@@ -22,6 +22,7 @@ package org.apache.james.backends.redis
 import java.util.concurrent.TimeUnit
 
 import org.apache.james.backends.redis.RedisClusterExtension.RedisClusterContainer
+import org.apache.james.server.core.filesystem.FileSystemImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.extension.ExtendWith
@@ -34,7 +35,7 @@ class RedisClusterHealthCheckTest {
 
   @BeforeEach
   def setup(redis: RedisClusterContainer): Unit = {
-    redisHealthCheck = new RedisHealthCheck(redis.getRedisConfiguration)
+    redisHealthCheck = new RedisHealthCheck(redis.getRedisConfiguration, new RedisClientFactory(FileSystemImpl.forTesting()))
   }
 
   @AfterEach

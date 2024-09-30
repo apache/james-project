@@ -20,6 +20,7 @@
 package org.apache.james.backends.redis
 
 import org.apache.james.core.healthcheck.Result
+import org.apache.james.server.core.filesystem.FileSystemImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.extension.ExtendWith
@@ -35,7 +36,7 @@ class RedisStandaloneHealthCheckTest {
   def setup(redis: DockerRedis): Unit = {
     val redisConfiguration: StandaloneRedisConfiguration = StandaloneRedisConfiguration.from(redis.redisURI().toString)
 
-    redisHealthCheck = new RedisHealthCheck(redisConfiguration)
+    redisHealthCheck = new RedisHealthCheck(redisConfiguration, new RedisClientFactory(FileSystemImpl.forTesting()))
   }
 
   @AfterEach
