@@ -148,10 +148,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     static {
         Calendar cal = Calendar.getInstance();
-        cal.set(9999, 11, 31);
+        cal.set(9999, Calendar.DECEMBER, 31);
         MAX_DATE = cal.getTime();
 
-        cal.set(0000, 0, 1);
+        cal.set(0, Calendar.JANUARY, 1);
         MIN_DATE = cal.getTime();
     }
 
@@ -538,10 +538,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private Optional<MessageId> toMessageId(Optional<String> messageIdField) {
-        if (messageIdField.isPresent()) {
-            return Optional.of(messageIdFactory.fromString(messageIdField.get()));
-        }
-        return Optional.empty();
+        return messageIdField.map(messageIdFactory::fromString);
     }
 
     private Query buildQueryFromMailboxes(Collection<MailboxId> mailboxIds) {
@@ -621,8 +618,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                     doc.add(new TextField(HEADERS_FIELD, fullValue, Store.NO));
                     doc.add(new TextField(PREFIX_HEADER_FIELD + headerName, headerValue, Store.NO));
 
-                    if (f instanceof DateTimeField) {
-                        DateTimeField dateTimeField = (DateTimeField) f;
+                    if (f instanceof DateTimeField dateTimeField) {
                         sentDate = dateTimeField.getDate();
                     }
                     String field = null;
@@ -644,8 +640,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                         AddressList aList = LenientAddressParser.DEFAULT.parseAddressList(MimeUtil.unfold(f.getBody()));
                         for (int i = 0; i < aList.size(); i++) {
                             Address address = aList.get(i);
-                            if (address instanceof org.apache.james.mime4j.dom.address.Mailbox) {
-                                org.apache.james.mime4j.dom.address.Mailbox mailbox = (org.apache.james.mime4j.dom.address.Mailbox) address;
+                            if (address instanceof org.apache.james.mime4j.dom.address.Mailbox mailbox) {
                                 String value = AddressFormatter.DEFAULT.encode(mailbox).toUpperCase(Locale.US);
                                 doc.add(new TextField(field, value, Store.NO));
                                 if (i == 0) {
@@ -690,7 +685,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                             }
                         }
 
-
                         doc.add(new TextField(field, headerValue, Store.NO));
 
                     } else if (headerName.equalsIgnoreCase("Subject")) {
@@ -727,7 +721,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             }
 
             @Override
-            public void body(BodyDescriptor desc, InputStream in) throws MimeException, IOException {
+            public void body(BodyDescriptor desc, InputStream in) throws IOException {
                 String mediaType = desc.getMediaType();
                 if (MEDIA_TYPE_TEXT.equalsIgnoreCase(mediaType) || MEDIA_TYPE_MESSAGE.equalsIgnoreCase(mediaType)) {
                     String cset = desc.getCharset();
@@ -771,22 +765,14 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private String toSentDateField(DateResolution res) {
-        switch (res) {
-            case Year:
-                return SENT_DATE_FIELD_YEAR_RESOLUTION;
-            case Month:
-                return SENT_DATE_FIELD_MONTH_RESOLUTION;
-            case Day:
-                return SENT_DATE_FIELD_DAY_RESOLUTION;
-            case Hour:
-                return SENT_DATE_FIELD_HOUR_RESOLUTION;
-            case Minute:
-                return SENT_DATE_FIELD_MINUTE_RESOLUTION;
-            case Second:
-                return SENT_DATE_FIELD_SECOND_RESOLUTION;
-            default:
-                return SENT_DATE_FIELD_MILLISECOND_RESOLUTION;
-        }
+        return switch (res) {
+            case Year -> SENT_DATE_FIELD_YEAR_RESOLUTION;
+            case Month -> SENT_DATE_FIELD_MONTH_RESOLUTION;
+            case Day -> SENT_DATE_FIELD_DAY_RESOLUTION;
+            case Hour -> SENT_DATE_FIELD_HOUR_RESOLUTION;
+            case Minute -> SENT_DATE_FIELD_MINUTE_RESOLUTION;
+            case Second -> SENT_DATE_FIELD_SECOND_RESOLUTION;
+        };
     }
 
     private static Calendar getGMT() {
@@ -794,41 +780,25 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private String toInteralDateField(DateResolution res) {
-        switch (res) {
-            case Year:
-                return INTERNAL_DATE_FIELD_YEAR_RESOLUTION;
-            case Month:
-                return INTERNAL_DATE_FIELD_MONTH_RESOLUTION;
-            case Day:
-                return INTERNAL_DATE_FIELD_DAY_RESOLUTION;
-            case Hour:
-                return INTERNAL_DATE_FIELD_HOUR_RESOLUTION;
-            case Minute:
-                return INTERNAL_DATE_FIELD_MINUTE_RESOLUTION;
-            case Second:
-                return INTERNAL_DATE_FIELD_SECOND_RESOLUTION;
-            default:
-                return INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION;
-        }
+        return switch (res) {
+            case Year -> INTERNAL_DATE_FIELD_YEAR_RESOLUTION;
+            case Month -> INTERNAL_DATE_FIELD_MONTH_RESOLUTION;
+            case Day -> INTERNAL_DATE_FIELD_DAY_RESOLUTION;
+            case Hour -> INTERNAL_DATE_FIELD_HOUR_RESOLUTION;
+            case Minute -> INTERNAL_DATE_FIELD_MINUTE_RESOLUTION;
+            case Second -> INTERNAL_DATE_FIELD_SECOND_RESOLUTION;
+        };
     }
 
     private String toSaveDateField(DateResolution res) {
-        switch (res) {
-            case Year:
-                return SAVE_DATE_FIELD_YEAR_RESOLUTION;
-            case Month:
-                return SAVE_DATE_FIELD_MONTH_RESOLUTION;
-            case Day:
-                return SAVE_DATE_FIELD_DAY_RESOLUTION;
-            case Hour:
-                return SAVE_DATE_FIELD_HOUR_RESOLUTION;
-            case Minute:
-                return SAVE_DATE_FIELD_MINUTE_RESOLUTION;
-            case Second:
-                return SAVE_DATE_FIELD_SECOND_RESOLUTION;
-            default:
-                throw new RuntimeException(String.format("Not support search for the %s date resolution", res));
-        }
+        return switch (res) {
+            case Year -> SAVE_DATE_FIELD_YEAR_RESOLUTION;
+            case Month -> SAVE_DATE_FIELD_MONTH_RESOLUTION;
+            case Day -> SAVE_DATE_FIELD_DAY_RESOLUTION;
+            case Hour -> SAVE_DATE_FIELD_HOUR_RESOLUTION;
+            case Minute -> SAVE_DATE_FIELD_MINUTE_RESOLUTION;
+            case Second -> SAVE_DATE_FIELD_SECOND_RESOLUTION;
+        };
     }
 
     /**
@@ -856,16 +826,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      */
     private Query createSizeQuery(SearchQuery.SizeCriterion crit) throws UnsupportedSearchException {
         NumericOperator op = crit.getOperator();
-        switch (op.getType()) {
-            case EQUALS:
-                return LongPoint.newExactQuery(SIZE_FIELD, op.getValue());
-            case GREATER_THAN:
-                return LongPoint.newRangeQuery(SIZE_FIELD, op.getValue() + 1, Long.MAX_VALUE);
-            case LESS_THAN:
-                return LongPoint.newRangeQuery(SIZE_FIELD, Long.MIN_VALUE, op.getValue() - 1);
-            default:
-                throw new UnsupportedSearchException();
-        }
+        return switch (op.getType()) {
+            case EQUALS -> LongPoint.newExactQuery(SIZE_FIELD, op.getValue());
+            case GREATER_THAN -> LongPoint.newRangeQuery(SIZE_FIELD, op.getValue() + 1, Long.MAX_VALUE);
+            case LESS_THAN -> LongPoint.newRangeQuery(SIZE_FIELD, Long.MIN_VALUE, op.getValue() - 1);
+        };
     }
 
     /**
@@ -886,65 +851,57 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         HeaderOperator op = crit.getOperator();
         String name = crit.getHeaderName().toUpperCase(Locale.US);
         String fieldName = PREFIX_HEADER_FIELD + name;
-        if (op instanceof SearchQuery.ContainsOperator) {
-            ContainsOperator cop = (ContainsOperator) op;
-            return createTermQuery(fieldName, cop.getValue().toUpperCase(Locale.US));
-        } else if (op instanceof SearchQuery.ExistsOperator) {
-            return new PrefixQuery(new Term(fieldName, ""));
-        } else if (op instanceof SearchQuery.DateOperator) {
-                DateOperator dop = (DateOperator) op;
+        switch (op) {
+            case ContainsOperator cop -> {
+                return createTermQuery(fieldName, cop.getValue().toUpperCase(Locale.US));
+            }
+            case SearchQuery.ExistsOperator existsOperator -> {
+                return new PrefixQuery(new Term(fieldName, ""));
+            }
+            case DateOperator dop -> {
                 String field = toSentDateField(dop.getDateResultion());
                 return createQuery(field, dop);
-        } else if (op instanceof SearchQuery.AddressOperator) {
-            String field = name.toLowerCase(Locale.US);
-            return createTermQuery(field, ((SearchQuery.AddressOperator) op).getAddress().toUpperCase(Locale.US));
-        } else {
-            // Operator not supported
-            throw new UnsupportedSearchException();
+            }
+            case SearchQuery.AddressOperator addressOperator -> {
+                String field = name.toLowerCase(Locale.US);
+                return createTermQuery(field, addressOperator.getAddress().toUpperCase(Locale.US));
+            }
+            case null, default ->
+                // Operator not supported
+                throw new UnsupportedSearchException();
         }
     }
 
 
-    private Query createQuery(String field, DateOperator dop) throws UnsupportedSearchException {
+    private Query createQuery(String field, DateOperator dop) {
         Date date = dop.getDate();
         DateResolution res = dop.getDateResultion();
         DateTools.Resolution dRes = toResolution(res);
         String value = DateTools.dateToString(date, dRes);
-        switch (dop.getType()) {
-        case ON:
-            return new TermQuery(new Term(field, value));
-        case BEFORE:
-            return TermRangeQuery.newStringRange(field, DateTools.dateToString(MIN_DATE, dRes), value, true, false);
-        case AFTER:
-            return TermRangeQuery.newStringRange(field, value, DateTools.dateToString(MAX_DATE, dRes), false, true);
-        default:
-            throw new UnsupportedSearchException();
-        }
+        return switch (dop.getType()) {
+            case ON -> new TermQuery(new Term(field, value));
+            case BEFORE ->
+                TermRangeQuery.newStringRange(field, DateTools.dateToString(MIN_DATE, dRes), value, true, false);
+            case AFTER ->
+                TermRangeQuery.newStringRange(field, value, DateTools.dateToString(MAX_DATE, dRes), false, true);
+        };
     }
 
     private DateTools.Resolution toResolution(DateResolution res) {
-        switch (res) {
-        case Year:
-            return DateTools.Resolution.YEAR;
-        case Month:
-            return DateTools.Resolution.MONTH;
-        case Day:
-            return DateTools.Resolution.DAY;
-        case Hour:
-            return DateTools.Resolution.HOUR;
-        case Minute:
-            return DateTools.Resolution.MINUTE;
-        case Second:
-            return DateTools.Resolution.SECOND;
-        default:
-            return DateTools.Resolution.MILLISECOND;
-        }
+        return switch (res) {
+            case Year -> DateTools.Resolution.YEAR;
+            case Month -> DateTools.Resolution.MONTH;
+            case Day -> DateTools.Resolution.DAY;
+            case Hour -> DateTools.Resolution.HOUR;
+            case Minute -> DateTools.Resolution.MINUTE;
+            case Second -> DateTools.Resolution.SECOND;
+        };
     }
 
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.UidCriterion}
      */
-    private Query createUidQuery(SearchQuery.UidCriterion crit) throws UnsupportedSearchException {
+    private Query createUidQuery(SearchQuery.UidCriterion crit) {
         UidRange[] ranges = crit.getOperator().getRange();
         if (ranges.length == 1) {
             UidRange range = ranges[0];
@@ -962,21 +919,16 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.UidCriterion}
      */
-    private Query createModSeqQuery(SearchQuery.ModSeqCriterion crit) throws UnsupportedSearchException {
+    private Query createModSeqQuery(SearchQuery.ModSeqCriterion crit) {
         NumericOperator op = crit.getOperator();
-        switch (op.getType()) {
-            case EQUALS:
-                return LongPoint.newRangeQuery(MODSEQ_FIELD, op.getValue(), op.getValue());
-            case GREATER_THAN:
-                return LongPoint.newRangeQuery(MODSEQ_FIELD, op.getValue(), Long.MAX_VALUE);
-            case LESS_THAN:
-                return LongPoint.newRangeQuery(MODSEQ_FIELD, Long.MIN_VALUE, op.getValue());
-            default:
-                throw new UnsupportedSearchException();
-        }
+        return switch (op.getType()) {
+            case EQUALS -> LongPoint.newRangeQuery(MODSEQ_FIELD, op.getValue(), op.getValue());
+            case GREATER_THAN -> LongPoint.newRangeQuery(MODSEQ_FIELD, op.getValue(), Long.MAX_VALUE);
+            case LESS_THAN -> LongPoint.newRangeQuery(MODSEQ_FIELD, Long.MIN_VALUE, op.getValue());
+        };
     }
 
-    private Query createAttachmentQuery(boolean isSet) throws MailboxException {
+    private Query createAttachmentQuery(boolean isSet) {
         return new TermQuery(new Term(HAS_ATTACHMENT_FIELD, Boolean.toString(isSet)));
     }
 
@@ -1057,50 +1009,57 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private SortField createSortField(SearchQuery.Sort s, boolean reverse) {
-        switch (s.getSortClause()) {
-            case Arrival:
+        return switch (s.getSortClause()) {
+            case Arrival -> {
                 if (reverse) {
-                    return ARRIVAL_MAILBOX_SORT_REVERSE;
+                    yield ARRIVAL_MAILBOX_SORT_REVERSE;
                 }
-                return ARRIVAL_MAILBOX_SORT;
-            case SentDate:
+                yield ARRIVAL_MAILBOX_SORT;
+            }
+            case SentDate -> {
                 if (reverse) {
-                    return SENT_DATE_SORT_REVERSE;
+                    yield SENT_DATE_SORT_REVERSE;
                 }
-                return SENT_DATE_SORT;
-            case MailboxCc:
+                yield SENT_DATE_SORT;
+            }
+            case MailboxCc -> {
                 if (reverse) {
-                    return FIRST_CC_MAILBOX_SORT_REVERSE;
+                    yield FIRST_CC_MAILBOX_SORT_REVERSE;
                 }
-                return FIRST_CC_MAILBOX_SORT;
-            case MailboxFrom:
+                yield FIRST_CC_MAILBOX_SORT;
+            }
+            case MailboxFrom -> {
                 if (reverse) {
-                    return FIRST_FROM_MAILBOX_SORT_REVERSE;
+                    yield FIRST_FROM_MAILBOX_SORT_REVERSE;
                 }
-                return FIRST_FROM_MAILBOX_SORT;
-            case Size:
+                yield FIRST_FROM_MAILBOX_SORT;
+            }
+            case Size -> {
                 if (reverse) {
-                    return SIZE_SORT_REVERSE;
+                    yield SIZE_SORT_REVERSE;
                 }
-                return SIZE_SORT;
-            case BaseSubject:
+                yield SIZE_SORT;
+            }
+            case BaseSubject -> {
                 if (reverse) {
-                    return BASE_SUBJECT_SORT_REVERSE;
+                    yield BASE_SUBJECT_SORT_REVERSE;
                 }
-                return BASE_SUBJECT_SORT;
-            case MailboxTo:
+                yield BASE_SUBJECT_SORT;
+            }
+            case MailboxTo -> {
                 if (reverse) {
-                    return FIRST_TO_MAILBOX_SORT_REVERSE;
+                    yield FIRST_TO_MAILBOX_SORT_REVERSE;
                 }
-                return FIRST_TO_MAILBOX_SORT;
-            case Uid:
+                yield FIRST_TO_MAILBOX_SORT;
+            }
+            case Uid -> {
                 if (reverse) {
-                    return UID_SORT_REVERSE;
+                    yield UID_SORT_REVERSE;
                 }
-                return UID_SORT;
-            default:
-                return null;
-        }
+                yield UID_SORT;
+            }
+            default -> null;
+        };
     }
 
     /**
@@ -1190,51 +1149,37 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * Return a {@link Query} which is builded based on the given {@link Criterion}
      */
     private Query createQuery(Criterion criterion, Query inMailboxes, Collection<MessageUid> recentUids) throws MailboxException {
-        if (criterion instanceof SearchQuery.InternalDateCriterion) {
-            SearchQuery.InternalDateCriterion crit = (SearchQuery.InternalDateCriterion) criterion;
+        if (criterion instanceof SearchQuery.InternalDateCriterion crit) {
             return createInternalDateQuery(crit);
-        } else if (criterion instanceof SearchQuery.SaveDateCriterion) {
-            SearchQuery.SaveDateCriterion crit = (SearchQuery.SaveDateCriterion) criterion;
+        } else if (criterion instanceof SearchQuery.SaveDateCriterion crit) {
             return createSaveDateQuery(crit);
-        } else if (criterion instanceof SearchQuery.SizeCriterion) {
-            SearchQuery.SizeCriterion crit = (SearchQuery.SizeCriterion) criterion;
+        } else if (criterion instanceof SearchQuery.SizeCriterion crit) {
             return createSizeQuery(crit);
-        }  else if (criterion instanceof SearchQuery.MessageIdCriterion) {
-            SearchQuery.MessageIdCriterion crit = (SearchQuery.MessageIdCriterion) criterion;
+        }  else if (criterion instanceof SearchQuery.MessageIdCriterion crit) {
             return createTermQuery(MESSAGE_ID_FIELD, crit.getMessageId().serialize());
-        } else if (criterion instanceof SearchQuery.HeaderCriterion) {
-            HeaderCriterion crit = (HeaderCriterion) criterion;
+        } else if (criterion instanceof HeaderCriterion crit) {
             return createHeaderQuery(crit);
-        } else if (criterion instanceof SearchQuery.UidCriterion) {
-            SearchQuery.UidCriterion crit = (SearchQuery.UidCriterion) criterion;
+        } else if (criterion instanceof UidCriterion crit) {
             return createUidQuery(crit);
-        } else if (criterion instanceof SearchQuery.FlagCriterion) {
-            FlagCriterion crit = (FlagCriterion) criterion;
+        } else if (criterion instanceof FlagCriterion crit) {
             return createFlagQuery(toString(crit.getFlag()), crit.getOperator().isSet(), inMailboxes, recentUids);
-        } else if (criterion instanceof SearchQuery.AttachmentCriterion) {
-            AttachmentCriterion crit = (AttachmentCriterion) criterion;
+        } else if (criterion instanceof AttachmentCriterion crit) {
             return createAttachmentQuery(crit.getOperator().isSet());
-        } else if (criterion instanceof SearchQuery.CustomFlagCriterion) {
-            CustomFlagCriterion crit = (CustomFlagCriterion) criterion;
+        } else if (criterion instanceof CustomFlagCriterion crit) {
             return createFlagQuery(crit.getFlag(), crit.getOperator().isSet(), inMailboxes, recentUids);
-        } else if (criterion instanceof SearchQuery.TextCriterion) {
-            SearchQuery.TextCriterion crit = (SearchQuery.TextCriterion) criterion;
+        } else if (criterion instanceof SearchQuery.TextCriterion crit) {
             return createTextQuery(crit);
         } else if (criterion instanceof SearchQuery.AllCriterion) {
             return createAllQuery((AllCriterion) criterion);
-        } else if (criterion instanceof SearchQuery.ConjunctionCriterion) {
-            SearchQuery.ConjunctionCriterion crit = (SearchQuery.ConjunctionCriterion) criterion;
+        } else if (criterion instanceof SearchQuery.ConjunctionCriterion crit) {
             return createConjunctionQuery(crit, inMailboxes, recentUids);
         } else if (criterion instanceof SearchQuery.ModSeqCriterion) {
             return createModSeqQuery((SearchQuery.ModSeqCriterion) criterion);
-        } else if (criterion instanceof SearchQuery.MimeMessageIDCriterion) {
-            SearchQuery.MimeMessageIDCriterion mimeMessageIDCriterion = (SearchQuery.MimeMessageIDCriterion) criterion;
+        } else if (criterion instanceof SearchQuery.MimeMessageIDCriterion mimeMessageIDCriterion) {
             return createHeaderQuery(mimeMessageIDCriterion.asHeaderCriterion());
-        } else if (criterion instanceof SearchQuery.SubjectCriterion) {
-            SearchQuery.SubjectCriterion subjectCriterion = (SearchQuery.SubjectCriterion) criterion;
+        } else if (criterion instanceof SearchQuery.SubjectCriterion subjectCriterion) {
             return createHeaderQuery(subjectCriterion.asHeaderCriterion());
-        } else if (criterion instanceof SearchQuery.ThreadIdCriterion) {
-            SearchQuery.ThreadIdCriterion threadIdCriterion = (SearchQuery.ThreadIdCriterion) criterion;
+        } else if (criterion instanceof SearchQuery.ThreadIdCriterion threadIdCriterion) {
             return createTermQuery(THREAD_ID_FIELD, threadIdCriterion.getThreadId().serialize());
         }
         throw new UnsupportedSearchException();
@@ -1319,18 +1264,15 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private Query createQuery(MessageRange range) {
-        switch (range.getType()) {
-        case ONE:
-            return LongPoint.newRangeQuery(UID_FIELD,
-                    range.getUidFrom().asLong(),
-                    range.getUidTo().asLong());
-        case FROM:
-            return LongPoint.newRangeQuery(UID_FIELD,
-                    range.getUidFrom().asLong(),
-                    MessageUid.MAX_VALUE.asLong());
-        default:
-            return LongPoint.newRangeQuery(UID_FIELD, MessageUid.MIN_VALUE.asLong(), MessageUid.MAX_VALUE.asLong());
-        }
+        return switch (range.getType()) {
+            case ONE -> LongPoint.newRangeQuery(UID_FIELD,
+                range.getUidFrom().asLong(),
+                range.getUidTo().asLong());
+            case FROM -> LongPoint.newRangeQuery(UID_FIELD,
+                range.getUidFrom().asLong(),
+                MessageUid.MAX_VALUE.asLong());
+            default -> LongPoint.newRangeQuery(UID_FIELD, MessageUid.MIN_VALUE.asLong(), MessageUid.MAX_VALUE.asLong());
+        };
     }
 
     @Override
@@ -1397,21 +1339,14 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * Convert the given {@link Flag} to a String
      */
     private Optional<Flag> fromString(String flag) {
-        switch (flag) {
-            case "\\ANSWERED":
-                return Optional.of(Flag.ANSWERED);
-            case "\\DELETED":
-                return Optional.of(Flag.DELETED);
-            case "\\DRAFT":
-                return Optional.of(Flag.DRAFT);
-            case "\\FLAGGED":
-                return Optional.of(Flag.FLAGGED);
-            case "\\RECENT":
-                return Optional.of(Flag.RECENT);
-            case "\\FLAG":
-                return Optional.of(Flag.SEEN);
-            default:
-                return Optional.empty();
-        }
+        return switch (flag) {
+            case "\\ANSWERED" -> Optional.of(Flag.ANSWERED);
+            case "\\DELETED" -> Optional.of(Flag.DELETED);
+            case "\\DRAFT" -> Optional.of(Flag.DRAFT);
+            case "\\FLAGGED" -> Optional.of(Flag.FLAGGED);
+            case "\\RECENT" -> Optional.of(Flag.RECENT);
+            case "\\FLAG" -> Optional.of(Flag.SEEN);
+            default -> Optional.empty();
+        };
     }
 }
