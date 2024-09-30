@@ -525,7 +525,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             TopDocs docs = searcher.search(queryBuilder.build(), maxQueryResults, createSort(searchQuery.getSorts()));
             ScoreDoc[] sDocs = docs.scoreDocs;
             for (ScoreDoc sDoc : sDocs) {
-                Document doc = searcher.doc(sDoc.doc);
+                Document doc = searcher.storedFields().document(sDoc.doc);
                 MessageUid uid = MessageUid.of(doc.getField(UID_FIELD).numericValue().longValue());
                 MailboxId mailboxId = mailboxIdFactory.fromString(doc.get(MAILBOX_ID_FIELD));
                 Optional<MessageId> messageId = toMessageId(Optional.ofNullable(doc.get(MESSAGE_ID_FIELD)));
@@ -960,7 +960,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             TopDocs docs = searcher.search(queryBuilder.build(), maxQueryResults, new Sort(UID_SORT));
             ScoreDoc[] sDocs = docs.scoreDocs;
             for (ScoreDoc sDoc : sDocs) {
-                MessageUid uid = MessageUid.of(searcher.doc(sDoc.doc).getField(UID_FIELD).numericValue().longValue());
+                MessageUid uid = MessageUid.of(searcher.storedFields().document(sDoc.doc).getField(UID_FIELD).numericValue().longValue());
                 uids.add(uid);
             }
 
@@ -1326,7 +1326,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             TopDocs docs = searcher.search(queryBuilder.build(), 100000);
             ScoreDoc[] sDocs = docs.scoreDocs;
             for (ScoreDoc sDoc : sDocs) {
-                Document doc = searcher.doc(sDoc.doc);
+                Document doc = searcher.storedFields().document(sDoc.doc);
 
                 Stream.of(doc.getValues(FLAGS_FIELD))
                     .forEach(flag -> fromString(flag).ifPresentOrElse(retrievedFlags::add, () -> retrievedFlags.add(flag)));
