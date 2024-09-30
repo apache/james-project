@@ -24,8 +24,8 @@ import java.util.concurrent.atomic.AtomicReference
 import java.util.stream
 
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
-import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
+import io.netty.handler.codec.http.{HttpHeaderNames, HttpMethod}
 import jakarta.inject.{Inject, Named}
 import org.apache.james.core.Username
 import org.apache.james.events.{EventBus, Registration, RegistrationKey}
@@ -95,7 +95,8 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
     SMono(authenticator.authenticate(httpServerRequest))
       .flatMap((mailboxSession: MailboxSession) => userProvisioner.provisionUser(mailboxSession)
         .`then`
-        .`then`(SMono(httpServerResponse.sendWebsocket((in, out) => handleWebSocketConnection(mailboxSession)(in, out)))))
+        .`then`(SMono(httpServerResponse.addHeader(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, "jmap")
+            .sendWebsocket((in, out) => handleWebSocketConnection(mailboxSession)(in, out)))))
       .onErrorResume(throwable => handleHttpHandshakeError(throwable, httpServerResponse))
       .asJava()
       .`then`()
