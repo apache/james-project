@@ -24,11 +24,12 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import eu.timepit.refined.auto._
-import org.apache.james.backends.redis.RedisSentinelExtension
+import org.apache.james.backends.redis.{RedisClientFactory, RedisSentinelExtension}
 import org.apache.james.backends.redis.RedisSentinelExtension.RedisSentinelCluster
 import org.apache.james.rate.limiter.RedisRateLimiterWithSentinelTest.{RULES, SLIDING_WIDOW_PRECISION}
 import org.apache.james.rate.limiter.api._
 import org.apache.james.rate.limiter.redis.RedisRateLimiterFactory
+import org.apache.james.server.core.filesystem.FileSystemImpl
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode}
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.extension.ExtendWith
@@ -51,7 +52,8 @@ class RedisRateLimiterWithSentinelTest {
 
   @Test
   def rateLimitShouldBeAcceptableWhenLimitIsAcceptable(redisClusterContainer: RedisSentinelCluster): Unit = {
-    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.redisSentinelContainerList.getRedisConfiguration)
+    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.redisSentinelContainerList.getRedisConfiguration,
+      new RedisClientFactory(FileSystemImpl.forTesting()))
     val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
     val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key" + UUID.randomUUID().toString), 4)).block()
     assertThat(actual).isEqualTo(AcceptableRate)
@@ -59,7 +61,8 @@ class RedisRateLimiterWithSentinelTest {
 
   @Test
   def rateLimitShouldWorkNormallyWhenLimitExceeded(redisClusterContainer: RedisSentinelCluster): Unit = {
-    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.redisSentinelContainerList.getRedisConfiguration)
+    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.redisSentinelContainerList.getRedisConfiguration,
+      new RedisClientFactory(FileSystemImpl.forTesting()))
     val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
     val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key" + UUID.randomUUID().toString), 5)).block()
     assertThat(actual).isEqualTo(RateExceeded)
@@ -67,7 +70,8 @@ class RedisRateLimiterWithSentinelTest {
 
   @Test
   def rateLimitShouldWorkNormallyAfterFailoverComplete(redisClusterContainer: RedisSentinelCluster): Unit = {
-    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.redisSentinelContainerList.getRedisConfiguration)
+    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.redisSentinelContainerList.getRedisConfiguration,
+      new RedisClientFactory(FileSystemImpl.forTesting()))
     val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
 
     // Before failover, the rate limit should be working normally
