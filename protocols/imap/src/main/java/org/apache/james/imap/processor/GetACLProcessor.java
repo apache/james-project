@@ -32,6 +32,7 @@ import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.GetACLRequest;
 import org.apache.james.imap.message.response.ACLResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -70,9 +71,9 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
     protected Mono<Void> processRequestReactive(GetACLRequest request, ImapSession session, Responder responder) {
         MailboxManager mailboxManager = getMailboxManager();
         MailboxSession mailboxSession = session.getMailboxSession();
-        String mailboxName = request.getMailboxName();
+        MailboxName mailboxName = request.getMailboxName();
 
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
+        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName.asString());
 
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
             .flatMap(Throwing.function(mailbox -> {
@@ -129,6 +130,6 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
     protected MDCBuilder mdc(GetACLRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "GET_ACL")
-            .addToContext("mailbox", request.getMailboxName());
+            .addToContext("mailbox", request.getMailboxName().asString());
     }
 }

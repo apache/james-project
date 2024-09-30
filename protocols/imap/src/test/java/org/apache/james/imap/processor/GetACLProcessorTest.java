@@ -36,6 +36,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.GetACLRequest;
 import org.apache.james.imap.message.response.ACLResponse;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
@@ -89,7 +90,7 @@ class GetACLProcessorTest {
         metaData = mock(MailboxMetaData.class);
         responder = mock(Responder.class);
 
-        getACLRequest = new GetACLRequest(TAG, MAILBOX_NAME);
+        getACLRequest = new GetACLRequest(TAG, new MailboxName(MAILBOX_NAME));
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
@@ -168,7 +169,7 @@ class GetACLProcessorTest {
 
         assertThat(argumentCaptor.getAllValues())
             .hasSize(2);
-        ACLResponse response = new ACLResponse(MAILBOX_NAME, acl);
+        ACLResponse response = new ACLResponse(new MailboxName(MAILBOX_NAME), acl);
         assertThat(argumentCaptor.getAllValues().get(0))
             .isEqualTo(response);
         assertThat(argumentCaptor.getAllValues().get(1))

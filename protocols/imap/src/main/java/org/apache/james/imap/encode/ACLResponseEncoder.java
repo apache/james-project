@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.response.ACLResponse;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
@@ -38,8 +39,8 @@ public class ACLResponseEncoder implements ImapResponseEncoder<ACLResponse> {
         composer.untagged();
         composer.message(ImapConstants.ACL_RESPONSE_NAME);
         
-        String mailboxName = aclResponse.getMailboxName();
-        composer.mailbox(mailboxName == null ? "" : mailboxName);
+        MailboxName mailboxName = aclResponse.getMailboxName();
+        composer.mailbox(mailboxName == null ? "" : mailboxName.asString());
         
         if (entries != null) {
             for (Entry<EntryKey, Rfc4314Rights> entry : entries.entrySet()) {
