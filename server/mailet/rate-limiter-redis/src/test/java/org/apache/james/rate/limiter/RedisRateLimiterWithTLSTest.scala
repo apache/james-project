@@ -19,26 +19,19 @@
 
 package org.apache.james.rate.limiter
 
-import java.time.Duration
-
-import org.apache.james.backends.redis.{DockerRedis, RedisClientFactory, RedisConfiguration, RedisExtension, StandaloneRedisConfiguration}
-import org.apache.james.rate.limiter.api.{RateLimiterContract, RateLimiterFactory}
-import org.apache.james.rate.limiter.redis.RedisRateLimiterFactory
-import org.apache.james.server.core.filesystem.FileSystemImpl
+import org.apache.james.backends.redis.RedisTLSExtension.RedisContainer
+import org.apache.james.backends.redis.{RedisConfiguration, RedisTLSExtension}
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 
-@ExtendWith(Array(classOf[RedisExtension]))
-class RedisRateLimiterTest extends RateLimiterContract {
+@ExtendWith(Array(classOf[RedisTLSExtension]))
+class RedisRateLimiterWithTLSTest extends TopologyRedisRateLimiterTest {
+  var redisContainer: RedisContainer = _
 
-  var redisRateLimiterConfiguration: RedisConfiguration = _
+  def getRedisConfiguration(): RedisConfiguration = redisContainer.getConfiguration
 
   @BeforeEach
-  def setup(redis: DockerRedis): Unit = {
-    redisRateLimiterConfiguration = StandaloneRedisConfiguration.from(redis.redisURI().toString)
+  def beforeEach(redisContainer: RedisContainer): Unit = {
+    this.redisContainer = redisContainer
   }
-
-  override def testee(): RateLimiterFactory = new RedisRateLimiterFactory(redisRateLimiterConfiguration, new RedisClientFactory(FileSystemImpl.forTesting()))
-
-  override def sleep(duration: Duration): Unit = Thread.sleep(duration.toMillis)
 }

@@ -22,10 +22,11 @@ package org.apache.james.rate.limiter
 import java.time.Duration
 
 import eu.timepit.refined.auto._
-import org.apache.james.backends.redis.RedisConfiguration
+import org.apache.james.backends.redis.{RedisClientFactory, RedisConfiguration}
 import org.apache.james.rate.limiter.TopologyRedisRateLimiterTest.{RULES, SLIDING_WIDOW_PRECISION}
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateLimitingResult, Rule, Rules, TestKey}
 import org.apache.james.rate.limiter.redis.RedisRateLimiterFactory
+import org.apache.james.server.core.filesystem.FileSystemImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import reactor.core.scala.publisher.SMono
@@ -40,7 +41,7 @@ trait TopologyRedisRateLimiterTest {
 
   @Test
   def rateLimitShouldWorkNormally(): Unit = {
-    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(getRedisConfiguration())
+    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(getRedisConfiguration(), new RedisClientFactory(FileSystemImpl.forTesting()))
     val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
     val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key1"), 4)).block()
     assertThat(actual).isEqualTo(AcceptableRate)
