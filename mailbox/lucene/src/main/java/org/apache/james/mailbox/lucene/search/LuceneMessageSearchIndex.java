@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.stream.Stream;
 
 import jakarta.annotation.PreDestroy;
@@ -41,6 +40,7 @@ import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 import jakarta.mail.Flags.Flag;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
@@ -54,7 +54,6 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.mailbox.model.SearchQuery.AllCriterion;
 import org.apache.james.mailbox.model.SearchQuery.AttachmentCriterion;
 import org.apache.james.mailbox.model.SearchQuery.ContainsOperator;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
@@ -63,7 +62,6 @@ import org.apache.james.mailbox.model.SearchQuery.DateOperator;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.mailbox.model.SearchQuery.FlagCriterion;
 import org.apache.james.mailbox.model.SearchQuery.HeaderCriterion;
-import org.apache.james.mailbox.model.SearchQuery.HeaderOperator;
 import org.apache.james.mailbox.model.SearchQuery.NumericOperator;
 import org.apache.james.mailbox.model.SearchQuery.UidCriterion;
 import org.apache.james.mailbox.model.SearchQuery.UidRange;
@@ -368,6 +366,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final String MEDIA_TYPE_TEXT = "text";
     private static final String MEDIA_TYPE_MESSAGE = "message";
     private static final String DEFAULT_ENCODING = "US-ASCII";
+    private static final boolean INCLUDE_LOWER = true;
+    private static final boolean INCLUDE_UPPER = true;
 
     private static final SortField UID_SORT = new SortField(UID_FIELD, SortField.Type.LONG);
     private static final SortField UID_SORT_REVERSE = new SortField(UID_FIELD, SortField.Type.LONG, true);
@@ -472,7 +472,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * If set to true this implementation will use {@link WildcardQuery} to match suffix and prefix. This is what RFC3501 expects but is often not what the user does.
      * It also slow things a lot if you have complex queries which use many "TEXT" arguments. If you want the implementation to behave strict like RFC3501 says, you should
      * set this to true.
-     *
+     * <p>
      * The default is false for performance reasons
      */
     public void setEnableSuffixMatch(boolean suffixMatch) {
@@ -498,6 +498,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
         return Flux.fromIterable(searchMultimap(mailboxIds, searchQuery)
             .stream()
+            .filter(searchResult -> searchResult.getMessageId().isPresent())
             .map(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
             .limit(Long.valueOf(limit).intValue())
@@ -528,17 +529,14 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 Document doc = searcher.storedFields().document(sDoc.doc);
                 MessageUid uid = MessageUid.of(doc.getField(UID_FIELD).numericValue().longValue());
                 MailboxId mailboxId = mailboxIdFactory.fromString(doc.get(MAILBOX_ID_FIELD));
-                Optional<MessageId> messageId = toMessageId(Optional.ofNullable(doc.get(MESSAGE_ID_FIELD)));
+                Optional<MessageId> messageId = Optional.ofNullable(doc.get(MESSAGE_ID_FIELD))
+                    .map(messageIdFactory::fromString);
                 results.add(new SearchResult(messageId, mailboxId, uid));
             }
         } catch (IOException e) {
             throw new MailboxException("Unable to search the mailbox", e);
         }
         return results.build();
-    }
-
-    private Optional<MessageId> toMessageId(Optional<String> messageIdField) {
-        return messageIdField.map(messageIdFactory::fromString);
     }
 
     private Query buildQueryFromMailboxes(Collection<MailboxId> mailboxIds) {
@@ -552,7 +550,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     /**
      * Create a new {@link Document} for the given {@link MailboxMessage}. This Document does not contain any flags data. The {@link Flags} are stored in a seperate Document.
-     *
+     * <p>
      * See {@link #createFlagsDocument(MailboxMessage)}
      */
     private Document createMessageDocument(final MailboxSession session, final MailboxMessage membership) throws IOException, MimeException {
@@ -574,8 +572,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             doc.add(new StringField(THREAD_ID_FIELD, serializedThreadId, Store.YES));
         }
 
-        // create an unqiue key for the document which can be used later on updates to find the document
-        doc.add(new StringField(ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.US) + "-" + Long.toString(membership.getUid().asLong()), Store.YES));
+        // create a unique key for the document which can be used later on updates to find the document
+        doc.add(new StringField(ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.US) + "-" + membership.getUid().asLong(), Store.YES));
 
         doc.add(new StringField(INTERNAL_DATE_FIELD_YEAR_RESOLUTION, DateTools.dateToString(membership.getInternalDate(), DateTools.Resolution.YEAR), Store.NO));
         doc.add(new StringField(INTERNAL_DATE_FIELD_MONTH_RESOLUTION, DateTools.dateToString(membership.getInternalDate(), DateTools.Resolution.MONTH), Store.NO));
@@ -633,7 +631,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                     }
 
 
-                    // Check if we can index the the address in the right manner
+                    // Check if we can index the address in the right manner
                     if (field != null) {
                         // not sure if we really should reparse it. It maybe be better to check just for the right type.
                         // But this impl was easier in the first place
@@ -756,7 +754,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         // parse the message to index headers and body
         parser.parse(membership.getFullContent());
 
-
         return doc;
     }
 
@@ -773,10 +770,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             case Minute -> SENT_DATE_FIELD_MINUTE_RESOLUTION;
             case Second -> SENT_DATE_FIELD_SECOND_RESOLUTION;
         };
-    }
-
-    private static Calendar getGMT() {
-        return Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.US);
     }
 
     private String toInteralDateField(DateResolution res) {
@@ -804,7 +797,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.InternalDateCriterion}
      */
-    private Query createInternalDateQuery(SearchQuery.InternalDateCriterion crit) throws UnsupportedSearchException {
+    private Query createInternalDateQuery(SearchQuery.InternalDateCriterion crit) {
         DateOperator dop = crit.getOperator();
         DateResolution res = dop.getDateResultion();
         String field = toInteralDateField(res);
@@ -814,7 +807,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.SaveDateCriterion}
      */
-    private Query createSaveDateQuery(SearchQuery.SaveDateCriterion crit) throws UnsupportedSearchException {
+    private Query createSaveDateQuery(SearchQuery.SaveDateCriterion crit) {
         DateOperator dop = crit.getOperator();
         DateResolution res = dop.getDateResultion();
         String field = toSaveDateField(res);
@@ -824,7 +817,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.SizeCriterion}
      */
-    private Query createSizeQuery(SearchQuery.SizeCriterion crit) throws UnsupportedSearchException {
+    private Query createSizeQuery(SearchQuery.SizeCriterion crit) {
         NumericOperator op = crit.getOperator();
         return switch (op.getType()) {
             case EQUALS -> LongPoint.newExactQuery(SIZE_FIELD, op.getValue());
@@ -848,28 +841,19 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * Return a {@link Query} which is build based on the given {@link SearchQuery.HeaderCriterion}
      */
     private Query createHeaderQuery(SearchQuery.HeaderCriterion crit) throws UnsupportedSearchException {
-        HeaderOperator op = crit.getOperator();
+        if (crit.getOperator() == null) {
+            throw new UnsupportedSearchException();
+        }
+
         String name = crit.getHeaderName().toUpperCase(Locale.US);
         String fieldName = PREFIX_HEADER_FIELD + name;
-        switch (op) {
-            case ContainsOperator cop -> {
-                return createTermQuery(fieldName, cop.getValue().toUpperCase(Locale.US));
-            }
-            case SearchQuery.ExistsOperator existsOperator -> {
-                return new PrefixQuery(new Term(fieldName, ""));
-            }
-            case DateOperator dop -> {
-                String field = toSentDateField(dop.getDateResultion());
-                return createQuery(field, dop);
-            }
-            case SearchQuery.AddressOperator addressOperator -> {
-                String field = name.toLowerCase(Locale.US);
-                return createTermQuery(field, addressOperator.getAddress().toUpperCase(Locale.US));
-            }
-            case null, default ->
-                // Operator not supported
-                throw new UnsupportedSearchException();
-        }
+        return switch (crit.getOperator()) {
+            case ContainsOperator cop -> createTermQuery(fieldName, cop.getValue().toUpperCase(Locale.US));
+            case SearchQuery.ExistsOperator existsOperator -> new PrefixQuery(new Term(fieldName, StringUtils.EMPTY));
+            case DateOperator dop -> createQuery(toSentDateField(dop.getDateResultion()), dop);
+            case SearchQuery.AddressOperator addressOperator -> createTermQuery(name.toLowerCase(Locale.US), addressOperator.getAddress().toUpperCase(Locale.US));
+            default -> throw new UnsupportedSearchException();
+        };
     }
 
 
@@ -880,10 +864,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         String value = DateTools.dateToString(date, dRes);
         return switch (dop.getType()) {
             case ON -> new TermQuery(new Term(field, value));
-            case BEFORE ->
-                TermRangeQuery.newStringRange(field, DateTools.dateToString(MIN_DATE, dRes), value, true, false);
-            case AFTER ->
-                TermRangeQuery.newStringRange(field, value, DateTools.dateToString(MAX_DATE, dRes), false, true);
+            case BEFORE -> TermRangeQuery.newStringRange(field, DateTools.dateToString(MIN_DATE, dRes), value, INCLUDE_LOWER, !INCLUDE_UPPER);
+            case AFTER -> TermRangeQuery.newStringRange(field, value, DateTools.dateToString(MAX_DATE, dRes), !INCLUDE_LOWER, INCLUDE_UPPER);
         };
     }
 
@@ -1009,55 +991,31 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private SortField createSortField(SearchQuery.Sort s, boolean reverse) {
+        if (s.getSortClause() == null) {
+            return null;
+        }
+        if (reverse) {
+            return switch (s.getSortClause()) {
+                case Arrival -> ARRIVAL_MAILBOX_SORT_REVERSE;
+                case SentDate -> SENT_DATE_SORT_REVERSE;
+                case MailboxCc -> FIRST_CC_MAILBOX_SORT_REVERSE;
+                case MailboxFrom -> FIRST_FROM_MAILBOX_SORT_REVERSE;
+                case Size -> SIZE_SORT_REVERSE;
+                case BaseSubject -> BASE_SUBJECT_SORT_REVERSE;
+                case MailboxTo -> FIRST_TO_MAILBOX_SORT_REVERSE;
+                case Uid -> UID_SORT_REVERSE;
+                default -> null;
+            };
+        }
         return switch (s.getSortClause()) {
-            case Arrival -> {
-                if (reverse) {
-                    yield ARRIVAL_MAILBOX_SORT_REVERSE;
-                }
-                yield ARRIVAL_MAILBOX_SORT;
-            }
-            case SentDate -> {
-                if (reverse) {
-                    yield SENT_DATE_SORT_REVERSE;
-                }
-                yield SENT_DATE_SORT;
-            }
-            case MailboxCc -> {
-                if (reverse) {
-                    yield FIRST_CC_MAILBOX_SORT_REVERSE;
-                }
-                yield FIRST_CC_MAILBOX_SORT;
-            }
-            case MailboxFrom -> {
-                if (reverse) {
-                    yield FIRST_FROM_MAILBOX_SORT_REVERSE;
-                }
-                yield FIRST_FROM_MAILBOX_SORT;
-            }
-            case Size -> {
-                if (reverse) {
-                    yield SIZE_SORT_REVERSE;
-                }
-                yield SIZE_SORT;
-            }
-            case BaseSubject -> {
-                if (reverse) {
-                    yield BASE_SUBJECT_SORT_REVERSE;
-                }
-                yield BASE_SUBJECT_SORT;
-            }
-            case MailboxTo -> {
-                if (reverse) {
-                    yield FIRST_TO_MAILBOX_SORT_REVERSE;
-                }
-                yield FIRST_TO_MAILBOX_SORT;
-            }
-            case Uid -> {
-                if (reverse) {
-                    yield UID_SORT_REVERSE;
-                }
-                yield UID_SORT;
-            }
+            case Arrival -> ARRIVAL_MAILBOX_SORT;
+            case SentDate -> SENT_DATE_SORT;
+            case MailboxCc -> FIRST_CC_MAILBOX_SORT;
+            case MailboxFrom -> FIRST_FROM_MAILBOX_SORT;
+            case Size -> SIZE_SORT;
+            case BaseSubject -> BASE_SUBJECT_SORT;
+            case MailboxTo -> FIRST_TO_MAILBOX_SORT;
+            case Uid -> UID_SORT;
             default -> null;
         };
     }
@@ -1104,7 +1062,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.AllCriterion}
      */
-    private Query createAllQuery(SearchQuery.AllCriterion crit) throws UnsupportedSearchException {
+    private Query createAllQuery() {
         BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
 
         queryBuilder.add(createQuery(MessageRange.all()), BooleanClause.Occur.MUST);
@@ -1116,7 +1074,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.ConjunctionCriterion}
      */
-    private Query createConjunctionQuery(SearchQuery.ConjunctionCriterion crit, Query inMailboxes, Collection<MessageUid> recentUids) throws UnsupportedSearchException, MailboxException {
+    private Query createConjunctionQuery(SearchQuery.ConjunctionCriterion crit, Query inMailboxes, Collection<MessageUid> recentUids) throws MailboxException {
         List<Criterion> crits = crit.getCriteria();
         BooleanQuery.Builder conQuery = new BooleanQuery.Builder();
         switch (crit.getType()) {
@@ -1170,7 +1128,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         } else if (criterion instanceof SearchQuery.TextCriterion crit) {
             return createTextQuery(crit);
         } else if (criterion instanceof SearchQuery.AllCriterion) {
-            return createAllQuery((AllCriterion) criterion);
+            return createAllQuery();
         } else if (criterion instanceof SearchQuery.ConjunctionCriterion crit) {
             return createConjunctionQuery(crit, inMailboxes, recentUids);
         } else if (criterion instanceof SearchQuery.ModSeqCriterion) {
@@ -1244,10 +1202,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * Add the given {@link Flags} to the {@link Document}
      */
     private void indexFlags(Document doc, Flags f) {
-        List<String> fString = new ArrayList<>();
         Flag[] flags = f.getSystemFlags();
         for (Flag flag : flags) {
-            fString.add(toString(flag));
             doc.add(new StringField(FLAGS_FIELD, toString(flag), Store.YES));
         }
 
@@ -1260,7 +1216,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         if (flags.length == 0 && userFlags.length == 0) {
             doc.add(new StringField(FLAGS_FIELD, "",Store.NO));
         }
-
     }
 
     private Query createQuery(MessageRange range) {
