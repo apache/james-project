@@ -23,21 +23,22 @@ import java.util.Objects;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.mailbox.model.MailboxACL;
 
 /**
  * MYRIGHTS Response.
  */
 public final class MyRightsResponse implements ImapResponseMessage {
-    private final String mailboxName;
+    private final MailboxName mailboxName;
     private final MailboxACL.Rfc4314Rights myRights;
 
-    public MyRightsResponse(String mailboxName, MailboxACL.Rfc4314Rights myRights) {
+    public MyRightsResponse(MailboxName mailboxName, MailboxACL.Rfc4314Rights myRights) {
         this.mailboxName = mailboxName;
         this.myRights = myRights;
     }
 
-    public String getMailboxName() {
+    public MailboxName getMailboxName() {
         return mailboxName;
     }
 
@@ -46,7 +47,7 @@ public final class MyRightsResponse implements ImapResponseMessage {
     }
 
     @Override
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         if (o instanceof MyRightsResponse) {
             MyRightsResponse other = (MyRightsResponse) o;
 
@@ -57,7 +58,7 @@ public final class MyRightsResponse implements ImapResponseMessage {
     }
 
     @Override
-    public final int hashCode() {
+    public int hashCode() {
         return Objects.hash(myRights, mailboxName);
     }
 

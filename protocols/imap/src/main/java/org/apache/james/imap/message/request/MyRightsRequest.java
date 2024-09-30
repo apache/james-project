@@ -21,6 +21,7 @@ package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.message.MailboxName;
 
 import com.google.common.base.MoreObjects;
 
@@ -28,14 +29,14 @@ import com.google.common.base.MoreObjects;
  * MYRIGHTS Request.
  */
 public class MyRightsRequest extends AbstractImapRequest {
-    private final String mailboxName;
+    private final MailboxName mailboxName;
 
-    public MyRightsRequest(Tag tag, String mailboxName) {
+    public MyRightsRequest(Tag tag, MailboxName mailboxName) {
         super(tag, ImapConstants.MYRIGHTS_COMMAND);
         this.mailboxName = mailboxName;
     }
 
-    public String getMailboxName() {
+    public MailboxName getMailboxName() {
         return mailboxName;
     }
 

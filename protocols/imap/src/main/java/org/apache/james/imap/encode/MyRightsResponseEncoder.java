@@ -22,6 +22,7 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.response.MyRightsResponse;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 
@@ -40,8 +41,8 @@ public class MyRightsResponseEncoder implements ImapResponseEncoder<MyRightsResp
         composer.untagged();
         composer.commandName(ImapConstants.MYRIGHTS_COMMAND);
         
-        String mailboxName = aclResponse.getMailboxName();
-        composer.mailbox(mailboxName == null ? "" : mailboxName);
+        MailboxName mailboxName = aclResponse.getMailboxName();
+        composer.mailbox(mailboxName == null ? "" : mailboxName.asString());
         composer.quote(myRights == null ? "" : myRights.serialize());
         composer.end();
     }
