@@ -123,6 +123,39 @@ trait WebSocketContract {
 
   @Test
   @Timeout(180)
+  def shouldReturnSecWebSocketProtocolHttpHeader(server: GuiceJamesServer): Unit = {
+    val subProtocolResponseHeader: String =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, String] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "Request",
+                |  "id": "req-36",
+                |  "using": [ "urn:ietf:params:jmap:core"],
+                |  "methodCalls": [
+                |    [
+                |      "Core/echo",
+                |      {
+                |        "arg1": "arg1data",
+                |        "arg2": "arg2data"
+                |      },
+                |      "c1"
+                |    ]
+                |  ]
+                |}""".stripMargin))
+
+            ws.receive().asPayload
+        })
+        .send(backend)
+        .header("Sec-WebSocket-Protocol")
+        .get
+
+    assertThat(subProtocolResponseHeader).isEqualTo("jmap")
+  }
+
+  @Test
+  @Timeout(180)
   def executingSeveralAPICallsShouldBePossible(server: GuiceJamesServer): Unit = {
     val response: Either[String, List[String]] =
       authenticatedRequest(server)
