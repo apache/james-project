@@ -168,43 +168,62 @@ public class AuthCmdHandler
             }
             String authType = argument.toUpperCase(Locale.US);
             if (authType.equals(AUTH_TYPE_PLAIN) && session.getConfiguration().isPlainAuthEnabled()) {
-                String userpass;
-                if (initialResponse == null) {
-                    session.pushLineHandler(new AbstractSMTPLineHandler() {
-                        @Override
-                        protected Response onCommand(SMTPSession session, String l) {
-                            return doPlainAuth(session, l);
-                        }
-                    });
-                    return AUTH_READY_PLAIN;
-                } else {
-                    userpass = initialResponse.trim();
-                    return doPlainAuth(session, userpass);
-                }
+                return handlePlainContinuation(session, initialResponse);
             } else if (authType.equals(AUTH_TYPE_LOGIN) && session.getConfiguration().isPlainAuthEnabled()) {
-
-                if (initialResponse == null) {
-                    session.pushLineHandler(new AbstractSMTPLineHandler() {
-                        @Override
-                        protected Response onCommand(SMTPSession session, String l) {
-                            return doLoginAuthPass(session, l);
-                        }
-                    });
-                    return AUTH_READY_USERNAME_LOGIN;
-                } else {
-                    String user = initialResponse.trim();
-                    return doLoginAuthPass(session, user);
-                }
-            } else if ((authType.equals(AUTH_TYPE_OAUTHBEARER) || authType.equals(AUTH_TYPE_XOAUTH2))
-                && session.supportsOAuth()) {
-                return doSASLAuthentication(session, initialResponse);
+                return handleLoginAuthContinuation(session, initialResponse);
+            } else if ((authType.equals(AUTH_TYPE_OAUTHBEARER) || authType.equals(AUTH_TYPE_XOAUTH2)) && session.supportsOAuth()) {
+                return handleOauth2Continuation(session, initialResponse);
             } else {
                 return doUnknownAuth(authType);
             }
         }
     }
 
-    private Response doSASLAuthentication(SMTPSession session, String initialResponseString) {
+    private Response handlePlainContinuation(SMTPSession session, String initialResponse) {
+        return Optional.ofNullable(initialResponse)
+        .map(String::trim)
+        .map(userpass -> doPlainAuth(session, userpass))
+        .orElseGet(() -> {
+            session.pushLineHandler(new AbstractSMTPLineHandler() {
+                @Override
+                protected Response onCommand(SMTPSession session, String l) {
+                    return doPlainAuth(session, l);
+                }
+            });
+            return AUTH_READY_USERNAME_LOGIN;
+        });
+    }
+
+    private Response handleLoginAuthContinuation(SMTPSession session, String initialResponse) {
+        return Optional.ofNullable(initialResponse)
+            .map(String::trim)
+            .map(user -> doLoginAuthPass(session, user))
+            .orElseGet(() -> {
+                session.pushLineHandler(new AbstractSMTPLineHandler() {
+                    @Override
+                    protected Response onCommand(SMTPSession session, String l) {
+                        return doLoginAuthPass(session, l);
+                    }
+                });
+                return AUTH_READY_USERNAME_LOGIN;
+            });
+    }
+
+    private Response handleOauth2Continuation(SMTPSession session, String initialResponse) {
+        return Optional.ofNullable(initialResponse)
+            .map(token -> doOauth2Authentication(session, token))
+            .orElseGet(() -> {
+                session.pushLineHandler(new AbstractSMTPLineHandler() {
+                    @Override
+                    protected Response onCommand(SMTPSession session, String l) {
+                        return doOauth2Authentication(session, l);
+                    }
+                });
+                return new SMTPResponse(SMTPRetCode.AUTH_READY, "");
+            });
+    }
+
+    private Response doOauth2Authentication(SMTPSession session, String initialResponseString) {
         return session.getConfiguration().saslConfiguration()
             .map(oidcSASLConfiguration -> hooks.stream()
                 .flatMap(hook -> Optional.ofNullable(executeHook(session, hook,
