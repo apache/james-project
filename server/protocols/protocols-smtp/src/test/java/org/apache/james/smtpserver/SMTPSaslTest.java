@@ -121,6 +121,28 @@ class SMTPSaslTest {
     }
 
     @Test
+    void oauthShouldSuccessWhenValidTokenAndContinuation() throws Exception {
+        SMTPSClient client = initSMTPSClient();
+
+        client.sendCommand("AUTH OAUTHBEARER");
+        assertThat(client.getReplyString()).contains("334");
+        client.sendCommand(VALID_TOKEN);
+
+        assertThat(client.getReplyString()).contains("235 Authentication successful.");
+    }
+
+    @Test
+    void oauthShouldSuccessWhenValidTokenAndContinuationAndXOauth2() throws Exception {
+        SMTPSClient client = initSMTPSClient();
+
+        client.sendCommand("AUTH XOAUTH2");
+        assertThat(client.getReplyString()).contains("334");
+        client.sendCommand(VALID_TOKEN);
+
+        assertThat(client.getReplyString()).contains("235 Authentication successful.");
+    }
+
+    @Test
     void oauthShouldSupportXOAUTH2Type() throws Exception {
         SMTPSClient client = initSMTPSClient();
 
