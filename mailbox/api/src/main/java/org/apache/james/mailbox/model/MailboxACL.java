@@ -355,6 +355,9 @@ public class MailboxACL {
 
     }
 
+    public static final boolean NEGATIVE_KEY = true;
+    public static final boolean POSITIVE_KEY = !NEGATIVE_KEY;
+
     /**
      * The key used in {@link MailboxACL#getEntries()}. Implementations should
      * override {@link #hashCode()} and {@link #equals(Object)} in such a way
@@ -364,7 +367,7 @@ public class MailboxACL {
      */
     public static class EntryKey {
         public static EntryKey createGroupEntryKey(String name) {
-            return new EntryKey(name, NameType.group, false);
+            return new EntryKey(name, NameType.group, POSITIVE_KEY);
         }
 
         public static EntryKey createGroupEntryKey(String name, boolean negative) {
@@ -372,11 +375,11 @@ public class MailboxACL {
         }
 
         public static EntryKey createUserEntryKey(Username name) {
-            return new EntryKey(name.asString(), NameType.user, false);
+            return new EntryKey(name.asString(), NameType.user, POSITIVE_KEY);
         }
 
         public static EntryKey createNegativeUserEntryKey(Username name) {
-            return new EntryKey(name.asString(), NameType.user, true);
+            return new EntryKey(name.asString(), NameType.user, NEGATIVE_KEY);
         }
 
         public static EntryKey createUserEntryKey(Username name, boolean negative) {
@@ -651,15 +654,15 @@ public class MailboxACL {
 
     static {
         try {
-            ANYONE_KEY = new EntryKey(SpecialName.anyone.name(), NameType.special, false);
-            ANYONE_NEGATIVE_KEY = new EntryKey(SpecialName.anyone.name(), NameType.special, true);
-            AUTHENTICATED_KEY = new EntryKey(SpecialName.authenticated.name(), NameType.special, false);
-            AUTHENTICATED_NEGATIVE_KEY = new EntryKey(SpecialName.authenticated.name(), NameType.special, true);
+            ANYONE_KEY = new EntryKey(SpecialName.anyone.name(), NameType.special, POSITIVE_KEY);
+            ANYONE_NEGATIVE_KEY = new EntryKey(SpecialName.anyone.name(), NameType.special, NEGATIVE_KEY);
+            AUTHENTICATED_KEY = new EntryKey(SpecialName.authenticated.name(), NameType.special, POSITIVE_KEY);
+            AUTHENTICATED_NEGATIVE_KEY = new EntryKey(SpecialName.authenticated.name(), NameType.special, NEGATIVE_KEY);
             EMPTY = new MailboxACL();
             FULL_RIGHTS =  new Rfc4314Rights(Right.allRights);
             NO_RIGHTS = new Rfc4314Rights();
-            OWNER_KEY = new EntryKey(SpecialName.owner.name(), NameType.special, false);
-            OWNER_NEGATIVE_KEY = new EntryKey(SpecialName.owner.name(), NameType.special, true);
+            OWNER_KEY = new EntryKey(SpecialName.owner.name(), NameType.special, POSITIVE_KEY);
+            OWNER_NEGATIVE_KEY = new EntryKey(SpecialName.owner.name(), NameType.special, NEGATIVE_KEY);
             OWNER_FULL_ACL = new MailboxACL(new Entry[] { new Entry(MailboxACL.OWNER_KEY, MailboxACL.FULL_RIGHTS) });
             OWNER_FULL_EXCEPT_ADMINISTRATION_ACL = new MailboxACL(new Entry[] { new Entry(MailboxACL.OWNER_KEY, MailboxACL.FULL_RIGHTS.except(new Rfc4314Rights(Right.Administer))) });
         } catch (UnsupportedRightException e) {

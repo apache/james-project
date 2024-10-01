@@ -33,7 +33,7 @@ class PositiveUserACLDiffTest {
 
     private static final Username USER = Username.of("user");
     private static final EntryKey USER_ENTRY_KEY = EntryKey.createUserEntryKey(USER);
-    private static final EntryKey NEGATIVE_USER_ENTRY_KEY = EntryKey.createUserEntryKey(USER, true);
+    private static final EntryKey NEGATIVE_USER_ENTRY_KEY = EntryKey.createUserEntryKey(USER, MailboxACL.NEGATIVE_KEY);
     private static final EntryKey GROUP_ENTRY_KEY = EntryKey.createGroupEntryKey("group");
     private static final Rfc4314Rights RIGHTS = new Rfc4314Rights(Right.Administer);
 

@@ -21,6 +21,7 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -42,6 +43,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EditMode;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
@@ -101,30 +103,29 @@ class SetACLProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
 
-        replaceAclRequest = new SetACLRequest(TAG, MAILBOX_NAME, USER_1.asString(), SET_RIGHTS);
+        MailboxACL.ACLCommand aclCommand = MailboxACL.command()
+                .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                .mode(EditMode.REPLACE)
+                .rights(MailboxACL.Rfc4314Rights.deserialize(SET_RIGHTS))
+                .build();
+        replaceAclRequest = new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), aclCommand);
 
         user1Key = EntryKey.deserialize(USER_1.asString());
         setRights = Rfc4314Rights.fromSerializedRfc4314Rights(SET_RIGHTS);
     }
-    
+
     @Test
     void testUnsupportedRight() {
-        SetACLRequest setACLRequest = new SetACLRequest(TAG, MAILBOX_NAME, USER_1.asString(), UNSUPPORTED_RIGHT);
-
-        when(mailboxManager.hasRightReactive(path, MailboxACL.Right.Lookup, mailboxSession))
-            .thenReturn(Mono.just(true));
-        when(mailboxManager.hasRightReactive(path, MailboxACL.Right.Administer, mailboxSession))
-            .thenReturn(Mono.just(true));
-
-        subject.doProcess(setACLRequest, responder, imapSession).block();
-
-        verify(responder, times(1)).respond(argumentCaptor.capture());
-        verifyNoMoreInteractions(responder);
-
-        assertThat(argumentCaptor.getAllValues())
-            .hasSize(1);
-        assertThat(argumentCaptor.getAllValues().get(0))
-            .matches(StatusResponseTypeMatcher.BAD_RESPONSE_MATCHER::matches);
+        assertThrows(UnsupportedRightException.class, () -> {
+            MailboxACL.Rfc4314Rights unsupportedRight = MailboxACL.Rfc4314Rights.deserialize(UNSUPPORTED_RIGHT);
+            MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.createUserEntryKey(USER_1);
+            MailboxACL.ACLCommand aclCommand = MailboxACL.command()
+                    .key(entryKey)
+                    .mode(EditMode.REPLACE)
+                    .rights(unsupportedRight)
+                    .build();
+            new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), aclCommand);
+        });
     }
     
     @Test
@@ -164,20 +165,20 @@ class SetACLProcessorTest {
 
     @Test
     void testAddRights() throws Exception {
-        testOp("+", EditMode.ADD);
+        testOp(EditMode.ADD);
     }
 
     @Test
     void testRemoveRights() throws Exception {
-        testOp("-", EditMode.REMOVE);
+        testOp(EditMode.REMOVE);
     }
 
     @Test
     void testReplaceRights() throws Exception {
-        testOp("", EditMode.REPLACE);
+        testOp(EditMode.REPLACE);
     }
     
-    private void testOp(String prefix, EditMode editMode) {
+    private void testOp(EditMode editMode) throws UnsupportedRightException {
         when(mailboxManager.hasRightReactive(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(Mono.just(true));
         when(mailboxManager.hasRightReactive(path, MailboxACL.Right.Administer, mailboxSession))
@@ -187,8 +188,13 @@ class SetACLProcessorTest {
             mailboxSession))
             .thenReturn(Mono.empty());
 
-        SetACLRequest r = new SetACLRequest(TAG, MAILBOX_NAME, USER_1.asString(), prefix + SET_RIGHTS);
-        subject.doProcess(r, responder, imapSession).block();
+        MailboxACL.ACLCommand aclCommand = MailboxACL.command()
+                .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                .mode(editMode)
+                .rights(MailboxACL.Rfc4314Rights.deserialize(SET_RIGHTS))
+                .build();
+        SetACLRequest setACLRequest = new SetACLRequest(TAG, new SetACLRequest.MailboxName(MAILBOX_NAME), aclCommand);
+        subject.doProcess(setACLRequest, responder, imapSession).block();
 
         verify(mailboxManager).applyRightsCommandReactive(path,
             MailboxACL.command().key(user1Key).rights(setRights).mode(editMode).build(),
