@@ -22,13 +22,9 @@ package org.apache.james.imap.message;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-public class MailboxName {
-    private final String mailboxName;
-
-    public MailboxName(String mailboxName) {
+public record MailboxName(String mailboxName) {
+    public MailboxName {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(mailboxName), "MailboxName must not be null or empty");
-
-        this.mailboxName = mailboxName;
     }
 
     public String asString() {

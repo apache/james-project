@@ -68,7 +68,7 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
     protected Mono<Void> processRequestReactive(SetACLRequest request, ImapSession session, Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
-        final MailboxName mailboxName = request.getMailboxName();
+        MailboxName mailboxName = request.getMailboxName();
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName.asString());
 
         return checkLookupRight(request, responder, mailboxManager, mailboxSession, mailboxPath)
