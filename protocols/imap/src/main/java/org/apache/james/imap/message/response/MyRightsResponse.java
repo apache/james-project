@@ -47,7 +47,7 @@ public final class MyRightsResponse implements ImapResponseMessage {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public final boolean equals(Object o) {
         if (o instanceof MyRightsResponse) {
             MyRightsResponse other = (MyRightsResponse) o;
 
@@ -58,7 +58,7 @@ public final class MyRightsResponse implements ImapResponseMessage {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(myRights, mailboxName);
     }
 

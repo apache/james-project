@@ -20,6 +20,7 @@
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.MailboxName;
@@ -37,13 +38,12 @@ public class MyRightsResponseEncoder implements ImapResponseEncoder<MyRightsResp
 
     @Override
     public void encode(MyRightsResponse aclResponse, ImapResponseComposer composer) throws IOException {
-        Rfc4314Rights myRights = aclResponse.getMyRights();
+        Optional<Rfc4314Rights> myRights = Optional.ofNullable(aclResponse.getMyRights());
         composer.untagged();
         composer.commandName(ImapConstants.MYRIGHTS_COMMAND);
-        
-        MailboxName mailboxName = aclResponse.getMailboxName();
-        composer.mailbox(mailboxName == null ? "" : mailboxName.asString());
-        composer.quote(myRights == null ? "" : myRights.serialize());
-        composer.end();
-    }
+
+        Optional<String> mailboxName = Optional.ofNullable(aclResponse.getMailboxName().asString());
+        composer.mailbox(mailboxName.orElse(""));
+        composer.quote(myRights.map(Rfc4314Rights::serialize).orElse(""));
+        composer.end();}
 }

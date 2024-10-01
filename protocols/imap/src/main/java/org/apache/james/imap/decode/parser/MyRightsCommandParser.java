@@ -44,7 +44,7 @@ public class MyRightsCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        final MailboxName mailboxName = new MailboxName(request.mailbox());
+        MailboxName mailboxName = new MailboxName(request.mailbox());
         request.eol();
         return new MyRightsRequest(tag, mailboxName);
     }
