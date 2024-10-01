@@ -63,7 +63,7 @@ import reactor.core.publisher.Mono;
  */
 class GetACLProcessorTest {
 
-    private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
+    private static final MailboxName MAILBOX_NAME = new MailboxName(ImapConstants.INBOX_NAME);
     private static final Username USER_1 = Username.of("user1");
 
     private FakeImapSession imapSession;
@@ -90,7 +90,7 @@ class GetACLProcessorTest {
         metaData = mock(MailboxMetaData.class);
         responder = mock(Responder.class);
 
-        getACLRequest = new GetACLRequest(TAG, new MailboxName(MAILBOX_NAME));
+        getACLRequest = new GetACLRequest(TAG, MAILBOX_NAME);
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
@@ -169,7 +169,7 @@ class GetACLProcessorTest {
 
         assertThat(argumentCaptor.getAllValues())
             .hasSize(2);
-        ACLResponse response = new ACLResponse(new MailboxName(MAILBOX_NAME), acl);
+        ACLResponse response = new ACLResponse(MAILBOX_NAME, acl);
         assertThat(argumentCaptor.getAllValues().get(0))
             .isEqualTo(response);
         assertThat(argumentCaptor.getAllValues().get(1))

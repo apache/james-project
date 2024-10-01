@@ -62,7 +62,7 @@ public final class ACLResponse implements ImapResponseMessage {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(acl, mailboxName);
     }
 
