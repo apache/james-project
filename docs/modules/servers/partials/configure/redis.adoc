@@ -25,6 +25,9 @@ Reference: https://github.com/redis/lettuce/wiki/ReadFrom-Settings
 | redis.sentinelPassword
 | Redis sentinel password. If not specified, the redis driver will not set password for sentinel.
 
+| redis.ssl.enabled
+| To enable ssl connection. Defaults to false. Read TLS/SSL for more details.
+
 | redis.ioThreads
 | IO threads to be using for the underlying Netty networking resources. If unspecified driver defaults applies.
 
@@ -47,3 +50,31 @@ io-threads-do-reads yes
 ....
 
 However, if your machine has only 1 CPU core or your Redis usage is not intensive, you will not benefit from this.
+
+== TLS/SSL
+
+To enable ssl mode, set `redis.ssl.enalbed` to true. The keyword `rediss` must be used in redisURL. For example:
+....
+redisURL=rediss://123@localhost:6379?verifyPeer=NONE
+....
+Once ssl mode is enabled, the following properties can be specified:
+
+|===
+| Property name | explanation
+
+| redis.ignoreCertificateCheck
+| To tell James to ignore any certificate check when connecting to redis via ssl. Defaults to true. If the value is false, the key store file would be used for the check.
+
+| redis.keystore.file.path
+| The file path pointing to the p12 file containing private key, cert and ca cert. Defaults to cacerts file path in java home location.
+
+| redis.keystore.password
+| The password of the p12 file. Defaults to empty.
+|===
+
+Query paras in `redisURL` could be used to specify some configs for Lettuce (Redis client lib used by James)
+
+One of those query paras is `verifyPeer`. By default, Lettuce verifies the certificate against the validity and the common name (Name validation not supported on Java 1.6, only available on Java 1.7 and higher) of the Redis host you are connecting to. This behavior can be turned off by `verifyPeer=NONE`
+
+For more details about query paras supported in `redisURL` as well as other Lettuce support for TLS/SSL, consult this link:
+https://github.com/redis/lettuce/wiki/SSL-Connections
