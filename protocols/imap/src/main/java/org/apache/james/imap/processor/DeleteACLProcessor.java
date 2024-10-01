@@ -67,8 +67,8 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
     protected Mono<Void> processRequestReactive(DeleteACLRequest request, ImapSession session, Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
-        final MailboxName mailboxName = request.getMailboxName();
-        final MailboxACL.EntryKey entryKey = request.getEntryKey();
+        MailboxName mailboxName = request.getMailboxName();
+        MailboxACL.EntryKey entryKey = request.getEntryKey();
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName.asString());
 
         return checkLookupRight(request, responder, mailboxManager, mailboxSession, mailboxPath)
