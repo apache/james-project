@@ -55,7 +55,7 @@ public final class ListRightsResponse implements ImapResponseMessage {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public final boolean equals(Object o) {
         if (o instanceof ListRightsResponse) {
             ListRightsResponse other = (ListRightsResponse) o;
 

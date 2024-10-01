@@ -66,7 +66,7 @@ import reactor.core.publisher.Mono;
  */
 class ListRightsProcessorTest {
 
-    private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
+    private static final MailboxName MAILBOX_NAME = new MailboxName(ImapConstants.INBOX_NAME);
     private static final Username USER_1 = Username.of("user1");
 
     private FakeImapSession imapSession;
@@ -83,7 +83,7 @@ class ListRightsProcessorTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        path = MailboxPath.forUser(USER_1, MAILBOX_NAME);
+        path = MailboxPath.forUser(USER_1, MAILBOX_NAME.asString());
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
@@ -108,7 +108,7 @@ class ListRightsProcessorTest {
         when(messageManager.getMailboxEntity()).thenReturn(mock(Mailbox.class));
 
         user1Key = EntryKey.createUserEntryKey(USER_1);
-        listRightsRequest = new ListRightsRequest(TAG, new MailboxName(MAILBOX_NAME), user1Key);
+        listRightsRequest = new ListRightsRequest(TAG, MAILBOX_NAME, user1Key);
 
         listRights = List.of(
             Rfc4314Rights.fromSerializedRfc4314Rights("ae"),
@@ -182,7 +182,7 @@ class ListRightsProcessorTest {
 
         subject.doProcess(listRightsRequest, responder, imapSession).block();
 
-        ListRightsResponse response = new ListRightsResponse(new MailboxName(MAILBOX_NAME), user1Key, listRights);
+        ListRightsResponse response = new ListRightsResponse(MAILBOX_NAME, user1Key, listRights);
         verify(responder, times(2)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
 
