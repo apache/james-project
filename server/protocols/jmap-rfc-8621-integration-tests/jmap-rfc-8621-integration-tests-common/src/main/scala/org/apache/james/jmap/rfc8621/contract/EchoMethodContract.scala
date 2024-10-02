@@ -137,6 +137,29 @@ trait EchoMethodContract {
   }
 
   @Test
+  def apiShouldRejectTooManyCalls(): Unit = {
+    val response: String = `given`()
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(TOO_MANY_CALLS_ECHO_REQUEST_OBJECT)
+      .when()
+        .post()
+      .`then`
+        .statusCode(SC_BAD_REQUEST)
+        .contentType(JSON)
+      .extract()
+        .body()
+        .asString()
+
+    assertThatJson(response).isEqualTo(
+      """{
+        |    "type": "urn:ietf:params:jmap:error:limit",
+        |    "status": 400,
+        |    "limit": "maxCallsInRequest",
+        |    "detail": "Request call count limit is exceeded. Was 17 but maximum allowed is 16"
+        |}""".stripMargin)
+  }
+
+  @Test
   def echoMethodShouldRespondWithRFC8621VersionAndUnsupportedMethod(): Unit = {
     val response: String = `given`()
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)

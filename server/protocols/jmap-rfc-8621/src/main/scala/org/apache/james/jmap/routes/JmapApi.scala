@@ -21,7 +21,7 @@ package org.apache.james.jmap.routes
 import jakarta.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation.MethodName
-import org.apache.james.jmap.core.{CapabilityFactory, ErrorCode, Invocation, JmapRfc8621Configuration, MissingCapabilityException, RequestObject, ResponseObject}
+import org.apache.james.jmap.core.{CapabilityFactory, ErrorCode, Invocation, JmapRfc8621Configuration, MaxCallsInRequest, MissingCapabilityException, RequestObject, ResponseObject}
 import org.apache.james.jmap.method.{InvocationWithContext, Method}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
@@ -46,16 +46,33 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
   def process(requestObject: RequestObject,
               mailboxSession: MailboxSession): SMono[ResponseObject] = {
     val processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)
-    val unsupportedCapabilities = requestObject.using -- defaultCapabilities
     val capabilities: Set[CapabilityIdentifier] = requestObject.using
 
-    if (unsupportedCapabilities.nonEmpty) {
-      SMono.error(UnsupportedCapabilitiesException(unsupportedCapabilities))
-    } else {
+    val validatedRequestObject = for {
+      _ <- validateCapabilities(requestObject)
+      _ <- validateMaxCalls(requestObject)
+    } yield {
       processSequentiallyAndUpdateContext(requestObject, mailboxSession, processingContext, capabilities)
         .map(invocations => ResponseObject(ResponseObject.SESSION_STATE, invocations.map(_.invocation)))
     }
+    validatedRequestObject.fold(e => SMono.error(e), obj => obj)
   }
+
+  private def validateCapabilities(requestObject: RequestObject): Either[Exception, RequestObject] = {
+    val unsupportedCapabilities = requestObject.using -- defaultCapabilities
+    if (unsupportedCapabilities.nonEmpty) {
+      Left(UnsupportedCapabilitiesException(unsupportedCapabilities))
+    } else {
+      Right(requestObject)
+    }
+  }
+
+  private def validateMaxCalls(requestObject: RequestObject): Either[Exception, RequestObject] =
+    if (requestObject.methodCalls.length > MaxCallsInRequest.DEFAULT) {
+      Left(TooManyCallsInRequest(requestObject))
+    } else {
+      Right(requestObject)
+    }
 
   private def processSequentiallyAndUpdateContext(requestObject: RequestObject, mailboxSession: MailboxSession, processingContext: ProcessingContext, capabilities: Set[CapabilityIdentifier]): SMono[Seq[(InvocationWithContext)]] =
     SFlux.fromIterable(requestObject.methodCalls)

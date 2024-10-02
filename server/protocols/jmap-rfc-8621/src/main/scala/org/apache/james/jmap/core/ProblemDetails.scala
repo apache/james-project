@@ -23,7 +23,7 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
 import org.apache.james.jmap.core.RequestLevelErrorType.{DEFAULT_ERROR_TYPE, ErrorTypeIdentifier}
 import org.apache.james.jmap.exceptions.UnauthorizedException
-import org.apache.james.jmap.routes.{RequestSizeExceeded, StreamConstraintsExceptionWithInput, UnsupportedCapabilitiesException}
+import org.apache.james.jmap.routes.{RequestSizeExceeded, StreamConstraintsExceptionWithInput, TooManyCallsInRequest, UnsupportedCapabilitiesException}
 import org.apache.james.util.MDCStructuredLogger
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.netty.channel.AbortedException
@@ -71,6 +71,10 @@ object ProblemDetails {
         .field("input", new String(exception.input).substring(0, 4096))
         .log(logger => logger.warn(message))
       ProblemDetails(RequestLevelErrorType.LIMIT, BAD_REQUEST, Some("maxSizeRequest"), message)
+    case exception: TooManyCallsInRequest =>
+      val message = s"Request call count limit is exceeded. Was ${exception.requestObject.methodCalls.length} but maximum allowed is ${MaxCallsInRequest.DEFAULT}"
+      LOGGER.warn(message, exception)
+      ProblemDetails(RequestLevelErrorType.LIMIT, BAD_REQUEST, Some("maxCallsInRequest"), message)
     case e =>
       LOGGER.error("Unexpected error upon API request", e)
       ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage)

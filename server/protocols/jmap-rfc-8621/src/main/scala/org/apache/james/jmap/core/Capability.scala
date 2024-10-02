@@ -114,7 +114,7 @@ final case class CoreCapabilityFactory(configration: JmapRfc8621Configuration) e
     MaxConcurrentUpload(4L),
     MaxSizeRequest(10_000_000L), // See MaxSizeRequest.DEFAULT compile-time refinement only works with literals
     MaxConcurrentRequests(4L),
-    MaxCallsInRequest(16L),
+    MaxCallsInRequest(16L), // See MaxCallsInRequest.DEFAULT compile-time refinement only works with literals
     configration.maxObjectsInGet,
     configration.maxObjectsInSet,
     collationAlgorithms = List("i;unicode-casemap")))
@@ -141,6 +141,9 @@ case class MaxConcurrentUpload(value: UnsignedInt)
 
 object MaxSizeRequest {
   val DEFAULT: Long = 10_000_000L
+}
+object MaxCallsInRequest {
+  val DEFAULT: Long = 16L
 }
 
 case class MaxSizeRequest(value: UnsignedInt)
