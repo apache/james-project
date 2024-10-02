@@ -138,3 +138,4 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
 }
 
 case class UnsupportedCapabilitiesException(capabilities: Set[CapabilityIdentifier]) extends RuntimeException
+case class TooManyCallsInRequest(requestObject: RequestObject) extends RuntimeException

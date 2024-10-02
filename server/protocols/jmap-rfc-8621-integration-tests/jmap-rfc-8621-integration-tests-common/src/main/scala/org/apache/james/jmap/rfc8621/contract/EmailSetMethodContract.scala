@@ -1588,6 +1588,34 @@ trait EmailSetMethodContract {
     val bobPath = MailboxPath.inbox(BOB)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
+    val uploadResponse1: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .contentType("text/plain")
+      .body("0123456789\\r\\n".repeat(500 * 1024))
+    .when
+      .post(s"/upload/$ACCOUNT_ID")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString()
+
+    val uploadResponse2: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .contentType("text/plain")
+      .body("0123456789\\r\\n".repeat(500 * 1024))
+    .when
+      .post(s"/upload/$ACCOUNT_ID")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString()
+    val blobId1: String = Json.parse(uploadResponse1).\("blobId").get.asInstanceOf[JsString].value
+    val blobId2: String = Json.parse(uploadResponse2).\("blobId").get.asInstanceOf[JsString].value
+
     val request =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
@@ -1606,9 +1634,27 @@ trait EmailSetMethodContract {
          |              "type": "text/html"
          |            }
          |          ],
+         |          "attachments": [
+         |            {
+         |              "blobId": "$blobId1",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "attachment",
+         |              "language": ["fr", "en"],
+         |              "location": "http://125.26.23.36/content"
+         |            },
+         |            {
+         |              "blobId": "$blobId2",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "attachment",
+         |              "language": ["fr", "en"],
+         |              "location": "http://125.26.23.36/content"
+         |            }
+         |          ],
          |          "bodyValues": {
          |            "a49d": {
-         |              "value": "${"0123456789\\r\\n".repeat(1024 * 1024)}",
+         |              "value": "0123456789",
          |              "isTruncated": false,
          |              "isEncodingProblem": false
          |            }
