@@ -23,7 +23,8 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
 import org.apache.james.jmap.core.RequestLevelErrorType.{DEFAULT_ERROR_TYPE, ErrorTypeIdentifier}
 import org.apache.james.jmap.exceptions.UnauthorizedException
-import org.apache.james.jmap.routes.UnsupportedCapabilitiesException
+import org.apache.james.jmap.routes.{StreamConstraintsExceptionWithInput, UnsupportedCapabilitiesException}
+import org.apache.james.util.MDCStructuredLogger
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.netty.channel.AbortedException
 
@@ -58,6 +59,12 @@ object ProblemDetails {
     case exception: UnsupportedCapabilitiesException =>
       LOGGER.info(s"The request used unsupported capabilities: ${exception.capabilities}")
       unknownCapabilityProblem(s"The request used unsupported capabilities: ${exception.capabilities}")
+    case exception: StreamConstraintsExceptionWithInput =>
+      MDCStructuredLogger.forLogger(LOGGER)
+        .field("input", new String(exception.input).substring(0, 4096))
+        .log(logger => logger.warn("Stream constraint had been violated", exception.cause))
+      notRequestProblem(
+        s"The request violated stream constraints: ${exception.getMessage}")
     case e =>
       LOGGER.error("Unexpected error upon API request", e)
       ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage)

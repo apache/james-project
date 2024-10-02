@@ -18,11 +18,11 @@
  ****************************************************************/
 package org.apache.james.jmap.routes
 
-import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
 
+import com.fasterxml.jackson.core.exc.StreamConstraintsException
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpResponseStatus.OK
@@ -43,9 +43,13 @@ import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
+import scala.util.Try
+
 object JMAPApiRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[JMAPApiRoutes])
 }
+
+case class StreamConstraintsExceptionWithInput(cause: StreamConstraintsException, input: Array[Byte]) extends RuntimeException(cause)
 
 class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                      userProvisioner: UserProvisioning,
@@ -75,14 +79,18 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
     SMono.fromPublisher(httpServerRequest
       .receive()
       .aggregate()
-      .asInputStream())
+      .asByteArray())
       .handle[RequestObject] {
-        case (input, sink) => parseRequestObject(input)
-          .fold(sink.error, sink.next)
+        case (input, sink) => Try(parseRequestObject(input)
+          .fold(sink.error, sink.next))
+          .fold(e => {
+            case ex: StreamConstraintsException => sink.error(StreamConstraintsExceptionWithInput(ex, input))
+            case _ => sink.error(e)
+          }, nothing => nothing)
       }
 
-  private def parseRequestObject(inputStream: InputStream): Either[IllegalArgumentException, RequestObject] =
-    ResponseSerializer.deserializeRequestObject(inputStream) match {
+  private def parseRequestObject(input: Array[Byte]): Either[IllegalArgumentException, RequestObject] =
+    ResponseSerializer.deserializeRequestObject(input) match {
       case JsSuccess(requestObject, _) => Right(requestObject)
       case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString()))
     }
