@@ -22,6 +22,7 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.MailboxName;
@@ -38,16 +39,16 @@ public class ACLResponseEncoder implements ImapResponseEncoder<ACLResponse> {
         Map<EntryKey, Rfc4314Rights> entries = aclResponse.getAcl().getEntries();
         composer.untagged();
         composer.message(ImapConstants.ACL_RESPONSE_NAME);
-        
-        MailboxName mailboxName = aclResponse.getMailboxName();
-        composer.mailbox(mailboxName == null ? "" : mailboxName.asString());
-        
+
+        Optional<MailboxName> mailboxName = Optional.ofNullable(aclResponse.getMailboxName());
+        composer.mailbox(mailboxName.map(MailboxName::asString).orElse(""));
+
         if (entries != null) {
             for (Entry<EntryKey, Rfc4314Rights> entry : entries.entrySet()) {
                 String identifier = entry.getKey().serialize();
                 composer.quote(identifier);
-                String rights = entry.getValue().serialize();
-                composer.quote(rights == null ? "" : rights);
+                Optional<Rfc4314Rights> rights = Optional.ofNullable(entry.getValue());
+                composer.quote(rights.map(Rfc4314Rights::serialize).orElse(""));
             }
         }
         composer.end();
