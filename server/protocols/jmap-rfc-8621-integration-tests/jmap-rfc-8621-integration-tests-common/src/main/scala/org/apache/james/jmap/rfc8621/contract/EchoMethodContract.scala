@@ -22,7 +22,7 @@ import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.apache.http.HttpStatus.SC_OK
+import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_OK}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
@@ -111,6 +111,29 @@ trait EchoMethodContract {
         .asString()
 
     assertThatJson(response).isEqualTo(ECHO_RESPONSE_OBJECT)
+  }
+
+  @Test
+  def apiShouldRejectBigRequests(): Unit = {
+    val response: String = `given`()
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(BIG_ECHO_REQUEST_OBJECT)
+      .when()
+        .post()
+      .`then`
+        .statusCode(SC_BAD_REQUEST)
+        .contentType(JSON)
+      .extract()
+        .body()
+        .asString()
+
+    assertThatJson(response).isEqualTo(
+      """{
+        |    "type": "urn:ietf:params:jmap:error:limit",
+        |    "status": 400,
+        |    "limit": "maxSizeRequest",
+        |    "detail": "Request size is exceeded. Was 10000192 but maximum allowed is 10000000"
+        |}""".stripMargin)
   }
 
   @Test
