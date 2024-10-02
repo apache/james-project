@@ -55,6 +55,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 class SubAddressingTest {
     private static final String TARGETED_MAILBOX = "any";
+    private static final String TARGETED_MAILBOX_UPPER = "ANY";
 
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
@@ -100,8 +101,60 @@ class SubAddressingTest {
 
         // do not create mailbox
 
-        sendSubAddressedMail();
+        sendSubAddressedMail(TARGETED_MAILBOX);
         awaitSubAddressedMail(MailboxConstants.INBOX);
+    }
+
+    @Test
+    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenItExistsInUpperCase(@TempDir File temporaryFolder) throws Exception {
+        setup(temporaryFolder);
+
+        // create mailbox
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX_UPPER);
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX_UPPER + " " + "anyone" + " p");
+
+        sendSubAddressedMail(TARGETED_MAILBOX);
+        awaitSubAddressedMail(TARGETED_MAILBOX_UPPER);
+    }
+
+    @Test
+    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenItExistsInLowerCase(@TempDir File temporaryFolder) throws Exception {
+        setup(temporaryFolder);
+
+        // create mailbox
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " p");
+
+        sendSubAddressedMail(TARGETED_MAILBOX_UPPER);
+        awaitSubAddressedMail(TARGETED_MAILBOX);
+    }
+
+    @Test
+    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWithCorrectLowerCaseWhenSeveralCasesExist(@TempDir File temporaryFolder) throws Exception {
+        setup(temporaryFolder);
+
+        // create mailboxes
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " p");
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX_UPPER);
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX_UPPER + " " + "anyone" + " p");
+
+        sendSubAddressedMail(TARGETED_MAILBOX);
+        awaitSubAddressedMail(TARGETED_MAILBOX);
+    }
+
+    @Test
+    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWithCorrectUpperCaseWhenSeveralCasesExist(@TempDir File temporaryFolder) throws Exception {
+        setup(temporaryFolder);
+
+        // create mailboxes
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " p");
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX_UPPER);
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX_UPPER + " " + "anyone" + " p");
+
+        sendSubAddressedMail(TARGETED_MAILBOX_UPPER);
+        awaitSubAddressedMail(TARGETED_MAILBOX_UPPER);
     }
 
     @Test
@@ -114,7 +167,7 @@ class SubAddressingTest {
         // do not give posting rights
         testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " -p");
 
-        sendSubAddressedMail();
+        sendSubAddressedMail(TARGETED_MAILBOX);
         awaitSubAddressedMail(MailboxConstants.INBOX);
     }
 
@@ -127,14 +180,14 @@ class SubAddressingTest {
         // give posting rights for anyone
         testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " +p");
 
-        sendSubAddressedMail();
+        sendSubAddressedMail(TARGETED_MAILBOX);
         awaitSubAddressedMail(TARGETED_MAILBOX);
     }
 
-    private void sendSubAddressedMail() throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidKeySpecException {
+    private void sendSubAddressedMail(String targetMailbox) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidKeySpecException {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(FROM, PASSWORD)
-            .sendMessage(FROM, "user2+" + TARGETED_MAILBOX + "@" + DEFAULT_DOMAIN);
+            .sendMessage(FROM, "user2+" + targetMailbox + "@" + DEFAULT_DOMAIN);
     }
 
     private void awaitSubAddressedMail(String expectedMailbox) throws IOException {

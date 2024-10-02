@@ -55,7 +55,8 @@ public class SubAddressingTest {
     private static final String SENDER2 = "sender2@localhost";
     private static final String RECIPIENT = "recipient@localhost";
     private static final String TARGET = "targetfolder";
-    private static final String UNEXISTING_TARGET = "unexistingfolder";
+    private static final String TARGET_UPPERCASE = "Targetfolder";
+    private static final String TARGET_UNEXISTING = "unexistingfolder";
 
     private MailboxManager mailboxManager;
     private SubAddressing testee;
@@ -83,12 +84,43 @@ public class SubAddressingTest {
 
     @Test
     void shouldNotAddStorageDirectiveWhenTargetMailboxDoesNotExist() throws Exception {
-        Mail mail = mailBuilder(UNEXISTING_TARGET).sender(SENDER1).build();
+        Mail mail = mailBuilder(TARGET_UNEXISTING).sender(SENDER1).build();
         testee.service(mail);
 
         AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
         assertThat(mail.attributes().map(this::unbox))
-            .doesNotContain(Pair.of(recipient, UNEXISTING_TARGET));
+            .doesNotContain(Pair.of(recipient, TARGET_UNEXISTING));
+    }
+
+    @Test
+    void shouldAddStorageDirectiveWhenTargetMailboxExistsButLowerCase() throws Exception {
+        givePostRightForKey(MailboxACL.ANYONE_KEY);
+
+        Mail mail = mailBuilder(TARGET_UPPERCASE).sender(SENDER1).build();
+        testee.service(mail);
+
+        AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
+        assertThat(mail.attributes().map(this::unbox))
+                .containsOnly(Pair.of(recipient, TARGET));
+    }
+
+    @Test
+    void shouldAddStorageDirectiveWhenTargetMailboxExistsButUpperCase() throws Exception {
+        targetMailboxId = mailboxManager.createMailbox(
+                MailboxPath.forUser(recipientUsername, "Target"), recipientSession).get();
+
+        MailboxACL.ACLCommand command = MailboxACL.command()
+                .key(MailboxACL.ANYONE_KEY)
+                .rights(MailboxACL.Right.Post)
+                .asAddition();
+        mailboxManager.applyRightsCommand(targetMailboxId, command, recipientSession);
+
+        Mail mail = mailBuilder("target").sender(SENDER1).build();
+        testee.service(mail);
+
+        AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
+        assertThat(mail.attributes().map(this::unbox))
+                .containsOnly(Pair.of(recipient, "Target"));
     }
 
     @Test
