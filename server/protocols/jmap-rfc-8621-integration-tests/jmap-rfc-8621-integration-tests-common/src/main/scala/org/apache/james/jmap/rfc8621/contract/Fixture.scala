@@ -117,6 +117,22 @@ object Fixture {
       |    ]
       |  ]
       |}""".stripMargin
+  val BIG_ECHO_REQUEST_OBJECT: String =
+    s"""{
+      |  "using": [
+      |    "urn:ietf:params:jmap:core"
+      |  ],
+      |  "methodCalls": [
+      |    [
+      |      "Core/echo",
+      |      {
+      |        "arg1": "${"0123456789".repeat(1_000_001)}",
+      |        "arg2": "arg2data"
+      |      },
+      |      "c1"
+      |    ]
+      |  ]
+      |}""".stripMargin
 
   val ECHO_REQUEST_OBJECT_WITHOUT_CORE_CAPABILITY: String =
     """{

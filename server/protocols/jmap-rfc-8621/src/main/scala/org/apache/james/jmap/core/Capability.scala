@@ -112,7 +112,7 @@ final case class CoreCapabilityFactory(configration: JmapRfc8621Configuration) e
   override def create(urlPrefixes: UrlPrefixes): Capability = CoreCapability(CoreCapabilityProperties(
     configration.maxUploadSize,
     MaxConcurrentUpload(4L),
-    MaxSizeRequest(10_000_000L),
+    MaxSizeRequest(10_000_000L), // See MaxSizeRequest.DEFAULT compile-time refinement only works with literals
     MaxConcurrentRequests(4L),
     MaxCallsInRequest(16L),
     configration.maxObjectsInGet,
@@ -138,6 +138,11 @@ object MaxSizeUpload {
 
 case class MaxSizeUpload(value: UnsignedInt)
 case class MaxConcurrentUpload(value: UnsignedInt)
+
+object MaxSizeRequest {
+  val DEFAULT: Long = 10_000_000L
+}
+
 case class MaxSizeRequest(value: UnsignedInt)
 case class MaxConcurrentRequests(value: UnsignedInt)
 case class MaxCallsInRequest(value: UnsignedInt)

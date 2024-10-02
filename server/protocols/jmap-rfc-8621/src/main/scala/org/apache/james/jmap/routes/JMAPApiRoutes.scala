@@ -30,7 +30,7 @@ import jakarta.inject.{Inject, Named}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.core.{ProblemDetails, RequestObject}
+import org.apache.james.jmap.core.{MaxSizeRequest, ProblemDetails, RequestObject}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
@@ -39,7 +39,7 @@ import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsError, JsSuccess, Json}
-import reactor.core.publisher.Mono
+import reactor.core.publisher.{Mono, SynchronousSink}
 import reactor.core.scala.publisher.SMono
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
@@ -50,6 +50,7 @@ object JMAPApiRoutes {
 }
 
 case class StreamConstraintsExceptionWithInput(cause: StreamConstraintsException, input: Array[Byte]) extends RuntimeException(cause)
+case class RequestSizeExceeded(input: Array[Byte]) extends RuntimeException
 
 class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                      userProvisioner: UserProvisioning,
@@ -80,14 +81,25 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
       .receive()
       .aggregate()
       .asByteArray())
-      .handle[RequestObject] {
-        case (input, sink) => Try(parseRequestObject(input)
-          .fold(sink.error, sink.next))
-          .fold(e => {
-            case ex: StreamConstraintsException => sink.error(StreamConstraintsExceptionWithInput(ex, input))
-            case _ => sink.error(e)
-          }, nothing => nothing)
-      }
+      .handle[Array[Byte]](validateRequestSize)
+      .handle[RequestObject](parseRequestObject)
+
+  private def validateRequestSize: (Array[Byte], SynchronousSink[Array[Byte]]) => Unit = {
+    case (input, sink) => if (input.length > MaxSizeRequest.DEFAULT) {
+      sink.error(RequestSizeExceeded(input))
+    } else {
+      sink.next(input)
+    }
+  }
+
+  private def parseRequestObject: (Array[Byte], SynchronousSink[RequestObject]) => Unit = {
+    case (input, sink) => Try(parseRequestObject(input)
+      .fold(sink.error, sink.next))
+      .fold({
+        case ex: StreamConstraintsException => sink.error(StreamConstraintsExceptionWithInput(ex, input))
+        case e => sink.error(e)
+      }, nothing => nothing)
+  }
 
   private def parseRequestObject(input: Array[Byte]): Either[IllegalArgumentException, RequestObject] =
     ResponseSerializer.deserializeRequestObject(input) match {
