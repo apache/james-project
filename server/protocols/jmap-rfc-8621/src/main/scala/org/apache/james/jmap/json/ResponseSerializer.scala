@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.json
 
-import java.io.InputStream
-
 import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.james.core.Username
@@ -165,7 +163,7 @@ object ResponseSerializer {
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 
-  def deserializeRequestObject(input: InputStream): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
+  def deserializeRequestObject(input: Array[Byte]): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 
   def deserializeRequestObject(js: JsValue): JsResult[RequestObject] = js.validate[RequestObject]
 
