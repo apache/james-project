@@ -24,13 +24,14 @@ import java.time.Duration
 import io.lettuce.core.{ClientOptions, RedisClient, SslOptions}
 import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.resource.ClientResources
-import jakarta.inject.Inject
+import jakarta.inject.{Inject, Singleton}
 import org.apache.james.filesystem.api.FileSystem
 import org.apache.james.util.concurrent.NamedThreadFactory
 
 import scala.jdk.CollectionConverters._
 
-class RedisClientFactory @Inject()(fileSystem: FileSystem) {
+class RedisClientFactory @Singleton() @Inject()
+(fileSystem: FileSystem) {
   def createStandaloneClient(redisConfiguration: StandaloneRedisConfiguration): RedisClient =
     createStandaloneClient(redisConfiguration, Option.empty)
 
