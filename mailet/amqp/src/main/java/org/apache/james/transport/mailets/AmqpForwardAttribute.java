@@ -171,9 +171,9 @@ public class AmqpForwardAttribute extends GenericMailet {
 
     private static Host asHost(URI aUri) {
         if (aUri.getPort() > 0) {
-            return Host.from(aUri.getHost(), RabbitMQConfiguration.Builder.DEFAULT_PORT);
-        } else {
             return Host.from(aUri.getHost(), aUri.getPort());
+        } else {
+            return Host.from(aUri.getHost(), RabbitMQConfiguration.Builder.DEFAULT_PORT);
         }
     }
 
