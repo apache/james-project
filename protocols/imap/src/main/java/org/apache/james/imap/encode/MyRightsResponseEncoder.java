@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.response.MyRightsResponse;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 
@@ -41,8 +42,8 @@ public class MyRightsResponseEncoder implements ImapResponseEncoder<MyRightsResp
         composer.untagged();
         composer.commandName(ImapConstants.MYRIGHTS_COMMAND);
 
-        Optional<String> mailboxName = Optional.ofNullable(aclResponse.getMailboxName().asString());
-        composer.mailbox(mailboxName.orElse(""));
+        Optional<MailboxName> mailboxName = Optional.ofNullable(aclResponse.getMailboxName());
+        composer.mailbox(mailboxName.map(MailboxName::asString).orElse(""));
         composer.quote(myRights.map(Rfc4314Rights::serialize).orElse(""));
         composer.end();
     }
