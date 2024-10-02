@@ -25,10 +25,11 @@ import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.response.ACLResponse;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
+
+import com.github.fge.lambdas.Throwing;
 
 /**
  * ACL Response Encoder.
@@ -40,15 +41,13 @@ public class ACLResponseEncoder implements ImapResponseEncoder<ACLResponse> {
         composer.untagged();
         composer.message(ImapConstants.ACL_RESPONSE_NAME);
 
-        Optional<MailboxName> mailboxName = Optional.ofNullable(aclResponse.getMailboxName());
-        composer.mailbox(mailboxName.map(MailboxName::asString).orElse(""));
+        Optional.ofNullable(aclResponse.getMailboxName()).ifPresent(Throwing.consumer(value -> composer.mailbox(value.asString())));
 
         if (entries != null) {
             for (Entry<EntryKey, Rfc4314Rights> entry : entries.entrySet()) {
                 String identifier = entry.getKey().serialize();
                 composer.quote(identifier);
-                Optional<Rfc4314Rights> rights = Optional.ofNullable(entry.getValue());
-                composer.quote(rights.map(Rfc4314Rights::serialize).orElse(""));
+                Optional.ofNullable(entry.getValue()).ifPresent(Throwing.consumer(value -> composer.quote(value.serialize())));
             }
         }
         composer.end();
