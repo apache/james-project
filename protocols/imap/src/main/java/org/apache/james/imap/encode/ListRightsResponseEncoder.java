@@ -21,6 +21,7 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.MailboxName;
@@ -41,10 +42,11 @@ public class ListRightsResponseEncoder implements ImapResponseEncoder<ListRights
     public void encode(ListRightsResponse listRightsResponse, ImapResponseComposer composer) throws IOException {
         composer.untagged();
         composer.commandName(ImapConstants.LISTRIGHTS_COMMAND);
-        
-        MailboxName mailboxName = listRightsResponse.getMailboxName();
-        composer.mailbox(mailboxName == null ? "" : mailboxName.asString());
-        
+
+        Optional<MailboxName> mailboxName = Optional.ofNullable(listRightsResponse.getMailboxName());
+        composer.mailbox(mailboxName.map(MailboxName::asString).orElse(""));
+
+
         MailboxACL.EntryKey entryKey = listRightsResponse.getEntryKey();
         composer.quote(entryKey.toString());
         
