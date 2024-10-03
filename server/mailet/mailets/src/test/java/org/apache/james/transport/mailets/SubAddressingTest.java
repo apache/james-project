@@ -123,6 +123,36 @@ public class SubAddressingTest {
     }
 
     @Test
+    void shouldAddStorageDirectiveWhenTargetFolderIsASubFolder() throws Exception {
+        givePostRightForKey(MailboxACL.ANYONE_KEY);
+
+        MailboxPath newPath = MailboxPath.forUser(recipientUsername, "folder" + recipientSession.getPathDelimiter() + TARGET);
+        mailboxManager.renameMailbox(targetMailboxId, newPath, recipientSession).getFirst().getMailboxId();
+
+        Mail mail = mailBuilder("folder" + recipientSession.getPathDelimiter() + TARGET).sender(SENDER1).build();
+        testee.service(mail);
+
+        AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
+        assertThat(mail.attributes().map(this::unbox))
+                .containsOnly(Pair.of(recipient, "folder" + recipientSession.getPathDelimiter() + TARGET));
+    }
+
+    @Test
+    void shouldAddStorageDirectiveWhenTargetFolderIsASubFolderWithDifferentCase() throws Exception {
+        givePostRightForKey(MailboxACL.ANYONE_KEY);
+
+        MailboxPath newPath = MailboxPath.forUser(recipientUsername, "Folder" + recipientSession.getPathDelimiter() + TARGET_UPPERCASE);
+        mailboxManager.renameMailbox(targetMailboxId, newPath, recipientSession).getFirst().getMailboxId();
+
+        Mail mail = mailBuilder("folder" + recipientSession.getPathDelimiter() + TARGET).sender(SENDER1).build();
+        testee.service(mail);
+
+        AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
+        assertThat(mail.attributes().map(this::unbox))
+                .containsOnly(Pair.of(recipient, "Folder" + recipientSession.getPathDelimiter() + TARGET_UPPERCASE));
+    }
+
+    @Test
     void shouldNotAddStorageDirectiveWhenNobodyHasRight() throws Exception {
         removePostRightForKey(MailboxACL.ANYONE_KEY);
 
