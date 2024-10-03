@@ -389,7 +389,7 @@ public class RabbitMQConfiguration {
         static final int DEFAULT_HANDSHAKE_TIMEOUT = 10_000;
         static final int DEFAULT_SHUTDOWN_TIMEOUT = 10_000;
         static final int DEFAULT_NETWORK_RECOVERY_INTERVAL = 100;
-        static final int DEFAULT_PORT = 5672;
+        public static final int DEFAULT_PORT = 5672;
         static final Duration DEFAULT_TASK_QUEUE_CONSUMER_TIMEOUT = Duration.ofDays(1);
 
         private final URI amqpUri;

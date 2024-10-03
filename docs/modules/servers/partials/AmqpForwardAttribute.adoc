@@ -7,7 +7,8 @@ It takes 4 parameters:
 * attribute (mandatory): content to be forwarded, expected to be a Map<String, byte[]>
 where the byte[] content is issued from a MimeBodyPart.
 It is typically generated from the StripAttachment mailet.
-* uri (mandatory): AMQP URI defining the server where to send the attachment.
+* uri (mandatory): AMQP URI defining the server where to send the attachment. High availability is supported with a
+  coma separated list of uris, whost and credentials are taken from the first URI specified.
 * exchange (mandatory): name of the AMQP exchange.
 * exchange_type (optional, default to "direct"): type of the exchange. Can be "direct", "fanout", "topic", "headers".
 * routing_key (optional, default to empty string): name of the routing key on this exchange.
