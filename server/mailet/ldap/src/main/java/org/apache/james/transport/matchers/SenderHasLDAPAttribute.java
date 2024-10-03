@@ -35,8 +35,6 @@ import org.apache.james.user.ldap.LDAPConnectionFactory;
 import org.apache.james.user.ldap.LdapRepositoryConfiguration;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.cache.Cache;
@@ -87,8 +85,6 @@ import com.unboundid.ldap.sdk.SearchScope;
  * The defaults are cache up to 10_000 entries for 1 day.
  */
 public class SenderHasLDAPAttribute extends GenericMatcher {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SenderHasLDAPAttribute.class);
-
     private final LDAPConnectionPool ldapConnectionPool;
     private final LdapRepositoryConfiguration configuration;
     private final Filter objectClassFilter;
@@ -181,7 +177,7 @@ public class SenderHasLDAPAttribute extends GenericMatcher {
         return attributeValue.map(value -> Optional.ofNullable(entry.getAttribute(attributeName))
                 .map(attribute -> Arrays.stream(attribute.getValues()))
                 .orElse(Stream.empty())
-                .map(ldapValue -> extractLdapAttributeValue(ldapValue, attributeName))
+                .map(ldapValue -> extractLdapAttributeValue(attributeName, ldapValue))
                 .anyMatch(value::equals))
             .orElseGet(() -> entry.hasAttribute(attributeName));
     }

@@ -31,7 +31,7 @@ import com.unboundid.ldap.sdk.RDNNameValuePair;
 public class AttributeUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(HasLDAPAttribute.class);
 
-    static String extractLdapAttributeValue(String ldapValue, String attributeName) {
+    static String extractLdapAttributeValue(String attributeName, String ldapValue) {
         if (ldapValue.contains(",")) {
             try {
                 return Arrays.stream(new DN(ldapValue).getRDNs())
