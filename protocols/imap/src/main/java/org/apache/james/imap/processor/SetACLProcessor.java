@@ -31,6 +31,7 @@ import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.SetACLRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -67,7 +68,7 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
     protected Mono<Void> processRequestReactive(SetACLRequest request, ImapSession session, Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
-        final SetACLRequest.MailboxName mailboxName = request.getMailboxName();
+        MailboxName mailboxName = request.getMailboxName();
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName.asString());
 
         return checkLookupRight(request, responder, mailboxManager, mailboxSession, mailboxPath)
@@ -100,7 +101,7 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
                 mailboxSession));
     }
 
-    private Mono<Boolean> checkAdminRight(SetACLRequest request, Responder responder, MailboxManager mailboxManager, MailboxSession mailboxSession, SetACLRequest.MailboxName mailboxName, MailboxPath mailboxPath) {
+    private Mono<Boolean> checkAdminRight(SetACLRequest request, Responder responder, MailboxManager mailboxManager, MailboxSession mailboxSession, MailboxName mailboxName, MailboxPath mailboxPath) {
         return Mono.from(mailboxManager.hasRightReactive(mailboxPath, MailboxACL.Right.Administer, mailboxSession))
             .doOnNext(hasRight -> {
                 if (!hasRight) {

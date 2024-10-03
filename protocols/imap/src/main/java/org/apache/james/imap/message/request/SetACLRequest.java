@@ -21,26 +21,15 @@ package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.mailbox.model.MailboxACL;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 /**
  * SETACL Request.
  */
 public class SetACLRequest extends AbstractImapRequest {
-
-    public record MailboxName(String mailboxName) {
-        public MailboxName {
-            Preconditions.checkArgument(!Strings.isNullOrEmpty(mailboxName), "MailboxName must not be null or empty");
-        }
-
-        public String asString() {
-            return mailboxName;
-        }
-    }
 
     private final MailboxName mailboxName;
     private final MailboxACL.ACLCommand aclCommand;

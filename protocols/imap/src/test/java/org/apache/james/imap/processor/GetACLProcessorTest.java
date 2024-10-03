@@ -36,6 +36,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.GetACLRequest;
 import org.apache.james.imap.message.response.ACLResponse;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
@@ -62,7 +63,7 @@ import reactor.core.publisher.Mono;
  */
 class GetACLProcessorTest {
 
-    private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
+    private static final MailboxName MAILBOX_NAME = new MailboxName(ImapConstants.INBOX_NAME);
     private static final Username USER_1 = Username.of("user1");
 
     private FakeImapSession imapSession;

@@ -17,35 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.imap.decode.parser;
+package org.apache.james.imap.message;
 
-import jakarta.inject.Inject;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
-import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapMessage;
-import org.apache.james.imap.api.Tag;
-import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.decode.DecodingException;
-import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.decode.base.AbstractImapCommandParser;
-import org.apache.james.imap.message.MailboxName;
-import org.apache.james.imap.message.request.MyRightsRequest;
-
-/**
- * MYRIGHTS Parser
- */
-public class MyRightsCommandParser extends AbstractImapCommandParser {
-
-    @Inject
-    public MyRightsCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapConstants.MYRIGHTS_COMMAND, statusResponseFactory);
+public record MailboxName(String mailboxName) {
+    public MailboxName {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(mailboxName), "MailboxName must not be null or empty");
     }
 
-    @Override
-    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        MailboxName mailboxName = new MailboxName(request.mailbox());
-        request.eol();
-        return new MyRightsRequest(tag, mailboxName);
+    public String asString() {
+        return mailboxName;
     }
 }

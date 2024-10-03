@@ -24,28 +24,29 @@ import java.util.Objects;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.mailbox.model.MailboxACL;
 
 /**
  * LISTRIGHTS Response.
  */
 public final class ListRightsResponse implements ImapResponseMessage {
-    private final String identifier;
-    private final String mailboxName;
+    private final MailboxACL.EntryKey entryKey;
+    private final MailboxName mailboxName;
     private final List<MailboxACL.Rfc4314Rights> rights;
 
-    public ListRightsResponse(String mailboxName, String identifier, List<MailboxACL.Rfc4314Rights> rights) {
+    public ListRightsResponse(MailboxName mailboxName, MailboxACL.EntryKey entryKey, List<MailboxACL.Rfc4314Rights> rights) {
         super();
         this.mailboxName = mailboxName;
-        this.identifier = identifier;
+        this.entryKey = entryKey;
         this.rights = rights;
     }
 
-    public String getIdentifier() {
-        return identifier;
+    public MailboxACL.EntryKey getEntryKey() {
+        return entryKey;
     }
 
-    public String getMailboxName() {
+    public MailboxName getMailboxName() {
         return mailboxName;
     }
 
@@ -59,7 +60,7 @@ public final class ListRightsResponse implements ImapResponseMessage {
             ListRightsResponse other = (ListRightsResponse) o;
 
             return Objects.equals(this.mailboxName, other.mailboxName) &&
-                Objects.equals(this.identifier, other.identifier) &&
+                Objects.equals(this.entryKey, other.entryKey) &&
                 Objects.equals(this.rights, other.rights);
         }
         return false;
@@ -67,12 +68,12 @@ public final class ListRightsResponse implements ImapResponseMessage {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(mailboxName, identifier, rights);
+        return Objects.hash(mailboxName, entryKey, rights);
     }
 
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder().append(ImapConstants.LISTRIGHTS_COMMAND.getName()).append(' ').append(mailboxName).append(' ').append(identifier);
+        StringBuilder result = new StringBuilder().append(ImapConstants.LISTRIGHTS_COMMAND.getName()).append(' ').append(mailboxName).append(' ').append(entryKey);
 
         for (MailboxACL.Rfc4314Rights optionalRightsGroup : rights) {
             result.append(' ').append(optionalRightsGroup.toString());

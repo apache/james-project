@@ -31,6 +31,7 @@ import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.DeleteACLRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -38,7 +39,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.FunctionalUtils;
@@ -67,15 +67,15 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
     protected Mono<Void> processRequestReactive(DeleteACLRequest request, ImapSession session, Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
-        final String mailboxName = request.getMailboxName();
-        final String identifier = request.getIdentifier();
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
+        MailboxName mailboxName = request.getMailboxName();
+        MailboxACL.EntryKey entryKey = request.getEntryKey();
+        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName.asString());
 
         return checkLookupRight(request, responder, mailboxManager, mailboxSession, mailboxPath)
             .filter(FunctionalUtils.identityPredicate())
             .flatMap(hasLookupRight -> checkAdminRight(request, responder, mailboxManager, mailboxSession, mailboxName, mailboxPath))
             .filter(FunctionalUtils.identityPredicate())
-            .flatMap(hasAdminRight -> applyRight(mailboxManager, mailboxSession, identifier, mailboxPath)
+            .flatMap(hasAdminRight -> applyRight(mailboxManager, mailboxSession, entryKey, mailboxPath)
                 .then(Mono.fromRunnable(() -> okComplete(request, responder)))
                 .then())
             .onErrorResume(UnsupportedRightException.class,
@@ -91,14 +91,14 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
                 error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING)));
     }
 
-    private static Mono<Void> applyRight(MailboxManager mailboxManager, MailboxSession mailboxSession, String identifier, MailboxPath mailboxPath) {
+    private static Mono<Void> applyRight(MailboxManager mailboxManager, MailboxSession mailboxSession, MailboxACL.EntryKey entryKey, MailboxPath mailboxPath) {
         return Mono.from(mailboxManager.applyRightsCommandReactive(
             mailboxPath,
-            MailboxACL.command().key(EntryKey.deserialize(identifier)).noRights().asReplacement(),
+            MailboxACL.command().key(entryKey).noRights().asReplacement(),
             mailboxSession));
     }
 
-    private Mono<Boolean> checkAdminRight(DeleteACLRequest request, Responder responder, MailboxManager mailboxManager, MailboxSession mailboxSession, String mailboxName, MailboxPath mailboxPath) {
+    private Mono<Boolean> checkAdminRight(DeleteACLRequest request, Responder responder, MailboxManager mailboxManager, MailboxSession mailboxSession, MailboxName mailboxName, MailboxPath mailboxPath) {
         return Mono.from(mailboxManager.hasRightReactive(mailboxPath, MailboxACL.Right.Administer, mailboxSession))
             .doOnNext(hasRight -> {
                 if (!hasRight) {
@@ -108,7 +108,7 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
                             HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE,
                             MailboxACL.Right.Administer.toString(),
                             request.getCommand().getName(),
-                            mailboxName));
+                            mailboxName.asString()));
                 }
             });
     }
@@ -131,7 +131,7 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
     protected MDCBuilder mdc(DeleteACLRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "DELETE_ACL")
-            .addToContext("mailbox", request.getMailboxName())
-            .addToContext("identifier", request.getIdentifier());
+            .addToContext("mailbox", request.getMailboxName().asString())
+            .addToContext("identifier", request.getEntryKey().toString());
     }
 }

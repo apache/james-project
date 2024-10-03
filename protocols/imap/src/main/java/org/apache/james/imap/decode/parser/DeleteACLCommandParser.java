@@ -29,7 +29,9 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.DeleteACLRequest;
+import org.apache.james.mailbox.model.MailboxACL;
 
 /**
  * DELETEACL Parser
@@ -43,10 +45,10 @@ public class DeleteACLCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        final String mailboxName = request.mailbox();
-        final String identifier = request.astring();
+        MailboxName mailboxName = new MailboxName(request.mailbox());
+        MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.deserialize(request.astring());
         request.eol();
-        return new DeleteACLRequest(tag, mailboxName, identifier);
+        return new DeleteACLRequest(tag, mailboxName, entryKey);
     }
 
 }

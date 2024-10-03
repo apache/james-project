@@ -21,10 +21,14 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.ListRightsResponse;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
+
+import com.github.fge.lambdas.Throwing;
 
 /**
  * ACL Response Encoder.
@@ -39,12 +43,11 @@ public class ListRightsResponseEncoder implements ImapResponseEncoder<ListRights
     public void encode(ListRightsResponse listRightsResponse, ImapResponseComposer composer) throws IOException {
         composer.untagged();
         composer.commandName(ImapConstants.LISTRIGHTS_COMMAND);
-        
-        String mailboxName = listRightsResponse.getMailboxName();
-        composer.mailbox(mailboxName == null ? "" : mailboxName);
-        
-        String identifier = listRightsResponse.getIdentifier();
-        composer.quote(identifier);
+
+        Optional.ofNullable(listRightsResponse.getMailboxName()).ifPresent(Throwing.consumer(value -> composer.mailbox(value.asString())));
+
+        MailboxACL.EntryKey entryKey = listRightsResponse.getEntryKey();
+        composer.quote(entryKey.toString());
         
         List<Rfc4314Rights> rights = listRightsResponse.getRights();
         

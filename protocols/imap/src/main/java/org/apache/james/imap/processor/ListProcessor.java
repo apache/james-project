@@ -46,6 +46,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.main.PathConverter;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
@@ -319,7 +320,8 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
     private void respondMyRights(T request, Responder responder, MailboxSession mailboxSession, MailboxMetaData metaData) {
         if (request.getReturnOptions().contains(ListRequest.ListReturnOption.MYRIGHTS)) {
-            MyRightsResponse myRightsResponse = new MyRightsResponse(metaData.getPath().getName(), getRfc4314Rights(mailboxSession, metaData));
+            MailboxName mailboxName = new MailboxName(metaData.getPath().getName());
+            MyRightsResponse myRightsResponse = new MyRightsResponse(mailboxName, getRfc4314Rights(mailboxSession, metaData));
             responder.respond(myRightsResponse);
         }
     }

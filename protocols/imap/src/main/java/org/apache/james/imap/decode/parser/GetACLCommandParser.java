@@ -29,6 +29,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.GetACLRequest;
 
 /**
@@ -43,7 +44,7 @@ public class GetACLCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        final String mailboxName = request.mailbox();
+        MailboxName mailboxName = new MailboxName(request.mailbox());
         request.eol();
         return new GetACLRequest(tag, mailboxName);
     }

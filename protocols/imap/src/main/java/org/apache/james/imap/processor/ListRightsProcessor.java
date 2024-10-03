@@ -29,6 +29,7 @@ import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.ListRightsRequest;
 import org.apache.james.imap.message.response.ListRightsResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -37,7 +38,6 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
@@ -69,9 +69,8 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
     protected Mono<Void> processRequestReactive(ListRightsRequest request, ImapSession session, Responder responder) {
         MailboxManager mailboxManager = getMailboxManager();
         MailboxSession mailboxSession = session.getMailboxSession();
-        String mailboxName = request.getMailboxName();
-        String identifier = request.getIdentifier();
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
+        MailboxName mailboxName = request.getMailboxName();
+        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName.asString());
 
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
             .doOnNext(Throwing.<MessageManager>consumer(mailbox -> {
@@ -98,9 +97,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
                     no(request, responder, text);
                 } else {
 
-                    EntryKey key = EntryKey.deserialize(identifier);
-
-                    // FIXME check if identifier is a valid user or group
+                    // FIXME check if request.getEntryKey() is a valid user or group
                     // FIXME Servers, when processing a command that has an identifier as a
                     // parameter (i.e., any of SETACL, DELETEACL, and LISTRIGHTS commands),
                     // SHOULD first prepare the received identifier using "SASLprep" profile
@@ -110,8 +107,8 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
                     // Note that Section 6 recommends additional identifier’s verification
                     // steps.
 
-                    List<Rfc4314Rights> rights = mailboxManager.listRights(mailbox.getMailboxEntity(), key, mailboxSession);
-                    ListRightsResponse aclResponse = new ListRightsResponse(mailboxName, identifier, rights);
+                    List<Rfc4314Rights> rights = mailboxManager.listRights(mailbox.getMailboxEntity(), request.getEntryKey(), mailboxSession);
+                    ListRightsResponse aclResponse = new ListRightsResponse(mailboxName, request.getEntryKey(), rights);
                     responder.respond(aclResponse);
                     okComplete(request, responder);
                 }
@@ -136,7 +133,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
     protected MDCBuilder mdc(ListRightsRequest request) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "LIST_RIGHTS")
-            .addToContext("mailbox", request.getMailboxName())
-            .addToContext("identifier", request.getIdentifier());
+            .addToContext("mailbox", request.getMailboxName().asString())
+            .addToContext("identifier", request.getEntryKey().toString());
     }
 }

@@ -24,6 +24,7 @@ import java.util.Objects;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
@@ -34,9 +35,9 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
  */
 public final class ACLResponse implements ImapResponseMessage {
     private final MailboxACL acl;
-    private final String mailboxName;
+    private final MailboxName mailboxName;
 
-    public ACLResponse(String mailboxName, MailboxACL acl) {
+    public ACLResponse(MailboxName mailboxName, MailboxACL acl) {
         this.mailboxName = mailboxName;
         this.acl = acl;
     }
@@ -45,7 +46,7 @@ public final class ACLResponse implements ImapResponseMessage {
         return acl;
     }
 
-    public String getMailboxName() {
+    public MailboxName getMailboxName() {
         return mailboxName;
     }
 

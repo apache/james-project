@@ -37,6 +37,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.ListRightsRequest;
 import org.apache.james.imap.message.response.ListRightsResponse;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
@@ -65,7 +66,7 @@ import reactor.core.publisher.Mono;
  */
 class ListRightsProcessorTest {
 
-    private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
+    private static final MailboxName MAILBOX_NAME = new MailboxName(ImapConstants.INBOX_NAME);
     private static final Username USER_1 = Username.of("user1");
 
     private FakeImapSession imapSession;
@@ -82,7 +83,7 @@ class ListRightsProcessorTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        path = MailboxPath.forUser(USER_1, MAILBOX_NAME);
+        path = MailboxPath.forUser(USER_1, MAILBOX_NAME.asString());
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
@@ -106,9 +107,9 @@ class ListRightsProcessorTest {
             .thenReturn(Mono.just(messageManager));
         when(messageManager.getMailboxEntity()).thenReturn(mock(Mailbox.class));
 
-        listRightsRequest = new ListRightsRequest(TAG, MAILBOX_NAME, USER_1.asString());
+        user1Key = EntryKey.createUserEntryKey(USER_1);
+        listRightsRequest = new ListRightsRequest(TAG, MAILBOX_NAME, user1Key);
 
-        user1Key = EntryKey.deserialize(USER_1.asString());
         listRights = List.of(
             Rfc4314Rights.fromSerializedRfc4314Rights("ae"),
             Rfc4314Rights.fromSerializedRfc4314Rights("i"),
@@ -181,7 +182,7 @@ class ListRightsProcessorTest {
 
         subject.doProcess(listRightsRequest, responder, imapSession).block();
 
-        ListRightsResponse response = new ListRightsResponse(MAILBOX_NAME, USER_1.asString(), listRights);
+        ListRightsResponse response = new ListRightsResponse(MAILBOX_NAME, user1Key, listRights);
         verify(responder, times(2)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
 
