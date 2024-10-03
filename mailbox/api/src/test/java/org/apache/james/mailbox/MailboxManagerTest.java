@@ -3146,9 +3146,13 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .asAddition();
             mailboxManager.applyRightsCommand(mailboxPath, command, session);
 
-            assertThat(mailboxManager.list(session2).stream().filter(Throwing.predicate(
-                    path -> mailboxManager.hasRight(path, MailboxACL.Right.Lookup, session2)))
-            ).doesNotContain(mailboxPath);
+            assertThat(mailboxManager.search(
+                    MailboxQuery.privateMailboxesBuilder(session2).matchesAllMailboxNames().build(),
+                    session2)
+                .toStream().map(MailboxMetaData::getPath)
+                .filter(Throwing.predicate(
+                    path -> mailboxManager.hasRight(path, MailboxACL.Right.Lookup, session2))))
+                .doesNotContain(mailboxPath);
         }
 
         @Test
@@ -3162,9 +3166,13 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .asAddition();
             mailboxManager.applyRightsCommand(mailboxPath, command, session);
 
-            assertThat(mailboxManager.list(session2).stream().filter(Throwing.predicate(
-                    path -> mailboxManager.hasRight(path, MailboxACL.Right.Lookup, session2)))
-            ).doesNotContain(mailboxPath);
+            assertThat(mailboxManager.search(
+                    MailboxQuery.privateMailboxesBuilder(session2).matchesAllMailboxNames().build(),
+                    session2)
+                .toStream().map(MailboxMetaData::getPath)
+                .filter(Throwing.predicate(
+                    path -> mailboxManager.hasRight(path, MailboxACL.Right.Lookup, session2))))
+                .doesNotContain(mailboxPath);
         }
     }
 }
