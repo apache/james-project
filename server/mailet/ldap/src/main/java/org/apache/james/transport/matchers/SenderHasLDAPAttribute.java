@@ -175,6 +175,7 @@ public class SenderHasLDAPAttribute extends GenericMatcher {
         return attributeValue.map(value -> Optional.ofNullable(entry.getAttribute(attributeName))
                 .map(attribute -> Arrays.stream(attribute.getValues()))
                 .orElse(Stream.empty())
+                .map(HasLDAPAttribute::extractLdapAttributeValue)
                 .anyMatch(value::equals))
             .orElseGet(() -> entry.hasAttribute(attributeName));
     }

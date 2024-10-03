@@ -188,6 +188,26 @@ class SenderHasLDAPAttributeTest {
     }
 
     @Test
+    void shouldReturnSenderWhenHasAttributeWithDnValue() throws Exception {
+        SenderHasLDAPAttribute testee = new SenderHasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("HasLDAPAttribute")
+            .condition("description:active")
+            .build();
+        testee.init(matcherConfig);
+
+        MailAddress sender = new MailAddress("james-user1@james.org");
+        MailAddress recipient = new MailAddress("recipient@james.org");
+        Collection<MailAddress> matched = testee.match(FakeMail.builder()
+            .name("default-id")
+            .sender(sender)
+            .recipient(recipient)
+            .build());
+
+        assertThat(matched).containsOnly(recipient);
+    }
+
+    @Test
     void shouldReturnEmptyWhenNoSender() throws Exception {
         SenderHasLDAPAttribute testee = new SenderHasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()

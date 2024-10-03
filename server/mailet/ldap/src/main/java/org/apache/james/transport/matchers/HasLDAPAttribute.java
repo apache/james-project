@@ -172,12 +172,12 @@ public class HasLDAPAttribute extends GenericMatcher {
         return attributeValue.map(value -> Optional.ofNullable(entry.getAttribute(attributeName))
                 .map(attribute -> Arrays.stream(attribute.getValues()))
                 .orElse(Stream.empty())
-                .map(this::extractLdapAttributeValue)
+                .map(HasLDAPAttribute::extractLdapAttributeValue)
                 .anyMatch(value::equals))
             .orElseGet(() -> entry.hasAttribute(attributeName));
     }
 
-    private String extractLdapAttributeValue(String ldapValue) {
+    public static String extractLdapAttributeValue(String ldapValue) {
         if (ldapValue.contains(",")) {
             try {
                 return Arrays.stream(new DN(ldapValue).getRDNs())
