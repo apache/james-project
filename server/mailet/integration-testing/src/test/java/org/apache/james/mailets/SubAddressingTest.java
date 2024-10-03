@@ -55,6 +55,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 class SubAddressingTest {
     private static final String TARGETED_MAILBOX = "any";
+    private static final String TARGETED_MAILBOX_LOWER = TARGETED_MAILBOX;
     private static final String TARGETED_MAILBOX_UPPER = "ANY";
 
     @RegisterExtension
@@ -113,7 +114,7 @@ class SubAddressingTest {
         testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX_UPPER);
         testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX_UPPER + " " + "anyone" + " p");
 
-        sendSubAddressedMail(TARGETED_MAILBOX);
+        sendSubAddressedMail(TARGETED_MAILBOX_LOWER);
         awaitSubAddressedMail(TARGETED_MAILBOX_UPPER);
     }
 
@@ -122,11 +123,11 @@ class SubAddressingTest {
         setup(temporaryFolder);
 
         // create mailbox
-        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
-        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " p");
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX_LOWER);
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX_LOWER + " " + "anyone" + " p");
 
         sendSubAddressedMail(TARGETED_MAILBOX_UPPER);
-        awaitSubAddressedMail(TARGETED_MAILBOX);
+        awaitSubAddressedMail(TARGETED_MAILBOX_LOWER);
     }
 
     @Test
@@ -134,13 +135,13 @@ class SubAddressingTest {
         setup(temporaryFolder);
 
         // create mailboxes
-        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
-        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " p");
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX_LOWER);
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX_LOWER + " " + "anyone" + " p");
         testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX_UPPER);
         testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX_UPPER + " " + "anyone" + " p");
 
-        sendSubAddressedMail(TARGETED_MAILBOX);
-        awaitSubAddressedMail(TARGETED_MAILBOX);
+        sendSubAddressedMail(TARGETED_MAILBOX_LOWER);
+        awaitSubAddressedMail(TARGETED_MAILBOX_LOWER);
     }
 
     @Test
@@ -148,13 +149,28 @@ class SubAddressingTest {
         setup(temporaryFolder);
 
         // create mailboxes
-        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
-        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " p");
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX_LOWER);
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX_LOWER + " " + "anyone" + " p");
         testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX_UPPER);
         testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX_UPPER + " " + "anyone" + " p");
 
         sendSubAddressedMail(TARGETED_MAILBOX_UPPER);
         awaitSubAddressedMail(TARGETED_MAILBOX_UPPER);
+    }
+
+    @Test
+    void subAddressedEmailShouldBeDeliveredInINBOXWhenSpecifiedFolderExistsWithCorrectCaseButNoRightAndOtherCaseButRight(@TempDir File temporaryFolder) throws Exception {
+        setup(temporaryFolder);
+
+        // create mailbox with incorrect case and give posting right
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX_LOWER);
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX_LOWER + " " + "anyone" + " p");
+
+        // create mailbox with correct case but don't give posting right
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX_UPPER);
+
+        sendSubAddressedMail(TARGETED_MAILBOX_UPPER);
+        awaitSubAddressedMail(MailboxConstants.INBOX);
     }
 
     @Test

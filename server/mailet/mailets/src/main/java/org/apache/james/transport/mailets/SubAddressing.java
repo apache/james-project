@@ -39,7 +39,10 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.ExactNameCaseIncensitive;
+import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
@@ -96,9 +99,14 @@ public class SubAddressing extends GenericMailet {
         Username recipientUsername = usersRepository.getUsername(recipient);
         MailboxSession session = mailboxManager.createSystemSession(recipientUsername);
 
-        return mailboxManager.list(session).stream()
-                .filter(mailboxPath -> mailboxPath.getUser().equals(recipientUsername) && mailboxPath.getName().equalsIgnoreCase(targetFolder))
-                .sorted(Comparator.comparing(mailboxPath -> mailboxPath.getName().equals(targetFolder) ? 0 : 1)) // that way, if an exact match is found, it will be first
+        Comparator<MailboxPath> exactMatchFirst = Comparator.comparing(mailboxPath -> mailboxPath.getName().equals(targetFolder) ? 0 : 1);
+
+        return mailboxManager.search(
+                        MailboxQuery.privateMailboxesBuilder(session).expression(new ExactNameCaseIncensitive(targetFolder)).build(),
+                        session)
+                .toStream()
+                .map(MailboxMetaData::getPath)
+                .sorted(exactMatchFirst)
                 .findFirst()
                 .or(() -> {
                     LOG.info("{}'s subfolder `{}` was tried to be addressed but it does not exist", recipient, targetFolder);
