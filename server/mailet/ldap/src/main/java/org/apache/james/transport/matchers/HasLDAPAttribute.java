@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.james.transport.matchers.AttributeUtils.extractLdapAttributeValue;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -87,7 +89,7 @@ import com.unboundid.ldap.sdk.SearchScope;
  * The defaults are cache up to 10_000 entries for 1 day.
  */
 public class HasLDAPAttribute extends GenericMatcher {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HasLDAPAttribute.class);
+
 
     private final LDAPConnectionPool ldapConnectionPool;
     private final LdapRepositoryConfiguration configuration;
@@ -176,26 +178,9 @@ public class HasLDAPAttribute extends GenericMatcher {
         return attributeValue.map(value -> Optional.ofNullable(entry.getAttribute(attributeName))
                 .map(attribute -> Arrays.stream(attribute.getValues()))
                 .orElse(Stream.empty())
-                .map(ldapValue -> extractLdapAttributeValue(ldapValue, attributeName, LOGGER))
+                .map(ldapValue -> extractLdapAttributeValue(ldapValue, attributeName))
                 .anyMatch(value::equals))
             .orElseGet(() -> entry.hasAttribute(attributeName));
-    }
-
-    public static String extractLdapAttributeValue(String ldapValue, String attributeName, Logger logger) {
-        if (ldapValue.contains(",")) {
-            try {
-                return Arrays.stream(new DN(ldapValue).getRDNs())
-                    .flatMap(rdn -> rdn.getNameValuePairs().stream())
-                    .filter(pair -> pair.getAttributeName().equals("cn"))
-                    .findFirst()
-                    .map(RDNNameValuePair::getAttributeValue)
-                    .orElse(ldapValue);
-            } catch (LDAPException e) {
-                logger.info("Non DN value '{}' for attribute {} contains coma", ldapValue, attributeName);
-                return ldapValue;
-            }
-        }
-        return ldapValue;
     }
 
     private Filter createFilter(String retrievalName, String ldapUserRetrievalAttribute) {
