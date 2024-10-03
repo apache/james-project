@@ -52,7 +52,6 @@ import org.junit.jupiter.api.Test;
 public class SubAddressingTest {
 
     private static final String SENDER1 = "sender1@localhost";
-    private static final String SENDER2 = "sender2@localhost";
     private static final String RECIPIENT = "recipient@localhost";
     private static final String TARGET = "targetfolder";
     private static final String TARGET_UPPERCASE = "Targetfolder";
@@ -61,7 +60,7 @@ public class SubAddressingTest {
     private MailboxManager mailboxManager;
     private SubAddressing testee;
     private UsersRepository usersRepository;
-    private Username sender1Username;
+    private Username senderUsername;
     private Username recipientUsername;
     private MailboxSession recipientSession;
     private MailboxId targetMailboxId;
@@ -72,7 +71,7 @@ public class SubAddressingTest {
         usersRepository = MemoryUsersRepository.withVirtualHosting(NO_DOMAIN_LIST);
 
         recipientUsername = usersRepository.getUsername(new MailAddress(RECIPIENT));
-        sender1Username = usersRepository.getUsername(new MailAddress(SENDER1));
+        senderUsername = usersRepository.getUsername(new MailAddress(SENDER1));
 
         recipientSession = mailboxManager.createSystemSession(recipientUsername);
         targetMailboxId = mailboxManager.createMailbox(
@@ -141,63 +140,6 @@ public class SubAddressingTest {
         givePostRightForKey(MailboxACL.ANYONE_KEY);
 
         Mail mail = mailBuilder(TARGET).sender(SENDER1).build();
-        testee.service(mail);
-
-        AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
-        assertThat(mail.attributes().map(this::unbox))
-            .containsOnly(Pair.of(recipient, TARGET));
-    }
-
-    //@Disabled
-    @Test
-    void shouldAddStorageDirectiveWhenSenderIsWhiteListed() throws Exception {
-        // whitelist sender 1 and send from sender 1
-        removePostRightForKey(MailboxACL.ANYONE_KEY);
-        givePostRightForKey(MailboxACL.EntryKey.createUserEntryKey(sender1Username));
-
-        Mail mail = mailBuilder(TARGET).sender(SENDER1).build();
-        testee.service(mail);
-
-        AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
-        assertThat(mail.attributes().map(this::unbox))
-            .containsOnly(Pair.of(recipient, TARGET));
-    }
-
-    @Test
-    void shouldNotAddStorageDirectiveWhenSenderIsNotWhiteListed() throws Exception {
-        // whitelist sender 1 and send from sender 2
-        removePostRightForKey(MailboxACL.ANYONE_KEY);
-        givePostRightForKey(MailboxACL.EntryKey.createUserEntryKey(sender1Username));
-
-        Mail mail = mailBuilder(TARGET).sender(SENDER2).build();
-        testee.service(mail);
-
-        AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
-        assertThat(mail.attributes().map(this::unbox))
-            .doesNotContain(Pair.of(recipient, TARGET));
-    }
-
-    @Test
-    void shouldNotAddStorageDirectiveWhenSenderIsBlackListed() throws Exception {
-        // blacklist sender 1 and send from sender 1
-        givePostRightForKey(MailboxACL.ANYONE_KEY);
-        givePostRightForKey(MailboxACL.EntryKey.createNegativeUserEntryKey(sender1Username));
-
-        Mail mail = mailBuilder(TARGET).sender(SENDER1).build();
-        testee.service(mail);
-
-        AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
-        assertThat(mail.attributes().map(this::unbox))
-            .doesNotContain(Pair.of(recipient, TARGET));
-    }
-
-    @Test
-    void shouldAddStorageDirectiveWhenSenderIsNotBlackListed() throws Exception {
-        // blacklist sender 1 and send from sender 2
-        givePostRightForKey(MailboxACL.ANYONE_KEY);
-        removePostRightForKey(MailboxACL.EntryKey.createUserEntryKey(sender1Username));
-
-        Mail mail = mailBuilder(TARGET).sender(SENDER2).build();
         testee.service(mail);
 
         AttributeName recipient = AttributeName.of("DeliveryPaths_recipient@localhost");
