@@ -42,9 +42,9 @@ public class Constants {
     public static final String DEFAULT_DOMAIN = "james.org";
     public static final String LOCALHOST_IP = "127.0.0.1";
     public static final String PASSWORD = "secret";
-    public static final String FROM = "user@" + DEFAULT_DOMAIN;
-    public static final String FROM2 = "user4@" + DEFAULT_DOMAIN;
-    public static final String RECIPIENT = "user2@" + DEFAULT_DOMAIN;
-    public static final String ALIAS = "user2alias@" + DEFAULT_DOMAIN;
-    public static final String RECIPIENT2 = "user3@" + DEFAULT_DOMAIN;
+    public static final String FROM = "from@" + DEFAULT_DOMAIN;
+    public static final String FROM2 = "from2@" + DEFAULT_DOMAIN;
+    public static final String RECIPIENT = "recipient@" + DEFAULT_DOMAIN;
+    public static final String ALIAS = "recipientalias@" + DEFAULT_DOMAIN;
+    public static final String RECIPIENT2 = "recipient2@" + DEFAULT_DOMAIN;
 }

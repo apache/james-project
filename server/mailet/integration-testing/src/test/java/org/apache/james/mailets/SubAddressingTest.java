@@ -27,6 +27,7 @@ import static org.apache.james.mailets.configuration.Constants.FROM2;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
+import static org.apache.james.mailets.configuration.Constants.RECIPIENT2;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
 import java.io.File;
@@ -80,6 +81,7 @@ class SubAddressingTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(RECIPIENT2, PASSWORD);
         dataProbe.addUser(FROM, PASSWORD);
         dataProbe.addUser(FROM2, PASSWORD);
 
@@ -104,6 +106,27 @@ class SubAddressingTest {
 
         sendSubAddressedMail(TARGETED_MAILBOX);
         awaitSubAddressedMail(MailboxConstants.INBOX);
+    }
+
+
+    @Test
+    void subAddressedEmailShouldBeDeliveredInINBOXWhenSpecifiedFolderExistsForAnotherUser(@TempDir File temporaryFolder) throws Exception {
+        setup(temporaryFolder);
+
+        // create mailbox for recipient 1
+        testIMAPClient.sendCommand("CREATE " + TARGETED_MAILBOX);
+        testIMAPClient.sendCommand("SETACL " + TARGETED_MAILBOX + " " + "anyone" + " p");
+
+        // send to recipient 2
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(FROM, PASSWORD)
+                .sendMessage(FROM, "recipient2+" + TARGETED_MAILBOX + "@" + DEFAULT_DOMAIN);
+
+        testIMAPClient
+                .connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(RECIPIENT2, PASSWORD)
+                .select(MailboxConstants.INBOX)
+                .awaitMessage(awaitAtMostOneMinute);
     }
 
     @Test
@@ -203,7 +226,7 @@ class SubAddressingTest {
     private void sendSubAddressedMail(String targetMailbox) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidKeySpecException {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(FROM, PASSWORD)
-            .sendMessage(FROM, "user2+" + targetMailbox + "@" + DEFAULT_DOMAIN);
+            .sendMessage(FROM,"recipient+" + targetMailbox + "@" + DEFAULT_DOMAIN);
     }
 
     private void awaitSubAddressedMail(String expectedMailbox) throws IOException {
