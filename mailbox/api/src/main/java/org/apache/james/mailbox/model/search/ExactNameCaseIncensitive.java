@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.model.search;
 
-import com.google.common.base.Preconditions;
-
 import java.util.Objects;
+
+import com.google.common.base.Preconditions;
 
 public class ExactNameCaseIncensitive implements MailboxNameExpression {
 
