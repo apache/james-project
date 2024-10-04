@@ -99,6 +99,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -3132,6 +3133,46 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .rights(MailboxACL.FULL_RIGHTS)
                     .asAddition(), session))
                 .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void giveRightToPostToSomeoneShouldNotAllowToSeeMailbox() throws Exception {
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_1, "mailbox");
+            mailboxManager.createMailbox(mailboxPath, session);
+
+            MailboxACL.ACLCommand command = MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_2))
+                    .rights(MailboxACL.Right.Post)
+                    .asAddition();
+            mailboxManager.applyRightsCommand(mailboxPath, command, session);
+
+            assertThat(mailboxManager.search(
+                    MailboxQuery.privateMailboxesBuilder(session2).matchesAllMailboxNames().build(),
+                    session2)
+                .toStream().map(MailboxMetaData::getPath)
+                .filter(Throwing.predicate(
+                    path -> mailboxManager.hasRight(path, MailboxACL.Right.Lookup, session2))))
+                .doesNotContain(mailboxPath);
+        }
+
+        @Test
+        void giveRightToPostToAnyoneShouldNotAllowToSeeMailbox() throws Exception {
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_1, "mailbox");
+            mailboxManager.createMailbox(mailboxPath, session);
+
+            MailboxACL.ACLCommand command = MailboxACL.command()
+                    .key(MailboxACL.ANYONE_KEY)
+                    .rights(MailboxACL.Right.Post)
+                    .asAddition();
+            mailboxManager.applyRightsCommand(mailboxPath, command, session);
+
+            assertThat(mailboxManager.search(
+                    MailboxQuery.privateMailboxesBuilder(session2).matchesAllMailboxNames().build(),
+                    session2)
+                .toStream().map(MailboxMetaData::getPath)
+                .filter(Throwing.predicate(
+                    path -> mailboxManager.hasRight(path, MailboxACL.Right.Lookup, session2))))
+                .doesNotContain(mailboxPath);
         }
     }
 }
