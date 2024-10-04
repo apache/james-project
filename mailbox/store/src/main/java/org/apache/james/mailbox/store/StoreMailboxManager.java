@@ -883,7 +883,7 @@ public class StoreMailboxManager implements MailboxManager {
         return threadIdGuessingAlgorithm.getMessageIdsInThread(threadId, session);
     }
 
-    private Flux<MailboxId> getInMailboxIds(MultimailboxesSearchQuery expression, MailboxSession session) {
+    public Flux<MailboxId> getInMailboxIds(MultimailboxesSearchQuery expression, MailboxSession session) {
         if (expression.getInMailboxes().isEmpty()) {
             return accessibleMailboxIds(expression.getNamespace(), Right.Read, session);
         } else {
