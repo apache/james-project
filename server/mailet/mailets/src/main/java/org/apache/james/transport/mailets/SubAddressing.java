@@ -41,7 +41,7 @@ import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.search.ExactNameCaseIncensitive;
+import org.apache.james.mailbox.model.search.ExactNameCaseInsensitive;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -102,7 +102,7 @@ public class SubAddressing extends GenericMailet {
         Comparator<MailboxPath> exactMatchFirst = Comparator.comparing(mailboxPath -> mailboxPath.getName().equals(targetFolder) ? 0 : 1);
 
         return mailboxManager.search(
-                        MailboxQuery.privateMailboxesBuilder(session).expression(new ExactNameCaseIncensitive(targetFolder)).build(),
+                        MailboxQuery.privateMailboxesBuilder(session).expression(new ExactNameCaseInsensitive(targetFolder)).build(),
                         session)
                 .toStream()
                 .map(MailboxMetaData::getPath)

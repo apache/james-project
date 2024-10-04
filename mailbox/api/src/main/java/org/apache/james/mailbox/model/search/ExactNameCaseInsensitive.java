@@ -23,47 +23,48 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
-public class PrefixedWildcardCaseIncensitive implements MailboxNameExpression {
+public class ExactNameCaseInsensitive implements MailboxNameExpression {
 
-    private final String prefix;
+    private final String name;
 
-    public PrefixedWildcardCaseIncensitive(String prefix) {
-        Preconditions.checkNotNull(prefix);
-        this.prefix = prefix;
+    public ExactNameCaseInsensitive(String name) {
+        Preconditions.checkNotNull(name);
+        this.name = name;
     }
 
     @Override
-    public boolean isExpressionMatch(String name) {
-        return name.startsWith(prefix);
+    public boolean isExpressionMatch(String mailboxName) {
+        Preconditions.checkNotNull(mailboxName);
+        return name.equalsIgnoreCase(mailboxName);
     }
 
     @Override
     public String getCombinedName() {
-        return prefix + FREEWILDCARD;
+        return name;
     }
 
     @Override
     public boolean isWild() {
-        return true;
+        return false;
     }
 
     @Override
     public MailboxNameExpression includeChildren() {
-        return this;
+        return new PrefixedWildcardCaseInsensitive(name);
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof PrefixedWildcardCaseIncensitive) {
-            PrefixedWildcardCaseIncensitive that = (PrefixedWildcardCaseIncensitive) o;
+        if (o instanceof ExactNameCaseInsensitive) {
+            ExactNameCaseInsensitive exactName = (ExactNameCaseInsensitive) o;
 
-            return Objects.equals(this.prefix, that.prefix);
+            return Objects.equals(this.name, exactName.name);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(prefix);
+        return Objects.hash(name);
     }
 }
