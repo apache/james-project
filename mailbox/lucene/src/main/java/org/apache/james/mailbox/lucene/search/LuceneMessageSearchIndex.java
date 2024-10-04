@@ -18,10 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.lucene.search;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -40,6 +38,7 @@ import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 import jakarta.mail.Flags.Flag;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
@@ -126,7 +125,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -188,8 +186,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * {@link Field} which will contain the body of the {@link MailboxMessage}
      */
-    private static final String BODY_FIELD = "body";
-
+    static final String BODY_FIELD = "body";
 
     /**
      * Prefix which will be used for each message header to store it also in a seperate {@link Field}
@@ -241,7 +238,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final String BCC_FIELD = "bcc";
 
 
-    private static final String BASE_SUBJECT_FIELD = "baseSubject";
+    static final String BASE_SUBJECT_FIELD = "baseSubject";
+    static final String SUBJECT_FIELD = "subject";
 
     /**
      * {@link Field} which contain the internalDate of the message with YEAR-Resolution
@@ -322,7 +320,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * {@link Field} which will contain the id of the {@link MessageId}
      */
-    private static final String MESSAGE_ID_FIELD = "messageid";
+    static final String MESSAGE_ID_FIELD = "messageid";
 
     /**
      * {@link Field} which contain the Date header of the message with YEAR-Resolution
@@ -479,8 +477,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         this.suffixMatch = suffixMatch;
     }
 
-
-
     @Override
     public Flux<MessageUid> doSearch(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
@@ -506,8 +502,21 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private List<SearchResult> searchMultimap(Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {
-        ImmutableList.Builder<SearchResult> results = ImmutableList.builder();
+        return searchDocument(mailboxIds, searchQuery, maxQueryResults)
+            .stream()
+            .map(this::documentToSearchResult)
+            .toList();
+    }
 
+    private SearchResult documentToSearchResult(Document doc) {
+        MessageUid uid = MessageUid.of(doc.getField(UID_FIELD).numericValue().longValue());
+        MailboxId mailboxId = mailboxIdFactory.fromString(doc.get(MAILBOX_ID_FIELD));
+        Optional<MessageId> messageId = Optional.ofNullable(doc.get(MESSAGE_ID_FIELD))
+            .map(messageIdFactory::fromString);
+        return new SearchResult(messageId, mailboxId, uid);
+    }
+
+    public List<Document> searchDocument(Collection<MailboxId> mailboxIds, SearchQuery searchQuery, int maxQueryResults) throws MailboxException {
         Query inMailboxes = buildQueryFromMailboxes(mailboxIds);
 
         try (IndexReader reader = DirectoryReader.open(writer)) {
@@ -524,19 +533,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
             // query for all the documents sorted as specified in the SearchQuery
             TopDocs docs = searcher.search(queryBuilder.build(), maxQueryResults, createSort(searchQuery.getSorts()));
-            ScoreDoc[] sDocs = docs.scoreDocs;
-            for (ScoreDoc sDoc : sDocs) {
-                Document doc = searcher.storedFields().document(sDoc.doc);
-                MessageUid uid = MessageUid.of(doc.getField(UID_FIELD).numericValue().longValue());
-                MailboxId mailboxId = mailboxIdFactory.fromString(doc.get(MAILBOX_ID_FIELD));
-                Optional<MessageId> messageId = Optional.ofNullable(doc.get(MESSAGE_ID_FIELD))
-                    .map(messageIdFactory::fromString);
-                results.add(new SearchResult(messageId, mailboxId, uid));
-            }
+
+            return Stream.of(docs.scoreDocs)
+                .map(Throwing.function(sDoc -> searcher.storedFields().document(sDoc.doc)))
+                .toList();
         } catch (IOException e) {
             throw new MailboxException("Unable to search the mailbox", e);
         }
-        return results.build();
     }
 
     private Query buildQueryFromMailboxes(Collection<MailboxId> mailboxIds) {
@@ -686,6 +689,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                         doc.add(new TextField(field, headerValue, Store.NO));
 
                     } else if (headerName.equalsIgnoreCase("Subject")) {
+                        doc.add(new StringField(SUBJECT_FIELD, f.getBody(), Store.YES));
                         doc.add(new StringField(BASE_SUBJECT_FIELD, SearchUtil.getBaseSubject(headerValue), Store.YES));
                         doc.add(new SortedSetDocValuesField(BASE_SUBJECT_FIELD, new BytesRef(SearchUtil.getBaseSubject(headerValue))));
                     }
@@ -734,14 +738,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                         charset = Charset.forName(DEFAULT_ENCODING);
                     }
 
-                    // Read the content one line after the other and add it to the document
-                    try (BufferedReader bodyReader = new BufferedReader(new InputStreamReader(in, charset))) {
-                        String line = null;
-                        while ((line = bodyReader.readLine()) != null) {
-                            doc.add(new TextField(BODY_FIELD, line.toUpperCase(Locale.US), Store.NO));
-                        }
-                    }
-
+                    String bodyContent = IOUtils.toString(in, charset);
+                    doc.add(new TextField(BODY_FIELD, bodyContent, Store.YES));
                 }
             }
 
