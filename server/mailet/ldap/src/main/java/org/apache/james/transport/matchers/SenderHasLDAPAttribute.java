@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.james.transport.matchers.AttributeUtils.extractLdapAttributeValue;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -175,6 +177,7 @@ public class SenderHasLDAPAttribute extends GenericMatcher {
         return attributeValue.map(value -> Optional.ofNullable(entry.getAttribute(attributeName))
                 .map(attribute -> Arrays.stream(attribute.getValues()))
                 .orElse(Stream.empty())
+                .map(ldapValue -> extractLdapAttributeValue(attributeName, ldapValue))
                 .anyMatch(value::equals))
             .orElseGet(() -> entry.hasAttribute(attributeName));
     }

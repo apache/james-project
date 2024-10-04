@@ -23,6 +23,15 @@ mail: james-user@james.org
 userPassword: secret
 description: abcdef
 
+dn: uid=james-user1, ou=people, dc=james,dc=org
+objectClass: inetOrgPerson
+uid: james-user1
+cn: james-user1
+sn: james-user1
+mail: james-user1@james.org
+userPassword: secret
+description: cn=active,ou=accountStatus,ou=whatever,o=gov,c=vn
+
 dn: uid=bob, ou=people, dc=james,dc=org
 objectClass: inetOrgPerson
 uid: bob

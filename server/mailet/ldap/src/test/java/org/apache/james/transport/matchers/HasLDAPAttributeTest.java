@@ -77,6 +77,24 @@ class HasLDAPAttributeTest {
     }
 
     @Test
+    void shouldReturnRecipientWhenHasAttributeWithDnValue() throws Exception {
+        HasLDAPAttribute testee = new HasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
+        FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
+            .matcherName("HasLDAPAttribute")
+            .condition("description:active")
+            .build();
+        testee.init(matcherConfig);
+
+        MailAddress recipient = new MailAddress("james-user1@james.org");
+        Collection<MailAddress> matched = testee.match(FakeMail.builder()
+            .name("default-id")
+            .recipient(recipient)
+            .build());
+
+        assertThat(matched).containsOnly(recipient);
+    }
+
+    @Test
     void shouldMatchWhenCached() throws Exception {
         HasLDAPAttribute testee = new HasLDAPAttribute(LdapRepositoryConfiguration.from(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer)));
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
