@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
@@ -74,6 +75,22 @@ class TikaTextExtractorTest {
             .isPresent()
             .asString()
             .contains("This is some awesome text text.");
+    }
+
+    @Test
+    void shouldReturnEmptyParsedContentWhenTimeoutTriggered() throws Exception {
+        textExtractor = new TikaTextExtractor(new RecordingMetricFactory(), new TikaHttpClientImpl(TikaConfiguration.builder()
+            .host(tika.getIp())
+            .port(tika.getPort())
+            .timeoutInMillis(1)
+            .build()));
+
+        InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/writter.docx");
+
+        assertThat(textExtractor.extractContentReactive(inputStream,
+                ContentType.of("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+            .block())
+            .isEqualTo(ParsedContent.empty());
     }
 
     @Test

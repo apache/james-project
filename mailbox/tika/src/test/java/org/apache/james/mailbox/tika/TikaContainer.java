@@ -18,9 +18,10 @@
  ****************************************************************/
 package org.apache.james.mailbox.tika;
 
+import static org.apache.james.mailbox.tika.TikaConfiguration.DEFAULT_TIMEOUT_IN_MS;
+
 import java.time.Duration;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
@@ -28,12 +29,9 @@ import org.apache.james.util.docker.RateLimiters;
 import org.junit.rules.ExternalResource;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-import com.google.common.primitives.Ints;
-
 public class TikaContainer extends ExternalResource {
     
     private static final int DEFAULT_TIKA_PORT = 9998;
-    private static final int DEFAULT_TIMEOUT_IN_MS = Ints.checkedCast(TimeUnit.MINUTES.toMillis(3));
 
     private final DockerContainer tika;
 
