@@ -36,10 +36,14 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
+import org.apache.james.core.Username;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
@@ -49,6 +53,7 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
@@ -58,6 +63,8 @@ class SubAddressingTest {
     private static final String TARGETED_MAILBOX = "any";
     private static final String TARGETED_MAILBOX_LOWER = TARGETED_MAILBOX;
     private static final String TARGETED_MAILBOX_UPPER = "ANY";
+    private static final String TARGETED_MAILBOX_REQUIRING_ENCODING = "Dossier d'été";
+    private static final String TARGETED_MAILBOX_ENCODED = "Dossier%20d%27%C3%A9t%C3%A9";
 
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
@@ -194,6 +201,28 @@ class SubAddressingTest {
 
         sendSubAddressedMail(TARGETED_MAILBOX_UPPER);
         awaitSubAddressedMail(MailboxConstants.INBOX);
+    }
+
+    @Disabled("can't manage to successfully create the mailbox...")
+    @Test
+    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenRequiringEncoding(@TempDir File temporaryFolder) throws Exception {
+        setup(temporaryFolder);
+
+        // create mailbox
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(RECIPIENT, PASSWORD)
+                .create(TARGETED_MAILBOX_REQUIRING_ENCODING);
+
+        //give posting rights
+        jamesServer.getProbe(ACLProbeImpl.class).executeCommand(
+                MailboxPath.forUser(Username.of(RECIPIENT), TARGETED_MAILBOX_REQUIRING_ENCODING),
+                MailboxACL.command()
+                        .key(MailboxACL.ANYONE_KEY)
+                        .rights(MailboxACL.Right.Post)
+                        .asAddition());
+
+        sendSubAddressedMail(TARGETED_MAILBOX_ENCODED);
+        awaitSubAddressedMail(TARGETED_MAILBOX_REQUIRING_ENCODING);
     }
 
     @Test
