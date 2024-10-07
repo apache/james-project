@@ -485,6 +485,33 @@ class MessageToOpenSearchJsonTest {
     }
 
     @Test
+    void convertMessageShouldSucceedWithAttachmentTextContentBeNullWhenTikaReadTimeout() throws Exception {
+        textExtractor = new TikaTextExtractor(new RecordingMetricFactory(), new TikaHttpClientImpl(TikaConfiguration.builder()
+            .host(tika.getIp())
+            .port(tika.getPort())
+            .timeoutInMillis(1)
+            .build()));
+
+        MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
+            textExtractor,
+            ZoneId.of("Europe/Paris"),
+            IndexAttachments.YES, IndexHeaders.YES);
+        MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, date,
+            SIZE,
+            BODY_START_OCTET,
+            new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nonTextual.eml"))),
+            new Flags(),
+            propertyBuilder.build(),
+            MAILBOX_ID);
+        spamMail.setUid(UID);
+        spamMail.setModSeq(MOD_SEQ);
+
+        assertThatJson(messageToOpenSearchJson.convertToJson(spamMail).block())
+            .when(IGNORING_ARRAY_ORDER)
+            .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/nonTextualWithoutAttachmentTextContent.json", StandardCharsets.UTF_8));
+    }
+
+    @Test
     void convertToJsonWithoutAttachmentShouldConvertEmailBoby() throws IOException {
         // Given
         MailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID,
