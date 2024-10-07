@@ -46,6 +46,7 @@
         <module>distributed</module>
         <module>jmx</module>
         <module>jpa-common</module>
+        <module>lucene</module>
         <module>mailbox</module>
         <module>mailbox-jpa</module>
         <module>mailbox-plugin-deleted-messages-vault</module>
@@ -138,6 +139,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-lmtp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-lucene</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

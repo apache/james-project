@@ -31,6 +31,7 @@ import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
 import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
 import org.apache.james.modules.mailbox.MemoryDeadLetterModule;
+import org.apache.james.modules.mailbox.ReIndexingTaskSerializationModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
 import org.apache.james.modules.protocols.ManageSieveServerModule;
@@ -88,6 +89,7 @@ public class JPAJamesServerMain implements JamesServerMain {
         new JPADataModule(),
         new JPAMailboxModule(),
         new MailboxModule(),
+        new ReIndexingTaskSerializationModule(),
         new LuceneSearchMailboxModule(),
         new NoJwtModule(),
         new RawPostDequeueDecoratorModule(),
