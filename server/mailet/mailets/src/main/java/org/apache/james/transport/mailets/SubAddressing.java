@@ -21,6 +21,9 @@ package org.apache.james.transport.mailets;
 
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 
+import java.util.Comparator;
+import java.util.Optional;
+
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.mail.MessagingException;
@@ -36,7 +39,10 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.ExactNameCaseInsensitive;
+import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
@@ -83,33 +89,56 @@ public class SubAddressing extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         mail.getRecipients().forEach(recipient ->
             recipient.getLocalPartDetails(UsersRepository.LOCALPART_DETAIL_DELIMITER)
-                .ifPresent(Throwing.consumer(targetFolder -> postIfHasRight(mail, recipient, targetFolder))));
+                .ifPresent(Throwing.consumer(targetFolder -> postIfHasRight(
+                        mail,
+                        recipient.stripDetails(UsersRepository.LOCALPART_DETAIL_DELIMITER),
+                        getPathWithCorrectCase(recipient, targetFolder)))));
     }
 
-    private void postIfHasRight(Mail mail, MailAddress recipient, String targetFolder) throws UsersRepositoryException, MailboxException {
-        if (hasPostRight(mail, recipient, targetFolder)) {
-            StorageDirective.builder().targetFolders(ImmutableList.of(targetFolder)).build()
+    private Optional<MailboxPath> getPathWithCorrectCase(MailAddress recipient, String targetFolder) throws UsersRepositoryException, MailboxException {
+        Username recipientUsername = usersRepository.getUsername(recipient);
+        MailboxSession session = mailboxManager.createSystemSession(recipientUsername);
+
+        Comparator<MailboxPath> exactMatchFirst = Comparator.comparing(mailboxPath -> mailboxPath.getName().equals(targetFolder) ? 0 : 1);
+
+        return mailboxManager.search(
+                        MailboxQuery.privateMailboxesBuilder(session).expression(new ExactNameCaseInsensitive(targetFolder)).build(),
+                        session)
+                .toStream()
+                .map(MailboxMetaData::getPath)
+                .sorted(exactMatchFirst)
+                .findFirst()
+                .or(() -> {
+                    LOG.info("{}'s subfolder `{}` was tried to be addressed but it does not exist", recipient, targetFolder);
+                    return Optional.empty();
+                });
+    }
+
+    private void postIfHasRight(Mail mail, MailAddress recipient, Optional<MailboxPath> targetFolderPath) throws UsersRepositoryException, MailboxException {
+        if (hasPostRight(mail, recipient, targetFolderPath)) {
+            StorageDirective.builder().targetFolders(ImmutableList.of(targetFolderPath.get().getName())).build()
                 .encodeAsAttributes(usersRepository.getUsername(recipient))
                 .forEach(mail::setAttribute);
         } else {
             LOG.info("{} tried to address {}'s subfolder `{}` but they did not have the right to",
-                mail.getMaybeSender().toString(), recipient.stripDetails(UsersRepository.LOCALPART_DETAIL_DELIMITER), targetFolder);
+                mail.getMaybeSender().toString(), recipient, targetFolderPath);
         }
     }
 
-    private Boolean hasPostRight(Mail mail, MailAddress recipient, String targetFolder) throws MailboxException, UsersRepositoryException {
+    private Boolean hasPostRight(Mail mail, MailAddress recipient, Optional<MailboxPath> targetFolderPath) throws MailboxException, UsersRepositoryException {
         try {
-            return resolvePostRight(retrieveMailboxACL(recipient, targetFolder), mail.getMaybeSender(), recipient);
+            return targetFolderPath.isPresent() && resolvePostRight(retrieveMailboxACL(recipient, targetFolderPath.get()), mail.getMaybeSender(), recipient);
         } catch (MailboxNotFoundException e) {
-            LOG.info("{}'s subfolder `{}` was tried to be addressed but it does not exist", recipient.stripDetails(UsersRepository.LOCALPART_DETAIL_DELIMITER), targetFolder);
+            LOG.info("{}'s subfolder `{}` was tried to be addressed but it does not exist", recipient, targetFolderPath);
             return false;
         }
     }
 
-    private MailboxACL retrieveMailboxACL(MailAddress recipient, String targetFolder) throws MailboxException, UsersRepositoryException {
+    private MailboxACL retrieveMailboxACL(MailAddress recipient, MailboxPath targetFolderPath) throws MailboxException, UsersRepositoryException {
         Username recipientUsername = usersRepository.getUsername(recipient);
         MailboxSession session = mailboxManager.createSystemSession(recipientUsername);
-        return mailboxManager.getMailbox(MailboxPath.forUser(recipientUsername, targetFolder), session)
+
+        return mailboxManager.getMailbox(targetFolderPath, session)
             .getMetaData(IGNORE, session, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
             .getACL();
     }
