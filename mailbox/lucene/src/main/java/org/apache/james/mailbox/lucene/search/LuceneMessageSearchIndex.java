@@ -931,7 +931,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         }
         queryBuilder.add(inMailboxes, BooleanClause.Occur.MUST);
 
-
         try (IndexReader reader = DirectoryReader.open(writer)) {
             IndexSearcher searcher = new IndexSearcher(reader);
             Set<MessageUid> uids = new HashSet<>();
@@ -1098,7 +1097,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         default:
             throw new UnsupportedSearchException();
         }
-
     }
 
     /**
@@ -1112,7 +1110,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         } else if (criterion instanceof SearchQuery.SizeCriterion crit) {
             return createSizeQuery(crit);
         }  else if (criterion instanceof SearchQuery.MessageIdCriterion crit) {
-            return createTermQuery(MESSAGE_ID_FIELD, crit.getMessageId().serialize());
+            return new TermQuery(new Term(MESSAGE_ID_FIELD, crit.getMessageId().serialize()));
         } else if (criterion instanceof HeaderCriterion crit) {
             return createHeaderQuery(crit);
         } else if (criterion instanceof UidCriterion crit) {
