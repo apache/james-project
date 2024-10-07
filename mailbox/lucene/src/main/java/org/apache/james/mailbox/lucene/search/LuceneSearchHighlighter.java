@@ -61,7 +61,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-public class LuceneMemorySearchHighlighter implements SearchHighlighter {
+public class LuceneSearchHighlighter implements SearchHighlighter {
     private static Analyzer defaultAnalyzer() {
         return new StandardAnalyzer();
     }
@@ -73,10 +73,10 @@ public class LuceneMemorySearchHighlighter implements SearchHighlighter {
     private final SearchHighlighterConfiguration configuration;
     private final StoreMailboxManager storeMailboxManager;
 
-    public LuceneMemorySearchHighlighter(LuceneMessageSearchIndex luceneMessageSearchIndex,
-                                         SearchHighlighterConfiguration searchHighlighterConfiguration,
-                                         MessageId.Factory messageIdFactory, StoreMailboxManager storeMailboxManager,
-                                         Analyzer analyzer) {
+    public LuceneSearchHighlighter(LuceneMessageSearchIndex luceneMessageSearchIndex,
+                                   SearchHighlighterConfiguration searchHighlighterConfiguration,
+                                   MessageId.Factory messageIdFactory, StoreMailboxManager storeMailboxManager,
+                                   Analyzer analyzer) {
         this.luceneMessageSearchIndex = luceneMessageSearchIndex;
         this.messageIdFactory = messageIdFactory;
         this.analyzer = analyzer;
@@ -85,10 +85,10 @@ public class LuceneMemorySearchHighlighter implements SearchHighlighter {
         this.formatter = new SimpleHTMLFormatter(searchHighlighterConfiguration.preTagFormatter(), searchHighlighterConfiguration.postTagFormatter());
     }
 
-    public LuceneMemorySearchHighlighter(LuceneMessageSearchIndex luceneMessageSearchIndex,
-                                         SearchHighlighterConfiguration searchHighlighterConfiguration,
-                                         MessageId.Factory messageIdFactory,
-                                         StoreMailboxManager storeMailboxManager) {
+    public LuceneSearchHighlighter(LuceneMessageSearchIndex luceneMessageSearchIndex,
+                                   SearchHighlighterConfiguration searchHighlighterConfiguration,
+                                   MessageId.Factory messageIdFactory,
+                                   StoreMailboxManager storeMailboxManager) {
         this(luceneMessageSearchIndex,
             searchHighlighterConfiguration,
             messageIdFactory,
