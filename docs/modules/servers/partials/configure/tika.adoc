@@ -26,7 +26,7 @@ Defaults to false.
 | Port of your tika server. The default value is 9998
 
 | tika.timeoutInMillis
-| Timeout when issuing request to the tika server. The default value is 3 seconds.
+| Timeout when issuing request to the tika server. The default value is 30 seconds.
 
 | tika.cache.eviction.period
 | A cache is used to avoid, when possible, query Tika multiple time for the same attachments.
