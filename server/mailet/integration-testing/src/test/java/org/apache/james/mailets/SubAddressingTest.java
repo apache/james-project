@@ -57,7 +57,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
@@ -211,11 +210,11 @@ class SubAddressingTest {
     void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenRequiringEncoding(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder);
 
-        MailboxId id = jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(Username.of(RECIPIENT), TARGETED_MAILBOX_REQUIRING_ENCODING));
+        MailboxId targetMailboxId = jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(Username.of(RECIPIENT), TARGETED_MAILBOX_REQUIRING_ENCODING));
 
         //give posting rights
         jamesServer.getProbe(ACLProbeImpl.class).executeCommand(
-                id,
+                targetMailboxId,
                 Username.of(RECIPIENT),
                 MailboxACL.command()
                         .key(MailboxACL.ANYONE_KEY)
@@ -225,6 +224,15 @@ class SubAddressingTest {
         sendSubAddressedMail(TARGETED_MAILBOX_ENCODED);
         awaitAtMostOneMinute.until(() -> jamesServer.getProbe(MailboxProbeImpl.class)
                 .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), RECIPIENT, 1)
+                .size() == 1);
+
+        awaitAtMostOneMinute.until(() -> jamesServer.getProbe(MailboxProbeImpl.class)
+                .searchMessage(MultimailboxesSearchQuery
+                        .from(SearchQuery.builder().build())
+                        .inMailboxes(targetMailboxId)
+                        .build(),
+                    RECIPIENT,
+                    1)
                 .size() == 1);
     }
 
