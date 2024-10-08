@@ -222,17 +222,15 @@ class SubAddressingTest {
                         .asAddition());
 
         sendSubAddressedMail(TARGETED_MAILBOX_ENCODED);
-        awaitAtMostOneMinute.until(() -> jamesServer.getProbe(MailboxProbeImpl.class)
-                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), RECIPIENT, 1)
-                .size() == 1);
 
+        int LOAD_LIMIT = 1;
         awaitAtMostOneMinute.until(() -> jamesServer.getProbe(MailboxProbeImpl.class)
                 .searchMessage(MultimailboxesSearchQuery
                         .from(SearchQuery.builder().build())
                         .inMailboxes(targetMailboxId)
                         .build(),
                     RECIPIENT,
-                    1)
+                    LOAD_LIMIT)
                 .size() == 1);
     }
 
