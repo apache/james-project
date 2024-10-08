@@ -84,10 +84,7 @@ public class TikaHttpClientImpl implements TikaHttpClient {
                 }
             })
             .timeout(Duration.ofMillis(tikaConfiguration.getTimeoutInMillis()))
-            .onErrorResume(e -> {
-                LOGGER.warn("Failing to call Tika for content type '{}'", contentType.asString(), e);
-                return Mono.empty();
-            });
+            .doOnError(e -> LOGGER.warn("Failing to call Tika for content type '{}'", contentType.asString(), e));
     }
 
 }
