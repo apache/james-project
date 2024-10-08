@@ -412,6 +412,19 @@ public interface RecipientRewriteTableContract {
     }
 
     @Test
+    default void listSourcesShouldReturnWhenSourceHasMultipleMappings() throws Exception {
+        MappingSource source = MappingSource.fromUser(USER, Domain.of("james"));
+        Mapping mapping = Mapping.group(ADDRESS);
+        Mapping mapping2 = Mapping.group(ADDRESS_2);
+
+        virtualUserTable().addMapping(source, mapping);
+        virtualUserTable().addMapping(source, mapping2);
+
+        assertThat(virtualUserTable().listSources(mapping)).contains(source);
+        assertThat(virtualUserTable().listSources(mapping2)).contains(source);
+    }
+
+    @Test
     default void listSourcesShouldReturnWhenHasForwardMapping() throws Exception {
         Mapping mapping = Mapping.forward("forward");
 
