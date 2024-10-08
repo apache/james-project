@@ -21,38 +21,18 @@ package org.apache.james.modules.mailbox;
 
 import java.io.IOException;
 
-import org.apache.james.events.EventListener;
-import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
-import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
 
-public class LuceneSearchMailboxModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        install(new ReIndexingTaskSerializationModule());
-
-        bind(LuceneMessageSearchIndex.class).in(Scopes.SINGLETON);
-        bind(MessageSearchIndex.class).to(LuceneMessageSearchIndex.class);
-        bind(ListeningMessageSearchIndex.class).to(LuceneMessageSearchIndex.class);
-
-        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
-            .addBinding()
-            .to(LuceneMessageSearchIndex.class);
-    }
+public class LuceneMemorySearchMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    Directory provideDirectory(FileSystem fileSystem) throws IOException {
-        return FSDirectory.open(fileSystem.getBasedir().toPath());
+    Directory provideDirectory() throws IOException {
+        return new ByteBuffersDirectory();
     }
 }
