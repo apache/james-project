@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.james.core.Domain;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -59,15 +58,6 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
     @Override
     public Mappings getStoredMappings(MappingSource mappingSource) {
         return toMappings(table.get(mappingSource));
-    }
-
-    @Override
-    protected Mappings mapAddress(String user, Domain domain) {
-        Set<Mapping> mappings = table.get(MappingSource.fromUser(user, domain));
-        if (mappings == null) {
-            mappings = table.get(MappingSource.fromDomain(domain));
-        }
-        return toMappings(mappings);
     }
 
     @Override

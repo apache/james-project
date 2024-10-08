@@ -25,7 +25,6 @@ import java.util.Optional;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
@@ -58,14 +57,6 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
         } else {
             throw new ConfigurationException("No mapping configured");
         }
-    }
-
-    @Override
-    protected Mappings mapAddress(String user, Domain domain) {
-        return Optional.ofNullable(mappings)
-            .map(mappings -> RecipientRewriteTableUtil.getTargetString(user, domain, mappings))
-            .map(MappingsImpl::fromRawString)
-            .orElse(MappingsImpl.empty());
     }
 
     @Override

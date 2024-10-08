@@ -406,7 +406,13 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      * It must never return null but throw RecipientRewriteTableException on errors and return an empty Mappings
      * object if no mapping is found.
      */
-    protected abstract Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException;
+    protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
+        Mappings mappings = getStoredMappings(MappingSource.fromUser(user, domain));
+        if (mappings.isEmpty()) {
+            mappings = getStoredMappings(MappingSource.fromDomain(domain));
+        }
+        return mappings;
+    }
 
     private void checkDomainMappingSourceIsManaged(MappingSource source) throws RecipientRewriteTableException {
         Optional<Domain> notManagedSourceDomain = source.availableDomain()
