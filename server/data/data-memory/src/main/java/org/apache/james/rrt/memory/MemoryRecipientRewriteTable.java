@@ -19,9 +19,8 @@
 
 package org.apache.james.rrt.memory;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -76,10 +75,10 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
         }
     }
 
-    private final List<InMemoryMappingEntry> mappingEntries;
+    private final Collection<InMemoryMappingEntry> mappingEntries;
 
     public MemoryRecipientRewriteTable() {
-        mappingEntries = new ArrayList<>();
+        mappingEntries = new LinkedHashSet<>();
     }
 
     @Override

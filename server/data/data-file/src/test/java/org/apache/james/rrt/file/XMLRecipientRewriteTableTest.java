@@ -80,6 +80,11 @@ class XMLRecipientRewriteTableTest implements RecipientRewriteTableContract {
 
     @Test
     @Disabled("XMLRecipientRewriteTable is read only")
+    public void testStoreDuplicateMapping() {
+    }
+
+    @Test
+    @Disabled("XMLRecipientRewriteTable is read only")
     public void testStoreAndRetrieveRegexMapping() {
     }
 
