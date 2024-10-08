@@ -39,11 +39,15 @@ import java.security.spec.InvalidKeySpecException;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.ACLProbeImpl;
+import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
@@ -203,26 +207,25 @@ class SubAddressingTest {
         awaitSubAddressedMail(MailboxConstants.INBOX);
     }
 
-    @Disabled("can't manage to successfully create the mailbox...")
     @Test
     void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenRequiringEncoding(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder);
 
-        // create mailbox
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-                .login(RECIPIENT, PASSWORD)
-                .create(TARGETED_MAILBOX_REQUIRING_ENCODING);
+        MailboxId id = jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(Username.of(RECIPIENT), TARGETED_MAILBOX_REQUIRING_ENCODING));
 
         //give posting rights
         jamesServer.getProbe(ACLProbeImpl.class).executeCommand(
-                MailboxPath.forUser(Username.of(RECIPIENT), TARGETED_MAILBOX_REQUIRING_ENCODING),
+                id,
+                Username.of(RECIPIENT),
                 MailboxACL.command()
                         .key(MailboxACL.ANYONE_KEY)
                         .rights(MailboxACL.Right.Post)
                         .asAddition());
 
         sendSubAddressedMail(TARGETED_MAILBOX_ENCODED);
-        awaitSubAddressedMail(TARGETED_MAILBOX_REQUIRING_ENCODING);
+        awaitAtMostOneMinute.until(() -> jamesServer.getProbe(MailboxProbeImpl.class)
+                .searchMessage(MultimailboxesSearchQuery.from(SearchQuery.builder().build()).build(), RECIPIENT, 1)
+                .size() == 1);
     }
 
     @Test

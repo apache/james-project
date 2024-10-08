@@ -31,6 +31,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.ACLCommand;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.probe.ACLProbe;
 import org.apache.james.utils.GuiceProbe;
@@ -60,9 +61,9 @@ public class ACLProbeImpl implements GuiceProbe, ACLProbe {
         mailboxManager.applyRightsCommand(mailboxPath, command, mailboxSession);
     }
 
-    public void executeCommand(MailboxPath mailboxPath, ACLCommand command) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
-        mailboxManager.applyRightsCommand(mailboxPath, command, mailboxSession);
+    public void executeCommand(MailboxId mailboxId, Username ownerUser, ACLCommand command) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(ownerUser);
+        mailboxManager.applyRightsCommand(mailboxId, command, mailboxSession);
     }
 
     @Override
