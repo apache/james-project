@@ -223,14 +223,14 @@ class SubAddressingTest {
 
         sendSubAddressedMail(TARGETED_MAILBOX_ENCODED);
 
-        int LOAD_LIMIT = 1;
+        int loadLimit = 1;
         awaitAtMostOneMinute.until(() -> jamesServer.getProbe(MailboxProbeImpl.class)
                 .searchMessage(MultimailboxesSearchQuery
                         .from(SearchQuery.builder().build())
                         .inMailboxes(targetMailboxId)
                         .build(),
                     RECIPIENT,
-                    LOAD_LIMIT)
+                    loadLimit)
                 .size() == 1);
     }
 
