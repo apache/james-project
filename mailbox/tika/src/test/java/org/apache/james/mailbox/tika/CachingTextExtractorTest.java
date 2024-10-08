@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.tika;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -93,6 +94,27 @@ class CachingTextExtractorTest {
         textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE);
 
         verify(wrappedTextExtractor, times(1)).extractContentReactive(any(), any());
+        verifyNoMoreInteractions(wrappedTextExtractor);
+    }
+
+    @Test
+    void cacheShouldBeRecomputedWhenSuccessSecondCallWithActualContent() {
+        // The first call fails
+        when(wrappedTextExtractor.extractContentReactive(any(), any()))
+            .thenReturn(Mono.error(() -> new IOException("test")));
+        assertThatThrownBy(() -> textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE))
+            .hasRootCauseInstanceOf(IOException.class);
+        verify(wrappedTextExtractor, times(1)).extractContentReactive(any(), any());
+
+        // The second call succeeds and CachingTextExtractor should recompute the cache
+        when(wrappedTextExtractor.extractContentReactive(any(), any()))
+            .thenReturn(Mono.just(RESULT));
+        assertThat(textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE))
+            .isEqualTo(RESULT);
+        verify(wrappedTextExtractor, times(2)).extractContentReactive(any(), any());
+
+        // The third call would get actual value from the cache
+        textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE);
         verifyNoMoreInteractions(wrappedTextExtractor);
     }
 
