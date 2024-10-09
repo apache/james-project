@@ -33,6 +33,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+import com.google.common.escape.Escaper;
+import com.google.common.escape.Escapers;
 
 public interface PathConverter {
     interface Factory {
@@ -50,6 +52,10 @@ public interface PathConverter {
     class Default implements PathConverter{
         private static final int NAMESPACE = 0;
         private static final int USER = 1;
+        public static final Escaper USERNAME_ESCAPER = Escapers.builder()
+            .addEscape('.', "__")
+            .addEscape('_', "_-")
+            .build();
 
         private final ImapSession session;
 
@@ -90,7 +96,9 @@ public interface PathConverter {
             } else if (namespace.equalsIgnoreCase("#user")) {
                 Preconditions.checkArgument(mailboxPathParts.size() > 2, "Expecting at least 2 parts");
                 String username = mailboxPathParts.get(USER);
-                Username user = Username.from(username, session.getUser().getDomainPart().map(Domain::asString));
+                String unescapedUsername = username.replace("__", ".")
+                    .replace("_-", "_");
+                Username user = Username.from(unescapedUsername, session.getUser().getDomainPart().map(Domain::asString));
                 String mailboxName = Joiner.on(session.getPathDelimiter()).join(Iterables.skip(mailboxPathParts, 2));
                 return new MailboxPath(MailboxConstants.USER_NAMESPACE, user, sanitizeMailboxName(mailboxName));
 
@@ -126,7 +134,8 @@ public interface PathConverter {
                     if (!sb.isEmpty()) {
                         sb.append(session.getPathDelimiter());
                     }
-                    sb.append(mailboxPath.getUser().getLocalPart());
+
+                    sb.append(USERNAME_ESCAPER.escape(mailboxPath.getUser().getLocalPart()));
                 }
             }
             if (mailboxPath.getName() != null && !mailboxPath.getName().isEmpty()) {
