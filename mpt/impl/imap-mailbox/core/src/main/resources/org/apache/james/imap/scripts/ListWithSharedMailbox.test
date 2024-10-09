@@ -59,15 +59,11 @@ S: \* STATUS \"#user.boby.sharedMailbox\" \(RECENT 0 UNSEEN 0\)
 S: a3 OK STATUS completed.
 
 C: a4 LIST "#user.diana" "*"
-# TODO why double results
-S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
 S: a4 OK LIST completed.
 
 C: a7 LIST "#user" "*"
-# TODO personal mailboxes shall not be included
 SUB {
-S: \* LIST \(\\HasNoChildren\) \"\.\" \"#private.INBOX\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
 S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
