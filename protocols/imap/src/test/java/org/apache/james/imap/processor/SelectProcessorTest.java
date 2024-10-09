@@ -36,6 +36,7 @@ import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.encode.main.DefaultLocalizer;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
 import org.apache.james.imap.message.request.SelectRequest;
@@ -68,7 +69,8 @@ class SelectProcessorTest {
         testee = new SelectProcessor(mailboxManager,
             integrationResources.getEventBus(),
             new UnpooledStatusResponseFactory(),
-            new RecordingMetricFactory());
+            new RecordingMetricFactory(),
+            PathConverter.Factory.DEFAULT);
 
         mailboxSession = mailboxManager.createSystemSession(Username.of("bob"));
         mailboxManager.createMailbox(MailboxPath.inbox(BOB), mailboxSession);

@@ -42,6 +42,7 @@ import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.GetQuotaRootRequest;
 import org.apache.james.imap.message.response.QuotaResponse;
 import org.apache.james.imap.message.response.QuotaRootResponse;
@@ -103,7 +104,7 @@ class GetQuotaRootProcessorTest {
             .thenReturn(Mono.just(messageManager));
         when(messageManager.getMailboxEntity()).thenReturn(mock(Mailbox.class));
         testee = new GetQuotaRootProcessor(mockedMailboxManager,
-            statusResponseFactory, mockedQuotaRootResolver, mockedQuotaManager, new RecordingMetricFactory());
+            statusResponseFactory, mockedQuotaRootResolver, mockedQuotaManager, new RecordingMetricFactory(), PathConverter.Factory.DEFAULT);
     }
 
     @Test

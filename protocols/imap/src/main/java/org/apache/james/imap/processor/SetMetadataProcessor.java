@@ -57,10 +57,13 @@ public class SetMetadataProcessor extends AbstractMailboxProcessor<SetMetadataRe
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMetadataProcessor.class);
     private final ImmutableList<Capability> capabilities;
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
     public SetMetadataProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                                MetricFactory metricFactory) {
+                                MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(SetMetadataRequest.class, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
         this.capabilities = computeCapabilities();
     }
 
@@ -83,7 +86,7 @@ public class SetMetadataProcessor extends AbstractMailboxProcessor<SetMetadataRe
         final String mailboxName = request.getMailboxName();
 
         return Mono.from(mailboxManager.updateAnnotationsReactive(
-                PathConverter.forSession(session).buildFullPath(mailboxName),
+                pathConverterFactory.forSession(session).buildFullPath(mailboxName),
                 mailboxSession, request.getMailboxAnnotations()))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)).then())
             .doOnEach(logOnError(MailboxException.class,

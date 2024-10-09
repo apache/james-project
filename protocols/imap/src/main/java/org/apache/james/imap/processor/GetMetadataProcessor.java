@@ -65,10 +65,13 @@ public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRe
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMetadataProcessor.class);
     private final ImmutableList<Capability> capabilities;
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
     public GetMetadataProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                                MetricFactory metricFactory) {
+                                MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(GetMetadataRequest.class, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
         this.capabilities = computeCapabilities();
     }
 
@@ -89,7 +92,8 @@ public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRe
         String mailboxName = request.getMailboxName();
         Optional<Integer> maxsize = request.getMaxsize();
 
-        return getMailboxAnnotations(session, request.getKeys(), request.getDepth(), PathConverter.forSession(session).buildFullPath(mailboxName))
+        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName);
+        return getMailboxAnnotations(session, request.getKeys(), request.getDepth(), mailboxPath)
             .collectList()
             .flatMap(mailboxAnnotations -> Mono.fromCallable(() -> getMaxSizeValue(mailboxAnnotations, maxsize))
                 .flatMap(maximumOversizedSize -> Mono.fromRunnable(() -> respond(request, responder, mailboxName, mailboxAnnotations, maxsize, maximumOversizedSize)))

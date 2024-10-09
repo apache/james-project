@@ -41,17 +41,20 @@ import reactor.core.publisher.Mono;
 public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateProcessor.class);
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
     public CreateProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                           MetricFactory metricFactory) {
+                           MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(CreateRequest.class, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
     protected Mono<Void> processRequestReactive(CreateRequest request, ImapSession session, Responder responder) {
         MailboxManager mailboxManager = getMailboxManager();
 
-        return Mono.fromCallable(() -> PathConverter.forSession(session).buildFullPath(request.getMailboxName()))
+        return Mono.fromCallable(() -> pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName()))
             .flatMap(mailboxPath -> Mono.from(mailboxManager.createMailboxReactive(mailboxPath, session.getMailboxSession()))
                 .flatMap(mailboxId -> unsolicitedResponses(session, responder, false)
                     .then(Mono.fromRunnable(() -> okComplete(request, StatusResponse.ResponseCode.mailboxId(mailboxId), responder))))
