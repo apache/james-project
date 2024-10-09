@@ -58,9 +58,12 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
 
     private static final List<Capability> CAPABILITIES = Collections.singletonList(ImapConstants.SUPPORTS_ACL);
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
-    public MyRightsProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+    public MyRightsProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(MyRightsRequest.class, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -69,7 +72,7 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
         MailboxSession mailboxSession = session.getMailboxSession();
         MailboxName mailboxName = request.getMailboxName();
 
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName.asString());
+        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName.asString());
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
             .doOnNext(Throwing.consumer(mailbox -> {
                 Rfc4314Rights myRights = mailboxManager.myRights(mailbox.getMailboxEntity(), mailboxSession);

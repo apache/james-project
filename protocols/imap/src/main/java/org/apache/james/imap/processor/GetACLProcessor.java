@@ -61,10 +61,13 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
 
     private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_ACL);
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
     public GetACLProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                           MetricFactory metricFactory) {
+                           MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(GetACLRequest.class, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -73,7 +76,7 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
         MailboxSession mailboxSession = session.getMailboxSession();
         MailboxName mailboxName = request.getMailboxName();
 
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName.asString());
+        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName.asString());
 
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
             .flatMap(Throwing.function(mailbox -> {

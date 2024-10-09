@@ -90,20 +90,23 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     private final StatusProcessor statusProcessor;
     protected final MailboxTyper mailboxTyper;
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
     public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                          MetricFactory metricFactory, SubscriptionManager subscriptionManager,
-                         StatusProcessor statusProcessor, MailboxTyper mailboxTyper) {
-        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper);
+                         StatusProcessor statusProcessor, MailboxTyper mailboxTyper, PathConverter.Factory pathConverterFactory) {
+        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper, pathConverterFactory);
     }
 
     public ListProcessor(Class<T> clazz, MailboxManager mailboxManager, StatusResponseFactory factory,
                          MetricFactory metricFactory, SubscriptionManager subscriptionManager,
-                         StatusProcessor statusProcessor, MailboxTyper mailboxTyper) {
+                         StatusProcessor statusProcessor, MailboxTyper mailboxTyper, PathConverter.Factory pathConverterFactory) {
         super(clazz, mailboxManager, factory, metricFactory);
         this.subscriptionManager = subscriptionManager;
         this.statusProcessor = statusProcessor;
         this.mailboxTyper = mailboxTyper;
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -360,7 +363,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         if (isRelative) {
             return MailboxPath.forUser(session.getUserName(), decodedName);
         } else {
-            return PathConverter.forSession(session).buildFullPath(decodedName);
+            return pathConverterFactory.forSession(session).buildFullPath(decodedName);
         }
     }
 

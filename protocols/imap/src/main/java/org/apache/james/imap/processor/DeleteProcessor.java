@@ -43,15 +43,18 @@ import reactor.core.publisher.Mono;
 public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteProcessor.class);
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
-    public DeleteProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+    public DeleteProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(DeleteRequest.class, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
     protected Mono<Void> processRequestReactive(DeleteRequest request, ImapSession session, Responder responder) {
         MailboxManager mailboxManager = getMailboxManager();
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
+        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
         SelectedMailbox selected = session.getSelected();
 
         return deselect(session, selected, mailboxPath)
