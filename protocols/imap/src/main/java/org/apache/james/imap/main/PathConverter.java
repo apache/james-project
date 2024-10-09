@@ -21,6 +21,7 @@ package org.apache.james.imap.main;
 
 import java.util.List;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxSession;
@@ -48,6 +49,7 @@ public interface PathConverter {
 
     class Default implements PathConverter{
         private static final int NAMESPACE = 0;
+        private static final int USER = 1;
 
         private final ImapSession session;
 
@@ -72,29 +74,29 @@ public interface PathConverter {
         }
 
         private MailboxPath buildRelativePath(String mailboxName) {
-            return buildMailboxPath(MailboxConstants.USER_NAMESPACE, session.getUserName(), mailboxName);
+            return new MailboxPath(MailboxConstants.USER_NAMESPACE, session.getUserName(), sanitizeMailboxName(mailboxName));
         }
 
         private MailboxPath buildAbsolutePath(String absolutePath) {
-            char pathDelimiter = session.getMailboxSession().getPathDelimiter();
-            List<String> mailboxPathParts = Splitter.on(pathDelimiter).splitToList(absolutePath);
+            MailboxSession mailboxSession = session.getMailboxSession();
+            return asMailboxPath(Splitter.on(mailboxSession.getPathDelimiter()).splitToList(absolutePath), mailboxSession);
+        }
+
+        private MailboxPath asMailboxPath(List<String> mailboxPathParts, MailboxSession session) {
             String namespace = mailboxPathParts.get(NAMESPACE);
-            String mailboxName = Joiner.on(pathDelimiter).join(Iterables.skip(mailboxPathParts, 1));
-            return buildMailboxPath(namespace, retrieveUserName(namespace), mailboxName);
-        }
+            if (namespace.equalsIgnoreCase("#private")) {
+                String mailboxName = Joiner.on(session.getPathDelimiter()).join(Iterables.skip(mailboxPathParts, 1));
+                return new MailboxPath(MailboxConstants.USER_NAMESPACE, session.getUser(), sanitizeMailboxName(mailboxName));
+            } else if (namespace.equalsIgnoreCase("#user")) {
+                Preconditions.checkArgument(mailboxPathParts.size() > 2, "Expecting at least 2 parts");
+                String username = mailboxPathParts.get(USER);
+                Username user = Username.from(username, session.getUser().getDomainPart().map(Domain::asString));
+                String mailboxName = Joiner.on(session.getPathDelimiter()).join(Iterables.skip(mailboxPathParts, 2));
+                return new MailboxPath(MailboxConstants.USER_NAMESPACE, user, sanitizeMailboxName(mailboxName));
 
-        private Username retrieveUserName(String namespace) {
-            if (namespace.equals(MailboxConstants.USER_NAMESPACE)) {
-                return session.getUserName();
-            }
-            throw new DeniedAccessOnSharedMailboxException();
-        }
-
-        private MailboxPath buildMailboxPath(String namespace, Username user, String mailboxName) {
-            if (!namespace.equals(MailboxConstants.USER_NAMESPACE)) {
+            } else {
                 throw new DeniedAccessOnSharedMailboxException();
             }
-            return new MailboxPath(namespace, user, sanitizeMailboxName(mailboxName));
         }
 
         private String sanitizeMailboxName(String mailboxName) {
@@ -109,20 +111,27 @@ public interface PathConverter {
         /**
          * Joins the elements of a mailboxPath together and returns them as a string
          */
-        private String joinMailboxPath(MailboxPath mailboxPath, char delimiter) {
+        private String joinMailboxPath(MailboxPath mailboxPath, MailboxSession session) {
             StringBuilder sb = new StringBuilder();
             if (mailboxPath.getNamespace() != null && !mailboxPath.getNamespace().equals("")) {
-                sb.append(mailboxPath.getNamespace());
+                if (mailboxPath.getNamespace().equalsIgnoreCase(MailboxConstants.USER_NAMESPACE)
+                    && !mailboxPath.belongsTo(session)) {
+                    sb.append("#user");
+                } else {
+                    sb.append(mailboxPath.getNamespace());
+                }
             }
             if (mailboxPath.getUser() != null && !mailboxPath.getUser().equals("")) {
-                if (sb.length() > 0) {
-                    sb.append(delimiter);
+                if (!mailboxPath.belongsTo(session)) {
+                    if (sb.length() > 0) {
+                        sb.append(session.getPathDelimiter());
+                    }
+                    sb.append(mailboxPath.getUser().asString());
                 }
-                sb.append(mailboxPath.getUser().asString());
             }
             if (mailboxPath.getName() != null && !mailboxPath.getName().equals("")) {
                 if (sb.length() > 0) {
-                    sb.append(delimiter);
+                    sb.append(session.getPathDelimiter());
                 }
                 sb.append(mailboxPath.getName());
             }
@@ -133,7 +142,7 @@ public interface PathConverter {
             if (relative && path.belongsTo(session)) {
                 return path.getName();
             } else {
-                return joinMailboxPath(path, session.getPathDelimiter());
+                return joinMailboxPath(path, session);
             }
         }
     }
