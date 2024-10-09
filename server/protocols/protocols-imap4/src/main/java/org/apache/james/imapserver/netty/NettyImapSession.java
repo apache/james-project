@@ -311,11 +311,6 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     @Override
-    public boolean supportMultipleNamespaces() {
-        return false;
-    }
-
-    @Override
     public boolean isCompressionActive() {
         return channel.pipeline().get(ZLIB_DECODER) != null;
     }
