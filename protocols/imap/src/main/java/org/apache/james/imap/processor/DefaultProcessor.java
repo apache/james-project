@@ -30,6 +30,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.MailboxTyper;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.base.ImapResponseMessageProcessor;
 import org.apache.james.imap.processor.fetch.FetchProcessor;
@@ -55,6 +56,7 @@ public class DefaultProcessor implements ImapProcessor {
                                                        QuotaManager quotaManager,
                                                        QuotaRootResolver quotaRootResolver,
                                                        MetricFactory metricFactory) {
+        PathConverter.Factory pathConverterFactory = PathConverter.Factory.DEFAULT;
 
         ImmutableList.Builder<AbstractProcessor> builder = ImmutableList.builder();
         CapabilityProcessor capabilityProcessor = new CapabilityProcessor(mailboxManager, statusResponseFactory, metricFactory);
@@ -63,51 +65,51 @@ public class DefaultProcessor implements ImapProcessor {
         builder.add(capabilityProcessor);
         builder.add(new IdProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new CheckProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new LoginProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new RenameProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new DeleteProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new CreateProcessor(mailboxManager, statusResponseFactory, metricFactory));
+        builder.add(new LoginProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new RenameProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new DeleteProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new CreateProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new CloseProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new UnsubscribeProcessor(mailboxManager, subscriptionManager, statusResponseFactory, metricFactory));
-        builder.add(new SubscribeProcessor(mailboxManager, subscriptionManager, statusResponseFactory, metricFactory));
-        builder.add(new CopyProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new AuthenticateProcessor(mailboxManager, statusResponseFactory, metricFactory));
+        builder.add(new UnsubscribeProcessor(mailboxManager, subscriptionManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new SubscribeProcessor(mailboxManager, subscriptionManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new CopyProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new AuthenticateProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new ExpungeProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new ReplaceProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new ExamineProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory));
-        builder.add(new AppendProcessor(mailboxManager, statusResponseFactory, metricFactory));
+        builder.add(new ReplaceProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new ExamineProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new AppendProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new StoreProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new NoopProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new IdleProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        StatusProcessor statusProcessor = new StatusProcessor(mailboxManager, statusResponseFactory, metricFactory);
+        StatusProcessor statusProcessor = new StatusProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory);
         builder.add(statusProcessor);
         builder.add(new LSubProcessor(mailboxManager, subscriptionManager, statusResponseFactory, metricFactory));
-        builder.add(new XListProcessor(mailboxManager, statusResponseFactory, mailboxTyper, metricFactory, subscriptionManager));
-        builder.add(new ListProcessor<>(mailboxManager, statusResponseFactory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper));
+        builder.add(new XListProcessor(mailboxManager, statusResponseFactory, mailboxTyper, metricFactory, subscriptionManager, pathConverterFactory));
+        builder.add(new ListProcessor<>(mailboxManager, statusResponseFactory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper, pathConverterFactory));
         builder.add(new SearchProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new SelectProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory));
+        builder.add(new SelectProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new NamespaceProcessor(mailboxManager, statusResponseFactory, metricFactory, new NamespaceSupplier.Default()));
         builder.add(new FetchProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new StartTLSProcessor(statusResponseFactory));
         builder.add(new UnselectProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new CompressProcessor(statusResponseFactory));
-        builder.add(new GetACLProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new SetACLProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new DeleteACLProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new ListRightsProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new MyRightsProcessor(mailboxManager, statusResponseFactory, metricFactory));
+        builder.add(new GetACLProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new SetACLProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new DeleteACLProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new ListRightsProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new MyRightsProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
         EnableProcessor enableProcessor = new EnableProcessor(mailboxManager, statusResponseFactory, metricFactory, capabilityProcessor);
         builder.add(enableProcessor);
         builder.add(new GetQuotaProcessor(mailboxManager, statusResponseFactory, quotaManager, quotaRootResolver, metricFactory));
         builder.add(new SetQuotaProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new GetQuotaRootProcessor(mailboxManager, statusResponseFactory, quotaRootResolver, quotaManager, metricFactory));
+        builder.add(new GetQuotaRootProcessor(mailboxManager, statusResponseFactory, quotaRootResolver, quotaManager, metricFactory, pathConverterFactory));
         builder.add(new ImapResponseMessageProcessor());
         if (mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Move)) {
-            builder.add(new MoveProcessor(mailboxManager, statusResponseFactory, metricFactory));
+            builder.add(new MoveProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
         }
         if (mailboxManager.hasCapability(MailboxManager.MailboxCapabilities.Annotation)) {
-            builder.add(new SetMetadataProcessor(mailboxManager, statusResponseFactory, metricFactory));
-            builder.add(new GetMetadataProcessor(mailboxManager, statusResponseFactory, metricFactory));
+            builder.add(new SetMetadataProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+            builder.add(new GetMetadataProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
         }
 
         ImmutableList<AbstractProcessor> processors = builder.build();

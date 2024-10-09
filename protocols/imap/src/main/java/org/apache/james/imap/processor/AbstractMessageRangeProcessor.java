@@ -52,9 +52,12 @@ import reactor.core.publisher.Mono;
 public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRangeRequest> extends AbstractMailboxProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageRangeProcessor.class);
 
+    private final PathConverter.Factory pathConverterFactory;
+
     public AbstractMessageRangeProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory factory,
-                                         MetricFactory metricFactory) {
+                                         MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(acceptableClass, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     protected abstract Flux<MessageRange> process(MailboxId targetMailbox,
@@ -66,7 +69,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
 
     @Override
     protected Mono<Void> processRequestReactive(R request, ImapSession session, Responder responder) {
-        MailboxPath targetMailbox = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
+        MailboxPath targetMailbox = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
         MailboxSession mailboxSession = session.getMailboxSession();
 
         return Mono.from(getMailboxManager().mailboxExists(targetMailbox, mailboxSession))

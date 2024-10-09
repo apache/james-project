@@ -63,9 +63,12 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> imp
 
     private ImmutableList<Capability> capabilities = ImmutableList.of();
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
-    public AppendProcessor(MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, MetricFactory metricFactory) {
+    public AppendProcessor(MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(AppendRequest.class, mailboxManager, statusResponseFactory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -88,7 +91,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> imp
         final Content messageIn = request.getMessage().asMailboxContent();
         final Date datetime = request.getDatetime();
         final Flags flags = request.getFlags();
-        final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
+        final MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName);
         final MailboxManager mailboxManager = getMailboxManager();
 
         session.stopDetectingCommandInjection();

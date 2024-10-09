@@ -36,6 +36,7 @@ import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.AuthenticateRequest;
 import org.apache.james.imap.message.request.IRAuthenticateRequest;
 import org.apache.james.imap.message.response.AuthenticateResponse;
@@ -70,8 +71,8 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
 
     @Inject
     public AuthenticateProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                                 MetricFactory metricFactory) {
-        super(AuthenticateRequest.class, mailboxManager, factory, metricFactory);
+                                 MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
+        super(AuthenticateRequest.class, mailboxManager, factory, metricFactory, pathConverterFactory);
     }
 
     @Override

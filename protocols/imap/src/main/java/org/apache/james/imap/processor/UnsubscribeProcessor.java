@@ -43,15 +43,18 @@ import reactor.core.publisher.Mono;
 public class UnsubscribeProcessor extends AbstractSubscriptionProcessor<UnsubscribeRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(UnsubscribeProcessor.class);
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
     public UnsubscribeProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
-                                MetricFactory metricFactory) {
+                                MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(UnsubscribeRequest.class, mailboxManager, subscriptionManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
     protected Mono<Void> doProcessRequest(UnsubscribeRequest request, ImapSession session, Responder responder) {
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
+        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
         MailboxSession mailboxSession = session.getMailboxSession();
 
         return Mono.from(getSubscriptionManager().unsubscribeReactive(mailboxPath, mailboxSession))

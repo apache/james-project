@@ -32,69 +32,83 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 
-public class PathConverter {
+public interface PathConverter {
+    interface Factory {
+        PathConverter.Factory DEFAULT = new PathConverter.Factory.Default();
 
-    private static final int NAMESPACE = 0;
-
-    public static PathConverter forSession(ImapSession session) {
-        return new PathConverter(session);
-    }
-
-    private final ImapSession session;
-
-    private PathConverter(ImapSession session) {
-        this.session = session;
-    }
-
-    public MailboxPath buildFullPath(String mailboxName) {
-        if (Strings.isNullOrEmpty(mailboxName)) {
-            return buildRelativePath("");
+        class Default implements Factory {
+            public PathConverter forSession(ImapSession session) {
+                return new PathConverter.Default(session);
+            }
         }
-        if (isAbsolute(mailboxName)) {
-            return buildAbsolutePath(mailboxName);
-        } else {
-            return buildRelativePath(mailboxName);
+
+        PathConverter forSession(ImapSession session);
+    }
+
+    class Default implements PathConverter{
+        private static final int NAMESPACE = 0;
+
+        public static PathConverter forSession(ImapSession session) {
+            return new PathConverter.Default(session);
         }
-    }
 
-    private boolean isAbsolute(String mailboxName) {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(mailboxName));
-        return mailboxName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR;
-    }
+        private final ImapSession session;
 
-    private MailboxPath buildRelativePath(String mailboxName) {
-        return buildMailboxPath(MailboxConstants.USER_NAMESPACE, session.getUserName(), mailboxName);
-    }
-
-    private MailboxPath buildAbsolutePath(String absolutePath) {
-        char pathDelimiter = session.getMailboxSession().getPathDelimiter();
-        List<String> mailboxPathParts = Splitter.on(pathDelimiter).splitToList(absolutePath);
-        String namespace = mailboxPathParts.get(NAMESPACE);
-        String mailboxName = Joiner.on(pathDelimiter).join(Iterables.skip(mailboxPathParts, 1));
-        return buildMailboxPath(namespace, retrieveUserName(namespace), mailboxName);
-    }
-
-    private Username retrieveUserName(String namespace) {
-        if (namespace.equals(MailboxConstants.USER_NAMESPACE)) {
-            return session.getUserName();
+        private Default(ImapSession session) {
+            this.session = session;
         }
-        throw new DeniedAccessOnSharedMailboxException();
-    }
 
-    private MailboxPath buildMailboxPath(String namespace, Username user, String mailboxName) {
-        if (!namespace.equals(MailboxConstants.USER_NAMESPACE)) {
+        public MailboxPath buildFullPath(String mailboxName) {
+            if (Strings.isNullOrEmpty(mailboxName)) {
+                return buildRelativePath("");
+            }
+            if (isAbsolute(mailboxName)) {
+                return buildAbsolutePath(mailboxName);
+            } else {
+                return buildRelativePath(mailboxName);
+            }
+        }
+
+        private boolean isAbsolute(String mailboxName) {
+            Preconditions.checkArgument(!Strings.isNullOrEmpty(mailboxName));
+            return mailboxName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR;
+        }
+
+        private MailboxPath buildRelativePath(String mailboxName) {
+            return buildMailboxPath(MailboxConstants.USER_NAMESPACE, session.getUserName(), mailboxName);
+        }
+
+        private MailboxPath buildAbsolutePath(String absolutePath) {
+            char pathDelimiter = session.getMailboxSession().getPathDelimiter();
+            List<String> mailboxPathParts = Splitter.on(pathDelimiter).splitToList(absolutePath);
+            String namespace = mailboxPathParts.get(NAMESPACE);
+            String mailboxName = Joiner.on(pathDelimiter).join(Iterables.skip(mailboxPathParts, 1));
+            return buildMailboxPath(namespace, retrieveUserName(namespace), mailboxName);
+        }
+
+        private Username retrieveUserName(String namespace) {
+            if (namespace.equals(MailboxConstants.USER_NAMESPACE)) {
+                return session.getUserName();
+            }
             throw new DeniedAccessOnSharedMailboxException();
         }
-        return new MailboxPath(namespace, user, sanitizeMailboxName(mailboxName));
-    }
 
-    private String sanitizeMailboxName(String mailboxName) {
-        // use uppercase for INBOX
-        // See IMAP-349
-        if (mailboxName.equalsIgnoreCase(MailboxConstants.INBOX)) {
-            return MailboxConstants.INBOX;
+        private MailboxPath buildMailboxPath(String namespace, Username user, String mailboxName) {
+            if (!namespace.equals(MailboxConstants.USER_NAMESPACE)) {
+                throw new DeniedAccessOnSharedMailboxException();
+            }
+            return new MailboxPath(namespace, user, sanitizeMailboxName(mailboxName));
         }
-        return mailboxName;
+
+        private String sanitizeMailboxName(String mailboxName) {
+            // use uppercase for INBOX
+            // See IMAP-349
+            if (mailboxName.equalsIgnoreCase(MailboxConstants.INBOX)) {
+                return MailboxConstants.INBOX;
+            }
+            return mailboxName;
+        }
     }
 
+    MailboxPath buildFullPath(String mailboxName);
 }
