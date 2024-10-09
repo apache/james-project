@@ -56,6 +56,7 @@ import org.apache.james.imap.processor.CapabilityImplementingProcessor;
 import org.apache.james.imap.processor.CapabilityProcessor;
 import org.apache.james.imap.processor.DefaultProcessor;
 import org.apache.james.imap.processor.EnableProcessor;
+import org.apache.james.imap.processor.NamespaceSupplier;
 import org.apache.james.imap.processor.PermitEnableCapabilityProcessor;
 import org.apache.james.imap.processor.SelectProcessor;
 import org.apache.james.imap.processor.StatusProcessor;
@@ -104,6 +105,7 @@ public class IMAPServerModule extends AbstractModule {
         bind(SelectProcessor.class).in(Scopes.SINGLETON);
         bind(StatusProcessor.class).in(Scopes.SINGLETON);
         bind(EnableProcessor.class).in(Scopes.SINGLETON);
+        bind(NamespaceSupplier.class).to(NamespaceSupplier.Default.class).in(Scopes.SINGLETON);
         bind(MailboxTyper.class).to(DefaultMailboxTyper.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(ImapGuiceProbe.class);
