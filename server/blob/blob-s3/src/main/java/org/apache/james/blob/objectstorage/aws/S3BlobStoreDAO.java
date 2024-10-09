@@ -113,7 +113,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
 
     @Inject
     @Singleton
-    S3BlobStoreDAO(S3ClientFactory s3ClientFactory,
+    public S3BlobStoreDAO(S3ClientFactory s3ClientFactory,
                    S3BlobStoreConfiguration configuration,
                    BlobId.Factory blobIdFactory) {
         this.configuration = configuration;
