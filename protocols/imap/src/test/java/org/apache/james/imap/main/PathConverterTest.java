@@ -35,6 +35,8 @@ import org.junit.jupiter.api.Test;
 class PathConverterTest {
 
     private static final Username USERNAME = Username.of("username");
+    private static final Username USERNAME_WITH_DOT = Username.of("username.with.dot");
+    private static final Username USERNAME_WITH_UNDERSCORE = Username.of("username_with_underscore");
     private static final Username USERNAME2 = Username.of("username2");
 
     private static final Username USERNAME_WITH_MAIL = Username.of("username@apache.org");
@@ -113,6 +115,18 @@ class PathConverterTest {
     }
 
     @Test
+    void buildFullPathShouldAcceptAbsoluteOtherUserPathWithDot() {
+        assertThat(pathConverter.buildFullPath("#user.username__with__dot.abc"))
+            .isEqualTo(MailboxPath.forUser(USERNAME_WITH_DOT, "abc"));
+    }
+
+    @Test
+    void buildFullPathShouldAcceptAbsoluteOtherUserPathWithUnderscore() {
+        assertThat(pathConverter.buildFullPath("#user.username_-with_-underscore.abc"))
+            .isEqualTo(MailboxPath.forUser(USERNAME_WITH_UNDERSCORE, "abc"));
+    }
+
+    @Test
     void buildFullPathShouldAcceptAbsoluteOtherUserPathWithSubfolder() {
         assertThat(pathConverter.buildFullPath("#user.username2.abc.def"))
             .isEqualTo(MailboxPath.forUser(USERNAME2, "abc.def"));
@@ -134,6 +148,18 @@ class PathConverterTest {
     void mailboxNameShouldReturnFQDNWhenRelativeAndOtherUserMailbox() {
         assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME2, "abc"), mailboxSession))
             .isEqualTo("#user.username2.abc");
+    }
+
+    @Test
+    void mailboxNameShouldEscapeDotInUsername() {
+        assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME_WITH_DOT, "abc"), mailboxSession))
+            .isEqualTo("#user.username__with__dot.abc");
+    }
+
+    @Test
+    void mailboxNameShouldEscapeUnderscoreInUsername() {
+        assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME_WITH_UNDERSCORE, "abc"), mailboxSession))
+            .isEqualTo("#user.username_-with_-underscore.abc");
     }
 
     @Test
