@@ -21,6 +21,8 @@ package org.apache.james.transport.mailets;
 
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.Optional;
 
@@ -95,21 +97,22 @@ public class SubAddressing extends GenericMailet {
                         getPathWithCorrectCase(recipient, targetFolder)))));
     }
 
-    private Optional<MailboxPath> getPathWithCorrectCase(MailAddress recipient, String targetFolder) throws UsersRepositoryException, MailboxException {
+    private Optional<MailboxPath> getPathWithCorrectCase(MailAddress recipient, String encodedTargetFolder) throws UsersRepositoryException, MailboxException {
         Username recipientUsername = usersRepository.getUsername(recipient);
         MailboxSession session = mailboxManager.createSystemSession(recipientUsername);
+        String decodedTargetFolder = URLDecoder.decode(encodedTargetFolder, StandardCharsets.UTF_8);
 
-        Comparator<MailboxPath> exactMatchFirst = Comparator.comparing(mailboxPath -> mailboxPath.getName().equals(targetFolder) ? 0 : 1);
+        Comparator<MailboxPath> exactMatchFirst = Comparator.comparing(mailboxPath -> mailboxPath.getName().equals(decodedTargetFolder) ? 0 : 1);
 
         return mailboxManager.search(
-                        MailboxQuery.privateMailboxesBuilder(session).expression(new ExactNameCaseInsensitive(targetFolder)).build(),
+                        MailboxQuery.privateMailboxesBuilder(session).expression(new ExactNameCaseInsensitive(decodedTargetFolder)).build(),
                         session)
                 .toStream()
                 .map(MailboxMetaData::getPath)
                 .sorted(exactMatchFirst)
                 .findFirst()
                 .or(() -> {
-                    LOG.info("{}'s subfolder `{}` was tried to be addressed but it does not exist", recipient, targetFolder);
+                    LOG.info("{}'s subfolder `{}` was tried to be addressed but it does not exist", recipient, decodedTargetFolder);
                     return Optional.empty();
                 });
     }

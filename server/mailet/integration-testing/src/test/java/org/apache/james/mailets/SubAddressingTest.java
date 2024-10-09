@@ -36,10 +36,18 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
+import org.apache.james.core.Username;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.modules.ACLProbeImpl;
+import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
@@ -58,6 +66,8 @@ class SubAddressingTest {
     private static final String TARGETED_MAILBOX = "any";
     private static final String TARGETED_MAILBOX_LOWER = TARGETED_MAILBOX;
     private static final String TARGETED_MAILBOX_UPPER = "ANY";
+    private static final String TARGETED_MAILBOX_REQUIRING_ENCODING = "Dossier d'été";
+    private static final String TARGETED_MAILBOX_ENCODED = "Dossier%20d%27%C3%A9t%C3%A9";
 
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
@@ -194,6 +204,34 @@ class SubAddressingTest {
 
         sendSubAddressedMail(TARGETED_MAILBOX_UPPER);
         awaitSubAddressedMail(MailboxConstants.INBOX);
+    }
+
+    @Test
+    void subAddressedEmailShouldBeDeliveredInSpecifiedFolderWhenRequiringEncoding(@TempDir File temporaryFolder) throws Exception {
+        setup(temporaryFolder);
+
+        MailboxId targetMailboxId = jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(Username.of(RECIPIENT), TARGETED_MAILBOX_REQUIRING_ENCODING));
+
+        //give posting rights
+        jamesServer.getProbe(ACLProbeImpl.class).executeCommand(
+                targetMailboxId,
+                Username.of(RECIPIENT),
+                MailboxACL.command()
+                        .key(MailboxACL.ANYONE_KEY)
+                        .rights(MailboxACL.Right.Post)
+                        .asAddition());
+
+        sendSubAddressedMail(TARGETED_MAILBOX_ENCODED);
+
+        int loadLimit = 1;
+        awaitAtMostOneMinute.until(() -> jamesServer.getProbe(MailboxProbeImpl.class)
+                .searchMessage(MultimailboxesSearchQuery
+                        .from(SearchQuery.builder().build())
+                        .inMailboxes(targetMailboxId)
+                        .build(),
+                    RECIPIENT,
+                    loadLimit)
+                .size() == 1);
     }
 
     @Test
