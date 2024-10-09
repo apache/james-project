@@ -86,7 +86,7 @@ public class DefaultProcessor implements ImapProcessor {
         builder.add(new ListProcessor<>(mailboxManager, statusResponseFactory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper));
         builder.add(new SearchProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new SelectProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory));
-        builder.add(new NamespaceProcessor(mailboxManager, statusResponseFactory, metricFactory));
+        builder.add(new NamespaceProcessor(mailboxManager, statusResponseFactory, metricFactory, new NamespaceSupplier.Default()));
         builder.add(new FetchProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new StartTLSProcessor(statusResponseFactory));
         builder.add(new UnselectProcessor(mailboxManager, statusResponseFactory, metricFactory));
