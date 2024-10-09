@@ -108,7 +108,40 @@ public interface PathConverter {
             }
             return mailboxName;
         }
+
+        /**
+         * Joins the elements of a mailboxPath together and returns them as a string
+         */
+        private String joinMailboxPath(MailboxPath mailboxPath, char delimiter) {
+            StringBuilder sb = new StringBuilder();
+            if (mailboxPath.getNamespace() != null && !mailboxPath.getNamespace().equals("")) {
+                sb.append(mailboxPath.getNamespace());
+            }
+            if (mailboxPath.getUser() != null && !mailboxPath.getUser().equals("")) {
+                if (sb.length() > 0) {
+                    sb.append(delimiter);
+                }
+                sb.append(mailboxPath.getUser().asString());
+            }
+            if (mailboxPath.getName() != null && !mailboxPath.getName().equals("")) {
+                if (sb.length() > 0) {
+                    sb.append(delimiter);
+                }
+                sb.append(mailboxPath.getName());
+            }
+            return sb.toString();
+        }
+
+        public String mailboxName(boolean relative, MailboxPath path, char delimiter) {
+            if (relative) {
+                return path.getName();
+            } else {
+                return joinMailboxPath(path, delimiter);
+            }
+        }
     }
 
     MailboxPath buildFullPath(String mailboxName);
+
+    String mailboxName(boolean relative, MailboxPath path, char delimiter);
 }
