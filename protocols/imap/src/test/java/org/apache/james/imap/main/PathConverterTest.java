@@ -185,8 +185,9 @@ class PathConverterTest {
         assertThat(pathConverter.mailboxName(!RELATIVE, new MailboxPath("#Shared", Username.of("marketing"), "abc"), mailboxSession))
             .isEqualTo("#Shared.marketing.abc");
     }
+    
     @Nested
-    class WithEmail{
+    class WithEmail {
         @BeforeEach
         void setUp() {
             imapSession = new FakeImapSession();

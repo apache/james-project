@@ -21,7 +21,6 @@ package org.apache.james.imapserver.netty;
 
 import static jakarta.mail.Flags.Flag.ANSWERED;
 import static jakarta.mail.Folder.READ_WRITE;
-import static org.apache.james.jmap.JMAPTestingConstants.BOB;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.apache.james.jwt.OidcTokenFixture.INTROSPECTION_RESPONSE;
 import static org.apache.james.mailbox.MessageManager.FlagsUpdateMode.REPLACE;
