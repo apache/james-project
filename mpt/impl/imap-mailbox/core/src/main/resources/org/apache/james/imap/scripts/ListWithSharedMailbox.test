@@ -29,18 +29,17 @@ S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
 S: a0 OK LIST completed.
 
 C: a1 LIST "" "*" RETURN (MYRIGHTS)
-# TODO MYRIGHTS status response should keep FQDN
 SUB {
 S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
 S: \* MYRIGHTS \"INBOX\" \"aeiklprstwx\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
-S: \* MYRIGHTS \"sharedMailbox\" \"lr\"
+S: \* MYRIGHTS \"#user.diana.sharedMailbox\" \"lr\"
 S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
-S: \* MYRIGHTS \"sharedMailbox\" \"lr\"
+S: \* MYRIGHTS \"#user.boby.sharedMailbox\" \"lr\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
-S: \* MYRIGHTS \"sharedMailbox.child\" \"lr\"
+S: \* MYRIGHTS \"#user.boby.sharedMailbox.child\" \"lr\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
-S: \* MYRIGHTS \"Sent\" \"lr\"
+S: \* MYRIGHTS \"#user.boby.Sent\" \"lr\"
 }
 S: a1 OK LIST completed.
 
