@@ -59,7 +59,7 @@ public interface PathConverter {
         PathConverter forSession(MailboxSession session);
     }
 
-    class Default implements PathConverter{
+    class Default implements PathConverter {
         private static final int NAMESPACE = 0;
         private static final int USER = 1;
         public static final Escaper USERNAME_ESCAPER = Escapers.builder()

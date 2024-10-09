@@ -19,7 +19,6 @@
 package org.apache.james.imap.message.response;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
