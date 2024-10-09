@@ -60,9 +60,11 @@ public abstract class ListingWithSharingTest implements ImapTestConstants {
             .withMailbox(OTHER_USER_SHARED_MAILBOX)
             .withMailbox(OTHER_USER_SHARED_MAILBOX_CHILD)
             .withMailbox(YET_ANOTHER_USER_SHARED_MAILBOX)
+            .withMailbox(MailboxPath.forUser(OTHER_USER_NAME, "Sent"))
             .withRights(OTHER_USER_SHARED_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rl"))
             .withRights(OTHER_USER_SHARED_MAILBOX_CHILD, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rl"))
             .withRights(YET_ANOTHER_USER_SHARED_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rl"))
+            .withRights(MailboxPath.forUser(OTHER_USER_NAME, "Sent"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rl"))
             .withLocale(Locale.US)
             .run("ListWithSharedMailbox");
     }
