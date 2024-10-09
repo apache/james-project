@@ -20,7 +20,6 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.NamespaceResponse;
