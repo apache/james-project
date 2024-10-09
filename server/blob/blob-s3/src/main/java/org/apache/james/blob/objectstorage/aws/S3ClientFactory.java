@@ -65,8 +65,8 @@ public class S3ClientFactory implements Startable, Closeable {
         }
     };
 
-    private static final String S3_METRICS_ENABLED_PROPERTY_KEY = "james.s3.metrics.enabled";
-    private static final String S3_METRICS_ENABLED_DEFAULT_VALUE = "true";
+    public static final String S3_METRICS_ENABLED_PROPERTY_KEY = "james.s3.metrics.enabled";
+    public static final String S3_METRICS_ENABLED_DEFAULT_VALUE = "true";
 
     private final S3AsyncClient s3Client;
 
