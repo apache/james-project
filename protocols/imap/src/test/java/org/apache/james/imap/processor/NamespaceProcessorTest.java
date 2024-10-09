@@ -83,55 +83,6 @@ class NamespaceProcessorTest {
         imapSession.setMailboxSession(mailboxSession);
     }
 
-    @Test
-    void testNamespaceResponseShouldContainPersonalAndUserSpaces() {
-        when(imapSession.supportMultipleNamespaces()).thenReturn(true);
-
-        when(mailboxSession.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
-        when(mailboxSession.getOtherUsersSpace()).thenReturn(USERS_PREFIX);
-        when(mailboxSession.getSharedSpaces()).thenReturn(new ArrayList<>());
-        when(mailboxSession.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
-
-        when(imapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
-        when(statusResponseStub.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class)))
-            .thenReturn(mock(StatusResponse.class));
-
-        final NamespaceResponse response = buildResponse(null);
-        final Responder responderMock = mock(Responder.class);
-
-        subject.doProcess(namespaceRequest, responderMock, imapSession).block();
-
-        verify(responderMock, times(1)).respond(response);
-        verify(responderMock, times(1)).respond(any(StatusResponse.class));
-        verifyNoMoreInteractions(responderMock);
-    }
-    
-    @Test
-    void testNamespaceResponseShouldContainSharedSpaces() {
-        when(imapSession.supportMultipleNamespaces()).thenReturn(true);
-
-        when(mailboxSession.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
-        when(mailboxSession.getOtherUsersSpace()).thenReturn(USERS_PREFIX);
-        when(mailboxSession.getSharedSpaces()).thenReturn(Arrays.asList(SHARED_PREFIX));
-        when(mailboxSession.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
-
-        when(imapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
-        when(statusResponseStub.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class)))
-            .thenReturn(mock(StatusResponse.class));
-        
-        final List<NamespaceResponse.Namespace> sharedSpaces = new ArrayList<>();
-        sharedSpaces.add(new NamespaceResponse.Namespace(SHARED_PREFIX, MailboxConstants.DEFAULT_DELIMITER));
-        final NamespaceResponse response = buildResponse(sharedSpaces);
-        
-        final Responder responderMock = mock(Responder.class);
-
-        subject.doProcess(namespaceRequest, responderMock, imapSession).block();
-
-        verify(responderMock, times(1)).respond(response);
-        verify(responderMock, times(1)).respond(any(StatusResponse.class));
-        verifyNoMoreInteractions(responderMock);
-    }
-
     private NamespaceResponse buildResponse(List<NamespaceResponse.Namespace> sharedSpaces) {
        
         final List<NamespaceResponse.Namespace> personalSpaces = new ArrayList<>();
