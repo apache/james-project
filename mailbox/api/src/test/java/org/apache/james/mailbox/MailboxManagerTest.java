@@ -1201,6 +1201,32 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .extracting(MailboxMetaData::getPath)
                 .containsOnly(inbox1, inbox2);
         }
+        
+        @Test
+        void searchShouldAllowListingAnotherUserMailbox() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
+            MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+            MailboxPath inbox1 = MailboxPath.inbox(session1);
+            MailboxPath inbox2 = MailboxPath.inbox(session2);
+            mailboxManager.createMailbox(inbox1, session1);
+            mailboxManager.createMailbox(inbox2, session2);
+            mailboxManager.setRights(inbox1,
+                MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup)
+                    .asAddition()),
+                session1);
+
+            MailboxQuery mailboxQuery = MailboxQuery.builder()
+                .userAndNamespaceFrom(inbox1)
+                .matchesAllMailboxNames()
+                .build();
+
+            assertThat(mailboxManager.search(mailboxQuery, session2).toStream())
+                .extracting(MailboxMetaData::getPath)
+                .containsExactly(inbox1);
+        }
 
         @Test
         void searchShouldAllowUserFiltering() throws Exception {

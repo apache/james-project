@@ -808,12 +808,20 @@ public class StoreMailboxManager implements MailboxManager {
 
     private Flux<Mailbox> searchMailboxes(MailboxQuery mailboxQuery, MailboxSession session, Right right) {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Flux<Mailbox> baseMailboxes = mailboxMapper
-            .findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session));
+        Flux<Mailbox> baseMailboxes = getBaseMailboxes(mailboxMapper, mailboxQuery, session);
         Flux<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxQuery, right, session)
             .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)))
             .filter(mailbox -> !mailbox.getUser().equals(session.getUser()));
         return Flux.concat(baseMailboxes, delegatedMailboxes);
+    }
+
+    private Flux<Mailbox> getBaseMailboxes(MailboxMapper mailboxMapper,MailboxQuery mailboxQuery, MailboxSession session) {
+        if (mailboxQuery.isPrivateMailboxes(session)
+          || mailboxQuery.getNamespace().isEmpty() && mailboxQuery.getUser().isEmpty()) {
+            return mailboxMapper.findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session));
+        } else {
+            return Flux.empty();
+        }
     }
 
     private Flux<MailboxId> accessibleMailboxIds(MultimailboxesSearchQuery.Namespace namespace, Right right, MailboxSession session) {
