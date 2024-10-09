@@ -46,11 +46,17 @@ public interface PathConverter {
 
         class Default implements Factory {
             public PathConverter forSession(ImapSession session) {
+                return new PathConverter.Default(session.getMailboxSession());
+            }
+
+            public PathConverter forSession(MailboxSession session) {
                 return new PathConverter.Default(session);
             }
         }
 
         PathConverter forSession(ImapSession session);
+
+        PathConverter forSession(MailboxSession session);
     }
 
     class Default implements PathConverter{
@@ -61,10 +67,10 @@ public interface PathConverter {
             .addEscape('_', "_-")
             .build();
 
-        private final ImapSession session;
+        private final MailboxSession mailboxSession;
 
-        private Default(ImapSession session) {
-            this.session = session;
+        private Default(MailboxSession mailboxSession) {
+            this.mailboxSession = mailboxSession;
         }
 
         public MailboxPath buildFullPath(String mailboxName) {
@@ -84,11 +90,10 @@ public interface PathConverter {
         }
 
         private MailboxPath buildRelativePath(String mailboxName) {
-            return new MailboxPath(MailboxConstants.USER_NAMESPACE, session.getUserName(), sanitizeMailboxName(mailboxName));
+            return new MailboxPath(MailboxConstants.USER_NAMESPACE, mailboxSession.getUser(), sanitizeMailboxName(mailboxName));
         }
 
         private MailboxPath buildAbsolutePath(String absolutePath) {
-            MailboxSession mailboxSession = session.getMailboxSession();
             return asMailboxPath(Splitter.on(mailboxSession.getPathDelimiter()).splitToList(absolutePath), mailboxSession);
         }
 
