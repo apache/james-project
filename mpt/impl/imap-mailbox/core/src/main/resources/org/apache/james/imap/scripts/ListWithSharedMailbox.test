@@ -24,6 +24,7 @@ S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
 S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
 }
 S: a0 OK LIST completed.
 
@@ -38,6 +39,8 @@ S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
 S: \* MYRIGHTS \"sharedMailbox\" \"lr\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
 S: \* MYRIGHTS \"sharedMailbox.child\" \"lr\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
+S: \* MYRIGHTS \"Sent\" \"lr\"
 }
 S: a1 OK LIST completed.
 
@@ -51,6 +54,8 @@ S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
 S: \* STATUS \"#user.boby.sharedMailbox\" \(RECENT 0 UNSEEN 0\)
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
 S: \* STATUS \"#user.boby.sharedMailbox.child\" \(RECENT 0 UNSEEN 0\)
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
+S: \* STATUS \"#user.boby.Sent\" \(RECENT 0 UNSEEN 0\)
 }
 S: a2 OK LIST completed.
 
@@ -67,6 +72,7 @@ SUB {
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
 S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
 S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
 }
 S: a7 OK LIST completed.
 
@@ -85,3 +91,12 @@ S: a10 OK LIST completed.
 C: a11 LIST "#user" "diana."
 S: a11 OK LIST completed.
 
+C: a12 LIST "" "*" RETURN (SPECIAL-USE)
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
+}
+S: a12 OK LIST completed.
