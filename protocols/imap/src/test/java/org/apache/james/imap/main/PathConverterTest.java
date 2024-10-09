@@ -103,6 +103,18 @@ class PathConverterTest {
     }
 
     @Test
+    void buildFullPathShouldAcceptAbsoluteOtherUserPath() {
+        assertThat(pathConverter.buildFullPath("#user.username2.abc"))
+            .isEqualTo(MailboxPath.forUser(USERNAME2, "abc"));
+    }
+
+    @Test
+    void buildFullPathShouldAcceptAbsoluteOtherUserPathWithSubfolder() {
+        assertThat(pathConverter.buildFullPath("#user.username2.abc.def"))
+            .isEqualTo(MailboxPath.forUser(USERNAME2, "abc.def"));
+    }
+
+    @Test
     void buildFullPathShouldDenyMailboxPathNotBelongingToTheUser() {
         assertThatThrownBy(() -> pathConverter.buildFullPath("#any"))
             .isInstanceOf(DeniedAccessOnSharedMailboxException.class);
@@ -117,7 +129,7 @@ class PathConverterTest {
     @Test
     void mailboxNameShouldReturnFQDNWhenRelativeAndOtherUserMailbox() {
         assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME2, "abc"), mailboxSession))
-            .isEqualTo("#private.username2.abc");
+            .isEqualTo("#user.username2.abc");
     }
 
     @Test
@@ -129,13 +141,13 @@ class PathConverterTest {
     @Test
     void mailboxNameShouldReturnFQDNWhenNotRelativeAndUserMailbox() {
         assertThat(pathConverter.mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME, "abc"), mailboxSession))
-            .isEqualTo("#private.username.abc");
+            .isEqualTo("#private.abc");
     }
 
     @Test
     void mailboxNameShouldReturnFQDNWhenNotRelativeAndOtherUserMailbox() {
         assertThat(pathConverter.mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME2, "abc"), mailboxSession))
-            .isEqualTo("#private.username2.abc");
+            .isEqualTo("#user.username2.abc");
     }
 
     @Test
