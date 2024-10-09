@@ -138,7 +138,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     }
 
     private Mono<Void> respond(ImapSession session, Responder responder, T request, MailboxSession mailboxSession) {
-        if (request.getMailboxPattern().length() == 0) {
+        if (request.getMailboxPattern().isEmpty()) {
             return Mono.fromRunnable(() -> respondNamespace(request.getBaseReferenceName(), responder, mailboxSession));
         } else {
             return respondMailboxList(request, session, responder, mailboxSession);
@@ -166,7 +166,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     }
 
     private String computeReferenceRoot(String referenceName, MailboxSession mailboxSession) {
-        if (referenceName.length() > 0 && referenceName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
+        if (!referenceName.isEmpty() && referenceName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
             // A qualified reference name - get the root element
             int firstDelimiter = referenceName.indexOf(mailboxSession.getPathDelimiter());
             if (firstDelimiter == -1) {
