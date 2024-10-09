@@ -24,7 +24,7 @@ S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
 S: a0 OK LIST completed.
 
 C: a1 LIST "#private" "%"
-S: \* LIST \(\\HasNoChildren\) \"\.\" \"#private.imapuser.INBOX\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"#private.INBOX\"
 S: a1 OK LIST completed.
 
 C: a3 LIST "#private" sharedMailbox*

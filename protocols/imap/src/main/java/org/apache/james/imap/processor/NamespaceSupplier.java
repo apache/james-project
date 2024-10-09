@@ -19,7 +19,7 @@ public interface NamespaceSupplier {
 
         @Override
         public Collection<Namespace> otherUsersNamespaces(MailboxSession session) {
-            return ImmutableList.of();
+            return ImmutableList.of(new NamespaceResponse.Namespace("#user", session.getPathDelimiter()));
         }
 
         @Override
