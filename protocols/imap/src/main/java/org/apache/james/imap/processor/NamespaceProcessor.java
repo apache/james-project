@@ -53,11 +53,11 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
 
     @Override
     protected Mono<Void> processRequestReactive(NamespaceRequest request, ImapSession session, Responder responder) {
-        final MailboxSession mailboxSession = session.getMailboxSession();
-        final List<NamespaceResponse.Namespace> personalNamespaces = buildPersonalNamespaces(mailboxSession, session);
-        final List<NamespaceResponse.Namespace> otherUsersNamespaces = buildOtherUsersSpaces(mailboxSession, session);
-        final List<NamespaceResponse.Namespace> sharedNamespaces = buildSharedNamespaces(mailboxSession, session);
-        final NamespaceResponse response = new NamespaceResponse(personalNamespaces, otherUsersNamespaces, sharedNamespaces);
+        MailboxSession mailboxSession = session.getMailboxSession();
+        List<NamespaceResponse.Namespace> personalNamespaces = buildPersonalNamespaces(mailboxSession);
+        List<NamespaceResponse.Namespace> otherUsersNamespaces = buildOtherUsersSpaces(mailboxSession);
+        List<NamespaceResponse.Namespace> sharedNamespaces = buildSharedNamespaces(mailboxSession);
+        NamespaceResponse response = new NamespaceResponse(personalNamespaces, otherUsersNamespaces, sharedNamespaces);
         responder.respond(response);
         return unsolicitedResponses(session, responder, false)
             .then(Mono.fromRunnable(() -> okComplete(request, responder)));
@@ -70,15 +70,15 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
      *            not null
      * @return personal namespaces, not null
      */
-    private List<NamespaceResponse.Namespace> buildPersonalNamespaces(MailboxSession mailboxSession, ImapSession session) {
+    private List<NamespaceResponse.Namespace> buildPersonalNamespaces(MailboxSession mailboxSession) {
         final List<NamespaceResponse.Namespace> personalSpaces = new ArrayList<>();
         String personal = "";
         personalSpaces.add(new NamespaceResponse.Namespace(personal, mailboxSession.getPathDelimiter()));
         return personalSpaces;
     }
 
-    private List<NamespaceResponse.Namespace> buildOtherUsersSpaces(MailboxSession mailboxSession,  ImapSession session) {
-        final String otherUsersSpace = mailboxSession.getOtherUsersSpace();
+    private List<NamespaceResponse.Namespace> buildOtherUsersSpaces(MailboxSession mailboxSession) {
+        final String otherUsersSpace = null;
         final List<NamespaceResponse.Namespace> otherUsersSpaces;
         if (otherUsersSpace == null) {
             otherUsersSpaces = null;
@@ -89,9 +89,9 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
         return otherUsersSpaces;
     }
 
-    private List<NamespaceResponse.Namespace> buildSharedNamespaces(MailboxSession mailboxSession,  ImapSession session) {
+    private List<NamespaceResponse.Namespace> buildSharedNamespaces(MailboxSession mailboxSession) {
         List<NamespaceResponse.Namespace> sharedNamespaces = null;
-        final Collection<String> sharedSpaces = mailboxSession.getSharedSpaces();
+        final Collection<String> sharedSpaces = new ArrayList<>();
         if (!sharedSpaces.isEmpty()) {
             sharedNamespaces = new ArrayList<>(sharedSpaces.size());
             for (String space : sharedSpaces) {
