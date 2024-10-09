@@ -17,16 +17,68 @@
 # under the License.                                           #
 ################################################################
 
-# Shouw that #private.Boby.sharedMailbox and it's child are not displayed
-
+# Can list other users delegated mailbox
 C: a0 LIST "" "*"
+SUB {
 S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+}
 S: a0 OK LIST completed.
 
-C: a1 LIST "#private" "%"
-S: \* LIST \(\\HasNoChildren\) \"\.\" \"#private.INBOX\"
+C: a1 LIST "" "*" RETURN (MYRIGHTS)
+# TODO MYRIGHTS status response should keep FQDN
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+S: \* MYRIGHTS \"INBOX\" \"aeiklprstwx\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* MYRIGHTS \"sharedMailbox\" \"lr\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* MYRIGHTS \"sharedMailbox\" \"lr\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* MYRIGHTS \"sharedMailbox.child\" \"lr\"
+}
 S: a1 OK LIST completed.
 
-C: a3 LIST "#private" sharedMailbox*
-S: a3 OK LIST completed.
+C: a2 LIST "" "*" RETURN (STATUS (UNSEEN RECENT))
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+S: \* STATUS \"INBOX\" \(RECENT 0 UNSEEN 0\)
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* STATUS \"#user.diana.sharedMailbox\" \(RECENT 0 UNSEEN 0\)
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* STATUS \"#user.boby.sharedMailbox\" \(RECENT 0 UNSEEN 0\)
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* STATUS \"#user.boby.sharedMailbox.child\" \(RECENT 0 UNSEEN 0\)
+}
+S: a2 OK LIST completed.
+
+C: a3 STATUS #user.boby.sharedMailbox (UNSEEN RECENT)
+S: \* STATUS \"#user.boby.sharedMailbox\" \(RECENT 0 UNSEEN 0\)
+S: a3 OK STATUS completed.
+
+C: a4 LIST "#user.diana" "*"
+# TODO why double results
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: a4 OK LIST completed.
+
+C: a7 LIST "#user" "*"
+# TODO personal mailboxes shall not be included
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"#private.INBOX\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+}
+S: a7 OK LIST completed.
+
+# When looking up private namespace the shared mailboxes are not included
+C: a8 LIST "#private" "%"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"#private.INBOX\"
+S: a8 OK LIST completed.
+
+C: a9 LIST "#private" sharedMailbox*
+S: a9 OK LIST completed.
 
