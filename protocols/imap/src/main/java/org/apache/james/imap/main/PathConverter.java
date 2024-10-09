@@ -113,7 +113,7 @@ public interface PathConverter {
          */
         private String joinMailboxPath(MailboxPath mailboxPath, MailboxSession session) {
             StringBuilder sb = new StringBuilder();
-            if (mailboxPath.getNamespace() != null && !mailboxPath.getNamespace().equals("")) {
+            if (mailboxPath.getNamespace() != null && !mailboxPath.getNamespace().isEmpty()) {
                 if (mailboxPath.getNamespace().equalsIgnoreCase(MailboxConstants.USER_NAMESPACE)
                     && !mailboxPath.belongsTo(session)) {
                     sb.append("#user");
@@ -121,16 +121,16 @@ public interface PathConverter {
                     sb.append(mailboxPath.getNamespace());
                 }
             }
-            if (mailboxPath.getUser() != null && !mailboxPath.getUser().equals("")) {
+            if (mailboxPath.getUser() != null) {
                 if (!mailboxPath.belongsTo(session)) {
-                    if (sb.length() > 0) {
+                    if (!sb.isEmpty()) {
                         sb.append(session.getPathDelimiter());
                     }
-                    sb.append(mailboxPath.getUser().asString());
+                    sb.append(mailboxPath.getUser().getLocalPart());
                 }
             }
-            if (mailboxPath.getName() != null && !mailboxPath.getName().equals("")) {
-                if (sb.length() > 0) {
+            if (mailboxPath.getName() != null && !mailboxPath.getName().isEmpty()) {
+                if (!sb.isEmpty()) {
                     sb.append(session.getPathDelimiter());
                 }
                 sb.append(mailboxPath.getName());
