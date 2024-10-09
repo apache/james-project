@@ -34,7 +34,9 @@ import org.junit.jupiter.api.Test;
 class PathConverterTest {
 
     private static final Username USERNAME = Username.of("username");
+    private static final Username USERNAME2 = Username.of("username2");
     private static final char PATH_DELIMITER = '.';
+    public static final boolean RELATIVE = true;
 
     private FakeImapSession imapSession;
     private MailboxSession mailboxSession;
@@ -104,5 +106,41 @@ class PathConverterTest {
     void buildFullPathShouldDenyMailboxPathNotBelongingToTheUser() {
         assertThatThrownBy(() -> pathConverter.buildFullPath("#any"))
             .isInstanceOf(DeniedAccessOnSharedMailboxException.class);
+    }
+
+    @Test
+    void mailboxNameShouldReturnNameOnlyWhenRelativeAndUserMailbox() {
+        assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME, "abc"), mailboxSession))
+            .isEqualTo("abc");
+    }
+
+    @Test
+    void mailboxNameShouldReturnFQDNWhenRelativeAndOtherUserMailbox() {
+        assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME2, "abc"), mailboxSession))
+            .isEqualTo("#private.username2.abc");
+    }
+
+    @Test
+    void mailboxNameShouldReturnFQDNWhenRelativeAndSharedMailbox() {
+        assertThat(pathConverter.mailboxName(RELATIVE, new MailboxPath("#Shared", Username.of("marketing"), "abc"), mailboxSession))
+            .isEqualTo("#Shared.marketing.abc");
+    }
+
+    @Test
+    void mailboxNameShouldReturnFQDNWhenNotRelativeAndUserMailbox() {
+        assertThat(pathConverter.mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME, "abc"), mailboxSession))
+            .isEqualTo("#private.username.abc");
+    }
+
+    @Test
+    void mailboxNameShouldReturnFQDNWhenNotRelativeAndOtherUserMailbox() {
+        assertThat(pathConverter.mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME2, "abc"), mailboxSession))
+            .isEqualTo("#private.username2.abc");
+    }
+
+    @Test
+    void mailboxNameShouldReturnFQDNWhenNotRelativeAndSharedMailbox() {
+        assertThat(pathConverter.mailboxName(!RELATIVE, new MailboxPath("#Shared", Username.of("marketing"), "abc"), mailboxSession))
+            .isEqualTo("#Shared.marketing.abc");
     }
 }

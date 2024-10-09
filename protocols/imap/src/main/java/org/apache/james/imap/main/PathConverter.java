@@ -49,10 +49,6 @@ public interface PathConverter {
     class Default implements PathConverter{
         private static final int NAMESPACE = 0;
 
-        public static PathConverter forSession(ImapSession session) {
-            return new PathConverter.Default(session);
-        }
-
         private final ImapSession session;
 
         private Default(ImapSession session) {
