@@ -134,7 +134,7 @@ public interface PathConverter {
         }
 
         public String mailboxName(boolean relative, MailboxPath path, MailboxSession session) {
-            if (relative) {
+            if (relative && path.belongsTo(session)) {
                 return path.getName();
             } else {
                 return joinMailboxPath(path, session.getPathDelimiter());
