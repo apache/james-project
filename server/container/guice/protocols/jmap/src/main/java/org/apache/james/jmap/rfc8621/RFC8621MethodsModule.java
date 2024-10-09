@@ -77,6 +77,7 @@ import org.apache.james.jmap.method.PushSubscriptionSetMethod;
 import org.apache.james.jmap.method.QuotaChangesMethod;
 import org.apache.james.jmap.method.QuotaGetMethod;
 import org.apache.james.jmap.method.QuotaQueryMethod;
+import org.apache.james.jmap.method.SearchSnippetGetMethod;
 import org.apache.james.jmap.method.SystemZoneIdProvider;
 import org.apache.james.jmap.method.ThreadChangesMethod;
 import org.apache.james.jmap.method.ThreadGetMethod;
@@ -171,6 +172,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(DelegateSetMethod.class);
         methods.addBinding().to(DelegatedAccountSetMethod.class);
         methods.addBinding().to(MailboxQueryChangesMethod.class);
+        methods.addBinding().to(SearchSnippetGetMethod.class);
 
         Multibinder<JMAPRoutes> routes = Multibinder.newSetBinder(binder(), JMAPRoutes.class);
         routes.addBinding().to(SessionRoutes.class);

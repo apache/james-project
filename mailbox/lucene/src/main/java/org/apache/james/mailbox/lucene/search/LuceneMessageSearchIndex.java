@@ -445,8 +445,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities) {
-        return EnumSet.of(SearchCapabilities.MultimailboxSearch);
-
+        return EnumSet.of(SearchCapabilities.MultimailboxSearch,
+            SearchCapabilities.Attachment,
+            SearchCapabilities.AttachmentFileName);
     }
 
     /**
