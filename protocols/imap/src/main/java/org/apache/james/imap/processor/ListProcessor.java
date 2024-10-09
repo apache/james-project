@@ -222,7 +222,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                             isSubscribed.test(metaData.getPath())));
                 }
             })
-            .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
+            .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData, isRelative))
             .concatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(retrieveMessageManager(metaData, mailboxSession), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
             .then();
     }
@@ -242,7 +242,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .map(tuple -> getListResponseForSelectSubscribed(session, tuple.getT1(), tuple.getT2(), request, mailboxSession, isRelative, mailboxQuery))
             .flatMapIterable(list -> list)
             .doOnNext(pathAndResponse -> responder.respond(pathAndResponse.getMiddle()))
-            .doOnNext(pathAndResponse -> pathAndResponse.getRight().ifPresent(mailboxMetaData -> respondMyRights(request, responder, mailboxSession, mailboxMetaData)))
+            .doOnNext(pathAndResponse -> pathAndResponse.getRight().ifPresent(mailboxMetaData -> respondMyRights(request, responder, mailboxSession, mailboxMetaData, isRelative)))
             .concatMap(pathAndResponse -> sendStatusWhenSubscribed(session, request, responder, mailboxSession, pathAndResponse))
             .then();
     }
@@ -313,9 +313,10 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .collect(Collectors.toList());
     }
 
-    private void respondMyRights(T request, Responder responder, MailboxSession mailboxSession, MailboxMetaData metaData) {
+    private void respondMyRights(T request, Responder responder, MailboxSession mailboxSession, MailboxMetaData metaData, boolean isRelative) {
         if (request.getReturnOptions().contains(ListRequest.ListReturnOption.MYRIGHTS)) {
-            MailboxName mailboxName = new MailboxName(metaData.getPath().getName());
+            MailboxName mailboxName = new MailboxName(pathConverterFactory.forSession(mailboxSession)
+                .mailboxName(isRelative, metaData.getPath(), mailboxSession));
             MyRightsResponse myRightsResponse = new MyRightsResponse(mailboxName, getRfc4314Rights(mailboxSession, metaData));
             responder.respond(myRightsResponse);
         }
