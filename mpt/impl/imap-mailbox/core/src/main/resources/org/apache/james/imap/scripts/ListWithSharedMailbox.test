@@ -78,3 +78,10 @@ S: a8 OK LIST completed.
 C: a9 LIST "#private" sharedMailbox*
 S: a9 OK LIST completed.
 
+C: a10 LIST "#user" "diana.*"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: a10 OK LIST completed.
+
+C: a11 LIST "#user" "diana."
+S: a11 OK LIST completed.
+
