@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 
@@ -132,16 +133,16 @@ public interface PathConverter {
             return sb.toString();
         }
 
-        public String mailboxName(boolean relative, MailboxPath path, char delimiter) {
+        public String mailboxName(boolean relative, MailboxPath path, MailboxSession session) {
             if (relative) {
                 return path.getName();
             } else {
-                return joinMailboxPath(path, delimiter);
+                return joinMailboxPath(path, session.getPathDelimiter());
             }
         }
     }
 
     MailboxPath buildFullPath(String mailboxName);
 
-    String mailboxName(boolean relative, MailboxPath path, char delimiter);
+    String mailboxName(boolean relative, MailboxPath path, MailboxSession session);
 }

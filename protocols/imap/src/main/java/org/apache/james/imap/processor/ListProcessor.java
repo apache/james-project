@@ -224,7 +224,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                     responder.respond(
                         createResponse(metaData.inferiors(),
                             metaData.getSelectability(),
-                            pathConverterFactory.forSession(session).mailboxName(isRelative, metaData.getPath(), metaData.getHierarchyDelimiter()),
+                            pathConverterFactory.forSession(session).mailboxName(isRelative, metaData.getPath(), mailboxSession),
                             metaData.getHierarchyDelimiter(),
                             mailboxType,
                             isSubscribed.test(metaData.getPath())));
@@ -287,7 +287,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .map(mailboxMetaData -> ListResponse.builder()
                 .returnSubscribed(RETURN_SUBSCRIBED)
                 .forMetaData(mailboxMetaData)
-                .name(pathConverterFactory.forSession(session).mailboxName(relative, subscribed, mailboxMetaData.getHierarchyDelimiter()))
+                .name(pathConverterFactory.forSession(session).mailboxName(relative, subscribed, session.getMailboxSession()))
                 .returnNonExistent(!RETURN_NON_EXISTENT)
                 .mailboxType(getMailboxType(listRequest, session, mailboxMetaData.getPath())))
             .orElseGet(() -> ListResponse.builder().nonExitingSubscribedMailbox(subscribed))
@@ -311,7 +311,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                 MailboxMetaData metaData = pair.getValue();
                 ListResponse listResponse = ListResponse.builder()
                     .forMetaData(metaData)
-                    .name(pathConverterFactory.forSession(session).mailboxName(relative, metaData.getPath(), metaData.getHierarchyDelimiter()))
+                    .name(pathConverterFactory.forSession(session).mailboxName(relative, metaData.getPath(), mailboxSession))
                     .childInfos(ListResponse.ChildInfo.SUBSCRIBED)
                     .returnSubscribed(allSubscribedSearch.contains(pair.getKey()))
                     .mailboxType(getMailboxType(listRequest, session, metaData.getPath()))
