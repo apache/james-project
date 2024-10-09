@@ -191,18 +191,11 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             return Mono.empty();
         }
 
-        // If the mailboxPattern is fully qualified, ignore the
-        // reference name.
-        String finalReferencename = request.getBaseReferenceName();
-        if (request.getMailboxPattern().charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
-            finalReferencename = "";
-        }
         // Is the interpreted (combined) pattern relative?
         // Should the namespace section be returned or not?
-        boolean isRelative = ((finalReferencename + request.getMailboxPattern()).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
+        boolean isRelative = ((request.getBaseReferenceName() + request.getMailboxPattern()).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
 
-        MailboxQuery mailboxQuery = mailboxQuery(computeBasePath(session, finalReferencename, isRelative),
-            request.getMailboxPattern(), mailboxSession);
+        MailboxQuery mailboxQuery = mailboxQuery(request.getBaseReferenceName(), request.getMailboxPattern(), mailboxSession, session, isRelative);
 
         if (request.selectSubscribed()) {
             return processWithSubscribed(session, request, responder, mailboxSession, isRelative, mailboxQuery);
@@ -337,7 +330,33 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         return metaData.getResolvedAcls().getEntries().get(entryKey);
     }
 
-    private MailboxQuery mailboxQuery(MailboxPath basePath, String mailboxName, MailboxSession mailboxSession) {
+    private MailboxQuery mailboxQuery(String finalReferencename, String mailboxName, MailboxSession mailboxSession,
+                                      ImapSession session, boolean isRelative) {
+        if (finalReferencename.isEmpty()) {
+            if (mailboxName.equals("*")) {
+                return MailboxQuery.builder()
+                    .matchesAllMailboxNames()
+                    .build();
+            }
+            return MailboxQuery.builder()
+                .expression(new PrefixedRegex(
+                    "",
+                    ModifiedUtf7.decodeModifiedUTF7(mailboxName),
+                    mailboxSession.getPathDelimiter()))
+                .build();
+        }
+
+        MailboxPath basePath = computeBasePath(session, finalReferencename, isRelative);
+        if (basePath.getNamespace().equals(MailboxConstants.USER_NAMESPACE)
+            && basePath.getUser() == null) {
+            return MailboxQuery.builder()
+                .namespace(MailboxConstants.USER_NAMESPACE)
+                .expression(new PrefixedRegex(
+                    basePath.getName(),
+                    ModifiedUtf7.decodeModifiedUTF7(mailboxName),
+                    mailboxSession.getPathDelimiter()))
+                .build();
+        }
         if (basePath.getNamespace().equals(MailboxConstants.USER_NAMESPACE)
             && basePath.getUser().equals(mailboxSession.getUser())
             && basePath.getName().isEmpty()
