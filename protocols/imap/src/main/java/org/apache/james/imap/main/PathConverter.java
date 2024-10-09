@@ -23,10 +23,14 @@ import java.util.List;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
+import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.PrefixedRegex;
+import org.apache.james.mailbox.model.search.Wildcard;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -158,9 +162,84 @@ public interface PathConverter {
                 return joinMailboxPath(path, session);
             }
         }
+
+        public MailboxQuery mailboxQuery(String finalReferencename, String mailboxName, ImapSession session) {
+            MailboxSession mailboxSession = session.getMailboxSession();
+            String decodedMailboxName = ModifiedUtf7.decodeModifiedUTF7(mailboxName);
+            if (finalReferencename.isEmpty()) {
+                if (mailboxName.equals("*")) {
+                    return MailboxQuery.builder()
+                        .matchesAllMailboxNames()
+                        .build();
+                }
+                return MailboxQuery.builder()
+                    .expression(new PrefixedRegex(
+                        "",
+                        decodedMailboxName,
+                        mailboxSession.getPathDelimiter()))
+                    .build();
+            }
+
+            MailboxPath basePath = computeBasePath(session, finalReferencename);
+            if (basePath.getNamespace().equals(MailboxConstants.USER_NAMESPACE)
+                && basePath.getUser() == null) {
+
+                int separatorPosition = decodedMailboxName.indexOf(mailboxSession.getPathDelimiter());
+                if (separatorPosition >= 0) {
+                    // interpret first part as the user
+                    Username username = Username.of(decodedMailboxName.substring(0, separatorPosition));
+                    return MailboxQuery.builder()
+                        .namespace(MailboxConstants.USER_NAMESPACE)
+                        .username(username)
+                        .expression(new PrefixedRegex(
+                            basePath.getName(),
+                            decodedMailboxName.substring(separatorPosition + 1),
+                            mailboxSession.getPathDelimiter()))
+                        .build();
+                }
+
+                return MailboxQuery.builder()
+                    .namespace(MailboxConstants.USER_NAMESPACE)
+                    .expression(new PrefixedRegex(
+                        basePath.getName(),
+                        decodedMailboxName,
+                        mailboxSession.getPathDelimiter()))
+                    .build();
+            }
+            if (basePath.getNamespace().equals(MailboxConstants.USER_NAMESPACE)
+                && basePath.getUser().equals(mailboxSession.getUser())
+                && basePath.getName().isEmpty()
+                && mailboxName.equals("*")) {
+
+                return MailboxQuery.builder()
+                    .userAndNamespaceFrom(basePath)
+                    .expression(Wildcard.INSTANCE)
+                    .build();
+            }
+
+            return MailboxQuery.builder()
+                .userAndNamespaceFrom(basePath)
+                .expression(new PrefixedRegex(
+                    basePath.getName(),
+                    decodedMailboxName,
+                    mailboxSession.getPathDelimiter()))
+                .build();
+        }
+
+        private MailboxPath computeBasePath(ImapSession session, String finalReferencename) {
+            String decodedName = ModifiedUtf7.decodeModifiedUTF7(finalReferencename);
+            boolean isRelative = !finalReferencename.startsWith("#");
+            if (isRelative) {
+                return MailboxPath.forUser(session.getUserName(), decodedName);
+            } else {
+                return buildFullPath(decodedName);
+            }
+        }
     }
 
     MailboxPath buildFullPath(String mailboxName);
 
     String mailboxName(boolean relative, MailboxPath path, MailboxSession session);
+
+    MailboxQuery mailboxQuery(String finalReferencename, String mailboxName, ImapSession session);
 }
