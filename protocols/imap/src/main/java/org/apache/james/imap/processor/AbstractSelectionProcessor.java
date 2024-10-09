@@ -82,13 +82,16 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     private static final List<Capability> CAPS = ImmutableList.of(ImapConstants.SUPPORTS_QRESYNC, ImapConstants.SUPPORTS_CONDSTORE);
 
     private final StatusResponseFactory statusResponseFactory;
+
+    private final PathConverter.Factory pathConverterFactory;
     private final boolean openReadOnly;
     private final EventBus eventBus;
 
-    public AbstractSelectionProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, boolean openReadOnly,
+    public AbstractSelectionProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, PathConverter.Factory pathConverterFactory, boolean openReadOnly,
                                       MetricFactory metricFactory, EventBus eventBus) {
         super(acceptableClass, mailboxManager, statusResponseFactory, metricFactory);
         this.statusResponseFactory = statusResponseFactory;
+        this.pathConverterFactory = pathConverterFactory;
         this.openReadOnly = openReadOnly;
 
         this.eventBus = eventBus;
@@ -97,7 +100,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     @Override
     protected Mono<Void> processRequestReactive(R request, ImapSession session, Responder responder) {
         String mailboxName = request.getMailboxName();
-        MailboxPath fullMailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
+        MailboxPath fullMailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName);
 
         return respond(session, fullMailboxPath, request, responder)
             .onErrorResume(MailboxNotFoundException.class, e -> {

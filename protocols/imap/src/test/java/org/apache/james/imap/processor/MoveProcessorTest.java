@@ -41,6 +41,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.MoveRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
@@ -88,7 +89,7 @@ public class MoveProcessorTest {
         mailboxSession = MailboxSessionUtil.create(USERNAME);
 
         when(mockMailboxManager.hasCapability(eq(MailboxCapabilities.Move))).thenReturn(true);
-        testee = new MoveProcessor(mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory());
+        testee = new MoveProcessor(mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory(), PathConverter.Factory.DEFAULT);
         verify(mockMailboxManager).hasCapability(MailboxCapabilities.Move);
 
         imapSession.authenticated();
@@ -103,7 +104,7 @@ public class MoveProcessorTest {
     @Test
     void getImplementedCapabilitiesShouldNotContainMoveWhenUnSupportedByMailboxManager() {
         when(mockMailboxManager.hasCapability(eq(MailboxCapabilities.Move))).thenReturn(false);
-        assertThat(new MoveProcessor(mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory())
+        assertThat(new MoveProcessor(mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory(), PathConverter.Factory.DEFAULT)
                 .getImplementedCapabilities(null)).isEmpty();
     }
 

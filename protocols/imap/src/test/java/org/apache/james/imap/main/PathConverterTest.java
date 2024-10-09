@@ -44,7 +44,7 @@ class PathConverterTest {
     void setUp() {
         imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USERNAME);
-        pathConverter = PathConverter.forSession(imapSession);
+        pathConverter = PathConverter.Factory.DEFAULT.forSession(imapSession);
         imapSession.setMailboxSession(mailboxSession);
     }
 

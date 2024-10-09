@@ -36,6 +36,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.GetACLRequest;
 import org.apache.james.imap.message.response.ACLResponse;
@@ -83,7 +84,7 @@ class GetACLProcessorTest {
             Object[] args = invocation.getArguments();
             return (Mono) args[0];
         });
-        subject = new GetACLProcessor(mailboxManager, statusResponseFactory, new RecordingMetricFactory());
+        subject = new GetACLProcessor(mailboxManager, statusResponseFactory, new RecordingMetricFactory(), PathConverter.Factory.DEFAULT);
         imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USER_1);
         MessageManager messageManager = mock(MessageManager.class);

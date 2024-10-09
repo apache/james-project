@@ -75,12 +75,15 @@ import reactor.core.publisher.Mono;
 public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(StatusProcessor.class);
 
+
+    private final PathConverter.Factory pathConverterFactory;
     private ImapConfiguration imapConfiguration;
 
     @Inject
     public StatusProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                           MetricFactory metricFactory) {
+                           MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(StatusRequest.class, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -96,7 +99,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
 
     @Override
     protected Mono<Void> processRequestReactive(StatusRequest request, ImapSession session, Responder responder) {
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
+        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
         MailboxSession mailboxSession = session.getMailboxSession();
         StatusDataItems statusDataItems = request.getStatusDataItems();
 
