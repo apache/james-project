@@ -36,6 +36,7 @@ import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.Capability;
@@ -332,6 +333,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
     private MailboxQuery mailboxQuery(String finalReferencename, String mailboxName, MailboxSession mailboxSession,
                                       ImapSession session, boolean isRelative) {
+        String decodedMailboxName = ModifiedUtf7.decodeModifiedUTF7(mailboxName);
         if (finalReferencename.isEmpty()) {
             if (mailboxName.equals("*")) {
                 return MailboxQuery.builder()
@@ -341,7 +343,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             return MailboxQuery.builder()
                 .expression(new PrefixedRegex(
                     "",
-                    ModifiedUtf7.decodeModifiedUTF7(mailboxName),
+                    decodedMailboxName,
                     mailboxSession.getPathDelimiter()))
                 .build();
         }
@@ -349,11 +351,26 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         MailboxPath basePath = computeBasePath(session, finalReferencename, isRelative);
         if (basePath.getNamespace().equals(MailboxConstants.USER_NAMESPACE)
             && basePath.getUser() == null) {
+
+            int separatorPosition = decodedMailboxName.indexOf(mailboxSession.getPathDelimiter());
+            if (separatorPosition >= 0) {
+                // interpret first part as the user
+                Username username = Username.of(decodedMailboxName.substring(0, separatorPosition));
+                return MailboxQuery.builder()
+                    .namespace(MailboxConstants.USER_NAMESPACE)
+                    .username(username)
+                    .expression(new PrefixedRegex(
+                        basePath.getName(),
+                        decodedMailboxName.substring(separatorPosition + 1),
+                        mailboxSession.getPathDelimiter()))
+                    .build();
+            }
+
             return MailboxQuery.builder()
                 .namespace(MailboxConstants.USER_NAMESPACE)
                 .expression(new PrefixedRegex(
                     basePath.getName(),
-                    ModifiedUtf7.decodeModifiedUTF7(mailboxName),
+                    decodedMailboxName,
                     mailboxSession.getPathDelimiter()))
                 .build();
         }
@@ -372,7 +389,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .userAndNamespaceFrom(basePath)
             .expression(new PrefixedRegex(
                 basePath.getName(),
-                ModifiedUtf7.decodeModifiedUTF7(mailboxName),
+                decodedMailboxName,
                 mailboxSession.getPathDelimiter()))
             .build();
     }
