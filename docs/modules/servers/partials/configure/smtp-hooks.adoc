@@ -359,7 +359,7 @@ some intermediate third parties. See link:https://issues.apache.org/jira/browse/
 Supported configuration elements:
 
 - *forceCRLF*: Should CRLF be forced when computing body hashes.
-- *onlyForSenderDomain*: If specified, the DKIM checks are applied just for the emails whose MAIL FROM specifies this domain. If unspecified, all emails are checked (default).
+- *onlyForSenderDomain*: If specified, the DKIM checks are applied just for the emails whose MAIL FROM or from header specifies this domain. If unspecified, all emails are checked (default).
 - *signatureRequired*: If DKIM signature is checked, the absence of signature will generate failure. Defaults to false.
 - *expectedDToken*: If DKIM signature is checked, the body should contain at least one DKIM signature with this d token. If unspecified, all d tokens are considered valid (default).
 
@@ -378,5 +378,5 @@ Example handlerchain configuration for `smtpserver.xml`:
 </handlerchain>
 ....
 
-Would allow emails using `apache.org` as a MAIL FROM domain if, and only if they contain a
+Would allow emails using `apache.org` as a MAIL FROM or from header domain if, and only if they contain a
 valid DKIM signature for the `apache.org` domain.
