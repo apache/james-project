@@ -29,6 +29,7 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.LsubRequest;
 import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -36,7 +37,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxNameExpression;
 import org.apache.james.mailbox.model.search.PrefixedRegex;
 import org.apache.james.metrics.api.MetricFactory;
@@ -50,14 +50,17 @@ import reactor.core.publisher.Mono;
 
 public class LSubProcessor extends AbstractMailboxProcessor<LsubRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(LSubProcessor.class);
+    public static final boolean RELATIVE = true;
 
     private final SubscriptionManager subscriptionManager;
+    private final PathConverter.Factory pathConverterFactory;
 
     @Inject
     public LSubProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
-                         MetricFactory metricFactory) {
+                         MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(LsubRequest.class, mailboxManager, factory, metricFactory);
         this.subscriptionManager = subscriptionManager;
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -76,8 +79,9 @@ public class LSubProcessor extends AbstractMailboxProcessor<LsubRequest> {
     private Mono<Void> listSubscriptions(ImapSession session, Responder responder, String referenceName, String mailboxName) {
         MailboxSession mailboxSession = session.getMailboxSession();
         try {
+            PathConverter pathConverter = pathConverterFactory.forSession(session);
             Mono<List<String>> mailboxesMono = Flux.from(subscriptionManager.subscriptionsReactive(mailboxSession))
-                .map(MailboxPath::getName)
+                .map(path -> pathConverter.mailboxName(RELATIVE, path, mailboxSession))
                 .collectList();
 
             String decodedMailName = ModifiedUtf7.decodeModifiedUTF7(referenceName);
@@ -90,7 +94,7 @@ public class LSubProcessor extends AbstractMailboxProcessor<LsubRequest> {
             return mailboxesMono.doOnNext(mailboxes -> {
                 Collection<String> mailboxResponses = new ArrayList<>();
                 for (String mailbox : mailboxes) {
-                    respond(responder, expression, mailbox, true, mailboxes, mailboxResponses, mailboxSession.getPathDelimiter());
+                    respond(responder, expression, mailbox, RELATIVE, mailboxes, mailboxResponses, mailboxSession.getPathDelimiter());
                 }
             }).then();
         } catch (SubscriptionException e) {

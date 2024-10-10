@@ -83,7 +83,7 @@ public class DefaultProcessor implements ImapProcessor {
         builder.add(new IdleProcessor(mailboxManager, statusResponseFactory, metricFactory));
         StatusProcessor statusProcessor = new StatusProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory);
         builder.add(statusProcessor);
-        builder.add(new LSubProcessor(mailboxManager, subscriptionManager, statusResponseFactory, metricFactory));
+        builder.add(new LSubProcessor(mailboxManager, subscriptionManager, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new XListProcessor(mailboxManager, statusResponseFactory, mailboxTyper, metricFactory, subscriptionManager, pathConverterFactory));
         builder.add(new ListProcessor<>(mailboxManager, statusResponseFactory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper, pathConverterFactory));
         builder.add(new SearchProcessor(mailboxManager, statusResponseFactory, metricFactory));
