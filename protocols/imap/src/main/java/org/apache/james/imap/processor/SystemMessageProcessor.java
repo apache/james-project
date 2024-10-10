@@ -24,7 +24,6 @@ import jakarta.inject.Inject;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.SystemMessage;
 import org.apache.james.imap.processor.base.AbstractProcessor;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -38,12 +37,9 @@ import reactor.core.publisher.Mono;
 public class SystemMessageProcessor extends AbstractProcessor<SystemMessage> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SystemMessageProcessor.class);
 
-    private final MailboxManager mailboxManager;
-
     @Inject
-    public SystemMessageProcessor(MailboxManager mailboxManager) {
+    public SystemMessageProcessor() {
         super(SystemMessage.class);
-        this.mailboxManager = mailboxManager;
     }
 
     @Override
