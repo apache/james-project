@@ -60,7 +60,7 @@ public class DefaultProcessor implements ImapProcessor {
 
         ImmutableList.Builder<AbstractProcessor> builder = ImmutableList.builder();
         CapabilityProcessor capabilityProcessor = new CapabilityProcessor(mailboxManager, statusResponseFactory, metricFactory);
-        builder.add(new SystemMessageProcessor(mailboxManager));
+        builder.add(new SystemMessageProcessor());
         builder.add(new LogoutProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(capabilityProcessor);
         builder.add(new IdProcessor(mailboxManager, statusResponseFactory, metricFactory));
