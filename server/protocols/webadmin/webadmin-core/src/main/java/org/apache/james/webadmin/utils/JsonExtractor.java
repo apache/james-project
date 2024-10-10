@@ -22,6 +22,7 @@ package org.apache.james.webadmin.utils;
 import java.io.IOException;
 import java.util.List;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
@@ -33,23 +34,37 @@ public class JsonExtractor<RequestT> {
 
     private final ObjectMapper objectMapper;
     private final Class<RequestT> type;
+    private final TypeReference<RequestT> typeReference;
+
+    private JsonExtractor(Class<RequestT> type, TypeReference<RequestT> typeReference, List<Module> modules) {
+        this.objectMapper = new ObjectMapper()
+            .registerModule(new Jdk8Module())
+            .registerModule(new GuavaModule())
+            .registerModules(modules);
+        this.type = type;
+        this.typeReference = typeReference;
+    }
 
     public JsonExtractor(Class<RequestT> type, Module... modules) {
         this(type, ImmutableList.copyOf(modules));
     }
 
     public JsonExtractor(Class<RequestT> type, List<Module> modules) {
-        this.objectMapper = new ObjectMapper()
-            .registerModule(new Jdk8Module())
-            .registerModule(new GuavaModule())
-            .registerModules(modules);
-        this.type = type;
+        this(type, null, modules);
+    }
+
+    public JsonExtractor(TypeReference<RequestT> typeReference, Module... modules) {
+        this(typeReference, ImmutableList.copyOf(modules));
+    }
+
+    public JsonExtractor(TypeReference<RequestT> typeReference, List<Module> modules) {
+        this(null, typeReference, modules);
     }
 
     public RequestT parse(String text) throws JsonExtractException {
         Preconditions.checkNotNull(text);
         try {
-            return objectMapper.readValue(text, type);
+            return type != null ? objectMapper.readValue(text, type) : objectMapper.readValue(text, typeReference);
         } catch (IOException | IllegalArgumentException e) {
             throw new JsonExtractException(e);
         }

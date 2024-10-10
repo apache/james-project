@@ -22,7 +22,6 @@ import static org.apache.james.rrt.jpa.model.JPARecipientRewrite.DELETE_MAPPING_
 import static org.apache.james.rrt.jpa.model.JPARecipientRewrite.SELECT_ALL_MAPPINGS_QUERY;
 import static org.apache.james.rrt.jpa.model.JPARecipientRewrite.SELECT_SOURCES_BY_MAPPING_QUERY;
 import static org.apache.james.rrt.jpa.model.JPARecipientRewrite.SELECT_USER_DOMAIN_MAPPING_QUERY;
-import static org.apache.james.rrt.jpa.model.JPARecipientRewrite.UPDATE_MAPPING_QUERY;
 
 import java.io.Serializable;
 
@@ -30,6 +29,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import jakarta.persistence.Index;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 
@@ -42,36 +42,40 @@ import com.google.common.base.Objects;
  * persistence.
  */
 @Entity(name = "JamesRecipientRewrite")
-@Table(name = JPARecipientRewrite.JAMES_RECIPIENT_REWRITE)
+@Table(name = JPARecipientRewrite.JAMES_RECIPIENT_REWRITE, indexes = {
+    // note: the generated primary key index also includes these 3 fields, but in unuseful alphabetic order
+    @Index(name = "USER_NAME_DOMAIN_NAME_TARGET_ADDRESS_INDEX", columnList = "USER_NAME,DOMAIN_NAME,TARGET_ADDRESS"),
+    @Index(name = "TARGET_ADDRESS_INDEX", columnList = "TARGET_ADDRESS")
+})
 @NamedQuery(name = SELECT_USER_DOMAIN_MAPPING_QUERY, query = "SELECT rrt FROM JamesRecipientRewrite rrt WHERE rrt.user=:user AND rrt.domain=:domain")
 @NamedQuery(name = SELECT_ALL_MAPPINGS_QUERY, query = "SELECT rrt FROM JamesRecipientRewrite rrt")
 @NamedQuery(name = DELETE_MAPPING_QUERY, query = "DELETE FROM JamesRecipientRewrite rrt WHERE rrt.user=:user AND rrt.domain=:domain AND rrt.targetAddress=:targetAddress")
-@NamedQuery(name = UPDATE_MAPPING_QUERY, query = "UPDATE JamesRecipientRewrite rrt SET rrt.targetAddress=:targetAddress WHERE rrt.user=:user AND rrt.domain=:domain")
 @NamedQuery(name = SELECT_SOURCES_BY_MAPPING_QUERY, query = "SELECT rrt FROM JamesRecipientRewrite rrt WHERE rrt.targetAddress=:targetAddress")
 @IdClass(JPARecipientRewrite.RecipientRewriteTableId.class)
 public class JPARecipientRewrite {
     public static final String SELECT_USER_DOMAIN_MAPPING_QUERY = "selectUserDomainMapping";
     public static final String SELECT_ALL_MAPPINGS_QUERY = "selectAllMappings";
     public static final String DELETE_MAPPING_QUERY = "deleteMapping";
-    public static final String UPDATE_MAPPING_QUERY = "updateMapping";
     public static final String SELECT_SOURCES_BY_MAPPING_QUERY = "selectSourcesByMapping";
 
     public static final String JAMES_RECIPIENT_REWRITE = "JAMES_RECIPIENT_REWRITE";
 
     public static class RecipientRewriteTableId implements Serializable {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2L;
 
         private String user;
 
         private String domain;
+
+        private String targetAddress;
 
         public RecipientRewriteTableId() {
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(user, domain);
+            return Objects.hashCode(user, domain, targetAddress);
         }
 
         @Override
@@ -83,7 +87,9 @@ public class JPARecipientRewrite {
                 return false;
             }
             final RecipientRewriteTableId other = (RecipientRewriteTableId) obj;
-            return Objects.equal(this.user, other.user) && Objects.equal(this.domain, other.domain);
+            return Objects.equal(this.user, other.user)
+                && Objects.equal(this.domain, other.domain)
+                && Objects.equal(this.targetAddress, other.targetAddress);
         }
     }
 
@@ -106,6 +112,7 @@ public class JPARecipientRewrite {
      * The target address. column name is chosen to be compatible with the
      * JDBCRecipientRewriteTableList.
      */
+    @Id
     @Column(name = "TARGET_ADDRESS", nullable = false, length = 100)
     private String targetAddress = "";
     

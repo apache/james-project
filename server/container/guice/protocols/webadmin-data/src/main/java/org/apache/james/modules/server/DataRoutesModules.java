@@ -28,7 +28,7 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.DTOModuleInjections;
-import org.apache.james.webadmin.dto.MappingSourceModule;
+import org.apache.james.webadmin.dto.MappingsModule;
 import org.apache.james.webadmin.mdc.RequestLogger;
 import org.apache.james.webadmin.routes.AddressMappingRoutes;
 import org.apache.james.webadmin.routes.AliasRoutes;
@@ -75,7 +75,7 @@ public class DataRoutesModules extends AbstractModule {
         routesMultibinder.addBinding().to(DeleteUserDataRoutes.class);
 
         Multibinder<JsonTransformerModule> jsonTransformerModuleMultibinder = Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
-        jsonTransformerModuleMultibinder.addBinding().to(MappingSourceModule.class);
+        jsonTransformerModuleMultibinder.addBinding().to(MappingsModule.class);
 
         Multibinder.newSetBinder(binder(), RequestLogger.class).addBinding().to(UserCreationRequestLogger.class);
     }
