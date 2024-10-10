@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -44,16 +43,13 @@ class PathConverterTest {
     private static final char PATH_DELIMITER = '.';
     public static final boolean RELATIVE = true;
 
-    private FakeImapSession imapSession;
     private MailboxSession mailboxSession;
     private PathConverter pathConverter;
 
     @BeforeEach
     void setUp() {
-        imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USERNAME);
-        pathConverter = PathConverter.Factory.DEFAULT.forSession(imapSession);
-        imapSession.setMailboxSession(mailboxSession);
+        pathConverter = PathConverter.Factory.DEFAULT.forSession(mailboxSession);
     }
 
     @Test
@@ -190,10 +186,8 @@ class PathConverterTest {
     class WithEmail {
         @BeforeEach
         void setUp() {
-            imapSession = new FakeImapSession();
             mailboxSession = MailboxSessionUtil.create(USERNAME_WITH_MAIL);
-            pathConverter = PathConverter.Factory.DEFAULT.forSession(imapSession);
-            imapSession.setMailboxSession(mailboxSession);
+            pathConverter = PathConverter.Factory.DEFAULT.forSession(mailboxSession);
         }
 
         @Test
