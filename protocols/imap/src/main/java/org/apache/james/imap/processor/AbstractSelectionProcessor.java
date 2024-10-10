@@ -60,6 +60,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
@@ -401,13 +402,25 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
             .flatMap(Throwing.function(mailbox -> selectMailbox(session, responder, mailbox, currentMailbox)
                 .flatMap(Throwing.function(sessionMailbox ->
-                    mailbox.getMetaDataReactive(recentMode(!openReadOnly), mailboxSession, EnumSet.of(MailboxMetaData.Item.FirstUnseen, MailboxMetaData.Item.HighestModSeq, MailboxMetaData.Item.NextUid, MailboxMetaData.Item.MailboxCounters))
+                    mailbox.getMetaDataReactive(recentMode(!openReadOnly, mailbox, mailboxSession), mailboxSession, EnumSet.of(MailboxMetaData.Item.FirstUnseen, MailboxMetaData.Item.HighestModSeq, MailboxMetaData.Item.NextUid, MailboxMetaData.Item.MailboxCounters))
                         .doOnNext(next -> addRecent(next, sessionMailbox))))));
     }
 
-    private MailboxMetaData.RecentMode recentMode(boolean reset) {
+    private MailboxMetaData.RecentMode recentMode(boolean reset, MessageManager mailbox, MailboxSession session) {
         if (reset) {
-            return RESET;
+            try {
+                if (getMailboxManager().myRights(mailbox.getMailboxEntity(), session).contains(MailboxACL.Right.Write)) {
+                    return RESET;
+                }
+                // https://datatracker.ietf.org/doc/html/rfc3501#section-6.3.1
+                //      If the client is not permitted to modify the mailbox but is
+                //      permitted read access, the mailbox is selected as read-only, and
+                //      the server MUST prefix the text of the tagged OK response to
+                //      SELECT with the "[READ-ONLY]" response code.
+                return RETRIEVE;
+            } catch (MailboxException e) {
+                return RESET;
+            }
         }
         return RETRIEVE;
     }
