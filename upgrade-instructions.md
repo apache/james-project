@@ -34,6 +34,27 @@ Change list:
  - [Migrate RabbitMQ classic queues to version 2](#migrate-rabbitmq-classic-queues-to-version-2)
  - [JAMES-3946 White list removals](#james-3946-white-list-removals)
  - [JAMES-4052 Details in quota index](#james-4052-details-in-quota-index)
+ - [JAMES-1409 Change JPARecipientRewriteTable to store separate record per target address](#james-1409-change-jparecipientrewritetable-to-store-separate-record-per-target-address)
+
+### JAMES-1409 Change JPARecipientRewriteTable to store separate record per target address
+
+Date: 09/10/2024
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-1409
+
+The JPARecipientRewriteTable was modified to store multiple mappings of a single source as separate database rows,
+each with a single target address, instead of a single row with a long semicolon-delimited multi-value target address.
+This solves both the limitation on the number of mappings (imposed by the column maximum length), and the broken query
+by target address.
+
+For JPA users, the database schema update and data migration can be performed as follows:
+
+- On the old James server (before the version upgrade), export all mappings using the webadmin
+  interface (GET /mappings) and save the JSON result.
+- Shut down the server.
+- Drop the old table using any database administration tool (DROP TABLE JAMES_RECIPIENT_REWRITE).
+- Upgrade and start the new James server. A new table will be created automatically with the new schema.
+- Import the saved JSON mappings via the webadmin interface (PUT /mappings).
 
 ### JAMES-4052 Details in quota index and mailbox user
 
