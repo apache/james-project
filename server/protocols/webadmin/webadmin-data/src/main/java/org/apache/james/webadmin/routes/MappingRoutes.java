@@ -19,23 +19,19 @@
 
 package org.apache.james.webadmin.routes;
 
-import java.util.List;
+import java.util.Map;
 
 import jakarta.inject.Inject;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
+import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.dto.MappingValueDTO;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 
 import spark.Request;
 import spark.Response;
@@ -67,16 +63,9 @@ public class MappingRoutes implements Routes {
         service.get(USER_MAPPING_PATH + ":" + USER, this::getUserMappings, jsonTransformer);
     }
 
-    private ImmutableListMultimap<String, MappingValueDTO> getMappings(Request request, Response response) {
+    private Map<MappingSource, Mappings> getMappings(Request request, Response response) {
         try {
-            return recipientRewriteTable.getAllMappings()
-                .entrySet()
-                .stream()
-                .flatMap(entry -> entry.getValue().asStream()
-                    .map(mapping -> Pair.of(
-                        entry.getKey().asString(),
-                        MappingValueDTO.fromMapping(mapping))))
-                .collect(ImmutableListMultimap.toImmutableListMultimap(Pair::getLeft, Pair::getRight));
+            return recipientRewriteTable.getAllMappings();
         } catch (RecipientRewriteTableException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
@@ -86,13 +75,8 @@ public class MappingRoutes implements Routes {
         }
     }
 
-    private List<MappingValueDTO> getUserMappings(Request request, Response response) throws RecipientRewriteTableException {
+    private Mappings getUserMappings(Request request, Response response) throws RecipientRewriteTableException {
         Username username = Username.of(request.params(USER).toLowerCase());
-
-        return recipientRewriteTable.getStoredMappings(MappingSource.fromUser(username))
-            .asStream()
-            .map(MappingValueDTO::fromMapping)
-            .collect(ImmutableList.toImmutableList());
+        return recipientRewriteTable.getStoredMappings(MappingSource.fromUser(username));
     }
 }
-

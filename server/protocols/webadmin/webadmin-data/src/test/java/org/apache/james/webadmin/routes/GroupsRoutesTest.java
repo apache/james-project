@@ -54,8 +54,9 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.dto.MappingSourceModule;
+import org.apache.james.webadmin.dto.MappingsModule;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -116,7 +117,7 @@ class GroupsRoutesTest {
             memoryRecipientRewriteTable.setDomainList(domainList);
             memoryRecipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
             usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
-            MappingSourceModule mappingSourceModule = new MappingSourceModule();
+            JsonTransformerModule mappingSourceModule = new MappingsModule();
             UserEntityValidator validator = UserEntityValidator.aggregate(
                 new DefaultUserEntityValidator(usersRepository),
                 new RecipientRewriteTableUserEntityValidator(memoryRecipientRewriteTable));

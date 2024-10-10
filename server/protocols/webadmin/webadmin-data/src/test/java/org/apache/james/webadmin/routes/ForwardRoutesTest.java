@@ -53,8 +53,9 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.dto.MappingSourceModule;
+import org.apache.james.webadmin.dto.MappingsModule;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -115,7 +116,7 @@ class ForwardRoutesTest {
             domainList.addDomain(DOMAIN_MAPPING);
             memoryRecipientRewriteTable.setDomainList(domainList);
             memoryRecipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
-            MappingSourceModule mappingSourceModule = new MappingSourceModule();
+            JsonTransformerModule mappingSourceModule = new MappingsModule();
 
             usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 

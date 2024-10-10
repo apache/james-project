@@ -38,6 +38,7 @@ import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.dto.MappingsModule;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -64,7 +65,7 @@ class MappingRoutesTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        JsonTransformer jsonTransformer = new JsonTransformer();
+        JsonTransformer jsonTransformer = new JsonTransformer(new MappingsModule());
         recipientRewriteTable = new MemoryRecipientRewriteTable();
         DNSService dnsService = mock(DNSService.class);
         MemoryDomainList domainList = new MemoryDomainList(dnsService);
