@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MaybeSender;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.jdkim.tagvalue.SignatureRecordImpl;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.mailet.base.test.FakeMail;
@@ -70,6 +71,34 @@ class DKIMHookTest {
                 .test(FakeMail.builder()
                     .name("mail")
                     .sender("bob@other.com")
+                    .build()))
+                .isFalse();
+        }
+
+        @Test
+        void onlyForSenderDomainShouldKeepWhenHeaderFromDomainMatches() throws Exception {
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                        .addFrom("bob@localhost")
+                        .setText("This is my email")
+                        .build())
+                    .build()))
+                .isTrue();
+        }
+
+        @Test
+        void onlyForSenderDomainShouldRejectWhenHeaderFromDomainDoesNotMatches() throws Exception {
+            assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.LOCALHOST)
+                .test(FakeMail.builder()
+                    .name("mail")
+                    .sender("bob@other.com")
+                    .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                        .addFrom("bob@other.com")
+                        .setText("This is my email")
+                        .build())
                     .build()))
                 .isFalse();
         }
