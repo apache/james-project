@@ -190,6 +190,139 @@ public class DKIMHookIntegrationTest {
             .contains("530 DKIM check failed. Wrong d token. Expecting avocat.fr");
     }
 
+    @Test
+    void shouldRejectFromHeaderCheckedDomainWhenNotSigned(GuiceJamesServer guiceJamesServer) throws Exception {
+        SocketChannel server = SocketChannel.open();
+        server.connect(new InetSocketAddress(LOCALHOST_IP, guiceJamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue()));
+        readBytes(server);
+
+        server.write(ByteBuffer.wrap(("EHLO whatever.com\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("MAIL FROM: <user@whatever.com>\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("RCPT TO: <user@" + DOMAIN.asString() + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server); // needed to synchronize
+        server.write(ByteBuffer.wrap(("from:<user@" + DOMAIN.asString() + ">\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        byte[] dataResponse = readBytes(server);
+        server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(new String(dataResponse, StandardCharsets.UTF_8))
+            .contains("530 DKIM check failed. Expecting DKIM signatures. Got none.");
+    }
+
+    @Test
+    void shouldAcceptFromHeaderNotCheckedDomains(GuiceJamesServer guiceJamesServer) throws Exception {
+        SocketChannel server = SocketChannel.open();
+        server.connect(new InetSocketAddress(LOCALHOST_IP, guiceJamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue()));
+        readBytes(server);
+
+        server.write(ByteBuffer.wrap(("EHLO whatever.com\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("MAIL FROM: <user@whatever.com>\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("RCPT TO: <user@" + DOMAIN.asString() + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server); // needed to synchronize
+        server.write(ByteBuffer.wrap(("from:<user@whatever.com>\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        byte[] dataResponse = readBytes(server);
+        server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(new String(dataResponse, StandardCharsets.UTF_8))
+            .contains("250 2.6.0 Message received");
+    }
+
+    @Test
+    void shouldAcceptFromHeaderEmailsForCheckedDomainsWhenSigned(GuiceJamesServer guiceJamesServer) throws Exception {
+        SocketChannel server = SocketChannel.open();
+        server.connect(new InetSocketAddress(LOCALHOST_IP, guiceJamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue()));
+        readBytes(server);
+
+        server.write(ByteBuffer.wrap(("EHLO " + DOMAIN.asString() + "\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("MAIL FROM: <user@whatever.com>\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("RCPT TO: <user@" + DOMAIN.asString() + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server); // needed to synchronize
+
+        // goodDkim.eml has a from header with the local domain
+        server.write(ByteBuffer.wrap(ClassLoaderUtils.getSystemResourceAsByteArray("eml/goodDkim.eml")));
+
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        byte[] dataResponse = readBytes(server);
+        server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(new String(dataResponse, StandardCharsets.UTF_8))
+            .contains("250 2.6.0 Message received");
+    }
+
+    @Test
+    void shouldRejectFromHeaderInvalidDKIMSignatures(GuiceJamesServer guiceJamesServer) throws Exception {
+        SocketChannel server = SocketChannel.open();
+        server.connect(new InetSocketAddress(LOCALHOST_IP, guiceJamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue()));
+        readBytes(server);
+
+        server.write(ByteBuffer.wrap(("EHLO " + DOMAIN.asString() + "\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("MAIL FROM: <user@whatever.com>\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("RCPT TO: <user@" + DOMAIN.asString() + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server); // needed to synchronize
+
+        // badDkim.eml has a from header with the local domain
+        server.write(ByteBuffer.wrap(ClassLoaderUtils.getSystemResourceAsByteArray("eml/badDkim.eml")));
+
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        byte[] dataResponse = readBytes(server);
+        server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(new String(dataResponse, StandardCharsets.UTF_8))
+            .contains("530 DKIM check failed. Invalid signature.");
+    }
+
+    @Test
+    void shouldRejectFromHeaderCheckedDomainsWhenSignatureOfOtherDomain(GuiceJamesServer guiceJamesServer) throws Exception {
+        SocketChannel server = SocketChannel.open();
+        server.connect(new InetSocketAddress(LOCALHOST_IP, guiceJamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue()));
+        readBytes(server);
+
+        server.write(ByteBuffer.wrap(("EHLO " + DOMAIN.asString() + "\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("MAIL FROM: <user@whatever.com>\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("RCPT TO: <user@" + DOMAIN.asString() + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server); // needed to synchronize
+
+        server.write(ByteBuffer.wrap(ClassLoaderUtils.getSystemResourceAsByteArray("eml/otherDomainDkimLocalFrom.eml")));
+
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        byte[] dataResponse = readBytes(server);
+        server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(new String(dataResponse, StandardCharsets.UTF_8))
+            .contains("530 DKIM check failed. Invalid signature.");
+    }
+
     private byte[] readBytes(SocketChannel channel) throws IOException {
         ByteBuffer line = ByteBuffer.allocate(1024);
         channel.read(line);
