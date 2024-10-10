@@ -33,6 +33,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mime4j.dom.Message;
@@ -64,14 +65,14 @@ public interface SearchHighLighterContract {
         ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Matthieu for your help")
+                    .setSubject("Hallo, Thx Matthieu for your help")
                     .setBody("append contentA to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
         ComposedMessageId m2 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Alex for your help")
+                    .setSubject("Hallo, Thx Alex for your help")
                     .setBody("append contentB to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
@@ -90,7 +91,7 @@ public interface SearchHighLighterContract {
         assertThat(searchSnippets).hasSize(1);
         assertSoftly(softly -> {
             softly.assertThat(searchSnippets.getFirst().messageId()).isEqualTo(m1.getMessageId());
-            softly.assertThat(searchSnippets.getFirst().highlightedSubject()).contains("Hallo! Thx <mark>Matthieu</mark> for your help");
+            softly.assertThat(searchSnippets.getFirst().highlightedSubject()).contains("Hallo, Thx <mark>Matthieu</mark> for your help");
         });
     }
 
@@ -102,14 +103,14 @@ public interface SearchHighLighterContract {
         ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Matthieu for your help")
+                    .setSubject("Hallo, Thx Matthieu for your help")
                     .setBody("append contentA to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
         ComposedMessageId m2 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Alex for your help")
+                    .setSubject("Hallo, Thx Alex for your help")
                     .setBody("append contentB to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
@@ -139,14 +140,14 @@ public interface SearchHighLighterContract {
         ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Matthieu for your help")
+                    .setSubject("Hallo, Thx Matthieu for your help")
                     .setBody("append contentA to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
         ComposedMessageId m2 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Alex for your help")
+                    .setSubject("Hallo, Thx Alex for your help")
                     .setBody("append contentB to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
@@ -172,14 +173,14 @@ public interface SearchHighLighterContract {
         ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Naruto for your help")
+                    .setSubject("Hallo, Thx Naruto for your help")
                     .setBody("append Naruto to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
         ComposedMessageId m2 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Alex for your help")
+                    .setSubject("Hallo, Thx Alex for your help")
                     .setBody("append contentB to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
@@ -200,7 +201,7 @@ public interface SearchHighLighterContract {
         assertSoftly(softly -> {
             softly.assertThat(searchSnippets.getFirst().messageId()).isEqualTo(m1.getMessageId());
             softly.assertThat(searchSnippets.getFirst().highlightedBody()).contains("append <mark>Naruto</mark> to inbox");
-            softly.assertThat(searchSnippets.getFirst().highlightedSubject()).contains("Hallo! Thx <mark>Naruto</mark> for your help");
+            softly.assertThat(searchSnippets.getFirst().highlightedSubject()).contains("Hallo, Thx <mark>Naruto</mark> for your help");
         });
     }
 
@@ -245,7 +246,7 @@ public interface SearchHighLighterContract {
         ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Naruto Itachi for your help")
+                    .setSubject("Hallo, Thx Naruto Itachi for your help")
                     .setBody("append Naruto Itachi to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
@@ -319,7 +320,7 @@ public interface SearchHighLighterContract {
         ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Matthieu for your help")
+                    .setSubject("Hallo, Thx Matthieu for your help")
                     .setBody("append contentA to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
@@ -344,7 +345,7 @@ public interface SearchHighLighterContract {
         ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Matthieu for your help")
+                    .setSubject("Hallo, Thx Matthieu for your help")
                     .setBody("append contentA to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
@@ -364,7 +365,7 @@ public interface SearchHighLighterContract {
 
         // Then highlightSearch should return username1 entry
         assertThat(searchSnippets).hasSize(1);
-        assertThat(searchSnippets.getFirst().highlightedSubject()).contains("Hallo! Thx <mark>Matthieu</mark> for your help");
+        assertThat(searchSnippets.getFirst().highlightedSubject()).contains("Hallo, Thx <mark>Matthieu</mark> for your help");
     }
 
     @Test
@@ -374,14 +375,14 @@ public interface SearchHighLighterContract {
         ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Naruto for your help")
+                    .setSubject("Hallo, Thx Naruto for your help")
                     .setBody("append Naruto to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
         ComposedMessageId m2 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Alex for your help")
+                    .setSubject("Hallo, Thx Alex for your help")
                     .setBody("append contentB to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
@@ -402,8 +403,8 @@ public interface SearchHighLighterContract {
         assertThat(searchSnippets.stream()
             .map(SearchSnippet::highlightedSubject)
             .toList())
-            .containsExactlyInAnyOrder(Optional.of("Hallo! Thx <mark>Naruto</mark> for your help"),
-                Optional.of("Hallo! Thx <mark>Alex</mark> for your help"));
+            .containsExactlyInAnyOrder(Optional.of("Hallo, Thx <mark>Naruto</mark> for your help"),
+                Optional.of("Hallo, Thx <mark>Alex</mark> for your help"));
     }
 
     @Test
@@ -413,14 +414,14 @@ public interface SearchHighLighterContract {
         ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Naruto for your help - Sasuke for your help")
+                    .setSubject("Hallo, Thx Naruto for your help - Sasuke for your help")
                     .setBody("append Naruto to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
         ComposedMessageId m2 = appendMessage(MessageManager.AppendCommand.from(
                 Message.Builder.of()
                     .setTo("to@james.local")
-                    .setSubject("Hallo! Thx Alex for your help")
+                    .setSubject("Hallo, Thx Alex for your help")
                     .setBody("append contentB to inbox", StandardCharsets.UTF_8)),
             session).getId();
 
@@ -441,6 +442,27 @@ public interface SearchHighLighterContract {
         assertThat(searchSnippets.stream()
             .map(SearchSnippet::highlightedSubject)
             .toList())
-            .containsExactlyInAnyOrder(Optional.of("Hallo! Thx <mark>Naruto</mark> for your help - <mark>Sasuke</mark> for your help"));
+            .containsExactlyInAnyOrder(Optional.of("Hallo, Thx <mark>Naruto</mark> for your help - <mark>Sasuke</mark> for your help"));
+    }
+
+    @Test
+    default void highLightSearchShouldReturnEmptyWhenMessageIdsIsEmpty() throws Exception {
+        MailboxSession session = session(USERNAME1);
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("Hallo, Thx Naruto Itachi for your help")
+                    .setBody("append Naruto Itachi to inbox", StandardCharsets.UTF_8)),
+            session).getId();
+
+        verifyMessageWasIndexed(1);
+
+        List<MessageId> messageIdsSearch = List.of();
+
+        assertThat(Flux.from(testee().highlightSearch(messageIdsSearch, MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.bodyContains("Naruto Itachi")))
+                .inMailboxes(List.of(m1.getMailboxId()))
+                .build(), session))
+            .collectList()
+            .block()).hasSize(0);
     }
 }

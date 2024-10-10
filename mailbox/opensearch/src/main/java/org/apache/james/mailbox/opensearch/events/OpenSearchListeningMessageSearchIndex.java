@@ -28,6 +28,7 @@ import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.IS_U
 import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.MAILBOX_ID;
 import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.MESSAGE_ID;
 import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.UID;
+import static org.apache.james.mailbox.opensearch.search.OpenSearchSearcher.SEARCH_HIGHLIGHT;
 
 import java.util.Collection;
 import java.util.EnumSet;
@@ -324,7 +325,7 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         Optional<Integer> noLimit = Optional.empty();
 
-        return searcher.search(ImmutableList.of(mailbox.getMailboxId()), searchQuery, noLimit, UID_FIELD)
+        return searcher.search(ImmutableList.of(mailbox.getMailboxId()), searchQuery, noLimit, UID_FIELD, !SEARCH_HIGHLIGHT)
             .handle(this::extractUidFromHit);
     }
     
@@ -336,7 +337,7 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
             return Flux.empty();
         }
 
-        return searcher.search(mailboxIds, searchQuery, Optional.empty(), MESSAGE_ID_FIELD)
+        return searcher.search(mailboxIds, searchQuery, Optional.empty(), MESSAGE_ID_FIELD, !SEARCH_HIGHLIGHT)
             .handle(this::extractMessageIdFromHit)
             .distinct()
             .take(limit);
