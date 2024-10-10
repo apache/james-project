@@ -237,12 +237,7 @@ public interface ImapSession extends CommandDetectionSession {
      * Pop the current {@link ImapLineHandler}
      */
     void popLineHandler();
-    
-    /**
-     * Return true if multiple namespaces are supported
-     */
-    boolean supportMultipleNamespaces();
-    
+
     /**
      * Return true if SSL is required when Authenticating
      */

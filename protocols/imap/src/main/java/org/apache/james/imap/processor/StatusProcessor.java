@@ -74,13 +74,17 @@ import reactor.core.publisher.Mono;
  */
 public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(StatusProcessor.class);
+    public static final boolean RELATIVE = true;
 
+
+    private final PathConverter.Factory pathConverterFactory;
     private ImapConfiguration imapConfiguration;
 
     @Inject
     public StatusProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                           MetricFactory metricFactory) {
+                           MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(StatusRequest.class, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -96,7 +100,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
 
     @Override
     protected Mono<Void> processRequestReactive(StatusRequest request, ImapSession session, Responder responder) {
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
+        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
         MailboxSession mailboxSession = session.getMailboxSession();
         StatusDataItems statusDataItems = request.getStatusDataItems();
 
@@ -161,8 +165,8 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
     private Mono<MailboxStatusResponse> computeStatusResponse(MessageManager mailbox,
                                                               StatusDataItems statusDataItems,
                                                               MessageManager.MailboxMetaData metaData,
-                                                              MailboxSession session) {
-        return iterateMailbox(statusDataItems, mailbox, session)
+                                                              MailboxSession mailboxSession) {
+        return iterateMailbox(statusDataItems, mailbox, mailboxSession)
             .map(maybeIterationResult -> {
                 Optional<Long> appendLimit = appendLimit(statusDataItems);
                 Long messages = messages(statusDataItems, metaData);
@@ -177,7 +181,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
                     maybeIterationResult.flatMap(result -> result.getSize(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeleted(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeletedStorage(statusDataItems)).orElse(null),
-                    messages, recent, uidNext, highestModSeq, uidValidity, unseen, mailbox.getMailboxPath().getName(), mailboxId);
+                    messages, recent, uidNext, highestModSeq, uidValidity, unseen, pathConverterFactory.forSession(mailboxSession).mailboxName(RELATIVE, mailbox.getMailboxPath(), mailboxSession), mailboxId);
             });
     }
 

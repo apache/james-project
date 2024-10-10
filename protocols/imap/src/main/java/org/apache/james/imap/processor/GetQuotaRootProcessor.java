@@ -60,13 +60,15 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
 
     private final QuotaRootResolver quotaRootResolver;
     private final QuotaManager quotaManager;
+    private final PathConverter.Factory pathConverterFactory;
 
     @Inject
     public GetQuotaRootProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, QuotaRootResolver quotaRootResolver, QuotaManager quotaManager,
-                                 MetricFactory metricFactory) {
+                                 MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(GetQuotaRootRequest.class, mailboxManager, factory, metricFactory);
         this.quotaRootResolver = quotaRootResolver;
         this.quotaManager = quotaManager;
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -79,7 +81,7 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
         final MailboxSession mailboxSession = session.getMailboxSession();
         final MailboxManager mailboxManager = getMailboxManager();
 
-        final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
+        final MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
 
         // First check mailbox exists
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))

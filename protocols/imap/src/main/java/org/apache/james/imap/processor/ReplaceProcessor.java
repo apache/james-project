@@ -68,8 +68,11 @@ public class ReplaceProcessor extends AbstractMailboxProcessor<ReplaceRequest> i
     private static final Logger LOGGER = LoggerFactory.getLogger(ReplaceProcessor.class);
     private static final ImmutableList<Capability> CAPABILITIES = ImmutableList.of(Capability.of("REPLACE"));
 
-    public ReplaceProcessor(MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, MetricFactory metricFactory) {
+    private final PathConverter.Factory pathConverterFactory;
+
+    public ReplaceProcessor(MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(ReplaceRequest.class, mailboxManager, statusResponseFactory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -83,7 +86,7 @@ public class ReplaceProcessor extends AbstractMailboxProcessor<ReplaceRequest> i
         final Content messageIn = request.getMessage().asMailboxContent();
         final Date datetime = request.getDatetime();
         final Flags flags = request.getFlags();
-        final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
+        final MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName);
         final MailboxManager mailboxManager = getMailboxManager();
 
         session.stopDetectingCommandInjection();

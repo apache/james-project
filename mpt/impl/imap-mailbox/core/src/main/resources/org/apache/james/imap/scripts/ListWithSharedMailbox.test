@@ -17,16 +17,179 @@
 # under the License.                                           #
 ################################################################
 
-# Shouw that #private.Boby.sharedMailbox and it's child are not displayed
-
+# Can list other users delegated mailbox
 C: a0 LIST "" "*"
+SUB {
 S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
+}
 S: a0 OK LIST completed.
 
-C: a1 LIST "#private" "%"
-S: \* LIST \(\\HasNoChildren\) \"\.\" \"#private.imapuser.INBOX\"
+C: a1 LIST "" "*" RETURN (MYRIGHTS)
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+S: \* MYRIGHTS \"INBOX\" \"aeiklprstwx\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* MYRIGHTS \"#user.diana.sharedMailbox\" \"lr\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* MYRIGHTS \"#user.boby.sharedMailbox\" \"lr\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* MYRIGHTS \"#user.boby.sharedMailbox.child\" \"lr\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
+S: \* MYRIGHTS \"#user.boby.Sent\" \"lr\"
+}
 S: a1 OK LIST completed.
 
-C: a3 LIST "#private" sharedMailbox*
-S: a3 OK LIST completed.
+C: a2 LIST "" "*" RETURN (STATUS (UNSEEN RECENT))
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+S: \* STATUS \"INBOX\" \(RECENT 0 UNSEEN 0\)
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* STATUS \"#user.diana.sharedMailbox\" \(RECENT 0 UNSEEN 0\)
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* STATUS \"#user.boby.sharedMailbox\" \(RECENT 0 UNSEEN 0\)
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* STATUS \"#user.boby.sharedMailbox.child\" \(RECENT 0 UNSEEN 0\)
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
+S: \* STATUS \"#user.boby.Sent\" \(RECENT 0 UNSEEN 0\)
+}
+S: a2 OK LIST completed.
 
+C: a3 STATUS #user.boby.sharedMailbox (UNSEEN RECENT)
+S: \* STATUS \"#user.boby.sharedMailbox\" \(RECENT 0 UNSEEN 0\)
+S: a3 OK STATUS completed.
+
+C: a4 LIST "#user.diana" "*"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: a4 OK LIST completed.
+
+C: a7 LIST "#user" "*"
+SUB {
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
+}
+S: a7 OK LIST completed.
+
+# When looking up private namespace the shared mailboxes are not included
+C: a8 LIST "#private" "%"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"#private.INBOX\"
+S: a8 OK LIST completed.
+
+C: a9 LIST "#private" sharedMailbox*
+S: a9 OK LIST completed.
+
+C: a10 LIST "#user" "diana.*"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: a10 OK LIST completed.
+
+C: a11 LIST "#user" "diana."
+S: a11 OK LIST completed.
+
+C: a12 LIST "" "*" RETURN (SPECIAL-USE)
+SUB {
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
+}
+S: a12 OK LIST completed.
+
+C: b01 SUBSCRIBE INBOX
+S: b01 OK SUBSCRIBE completed.
+C: b02 SUBSCRIBE #user.diana.sharedMailbox
+S: b02 OK SUBSCRIBE completed.
+C: b03 SUBSCRIBE #user.boby.sharedMailbox
+S: b03 OK SUBSCRIBE completed.
+C: b04 SUBSCRIBE #user.boby.sharedMailbox.child
+S: b04 OK SUBSCRIBE completed.
+C: b05 SUBSCRIBE #user.boby.Sent
+S: b05 OK SUBSCRIBE completed.
+
+C: b06 LSUB "" "*"
+SUB {
+S: \* LSUB \(\) \"\.\" \"INBOX\"
+S: \* LSUB \(\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LSUB \(\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LSUB \(\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LSUB \(\) \".\" \"#user.boby.Sent\"
+}
+S: b06 OK LSUB completed.
+
+C: b07 LSUB "#user" "*"
+SUB {
+S: \* LSUB \(\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LSUB \(\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LSUB \(\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LSUB \(\) \".\" \"#user.boby.Sent\"
+}
+S: b07 OK LSUB completed.
+
+C: b08 LSUB "#user.diana" "*"
+S: \* LSUB \(\) \".\" \"#user.diana.sharedMailbox\"
+S: b08 OK LSUB completed.
+
+C: b09 LSUB "" "#user.*"
+SUB {
+S: \* LSUB \(\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LSUB \(\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LSUB \(\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LSUB \(\) \".\" \"#user.boby.Sent\"
+}
+S: b09 OK LSUB completed.
+
+C: b10 LSUB "" "#user.diana.*"
+S: \* LSUB \(\) \".\" \"#user.diana.sharedMailbox\"
+S: b10 OK LSUB completed.
+
+C: b11 LSUB "#user" "diana.*"
+S: \* LSUB \(\) \".\" \"#user.diana.sharedMailbox\"
+S: b11 OK LSUB completed.
+
+C: b12 LIST "" "*" RETURN (SUBSCRIBED)
+SUB {
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" \"INBOX\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LIST \(\\HasChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.Sent\"
+}
+S: b12 OK LIST completed.
+
+C: b13 LIST (SUBSCRIBED) "" "*"RETURN (SUBSCRIBED)
+SUB {
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" \"INBOX\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LIST \(\\HasChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.Sent\"
+}
+S: b13 OK LIST completed.
+
+C: b14 UNSUBSCRIBE #user.diana.sharedMailbox
+S: b14 OK UNSUBSCRIBE completed.
+
+C: b15 LIST (SUBSCRIBED) "" "*"RETURN (SUBSCRIBED)
+SUB {
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" \"INBOX\"
+S: \* LIST \(\\HasChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.Sent\"
+}
+S: b15 OK LIST completed.
+
+C: c01 SELECT #user.diana.sharedMailbox
+S: \* OK \[MAILBOXID \(.*\)\] Ok
+S: \* FLAGS \(.*\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY .*\] UIDs valid
+S: \* OK \[PERMANENTFLAGS \(.*\)\] Limited
+S: \* OK \[HIGHESTMODSEQ .*\] Highest
+S: \* OK \[UIDNEXT .*\] Predicted next UID
+S: c01 OK \[READ-ONLY\] SELECT completed.

@@ -42,15 +42,18 @@ import reactor.core.publisher.Mono;
 public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscribeProcessor.class);
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
     public SubscribeProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
-                              MetricFactory metricFactory) {
+                              MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(SubscribeRequest.class, mailboxManager, subscriptionManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
     protected Mono<Void> doProcessRequest(SubscribeRequest request, ImapSession session, Responder responder) {
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
+        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
         MailboxSession mailboxSession = session.getMailboxSession();
 
         return Mono.from(getSubscriptionManager().subscribeReactive(mailboxPath, mailboxSession))

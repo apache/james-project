@@ -31,6 +31,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.api.process.MailboxTyper;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.ListRequest;
 import org.apache.james.imap.message.request.XListRequest;
 import org.apache.james.imap.message.response.XListResponse;
@@ -51,13 +52,13 @@ public class XListProcessor extends ListProcessor<XListRequest> implements Capab
 
     @Inject
     public XListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory,
-                          SubscriptionManager subscriptionManager) {
-        this(mailboxManager, factory, null, metricFactory, subscriptionManager);
+                          SubscriptionManager subscriptionManager, PathConverter.Factory pathConverterFactory) {
+        this(mailboxManager, factory, null, metricFactory, subscriptionManager, pathConverterFactory);
     }
 
     public XListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MailboxTyper mailboxTyper,
-                          MetricFactory metricFactory, SubscriptionManager subscriptionManager) {
-        super(XListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, null, mailboxTyper);
+                          MetricFactory metricFactory, SubscriptionManager subscriptionManager, PathConverter.Factory pathConverterFactory) {
+        super(XListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, null, mailboxTyper, pathConverterFactory);
     }
 
     @Override

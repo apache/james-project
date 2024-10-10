@@ -43,9 +43,12 @@ public class DefaultMailboxTyper implements MailboxTyper {
 
     @Override
     public MailboxType getMailboxType(ImapSession session, MailboxPath path) {
-        return Role.from(path.getName())
-            .flatMap(this::asMailboxType)
-            .orElse(MailboxType.OTHER);
+        if (path.belongsTo(session.getMailboxSession())) {
+            return Role.from(path.getName())
+                .flatMap(this::asMailboxType)
+                .orElse(MailboxType.OTHER);
+        }
+        return MailboxType.OTHER;
     }
 
     private Optional<MailboxType> asMailboxType(Role role) {
