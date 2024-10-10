@@ -41,8 +41,18 @@ public class PrefixedRegex implements MailboxNameExpression {
 
     @Override
     public boolean isExpressionMatch(String name) {
-        return name.startsWith(prefix)
-            && regexMatching(name.substring(prefix.length()));
+        if (name.startsWith(prefix)) {
+            String nameSubstring = sanitizeSubstring(name.substring(prefix.length()));
+            return regexMatching(nameSubstring);
+        }
+        return false;
+    }
+
+    private String sanitizeSubstring(String name) {
+        if (!name.isEmpty() && name.charAt(0) == pathDelimiter) {
+            return name.substring(1);
+        }
+        return name;
     }
 
     private boolean regexMatching(String name) {
@@ -132,5 +142,13 @@ public class PrefixedRegex implements MailboxNameExpression {
     @Override
     public final int hashCode() {
         return Objects.hash(prefix, regex, pathDelimiter);
+    }
+
+    @Override
+    public String toString() {
+        return "PrefixedRegex{" +
+            "prefix='" + prefix + '\'' +
+            ", regex='" + regex + '\'' +
+            '}';
     }
 }

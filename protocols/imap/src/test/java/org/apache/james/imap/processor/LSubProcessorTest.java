@@ -38,6 +38,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.LsubRequest;
 import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -101,7 +102,7 @@ class LSubProcessorTest {
             Object[] args = invocation.getArguments();
             return (Mono) args[0];
         });
-        processor = new LSubProcessor(mailboxManager, manager, serverResponseFactory, new RecordingMetricFactory());
+        processor = new LSubProcessor(mailboxManager, manager, serverResponseFactory, new RecordingMetricFactory(), PathConverter.Factory.DEFAULT);
         session.setMailboxSession(mailboxSession);
     }
 
