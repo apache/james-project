@@ -126,7 +126,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
 
     Mono<MailboxStatusResponse> sendStatus(MessageManager mailbox, StatusDataItems statusDataItems, Responder responder, ImapSession session, MailboxSession mailboxSession) {
         return retrieveMetadata(mailbox, statusDataItems, mailboxSession)
-            .flatMap(metaData -> computeStatusResponse(mailbox, statusDataItems, metaData, mailboxSession, session)
+            .flatMap(metaData -> computeStatusResponse(mailbox, statusDataItems, metaData, mailboxSession)
                 .doOnNext(response -> {
                     // Enable CONDSTORE as this is a CONDSTORE enabling command
                     if (response.getHighestModSeq() != null) {
@@ -165,7 +165,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
     private Mono<MailboxStatusResponse> computeStatusResponse(MessageManager mailbox,
                                                               StatusDataItems statusDataItems,
                                                               MessageManager.MailboxMetaData metaData,
-                                                              MailboxSession mailboxSession, ImapSession session) {
+                                                              MailboxSession mailboxSession) {
         return iterateMailbox(statusDataItems, mailbox, mailboxSession)
             .map(maybeIterationResult -> {
                 Optional<Long> appendLimit = appendLimit(statusDataItems);
@@ -181,7 +181,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
                     maybeIterationResult.flatMap(result -> result.getSize(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeleted(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeletedStorage(statusDataItems)).orElse(null),
-                    messages, recent, uidNext, highestModSeq, uidValidity, unseen, pathConverterFactory.forSession(session).mailboxName(RELATIVE, mailbox.getMailboxPath(), mailboxSession), mailboxId);
+                    messages, recent, uidNext, highestModSeq, uidValidity, unseen, pathConverterFactory.forSession(mailboxSession).mailboxName(RELATIVE, mailbox.getMailboxPath(), mailboxSession), mailboxId);
             });
     }
 
