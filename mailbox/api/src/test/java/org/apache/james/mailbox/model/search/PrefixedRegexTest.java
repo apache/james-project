@@ -224,12 +224,12 @@ class PrefixedRegexTest {
     }
 
     @Test
-    void isExpressionMatchShouldReturnFalseWhenNameBeginsWithDelimiter() {
+    void isExpressionMatchShouldReturnTrueWhenNameBeginsWithDelimiter() {
         PrefixedRegex testee = new PrefixedRegex(EMPTY_PREFIX, "mailbox", PATH_DELIMITER);
 
         boolean actual = testee.isExpressionMatch(".mailbox");
 
-        assertThat(actual).isFalse();
+        assertThat(actual).isTrue();
     }
 
     @Test
