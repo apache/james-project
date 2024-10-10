@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.routes;
 
+import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.hamcrest.CoreMatchers.is;
@@ -479,7 +480,52 @@ class MappingRoutesTest {
             );
     }
 
-     @Test
+    @Test
+    void addMappingsShouldAddMappings() throws Exception {
+        String importedJsonBody = "{" +
+            "  \"alias@domain.tld\": [" +
+            "    {" +
+            "      \"type\": \"Alias\"," +
+            "      \"mapping\": \"user@domain.tld\"" +
+            "    }" +
+            "  ]," +
+            "  \"domain.mapping.tld\": [" +
+            "    {" +
+            "      \"type\": \"Domain\"," +
+            "      \"mapping\": \"realdomain.tld\"" +
+            "    }" +
+            "  ]," +
+            "  \"address@domain.tld\": [" +
+            "    {" +
+            "      \"type\": \"Address\"," +
+            "      \"mapping\": \"user@domain.tld\"" +
+            "    }" +
+            "  ]" +
+            "}";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(importedJsonBody)
+            .when()
+                .put()
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+        String jsonBody = when()
+                .get()
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .extract()
+                .body()
+                .asString();
+
+        assertThatJson(jsonBody)
+            .isEqualTo(importedJsonBody);
+    }
+
+
+    @Test
     void getUserMappingsShouldReturnNotFoundByDefault() {
         when()
             .get("/user/")
