@@ -171,6 +171,18 @@ S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.Sent\"
 }
 S: b13 OK LIST completed.
 
+C: b14 UNSUBSCRIBE #user.diana.sharedMailbox
+S: b14 OK UNSUBSCRIBE completed.
+
+C: b15 LIST (SUBSCRIBED) "" "*"RETURN (SUBSCRIBED)
+SUB {
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" \"INBOX\"
+S: \* LIST \(\\HasChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.Sent\"
+}
+S: b15 OK LIST completed.
+
 C: c01 SELECT #user.diana.sharedMailbox
 S: \* OK \[MAILBOXID \(.*\)\] Ok
 S: \* FLAGS \(.*\)
