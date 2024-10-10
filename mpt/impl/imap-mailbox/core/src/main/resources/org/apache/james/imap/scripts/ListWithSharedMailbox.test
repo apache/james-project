@@ -170,3 +170,14 @@ S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox.chi
 S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.Sent\"
 }
 S: b13 OK LIST completed.
+
+C: c01 SELECT #user.diana.sharedMailbox
+S: \* OK \[MAILBOXID \(.*\)\] Ok
+S: \* FLAGS \(.*\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY .*\] UIDs valid
+S: \* OK \[PERMANENTFLAGS \(.*\)\] Limited
+S: \* OK \[HIGHESTMODSEQ .*\] Highest
+S: \* OK \[UIDNEXT .*\] Predicted next UID
+S: c01 OK \[READ-ONLY\] SELECT completed.
