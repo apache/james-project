@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.james.events.EventListener;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
+import org.apache.james.mailbox.searchhighligt.SearchHighlighterConfiguration;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.lucene.store.Directory;
@@ -52,5 +53,11 @@ public class LuceneSearchMailboxModule extends AbstractModule {
     @Singleton
     Directory provideDirectory(FileSystem fileSystem) throws IOException {
         return FSDirectory.open(fileSystem.getBasedir().toPath());
+    }
+
+    @Provides
+    @Singleton
+    SearchHighlighterConfiguration provideSearchHighlighterConfiguration() {
+        return SearchHighlighterConfiguration.DEFAULT;
     }
 }

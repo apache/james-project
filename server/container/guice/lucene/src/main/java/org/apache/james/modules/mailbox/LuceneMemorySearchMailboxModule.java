@@ -21,14 +21,23 @@ package org.apache.james.modules.mailbox;
 
 import java.io.IOException;
 
+import org.apache.james.mailbox.lucene.search.LuceneSearchHighlighter;
+import org.apache.james.mailbox.searchhighligt.SearchHighlighter;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 
 public class LuceneMemorySearchMailboxModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+        bind(SearchHighlighter.class).to(LuceneSearchHighlighter.class)
+            .in(Scopes.SINGLETON);
+    }
 
     @Provides
     @Singleton
