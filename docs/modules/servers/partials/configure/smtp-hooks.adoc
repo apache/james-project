@@ -360,6 +360,7 @@ Supported configuration elements:
 
 - *forceCRLF*: Should CRLF be forced when computing body hashes.
 - *onlyForSenderDomain*: If specified, the DKIM checks are applied just for the emails whose MAIL FROM or from header specifies this domain. If unspecified, all emails are checked (default).
+- *validatedEntities*: If specified, comma separated values allowing granular checks on emails whose MAIL FROM (`envelope` option) or from header (`headers` option) specifies the domain defined in `onlyForSenderDomain`. If unspecified, defaults to `envelope,headers`.
 - *signatureRequired*: If DKIM signature is checked, the absence of signature will generate failure. Defaults to false.
 - *expectedDToken*: If DKIM signature is checked, the body should contain at least one DKIM signature with this d token. If unspecified, all d tokens are considered valid (default).
 
@@ -368,13 +369,14 @@ Example handlerchain configuration for `smtpserver.xml`:
 [source,xml]
 ....
 <handlerchain>
-	<handler class="org.apache.james.smtpserver.DKIMHook">
-		<forceCLRF>true</forceCLRF>
-		<onlyForSenderDomain>apache.org</onlyForSenderDomain>
-		<signatureRequired>true</signatureRequired>
-		<expectedDToken>apache.org</expectedDToken>
-	</handler>
-	<handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+    <handler class="org.apache.james.smtpserver.DKIMHook">
+        <forceCLRF>true</forceCLRF>
+        <onlyForSenderDomain>apache.org</onlyForSenderDomain>
+        <validatedEntities>envelope,headers</validatedEntities>
+        <signatureRequired>true</signatureRequired>
+        <expectedDToken>apache.org</expectedDToken>
+    </handler>
+    <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
 </handlerchain>
 ....
 
