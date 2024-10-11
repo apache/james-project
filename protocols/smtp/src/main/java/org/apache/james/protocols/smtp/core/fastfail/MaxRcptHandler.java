@@ -45,7 +45,7 @@ public class MaxRcptHandler implements RcptHook {
 
 
     /**
-     * Set the max rcpt for wich should be accepted
+     * Set the max rcpt for which a mail should be accepted
      * 
      * @param maxRcpt
      *            The max rcpt count

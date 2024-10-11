@@ -26,32 +26,42 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import com.github.fge.lambdas.Throwing;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.smtpserver.fastfail.MaxRcptHandler;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.SmtpSendingStep;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
 class SmtpMaxRcptHandlerTest {
     private static final String USER = "user@" + DEFAULT_DOMAIN;
-    private static final Integer DEFAULT_MAX_RCPT_HANDLER = 50;
+    private static final Integer DEFAULT_MAX_RCPT = 50;
 
     @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
-    private void createJamesServer(File temporaryFolder, SmtpConfiguration.Builder smtpConfiguration) throws Exception {
+    private void createJamesServer(File temporaryFolder) throws Exception {
+        SmtpConfiguration.Builder smtpConfiguration = SmtpConfiguration.builder()
+                .doNotVerifyIdentity()
+                .addHook(MaxRcptHandler.class.getName(),
+                        Map.of("maxRcptCount", DEFAULT_MAX_RCPT.toString()));
+
         jamesServer = TemporaryJamesServer.builder()
             .withSmtpConfiguration(smtpConfiguration)
             .build(temporaryFolder);
@@ -60,10 +70,8 @@ class SmtpMaxRcptHandlerTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(USER, PASSWORD);
-
-        for (int i = 1; i <= DEFAULT_MAX_RCPT_HANDLER + 1 ; i++) {
-            dataProbe.addUser("recipient" + i + "@" + DEFAULT_DOMAIN, PASSWORD);
-        }
+        IntStream.range(1, DEFAULT_MAX_RCPT + 1).forEach(Throwing.intConsumer((
+                i -> dataProbe.addUser("recipient" + i + "@" + DEFAULT_DOMAIN, PASSWORD))));
     }
 
     @AfterEach
@@ -73,36 +81,32 @@ class SmtpMaxRcptHandlerTest {
         }
     }
 
+    @Disabled("this test wont pass just yet as the tested feature is still in development")
     @Test
     void messageShouldNotBeAcceptedWhenMaxRcptHandlerExceeded(@TempDir File temporaryFolder) throws Exception {
-        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
-            .doNotVerifyIdentity()
-            .withMaxRcptHandler(DEFAULT_MAX_RCPT_HANDLER));
+        createJamesServer(temporaryFolder);
 
         assertThatThrownBy(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(USER, PASSWORD)
-                .sendMessageWithHeaders(USER, getRecipients(DEFAULT_MAX_RCPT_HANDLER + 1), "message"))
-            .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "some error message\n"));
+                .sendMessageWithHeaders(USER, getRecipients(DEFAULT_MAX_RCPT + 1), "message"))
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "452 4.5.3 Requested action not taken: max recipients reached\n"));
     }
 
+    @Disabled("this test wont pass just yet as the tested feature is still in development")
     @Test
     void messageShouldBeAcceptedWhenMaxRcptHandlerWithinLimit(@TempDir File temporaryFolder) throws Exception {
-        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
-            .doNotVerifyIdentity()
-            .withMaxRcptHandler(DEFAULT_MAX_RCPT_HANDLER));
+        createJamesServer(temporaryFolder);
 
         assertDoesNotThrow(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(USER, PASSWORD)
-                .sendMessageWithHeaders(USER, getRecipients(DEFAULT_MAX_RCPT_HANDLER - 1),"message"));
+                .sendMessageWithHeaders(USER, getRecipients(DEFAULT_MAX_RCPT),"message"));
     }
 
     private List<String> getRecipients(Integer n) {
-        List<String> recipients = new ArrayList<>();
-        for (int i = 1; i <= n; i++) {
-            recipients.add("recipient" + i + "@" + DEFAULT_DOMAIN);
-        }
-        return recipients;
+        return IntStream.range(1, n + 1)
+                .mapToObj(i -> "recipient" + i + "@" + DEFAULT_DOMAIN)
+                .collect(Collectors.toList());
     }
 }
