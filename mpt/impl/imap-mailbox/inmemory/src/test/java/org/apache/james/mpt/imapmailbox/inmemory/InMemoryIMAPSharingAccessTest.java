@@ -16,24 +16,27 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mpt.api;
 
-import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCountLimit;
-import org.apache.james.core.quota.QuotaSizeLimit;
-import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mpt.api.ImapFeatures.Feature;
+package org.apache.james.mpt.imapmailbox.inmemory;
 
-public interface ImapHostSystem extends HostSystem {
+import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
+import org.apache.james.mpt.imapmailbox.suite.IMAPSharingAccessTest;
+import org.junit.jupiter.api.BeforeEach;
 
-    boolean supports(Feature... features);
+public class InMemoryIMAPSharingAccessTest extends IMAPSharingAccessTest {
+    private ImapHostSystem system;
+
+    @Override
+    @BeforeEach
+    public void setUp() throws Exception {
+        system = new InMemoryHostSystem();
+        system.beforeTest();
+        super.setUp();
+    }
     
-    void createMailbox(MailboxPath mailboxPath) throws Exception;
-
-    void fillMailbox(MailboxPath mailboxPath) throws Exception;
-
-    void setQuotaLimits(QuotaCountLimit maxMessageQuota, QuotaSizeLimit maxStorageQuota) throws Exception;
-
-    void grantRights(MailboxPath mailboxPath, Username userName, MailboxACL.Rfc4314Rights rights) throws Exception;
+    @Override
+    protected ImapHostSystem createImapHostSystem() {
+        return system;
+    }
 }
