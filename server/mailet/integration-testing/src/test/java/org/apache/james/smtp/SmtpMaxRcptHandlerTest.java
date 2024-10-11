@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.github.fge.lambdas.Throwing;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -46,6 +45,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
+
+import com.github.fge.lambdas.Throwing;
 
 class SmtpMaxRcptHandlerTest {
     private static final String USER = "user@" + DEFAULT_DOMAIN;
