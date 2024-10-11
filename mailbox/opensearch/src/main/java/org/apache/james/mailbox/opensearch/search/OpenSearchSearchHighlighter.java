@@ -39,7 +39,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import reactor.core.publisher.Flux;
 
 public class OpenSearchSearchHighlighter implements SearchHighlighter {
-    public static final List<String> SNIPPET_FIELDS = List.of(JsonMessageConstants.MESSAGE_ID, JsonMessageConstants.SUBJECT, JsonMessageConstants.TEXT_BODY);
+    public static final String ATTACHMENT_TEXT_CONTENT_FIELD = JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT;
+    public static final List<String> SNIPPET_FIELDS = List.of(
+        JsonMessageConstants.MESSAGE_ID,
+        JsonMessageConstants.SUBJECT,
+        JsonMessageConstants.TEXT_BODY,
+        ATTACHMENT_TEXT_CONTENT_FIELD);
 
     private final OpenSearchSearcher openSearchSearcher;
     private final StoreMailboxManager storeMailboxManager;
@@ -78,6 +83,7 @@ public class OpenSearchSearchHighlighter implements SearchHighlighter {
         Optional<String> highlightedSubject =  Optional.ofNullable(highlightHit.get(JsonMessageConstants.SUBJECT))
             .map(List::getFirst);
         Optional<String> highlightedTextBody = Optional.ofNullable(highlightHit.get(JsonMessageConstants.TEXT_BODY))
+            .or(() -> Optional.ofNullable(highlightHit.get(ATTACHMENT_TEXT_CONTENT_FIELD)))
             .map(List::getFirst);
 
         return new SearchSnippet(messageId, highlightedSubject, highlightedTextBody);

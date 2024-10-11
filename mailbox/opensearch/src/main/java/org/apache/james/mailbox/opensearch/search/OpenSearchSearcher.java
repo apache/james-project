@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.opensearch.search;
 
+import static org.apache.james.mailbox.opensearch.search.OpenSearchSearchHighlighter.ATTACHMENT_TEXT_CONTENT_FIELD;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -84,6 +86,7 @@ public class OpenSearchSearcher {
         this.highlightQuery = new Highlight.Builder()
             .fields(JsonMessageConstants.SUBJECT, highlightField)
             .fields(JsonMessageConstants.TEXT_BODY, highlightField)
+            .fields(ATTACHMENT_TEXT_CONTENT_FIELD, highlightField)
             .build();
     }
 
