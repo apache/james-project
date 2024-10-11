@@ -37,7 +37,6 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import scala.Int;
 
 public class SmtpConfiguration implements SerializableAsXml {
     public static final boolean AUTH_REQUIRED = true;
