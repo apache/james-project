@@ -41,7 +41,7 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.SmtpSendingStep;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
@@ -57,7 +57,8 @@ class SmtpMaxRcptHandlerTest {
 
     private TemporaryJamesServer jamesServer;
 
-    private void createJamesServer(File temporaryFolder) throws Exception {
+    @BeforeEach
+    public void createJamesServer(@TempDir File temporaryFolder) throws Exception {
         SmtpConfiguration.Builder smtpConfiguration = SmtpConfiguration.builder()
                 .doNotVerifyIdentity()
                 .addHook(MaxRcptHandler.class.getName(),
@@ -71,7 +72,7 @@ class SmtpMaxRcptHandlerTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(USER, PASSWORD);
-        IntStream.range(1, DEFAULT_MAX_RCPT + 1).forEach(Throwing.intConsumer((
+        IntStream.range(1, DEFAULT_MAX_RCPT + 2).forEach(Throwing.intConsumer((
                 i -> dataProbe.addUser("recipient" + i + "@" + DEFAULT_DOMAIN, PASSWORD))));
     }
 
@@ -82,11 +83,8 @@ class SmtpMaxRcptHandlerTest {
         }
     }
 
-    @Disabled("this test wont pass just yet as the tested feature is still in development")
     @Test
-    void messageShouldNotBeAcceptedWhenMaxRcptHandlerExceeded(@TempDir File temporaryFolder) throws Exception {
-        createJamesServer(temporaryFolder);
-
+    void messageShouldNotBeAcceptedWhenMaxRcptHandlerExceeded() throws Exception {
         assertThatThrownBy(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(USER, PASSWORD)
@@ -94,11 +92,8 @@ class SmtpMaxRcptHandlerTest {
             .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "452 4.5.3 Requested action not taken: max recipients reached\n"));
     }
 
-    @Disabled("this test wont pass just yet as the tested feature is still in development")
     @Test
-    void messageShouldBeAcceptedWhenMaxRcptHandlerWithinLimit(@TempDir File temporaryFolder) throws Exception {
-        createJamesServer(temporaryFolder);
-
+    void messageShouldBeAcceptedWhenMaxRcptHandlerWithinLimit() throws Exception {
         assertDoesNotThrow(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(USER, PASSWORD)

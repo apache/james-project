@@ -49,7 +49,11 @@
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
             {{#hooks}}
-            <handler class="{{hookFqcn}}"/>
+            <handler class="{{hookFqcn}}">
+                {{#hookConfigAsXML}}
+                <{{key}}>{{value}}</{{key}}>
+                {{/hookConfigAsXML}}
+            </handler>
             {{/hooks}}
         </handlerchain>
         <gracefulShutdown>false</gracefulShutdown>
@@ -89,7 +93,7 @@
             {{#hooks}}
             <handler class="{{hookFqcn}}">
                 {{#hookConfigAsXML}}
-                <MaxRcptCount>{{value}}</MaxRcptCount>
+                <{{key}}>{{value}}</{{key}}>
                 {{/hookConfigAsXML}}
             </handler>
             {{/hooks}}

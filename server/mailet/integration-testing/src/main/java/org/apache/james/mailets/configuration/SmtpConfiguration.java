@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
@@ -57,6 +56,13 @@ public class SmtpConfiguration implements SerializableAsXml {
         HookConfigurationEntry(String hookFqcn) {
             this.hookFqcn = hookFqcn;
             this.hookConfig = new HashMap<>();
+        }
+
+        private static Map<String, Object> asMustacheScopes(HookConfigurationEntry hook) {
+            Map<String, Object> hookScope = new HashMap<>();
+            hookScope.put("hookFqcn", hook.hookFqcn);
+            hookScope.put("hookConfigAsXML", hook.hookConfig.entrySet());
+            return hookScope;
         }
     }
 
@@ -176,13 +182,8 @@ public class SmtpConfiguration implements SerializableAsXml {
         scopes.put("bracketEnforcement", bracketEnforcement);
 
         List<Map<String, Object>> additionalHooksWithConfig = additionalHooks.stream()
-                .map(hook -> {
-                    Map<String, Object> hookScope = new HashMap<>();
-                    hookScope.put("hookFqcn", hook.hookFqcn);
-                    hookScope.put("hookConfigAsXML", hook.hookConfig.entrySet());
-                    return hookScope;
-                })
-                .collect(Collectors.toList());
+            .map(HookConfigurationEntry::asMustacheScopes)
+            .collect(ImmutableList.toImmutableList());
 
         scopes.put("hooks", additionalHooksWithConfig);
 
