@@ -65,7 +65,7 @@ public class DKIMHookIntegrationTest {
         server.connect(new InetSocketAddress(LOCALHOST_IP, guiceJamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue()));
         readBytes(server);
 
-        server.write(ByteBuffer.wrap(("HELO " + DOMAIN.asString() + "\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("EHLO " + DOMAIN.asString() + "\r\n").getBytes(StandardCharsets.UTF_8)));
         readBytes(server);
         server.write(ByteBuffer.wrap(("MAIL FROM: <user@" + DOMAIN.asString() + ">\r\n").getBytes(StandardCharsets.UTF_8)));
         readBytes(server);
