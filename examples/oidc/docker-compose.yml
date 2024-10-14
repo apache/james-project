@@ -7,6 +7,8 @@ services:
     volumes:
       - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml
       - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml
+    environment:
+      - X_USER_SECRET=xusersecret123
     networks:
       - james
     ports:

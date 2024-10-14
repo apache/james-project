@@ -99,6 +99,10 @@ This allows to prevent users from using some specific JMAP extensions.
 
 | set.max.size
 | Optional, default value is 500. The max number of items for /set methods.
+
+| authentication.strategy.rfc8621.xUser.secret
+| Optional. Disabled by default. Secret-value used to validate the X-User-Secret header when using the XUserAuthenticationStrategy. Use of this configuration property is highly advised.
+
 |===
 
 == Wire tapping
