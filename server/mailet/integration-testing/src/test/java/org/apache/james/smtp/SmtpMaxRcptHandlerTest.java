@@ -62,7 +62,7 @@ class SmtpMaxRcptHandlerTest {
         SmtpConfiguration.Builder smtpConfiguration = SmtpConfiguration.builder()
                 .doNotVerifyIdentity()
                 .addHook(MaxRcptHandler.class.getName(),
-                        Map.of("maxRcptCount", DEFAULT_MAX_RCPT.toString()));
+                        Map.of("maxRcpt", DEFAULT_MAX_RCPT.toString()));
 
         jamesServer = TemporaryJamesServer.builder()
             .withSmtpConfiguration(smtpConfiguration)
@@ -72,7 +72,7 @@ class SmtpMaxRcptHandlerTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(USER, PASSWORD);
-        IntStream.range(0, DEFAULT_MAX_RCPT).forEach(Throwing.intConsumer((
+        IntStream.range(0, DEFAULT_MAX_RCPT + 1).forEach(Throwing.intConsumer((
                 i -> dataProbe.addUser("recipient" + i + "@" + DEFAULT_DOMAIN, PASSWORD))));
     }
 
