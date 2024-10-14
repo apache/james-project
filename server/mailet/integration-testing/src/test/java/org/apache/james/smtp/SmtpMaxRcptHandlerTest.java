@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -47,6 +46,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 class SmtpMaxRcptHandlerTest {
     private static final String USER = "user@" + DEFAULT_DOMAIN;
@@ -72,7 +72,7 @@ class SmtpMaxRcptHandlerTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(USER, PASSWORD);
-        IntStream.range(1, DEFAULT_MAX_RCPT + 2).forEach(Throwing.intConsumer((
+        IntStream.range(0, DEFAULT_MAX_RCPT).forEach(Throwing.intConsumer((
                 i -> dataProbe.addUser("recipient" + i + "@" + DEFAULT_DOMAIN, PASSWORD))));
     }
 
@@ -97,12 +97,12 @@ class SmtpMaxRcptHandlerTest {
         assertDoesNotThrow(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(USER, PASSWORD)
-                .sendMessageWithHeaders(USER, getRecipients(DEFAULT_MAX_RCPT),"message"));
+                .sendMessageWithHeaders(USER, getRecipients(DEFAULT_MAX_RCPT), "message"));
     }
 
     private List<String> getRecipients(Integer n) {
-        return IntStream.range(1, n + 1)
+        return IntStream.range(0, n)
                 .mapToObj(i -> "recipient" + i + "@" + DEFAULT_DOMAIN)
-                .collect(Collectors.toList());
+                .collect(ImmutableList.toImmutableList());
     }
 }
