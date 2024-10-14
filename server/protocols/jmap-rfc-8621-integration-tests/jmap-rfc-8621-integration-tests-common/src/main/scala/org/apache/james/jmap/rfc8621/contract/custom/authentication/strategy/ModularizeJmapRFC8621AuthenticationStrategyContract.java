@@ -47,14 +47,22 @@ import java.util.Optional;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.jmap.core.JmapRfc8621Configuration;
+import org.apache.james.jmap.http.XUserAuthenticationStrategy;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 import io.restassured.RestAssured;
 import io.restassured.http.Header;
 
 public abstract class ModularizeJmapRFC8621AuthenticationStrategyContract {
+
     public static Optional<List<String>> ALLOW_AUTHENTICATION_STRATEGY = Optional.of(List.of(AllowAuthenticationStrategy.class.getCanonicalName()));
     public static Optional<List<String>> DENY_AUTHENTICATION_STRATEGY = Optional.of(List.of(DenyAuthenticationStrategy.class.getCanonicalName()));
     public static Optional<List<String>> DEFAULT_STRATEGIES = Optional.empty();
@@ -230,4 +238,107 @@ public abstract class ModularizeJmapRFC8621AuthenticationStrategyContract {
             .body("detail", equalTo("Failed Jwt verification"));
     }
 
+
+    @Test
+    public void givenXUserStrategyWhenMissingXUserSecretHeaderShouldFail(GuiceJamesServer server) throws Throwable {
+        // given a server with XUserAuthenticationStrategy
+        // The XUserAuthenticationStrategy is configured with a secret: "secret1"
+        setupJamesServerWithXUserStrategy(server, Optional.of("secret1"));
+
+        // when a request is made without the X-User-Secret header
+        // then the request should fail with a 401 status code
+        given()
+            .headers(getHeadersWith(new Header("X-User", BOB().asString())))
+            .body(ECHO_REQUEST_OBJECT())
+        .when()
+            .post()
+        .then()
+            .statusCode(SC_UNAUTHORIZED)
+            .body("status", equalTo(401))
+            .body("type", equalTo("about:blank"));
+    }
+
+    @Test
+    public void givenXUserStrategyWhenInvalidateXUserSecretHeaderShouldFail(GuiceJamesServer server) throws Throwable {
+        // given a server with XUserAuthenticationStrategy
+        // The XUserAuthenticationStrategy is configured with a secret: "secret1"
+        setupJamesServerWithXUserStrategy(server, Optional.of("secret1"));
+
+        // when a request is made with an invalid X-User-Secret header
+        // then the request should fail with a 401 status code
+        given()
+            .header(new Header("X-User", BOB().asString()))
+            .header(new Header("X-User-Secret", "invalid"))
+            .body(ECHO_REQUEST_OBJECT())
+        .when()
+            .post()
+        .then()
+            .statusCode(SC_UNAUTHORIZED)
+            .body("status", equalTo(401))
+            .body("type", equalTo("about:blank"));
+    }
+
+    @Test
+    public void givenXUserStrategyWhenValidateXUserSecretHeaderShouldSuccess(GuiceJamesServer server) throws Throwable {
+        // given a server with XUserAuthenticationStrategy
+        // The XUserAuthenticationStrategy is configured with a secret: "secret1"
+        String secret = "secret1";
+        setupJamesServerWithXUserStrategy(server, Optional.of(secret));
+
+        // when a request is made with an invalid X-User-Secret header
+        // then the request should fail with a 401 status code
+        given()
+            .header(new Header("X-User", BOB().asString()))
+            .header(new Header("X-User-Secret", secret))
+        .when()
+            .get("/session")
+        .then()
+            .statusCode(SC_OK)
+            .body("username", equalTo(BOB().asString()));
+    }
+
+    @Test
+    public void givenXUserStrategyWithAbsentXUserSecretWhenValidRequestShouldSuccess(GuiceJamesServer server) throws Throwable {
+        // given a server with XUserAuthenticationStrategy
+        // The XUserAuthenticationStrategy is configured with absent secret
+        setupJamesServerWithXUserStrategy(server, Optional.empty());
+
+        // when a request is made with an invalid X-User-Secret header
+        // then the request should fail with a 401 status code
+        given()
+            .header(new Header("X-User", BOB().asString()))
+            .when()
+        .get("/session")
+            .then()
+            .statusCode(SC_OK)
+            .body("username", equalTo(BOB().asString()));
+    }
+
+    private void setupJamesServerWithXUserStrategy(GuiceJamesServer server, Optional<String> xUserSecret) throws Exception {
+        jmapServer = server
+            .overrideWith(new AbstractModule() {
+                @Provides
+                @Singleton
+                public XUserAuthenticationStrategy provideXUserAuthenticationStrategy(UsersRepository usersRepository,
+                                                                                      MailboxManager mailboxManager) {
+                    return new XUserAuthenticationStrategy(usersRepository, mailboxManager, xUserSecret);
+                }
+            })
+            .overrideWith(binder -> binder.bind(JmapRfc8621Configuration.class)
+                .toInstance(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION()
+                    .withAuthenticationStrategies(Optional.of(List.of(XUserAuthenticationStrategy.class.getCanonicalName())))));
+
+        jmapServer.start();
+
+        RestAssured.requestSpecification = jmapRequestSpecBuilder
+            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
+            .addHeader("Accept", "application/json; jmapVersion=rfc-8621")
+            .setBasePath(JMAP)
+            .build();
+
+        jmapServer.getProbe(DataProbeImpl.class)
+            .fluent()
+            .addDomain(DOMAIN().asString())
+            .addUser(BOB().asString(), BOB_PASSWORD());
+    }
 }

@@ -141,6 +141,9 @@
 
                     <dt><strong>set.max.size</strong></dt>
                     <dd>Optional, default value is 500. The max number of items for /set methods.</dd>
+
+                    <dt><string>authentication.strategy.rfc8621.xUser.secret</string></dt>
+                    <dd>Optional. Disabled by default. Secret-value used to validate the X-User-Secret header when using the XUserAuthenticationStrategy. Use of this configuration property is highly advised.</dd>
                 </dl>
 
             </subsection>

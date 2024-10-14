@@ -11,6 +11,9 @@ routes:
     plugins:
       proxy-rewrite:
         uri: /jmap
+        headers:
+          set:
+            X-User-Secret: ${{X_USER_SECRET}}
   -
     id: jmap_websocket
     uri: /oidc/jmap/ws
@@ -23,6 +26,9 @@ routes:
     plugins:
       proxy-rewrite:
         uri: /jmap/ws
+        headers:
+          set:
+            X-User-Secret: ${{X_USER_SECRET}}
   -
     id: jmap_session_oidc
     uri: /oidc/jmap/session
@@ -34,6 +40,9 @@ routes:
     plugins:
       proxy-rewrite:
         uri: /jmap/session
+        headers:
+          set:
+            X-User-Secret: ${{X_USER_SECRET}}
   -
     id: download
     uri: /oidc/download/*
@@ -48,6 +57,9 @@ routes:
         regex_uri:
           - "^/oidc/download/(.*)/(.*)"
           - "/download/$1/$2"
+        headers:
+          set:
+            X-User-Secret: ${{X_USER_SECRET}}
   -
     id: upload
     uri: /oidc/upload/*
@@ -61,6 +73,9 @@ routes:
         regex_uri:
           - "^/oidc/upload/(.*)"
           - "/upload/$1"
+        headers:
+          set:
+            X-User-Secret: ${{X_USER_SECRET}}
   -
     id: upload_draft
     uri: /oidc/upload
@@ -85,6 +100,9 @@ routes:
     plugins:
       proxy-rewrite:
         uri: /.well-known/webfinger
+      headers:
+        set:
+          X-User-Secret: ${{X_USER_SECRET}}
   -
     id: web_known_linagora_ecosystem
     uri: /oidc/.well-known/linagora-ecosystem
@@ -96,6 +114,9 @@ routes:
     plugins:
       proxy-rewrite:
         uri: /.well-known/linagora-ecosystem
+      headers:
+        set:
+          X-User-Secret: ${{X_USER_SECRET}}
   -
     id: web_known_jmap
     uri: /oidc/.well-known/jmap
@@ -116,6 +137,7 @@ routes:
         headers:
           set:
             Location: "/oidc/jmap/session"
+            X-User-Secret: ${{X_USER_SECRET}}
 
   #  Basic authentication endpoints
   - id: jmap_session_basic_auth
