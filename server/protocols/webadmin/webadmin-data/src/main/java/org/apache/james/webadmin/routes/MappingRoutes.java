@@ -19,23 +19,26 @@
 
 package org.apache.james.webadmin.routes;
 
-import java.util.List;
+import java.util.Map;
 
 import jakarta.inject.Inject;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
+import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.dto.MappingValueDTO;
+import org.apache.james.webadmin.dto.MappingsModule;
 import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.JsonExtractException;
+import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import spark.Request;
 import spark.Response;
@@ -48,11 +51,14 @@ public class MappingRoutes implements Routes {
     static final String USER = "user";
 
     private final JsonTransformer jsonTransformer;
+    private final JsonExtractor<Map<MappingSource, Mappings>> jsonExtractor;
     private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
     MappingRoutes(JsonTransformer jsonTransformer, RecipientRewriteTable recipientRewriteTable) {
         this.jsonTransformer = jsonTransformer;
+        TypeReference<Map<MappingSource, Mappings>> typeRef = new TypeReference<>() {};
+        this.jsonExtractor = new JsonExtractor<>(typeRef, new MappingsModule().asJacksonModule());
         this.recipientRewriteTable = recipientRewriteTable;
     }
 
@@ -64,19 +70,13 @@ public class MappingRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.get(BASE_PATH, this::getMappings, jsonTransformer);
+        service.put(BASE_PATH, this::addMappings);
         service.get(USER_MAPPING_PATH + ":" + USER, this::getUserMappings, jsonTransformer);
     }
 
-    private ImmutableListMultimap<String, MappingValueDTO> getMappings(Request request, Response response) {
+    private Map<MappingSource, Mappings> getMappings(Request request, Response response) {
         try {
-            return recipientRewriteTable.getAllMappings()
-                .entrySet()
-                .stream()
-                .flatMap(entry -> entry.getValue().asStream()
-                    .map(mapping -> Pair.of(
-                        entry.getKey().asString(),
-                        MappingValueDTO.fromMapping(mapping))))
-                .collect(ImmutableListMultimap.toImmutableListMultimap(Pair::getLeft, Pair::getRight));
+            return recipientRewriteTable.getAllMappings();
         } catch (RecipientRewriteTableException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
@@ -86,13 +86,34 @@ public class MappingRoutes implements Routes {
         }
     }
 
-    private List<MappingValueDTO> getUserMappings(Request request, Response response) throws RecipientRewriteTableException {
-        Username username = Username.of(request.params(USER).toLowerCase());
+    public String addMappings(Request request, Response response) {
+        try {
+            Map<MappingSource, Mappings> mappings = jsonExtractor.parse(request.body());
+            for (Map.Entry<MappingSource, Mappings> entry : mappings.entrySet()) {
+                for (Mapping mapping : entry.getValue()) {
+                    recipientRewriteTable.addMapping(entry.getKey(), mapping);
+                }
+            }
+            return Responses.returnNoContent(response);
+        } catch (JsonExtractException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("error parsing mappings")
+                .cause(e)
+                .haltError();
+        } catch (RecipientRewriteTableException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("error adding mappings")
+                .cause(e)
+                .haltError();
+        }
+    }
 
-        return recipientRewriteTable.getStoredMappings(MappingSource.fromUser(username))
-            .asStream()
-            .map(MappingValueDTO::fromMapping)
-            .collect(ImmutableList.toImmutableList());
+    private Mappings getUserMappings(Request request, Response response) throws RecipientRewriteTableException {
+        Username username = Username.of(request.params(USER).toLowerCase());
+        return recipientRewriteTable.getStoredMappings(MappingSource.fromUser(username));
     }
 }
-

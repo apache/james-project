@@ -164,6 +164,12 @@ class XMLRecipientRewriteTableTest implements RecipientRewriteTableContract {
 
     @Test
     @Disabled("XMLRecipientRewriteTable is read only")
+    public void listSourcesShouldReturnWhenSourceHasMultipleMappings() {
+
+    }
+
+    @Test
+    @Disabled("XMLRecipientRewriteTable is read only")
     public void listSourcesShouldReturnWhenHasForwardMapping() {
 
     }
