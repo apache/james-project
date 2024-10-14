@@ -24,7 +24,6 @@ import java.util.stream.Stream;
 import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
@@ -77,13 +76,6 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
                 pair -> MappingsImpl.fromMappings(pair.getRight()),
                 Mappings::union))
             .block();
-    }
-
-    @Override
-    protected Mappings mapAddress(String user, Domain domain) {
-        return cassandraRecipientRewriteTableDAO.retrieveMappings(MappingSource.fromUser(user, domain)).blockOptional()
-            .or(() -> cassandraRecipientRewriteTableDAO.retrieveMappings(MappingSource.fromDomain(domain)).blockOptional())
-            .orElse(MappingsImpl.empty());
     }
 
     @Override

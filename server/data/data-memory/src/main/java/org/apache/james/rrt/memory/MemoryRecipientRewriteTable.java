@@ -19,113 +19,50 @@
 
 package org.apache.james.rrt.memory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.core.Domain;
-import org.apache.james.core.Username;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Multimaps;
-
 public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
-    private static class InMemoryMappingEntry {
-        private final MappingSource source;
-        private final Mapping mapping;
+    private final Map<MappingSource, Set<Mapping>> table = new HashMap<>();
 
-        public InMemoryMappingEntry(MappingSource source, Mapping mapping) {
-            this.source = source;
-            this.mapping = mapping;
-        }
-
-        public MappingSource getSource() {
-            return source;
-        }
-
-        public Mapping getMapping() {
-            return mapping;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o == null || this.getClass() != o.getClass()) {
-                return false;
-            }
-
-            InMemoryMappingEntry that = (InMemoryMappingEntry) o;
-
-            return Objects.equal(this.source, that.source)
-                && Objects.equal(this.mapping, that.mapping);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(source, mapping);
-        }
-    }
-
-    private final List<InMemoryMappingEntry> mappingEntries;
-
-    public MemoryRecipientRewriteTable() {
-        mappingEntries = new ArrayList<>();
+    private Mappings toMappings(Set<Mapping> mappings) {
+        return mappings == null ? MappingsImpl.empty() : MappingsImpl.fromMappings(mappings.stream());
     }
 
     @Override
     public void addMapping(MappingSource source, Mapping mapping) {
-        mappingEntries.add(new InMemoryMappingEntry(source, mapping));
+        table.computeIfAbsent(source, s -> new LinkedHashSet<>()).add(mapping);
     }
 
     @Override
     public void removeMapping(MappingSource source, Mapping mapping) {
-        mappingEntries.remove(new InMemoryMappingEntry(source, mapping));
+        Set<Mapping> mappings = table.get(source);
+        if (mappings != null) {
+            mappings.remove(mapping);
+            if (mappings.isEmpty()) {
+                table.remove(source);
+            }
+        }
     }
 
     @Override
     public Mappings getStoredMappings(MappingSource mappingSource) {
-        return retrieveMappings(mappingSource)
-            .orElse(MappingsImpl.empty());
-    }
-
-    @Override
-    protected Mappings mapAddress(String user, Domain domain) {
-        return retrieveMappings(MappingSource.fromUser(Username.fromLocalPartWithDomain(user, domain)))
-            .or(() -> retrieveMappings(MappingSource.fromDomain(domain)))
-            .orElse(MappingsImpl.empty());
+        return toMappings(table.get(mappingSource));
     }
 
     @Override
     public Map<MappingSource, Mappings> getAllMappings() {
-        return Multimaps.index(mappingEntries, InMemoryMappingEntry::getSource)
-            .asMap()
-            .entrySet()
-            .stream()
-            .map(entry -> Pair.of(entry.getKey(), toMappings(entry.getValue())))
-            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
+        return table.entrySet().stream()
+            .collect(Collectors.toMap(e -> e.getKey(), e -> toMappings(e.getValue())));
     }
-
-    private MappingsImpl toMappings(Collection<InMemoryMappingEntry> inMemoryMappingEntries) {
-        return MappingsImpl.fromMappings(inMemoryMappingEntries
-            .stream()
-            .map(InMemoryMappingEntry::getMapping));
-    }
-
-    private Optional<Mappings> retrieveMappings(MappingSource mappingSource) {
-        Stream<Mapping> userEntries = mappingEntries.stream()
-            .filter(mappingEntry -> mappingEntry.source.equals(mappingSource))
-            .map(InMemoryMappingEntry::getMapping);
-        return MappingsImpl.fromMappings(userEntries).toOptional();
-    }
-
 }

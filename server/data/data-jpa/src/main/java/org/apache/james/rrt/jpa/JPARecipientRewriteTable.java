@@ -114,19 +114,6 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
-        Mappings userDomainMapping = getStoredMappings(MappingSource.fromUser(user, domain));
-        if (userDomainMapping != null && !userDomainMapping.isEmpty()) {
-            return userDomainMapping;
-        }
-        Mappings domainMapping = getStoredMappings(MappingSource.fromDomain(domain));
-        if (domainMapping != null && !domainMapping.isEmpty()) {
-            return domainMapping;
-        }
-        return MappingsImpl.empty();
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     public Mappings getStoredMappings(MappingSource source) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
