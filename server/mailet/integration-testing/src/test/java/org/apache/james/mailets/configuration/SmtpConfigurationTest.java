@@ -24,6 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.xmlunit.matchers.EvaluateXPathMatcher.hasXPath;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.xml.transform.Source;
 
@@ -180,4 +181,33 @@ public class SmtpConfigurationTest {
             hasXPath("/smtpservers/smtpserver/verifyIdentity/text()",
                 is("DISABLED")));
     }
+
+    @Test
+    public void addHookShouldRegisterHookWithoutConfig() throws IOException {
+        String hookFqcn = "com.example.hooks.MyCustomHook";
+
+        SmtpConfiguration configuration = SmtpConfiguration.builder()
+                .addHook(hookFqcn)
+                .build();
+
+        assertThat(configuration.serializeAsXml(),
+                hasXPath("/smtpservers/smtpserver/handlerchain/handler[@class='" + hookFqcn + "']/@class", is(hookFqcn)));
+    }
+
+    @Test
+    public void addHookShouldRegisterHookWithConfig() throws IOException {
+        String hookFqcn = "com.example.hooks.MyCustomHook";
+        Map<String, String> hookConfig = Map.of("param1", "value1", "param2", "value2");
+
+        SmtpConfiguration configuration = SmtpConfiguration.builder()
+                .addHook(hookFqcn, hookConfig)
+                .build();
+
+        String xmlOutput = configuration.serializeAsXml();
+        assertThat(xmlOutput, hasXPath("/smtpservers/smtpserver/handlerchain/handler[@class='" + hookFqcn + "']/@class", is(hookFqcn)));
+        assertThat(xmlOutput, hasXPath("/smtpservers/smtpserver/handlerchain/handler[@class='" + hookFqcn + "']/param1/text()", is("value1")));
+        assertThat(xmlOutput, hasXPath("/smtpservers/smtpserver/handlerchain/handler[@class='" + hookFqcn + "']/param2/text()", is("value2")));
+    }
+
+
 }
