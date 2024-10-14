@@ -72,7 +72,7 @@ public class ScrolledSearch {
         }
 
         Consumer<ScrollResponse<ObjectNode>> onResponse = searchResponse -> {
-            scrollId.set(Optional.of(searchResponse.scrollId()));
+            scrollId.set(Optional.ofNullable(searchResponse.scrollId()));
             sink.next(searchResponse);
 
             if (searchResponse.hits().hits().isEmpty()) {
