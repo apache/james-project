@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -313,7 +314,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
                 .map(BlobId::asString)
                 .map(id -> ObjectIdentifier.builder().key(id).build())
                 .collect(ImmutableList.toImmutableList()))
-            .then();
+            .then()
+            .onErrorResume(NoSuchBucketException.class, e -> Mono.empty());
     }
 
     @Override
@@ -325,10 +327,10 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
 
     private Mono<Void> deleteResolvedBucket(BucketName bucketName) {
         return emptyBucket(bucketName)
-            .onErrorResume(t -> Mono.just(bucketName))
+            .onErrorResume(throwable -> throwable instanceof CompletionException && throwable.getCause() instanceof NoSuchBucketException, t -> Mono.just(bucketName))
             .flatMap(ignore -> Mono.fromFuture(() ->
                 client.deleteBucket(builder -> builder.bucket(bucketName.asString()))))
-            .onErrorResume(t -> Mono.empty())
+            .onErrorResume(NoSuchBucketException.class, t -> Mono.empty())
             .then()
             .publishOn(Schedulers.parallel());
     }
