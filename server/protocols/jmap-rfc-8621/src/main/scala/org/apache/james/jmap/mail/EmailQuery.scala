@@ -36,6 +36,38 @@ case class UnsupportedFilterException(unsupportedFilter: String) extends Unsuppo
 case class UnsupportedNestingException(message: String) extends UnsupportedOperationException
 case class UnsupportedRequestParameterException(unsupportedParam: String) extends UnsupportedOperationException
 
+object FilterQuery {
+   def validateFilter(filter: FilterQuery): Either[UnsupportedNestingException, FilterQuery] = filter match {
+    case filterCondition: FilterCondition => scala.Right(filterCondition)
+    case filterOperator: FilterOperator if filterOperator.operator == And =>
+      val nestedCount = filter.countNestedMailboxFilter
+      val topLevelCount = filter.countMailboxFilter
+
+      if (nestedCount == 1 && topLevelCount == 1)  {
+        scala.Right(filter)
+      } else if (nestedCount == 0)  {
+        scala.Right(filter)
+      } else {
+        rejectMailboxFilters(filterOperator)
+      }
+    case operator: FilterOperator => rejectMailboxFilters(operator)
+  }
+
+  private def rejectMailboxFilters(filter: FilterQuery): Either[UnsupportedNestingException, FilterQuery] =
+    filter match {
+      case filterCondition: FilterCondition if filterCondition.inMailbox.isDefined =>
+        scala.Left(UnsupportedNestingException("Nested inMailbox filters are not supported"))
+      case filterCondition: FilterCondition if filterCondition.inMailboxOtherThan.isDefined =>
+        scala.Left(UnsupportedNestingException("Nested inMailboxOtherThan filter are not supported"))
+      case filterCondition: FilterCondition => scala.Right(filterCondition)
+      case filterOperator: FilterOperator => filterOperator.conditions
+        .toList
+        .map(rejectMailboxFilters)
+        .sequence
+        .map(_ => filterOperator)
+    }
+}
+
 sealed trait FilterQuery {
   def inMailboxFilterOnly: Boolean
 
@@ -158,38 +190,9 @@ case class EmailQueryRequest(accountId: AccountId,
                              anchor: Option[Anchor],
                              anchorOffset: Option[AnchorOffset]) extends WithAccountId {
   val validatedFilter: Either[UnsupportedNestingException, Option[FilterQuery]] =
-    filter.map(validateFilter)
-      .sequence
-      .map(_.flatten)
-
-  private def validateFilter(filter: FilterQuery): Either[UnsupportedNestingException, Option[FilterQuery]] = filter match {
-    case filterCondition: FilterCondition => scala.Right(Some(filterCondition))
-    case filterOperator: FilterOperator if filterOperator.operator == And =>
-      val nestedCount = filter.countNestedMailboxFilter
-      val topLevelCount = filter.countMailboxFilter
-
-      if (nestedCount == 1 && topLevelCount == 1)  {
-        scala.Right(Some(filter))
-      } else if (nestedCount == 0)  {
-        scala.Right(Some(filter))
-      } else {
-        rejectMailboxFilters(filterOperator)
-      }
-    case operator: FilterOperator => rejectMailboxFilters(operator)
-  }
-
-  private def rejectMailboxFilters(filter: FilterQuery): Either[UnsupportedNestingException, Option[FilterQuery]] =
     filter match {
-      case filterCondition: FilterCondition if filterCondition.inMailbox.isDefined =>
-        scala.Left(UnsupportedNestingException("Nested inMailbox filters are not supported"))
-      case filterCondition: FilterCondition if filterCondition.inMailboxOtherThan.isDefined =>
-        scala.Left(UnsupportedNestingException("Nested inMailboxOtherThan filter are not supported"))
-      case filterCondition: FilterCondition => scala.Right(Some(filterCondition))
-      case filterOperator: FilterOperator => filterOperator.conditions
-        .toList
-        .map(rejectMailboxFilters)
-        .sequence
-        .map(_ => Some(filterOperator))
+      case Some(filterQuery) => FilterQuery.validateFilter(filterQuery).map(Some(_))
+      case None => scala.Right(None)
     }
 }
 
