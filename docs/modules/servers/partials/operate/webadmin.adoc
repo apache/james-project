@@ -2567,6 +2567,67 @@ Response codes:
 
 * 204: The quota has been updated to unlimited value.
 
+===== Domain DropList
+
+....
+curl -XPUT http://ip:port/droplist/domain/target.com/attacker@evil.com
+....
+
+....
+curl -XPUT http://ip:port/droplist/domain/target.com/evil.com
+....
+
+===== User DropList
+
+....
+curl -XPUT http://ip:port/droplist/user/target@target.com/attacker@evil.com
+....
+
+....
+curl -XPUT http://ip:port/droplist/user/target@target.com/evil.com
+....
+
+Response codes:
+
+* 204: The denied entity was successfully added
+* 400: The denied entity is invalid
+
+==== Remove Entry from the DropList
+
+===== Global DropList
+
+....
+curl -XDELETE http://ip:port/droplist/global/attacker@evil.com
+....
+
+....
+curl -XDELETE http://ip:port/droplist/global/evil.com
+....
+
+===== Domain DropList
+
+....
+curl -XDELETE http://ip:port/droplist/domain/target.com/attacker@evil.com
+....
+
+....
+curl -XDELETE http://ip:port/droplist/domain/target.com/evil.com
+....
+
+===== User DropList
+
+....
+curl -XDELETE http://ip:port/droplist/user/target@target.com/attacker@evil.com
+....
+
+....
+curl -XDELETE http://ip:port/droplist/user/target@target.com/evil.com
+....
+
+Response codes:
+
+* 204: Entry deleted successfully.
+
 === Administrating Sieve quotas
 
 Some limitations on space Users Sieve script can occupy can be
