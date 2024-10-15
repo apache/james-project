@@ -20,6 +20,7 @@ package org.apache.james.blob.objectstorage.aws;
 
 import static org.apache.james.blob.api.BlobStoreDAOFixture.ELEVEN_KILOBYTES;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
+import static org.apache.james.blob.objectstorage.aws.JamesS3MetricPublisher.DEFAULT_S3_METRICS_PREFIX;
 import static org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration.UPLOAD_RETRY_EXCEPTION_PREDICATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -66,7 +67,8 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
                 .filter(UPLOAD_RETRY_EXCEPTION_PREDICATE)))
             .build();
 
-        s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
+        s3ClientFactory = new S3ClientFactory(s3Configuration, () -> new JamesS3MetricPublisher(new RecordingMetricFactory(), new NoopGaugeRegistry(),
+            DEFAULT_S3_METRICS_PREFIX));
 
         testee = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory());
     }

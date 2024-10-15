@@ -19,6 +19,8 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
+import static org.apache.james.blob.objectstorage.aws.JamesS3MetricPublisher.DEFAULT_S3_METRICS_PREFIX;
+
 import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -32,6 +34,7 @@ import javax.net.ssl.X509TrustManager;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
 import org.apache.james.lifecycle.api.Startable;
@@ -67,13 +70,17 @@ public class S3ClientFactory implements Startable, Closeable {
 
     public static final String S3_METRICS_ENABLED_PROPERTY_KEY = "james.s3.metrics.enabled";
     public static final String S3_METRICS_ENABLED_DEFAULT_VALUE = "true";
+    public static final String S3_METRICS_PREFIX = System.getProperty("james.s3.metrics.prefix", DEFAULT_S3_METRICS_PREFIX);
 
     private final S3AsyncClient s3Client;
 
     @Inject
     @Singleton
     public S3ClientFactory(S3BlobStoreConfiguration configuration, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
+        this(configuration, () -> new JamesS3MetricPublisher(metricFactory, gaugeRegistry, S3_METRICS_PREFIX));
+    }
 
+    public S3ClientFactory(S3BlobStoreConfiguration configuration, Provider<JamesS3MetricPublisher> jamesS3MetricPublisherProvider) {
         AwsS3AuthConfiguration authConfiguration = configuration.getSpecificAuthConfiguration();
         S3Configuration pathStyleAccess = S3Configuration.builder()
             .pathStyleAccessEnabled(true)
@@ -89,7 +96,7 @@ public class S3ClientFactory implements Startable, Closeable {
             .overrideConfiguration(builder -> {
                 boolean s3MetricsEnabled = Boolean.parseBoolean(System.getProperty(S3_METRICS_ENABLED_PROPERTY_KEY, S3_METRICS_ENABLED_DEFAULT_VALUE));
                 if (s3MetricsEnabled) {
-                    builder.addMetricPublisher(new JamesS3MetricPublisher(metricFactory, gaugeRegistry));
+                    builder.addMetricPublisher(jamesS3MetricPublisherProvider.get());
                 }
             })
             .build();
