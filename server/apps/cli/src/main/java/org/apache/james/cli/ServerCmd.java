@@ -24,6 +24,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -44,6 +45,7 @@ import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
 import org.apache.james.cli.probe.impl.JmxConnection;
 import org.apache.james.cli.probe.impl.JmxDataProbe;
+import org.apache.james.cli.probe.impl.JmxDropListProbe;
 import org.apache.james.cli.probe.impl.JmxMailboxProbe;
 import org.apache.james.cli.probe.impl.JmxQuotaProbe;
 import org.apache.james.cli.probe.impl.JmxSieveProbe;
@@ -86,10 +88,10 @@ public class ServerCmd {
 
     private static Options createOptions() {
         return new Options()
-                .addOption(HOST_OPT_SHORT, HOST_OPT_LONG, true, "node hostname or ip address")
-                .addOption(PORT_OPT_SHORT, PORT_OPT_LONG, true, "remote jmx agent port number")
-                .addOption(JMX_USERNAME_OPT, JMX_USERNAME_OPT, true, "remote jmx username")
-                .addOption(JMX_PASSWORD_OPT, JMX_PASSWORD_OPT, true, "remote jmx password");
+            .addOption(HOST_OPT_SHORT, HOST_OPT_LONG, true, "node hostname or ip address")
+            .addOption(PORT_OPT_SHORT, PORT_OPT_LONG, true, "remote jmx agent port number")
+            .addOption(JMX_USERNAME_OPT, JMX_USERNAME_OPT, true, "remote jmx username")
+            .addOption(JMX_PASSWORD_OPT, JMX_PASSWORD_OPT, true, "remote jmx password");
     }
 
     /**
@@ -124,12 +126,13 @@ public class ServerCmd {
         JmxConnection jmxConnection = new JmxConnection(getHost(cmd), getPort(cmd), getAuthCredential(cmd, locateJmxConfiguration()));
 
         CmdType cmdType = new ServerCmd(
-                new JmxDataProbe().connect(jmxConnection),
-                new JmxMailboxProbe().connect(jmxConnection),
-                new JmxQuotaProbe().connect(jmxConnection),
-                new JmxSieveProbe().connect(jmxConnection))
+            new JmxDataProbe().connect(jmxConnection),
+            new JmxMailboxProbe().connect(jmxConnection),
+            new JmxQuotaProbe().connect(jmxConnection),
+            new JmxSieveProbe().connect(jmxConnection),
+            new JmxDropListProbe().connect(jmxConnection))
             .executeCommandLine(cmd, printStream);
-        print(new String[] { Joiner.on(' ')
+        print(new String[]{Joiner.on(' ')
                 .join(cmdType.getCommand(), "command executed sucessfully in", stopWatch.elapsed(TimeUnit.MILLISECONDS), "ms.")},
             printStream);
         stopWatch.stop();
@@ -149,12 +152,15 @@ public class ServerCmd {
     private final JmxMailboxProbe mailboxProbe;
     private final JmxQuotaProbe quotaProbe;
     private final JmxSieveProbe sieveProbe;
+    private final JmxDropListProbe dropListProbe;
 
-    public ServerCmd(JmxDataProbe probe, JmxMailboxProbe mailboxProbe, JmxQuotaProbe quotaProbe, JmxSieveProbe sieveProbe) {
+    public ServerCmd(JmxDataProbe probe, JmxMailboxProbe mailboxProbe, JmxQuotaProbe quotaProbe, JmxSieveProbe sieveProbe,
+                     JmxDropListProbe dropListProbe) {
         this.probe = probe;
         this.mailboxProbe = mailboxProbe;
         this.quotaProbe = quotaProbe;
         this.sieveProbe = sieveProbe;
+        this.dropListProbe = dropListProbe;
     }
 
     @VisibleForTesting
@@ -228,9 +234,9 @@ public class ServerCmd {
         String cmdName = arguments[0];
         CmdType cmdType = CmdType.lookup(cmdName);
         if (cmdType == null) {
-            throw  new UnrecognizedCommandException(cmdName);
+            throw new UnrecognizedCommandException(cmdName);
         }
-        if (! cmdType.hasCorrectArguments(arguments.length)) {
+        if (!cmdType.hasCorrectArguments(arguments.length)) {
             throw new InvalidArgumentNumberException(cmdType, arguments.length);
         }
         executeCommand(arguments, cmdType, printStream);
@@ -244,151 +250,81 @@ public class ServerCmd {
 
     private void executeCommand(String[] arguments, CmdType cmdType, PrintStream printStream) throws Exception {
         switch (cmdType) {
-        case ADDUSER:
-            probe.addUser(arguments[1], arguments[2]);
-            break;
-        case REMOVEUSER:
-            probe.removeUser(arguments[1]);
-            break;
-        case LISTUSERS:
-            print(probe.listUsers(), printStream);
-            break;
-        case ADDDOMAIN:
-            probe.addDomain(arguments[1]);
-            break;
-        case REMOVEDOMAIN:
-            probe.removeDomain(arguments[1]);
-            break;
-        case CONTAINSDOMAIN:
-            if (probe.containsDomain(arguments[1])) {
-                printStream.println(arguments[1] + " exists");
-            } else {
-                printStream.println(arguments[1] + " does not exists");
+            case ADDUSER -> probe.addUser(arguments[1], arguments[2]);
+            case REMOVEUSER -> probe.removeUser(arguments[1]);
+            case LISTUSERS -> print(probe.listUsers(), printStream);
+            case ADDDOMAIN -> probe.addDomain(arguments[1]);
+            case REMOVEDOMAIN -> probe.removeDomain(arguments[1]);
+            case CONTAINSDOMAIN -> {
+                if (probe.containsDomain(arguments[1])) {
+                    printStream.println(arguments[1] + " exists");
+                } else {
+                    printStream.println(arguments[1] + " does not exists");
+                }
             }
-            break;
-        case LISTDOMAINS:
-            print(probe.listDomains(), printStream);
-            break;
-        case ADDDOMAINMAPPING:
-            probe.addDomainMapping(arguments[1], arguments[2]);
-            break;
-        case REMOVEDOMAINMAPPING:
-            probe.removeDomainMapping(arguments[1], arguments[2]);
-            break;
-        case LISTDOMAINMAPPINGS:
-            Mappings domainMappings = probe.listDomainMappings(arguments[1]);
-            print(domainMappings.asStrings(), printStream);
-            break;
-        case LISTMAPPINGS:
-            print(probe.listMappings(), printStream);
-            break;
-        case LISTUSERDOMAINMAPPINGS:
-            Mappings userDomainMappings = probe.listUserDomainMappings(arguments[1], arguments[2]);
-            print(userDomainMappings.asStrings(), printStream);
-            break;
-        case ADDADDRESSMAPPING:
-            probe.addAddressMapping(arguments[1], arguments[2], arguments[3]);
-            break;
-        case REMOVEADDRESSMAPPING:
-            probe.removeAddressMapping(arguments[1], arguments[2], arguments[3]);
-            break;
-        case ADDREGEXMAPPING:
-            probe.addRegexMapping(arguments[1], arguments[2], arguments[3]);
-            break;
-        case REMOVEREGEXMAPPING:
-            probe.removeRegexMapping(arguments[1], arguments[2], arguments[3]);
-            break;
-        case SETPASSWORD:
-            probe.setPassword(arguments[1], arguments[2]);
-            break;
-        case COPYMAILBOX:
-            mailboxProbe.copyMailbox(arguments[1], arguments[2]);
-            break;
-        case DELETEUSERMAILBOXES:
-            mailboxProbe.deleteUserMailboxesNames(arguments[1]);
-            break;
-        case CREATEMAILBOX:
-            mailboxProbe.createMailbox(arguments[1], arguments[2], arguments[3]);
-            break;
-        case LISTUSERMAILBOXES:
-            Collection<String> mailboxes = mailboxProbe.listUserMailboxes(arguments[1]);
-            print(mailboxes.toArray(String[]::new), printStream);
-            break;
-        case DELETEMAILBOX:
-            mailboxProbe.deleteMailbox(arguments[1], arguments[2], arguments[3]);
-            break;
-        case IMPORTEML:
-            mailboxProbe.importEmlFileToMailbox(arguments[1], arguments[2], arguments[3], arguments[4]);
-            break;
-        case GETSTORAGEQUOTA:
-            printStorageQuota(arguments[1], quotaProbe.getStorageQuota(arguments[1]), printStream);
-            break;
-        case GETMESSAGECOUNTQUOTA:
-            printMessageQuota(arguments[1], quotaProbe.getMessageCountQuota(arguments[1]), printStream);
-            break;
-        case GETQUOTAROOT:
-            printStream.println("Quota Root: " + quotaProbe.getQuotaRoot(arguments[1], arguments[2], arguments[3]));
-            break;
-        case GETMAXSTORAGEQUOTA:
-            printStream.println("Storage space allowed for Quota Root "
-                + arguments[1]
-                + ": "
-                + formatStorageValue(quotaProbe.getMaxStorage(arguments[1])));
-            break;
-        case GETMAXMESSAGECOUNTQUOTA:
-            printStream.println("MailboxMessage count allowed for Quota Root " + arguments[1] + ": " + formatMessageValue(quotaProbe.getMaxMessageCount(arguments[1])));
-            break;
-        case SETMAXSTORAGEQUOTA:
-            quotaProbe.setMaxStorage(arguments[1], parseQuotaSize(arguments[2]));
-            break;
-        case SETMAXMESSAGECOUNTQUOTA:
-            quotaProbe.setMaxMessageCount(arguments[1], parseQuotaCount(arguments[2]));
-            break;
-        case SETGLOBALMAXSTORAGEQUOTA:
-            quotaProbe.setGlobalMaxStorage(parseQuotaSize(arguments[1]));
-            break;
-        case SETGLOBALMAXMESSAGECOUNTQUOTA:
-            quotaProbe.setGlobalMaxMessageCount(parseQuotaCount(arguments[1]));
-            break;
-        case GETGLOBALMAXSTORAGEQUOTA:
-            printStream.println("Global Maximum Storage Quota: " + formatStorageValue(quotaProbe.getGlobalMaxStorage()));
-            break;
-        case GETGLOBALMAXMESSAGECOUNTQUOTA:
-            printStream.println("Global Maximum message count Quota: " + formatMessageValue(quotaProbe.getGlobalMaxMessageCount()));
-            break;
-        case REINDEXMAILBOX:
-            mailboxProbe.reIndexMailbox(arguments[1], arguments[2], arguments[3]);
-            break;
-        case REINDEXALL:
-            mailboxProbe.reIndexAll();
-            break;
-        case SETSIEVEQUOTA:
-            sieveProbe.setSieveQuota(Size.parse(arguments[1]).asBytes());
-            break;
-        case SETSIEVEUSERQUOTA:
-            sieveProbe.setSieveQuota(arguments[1], Size.parse(arguments[2]).asBytes());
-            break;
-        case GETSIEVEQUOTA:
-            printStream.println("Storage space allowed for Sieve scripts by default: "
+            case LISTDOMAINS -> print(probe.listDomains(), printStream);
+            case ADDDOMAINMAPPING -> probe.addDomainMapping(arguments[1], arguments[2]);
+            case REMOVEDOMAINMAPPING -> probe.removeDomainMapping(arguments[1], arguments[2]);
+            case LISTDOMAINMAPPINGS -> {
+                Mappings domainMappings = probe.listDomainMappings(arguments[1]);
+                print(domainMappings.asStrings(), printStream);
+            }
+            case LISTMAPPINGS -> print(probe.listMappings(), printStream);
+            case LISTUSERDOMAINMAPPINGS -> {
+                Mappings userDomainMappings = probe.listUserDomainMappings(arguments[1], arguments[2]);
+                print(userDomainMappings.asStrings(), printStream);
+            }
+            case ADDADDRESSMAPPING -> probe.addAddressMapping(arguments[1], arguments[2], arguments[3]);
+            case REMOVEADDRESSMAPPING -> probe.removeAddressMapping(arguments[1], arguments[2], arguments[3]);
+            case ADDREGEXMAPPING -> probe.addRegexMapping(arguments[1], arguments[2], arguments[3]);
+            case REMOVEREGEXMAPPING -> probe.removeRegexMapping(arguments[1], arguments[2], arguments[3]);
+            case SETPASSWORD -> probe.setPassword(arguments[1], arguments[2]);
+            case COPYMAILBOX -> mailboxProbe.copyMailbox(arguments[1], arguments[2]);
+            case DELETEUSERMAILBOXES -> mailboxProbe.deleteUserMailboxesNames(arguments[1]);
+            case CREATEMAILBOX -> mailboxProbe.createMailbox(arguments[1], arguments[2], arguments[3]);
+            case LISTUSERMAILBOXES -> {
+                Collection<String> mailboxes = mailboxProbe.listUserMailboxes(arguments[1]);
+                print(mailboxes.toArray(String[]::new), printStream);
+            }
+            case DELETEMAILBOX -> mailboxProbe.deleteMailbox(arguments[1], arguments[2], arguments[3]);
+            case IMPORTEML ->
+                mailboxProbe.importEmlFileToMailbox(arguments[1], arguments[2], arguments[3], arguments[4]);
+            case GETSTORAGEQUOTA ->
+                printStorageQuota(arguments[1], quotaProbe.getStorageQuota(arguments[1]), printStream);
+            case GETMESSAGECOUNTQUOTA ->
+                printMessageQuota(arguments[1], quotaProbe.getMessageCountQuota(arguments[1]), printStream);
+            case GETQUOTAROOT ->
+                printStream.println("Quota Root: " + quotaProbe.getQuotaRoot(arguments[1], arguments[2], arguments[3]));
+            case GETMAXSTORAGEQUOTA -> printStream.println("Storage space allowed for Quota Root "
+                + arguments[1] + ": " + formatStorageValue(quotaProbe.getMaxStorage(arguments[1])));
+            case GETMAXMESSAGECOUNTQUOTA -> printStream.println("MailboxMessage count allowed for Quota Root "
+                + arguments[1] + ": " + formatMessageValue(quotaProbe.getMaxMessageCount(arguments[1])));
+            case SETMAXSTORAGEQUOTA -> quotaProbe.setMaxStorage(arguments[1], parseQuotaSize(arguments[2]));
+            case SETMAXMESSAGECOUNTQUOTA -> quotaProbe.setMaxMessageCount(arguments[1], parseQuotaCount(arguments[2]));
+            case SETGLOBALMAXSTORAGEQUOTA -> quotaProbe.setGlobalMaxStorage(parseQuotaSize(arguments[1]));
+            case SETGLOBALMAXMESSAGECOUNTQUOTA -> quotaProbe.setGlobalMaxMessageCount(parseQuotaCount(arguments[1]));
+            case GETGLOBALMAXSTORAGEQUOTA ->
+                printStream.println("Global Maximum Storage Quota: " + formatStorageValue(quotaProbe.getGlobalMaxStorage()));
+            case GETGLOBALMAXMESSAGECOUNTQUOTA ->
+                printStream.println("Global Maximum message count Quota: " + formatMessageValue(quotaProbe.getGlobalMaxMessageCount()));
+            case REINDEXMAILBOX -> mailboxProbe.reIndexMailbox(arguments[1], arguments[2], arguments[3]);
+            case REINDEXALL -> mailboxProbe.reIndexAll();
+            case SETSIEVEQUOTA -> sieveProbe.setSieveQuota(Size.parse(arguments[1]).asBytes());
+            case SETSIEVEUSERQUOTA -> sieveProbe.setSieveQuota(arguments[1], Size.parse(arguments[2]).asBytes());
+            case GETSIEVEQUOTA -> printStream.println("Storage space allowed for Sieve scripts by default: "
                 + formatStorageValue(sieveProbe.getSieveQuota()));
-            break;
-        case GETSIEVEUSERQUOTA:
-            printStream.println("Storage space allowed for "
-                + arguments[1]
-                + " Sieve scripts: "
-                + formatStorageValue(sieveProbe.getSieveQuota(arguments[1])));
-            break;
-        case REMOVESIEVEQUOTA:
-            sieveProbe.removeSieveQuota();
-            break;
-        case REMOVESIEVEUSERQUOTA:
-            sieveProbe.removeSieveQuota(arguments[1]);
-            break;
-        case ADDACTIVESIEVESCRIPT:
-            sieveProbe.addActiveSieveScriptFromFile(arguments[1], arguments[2], arguments[3]);
-            break;
-        default:
-            throw new UnrecognizedCommandException(cmdType.getCommand());
+            case GETSIEVEUSERQUOTA -> printStream.println("Storage space allowed for "
+                + arguments[1] + " Sieve scripts: " + formatStorageValue(sieveProbe.getSieveQuota(arguments[1])));
+            case REMOVESIEVEQUOTA -> sieveProbe.removeSieveQuota();
+            case REMOVESIEVEUSERQUOTA -> sieveProbe.removeSieveQuota(arguments[1]);
+            case ADDACTIVESIEVESCRIPT ->
+                sieveProbe.addActiveSieveScriptFromFile(arguments[1], arguments[2], arguments[3]);
+            case ADDDROPLISTENTRY -> dropListProbe.addDropListEntry(arguments[1], arguments[2], arguments[3]);
+            case REMOVEDROPLISTENTRY -> dropListProbe.removeDropListEntry(arguments[1], arguments[2], arguments[3]);
+            case GETDROPLIST -> print(dropListProbe.getDropList(arguments[1], arguments[2]), printStream);
+            case DROPLISTQUERY ->
+                print(List.of(dropListProbe.runDropListQuery(arguments[1], arguments[2], arguments[3])), printStream);
+            default -> throw new UnrecognizedCommandException(cmdType.getCommand());
         }
     }
 
@@ -432,10 +368,10 @@ public class ServerCmd {
             footerBuilder.append(cmdType.getUsage()).append("\n");
         }
         new HelpFormatter().printHelp(
-                String.format("java %s --host <arg> <command>%n", ServerCmd.class.getName()),
-                "",
-                createOptions(),
-                footerBuilder.toString());
+            String.format("java %s --host <arg> <command>%n", ServerCmd.class.getName()),
+            "",
+            createOptions(),
+            footerBuilder.toString());
     }
 
     private void printStorageQuota(String quotaRootString, SerializableQuota<QuotaSizeLimit, QuotaSizeUsage> quota, PrintStream printStream) {
@@ -466,11 +402,11 @@ public class ServerCmd {
         return value
             .toValue(QuotaSizeLimit::size, QuotaSizeLimit.unlimited())
             .map(size -> {
-            if (size.isUnlimited()) {
-                return Size.UNLIMITED;
-            }
-            return SizeFormat.format(size.asLong());
-        }).orElse(Size.UNKNOWN);
+                if (size.isUnlimited()) {
+                    return Size.UNLIMITED;
+                }
+                return SizeFormat.format(size.asLong());
+            }).orElse(Size.UNKNOWN);
     }
 
     private String formatMessageValue(Long value) {
@@ -487,11 +423,11 @@ public class ServerCmd {
         return value
             .toValue(QuotaCountLimit::count, QuotaCountLimit.unlimited())
             .map(count -> {
-            if (count.isUnlimited()) {
-                return Size.UNLIMITED;
-            }
-            return String.valueOf(count.asLong());
-        }).orElse(Size.UNKNOWN);
+                if (count.isUnlimited()) {
+                    return Size.UNLIMITED;
+                }
+                return String.valueOf(count.asLong());
+            }).orElse(Size.UNKNOWN);
     }
 
     private void print(Map<String, Mappings> map, PrintStream out) {

@@ -32,6 +32,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -43,6 +44,7 @@ import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
 import org.apache.james.cli.probe.impl.JmxConnection;
 import org.apache.james.cli.probe.impl.JmxDataProbe;
+import org.apache.james.cli.probe.impl.JmxDropListProbe;
 import org.apache.james.cli.probe.impl.JmxMailboxProbe;
 import org.apache.james.cli.probe.impl.JmxQuotaProbe;
 import org.apache.james.cli.probe.impl.JmxSieveProbe;
@@ -59,6 +61,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableList;
@@ -71,6 +74,7 @@ class ServerCmdTest {
     private JmxMailboxProbe mailboxProbe;
     private JmxQuotaProbe quotaProbe;
     private JmxSieveProbe sieveProbe;
+    private JmxDropListProbe dropListProbe;
 
     private ServerCmd testee;
 
@@ -80,7 +84,8 @@ class ServerCmdTest {
         mailboxProbe = mock(JmxMailboxProbe.class);
         quotaProbe = mock(JmxQuotaProbe.class);
         sieveProbe = mock(JmxSieveProbe.class);
-        testee = new ServerCmd(dataProbe, mailboxProbe, quotaProbe, sieveProbe);
+        dropListProbe = mock(JmxDropListProbe.class);
+        testee = new ServerCmd(dataProbe, mailboxProbe, quotaProbe, sieveProbe, dropListProbe);
     }
 
     @Test
@@ -645,6 +650,61 @@ class ServerCmdTest {
     }
 
     @Test
+    void addDropListEntryCommandShouldWork() throws Exception {
+        String ownerScope = "global";
+        String owner = "owner@owner.com";
+        String deniedEntity = "evil@example.com";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDROPLISTENTRY.getCommand(), ownerScope, owner, deniedEntity};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        testee.executeCommandLine(commandLine);
+
+        verify(dropListProbe).addDropListEntry(ownerScope, owner, deniedEntity);
+    }
+
+    @Test
+    void removeDropListEntryCommandShouldWork() throws Exception {
+        String ownerScope = "global";
+        String owner = "owner@owner.com";
+        String deniedEntity = "evil@example.com";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEDROPLISTENTRY.getCommand(), ownerScope, owner, deniedEntity};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        testee.executeCommandLine(commandLine);
+
+        verify(dropListProbe).removeDropListEntry(ownerScope, owner, deniedEntity);
+    }
+
+    @Test
+    void getDropListEntryCommandShouldWork() throws Exception {
+        String ownerScope = "global";
+        String owner = "owner@owner.com";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETDROPLIST.getCommand(), ownerScope, owner};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        when(dropListProbe.getDropList(ownerScope, owner)).thenReturn(Collections.emptyList());
+
+        testee.executeCommandLine(commandLine);
+
+        verify(dropListProbe).getDropList(ownerScope, owner);
+    }
+
+    @Test
+    void queryDropListCommandShouldWork() throws Exception {
+        String ownerScope = "global";
+        String owner = "owner@owner.com";
+        String deniedEntity = "evil@example.com";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DROPLISTQUERY.getCommand(), ownerScope, owner, deniedEntity};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        when(dropListProbe.runDropListQuery(ownerScope, owner, deniedEntity)).thenReturn("BLOCKED");
+
+        testee.executeCommandLine(commandLine);
+
+        verify(dropListProbe).runDropListQuery(ownerScope, owner, deniedEntity);
+    }
+
+    @Test
     void addDomainCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = {"-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAIN.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -838,6 +898,19 @@ class ServerCmdTest {
     @Test
     void listUserMailboxesMappingsCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = {"-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand()};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+        value = CmdType.class,
+        names = {"ADDDROPLISTENTRY", "REMOVEDROPLISTENTRY", "GETDROPLIST", "DROPLISTQUERY"},
+        mode = EnumSource.Mode.INCLUDE)
+    void dropListCommandShouldThrowOnMissingArguments(CmdType cmdType) throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", cmdType.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
@@ -1145,6 +1218,53 @@ class ServerCmdTest {
         String scriptPath = "./src/test/resources/sieve/sieve_script";
 
         String[] arguments = {"-h", "127.0.0.1", "-p", "9999", CmdType.ADDACTIVESIEVESCRIPT.getCommand(), user, scriptName, scriptPath, ADDITIONAL_ARGUMENT};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
+    }
+
+    @Test
+    void addDropListEntryCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String ownerScope = "global";
+        String owner = "owner@owner.com";
+        String deniedEntity = "evil@example.com";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDROPLISTENTRY.getCommand(), ownerScope, owner, deniedEntity, ADDITIONAL_ARGUMENT};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
+    }
+
+    @Test
+    void removeDropListEntryCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String ownerScope = "global";
+        String owner = "owner@owner.com";
+        String deniedEntity = "evil@example.com";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEDROPLISTENTRY.getCommand(), ownerScope, owner, deniedEntity, ADDITIONAL_ARGUMENT};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
+    }
+
+    @Test
+    void getDropListEntryCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String ownerScope = "global";
+        String owner = "owner@owner.com";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETDROPLIST.getCommand(), ownerScope, owner, ADDITIONAL_ARGUMENT};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
+    }
+
+    @Test
+    void queryDropListCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String ownerScope = "global";
+        String owner = "owner@owner.com";
+        String deniedEntity = "evil@example.com";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DROPLISTQUERY.getCommand(), ownerScope, owner, deniedEntity, ADDITIONAL_ARGUMENT};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         assertThatThrownBy(() -> testee.executeCommandLine(commandLine))

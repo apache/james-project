@@ -17,21 +17,42 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.data;
+package org.apache.james.utils;
 
-import org.apache.james.droplist.lib.DropListManagement;
+import java.util.List;
+
+import jakarta.inject.Inject;
+
+import org.apache.james.core.MailAddress;
 import org.apache.james.droplists.api.DropList;
-import org.apache.james.droplists.api.DropListManagementMBean;
-import org.apache.james.droplists.memory.MemoryDropList;
+import org.apache.james.droplists.api.DropListEntry;
+import org.apache.james.droplists.api.OwnerScope;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+public class DropListProbeImpl implements GuiceProbe {
 
-public class MemoryDropListsModule extends AbstractModule {
-    @Override
-    public void configure() {
-        bind(DropList.class).to(MemoryDropList.class).in(Scopes.SINGLETON);
-        bind(DropListManagement.class).in(Scopes.SINGLETON);
-        bind(DropListManagementMBean.class).to(DropListManagement.class);
+    private final DropList dropList;
+
+    @Inject
+    public DropListProbeImpl(DropList dropList) {
+        this.dropList = dropList;
+    }
+
+    public void addDropListEntry(DropListEntry dropListEntry) {
+        dropList.add(dropListEntry).block();
+    }
+
+    public void removeDropListEntry(DropListEntry dropListEntry) {
+        dropList.remove(dropListEntry).block();
+    }
+
+    public List<DropListEntry> getDropList(OwnerScope ownerScope, String owner) {
+        return dropList.list(ownerScope, owner)
+            .collectList()
+            .block();
+    }
+
+    public DropList.Status dropListQuery(OwnerScope ownerScope, String owner, MailAddress sender) {
+        return dropList.query(ownerScope, owner, sender)
+            .block();
     }
 }

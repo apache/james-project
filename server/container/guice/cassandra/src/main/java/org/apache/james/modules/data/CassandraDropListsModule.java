@@ -19,7 +19,9 @@
 
 package org.apache.james.modules.data;
 
+import org.apache.james.droplist.lib.DropListManagement;
 import org.apache.james.droplists.api.DropList;
+import org.apache.james.droplists.api.DropListManagementMBean;
 import org.apache.james.droplists.cassandra.CassandraDropList;
 
 import com.google.inject.AbstractModule;
@@ -29,5 +31,7 @@ public class CassandraDropListsModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(DropList.class).to(CassandraDropList.class).in(Scopes.SINGLETON);
+        bind(DropListManagement.class).in(Scopes.SINGLETON);
+        bind(DropListManagementMBean.class).to(DropListManagement.class);
     }
 }

@@ -17,21 +17,53 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.data;
+package org.apache.james.droplist.lib;
 
-import org.apache.james.droplist.lib.DropListManagement;
+import java.util.List;
+
+import javax.management.NotCompliantMBeanException;
+import javax.management.StandardMBean;
+
+import jakarta.inject.Inject;
+
+import org.apache.james.core.MailAddress;
 import org.apache.james.droplists.api.DropList;
+import org.apache.james.droplists.api.DropListEntry;
 import org.apache.james.droplists.api.DropListManagementMBean;
-import org.apache.james.droplists.memory.MemoryDropList;
+import org.apache.james.droplists.api.OwnerScope;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+public class DropListManagement extends StandardMBean implements DropListManagementMBean {
 
-public class MemoryDropListsModule extends AbstractModule {
+    private final DropList dropList;
+
+    @Inject
+    public DropListManagement(DropList dropList) throws NotCompliantMBeanException {
+        super(DropListManagementMBean.class);
+        this.dropList = dropList;
+    }
+
     @Override
-    public void configure() {
-        bind(DropList.class).to(MemoryDropList.class).in(Scopes.SINGLETON);
-        bind(DropListManagement.class).in(Scopes.SINGLETON);
-        bind(DropListManagementMBean.class).to(DropListManagement.class);
+    public String query(OwnerScope ownerScope, String owner, MailAddress sender) {
+        return dropList.query(ownerScope, owner, sender)
+            .map(Enum::name)
+            .block();
+    }
+
+    @Override
+    public List<String> list(OwnerScope ownerScope, String owner) {
+        return dropList.list(ownerScope, owner)
+            .map(DropListEntry::getDeniedEntity)
+            .collectList()
+            .block();
+    }
+
+    @Override
+    public void remove(DropListEntry entry) {
+        dropList.remove(entry).block();
+    }
+
+    @Override
+    public void add(DropListEntry entry) {
+        dropList.add(entry).block();
     }
 }
