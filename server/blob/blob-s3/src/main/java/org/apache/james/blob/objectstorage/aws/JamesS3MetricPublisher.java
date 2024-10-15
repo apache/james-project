@@ -35,18 +35,21 @@ import software.amazon.awssdk.metrics.MetricCollection;
 import software.amazon.awssdk.metrics.MetricPublisher;
 
 public class JamesS3MetricPublisher implements MetricPublisher {
+    public static final String DEFAULT_S3_METRICS_PREFIX = "s3";
+
     private final GaugeRegistry.SettableGauge<Integer> availableConcurrency; // The number of remaining concurrent requests that can be supported by the HTTP client without needing to establish another connection.
     private final GaugeRegistry.SettableGauge<Integer> leasedConcurrency; // The number of request currently being executed by the HTTP client.
     private final GaugeRegistry.SettableGauge<Integer> pendingConcurrencyAcquires; // The number of requests that are blocked, waiting for another TCP connection or a new stream to be available from the connection pool.
     private final TimeMetric concurrencyAcquireDuration; // The time taken to acquire a channel from the connection pool.
     private final TimeMetric apiCallDuration; // The total time taken to finish a request (inclusive of all retries).
 
-    public JamesS3MetricPublisher(MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
-        this.availableConcurrency = gaugeRegistry.settableGauge("s3_httpClient_availableConcurrency");
-        this.leasedConcurrency = gaugeRegistry.settableGauge("s3_httpClient_leasedConcurrency");
-        this.pendingConcurrencyAcquires = gaugeRegistry.settableGauge("s3_httpClient_pendingConcurrencyAcquires");
-        this.concurrencyAcquireDuration = metricFactory.timer("s3_httpClient_concurrencyAcquireDuration");
-        this.apiCallDuration = metricFactory.timer("s3_apiCall_apiCallDuration");
+    public JamesS3MetricPublisher(MetricFactory metricFactory, GaugeRegistry gaugeRegistry,
+                                  String metricPrefix) {
+        this.availableConcurrency = gaugeRegistry.settableGauge(metricPrefix + "_httpClient_availableConcurrency");
+        this.leasedConcurrency = gaugeRegistry.settableGauge(metricPrefix + "_httpClient_leasedConcurrency");
+        this.pendingConcurrencyAcquires = gaugeRegistry.settableGauge(metricPrefix + "_httpClient_pendingConcurrencyAcquires");
+        this.concurrencyAcquireDuration = metricFactory.timer(metricPrefix + "_httpClient_concurrencyAcquireDuration");
+        this.apiCallDuration = metricFactory.timer(metricPrefix + "_apiCall_apiCallDuration");
     }
 
     @Override
