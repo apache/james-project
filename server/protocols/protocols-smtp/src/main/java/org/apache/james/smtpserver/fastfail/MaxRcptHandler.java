@@ -27,6 +27,6 @@ public class MaxRcptHandler extends org.apache.james.protocols.smtp.core.fastfai
     @Override
     public void init(Configuration config) throws ConfigurationException {
         int maxRcpt = config.getInt("maxRcpt", 0);
-        setMaxRcpt(maxRcpt);        
+        setMaxRcpt(maxRcpt);
     }
 }
