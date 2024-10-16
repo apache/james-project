@@ -30,7 +30,6 @@
 
     <name>Apache James :: MPT :: ManageSieve :: Cassandra</name>
 
-
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -54,11 +53,5 @@
             <artifactId>testing-base</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-
 </project>
