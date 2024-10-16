@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (C) 2016, The logback-contrib developers. All rights reserved.
+
+    This program and the accompanying materials are dual-licensed under
+    either the terms of the Eclipse Public License v1.0 as published by
+    the Eclipse Foundation
+
+      or (per the licensee's choosing)
+
+    under the terms of the GNU Lesser General Public License version 2.1
+    as published by the Free Software Foundation.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
+    <groupId>ch.qos.logback.contrib</groupId>
+    <artifactId>logback-contrib-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>0.1.6-SNAPSHOT</version>
+
+    <name>Logback Contrib</name>
+    <url>https://github.com/qos-ch/logback-contrib/wiki</url>
+    <description>
+        Logback Contrib provides community-driven and supported
+        extensions to the Logback logging framework. All contributions
+        are made by contributors with CLA on file.
+    </description>
+    <inceptionYear>2012</inceptionYear>
+
+   <licenses>
+     <license>
+       <name>Eclipse Public License - v 1.0</name>
+       <url>http://www.eclipse.org/legal/epl-v10.html</url>
+     </license>
+
+     <license>
+       <name>GNU Lesser General Public License</name>
+       <url>http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html</url>
+     </license>
+    </licenses>
+
+    <scm>
+      <connection>scm:git:git://github.com/qos-ch/logback-contrib.git</connection>
+      <developerConnection>scm:git:git@github.com:qos-ch/logback-contrib.git</developerConnection>
+      <url>https://github.com/qos-ch/logback-contrib</url>
+      <tag>HEAD</tag>
+  </scm>
+    <issueManagement>
+      <system>GitHub</system>
+      <url>https://github.com/qos-ch/logback-contrib/issues</url>
+    </issueManagement>
+
+    <developers>
+        <developer>
+            <id>lhazlewood</id>
+            <name>Les Hazlewood</name>
+            <email>les@hazlewood.com</email>
+            <url>http://www.leshazlewood.com</url>
+            <timezone>-8</timezone>
+        </developer>
+        <developer>
+            <id>belaso</id>
+            <name>Christian Trutz</name>
+            <email>christian.trutz@belaso.de</email>
+            <url>http://www.belaso.de</url>
+            <timezone>+2</timezone>
+        </developer>
+        <developer>
+            <id>tony19</id>
+            <name>Tony Trinh</name>
+            <email>tony19@gmail.com</email>
+            <url>http://tony19.github.com</url>
+            <timezone>-5</timezone>
+        </developer>
+    </developers>
+    <contributors>
+    	<contributor>
+    		<name>David J. M. Karlsen</name>
+    		<email>david@davidkarlsen.com</email>
+    	</contributor>
+        <contributor>
+            <name>Espen A. Fossen</name>
+            <email>espenaf@junta.no</email>
+        </contributor>
+    </contributors>
+
+    <modules>
+        <module>json</module>
+        <module>jackson</module>
+        <module>mongodb</module>
+        <module>eclipse</module>
+        <module>janino-fragment</module>
+        <module>xmpp</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Compile Dependencies: -->
+        <logback.version>1.1.8</logback.version>
+        <jackson.version>2.8.5</jackson.version>
+        <mongo-java-driver.version>2.10.1</mongo-java-driver.version>
+        <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
+
+        <!-- Test Dependencies: -->
+        <mockito.version>2.0.44-beta</mockito.version>
+        <groovy.version>1.8.6</groovy.version>
+        <junit.version>4.8.2</junit.version>
+        <hamcrest.version>2.0.0.0</hamcrest.version>
+
+    </properties>
+
+    <dependencies>
+        <!-- Test Dependencies for _all_ children modules: -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-junit</artifactId>
+            <version>${hamcrest.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+
+        <dependencies>
+
+
+           <!-- Pool of dependencies available to any sub-module, but not included automatically.
+                They must be explicitly referenced in the children POMs, but _don't_ include
+                version numbers in the child POMs.  Define them here only to guarantee version
+                compatibility across children modules! -->
+
+            <!-- Logback Extensions sub-modules dependency .jars (alphabetized based on artifactId for easy scanning please!): -->
+          <dependency>
+               <groupId>ch.qos.logback</groupId>
+               <artifactId>logback-access</artifactId>
+               <version>${logback.version}</version>
+           </dependency>
+
+          <dependency>
+               <groupId>ch.qos.logback</groupId>
+               <artifactId>logback-classic</artifactId>
+               <version>${logback.version}</version>
+           </dependency>
+
+          <dependency>
+               <groupId>ch.qos.logback</groupId>
+               <artifactId>logback-core</artifactId>
+               <version>${logback.version}</version>
+           </dependency>
+
+            <!-- 3rd party dependencies: -->
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+                <version>2.5</version>
+                <scope>provided</scope>
+                <optional>true</optional>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongo-java-driver</artifactId>
+                <version>${mongo-java-driver.version}</version>
+            </dependency>
+
+        </dependencies>
+
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.5.1</version>
+                    <configuration>
+                        <source>1.6</source>
+                        <target>1.6</target>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <!-- Allow tests to be written in Groovy: -->
+            <plugin>
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <!--suppress MavenModelInspection -->
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.3</version>
+                <configuration>
+                    <preparationGoals>clean install</preparationGoals>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <useReleaseProfile>false</useReleaseProfile>
+                    <!-- <goals>deploy site-deploy</goals> -->
+                    <goals>deploy</goals>
+                    <arguments>-Prelease</arguments>
+                    <mavenExecutorId>forked-path</mavenExecutorId>
+                    <tagNameFormat>v_@{project.version}</tagNameFormat>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <archive>
+                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.3</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.7</version>
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- to format license headers, enter: "mvn license:format" -->
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <header>license-template.txt</header>
+                    <properties>
+                        <owner>The logback-contrib developers</owner>
+                        <year>2016</year>
+                        <email>logback-user@qos.ch</email>
+                    </properties>
+                    <includes>
+                        <include>**/*.java</include>
+                    </includes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>release</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <!--
+                    To disable debug compilation, debug must be "true" AND
+                    debuglevel must be "none".
+                    http://jira.codehaus.org/browse/MCOMPILER-114
+                -->
+                <maven.compiler.debug>true</maven.compiler.debug>
+                <maven.compiler.debuglevel>none</maven.compiler.debuglevel>
+            </properties>
+        </profile>
+    </profiles>
+</project>

@@ -1,0 +1,52 @@
+<!--
+
+    Copyright (C) 2016, The logback-contrib developers. All rights reserved.
+
+    This program and the accompanying materials are dual-licensed under
+    either the terms of the Eclipse Public License v1.0 as published by
+    the Eclipse Foundation
+
+      or (per the licensee's choosing)
+
+    under the terms of the GNU Lesser General Public License version 2.1
+    as published by the Free Software Foundation.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+    <parent>
+        <groupId>org.apache.james</groupId>
+        <artifactId>logback-json-parent</artifactId>
+        <version>0.1.6-SNAPSHOT</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>logback-json-access</artifactId>
+    <name>Logback Contrib :: JSON :: Access</name>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+           <groupId>ch.qos.logback</groupId>
+           <artifactId>logback-access</artifactId>
+           <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-access</artifactId>
+            <version>${logback.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>logback-json-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

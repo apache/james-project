@@ -542,6 +542,7 @@
         <module>examples</module>
         <module>javax-mail-extension</module>
         <module>json</module>
+        <module>logback-contrib</module>
         <module>mailbox</module>
         <module>mailet</module>
         <module>mdn</module>

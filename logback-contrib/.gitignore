@@ -1,0 +1,10 @@
+*.idea
+*.iml
+*.ipr
+*.iws
+.classpath
+.externalToolBuilders
+.project
+.settings
+target
+out

@@ -1,0 +1,68 @@
+<!--
+
+    Copyright (C) 2016, The logback-contrib developers. All rights reserved.
+
+    This program and the accompanying materials are dual-licensed under
+    either the terms of the Eclipse Public License v1.0 as published by
+    the Eclipse Foundation
+
+      or (per the licensee's choosing)
+
+    under the terms of the GNU Lesser General Public License version 2.1
+    as published by the Free Software Foundation.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+      <groupId>org.apache.james</groupId>
+      <artifactId>logback-contrib-parent</artifactId>
+      <version>0.1.6-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>logback-eclipse</artifactId>
+    <name>Logback Contrib :: Eclipse</name>
+    <packaging>jar</packaging>
+
+    <dependencies>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+      </dependency>
+
+
+      <dependency>
+        <groupId>org.eclipse.equinox</groupId>
+        <artifactId>org.eclipse.equinox.common</artifactId>
+        <version>3.6.0.v20100503</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jibx.config.3rdparty.org.eclipse</groupId>
+        <artifactId>org.eclipse.core.runtime</artifactId>
+        <version>3.7.0.v20110110</version>
+      </dependency>
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.core</artifactId>
+        <version>4.3.0</version>
+      </dependency>
+    </dependencies>
+
+<!-- 
+     XXX: Disable until we figure out how to use the pax-construct
+     Maven plugin to create a bundle from the command-line instead
+     of from Eclipse 
+        
+    <pluginRepositories>
+        <pluginRepository>
+            <id>ops4j.releases</id>
+            <url>http://repository.ops4j.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+-->
+</project>
