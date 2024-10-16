@@ -72,6 +72,7 @@ import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
+@Singleton
 public class S3BlobStoreDAO implements BlobStoreDAO {
 
     private static class FileBackedOutputStreamByteSource extends ByteSource {
@@ -113,7 +114,6 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     private final BlobId.Factory blobIdFactory;
 
     @Inject
-    @Singleton
     public S3BlobStoreDAO(S3ClientFactory s3ClientFactory,
                    S3BlobStoreConfiguration configuration,
                    BlobId.Factory blobIdFactory) {
