@@ -50,6 +50,7 @@ import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Configuration;
 
+@Singleton
 public class S3ClientFactory implements Startable, Closeable {
     private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
         @Override
@@ -75,7 +76,6 @@ public class S3ClientFactory implements Startable, Closeable {
     private final S3AsyncClient s3Client;
 
     @Inject
-    @Singleton
     public S3ClientFactory(S3BlobStoreConfiguration configuration, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         this(configuration, () -> new JamesS3MetricPublisher(metricFactory, gaugeRegistry, S3_METRICS_PREFIX));
     }

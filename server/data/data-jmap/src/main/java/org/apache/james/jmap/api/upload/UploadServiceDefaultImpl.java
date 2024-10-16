@@ -41,13 +41,13 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Singleton
 public class UploadServiceDefaultImpl implements UploadService {
     private final UploadRepository uploadRepository;
     private final UploadUsageRepository uploadUsageRepository;
     private final JmapUploadQuotaConfiguration jmapUploadQuotaConfiguration;
 
     @Inject
-    @Singleton
     public UploadServiceDefaultImpl(UploadRepository uploadRepository,
                                     UploadUsageRepository uploadUsageRepository,
                                     JmapUploadQuotaConfiguration jmapUploadQuotaConfiguration) {
