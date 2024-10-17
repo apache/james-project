@@ -62,10 +62,8 @@ S: a6 OK UNSELECT completed.
 C: a5 DELETE #user.boby.mailbox-lra
 S: a5 NO DELETE processing failed.
 
-# TODO if I have 'a' right I shall be able to administer!
-# org.apache.james.mailbox.exception.InsufficientRightsException: Setting ACL is only permitted to the owner of the mailbox
 C: a5 SETACL #user.boby.mailbox-lra imapuser lra
-S: a5 NO SETACL processing failed.
+S: a5 OK SETACL completed.
 
 C: a7 CREATE #user.boby.mailbox-lra.evev
 S: a7 NO CREATE processing failed.

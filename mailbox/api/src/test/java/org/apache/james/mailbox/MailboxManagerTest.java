@@ -3136,6 +3136,26 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
         @Test
         void setRightsByIdShouldThrowWhenNotOwner() throws Exception {
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_2, "mailbox");
+            MailboxId id = mailboxManager.createMailbox(mailboxPath, session2).get();
+            mailboxManager.setRights(id,  MailboxACL.EMPTY.apply(MailboxACL.command()
+                .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup, MailboxACL.Right.Administer, MailboxACL.Right.Read))
+                .asAddition()), session2);
+
+            mailboxManager.setRights(id, MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                    .rights(MailboxACL.FULL_RIGHTS)
+                    .asAddition()), session);
+
+            assertThat(mailboxManager.getMailbox(mailboxPath, session2)
+                .getMailboxEntity().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(USER_1)))
+                .isEqualTo(MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("aeiklprstwx"));
+        }
+
+        @Test
+        void setRightsByIdShouldThrowWhenNotAdministrator() throws Exception {
             MailboxId id = mailboxManager.createMailbox(MailboxPath.forUser(USER_2, "mailbox"), session2).get();
             mailboxManager.setRights(id,  MailboxACL.EMPTY.apply(MailboxACL.command()
                 .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))

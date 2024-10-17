@@ -275,10 +275,11 @@ public class StoreRightManager implements RightManager {
 
     private void assertHaveAccessTo(Mailbox mailbox, MailboxSession session) throws InsufficientRightsException, MailboxNotFoundException {
         if (!mailbox.generateAssociatedPath().belongsTo(session)) {
-            if (mailbox.getACL().getEntries().containsKey(EntryKey.createUserEntryKey(session.getUser()))) {
-                throw new InsufficientRightsException("Setting ACL is only permitted to the owner of the mailbox");
-            } else {
+            Rfc4314Rights acl = mailbox.getACL().getEntries().get(EntryKey.createUserEntryKey(session.getUser()));
+            if (acl == null) {
                 throw new MailboxNotFoundException(mailbox.getMailboxId());
+            } else if (!acl.contains(Right.Administer)) {
+                throw new InsufficientRightsException("Setting ACL is only permitted to the owner and admins of the mailbox");
             }
         }
     }
