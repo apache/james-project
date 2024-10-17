@@ -63,6 +63,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
@@ -408,6 +409,9 @@ public class StoreMessageManager implements MessageManager {
             if (!isWriteable(mailboxSession)) {
                 throw new ReadOnlyException(getMailboxPath());
             }
+            if (!storeRightManager.myRights(mailbox, mailboxSession).contains(MailboxACL.Right.Insert)) {
+                throw new InsufficientRightsException("Append messages requires 'i' right");
+            }
 
             try (InputStream contentStream = msgIn.getInputStream();
                  UnsynchronizedFilterInputStream bufferedContentStream = UnsynchronizedBufferedInputStream.builder()
@@ -733,6 +737,9 @@ public class StoreMessageManager implements MessageManager {
         if (!toMailbox.isWriteable(session)) {
             return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
         }
+        if (!storeRightManager.myRights(toMailbox.mailbox, session).contains(MailboxACL.Right.Insert)) {
+            return Flux.error(new InsufficientRightsException("Append messages requires 'i' right"));
+        }
         //TODO lock the from mailbox too, in a non-deadlocking manner - how?
         return Flux.from(locker.executeReactiveWithLockReactive(toMailbox.getMailboxPath(),
             copy(set, toMailbox, session)
@@ -747,8 +754,14 @@ public class StoreMessageManager implements MessageManager {
         if (!isWriteable(session)) {
             return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
         }
+        if (!storeRightManager.myRights(mailbox, session).contains(MailboxACL.Right.PerformExpunge)) {
+            return Flux.error(new InsufficientRightsException("Deleting messages requires 'e' right"));
+        }
         if (!toMailbox.isWriteable(session)) {
             return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
+        }
+        if (!storeRightManager.myRights(toMailbox.mailbox, session).contains(MailboxACL.Right.Insert)) {
+            return Flux.error(new InsufficientRightsException("Append messages requires 'i' right"));
         }
         //TODO lock the from mailbox too, in a non-deadlocking manner - how?
         return Flux.from(locker.executeReactiveWithLockReactive(toMailbox.getMailboxPath(),

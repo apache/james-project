@@ -54,9 +54,10 @@ S: \* OK \[PERMANENTFLAGS \(.*\)\] Limited
 S: \* OK \[HIGHESTMODSEQ .*\] Highest
 S: \* OK \[UIDNEXT .*\] Predicted next UID
 S: a4 OK \[READ-WRITE\] SELECT completed.
-# TODO WTF I do not have 'i' right but I can copy?
+
 C: a4 COPY 1:* #user.boby.mailbox-lrte
-S: a4 OK .* COPY completed.
+S: a4 NO COPY processing failed.
+
 C: a6 UNSELECT
 S: a6 OK UNSELECT completed.
 
@@ -104,5 +105,5 @@ S: F11 OK FETCH completed.
 
 C: F15 EXPUNGE
 S: \* 1 EXPUNGE
-S: \* 19 RECENT
+S: \* 9 RECENT
 S: F15 OK EXPUNGE completed.

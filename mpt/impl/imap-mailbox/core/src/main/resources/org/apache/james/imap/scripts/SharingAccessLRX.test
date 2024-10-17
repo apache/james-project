@@ -54,11 +54,12 @@ S: \* OK \[PERMANENTFLAGS \(.*\)\] Limited
 S: \* OK \[HIGHESTMODSEQ .*\] Highest
 S: \* OK \[UIDNEXT .*\] Predicted next UID
 S: a4 OK \[READ-WRITE\] SELECT completed.
+
 C: a4 COPY 1:* #user.boby.mailbox-lrx
 S: a4 NO COPY processing failed.
+
 C: a6 UNSELECT
 S: a6 OK UNSELECT completed.
-
 
 C: a5 SETACL #user.boby.mailbox-lrx imapuser lra
 S: a5 NO SETACL You need the Administer right to perform command SETACL on mailbox #user.boby.mailbox-lrx.
