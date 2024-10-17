@@ -65,12 +65,8 @@ S: a5 NO DELETE failed. No such mailbox.
 C: a5 SETACL #user.boby.mailbox-lrk imapuser lra
 S: a5 NO SETACL You need the Administer right to perform command SETACL on mailbox #user.boby.mailbox-lrk.
 
-# TODO
-#  - MUST be able to create mailboxes
-#  - When a new mailbox is created, it SHOULD inherit the ACL from the parent mailbox (if one exists) in the defined hierarchy.
-# CF https://github.com/giz-berlin/james-project/commit/9541be2da2a2da9a5bc5343e20ef152c5b473727#diff-78bbaf3505920ad8d1c2dfb95f2cbc4de2ed01c358645ad50e9b531483e3c25aR342
 C: a7 CREATE #user.boby.mailbox-lrk.evev
-S: a7 NO CREATE processing failed.
+S: a7 OK \[MAILBOXID \(.*\)\] CREATE completed.
 
 C: a3 SELECT #user.boby.mailbox-lrk
 S: \* OK \[MAILBOXID \(.*\)\] Ok

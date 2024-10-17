@@ -339,7 +339,7 @@ public class StoreMailboxManager implements MailboxManager {
     public Mono<MailboxId> createMailboxReactive(MailboxPath mailboxPath, CreateOption createOption, MailboxSession mailboxSession) {
         LOGGER.debug("createMailbox {}", mailboxPath);
 
-        return assertMailboxPathBelongToUserReactive(mailboxSession, mailboxPath)
+        return assertCanCreateReactive(mailboxSession, mailboxPath)
             .then(doCreateMailboxReactive(mailboxPath, createOption, mailboxSession));
     }
 
@@ -429,15 +429,32 @@ public class StoreMailboxManager implements MailboxManager {
                 LOGGER.info("{} mailbox was created concurrently", mailboxPath.asString());
                 return Mono.empty();
             })
-            .flatMap(any -> createSubscriptionIfNeeded(mailboxPath, createOption, mailboxSession).thenReturn(any));
+            .flatMap(any -> createSubscriptionIfNeeded(mailboxPath, createOption, mailboxSession).thenReturn(any))
+            .flatMap(any -> inheritRightsReactive(mailboxSession, mailboxPath).thenReturn(any));
     }
 
-    private Mono<Void> assertMailboxPathBelongToUserReactive(MailboxSession mailboxSession, MailboxPath mailboxPath) {
-        if (!mailboxPath.belongsTo(mailboxSession)) {
-            return Mono.error(new InsufficientRightsException("mailboxPath '" + mailboxPath.asString() + "'"
-                + " does not belong to user '" + mailboxSession.getUser().asString() + "'"));
+
+    private Mono<Void> assertCanCreateReactive(MailboxSession session, MailboxPath path) {
+        if (path.belongsTo(session)) {
+            return Mono.empty();
         }
-        return Mono.empty();
+
+        return nearestExistingParent(session, path)
+            .filterWhen(parent -> hasRightReactive(parent, Right.CreateMailbox, session))
+            .switchIfEmpty(Mono.error(new InsufficientRightsException("user '" + session.getUser().asString() + "' is not allowed to create the mailbox '" + path.asString() + "'")))
+            .then();
+    }
+
+    private Mono<MailboxPath> nearestExistingParent(MailboxSession session, MailboxPath path) {
+        return Flux.fromIterable(path.getParents(session.getPathDelimiter()).reversed())
+            .filterWhen(parent -> mailboxExists(parent, session))
+            .next();
+    }
+
+    private Mono<Void> inheritRightsReactive(MailboxSession mailboxSession, MailboxPath path) {
+        return nearestExistingParent(mailboxSession, path)
+            .flatMap(parent -> Mono.from(listRightsReactive(parent, mailboxSession)))
+            .flatMap(acl -> storeRightManager.setRightsReactiveWithoutAccessControl(path, acl, mailboxSession));
     }
 
     @Override
