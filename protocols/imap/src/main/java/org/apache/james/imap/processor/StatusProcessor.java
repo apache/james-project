@@ -44,10 +44,12 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
@@ -59,6 +61,7 @@ import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -121,6 +124,12 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
 
     private Mono<MailboxStatusResponse> sendStatus(MailboxPath mailboxPath, StatusDataItems statusDataItems, Responder responder, ImapSession session, MailboxSession mailboxSession) {
         return Mono.from(getMailboxManager().getMailboxReactive(mailboxPath, mailboxSession))
+            .<MessageManager>handle(Throwing.biConsumer((mailbox, sink) -> {
+                if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.Read, mailboxSession)) {
+                    sink.next(mailbox);
+                }
+                sink.error(new InsufficientRightsException("'r' right is needed to status a mailbox"));
+            }))
             .flatMap(mailbox -> sendStatus(mailbox, statusDataItems, responder, session, mailboxSession));
     }
 
