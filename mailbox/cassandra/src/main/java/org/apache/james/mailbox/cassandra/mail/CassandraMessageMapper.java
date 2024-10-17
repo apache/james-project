@@ -167,7 +167,16 @@ public class CassandraMessageMapper implements MessageMapper {
                 }
                 return Mono.just(counters);
             })
-            .doOnNext(counters -> readRepair(mailbox, counters));
+            .doOnNext(counters -> {
+                if (this.cassandraConfiguration.getMailboxReadRepair() > 0) {
+                    Mono.fromRunnable(() -> {
+                        readRepair(mailbox, counters);
+                    })
+                   .subscribeOn(Schedulers.boundedElastic())
+                   .subscribe();
+                }
+            });
+
     }
 
     public Mono<MailboxCounters> readMailboxCounters(CassandraId mailboxId) {
