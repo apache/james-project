@@ -272,6 +272,82 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void shareeShouldBeAbleToCreateMailbox() throws Exception {
+            // GIVEN USER1 shared his INBOX
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath mailboxPath = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(mailboxPath, session);
+            mailboxManager.applyRightsCommand(mailboxPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_2))
+                    .rights(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup,
+                        MailboxACL.Right.Read, MailboxACL.Right.CreateMailbox)))
+                    .asAddition(), session);
+
+            // When USER_2 create a mailbox child
+            MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+            MailboxPath childPath = MailboxPath.inbox(session).child("child", session2.getPathDelimiter());
+            mailboxManager.createMailbox(childPath, session2);
+
+            // Then child path inherit rights
+            assertThat(mailboxManager.getMailbox(childPath, session)
+                .getMailboxEntity().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(USER_2)))
+                .isEqualTo(MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("lrk"));
+        }
+
+        @Test
+        void shareeShouldBeAbleToCreateMailboxChildren() throws Exception {
+            // GIVEN USER1 shared his INBOX
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath mailboxPath = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(mailboxPath, session);
+            mailboxManager.applyRightsCommand(mailboxPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_2))
+                    .rights(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup,
+                        MailboxACL.Right.Read, MailboxACL.Right.CreateMailbox)))
+                    .asAddition(), session);
+
+            // When USER_2 create a mailbox child
+            MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+            MailboxPath childPath = MailboxPath.inbox(session)
+                .child("child", session2.getPathDelimiter())
+                .child("anotherkid", session2.getPathDelimiter());
+            mailboxManager.createMailbox(childPath, session2);
+
+            // Then child path inherit rights
+            assertThat(mailboxManager.getMailbox(childPath, session)
+                .getMailboxEntity().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(USER_2)))
+                .isEqualTo(MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("lrk"));
+        }
+
+        @Test
+        void shareeShouldBeAbleToCreateMailboxChildrenIntermediatePaths() throws Exception {
+            // GIVEN USER1 shared his INBOX
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath mailboxPath = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(mailboxPath, session);
+            mailboxManager.applyRightsCommand(mailboxPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_2))
+                    .rights(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup,
+                        MailboxACL.Right.Read, MailboxACL.Right.CreateMailbox)))
+                    .asAddition(), session);
+
+            // When USER_2 create a mailbox child
+            MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+            MailboxPath intermediatePath = MailboxPath.inbox(session)
+                .child("child", session2.getPathDelimiter());
+            MailboxPath childPath = intermediatePath.child("anotherkid", session2.getPathDelimiter());
+            mailboxManager.createMailbox(childPath, session2);
+
+            // Then child path inherit rights
+            assertThat(mailboxManager.getMailbox(intermediatePath, session)
+                .getMailboxEntity().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(USER_2)))
+                .isEqualTo(MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("lrk"));
+        }
+
+        @Test
         void creatingMixedCaseINBOXShouldCreateItAsINBOX() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
             mailboxManager.startProcessingRequest(session);
