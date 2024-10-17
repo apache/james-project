@@ -2650,12 +2650,15 @@ Response codes:
 * 404: The denied entity does not exist
 
 ==== Add Entry to the DropList
+
 The denied entity must be a valid email address or link:#_create_a_domain[domain].
 
 ===== Global DropList
+
 ....
 curl -XPUT http://ip:port/droplist/global/attacker@evil.com
 ....
+
 ....
 curl -XPUT http://ip:port/droplist/global/evil.com
 ....
