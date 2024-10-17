@@ -43,6 +43,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapGuiceProbe;
@@ -243,7 +244,7 @@ public abstract class ModularizeJmapRFC8621AuthenticationStrategyContract {
     public void givenXUserStrategyWhenMissingXUserSecretHeaderShouldFail(GuiceJamesServer server) throws Throwable {
         // given a server with XUserAuthenticationStrategy
         // The XUserAuthenticationStrategy is configured with a secret: "secret1"
-        setupJamesServerWithXUserStrategy(server, Optional.of("secret1"));
+        setupJamesServerWithXUserStrategy(server, Optional.of(List.of("secret1")));
 
         // when a request is made without the X-User-Secret header
         // then the request should fail with a 401 status code
@@ -262,7 +263,7 @@ public abstract class ModularizeJmapRFC8621AuthenticationStrategyContract {
     public void givenXUserStrategyWhenInvalidateXUserSecretHeaderShouldFail(GuiceJamesServer server) throws Throwable {
         // given a server with XUserAuthenticationStrategy
         // The XUserAuthenticationStrategy is configured with a secret: "secret1"
-        setupJamesServerWithXUserStrategy(server, Optional.of("secret1"));
+        setupJamesServerWithXUserStrategy(server, Optional.of(List.of("secret1")));
 
         // when a request is made with an invalid X-User-Secret header
         // then the request should fail with a 401 status code
@@ -283,7 +284,7 @@ public abstract class ModularizeJmapRFC8621AuthenticationStrategyContract {
         // given a server with XUserAuthenticationStrategy
         // The XUserAuthenticationStrategy is configured with a secret: "secret1"
         String secret = "secret1";
-        setupJamesServerWithXUserStrategy(server, Optional.of(secret));
+        setupJamesServerWithXUserStrategy(server, Optional.of(List.of(secret)));
 
         // when a request is made with an invalid X-User-Secret header
         // then the request should fail with a 401 status code
@@ -314,7 +315,24 @@ public abstract class ModularizeJmapRFC8621AuthenticationStrategyContract {
             .body("username", equalTo(BOB().asString()));
     }
 
-    private void setupJamesServerWithXUserStrategy(GuiceJamesServer server, Optional<String> xUserSecret) throws Exception {
+    @Test
+    public void givenXUserStrategySupportListSecret(GuiceJamesServer server) throws Throwable {
+        List<String> validatedSecretList = List.of("secret1", "secret2", "secret3");
+        setupJamesServerWithXUserStrategy(server, Optional.of(validatedSecretList));
+
+        // when a request is made with an invalid X-User-Secret header
+        // then the request should fail with a 401 status code
+        given()
+            .header(new Header("X-User", BOB().asString()))
+            .header(new Header("X-User-Secret", validatedSecretList.get(ThreadLocalRandom.current().nextInt(3))))
+        .when()
+            .get("/session")
+        .then()
+            .statusCode(SC_OK)
+            .body("username", equalTo(BOB().asString()));
+    }
+
+    private void setupJamesServerWithXUserStrategy(GuiceJamesServer server, Optional<List<String>> xUserSecret) throws Exception {
         jmapServer = server
             .overrideWith(new AbstractModule() {
                 @Provides
