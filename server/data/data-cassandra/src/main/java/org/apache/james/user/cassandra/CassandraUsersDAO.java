@@ -111,7 +111,7 @@ public class CassandraUsersDAO implements UsersDAO {
             .build());
 
         this.listStatement = session.prepare(selectFrom(TABLE_NAME)
-            .column(NAME)
+            .columns(NAME, ALGORITHM)
             .build());
 
         this.insertStatement = session.prepare(insertInto(TABLE_NAME)
@@ -173,6 +173,7 @@ public class CassandraUsersDAO implements UsersDAO {
         return executor.executeSingleRow(
                 getUserStatement.bind()
                     .setString(NAME, name.asString()))
+            .filter(row -> row.getString(ALGORITHM) != null)
             .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD),
                 Algorithm.of(row.getString(ALGORITHM), fallbackHashingMode), preferredAlgorithm));
     }
@@ -308,6 +309,7 @@ public class CassandraUsersDAO implements UsersDAO {
     @Override
     public Flux<Username> listReactive() {
         return executor.executeRows(listStatement.bind())
+            .filter(row -> row.getString(ALGORITHM) != null)
             .mapNotNull(row -> row.getString(NAME))
             .map(Username::of);
     }
