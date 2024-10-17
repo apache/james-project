@@ -38,10 +38,8 @@ C: a1 MYRIGHTS #user.boby.mailbox-l
 S: \* MYRIGHTS \"#user.boby.mailbox-l\" \"l\"
 S: a1 OK MYRIGHTS completed.
 
-# TODO should have had failed
 C: a2 STATUS #user.boby.mailbox-l (MESSAGES)
-S: \* STATUS \"#user.boby.mailbox-l\" \(MESSAGES 0\)
-S: a2 OK STATUS completed.
+S: a2 NO STATUS failed. Status failed.
 
 # Ensure we cannot write in the mailbox
 C: a4 SELECT INBOX
@@ -67,16 +65,7 @@ S: a5 NO SETACL You need the Administer right to perform command SETACL on mailb
 C: a7 CREATE #user.boby.mailbox-l.evev
 S: a7 NO CREATE processing failed.
 
-# TODO should have had failed
 C: a3 SELECT #user.boby.mailbox-l
-S: \* OK \[MAILBOXID \(.*\)\] Ok
-S: \* FLAGS \(.*\)
-S: \* .* EXISTS
-S: \* .* RECENT
-S: \* OK \[UIDVALIDITY .*\] UIDs valid
-S: \* OK \[PERMANENTFLAGS\] No permanent flags permitted
-S: \* OK \[HIGHESTMODSEQ .*\] Highest
-S: \* OK \[UIDNEXT .*\] Predicted next UID
-S: a3 OK \[READ-ONLY\] SELECT completed.
+S: a3 NO SELECT failed.
 
 
