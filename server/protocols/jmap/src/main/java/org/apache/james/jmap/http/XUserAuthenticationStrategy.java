@@ -20,6 +20,7 @@
 package org.apache.james.jmap.http;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -35,6 +36,7 @@ import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
@@ -50,12 +52,15 @@ public class XUserAuthenticationStrategy implements AuthenticationStrategy {
         AuthenticationScheme.of("XUserHeader"),
         ImmutableMap.of());
 
-    private static Optional<String> extractXUserSecretFromConfig(PropertiesProvider propertiesProvider) throws ConfigurationException {
+    private static Optional<List<String>> extractXUserSecretFromConfig(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             return Optional.ofNullable(propertiesProvider.getConfiguration("jmap"))
-                .map(config -> config.getString(AUTHENTICATION_STRATEGY_XUSER_SECRET, null));
+                .map(config -> config.getList(String.class, AUTHENTICATION_STRATEGY_XUSER_SECRET, null))
+                .map(list -> {
+                    Preconditions.checkArgument(!list.isEmpty(), AUTHENTICATION_STRATEGY_XUSER_SECRET + " must not be empty");
+                    return list;
+                });
         } catch (FileNotFoundException e) {
-             LOGGER.warn("");
             return Optional.empty();
         }
     }
@@ -73,7 +78,7 @@ public class XUserAuthenticationStrategy implements AuthenticationStrategy {
 
     public XUserAuthenticationStrategy(UsersRepository usersRepository,
                                        MailboxManager mailboxManager,
-                                       Optional<String> xUserSecret) {
+                                       Optional<List<String>> xUserSecret) {
         this.usersRepository = usersRepository;
         this.mailboxManager = mailboxManager;
         this.usernameExtractor = xUserSecret
@@ -110,10 +115,10 @@ public class XUserAuthenticationStrategy implements AuthenticationStrategy {
             .map(Username::of);
     }
 
-    private Function<HttpServerRequest, Optional<Username>> createUsernameExtractorWithSecretValidation(String secret) {
+    private Function<HttpServerRequest, Optional<Username>> createUsernameExtractorWithSecretValidation(List<String> validatedSecretList) {
         return httpRequest -> createUsernameExtractorWithoutSecretValidation().apply(httpRequest)
             .filter(username -> Optional.ofNullable(httpRequest.requestHeaders().get(X_USER_SECRET_HEADER_NAME))
-                .map(secret::equals)
+                .map(validatedSecretList::contains)
                 .orElse(false));
     }
 }
