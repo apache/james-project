@@ -335,4 +335,18 @@ public class StoreRightManager implements RightManager {
         }
         return new MailboxACL(ImmutableMap.of(userAsKey, rights));
     }
+
+    /** Sets an ACL for a mailbox *WITHOUT* checking if the user of current session is allowed to do so.
+     * We need this when creating a mailbox, to copy the ACL of the parent mailbox for all users.
+     */
+    public Mono<Void> setRightsReactiveWithoutAccessControl(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) {
+        try {
+            assertSharesBelongsToUserDomain(mailboxPath.getUser(), mailboxACL.getEntries());
+        } catch (DifferentDomainException e) {
+            return Mono.error(e);
+        }
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        return mapper.findMailboxByPath(mailboxPath)
+            .flatMap(Throwing.<Mailbox, Mono<Void>>function(mailbox -> setRights(mailboxACL, mapper, mailbox, session)).sneakyThrow());
+    }
 }
