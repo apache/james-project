@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.host;
 
+import java.util.stream.IntStream;
+
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.plist.PropertyListConfiguration;
@@ -37,6 +39,8 @@ import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.Continuation;
@@ -45,6 +49,8 @@ import org.apache.james.mpt.helper.ByteBufferInputStream;
 import org.apache.james.mpt.helper.ByteBufferOutputStream;
 import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
 import org.apache.james.user.memory.MemoryUsersRepository;
+
+import com.github.fge.lambdas.Throwing;
 
 public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRightsOnHost {
     private static final DomainList NO_DOMAIN_LIST = null;
@@ -105,6 +111,27 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
         mailboxManager.startProcessingRequest(mailboxSession);
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
+        mailboxManager.endProcessingRequest(mailboxSession);
+    }
+
+    @Override
+    public void fillMailbox(MailboxPath mailboxPath) throws Exception {
+        MailboxManager mailboxManager = getMailboxManager();
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
+        mailboxManager.startProcessingRequest(mailboxSession);
+
+        try {
+            mailboxManager.createMailbox(mailboxPath, mailboxSession);
+        } catch (MailboxExistsException e) {
+            // ignore
+        }
+        MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, mailboxSession);
+
+        IntStream.range(0, 10)
+            .forEach(Throwing.intConsumer(i ->
+                mailbox.appendMessage(MessageManager.AppendCommand.builder()
+                    .build("Subject: " + mailboxPath.getName() + " " + i + "\r\n\r\nBODY " + i + "\r\n"), mailboxSession)));
+
         mailboxManager.endProcessingRequest(mailboxSession);
     }
 

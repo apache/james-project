@@ -58,8 +58,10 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
@@ -82,13 +84,16 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     private static final List<Capability> CAPS = ImmutableList.of(ImapConstants.SUPPORTS_QRESYNC, ImapConstants.SUPPORTS_CONDSTORE);
 
     private final StatusResponseFactory statusResponseFactory;
+
+    private final PathConverter.Factory pathConverterFactory;
     private final boolean openReadOnly;
     private final EventBus eventBus;
 
-    public AbstractSelectionProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, boolean openReadOnly,
+    public AbstractSelectionProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, PathConverter.Factory pathConverterFactory, boolean openReadOnly,
                                       MetricFactory metricFactory, EventBus eventBus) {
         super(acceptableClass, mailboxManager, statusResponseFactory, metricFactory);
         this.statusResponseFactory = statusResponseFactory;
+        this.pathConverterFactory = pathConverterFactory;
         this.openReadOnly = openReadOnly;
 
         this.eventBus = eventBus;
@@ -97,7 +102,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     @Override
     protected Mono<Void> processRequestReactive(R request, ImapSession session, Responder responder) {
         String mailboxName = request.getMailboxName();
-        MailboxPath fullMailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
+        MailboxPath fullMailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName);
 
         return respond(session, fullMailboxPath, request, responder)
             .onErrorResume(MailboxNotFoundException.class, e -> {
@@ -105,7 +110,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 return ReactorUtils.logAsMono(() -> LOGGER.debug("Select failed as mailbox does not exist {}", mailboxName, e));
             })
             .onErrorResume(MailboxException.class, e -> {
-                no(request, responder, HumanReadableText.SELECT);
+                no(request, responder, HumanReadableText.FAILED);
                 return ReactorUtils.logAsMono(() -> LOGGER.error("Select failed for mailbox {}", mailboxName, e));
             });
     }
@@ -396,15 +401,34 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         final SelectedMailbox currentMailbox = session.getSelected();
 
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
+            .<MessageManager>handle(Throwing.biConsumer((mailbox, sink) -> {
+                if (mailboxManager.hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.Read, mailboxSession)) {
+                    sink.next(mailbox);
+                } else {
+                    sink.error(new InsufficientRightsException("'r' right is needed to select a mailbox"));
+                }
+            }))
             .flatMap(Throwing.function(mailbox -> selectMailbox(session, responder, mailbox, currentMailbox)
                 .flatMap(Throwing.function(sessionMailbox ->
-                    mailbox.getMetaDataReactive(recentMode(!openReadOnly), mailboxSession, EnumSet.of(MailboxMetaData.Item.FirstUnseen, MailboxMetaData.Item.HighestModSeq, MailboxMetaData.Item.NextUid, MailboxMetaData.Item.MailboxCounters))
+                    mailbox.getMetaDataReactive(recentMode(!openReadOnly, mailbox, mailboxSession), mailboxSession, EnumSet.of(MailboxMetaData.Item.FirstUnseen, MailboxMetaData.Item.HighestModSeq, MailboxMetaData.Item.NextUid, MailboxMetaData.Item.MailboxCounters))
                         .doOnNext(next -> addRecent(next, sessionMailbox))))));
     }
 
-    private MailboxMetaData.RecentMode recentMode(boolean reset) {
+    private MailboxMetaData.RecentMode recentMode(boolean reset, MessageManager mailbox, MailboxSession session) {
         if (reset) {
-            return RESET;
+            try {
+                if (getMailboxManager().myRights(mailbox.getMailboxEntity(), session).contains(MailboxACL.Right.Write)) {
+                    return RESET;
+                }
+                // https://datatracker.ietf.org/doc/html/rfc3501#section-6.3.1
+                //      If the client is not permitted to modify the mailbox but is
+                //      permitted read access, the mailbox is selected as read-only, and
+                //      the server MUST prefix the text of the tagged OK response to
+                //      SELECT with the "[READ-ONLY]" response code.
+                return RETRIEVE;
+            } catch (MailboxException e) {
+                return RESET;
+            }
         }
         return RETRIEVE;
     }

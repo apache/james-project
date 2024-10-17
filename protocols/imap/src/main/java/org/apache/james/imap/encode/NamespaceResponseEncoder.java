@@ -19,7 +19,7 @@
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.NamespaceResponse;
@@ -39,17 +39,14 @@ public class NamespaceResponseEncoder implements ImapResponseEncoder<NamespaceRe
         composer.untagged();
         composer.commandName(ImapConstants.NAMESPACE_COMMAND);
 
-        final List<NamespaceResponse.Namespace> personal = response.getPersonal();
-        encode(personal, composer);
-        final List<NamespaceResponse.Namespace> users = response.getUsers();
-        encode(users, composer);
-        final List<NamespaceResponse.Namespace> shared = response.getShared();
-        encode(shared, composer);
+        encode(response.getPersonal(), composer);
+        encode(response.getUsers(), composer);
+        encode(response.getShared(), composer);
 
         composer.end();
     }
 
-    private void encode(List<Namespace> namespaces, ImapResponseComposer composer) throws IOException {
+    private void encode(Collection<Namespace> namespaces, ImapResponseComposer composer) throws IOException {
         if (namespaces == null || namespaces.isEmpty()) {
             composer.nil();
         } else {
@@ -66,7 +63,7 @@ public class NamespaceResponseEncoder implements ImapResponseEncoder<NamespaceRe
         String prefix = namespace.getPrefix();
         String delimiter = Character.toString(namespace.getDelimiter());
 
-        if (prefix.length() > 0) {
+        if (!prefix.isEmpty()) {
             prefix = prefix + delimiter;
         }
         composer.quote(prefix);

@@ -339,7 +339,7 @@ public class StoreMailboxManager implements MailboxManager {
     public Mono<MailboxId> createMailboxReactive(MailboxPath mailboxPath, CreateOption createOption, MailboxSession mailboxSession) {
         LOGGER.debug("createMailbox {}", mailboxPath);
 
-        return assertMailboxPathBelongToUserReactive(mailboxSession, mailboxPath)
+        return assertCanCreateReactive(mailboxSession, mailboxPath)
             .then(doCreateMailboxReactive(mailboxPath, createOption, mailboxSession));
     }
 
@@ -429,24 +429,41 @@ public class StoreMailboxManager implements MailboxManager {
                 LOGGER.info("{} mailbox was created concurrently", mailboxPath.asString());
                 return Mono.empty();
             })
-            .flatMap(any -> createSubscriptionIfNeeded(mailboxPath, createOption, mailboxSession).thenReturn(any));
+            .flatMap(any -> createSubscriptionIfNeeded(mailboxPath, createOption, mailboxSession).thenReturn(any))
+            .flatMap(any -> inheritRightsReactive(mailboxSession, mailboxPath).thenReturn(any));
     }
 
-    private Mono<Void> assertMailboxPathBelongToUserReactive(MailboxSession mailboxSession, MailboxPath mailboxPath) {
-        if (!mailboxPath.belongsTo(mailboxSession)) {
-            return Mono.error(new InsufficientRightsException("mailboxPath '" + mailboxPath.asString() + "'"
-                + " does not belong to user '" + mailboxSession.getUser().asString() + "'"));
+
+    private Mono<Void> assertCanCreateReactive(MailboxSession session, MailboxPath path) {
+        if (path.belongsTo(session)) {
+            return Mono.empty();
         }
-        return Mono.empty();
+
+        return nearestExistingParent(session, path)
+            .filterWhen(parent -> hasRightReactive(parent, Right.CreateMailbox, session))
+            .switchIfEmpty(Mono.error(new InsufficientRightsException("user '" + session.getUser().asString() + "' is not allowed to create the mailbox '" + path.asString() + "'")))
+            .then();
+    }
+
+    private Mono<MailboxPath> nearestExistingParent(MailboxSession session, MailboxPath path) {
+        return Flux.fromIterable(path.getParents(session.getPathDelimiter()).reversed())
+            .filterWhen(parent -> mailboxExists(parent, session))
+            .next();
+    }
+
+    private Mono<Void> inheritRightsReactive(MailboxSession mailboxSession, MailboxPath path) {
+        return nearestExistingParent(mailboxSession, path)
+            .flatMap(parent -> Mono.from(listRightsReactive(parent, mailboxSession)))
+            .flatMap(acl -> storeRightManager.setRightsReactiveWithoutAccessControl(path, acl, mailboxSession));
     }
 
     @Override
     public void deleteMailbox(final MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
         LOGGER.info("deleteMailbox {}", mailboxPath);
-        assertIsOwner(session, mailboxPath);
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         mailboxMapper.execute(() -> block(mailboxMapper.findMailboxByPath(mailboxPath)
+            .filterWhen(mailbox -> assertCanDeleteReactive(session, mailbox.generateAssociatedPath()).thenReturn(true))
             .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session))
             .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxPath)))));
     }
@@ -480,16 +497,26 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public Mono<Void> deleteMailboxReactive(MailboxPath mailboxPath, MailboxSession session) {
         LOGGER.info("deleteMailbox {}", mailboxPath);
-        if (!mailboxPath.belongsTo(session)) {
-            LOGGER.info("Mailbox {} does not belong to {}", mailboxPath.asString(), session.getUser().asString());
-            return Mono.error(new MailboxNotFoundException(mailboxPath.asString()));
-        }
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         return mailboxMapper.executeReactive(mailboxMapper.findMailboxByPath(mailboxPath)
+            .filterWhen(mailbox -> assertCanDeleteReactive(session, mailbox.generateAssociatedPath()).thenReturn(true))
             .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session))
             .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxPath))))
             .then();
+    }
+
+    private Mono<Void> assertCanDeleteReactive(MailboxSession session, MailboxPath path) {
+        if (path.belongsTo(session)) {
+            return Mono.empty();
+        }
+        return Mono.from(hasRightReactive(path, Right.DeleteMailbox, session))
+            .flatMap(hasRight -> {
+                if (hasRight) {
+                    return Mono.empty();
+                }
+                return Mono.error(new InsufficientRightsException("user '" + session.getUser().asString() + "' is not allowed to delete the mailbox '" + path.asString() + "'"));
+            });
     }
 
     private Mono<Mailbox> doDeleteMailbox(MailboxMapper mailboxMapper, Mailbox mailbox, MailboxSession session) {
@@ -808,12 +835,21 @@ public class StoreMailboxManager implements MailboxManager {
 
     private Flux<Mailbox> searchMailboxes(MailboxQuery mailboxQuery, MailboxSession session, Right right) {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Flux<Mailbox> baseMailboxes = mailboxMapper
-            .findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session));
+        Flux<Mailbox> baseMailboxes = getBaseMailboxes(mailboxMapper, mailboxQuery, session);
         Flux<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxQuery, right, session)
             .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)))
             .filter(mailbox -> !mailbox.getUser().equals(session.getUser()));
         return Flux.concat(baseMailboxes, delegatedMailboxes);
+    }
+
+    private Flux<Mailbox> getBaseMailboxes(MailboxMapper mailboxMapper,MailboxQuery mailboxQuery, MailboxSession session) {
+        if (mailboxQuery.isPrivateMailboxes(session)) {
+            return mailboxMapper.findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session));
+        } else if (mailboxQuery.getNamespace().isEmpty() && mailboxQuery.getUser().isEmpty()) {
+            return mailboxMapper.findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session));
+        } else {
+            return Flux.empty();
+        }
     }
 
     private Flux<MailboxId> accessibleMailboxIds(MultimailboxesSearchQuery.Namespace namespace, Right right, MailboxSession session) {

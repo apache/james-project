@@ -57,10 +57,12 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteACLProcessor.class);
 
     private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_ACL);
+    private final PathConverter.Factory pathConverterFactory;
 
     @Inject
-    public DeleteACLProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+    public DeleteACLProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(DeleteACLRequest.class, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -69,7 +71,7 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
         final MailboxSession mailboxSession = session.getMailboxSession();
         MailboxName mailboxName = request.getMailboxName();
         MailboxACL.EntryKey entryKey = request.getEntryKey();
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName.asString());
+        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName.asString());
 
         return checkLookupRight(request, responder, mailboxManager, mailboxSession, mailboxPath)
             .filter(FunctionalUtils.identityPredicate())

@@ -275,10 +275,11 @@ public class StoreRightManager implements RightManager {
 
     private void assertHaveAccessTo(Mailbox mailbox, MailboxSession session) throws InsufficientRightsException, MailboxNotFoundException {
         if (!mailbox.generateAssociatedPath().belongsTo(session)) {
-            if (mailbox.getACL().getEntries().containsKey(EntryKey.createUserEntryKey(session.getUser()))) {
-                throw new InsufficientRightsException("Setting ACL is only permitted to the owner of the mailbox");
-            } else {
+            Rfc4314Rights acl = mailbox.getACL().getEntries().get(EntryKey.createUserEntryKey(session.getUser()));
+            if (acl == null) {
                 throw new MailboxNotFoundException(mailbox.getMailboxId());
+            } else if (!acl.contains(Right.Administer)) {
+                throw new InsufficientRightsException("Setting ACL is only permitted to the owner and admins of the mailbox");
             }
         }
     }
@@ -334,5 +335,19 @@ public class StoreRightManager implements RightManager {
             return acl;
         }
         return new MailboxACL(ImmutableMap.of(userAsKey, rights));
+    }
+
+    /** Sets an ACL for a mailbox *WITHOUT* checking if the user of current session is allowed to do so.
+     * We need this when creating a mailbox, to copy the ACL of the parent mailbox for all users.
+     */
+    public Mono<Void> setRightsReactiveWithoutAccessControl(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) {
+        try {
+            assertSharesBelongsToUserDomain(mailboxPath.getUser(), mailboxACL.getEntries());
+        } catch (DifferentDomainException e) {
+            return Mono.error(e);
+        }
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        return mapper.findMailboxByPath(mailboxPath)
+            .flatMap(Throwing.<Mailbox, Mono<Void>>function(mailbox -> setRights(mailboxACL, mapper, mailbox, session)).sneakyThrow());
     }
 }

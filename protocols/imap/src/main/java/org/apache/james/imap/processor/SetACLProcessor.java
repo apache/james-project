@@ -58,10 +58,13 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
 
     private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_ACL);
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
     public SetACLProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                           MetricFactory metricFactory) {
+                           MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(SetACLRequest.class, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -69,7 +72,7 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
         MailboxName mailboxName = request.getMailboxName();
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName.asString());
+        MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(mailboxName.asString());
 
         return checkLookupRight(request, responder, mailboxManager, mailboxSession, mailboxPath)
             .filter(FunctionalUtils.identityPredicate())

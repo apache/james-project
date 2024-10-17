@@ -135,6 +135,11 @@ public class CyrusHostSystem extends ExternalHostSystem implements Provider<Cont
     }
 
     @Override
+    public void fillMailbox(MailboxPath mailboxPath) throws Exception {
+        throw new NotImplementedException("not implemented");
+    }
+
+    @Override
     public void setQuotaLimits(QuotaCountLimit maxMessageQuota, QuotaSizeLimit maxStorageQuota) throws Exception {
         throw new NotImplementedException("not implemented");
     }

@@ -28,6 +28,7 @@ import org.apache.james.events.EventBus;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.SelectRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
@@ -37,8 +38,8 @@ public class SelectProcessor extends AbstractSelectionProcessor<SelectRequest> {
 
     @Inject
     public SelectProcessor(MailboxManager mailboxManager, EventBus eventBus, StatusResponseFactory statusResponseFactory,
-                           MetricFactory metricFactory) {
-        super(SelectRequest.class, mailboxManager, statusResponseFactory, false, metricFactory, eventBus);
+                           MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
+        super(SelectRequest.class, mailboxManager, statusResponseFactory, pathConverterFactory, false, metricFactory, eventBus);
     }
 
     @Override

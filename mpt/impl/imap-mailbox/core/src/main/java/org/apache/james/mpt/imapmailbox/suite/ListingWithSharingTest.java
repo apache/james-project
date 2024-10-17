@@ -33,8 +33,10 @@ import org.junit.jupiter.api.Test;
 
 public abstract class ListingWithSharingTest implements ImapTestConstants {
     public static final Username OTHER_USER_NAME = Username.of("Boby");
+    public static final Username YET_ANOTHER_USER_NAME = Username.of("Diana");
     public static final String OTHER_USER_PASSWORD = "password";
     public static final MailboxPath OTHER_USER_SHARED_MAILBOX = MailboxPath.forUser(OTHER_USER_NAME, "sharedMailbox");
+    public static final MailboxPath YET_ANOTHER_USER_SHARED_MAILBOX = MailboxPath.forUser(YET_ANOTHER_USER_NAME, "sharedMailbox");
     public static final MailboxPath OTHER_USER_SHARED_MAILBOX_CHILD = MailboxPath.forUser(OTHER_USER_NAME, "sharedMailbox.child");
 
     protected abstract ImapHostSystem createImapHostSystem();
@@ -57,8 +59,12 @@ public abstract class ListingWithSharingTest implements ImapTestConstants {
         scriptedTestProtocol
             .withMailbox(OTHER_USER_SHARED_MAILBOX)
             .withMailbox(OTHER_USER_SHARED_MAILBOX_CHILD)
-            .withRights(OTHER_USER_SHARED_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("r"))
-            .withRights(OTHER_USER_SHARED_MAILBOX_CHILD, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("r"))
+            .withMailbox(YET_ANOTHER_USER_SHARED_MAILBOX)
+            .withMailbox(MailboxPath.forUser(OTHER_USER_NAME, "Sent"))
+            .withRights(OTHER_USER_SHARED_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rl"))
+            .withRights(OTHER_USER_SHARED_MAILBOX_CHILD, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rl"))
+            .withRights(YET_ANOTHER_USER_SHARED_MAILBOX, USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rl"))
+            .withRights(MailboxPath.forUser(OTHER_USER_NAME, "Sent"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rl"))
             .withLocale(Locale.US)
             .run("ListWithSharedMailbox");
     }
