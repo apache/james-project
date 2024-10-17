@@ -2117,7 +2117,7 @@ trait MailboxSetMethodContract {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.CreateMailbox))
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
     val request =
       s"""
         |{
@@ -2167,6 +2167,84 @@ trait MailboxSetMethodContract {
          |          "type": "forbidden",
          |          "description": "Insufficient rights",
          |          "properties":["parentId"]
+         |        }
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def mailboxSetShouldCreateChildMailboxWhenSharedParentMailboxWithCreateRight(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.CreateMailbox))
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "childMailbox",
+        |                      "parentId":"${mailboxId.serialize}"
+        |                    }
+        |                }
+        |           },
+        |    "c1"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
+      .isEqualTo(
+      s"""{
+         |  "sessionState": "${SESSION_STATE.value}",
+         |  "methodResponses": [[
+         |    "Mailbox/set",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "created":{
+         |        "C42":{
+         |          "id":"3",
+         |          "isSubscribed":true,
+         |          "myRights":{
+         |            "mayAddItems":true,
+         |            "mayCreateChild":true,
+         |            "mayDelete":true,
+         |            "mayReadItems":true,
+         |            "mayRemoveItems":true,
+         |            "mayRename":true,
+         |            "maySetKeywords":true,
+         |            "maySetSeen":true,
+         |            "maySubmit":true
+         |          },
+         |          "sortOrder":1000,
+         |          "totalEmails":0,
+         |          "totalThreads":0,
+         |          "unreadEmails":0,
+         |          "unreadThreads":0
          |        }
          |      }
          |    },
