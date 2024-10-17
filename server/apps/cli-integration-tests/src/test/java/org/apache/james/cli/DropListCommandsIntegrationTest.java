@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 
 import jakarta.mail.internet.AddressException;
 
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesConfiguration;
@@ -42,6 +43,7 @@ import org.apache.james.droplists.api.DropListEntry;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.utils.DropListProbeImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -56,12 +58,19 @@ class DropListCommandsIntegrationTest {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .usersRepository(DEFAULT)
+            .enableDropLists()
             .build())
         .server(conf -> MemoryJamesServerMain.createServer(conf)
             .overrideWith(new JMXServerModule(),
                 binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class))))
         .build();
     private DropListProbeImpl dropListProbe;
+
+    @BeforeEach
+    public void setUp(GuiceJamesServer guiceJamesServer) {
+        dropListProbe = guiceJamesServer.getProbe(DropListProbeImpl.class);
+        outputCapture = new OutputCapture();
+    }
 
     public static Stream<Arguments> provideParametersForGetDropListEntryTest() throws AddressException {
         return provideParametersForGetEntryListTest();

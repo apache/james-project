@@ -304,31 +304,31 @@ entries specific to that domain.
 * `user`: allow to customize personalized droplist of blocked domains
 and email addresses.
 
-See example commands for `domain` owner scope, `owner@owner.com`
+See example commands for `domain` owner scope, `owner.com`
 owner, `evil@devil.com` denied entity.
 
 Add Entry to the DropList
 
 ....
-{cli} AddDropListEntry domain owner@owner.com evil@devil.com
+{cli} AddDropListEntry domain owner.com evil@devil.com
 ....
 
 Remove Entry from the DropList
 
 ....
-{cli} RemoveDropListEntry domain owner@owner.com evil@devil.com
+{cli} RemoveDropListEntry domain owner.com evil@devil.com
 ....
 
 Getting the DropList
 
 ....
-{cli} GetDropList domain owner@owner.com
+{cli} GetDropList domain owner.com
 ....
 
 Testing a denied entity existence (should returns `allowed` or `blocked`)
 
 ....
-{cli} DropListQuery domain owner@owner.com evil@devil.com
+{cli} DropListQuery domain owner.com evil@devil.com
 ....
 
 == Re-indexing

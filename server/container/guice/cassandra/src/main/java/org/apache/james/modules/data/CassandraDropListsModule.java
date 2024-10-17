@@ -23,9 +23,12 @@ import org.apache.james.droplist.lib.DropListManagement;
 import org.apache.james.droplists.api.DropList;
 import org.apache.james.droplists.api.DropListManagementMBean;
 import org.apache.james.droplists.cassandra.CassandraDropList;
+import org.apache.james.utils.DropListProbeImpl;
+import org.apache.james.utils.GuiceProbe;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 
 public class CassandraDropListsModule extends AbstractModule {
     @Override
@@ -33,5 +36,8 @@ public class CassandraDropListsModule extends AbstractModule {
         bind(DropList.class).to(CassandraDropList.class).in(Scopes.SINGLETON);
         bind(DropListManagement.class).in(Scopes.SINGLETON);
         bind(DropListManagementMBean.class).to(DropListManagement.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class)
+            .addBinding()
+            .to(DropListProbeImpl.class);
     }
 }
