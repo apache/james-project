@@ -60,7 +60,7 @@ C: a6 UNSELECT
 S: a6 OK UNSELECT completed.
 
 C: a5 DELETE #user.boby.mailbox-lra
-S: a5 NO DELETE failed. No such mailbox.
+S: a5 NO DELETE processing failed.
 
 # TODO if I have 'a' right I shall be able to administer!
 # org.apache.james.mailbox.exception.InsufficientRightsException: Setting ACL is only permitted to the owner of the mailbox
