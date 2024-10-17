@@ -61,7 +61,7 @@ C: a6 UNSELECT
 S: a6 OK UNSELECT completed.
 
 C: a5 DELETE #user.boby.mailbox-lrt
-S: a5 NO DELETE failed. No such mailbox.
+S: a5 NO DELETE processing failed.
 
 C: a5 SETACL #user.boby.mailbox-lrt imapuser lra
 S: a5 NO SETACL You need the Administer right to perform command SETACL on mailbox #user.boby.mailbox-lrt.
