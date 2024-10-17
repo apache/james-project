@@ -404,8 +404,9 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             .<MessageManager>handle(Throwing.biConsumer((mailbox, sink) -> {
                 if (mailboxManager.hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.Read, mailboxSession)) {
                     sink.next(mailbox);
+                } else {
+                    sink.error(new InsufficientRightsException("'r' right is needed to select a mailbox"));
                 }
-                sink.error(new InsufficientRightsException("'r' right is needed to select a mailbox"));
             }))
             .flatMap(Throwing.function(mailbox -> selectMailbox(session, responder, mailbox, currentMailbox)
                 .flatMap(Throwing.function(sessionMailbox ->
