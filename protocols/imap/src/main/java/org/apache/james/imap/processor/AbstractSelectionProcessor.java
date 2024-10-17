@@ -58,6 +58,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -109,7 +110,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 return ReactorUtils.logAsMono(() -> LOGGER.debug("Select failed as mailbox does not exist {}", mailboxName, e));
             })
             .onErrorResume(MailboxException.class, e -> {
-                no(request, responder, HumanReadableText.SELECT);
+                no(request, responder, HumanReadableText.FAILED);
                 return ReactorUtils.logAsMono(() -> LOGGER.error("Select failed for mailbox {}", mailboxName, e));
             });
     }
@@ -400,6 +401,12 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         final SelectedMailbox currentMailbox = session.getSelected();
 
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
+            .<MessageManager>handle(Throwing.biConsumer((mailbox, sink) -> {
+                if (mailboxManager.hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.Read, mailboxSession)) {
+                    sink.next(mailbox);
+                }
+                sink.error(new InsufficientRightsException("'r' right is needed to select a mailbox"));
+            }))
             .flatMap(Throwing.function(mailbox -> selectMailbox(session, responder, mailbox, currentMailbox)
                 .flatMap(Throwing.function(sessionMailbox ->
                     mailbox.getMetaDataReactive(recentMode(!openReadOnly, mailbox, mailboxSession), mailboxSession, EnumSet.of(MailboxMetaData.Item.FirstUnseen, MailboxMetaData.Item.HighestModSeq, MailboxMetaData.Item.NextUid, MailboxMetaData.Item.MailboxCounters))
