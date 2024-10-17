@@ -460,10 +460,10 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public void deleteMailbox(final MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
         LOGGER.info("deleteMailbox {}", mailboxPath);
-        assertIsOwner(session, mailboxPath);
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         mailboxMapper.execute(() -> block(mailboxMapper.findMailboxByPath(mailboxPath)
+            .filterWhen(mailbox -> assertCanDeleteReactive(session, mailbox.generateAssociatedPath()).thenReturn(true))
             .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session))
             .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxPath)))));
     }
@@ -497,16 +497,26 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public Mono<Void> deleteMailboxReactive(MailboxPath mailboxPath, MailboxSession session) {
         LOGGER.info("deleteMailbox {}", mailboxPath);
-        if (!mailboxPath.belongsTo(session)) {
-            LOGGER.info("Mailbox {} does not belong to {}", mailboxPath.asString(), session.getUser().asString());
-            return Mono.error(new MailboxNotFoundException(mailboxPath.asString()));
-        }
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         return mailboxMapper.executeReactive(mailboxMapper.findMailboxByPath(mailboxPath)
+            .filterWhen(mailbox -> assertCanDeleteReactive(session, mailbox.generateAssociatedPath()).thenReturn(true))
             .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session))
             .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxPath))))
             .then();
+    }
+
+    private Mono<Void> assertCanDeleteReactive(MailboxSession session, MailboxPath path) {
+        if (path.belongsTo(session)) {
+            return Mono.empty();
+        }
+        return Mono.from(hasRightReactive(path, Right.DeleteMailbox, session))
+            .flatMap(hasRight -> {
+                if (hasRight) {
+                    return Mono.empty();
+                }
+                return Mono.error(new InsufficientRightsException("user '" + session.getUser().asString() + "' is not allowed to delete the mailbox '" + path.asString() + "'"));
+            });
     }
 
     private Mono<Mailbox> doDeleteMailbox(MailboxMapper mailboxMapper, Mailbox mailbox, MailboxSession session) {

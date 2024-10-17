@@ -59,9 +59,6 @@ S: a4 NO COPY processing failed.
 C: a6 UNSELECT
 S: a6 OK UNSELECT completed.
 
-# TODO x right shall be enough to delete!
-C: a5 DELETE #user.boby.mailbox-lrx
-S: a5 NO DELETE failed. No such mailbox.
 
 C: a5 SETACL #user.boby.mailbox-lrx imapuser lra
 S: a5 NO SETACL You need the Administer right to perform command SETACL on mailbox #user.boby.mailbox-lrx.
@@ -103,3 +100,6 @@ S: F11 OK FETCH completed.
 
 C: F15 EXPUNGE
 S: F15 NO EXPUNGE failed. Mailbox is read only.
+
+C: a5 DELETE #user.boby.mailbox-lrx
+S: a5 OK DELETE completed.
