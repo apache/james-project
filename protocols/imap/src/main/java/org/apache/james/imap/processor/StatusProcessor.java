@@ -127,8 +127,9 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
             .<MessageManager>handle(Throwing.biConsumer((mailbox, sink) -> {
                 if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.Read, mailboxSession)) {
                     sink.next(mailbox);
+                } else {
+                    sink.error(new InsufficientRightsException("'r' right is needed to status a mailbox"));
                 }
-                sink.error(new InsufficientRightsException("'r' right is needed to status a mailbox"));
             }))
             .flatMap(mailbox -> sendStatus(mailbox, statusDataItems, responder, session, mailboxSession));
     }

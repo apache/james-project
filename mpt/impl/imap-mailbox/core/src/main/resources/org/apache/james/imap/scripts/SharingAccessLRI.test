@@ -84,21 +84,17 @@ C: F11 FETCH 1 FLAGS
 S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
 S: F11 OK FETCH completed.
 
-# TODO Insert is not flags
 C: F12 STORE 1 +FLAGS (\Deleted)
-S: \* 1 FETCH \(FLAGS \(\\Deleted \\Recent\)\)
-S: F12 OK STORE completed.
+S: F12 NO STORE failed. Save failed.
 
 C: F13 STORE 1 +FLAGS (\Seen)
-S: \* 1 FETCH \(FLAGS \(\\Deleted \\Recent \\Seen\)\)
-S: F13 OK STORE completed.
+S: F13 NO STORE failed. Save failed.
 
 C: F14 STORE 1 +FLAGS (\Flagged)
-S: \* 1 FETCH \(FLAGS \(\\Deleted \\Flagged \\Recent \\Seen\)\)
-S: F14 OK STORE completed.
+S: F14 NO STORE failed. Save failed.
 
 C: F11 FETCH 1 FLAGS
-S: \* 1 FETCH \(FLAGS \(\\Deleted \\Flagged \\Recent \\Seen\)\)
+S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
 S: F11 OK FETCH completed.
 
 C: F15 EXPUNGE
