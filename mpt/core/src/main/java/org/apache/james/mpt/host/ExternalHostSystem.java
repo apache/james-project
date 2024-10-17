@@ -126,4 +126,9 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
     public void grantRights(MailboxPath mailboxPath, Username userName, MailboxACL.Rfc4314Rights rights) throws Exception {
         throw new NotImplementedException("Not implemented");
     }
+
+    @Override
+    public void fillMailbox(MailboxPath mailboxPath) throws Exception {
+        throw new NotImplementedException("Not implemented");
+    }
 }
