@@ -37,7 +37,7 @@ Finally, please note that in case of a malformed URL the 400 bad request respons
  - [Administrating quotas by users](#Administrating_quotas_by_users)
  - [Administrating quotas by domains](#Administrating_quotas_by_domains)
  - [Administrating global quotas](#Administrating_global_quotas)
- - [Administrating DropLists](#administrating-droplists)
+ - [Administrating DropLists](#Administrating_DropLists)
  - [Cassandra Schema upgrades](#Cassandra_Schema_upgrades)
  - [Correcting ghost mailbox](#Correcting_ghost_mailbox)
  - [Creating address aliases](#Creating_address_aliases)
@@ -2532,22 +2532,10 @@ Owner scopes:
 
 The `deniedEntityType` query parameter is optional and can take the values `domain` or `address`.
 
-- [Getting the DropList](#getting-the-droplist)
-    * [Global DropList](#global-droplist)
-    * [Domain DropList](#domain-droplist)
-    * [User DropList](#user-droplist)
-- [Testing a denied entity existence](#testing-a-denied-entity-existence)
-    * [Global DropList](#global-droplist-1)
-    * [Domain DropList](#domain-droplist-1)
-    * [User DropList](#user-droplist-1)
-- [Add Entry to the DropList](#add-entry-to-the-droplist)
-    * [Global DropList](#global-droplist-2)
-    * [Domain DropList](#domain-droplist-2)
-    * [User DropList](#user-droplist-2)
-- [Remove Entry from the DropList](#remove-entry-from-the-droplist)
-    * [Global DropList](#global-droplist-3)
-    * [Domain DropList](#domain-droplist-3)
-    * [User DropList](#user-droplist-3)
+- [Getting the DropList](#Getting_the_DropList)
+- [Testing a denied entity existence](#Testing_a_denied_entity_existence)
+- [Add Entry to the DropList](#Add_Entry_to_the_DropList)
+- [Remove Entry from the DropList](#Remove_Entry_from_the_DropList)
 
 ### Getting the DropList
 #### Global DropList

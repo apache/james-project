@@ -24,7 +24,7 @@ import java.util.Arrays;
  * Enumeration of valid command types.
  */
 public enum CmdType {
-    ADDUSER("AddUser", "username","password"),
+    ADDUSER("AddUser", "username", "password"),
     REMOVEUSER("RemoveUser", "username"),
     LISTUSERS("ListUsers"),
     ADDDOMAIN("AddDomain", "domainName"),
@@ -35,13 +35,13 @@ public enum CmdType {
     REMOVEDOMAINMAPPING("RemoveDomainMapping", "domain", "targetDomain"),
     LISTDOMAINMAPPINGS("ListDomainMappings", "domain"),
     LISTMAPPINGS("ListMappings"),
-    LISTUSERDOMAINMAPPINGS("ListUserDomainMappings", "user","domain"),
-    ADDADDRESSMAPPING("AddAddressMapping", "fromUser","fromDomain", "toAddress"),
-    REMOVEADDRESSMAPPING("RemoveAddressMapping", "fromUser","fromDomain", "toAddress"),
-    ADDREGEXMAPPING("AddRegexMapping", "user","domain", "regex"),
-    REMOVEREGEXMAPPING("RemoveRegexMapping", "user","domain", "regex"),
-    SETPASSWORD("SetPassword", "username","password"),
-    COPYMAILBOX("CopyMailbox", "srcBean","dstBean"),
+    LISTUSERDOMAINMAPPINGS("ListUserDomainMappings", "user", "domain"),
+    ADDADDRESSMAPPING("AddAddressMapping", "fromUser", "fromDomain", "toAddress"),
+    REMOVEADDRESSMAPPING("RemoveAddressMapping", "fromUser", "fromDomain", "toAddress"),
+    ADDREGEXMAPPING("AddRegexMapping", "user", "domain", "regex"),
+    REMOVEREGEXMAPPING("RemoveRegexMapping", "user", "domain", "regex"),
+    SETPASSWORD("SetPassword", "username", "password"),
+    COPYMAILBOX("CopyMailbox", "srcBean", "dstBean"),
     DELETEUSERMAILBOXES("DeleteUserMailboxes", "user"),
     CREATEMAILBOX("CreateMailbox", "namespace", "user", "name"),
     LISTUSERMAILBOXES("ListUserMailboxes", "user"),
@@ -66,7 +66,11 @@ public enum CmdType {
     GETSIEVEUSERQUOTA("GetSieveUserQuota", "username"),
     SETSIEVEUSERQUOTA("SetSieveUserQuota", "username", "quota"),
     REMOVESIEVEUSERQUOTA("RemoveSieveUserQuota", "username"),
-    ADDACTIVESIEVESCRIPT("AddActiveSieveScript", "username", "scriptname", "path");
+    ADDACTIVESIEVESCRIPT("AddActiveSieveScript", "username", "scriptname", "path"),
+    GETDROPLIST("GetDropList", "ownerScope", "owner"),
+    ADDDROPLISTENTRY("AddDropListEntry", "ownerScope", "owner", "deniedEntity"),
+    REMOVEDROPLISTENTRY("RemoveDropListEntry", "ownerScope", "owner", "deniedEntity"),
+    DROPLISTQUERY("DropListQuery", "ownerScope", "owner", "deniedEntity");
 
     private final String command;
     private final String[] arguments;
@@ -79,8 +83,7 @@ public enum CmdType {
     /**
      * Validate that the number of arguments match the passed value.
      *
-     * @param arguments
-     *            The number of argument to compare.
+     * @param arguments The number of argument to compare.
      * @return true if values match, false otherwise.
      */
     public boolean hasCorrectArguments(int arguments) {
@@ -91,10 +94,9 @@ public enum CmdType {
     /**
      * Return a CmdType enumeration that matches the passed command.
      *
-     * @param command
-     *            The command to use for lookup.
+     * @param command The command to use for lookup.
      * @return the CmdType enumeration that matches the passed command, or null
-     *         if not found.
+     * if not found.
      */
     public static CmdType lookup(String command) {
         if (command != null) {

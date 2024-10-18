@@ -27,15 +27,16 @@ Note: the command line before **COMMAND** will be documente as *{cli}*.
 
 ## Navigation menu
 
- - [Manage Domains](#Manage_Domains)
- - [Managing users](#Managing_users)
- - [Managing mailboxes](#Managing_mailboxes)
- - [Adding a message in a mailbox](#Adding_a_message_in_a_mailbox)
- - [Managing mappings](#Managing_mappings)
- - [Manage quotas](#Manage_quotas)
+ - [Manage Domains](#Manage-Domains)
+ - [Managing users](#Managing-users)
+ - [Managing mailboxes](#Managing-mailboxes)
+ - [Adding a message in a mailbox](#Adding-a-message-in-a-mailbox)
+ - [Managing mappings](#Managing-mappings)
+ - [Manage quotas](#Manage-quotas)
+ - [Manage DropList](#Manage-Droplist)
  - [Re-indexing](#Re-indexing)
- - [Sieve scripts quota](#Sieve_scripts_quota)
- - [Switching of mailbox implementation](#Switching_of_mailbox_implementation)
+ - [Sieve scripts quota](#Sieve-scripts-quota)
+ - [Switching of mailbox implementation](#Switching-of-mailbox-implementation)
 
 ## Manage Domains
 
@@ -289,6 +290,45 @@ Moreover, James allows to specify global maximum values, at the server level. No
 {cli} SetGlobalMaxStorageQuota value
 {cli} GetGlobalMaxStorageQuota
 ```
+
+## Manage DropList
+
+The DropList, also known as the mail blacklist, is a collection of
+domains and email addresses that are denied from sending emails within the system.
+
+Owner scopes:
+
+- `global`: contains entries that are blocked across all domains and addresses within the system.
+  Entries in the global owner scope apply universally and affect all users and domains.
+- `domain`: each domain can have its own droplist, which contains entries specific to that domain.
+- `user`: allow to customize personalized droplist of blocked domains and email addresses.
+
+See example commands for `domain` owner scope, `owner.com` owner, `evil@devil.com` denied entity.
+
+Add Entry to the DropList
+
+```
+{cli} AddDropListEntry domain owner.com evil@devil.com
+```
+
+Remove Entry from the DropList
+
+```
+{cli} RemoveDropListEntry domain owner.com evil@devil.com
+```
+
+Getting the DropList
+
+```
+{cli} GetDropList domain owner.com
+```
+
+Testing a denied entity existence (should returns `allowed` or `blocked`)
+
+```
+{cli} DropListQuery domain owner.com evil@devil.com
+```
+
 
 ## Re-indexing
 

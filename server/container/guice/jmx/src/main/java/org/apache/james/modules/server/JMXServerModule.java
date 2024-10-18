@@ -20,6 +20,7 @@
 package org.apache.james.modules.server;
 
 import java.io.FileNotFoundException;
+import java.util.Optional;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.adapter.mailbox.MailboxCopierManagement;
@@ -33,6 +34,7 @@ import org.apache.james.adapter.mailbox.ReIndexerManagement;
 import org.apache.james.adapter.mailbox.ReIndexerManagementMBean;
 import org.apache.james.domainlist.api.DomainListManagementMBean;
 import org.apache.james.domainlist.lib.DomainListManagement;
+import org.apache.james.droplists.api.DropListManagementMBean;
 import org.apache.james.mailbox.copier.MailboxCopier;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.tools.copier.MailboxCopierImpl;
@@ -56,6 +58,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Names;
 
@@ -71,6 +74,7 @@ public class JMXServerModule extends AbstractModule {
     private static final String JMX_COMPONENT_REINDEXER = "org.apache.james:type=component,name=reindexerbean";
     private static final String JMX_COMPONENT_QUOTA = "org.apache.james:type=component,name=quotamanagerbean";
     private static final String JMX_COMPONENT_SIEVE = "org.apache.james:type=component,name=sievemanagerbean";
+    private static final String JMX_COMPONENT_DROPLIST = "org.apache.james:type=component,name=droplist";
 
     @Override
     protected void configure() {
@@ -95,6 +99,7 @@ public class JMXServerModule extends AbstractModule {
         bind(ReIndexerManagementMBean.class).to(ReIndexerManagement.class);
         bind(QuotaManagementMBean.class).to(QuotaManagement.class);
         bind(SieveRepositoryManagementMBean.class).to(SieveRepositoryManagement.class);
+        OptionalBinder.newOptionalBinder(binder(), DropListManagementMBean.class);
     }
 
     @Provides
@@ -110,14 +115,15 @@ public class JMXServerModule extends AbstractModule {
 
     @ProvidesIntoSet
     InitializationOperation startJmxServer(JMXServer jmxServer,
-                                        DomainListManagementMBean domainListManagementMBean,
-                                        UsersRepositoryManagementMBean usersRepositoryManagementMBean,
-                                        RecipientRewriteTableManagementMBean recipientRewriteTableManagementMBean,
-                                        MailboxManagerManagementMBean mailboxManagerManagementMBean,
-                                        MailboxCopierManagementMBean mailboxCopierManagementMBean,
-                                        ReIndexerManagementMBean reIndexerManagementMBean,
-                                        QuotaManagementMBean quotaManagementMBean,
-                                        SieveRepositoryManagementMBean sieveRepositoryManagementMBean) {
+                                           DomainListManagementMBean domainListManagementMBean,
+                                           UsersRepositoryManagementMBean usersRepositoryManagementMBean,
+                                           RecipientRewriteTableManagementMBean recipientRewriteTableManagementMBean,
+                                           MailboxManagerManagementMBean mailboxManagerManagementMBean,
+                                           MailboxCopierManagementMBean mailboxCopierManagementMBean,
+                                           ReIndexerManagementMBean reIndexerManagementMBean,
+                                           QuotaManagementMBean quotaManagementMBean,
+                                           SieveRepositoryManagementMBean sieveRepositoryManagementMBean,
+                                           Optional<DropListManagementMBean> dropListManagementMBean) {
         return InitilizationOperationBuilder
             .forClass(JMXServer.class)
             .init(() -> {
@@ -130,6 +136,9 @@ public class JMXServerModule extends AbstractModule {
                 jmxServer.register(JMX_COMPONENT_REINDEXER, reIndexerManagementMBean);
                 jmxServer.register(JMX_COMPONENT_QUOTA, quotaManagementMBean);
                 jmxServer.register(JMX_COMPONENT_SIEVE, sieveRepositoryManagementMBean);
+                if (dropListManagementMBean.isPresent()) {
+                    jmxServer.register(JMX_COMPONENT_DROPLIST, dropListManagementMBean.get());
+                }
             });
     }
 }

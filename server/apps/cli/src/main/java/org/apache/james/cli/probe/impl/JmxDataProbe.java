@@ -58,178 +58,119 @@ public class JmxDataProbe implements JmxProbe {
     }
 
     public void addUser(String userName, String password) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "addUser")
-                     .addToContext(PARAMETER, userName)
-                     .build()) {
+        try (Closeable closeable = buildMdc("addUser", userName)) {
             usersRepositoryProxy.addUser(userName, password);
         }
     }
 
     public void removeUser(String username) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "removeUser")
-                     .addToContext(PARAMETER, username)
-                     .build()) {
+        try (Closeable closeable = buildMdc("removeUser", username)) {
             usersRepositoryProxy.deleteUser(username);
         }
     }
 
     public String[] listUsers() throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "listUsers")
-                     .build()) {
+        try (Closeable closeable = buildMdc("listUsers")) {
             return usersRepositoryProxy.listAllUsers();
         }
     }
 
     public void setPassword(String userName, String password) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "setPassword")
-                     .addToContext(PARAMETER, userName)
-                     .build()) {
+        try (Closeable closeable = buildMdc("setPassword", userName)) {
             usersRepositoryProxy.setPassword(userName, password);
         }
     }
 
     public boolean containsDomain(String domain) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "containsDomain")
-                     .addToContext(PARAMETER, domain)
-                     .build()) {
+        try (Closeable closeable = buildMdc("containsDomain", domain)) {
             return domainListProxy.containsDomain(domain);
         }
     }
 
     public void addDomain(String domain) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "addDomain")
-                     .addToContext(PARAMETER, domain)
-                     .build()) {
+        try (Closeable closeable = buildMdc("addDomain", domain)) {
             domainListProxy.addDomain(domain);
         }
     }
 
     public void removeDomain(String domain) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "removeDomain")
-                     .addToContext(PARAMETER, domain)
-                     .build()) {
+        try (Closeable closeable = buildMdc("removeDomain", domain)) {
             domainListProxy.removeDomain(domain);
         }
     }
 
     public List<String> listDomains() throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "listDomains")
-                     .build()) {
+        try (Closeable closeable = buildMdc("listDomains")) {
             return domainListProxy.getDomains();
         }
     }
 
     public void addDomainMapping(String domain, String targetDomain) throws Exception {
-        try (Closeable closeable =
-                     MDCBuilder.create()
-                             .addToContext(MDCBuilder.PROTOCOL, JMX)
-                             .addToContext(MDCBuilder.ACTION, "addDomainMapping")
-                             .build()) {
+        try (Closeable closeable = buildMdc("addDomainMapping")) {
             virtualUserTableProxy.addDomainMapping(domain, targetDomain);
         }
     }
 
     public void removeDomainMapping(String domain, String targetDomain) throws Exception {
-        try (Closeable closeable =
-                     MDCBuilder.create()
-                             .addToContext(MDCBuilder.PROTOCOL, JMX)
-                             .addToContext(MDCBuilder.ACTION, "removeDomainMapping")
-                             .build()) {
+        try (Closeable closeable = buildMdc("removeDomainMapping")) {
             virtualUserTableProxy.removeDomainMapping(domain, targetDomain);
         }
     }
 
     public Mappings listDomainMappings(String domain) throws Exception {
-        try (Closeable closeable =
-                     MDCBuilder.create()
-                             .addToContext(MDCBuilder.PROTOCOL, JMX)
-                             .addToContext(MDCBuilder.ACTION, "listDomainMappings")
-                             .build()) {
+        try (Closeable closeable = buildMdc("listDomainMappings")) {
             return virtualUserTableProxy.getDomainMappings(domain);
         }
     }
 
     public Map<String, Mappings> listMappings() throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "listMappings")
-                     .build()) {
+        try (Closeable closeable = buildMdc("listMappings")) {
             return virtualUserTableProxy.getAllMappings();
         }
     }
 
     public void addAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "addAddressMapping")
-                     .build()) {
+        try (Closeable closeable = buildMdc("addAddressMapping")) {
             virtualUserTableProxy.addAddressMapping(fromUser, fromDomain, toAddress);
         }
     }
 
     public void removeAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "removeAddressMapping")
-                     .build()) {
+        try (Closeable closeable = buildMdc("removeAddressMapping")) {
             virtualUserTableProxy.removeAddressMapping(fromUser, fromDomain, toAddress);
         }
     }
 
     public Mappings listUserDomainMappings(String user, String domain) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "listUserDomainMappings")
-                     .build()) {
+        try (Closeable closeable = buildMdc("listUserDomainMappings")) {
             return virtualUserTableProxy.getUserDomainMappings(user, domain);
         }
     }
 
     public void addRegexMapping(String user, String domain, String regex) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "addRegexMapping")
-                     .build()) {
+        try (Closeable closeable = buildMdc("addRegexMapping")) {
             virtualUserTableProxy.addRegexMapping(user, domain, regex);
         }
     }
 
     public void removeRegexMapping(String user, String domain, String regex) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, JMX)
-                     .addToContext(MDCBuilder.ACTION, "removeRegexMapping")
-                     .build()) {
+        try (Closeable closeable = buildMdc("removeRegexMapping")) {
             virtualUserTableProxy.removeRegexMapping(user, domain, regex);
         }
+    }
+
+    private Closeable buildMdc(String action) {
+        return MDCBuilder.create()
+            .addToContext(MDCBuilder.PROTOCOL, JMX)
+            .addToContext(MDCBuilder.ACTION, action)
+            .build();
+    }
+
+    private Closeable buildMdc(String action, String parameter) {
+        return MDCBuilder.create()
+            .addToContext(MDCBuilder.PROTOCOL, JMX)
+            .addToContext(MDCBuilder.ACTION, action)
+            .addToContext(PARAMETER, parameter)
+            .build();
     }
 }

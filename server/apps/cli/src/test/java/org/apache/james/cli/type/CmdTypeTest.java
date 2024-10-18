@@ -254,7 +254,27 @@ class CmdTypeTest {
         assertThat(CmdType.lookup("addactivesievescript")).isEqualTo(CmdType.ADDACTIVESIEVESCRIPT);
     }
 
-    @Test 
+    @Test
+    void lookupAddDropListEntryShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("adddroplistentry")).isEqualTo(CmdType.ADDDROPLISTENTRY);
+    }
+
+    @Test
+    void lookupRemoveDropListEntryShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("removedroplistentry")).isEqualTo(CmdType.REMOVEDROPLISTENTRY);
+    }
+
+    @Test
+    void lookupGetDropListEntryShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("getdroplist")).isEqualTo(CmdType.GETDROPLIST);
+    }
+
+    @Test
+    void lookupGetDropListQueryShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("droplistquery")).isEqualTo(CmdType.DROPLISTQUERY);
+    }
+
+    @Test
     void lookupEmptyStringShouldReturnNull() {
         assertThat(CmdType.lookup("")).isNull();
     }
