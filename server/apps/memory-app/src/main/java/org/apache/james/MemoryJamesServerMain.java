@@ -37,6 +37,8 @@ import org.apache.james.modules.data.MemoryDelegationStoreModule;
 import org.apache.james.modules.data.MemoryDropListsModule;
 import org.apache.james.modules.data.MemoryUsersRepositoryModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
+import org.apache.james.modules.mailbox.LuceneMemorySearchMailboxModule;
+import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
 import org.apache.james.modules.mailbox.MemoryMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.JMAPServerModule;
@@ -149,11 +151,15 @@ public class MemoryJamesServerMain implements JamesServerMain {
         SMTP_ONLY_MODULE,
         new IMAPServerModule());
 
+    public static final Module SEARCH_MODULE = Modules.override(new LuceneSearchMailboxModule())
+        .with(new LuceneMemorySearchMailboxModule());
+
     public static final Module IN_MEMORY_SERVER_AGGREGATE_MODULE = Modules.combine(
         IN_MEMORY_SERVER_MODULE,
         PROTOCOLS,
         JMAP,
         WEBADMIN,
+        SEARCH_MODULE,
         new DKIMMailetModule());
 
     public static void main(String[] args) throws Exception {
@@ -165,7 +171,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
 
         LOGGER.info("Loading configuration {}", configuration.toString());
         GuiceJamesServer server = createServer(configuration)
-            .combineWith(new FakeSearchMailboxModule(), new JMXServerModule())
+            .combineWith(new JMXServerModule())
             .overrideWith(new RunArgumentsModule(args));
 
         JamesServerMain.main(server);
