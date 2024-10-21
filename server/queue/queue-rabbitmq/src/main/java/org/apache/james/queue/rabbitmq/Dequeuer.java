@@ -39,7 +39,6 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
 
 import reactor.core.publisher.Flux;
@@ -178,11 +177,14 @@ class Dequeuer {
 
     private Mono<MailReferenceDTO> toMailReference(AcknowledgableDelivery delivery) {
         return Mono.fromCallable(delivery::getBody)
-            .map(Throwing.function(mailReferenceSerializer::read).sneakyThrow())
-            .onErrorResume(e -> {
-                LOGGER.error("Fail to deserialize MailReferenceDTO. Discarding this message to prevent an infinite loop.", e);
-                delivery.nack(!REQUEUE);
-                return Mono.empty();
+            .handle((bytes, sink) -> {
+                try {
+                    sink.next(mailReferenceSerializer.read(bytes));
+                } catch (Exception e) {
+                    LOGGER.error("Fail to deserialize MailReferenceDTO. Discarding this message to prevent an infinite loop.", e);
+                    delivery.nack(!REQUEUE);
+                    sink.complete();
+                }
             });
     }
 }
