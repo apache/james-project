@@ -71,7 +71,7 @@ public class S3MinioTest implements BlobStoreDAOContract {
         .withEnv("MINIO_ROOT_USER", ACCESS_KEY_ID)
         .withEnv("MINIO_ROOT_PASSWORD", SECRET_ACCESS_KEY)
         .withCommand("server", "/data", "--console-address", ":9090")
-        .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-minio-s3-test-"+ UUID.randomUUID()));
+        .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-minio-s3-test-" + UUID.randomUUID()));
 
 
     @BeforeAll
