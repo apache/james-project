@@ -22,6 +22,7 @@ import static org.apache.james.droplists.api.OwnerScope.DOMAIN;
 import static org.apache.james.droplists.api.OwnerScope.GLOBAL;
 import static org.apache.james.droplists.api.OwnerScope.USER;
 
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -31,7 +32,7 @@ import org.apache.james.core.MailAddress;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-public class DropListEntry {
+public class DropListEntry implements Serializable {
 
     public static Builder builder() {
         return new Builder();
@@ -85,13 +86,13 @@ public class DropListEntry {
     }
 
     private final OwnerScope ownerScope;
-    private final Optional<String> owner;
+    private final String owner;
     private final DeniedEntityType deniedEntityType;
     private final String deniedEntity;
 
     private DropListEntry(OwnerScope ownerScope, Optional<String> owner, DeniedEntityType deniedEntityType, String deniedEntity) {
         this.ownerScope = ownerScope;
-        this.owner = owner;
+        this.owner = owner.orElse("");
         this.deniedEntityType = deniedEntityType;
         this.deniedEntity = deniedEntity;
     }
@@ -101,7 +102,7 @@ public class DropListEntry {
     }
 
     public String getOwner() {
-        return owner.orElse("");
+        return owner;
     }
 
     public DeniedEntityType getDeniedEntityType() {
@@ -132,7 +133,9 @@ public class DropListEntry {
     public String toString() {
         MoreObjects.ToStringHelper result = MoreObjects.toStringHelper(this)
             .add("ownerScope", ownerScope);
-        owner.ifPresent(o -> result.add("owner", o));
+        if (!owner.isBlank()) {
+            result.add("owner", owner);
+        }
         result.add("deniedType", deniedEntityType)
             .add("deniedEntity", deniedEntity);
         return result.toString();

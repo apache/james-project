@@ -17,27 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.data;
+package org.apache.james.probe;
 
-import org.apache.james.droplist.lib.DropListManagement;
+import java.util.List;
+
+import org.apache.james.core.MailAddress;
 import org.apache.james.droplists.api.DropList;
-import org.apache.james.droplists.api.DropListManagementMBean;
-import org.apache.james.droplists.cassandra.CassandraDropList;
-import org.apache.james.utils.DropListProbeImpl;
-import org.apache.james.utils.GuiceProbe;
+import org.apache.james.droplists.api.DropListEntry;
+import org.apache.james.droplists.api.OwnerScope;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
+public interface DropListProbe {
 
-public class CassandraDropListsModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(DropList.class).to(CassandraDropList.class).in(Scopes.SINGLETON);
-        bind(DropListManagement.class).in(Scopes.SINGLETON);
-        bind(DropListManagementMBean.class).to(DropListManagement.class);
-        Multibinder.newSetBinder(binder(), GuiceProbe.class)
-            .addBinding()
-            .to(DropListProbeImpl.class);
-    }
+    void addDropListEntry(DropListEntry dropListEntry);
+
+    void removeDropListEntry(DropListEntry dropListEntry);
+
+    List<DropListEntry> getDropList(OwnerScope ownerScope, String owner);
+
+    DropList.Status dropListQuery(OwnerScope ownerScope, String owner, MailAddress sender);
 }

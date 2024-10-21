@@ -25,6 +25,7 @@ Plug the `IsInDropList` matcher within `mailetcontainer.xml` :
 
 == DropList management
 
-DropList management, including adding and deleting entries, is performed through the WebAdmin REST API.
+DropList management, including adding and deleting entries, is performed through the WebAdmin REST API or CLI.
 
 See xref:{pages-path}/operate/webadmin.adoc#_administrating_droplists[WebAdmin DropLists].
+See xref:distributed/operate/cli.adoc#_manage_droplist[CLI DropLists].

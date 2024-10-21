@@ -89,7 +89,7 @@ mail address.
 
 The domains then become a part of the user.
 
-_usera@domaina.com and_ _usera@domainb.com_ on a mail server with
+_usera@domaina.com_ and _usera@domainb.com_ on a mail server with
 _domaina.com_ and _domainb.com_ configured are mail addresses that
 belongs to different users.
 
@@ -168,7 +168,8 @@ INBOX.subFolder mailbox belonging to user user@domain.tld.
 A mapping is a recipient rewriting rule. There is several kind of
 rewriting rules:
 
-* address mapping: rewrite a given mail address into an other one.
+* address mapping: rewrite a given mail address into another one.
+* domain mapping: rewrite a given domain into an alternate one.
 * regex mapping.
 
 You can manage address mapping like (redirects email from
@@ -178,6 +179,21 @@ mapping):
 ....
 {cli} AddAddressMapping fromUser fromDomain.tld redirected@domain.new
 {cli} RemoveAddressMapping fromUser fromDomain.tld redirected@domain.new
+....
+
+You can manage domain mapping like (redirects a domain, which means
+any@domain.tld will be rewritten as any@domain.new, then deletes the
+mapping):
+
+....
+{cli} AddDomainMapping domain.tld domain.new
+{cli} RemoveDomainMapping domain.tld domain.new
+....
+
+You can view mapping for a domain:
+
+....
+{cli} ListDomainMappings domain.tld
 ....
 
 You can manage regex mapping like this:
@@ -270,6 +286,49 @@ level. Note: syntax is similar to what was exposed previously.
 {cli} GetGlobalMaxMessageCountQuota
 {cli} SetGlobalMaxStorageQuota value
 {cli} GetGlobalMaxStorageQuota
+....
+
+=== Manage DropList
+
+The DropList, also known as the mail blacklist, is a collection of
+domains and email addresses that are denied from sending emails within
+the system.
+
+Owner scopes:
+
+* `global`: contains entries that are blocked across all domains and
+addresses within the system. Entries in the global owner scope apply
+universally and affect all users and domains.
+* `domain`: each domain can have its own droplist, which contains
+entries specific to that domain.
+* `user`: allow to customize personalized droplist of blocked domains
+and email addresses.
+
+See example commands for `domain` owner scope, `owner.com`
+owner, `evil@devil.com` denied entity.
+
+Add Entry to the DropList
+
+....
+{cli} AddDropListEntry domain owner.com evil@devil.com
+....
+
+Remove Entry from the DropList
+
+....
+{cli} RemoveDropListEntry domain owner.com evil@devil.com
+....
+
+Getting the DropList
+
+....
+{cli} GetDropList domain owner.com
+....
+
+Testing a denied entity existence (should returns `allowed` or `blocked`)
+
+....
+{cli} DropListQuery domain owner.com evil@devil.com
 ....
 
 == Re-indexing
