@@ -99,7 +99,7 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
 
   private implicit val filterOperatorReads: Reads[FilterOperator] = Json.reads[FilterOperator]
 
-  private implicit def filterQueryReads: Reads[FilterQuery] = {
+  implicit def filterQueryReads: Reads[FilterQuery] = {
     case JsObject(underlying) if underlying.contains("operator") && (!underlying.contains("conditions") || underlying.contains("conditions") && underlying.size > 2) => JsError("Expecting filterOperator to contain only operator and conditions")
     case jsValue@JsObject(underlying) if underlying.contains("operator") && underlying.contains("conditions") && underlying.size.equals(2) => filterOperatorReads.reads(jsValue)
     case jsValue => filterConditionReads.reads(jsValue)
