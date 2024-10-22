@@ -111,7 +111,8 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
         Text,
         FullText,
         Attachment,
-        AttachmentFileName
+        AttachmentFileName,
+        HighlightSearch
     }
     
     EnumSet<SearchCapabilities> getSupportedSearchCapabilities();
