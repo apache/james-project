@@ -64,7 +64,7 @@ Namely:
  - `Mailbox/get`, `Mailbox/query`, `Mailbox/queryChanges`, `Mailbox/changes` need to accept or return delegated.
  - `Thread/get`, `Thread/changes` need to accept of return Threads in mailboxes the account user can access.
  - `Email/get`, `Email/set`, `Email/query`, `Email/changes`, `Email/queryChanges`, `Email/copy`, `Email/import`, `Email/import` need to accept or return matching Emails in delegated mailboxes the account user can access.
- - `SearchSnippet/get` needs to accept delegated Emails as a valid input.
+ - `SearchSnippet/get` needs to accept or return matching search snippet in delegated mailboxes the account user can access.
 
 Sharee MUST not be able to modify a shared mailbox via `Mailbox/set`.
 
