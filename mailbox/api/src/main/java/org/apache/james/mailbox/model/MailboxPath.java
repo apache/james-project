@@ -154,7 +154,9 @@ public class MailboxPath {
     }
 
     public boolean belongsTo(MailboxSession mailboxSession) {
-        return user.equals(mailboxSession.getUser());
+        return Optional.ofNullable(user)
+            .map(mailboxSession.getUser()::equals)
+            .orElse(false);
     }
 
     public MailboxPath child(String childName, char delimiter) {
@@ -255,7 +257,7 @@ public class MailboxPath {
     }
 
     public String asString() {
-        return namespace + ":" + user.asString() + ":" + name;
+        return namespace + ":" + Optional.ofNullable(user).map(Username::asString).orElse("") + ":" + name;
     }
 
     public String asEscapedString() {
