@@ -39,8 +39,8 @@ public class InMemoryUploadRepositoryTest implements UploadRepositoryContract {
     @BeforeEach
     void setUp() {
         BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, new PlainBlobId.Factory());
-        testee = new InMemoryUploadRepository(blobStore, Clock.systemUTC());
         clock = new UpdatableTickingClock(Clock.systemUTC().instant());
+        testee = new InMemoryUploadRepository(blobStore, clock);
     }
 
     @Override
