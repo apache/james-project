@@ -120,7 +120,7 @@ public class PostgresUploadDAO {
             UploadId.from(record.get(PostgresUploadTable.ID)),
             Optional.ofNullable(record.get(PostgresUploadTable.CONTENT_TYPE)).map(ContentType::of).orElse(null),
             record.get(PostgresUploadTable.SIZE),
-            blobIdFactory.from(record.get(PostgresUploadTable.BLOB_ID)),
+            blobIdFactory.parse(record.get(PostgresUploadTable.BLOB_ID)),
             PostgresCommons.LOCAL_DATE_TIME_INSTANT_FUNCTION.apply(record.get(PostgresUploadTable.UPLOAD_DATE, LocalDateTime.class)));
     }
 }

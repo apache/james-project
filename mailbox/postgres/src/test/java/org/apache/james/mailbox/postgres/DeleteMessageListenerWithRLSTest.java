@@ -30,7 +30,7 @@ import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Username;
 import org.apache.james.events.EventBusTestFixture;
@@ -69,7 +69,7 @@ public class DeleteMessageListenerWithRLSTest extends DeleteMessageListenerContr
     @BeforeAll
     static void beforeAll() {
         blobStore = new PassThroughBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, BLOB_ID_FACTORY);
-        BlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
 
         PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(
             postgresExtension.getExecutorFactory(),
