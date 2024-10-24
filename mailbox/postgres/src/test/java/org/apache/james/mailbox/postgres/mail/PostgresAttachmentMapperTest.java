@@ -23,7 +23,7 @@ import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
@@ -38,7 +38,7 @@ class PostgresAttachmentMapperTest extends AttachmentMapperTest {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresAttachmentModule.MODULE);
 
-    static BlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+    static BlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 
     @Override
     protected AttachmentMapper createAttachmentMapper() {

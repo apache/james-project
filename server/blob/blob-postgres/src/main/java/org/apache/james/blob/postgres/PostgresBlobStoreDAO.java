@@ -154,6 +154,6 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
         return postgresExecutor.executeRows(dsl -> Flux.from(dsl.select(BLOB_ID)
                 .from(TABLE_NAME)
                 .where(BUCKET_NAME.eq(bucketName.asString()))))
-            .map(record -> blobIdFactory.from(record.get(BLOB_ID)));
+            .map(record -> blobIdFactory.parse(record.get(BLOB_ID)));
     }
 }

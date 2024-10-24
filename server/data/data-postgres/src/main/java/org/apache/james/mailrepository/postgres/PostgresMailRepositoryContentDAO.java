@@ -299,8 +299,8 @@ public class PostgresMailRepositoryContentDAO {
 
     private MimeMessagePartsId toMimeMessagePartsId(Record record) {
         return MimeMessagePartsId.builder()
-            .headerBlobId(blobIdFactory.from(record.get(HEADER_BLOB_ID)))
-            .bodyBlobId(blobIdFactory.from(record.get(BODY_BLOB_ID)))
+            .headerBlobId(blobIdFactory.parse(record.get(HEADER_BLOB_ID)))
+            .bodyBlobId(blobIdFactory.parse(record.get(BODY_BLOB_ID)))
             .build();
     }
 
@@ -349,6 +349,6 @@ public class PostgresMailRepositoryContentDAO {
     public Flux<BlobId> listBlobs() {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(HEADER_BLOB_ID, BODY_BLOB_ID)
                 .from(TABLE_NAME)))
-            .flatMapIterable(record -> ImmutableList.of(blobIdFactory.from(record.get(HEADER_BLOB_ID)), blobIdFactory.from(record.get(BODY_BLOB_ID))));
+            .flatMapIterable(record -> ImmutableList.of(blobIdFactory.parse(record.get(HEADER_BLOB_ID)), blobIdFactory.parse(record.get(BODY_BLOB_ID))));
     }
 }

@@ -134,7 +134,7 @@ public class PostgresMessageDAO {
             .internalDate(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(PostgresMessageModule.MessageTable.INTERNAL_DATE, LocalDateTime.class)))
             .size(record.get(PostgresMessageModule.MessageTable.SIZE))
             .headerContent(BYTE_TO_CONTENT_FUNCTION.apply(record.get(HEADER_CONTENT)))
-            .bodyBlobId(blobIdFactory.from(record.get(BODY_BLOB_ID)))
+            .bodyBlobId(blobIdFactory.parse(record.get(BODY_BLOB_ID)))
             .attachments(record.get(ATTACHMENT_METADATA))
             .build();
     }
@@ -148,13 +148,13 @@ public class PostgresMessageDAO {
         return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(BODY_BLOB_ID)
             .from(TABLE_NAME)
             .where(MESSAGE_ID.eq(messageId.asUuid()))))
-            .map(record -> blobIdFactory.from(record.get(BODY_BLOB_ID)));
+            .map(record -> blobIdFactory.parse(record.get(BODY_BLOB_ID)));
     }
 
     public Flux<BlobId> listBlobs() {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(BODY_BLOB_ID)
             .from(TABLE_NAME)))
-            .map(record -> blobIdFactory.from(record.get(BODY_BLOB_ID)));
+            .map(record -> blobIdFactory.parse(record.get(BODY_BLOB_ID)));
     }
 
 }
