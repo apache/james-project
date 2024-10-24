@@ -31,6 +31,8 @@ public interface ImapHostSystem extends HostSystem {
     
     void createMailbox(MailboxPath mailboxPath) throws Exception;
 
+    void fillMailbox(MailboxPath mailboxPath) throws Exception;
+
     void setQuotaLimits(QuotaCountLimit maxMessageQuota, QuotaSizeLimit maxStorageQuota) throws Exception;
 
     void grantRights(MailboxPath mailboxPath, Username userName, MailboxACL.Rfc4314Rights rights) throws Exception;

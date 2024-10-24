@@ -56,14 +56,17 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
     private static final int MAX_FAILURES = 3;
     private ImapConfiguration imapConfiguration;
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @FunctionalInterface
     protected interface MailboxSessionAuthWithDelegationSupplier {
         MailboxSession get() throws MailboxException;
     }
     
     public AbstractAuthProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory factory,
-                                 MetricFactory metricFactory) {
+                                 MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(acceptableClass, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -81,14 +84,13 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                 authFailure = true;
             }
             if (!authFailure) {
-                final MailboxManager mailboxManager = getMailboxManager();
                 try {
-                    final MailboxSession mailboxSession = mailboxManager.authenticate(authenticationAttempt.getAuthenticationId(),
+                    final MailboxSession mailboxSession = getMailboxManager().authenticate(authenticationAttempt.getAuthenticationId(),
                         authenticationAttempt.getPassword())
                         .withoutDelegation();
                     session.authenticated();
                     session.setMailboxSession(mailboxSession);
-                    provisionInbox(session, mailboxManager, mailboxSession);
+                    provisionInbox(session, getMailboxManager(), mailboxSession);
                     AuditTrail.entry()
                         .username(() -> mailboxSession.getUser().asString())
                         .sessionId(() -> session.sessionId().asString())
@@ -135,8 +137,8 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                                         ImapSession session, ImapRequest request, Responder responder,
                                         Username authenticateUser, Username delegatorUser) {
         try {
-            final MailboxManager mailboxManager = getMailboxManager();
-            final MailboxSession mailboxSession = mailboxSessionSupplier.get();
+            MailboxManager mailboxManager = getMailboxManager();
+            MailboxSession mailboxSession = mailboxSessionSupplier.get();
             session.authenticated();
             session.setMailboxSession(mailboxSession);
             AuditTrail.entry()
@@ -179,22 +181,22 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
     }
 
     protected void provisionInbox(ImapSession session, MailboxManager mailboxManager, MailboxSession mailboxSession) throws MailboxException {
-        final MailboxPath inboxPath = PathConverter.forSession(session).buildFullPath(MailboxConstants.INBOX);
+        MailboxPath inboxPath = pathConverterFactory.forSession(session).buildFullPath(MailboxConstants.INBOX);
         if (Mono.from(mailboxManager.mailboxExists(inboxPath, mailboxSession)).block()) {
             LOGGER.debug("INBOX exists. No need to create it.");
         } else {
-            provisionMailbox(DefaultMailboxes.INBOX, session, mailboxManager, mailboxSession);
+            provisionMailbox(DefaultMailboxes.INBOX, mailboxManager, mailboxSession);
             if (imapConfiguration.isProvisionDefaultMailboxes()) {
                 for (String mailbox : DefaultMailboxes.DEFAULT_MAILBOXES) {
-                    provisionMailbox(mailbox, session, mailboxManager, mailboxSession);
+                    provisionMailbox(mailbox, mailboxManager, mailboxSession);
                 }
             }
         }
     }
 
-    private void provisionMailbox(String mailbox, ImapSession session, MailboxManager mailboxManager,
+    private void provisionMailbox(String mailbox, MailboxManager mailboxManager,
                                   MailboxSession mailboxSession) throws MailboxException {
-        var mailboxPath = PathConverter.forSession(session).buildFullPath(mailbox);
+        MailboxPath mailboxPath = pathConverterFactory.forSession(mailboxSession).buildFullPath(mailbox);
         if (Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession)).block()) {
             LOGGER.debug("{} exists. No need to create it.", mailbox);
             return;
@@ -215,8 +217,8 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
     }
 
     protected void manageFailureCount(ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {
-        final Integer currentNumberOfFailures = (Integer) session.getAttribute(ATTRIBUTE_NUMBER_OF_FAILURES);
-        final int failures;
+        Integer currentNumberOfFailures = (Integer) session.getAttribute(ATTRIBUTE_NUMBER_OF_FAILURES);
+        int failures;
         if (currentNumberOfFailures == null) {
             failures = 1;
         } else {

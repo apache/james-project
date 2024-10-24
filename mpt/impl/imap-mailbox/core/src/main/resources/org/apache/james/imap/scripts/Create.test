@@ -73,6 +73,9 @@ S: \* LIST \(\\HasChildren\) "." "one"
 S: \* LIST \(\\HasNoChildren\) "." "one.two"
 S: 21 OK LIST completed.
 
+C: 22 CREATE #user
+S: 22 NO CREATE processing failed.
+
 # Cleanup
 C: a1 DELETE test1.subfolder1
 S: a1 OK DELETE completed.

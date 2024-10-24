@@ -1,0 +1,104 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+# Can list other users delegated mailbox
+C: a0 LIST "" "*"
+SUB {
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.mailbox-l\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.mailbox-lr\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.mailbox-lrs\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.mailbox-lrw\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.mailbox-lri\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.mailbox-lrx\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.mailbox-lrk\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.mailbox-lrt\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.mailbox-lrte\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.mailbox-lra\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"INBOX\"
+}
+S: a0 OK LIST completed.
+
+C: a1 MYRIGHTS #user.boby.mailbox-lra
+S: \* MYRIGHTS \"#user.boby.mailbox-lra\" \"alr\"
+S: a1 OK MYRIGHTS completed.
+
+C: a2 STATUS #user.boby.mailbox-lra (MESSAGES)
+S: \* STATUS \"#user.boby.mailbox-lra\" \(MESSAGES 10\)
+S: a2 OK STATUS completed.
+
+# Ensure we cannot write in the mailbox
+C: a4 SELECT INBOX
+S: \* OK \[MAILBOXID \(.*\)\] Ok
+S: \* FLAGS \(.*\)
+S: \* .* EXISTS
+S: \* .* RECENT
+S: \* OK \[UIDVALIDITY .*\] UIDs valid
+S: \* OK \[UNSEEN 1\] MailboxMessage 1 is first unseen
+S: \* OK \[PERMANENTFLAGS \(.*\)\] Limited
+S: \* OK \[HIGHESTMODSEQ .*\] Highest
+S: \* OK \[UIDNEXT .*\] Predicted next UID
+S: a4 OK \[READ-WRITE\] SELECT completed.
+C: a4 COPY 1:* #user.boby.mailbox-lra
+S: a4 NO COPY processing failed.
+C: a6 UNSELECT
+S: a6 OK UNSELECT completed.
+
+C: a5 DELETE #user.boby.mailbox-lra
+S: a5 NO DELETE processing failed.
+
+C: a5 SETACL #user.boby.mailbox-lra imapuser lra
+S: a5 OK SETACL completed.
+
+C: a7 CREATE #user.boby.mailbox-lra.evev
+S: a7 NO CREATE processing failed.
+
+C: a3 SELECT #user.boby.mailbox-lra
+S: \* OK \[MAILBOXID \(.*\)\] Ok
+S: \* FLAGS \(.*\)
+S: \* .* EXISTS
+S: \* .* RECENT
+S: \* OK \[UIDVALIDITY .*\] UIDs valid
+S: \* OK \[UNSEEN 1\] MailboxMessage 1 is first unseen
+S: \* OK \[PERMANENTFLAGS .*\] Limited
+S: \* OK \[HIGHESTMODSEQ .*\] Highest
+S: \* OK \[UIDNEXT .*\] Predicted next UID
+S: a3 OK \[READ-ONLY\] SELECT completed.
+
+C: F11 FETCH 1 FLAGS
+S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
+S: F11 OK FETCH completed.
+
+C: F12 STORE 1 +FLAGS (\Deleted)
+S: F12 NO STORE failed. Save failed.
+
+C: F13 STORE 1 +FLAGS (\Seen)
+S: F13 NO STORE failed. Save failed.
+
+C: F14 STORE 1 +FLAGS (\Flagged)
+S: F14 NO STORE failed. Save failed.
+
+C: F14 STORE 1 +FLAGS (\Flagged)
+S: F14 NO STORE failed. Save failed.
+
+C: F11 FETCH 1 FLAGS
+S: \* 1 FETCH \(FLAGS \(\\Recent\)\)
+S: F11 OK FETCH completed.
+
+C: F15 EXPUNGE
+S: F15 NO EXPUNGE failed. Mailbox is read only.

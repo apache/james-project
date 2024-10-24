@@ -63,6 +63,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
@@ -408,6 +409,9 @@ public class StoreMessageManager implements MessageManager {
             if (!isWriteable(mailboxSession)) {
                 throw new ReadOnlyException(getMailboxPath());
             }
+            if (!storeRightManager.myRights(mailbox, mailboxSession).contains(MailboxACL.Right.Insert)) {
+                throw new InsufficientRightsException("Append messages requires 'i' right");
+            }
 
             try (InputStream contentStream = msgIn.getInputStream();
                  UnsynchronizedFilterInputStream bufferedContentStream = UnsynchronizedBufferedInputStream.builder()
@@ -675,12 +679,43 @@ public class StoreMessageManager implements MessageManager {
 
     }
 
-    @Override
-    public Map<MessageUid, Flags> setFlags(final Flags flags, final FlagsUpdateMode flagsUpdateMode, final MessageRange set, MailboxSession mailboxSession) throws MailboxException {
+    public Optional<MailboxException> ensureFlagsWrite(Flags flags, FlagsUpdateMode flagsUpdateMode, MailboxSession mailboxSession) {
+        MailboxACL.Rfc4314Rights myRights = storeRightManager.myRights(mailbox, mailboxSession);
 
-        if (!isWriteable(mailboxSession)) {
-            throw new ReadOnlyException(getMailboxPath());
+        if (flagsUpdateMode.equals(FlagsUpdateMode.REPLACE)) {
+            if (!myRights.contains(MailboxACL.Right.Write, MailboxACL.Right.WriteSeenFlag, MailboxACL.Right.DeleteMessages)) {
+                return Optional.of(new InsufficientRightsException("'stw' rights are needed to reset flags"));
+            }
+            return Optional.empty();
         }
+
+        if (flags.contains(Flag.SEEN) && !myRights.contains(MailboxACL.Right.WriteSeenFlag)) {
+            return Optional.of(new InsufficientRightsException("'s' right is needed to modify seen flag"));
+        }
+
+        if (flags.contains(Flag.DELETED) && !myRights.contains(MailboxACL.Right.DeleteMessages)) {
+            return Optional.of(new InsufficientRightsException("'t' right is needed to modify deleted flag"));
+        }
+
+        boolean hasOtherFlagChanges = flags.getUserFlags().length > 0
+            || flags.contains(Flag.FLAGGED)
+            || flags.contains(Flag.DRAFT)
+            || flags.contains(Flag.ANSWERED)
+            || flags.contains(Flag.RECENT);
+
+        if (hasOtherFlagChanges && !myRights.contains(MailboxACL.Right.Write)) {
+            return Optional.of(new InsufficientRightsException("'w' right is needed to modify arbitrary flags"));
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Map<MessageUid, Flags> setFlags(Flags flags, FlagsUpdateMode flagsUpdateMode, MessageRange set, MailboxSession mailboxSession) throws MailboxException {
+
+        ensureFlagsWrite(flags, flagsUpdateMode, mailboxSession)
+            .ifPresent(Throwing.<MailboxException>consumer(e -> {
+                throw e;
+            }).sneakyThrow());
 
         trimFlags(flags, mailboxSession);
 
@@ -705,25 +740,25 @@ public class StoreMessageManager implements MessageManager {
 
     @Override
     public Publisher<Map<MessageUid, Flags>> setFlagsReactive(Flags flags, FlagsUpdateMode flagsUpdateMode, MessageRange set, MailboxSession mailboxSession) {
-        if (!isWriteable(mailboxSession)) {
-            return Mono.error(new ReadOnlyException(getMailboxPath()));
-        }
+        return ensureFlagsWrite(flags, flagsUpdateMode, mailboxSession)
+            .map(Mono::<Map<MessageUid, Flags>>error)
+            .orElseGet(() -> {
+                trimFlags(flags, mailboxSession);
 
-        trimFlags(flags, mailboxSession);
+                MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
-        MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
-
-        return messageMapper.executeReactive(messageMapper.updateFlagsReactive(getMailboxEntity(), new FlagsUpdateCalculator(flags, flagsUpdateMode), set))
-            .flatMap(updatedFlags -> eventBus.dispatch(EventFactory.flagsUpdated()
-                    .randomEventId()
-                    .mailboxSession(mailboxSession)
-                    .mailbox(getMailboxEntity())
-                    .updatedFlags(updatedFlags)
-                    .build(),
-                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
-                .thenReturn(updatedFlags.stream().collect(ImmutableMap.toImmutableMap(
-                    UpdatedFlags::getUid,
-                    UpdatedFlags::getNewFlags))));
+                return messageMapper.executeReactive(messageMapper.updateFlagsReactive(getMailboxEntity(), new FlagsUpdateCalculator(flags, flagsUpdateMode), set))
+                    .flatMap(updatedFlags -> eventBus.dispatch(EventFactory.flagsUpdated()
+                                .randomEventId()
+                                .mailboxSession(mailboxSession)
+                                .mailbox(getMailboxEntity())
+                                .updatedFlags(updatedFlags)
+                                .build(),
+                            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                        .thenReturn(updatedFlags.stream().collect(ImmutableMap.toImmutableMap(
+                            UpdatedFlags::getUid,
+                            UpdatedFlags::getNewFlags))));
+            });
     }
 
     /**
@@ -732,6 +767,9 @@ public class StoreMessageManager implements MessageManager {
     public Flux<MessageRange> copyTo(MessageRange set, StoreMessageManager toMailbox, MailboxSession session) {
         if (!toMailbox.isWriteable(session)) {
             return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
+        }
+        if (!storeRightManager.myRights(toMailbox.mailbox, session).contains(MailboxACL.Right.Insert)) {
+            return Flux.error(new InsufficientRightsException("Append messages requires 'i' right"));
         }
         //TODO lock the from mailbox too, in a non-deadlocking manner - how?
         return Flux.from(locker.executeReactiveWithLockReactive(toMailbox.getMailboxPath(),
@@ -747,8 +785,14 @@ public class StoreMessageManager implements MessageManager {
         if (!isWriteable(session)) {
             return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
         }
+        if (!storeRightManager.myRights(mailbox, session).contains(MailboxACL.Right.PerformExpunge)) {
+            return Flux.error(new InsufficientRightsException("Deleting messages requires 'e' right"));
+        }
         if (!toMailbox.isWriteable(session)) {
             return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
+        }
+        if (!storeRightManager.myRights(toMailbox.mailbox, session).contains(MailboxACL.Right.Insert)) {
+            return Flux.error(new InsufficientRightsException("Append messages requires 'i' right"));
         }
         //TODO lock the from mailbox too, in a non-deadlocking manner - how?
         return Flux.from(locker.executeReactiveWithLockReactive(toMailbox.getMailboxPath(),

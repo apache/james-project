@@ -20,8 +20,6 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_NAMESPACES;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -46,62 +44,27 @@ import reactor.core.publisher.Mono;
 public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceRequest> implements CapabilityImplementingProcessor {
     private static final List<Capability> CAPS = ImmutableList.of(SUPPORTS_NAMESPACES);
 
+    private final NamespaceSupplier namespaceSupplier;
+
+
     @Inject
-    public NamespaceProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
+    public NamespaceProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory, NamespaceSupplier namespaceSupplier) {
         super(NamespaceRequest.class, mailboxManager, factory, metricFactory);
+        this.namespaceSupplier = namespaceSupplier;
     }
 
     @Override
     protected Mono<Void> processRequestReactive(NamespaceRequest request, ImapSession session, Responder responder) {
-        final MailboxSession mailboxSession = session.getMailboxSession();
-        final List<NamespaceResponse.Namespace> personalNamespaces = buildPersonalNamespaces(mailboxSession, session);
-        final List<NamespaceResponse.Namespace> otherUsersNamespaces = buildOtherUsersSpaces(mailboxSession, session);
-        final List<NamespaceResponse.Namespace> sharedNamespaces = buildSharedNamespaces(mailboxSession, session);
-        final NamespaceResponse response = new NamespaceResponse(personalNamespaces, otherUsersNamespaces, sharedNamespaces);
+        MailboxSession mailboxSession = session.getMailboxSession();
+
+        NamespaceResponse response = new NamespaceResponse(namespaceSupplier.personalNamespaces(mailboxSession),
+            namespaceSupplier.otherUsersNamespaces(mailboxSession),
+            namespaceSupplier.sharedNamespaces(mailboxSession));
+
         responder.respond(response);
+
         return unsolicitedResponses(session, responder, false)
             .then(Mono.fromRunnable(() -> okComplete(request, responder)));
-    }
-
-    /**
-     * Builds personal namespaces from the session.
-     * 
-     * @param mailboxSession
-     *            not null
-     * @return personal namespaces, not null
-     */
-    private List<NamespaceResponse.Namespace> buildPersonalNamespaces(MailboxSession mailboxSession, ImapSession session) {
-        final List<NamespaceResponse.Namespace> personalSpaces = new ArrayList<>();
-        String personal = "";
-        if (session.supportMultipleNamespaces()) {
-            personal = mailboxSession.getPersonalSpace();
-        }
-        personalSpaces.add(new NamespaceResponse.Namespace(personal, mailboxSession.getPathDelimiter()));
-        return personalSpaces;
-    }
-
-    private List<NamespaceResponse.Namespace> buildOtherUsersSpaces(MailboxSession mailboxSession,  ImapSession session) {
-        final String otherUsersSpace = mailboxSession.getOtherUsersSpace();
-        final List<NamespaceResponse.Namespace> otherUsersSpaces;
-        if (session.supportMultipleNamespaces() == false || otherUsersSpace == null) {
-            otherUsersSpaces = null;
-        } else {
-            otherUsersSpaces = new ArrayList<>(1);
-            otherUsersSpaces.add(new NamespaceResponse.Namespace(otherUsersSpace, mailboxSession.getPathDelimiter()));
-        }
-        return otherUsersSpaces;
-    }
-
-    private List<NamespaceResponse.Namespace> buildSharedNamespaces(MailboxSession mailboxSession,  ImapSession session) {
-        List<NamespaceResponse.Namespace> sharedNamespaces = null;
-        final Collection<String> sharedSpaces = mailboxSession.getSharedSpaces();
-        if (session.supportMultipleNamespaces() && !sharedSpaces.isEmpty()) {
-            sharedNamespaces = new ArrayList<>(sharedSpaces.size());
-            for (String space : sharedSpaces) {
-                sharedNamespaces.add(new NamespaceResponse.Namespace(space, mailboxSession.getPathDelimiter()));
-            }
-        }
-        return sharedNamespaces;
     }
 
     @Override

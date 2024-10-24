@@ -28,6 +28,7 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.LoginRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
@@ -45,8 +46,8 @@ public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implemen
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginProcessor.class);
 
     @Inject
-    public LoginProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
-        super(LoginRequest.class, mailboxManager, factory, metricFactory);
+    public LoginProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
+        super(LoginRequest.class, mailboxManager, factory, metricFactory, pathConverterFactory);
     }
 
     @Override

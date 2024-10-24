@@ -17,19 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.imap.message.response;
+package org.apache.james.mpt.imapmailbox.inmemory;
 
-import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.Tag;
-import org.apache.james.imap.api.display.HumanReadableText;
-import org.apache.james.imap.api.message.response.StatusResponse;
-import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
-import org.apache.james.imap.api.message.response.StatusResponse.Type;
-import org.apache.james.imap.api.message.response.StatusResponseFactory;
+import org.apache.james.mpt.api.ImapHostSystem;
+import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
+import org.apache.james.mpt.imapmailbox.suite.IMAPSharingAccessTest;
+import org.junit.jupiter.api.BeforeEach;
 
-public class UnpooledStatusResponseFactory extends AbstractStatusResponseFactory implements StatusResponseFactory {
+public class InMemoryIMAPSharingAccessTest extends IMAPSharingAccessTest {
+    private ImapHostSystem system;
+
     @Override
-    protected StatusResponse createResponse(Type type, Tag tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code) {
-        return new ImmutableStatusResponse(type, tag, command, displayTextKey, code);
+    @BeforeEach
+    public void setUp() throws Exception {
+        system = new InMemoryHostSystem();
+        system.beforeTest();
+        super.setUp();
+    }
+    
+    @Override
+    protected ImapHostSystem createImapHostSystem() {
+        return system;
     }
 }

@@ -45,16 +45,19 @@ import reactor.core.publisher.Mono;
 public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RenameProcessor.class);
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
     public RenameProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                           MetricFactory metricFactory) {
+                           MetricFactory metricFactory, PathConverter.Factory pathConverterFactory) {
         super(RenameRequest.class, mailboxManager, factory, metricFactory);
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
     protected Mono<Void> processRequestReactive(RenameRequest request, ImapSession session, Responder responder) {
         try {
-            PathConverter pathConverter = PathConverter.forSession(session);
+            PathConverter pathConverter = pathConverterFactory.forSession(session);
             MailboxPath existingPath = pathConverter.buildFullPath(request.getExistingName());
             MailboxPath newPath = pathConverter.buildFullPath(request.getNewName());
             MailboxManager mailboxManager = getMailboxManager();

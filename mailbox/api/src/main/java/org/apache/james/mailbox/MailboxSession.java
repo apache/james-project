@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -29,7 +27,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.model.MailboxConstants;
 
 import com.google.common.base.MoreObjects;
 
@@ -100,9 +97,6 @@ public class MailboxSession {
         User
     }
 
-    private final Collection<String> sharedSpaces;
-    private final String otherUsersSpace;
-    private final String personalSpace;
     private final SessionId sessionId;
     private final Username userName;
     private final Optional<Username> loggedInUser;
@@ -113,21 +107,9 @@ public class MailboxSession {
 
     public MailboxSession(SessionId sessionId, Username userName, Optional<Username> loggedInUser,
                                 List<Locale> localePreferences, char pathSeparator, SessionType type) {
-        this(sessionId, userName, loggedInUser, localePreferences, new ArrayList<>(), null, pathSeparator, type);
-    }
-
-    public MailboxSession(SessionId sessionId, Username userName, Optional<Username> loggedInUser,
-                          List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
         this.sessionId = sessionId;
         this.userName = userName;
-        this.otherUsersSpace = otherUsersSpace;
-        this.sharedSpaces = sharedSpaces;
         this.type = type;
-        if (otherUsersSpace == null && (sharedSpaces == null || sharedSpaces.isEmpty())) {
-            this.personalSpace = "";
-        } else {
-            this.personalSpace = MailboxConstants.USER_NAMESPACE;
-        }
 
         this.localePreferences = localePreferences;
         this.attributes = new HashMap<>();
@@ -171,43 +153,6 @@ public class MailboxSession {
      */
     public List<Locale> getLocalePreferences() {
         return localePreferences;
-    }
-
-    /**
-     * Gets the <a href='http://www.isi.edu/in-notes/rfc2342.txt' rel='tag'>RFC
-     * 2342</a> personal namespace for the current session.<br>
-     * Note that though servers may offer multiple personal namespaces, support
-     * is not offered through this API. This decision may be revised if
-     * reasonable use cases emerge.
-     * 
-     * @return Personal Namespace, not null
-     */
-    public String getPersonalSpace() {
-        return personalSpace;
-    }
-
-    /**
-     * Gets the <a href='http://www.isi.edu/in-notes/rfc2342.txt' rel='tag'>RFC
-     * 2342</a> other users namespace for the current session.<br>
-     * Note that though servers may offer multiple other users namespaces,
-     * support is not offered through this API. This decision may be revised if
-     * reasonable use cases emerge.
-     * 
-     * @return Other Users Namespace or null when there is non available
-     */
-    public String getOtherUsersSpace() {
-        return otherUsersSpace;
-    }
-
-    /**
-     * Iterates the <a href='http://www.isi.edu/in-notes/rfc2342.txt'
-     * rel='tag'>RFC 2342</a> Shared Namespaces available for the current
-     * session.
-     * 
-     * @return not null though possibly empty
-     */
-    public Collection<String> getSharedSpaces() {
-        return sharedSpaces;
     }
 
     /**

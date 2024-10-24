@@ -40,6 +40,19 @@ public class ImapScriptedTestProtocol extends GenericSimpleScriptedTestProtocol<
         }
     }
 
+    private static class FillMailbox implements PrepareCommand<ImapHostSystem> {
+        final MailboxPath mailboxPath;
+
+        FillMailbox(MailboxPath mailboxPath) {
+            this.mailboxPath = mailboxPath;
+        }
+
+        @Override
+        public void prepare(ImapHostSystem system) throws Exception {
+            system.fillMailbox(mailboxPath);
+        }
+    }
+
     private static class CreateRights implements PrepareCommand<ImapHostSystem> {
 
         final MailboxPath mailboxPath;
@@ -65,6 +78,10 @@ public class ImapScriptedTestProtocol extends GenericSimpleScriptedTestProtocol<
 
     public ImapScriptedTestProtocol withMailbox(MailboxPath mailboxPath) {
         return withPreparedCommand(new CreateMailbox(mailboxPath));
+    }
+
+    public ImapScriptedTestProtocol withFilledMailbox(MailboxPath mailboxPath) {
+        return withPreparedCommand(new FillMailbox(mailboxPath));
     }
 
     public ImapScriptedTestProtocol withRights(MailboxPath mailboxPath, Username username, MailboxACL.Rfc4314Rights rights) {

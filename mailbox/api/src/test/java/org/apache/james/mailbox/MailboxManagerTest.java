@@ -272,6 +272,96 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void shareeShouldBeAbleToCreateMailbox() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath mailboxPath = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(mailboxPath, session);
+            mailboxManager.applyRightsCommand(mailboxPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_2))
+                    .rights(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup,
+                        MailboxACL.Right.Read, MailboxACL.Right.CreateMailbox)))
+                    .asAddition(), session);
+
+            MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+            MailboxPath childPath = MailboxPath.inbox(session).child("child", session2.getPathDelimiter());
+            mailboxManager.createMailbox(childPath, session2);
+
+            assertThat(mailboxManager.getMailbox(childPath, session)
+                .getMailboxEntity().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(USER_2)))
+                .isEqualTo(MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("lrk"));
+        }
+
+        @Test
+        void shareeShouldBeAbleToCreateMailboxChildren() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath mailboxPath = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(mailboxPath, session);
+            mailboxManager.applyRightsCommand(mailboxPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_2))
+                    .rights(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup,
+                        MailboxACL.Right.Read, MailboxACL.Right.CreateMailbox)))
+                    .asAddition(), session);
+
+            MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+            MailboxPath childPath = MailboxPath.inbox(session)
+                .child("child", session2.getPathDelimiter())
+                .child("anotherkid", session2.getPathDelimiter());
+            mailboxManager.createMailbox(childPath, session2);
+
+            assertThat(mailboxManager.getMailbox(childPath, session)
+                .getMailboxEntity().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(USER_2)))
+                .isEqualTo(MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("lrk"));
+        }
+
+        @Test
+        void shareeShouldBeAbleToCreateMailboxChildrenIntermediatePaths() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath mailboxPath = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(mailboxPath, session);
+            mailboxManager.applyRightsCommand(mailboxPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_2))
+                    .rights(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup,
+                        MailboxACL.Right.Read, MailboxACL.Right.CreateMailbox)))
+                    .asAddition(), session);
+
+            MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+            MailboxPath intermediatePath = MailboxPath.inbox(session)
+                .child("child", session2.getPathDelimiter());
+            MailboxPath childPath = intermediatePath.child("anotherkid", session2.getPathDelimiter());
+            mailboxManager.createMailbox(childPath, session2);
+
+            assertThat(mailboxManager.getMailbox(intermediatePath, session)
+                .getMailboxEntity().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(USER_2)))
+                .isEqualTo(MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("lrk"));
+        }
+
+        @Test
+        void shareeShouldBeAbleToDeleteMailbox() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_1, "child");
+            mailboxManager.createMailbox(mailboxPath, session);
+            mailboxManager.applyRightsCommand(mailboxPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_2))
+                    .rights(MailboxACL.Rfc4314Rights.of(ImmutableList.of(MailboxACL.Right.Lookup,
+                        MailboxACL.Right.Read, MailboxACL.Right.DeleteMailbox)))
+                    .asAddition(), session);
+
+            MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+            mailboxManager.deleteMailbox(mailboxPath, session2);
+
+            assertThatThrownBy(() -> mailboxManager.getMailbox(mailboxPath, session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
         void creatingMixedCaseINBOXShouldCreateItAsINBOX() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
             mailboxManager.startProcessingRequest(session);
@@ -1199,6 +1289,32 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .extracting(MailboxMetaData::getPath)
                 .containsOnly(inbox1, inbox2);
         }
+        
+        @Test
+        void searchShouldAllowListingAnotherUserMailbox() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
+            MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
+            MailboxPath inbox1 = MailboxPath.inbox(session1);
+            MailboxPath inbox2 = MailboxPath.inbox(session2);
+            mailboxManager.createMailbox(inbox1, session1);
+            mailboxManager.createMailbox(inbox2, session2);
+            mailboxManager.setRights(inbox1,
+                MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_2)
+                    .rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup)
+                    .asAddition()),
+                session1);
+
+            MailboxQuery mailboxQuery = MailboxQuery.builder()
+                .userAndNamespaceFrom(inbox1)
+                .matchesAllMailboxNames()
+                .build();
+
+            assertThat(mailboxManager.search(mailboxQuery, session2).toStream())
+                .extracting(MailboxMetaData::getPath)
+                .containsExactly(inbox1);
+        }
 
         @Test
         void searchShouldAllowUserFiltering() throws Exception {
@@ -2093,7 +2209,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(inbox, sessionUser1);
 
             assertThatThrownBy(() -> mailboxManager.deleteMailbox(inbox, sessionUser2))
-                .isInstanceOf(MailboxNotFoundException.class);
+                .isInstanceOf(InsufficientRightsException.class);
         }
 
 
@@ -3018,6 +3134,26 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
         @Test
         void setRightsByIdShouldThrowWhenNotOwner() throws Exception {
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_2, "mailbox");
+            MailboxId id = mailboxManager.createMailbox(mailboxPath, session2).get();
+            mailboxManager.setRights(id,  MailboxACL.EMPTY.apply(MailboxACL.command()
+                .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                .rights(new MailboxACL.Rfc4314Rights(MailboxACL.Right.Lookup, MailboxACL.Right.Administer, MailboxACL.Right.Read))
+                .asAddition()), session2);
+
+            mailboxManager.setRights(id, MailboxACL.EMPTY.apply(
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))
+                    .rights(MailboxACL.FULL_RIGHTS)
+                    .asAddition()), session);
+
+            assertThat(mailboxManager.getMailbox(mailboxPath, session2)
+                .getMailboxEntity().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(USER_1)))
+                .isEqualTo(MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("aeiklprstwx"));
+        }
+
+        @Test
+        void setRightsByIdShouldThrowWhenNotAdministrator() throws Exception {
             MailboxId id = mailboxManager.createMailbox(MailboxPath.forUser(USER_2, "mailbox"), session2).get();
             mailboxManager.setRights(id,  MailboxACL.EMPTY.apply(MailboxACL.command()
                 .key(MailboxACL.EntryKey.createUserEntryKey(USER_1))

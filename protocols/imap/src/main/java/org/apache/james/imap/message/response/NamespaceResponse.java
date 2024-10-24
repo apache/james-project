@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.message.response;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Objects;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
@@ -27,11 +27,11 @@ import org.apache.james.imap.api.message.response.ImapResponseMessage;
  * Describes a NAMESPACE response.
  */
 public class NamespaceResponse implements ImapResponseMessage {
-    private final List<Namespace> personal;
-    private final List<Namespace> users;
-    private final List<Namespace> shared;
+    private final Collection<Namespace> personal;
+    private final Collection<Namespace> users;
+    private final Collection<Namespace> shared;
 
-    public NamespaceResponse(List<Namespace> personal, List<Namespace> users, List<Namespace> shared) {
+    public NamespaceResponse(Collection<Namespace> personal, Collection<Namespace> users, Collection<Namespace> shared) {
         this.personal = personal;
         this.users = users;
         this.shared = shared;
@@ -42,7 +42,7 @@ public class NamespaceResponse implements ImapResponseMessage {
      * 
      * @return possibly null
      */
-    public List<Namespace> getPersonal() {
+    public Collection<Namespace> getPersonal() {
         return personal;
     }
 
@@ -51,7 +51,7 @@ public class NamespaceResponse implements ImapResponseMessage {
      * 
      * @return possibly null
      */
-    public List<Namespace> getShared() {
+    public Collection<Namespace> getShared() {
         return shared;
     }
 
@@ -60,7 +60,7 @@ public class NamespaceResponse implements ImapResponseMessage {
      * 
      * @return possibly null
      */
-    public List<Namespace> getUsers() {
+    public Collection<Namespace> getUsers() {
         return users;
     }
 

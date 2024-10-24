@@ -33,6 +33,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.MailboxName;
 import org.apache.james.imap.message.request.DeleteACLRequest;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
@@ -81,7 +82,7 @@ class DeleteACLProcessorTest {
             Object[] args = invocation.getArguments();
             return (Mono) args[0];
         });
-        subject = new DeleteACLProcessor(mailboxManager, statusResponseFactory, new RecordingMetricFactory());
+        subject = new DeleteACLProcessor(mailboxManager, statusResponseFactory, new RecordingMetricFactory(), PathConverter.Factory.DEFAULT);
         imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USER_1);
 

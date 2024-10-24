@@ -40,6 +40,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.CopyRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -86,7 +87,7 @@ class CopyProcessorTest {
         imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USERNAME);
 
-        testee = new CopyProcessor(mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory());
+        testee = new CopyProcessor(mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory(), PathConverter.Factory.DEFAULT);
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);

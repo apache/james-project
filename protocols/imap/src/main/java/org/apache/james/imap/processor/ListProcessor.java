@@ -61,8 +61,6 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
-import org.apache.james.mailbox.model.search.PrefixedRegex;
-import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
@@ -90,20 +88,23 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     private final StatusProcessor statusProcessor;
     protected final MailboxTyper mailboxTyper;
 
+    private final PathConverter.Factory pathConverterFactory;
+
     @Inject
     public ListProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                          MetricFactory metricFactory, SubscriptionManager subscriptionManager,
-                         StatusProcessor statusProcessor, MailboxTyper mailboxTyper) {
-        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper);
+                         StatusProcessor statusProcessor, MailboxTyper mailboxTyper, PathConverter.Factory pathConverterFactory) {
+        this((Class<T>) ListRequest.class, mailboxManager, factory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper, pathConverterFactory);
     }
 
     public ListProcessor(Class<T> clazz, MailboxManager mailboxManager, StatusResponseFactory factory,
                          MetricFactory metricFactory, SubscriptionManager subscriptionManager,
-                         StatusProcessor statusProcessor, MailboxTyper mailboxTyper) {
+                         StatusProcessor statusProcessor, MailboxTyper mailboxTyper, PathConverter.Factory pathConverterFactory) {
         super(clazz, mailboxManager, factory, metricFactory);
         this.subscriptionManager = subscriptionManager;
         this.statusProcessor = statusProcessor;
         this.mailboxTyper = mailboxTyper;
+        this.pathConverterFactory = pathConverterFactory;
     }
 
     @Override
@@ -138,7 +139,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     }
 
     private Mono<Void> respond(ImapSession session, Responder responder, T request, MailboxSession mailboxSession) {
-        if (request.getMailboxPattern().length() == 0) {
+        if (request.getMailboxPattern().isEmpty()) {
             return Mono.fromRunnable(() -> respondNamespace(request.getBaseReferenceName(), responder, mailboxSession));
         } else {
             return respondMailboxList(request, session, responder, mailboxSession);
@@ -166,7 +167,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
     }
 
     private String computeReferenceRoot(String referenceName, MailboxSession mailboxSession) {
-        if (referenceName.length() > 0 && referenceName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
+        if (!referenceName.isEmpty() && referenceName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
             // A qualified reference name - get the root element
             int firstDelimiter = referenceName.indexOf(mailboxSession.getPathDelimiter());
             if (firstDelimiter == -1) {
@@ -188,18 +189,12 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             return Mono.empty();
         }
 
-        // If the mailboxPattern is fully qualified, ignore the
-        // reference name.
-        String finalReferencename = request.getBaseReferenceName();
-        if (request.getMailboxPattern().charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
-            finalReferencename = "";
-        }
         // Is the interpreted (combined) pattern relative?
         // Should the namespace section be returned or not?
-        boolean isRelative = ((finalReferencename + request.getMailboxPattern()).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
+        boolean isRelative = ((request.getBaseReferenceName() + request.getMailboxPattern()).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
 
-        MailboxQuery mailboxQuery = mailboxQuery(computeBasePath(session, finalReferencename, isRelative),
-            request.getMailboxPattern(), mailboxSession);
+        MailboxQuery mailboxQuery = pathConverterFactory.forSession(session)
+            .mailboxQuery(request.getBaseReferenceName(), request.getMailboxPattern(), session);
 
         if (request.selectSubscribed()) {
             return processWithSubscribed(session, request, responder, mailboxSession, isRelative, mailboxQuery);
@@ -221,13 +216,13 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                     responder.respond(
                         createResponse(metaData.inferiors(),
                             metaData.getSelectability(),
-                            mailboxName(isRelative, metaData.getPath(), metaData.getHierarchyDelimiter()),
+                            pathConverterFactory.forSession(session).mailboxName(isRelative, metaData.getPath(), mailboxSession),
                             metaData.getHierarchyDelimiter(),
                             mailboxType,
                             isSubscribed.test(metaData.getPath())));
                 }
             })
-            .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
+            .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData, isRelative))
             .concatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(retrieveMessageManager(metaData, mailboxSession), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
             .then();
     }
@@ -247,7 +242,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .map(tuple -> getListResponseForSelectSubscribed(session, tuple.getT1(), tuple.getT2(), request, mailboxSession, isRelative, mailboxQuery))
             .flatMapIterable(list -> list)
             .doOnNext(pathAndResponse -> responder.respond(pathAndResponse.getMiddle()))
-            .doOnNext(pathAndResponse -> pathAndResponse.getRight().ifPresent(mailboxMetaData -> respondMyRights(request, responder, mailboxSession, mailboxMetaData)))
+            .doOnNext(pathAndResponse -> pathAndResponse.getRight().ifPresent(mailboxMetaData -> respondMyRights(request, responder, mailboxSession, mailboxMetaData, isRelative)))
             .concatMap(pathAndResponse -> sendStatusWhenSubscribed(session, request, responder, mailboxSession, pathAndResponse))
             .then();
     }
@@ -284,7 +279,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .map(mailboxMetaData -> ListResponse.builder()
                 .returnSubscribed(RETURN_SUBSCRIBED)
                 .forMetaData(mailboxMetaData)
-                .name(mailboxName(relative, subscribed, mailboxMetaData.getHierarchyDelimiter()))
+                .name(pathConverterFactory.forSession(session).mailboxName(relative, subscribed, session.getMailboxSession()))
                 .returnNonExistent(!RETURN_NON_EXISTENT)
                 .mailboxType(getMailboxType(listRequest, session, mailboxMetaData.getPath())))
             .orElseGet(() -> ListResponse.builder().nonExitingSubscribedMailbox(subscribed))
@@ -308,7 +303,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                 MailboxMetaData metaData = pair.getValue();
                 ListResponse listResponse = ListResponse.builder()
                     .forMetaData(metaData)
-                    .name(mailboxName(relative, metaData.getPath(), metaData.getHierarchyDelimiter()))
+                    .name(pathConverterFactory.forSession(session).mailboxName(relative, metaData.getPath(), mailboxSession))
                     .childInfos(ListResponse.ChildInfo.SUBSCRIBED)
                     .returnSubscribed(allSubscribedSearch.contains(pair.getKey()))
                     .mailboxType(getMailboxType(listRequest, session, metaData.getPath()))
@@ -318,9 +313,10 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .collect(Collectors.toList());
     }
 
-    private void respondMyRights(T request, Responder responder, MailboxSession mailboxSession, MailboxMetaData metaData) {
+    private void respondMyRights(T request, Responder responder, MailboxSession mailboxSession, MailboxMetaData metaData, boolean isRelative) {
         if (request.getReturnOptions().contains(ListRequest.ListReturnOption.MYRIGHTS)) {
-            MailboxName mailboxName = new MailboxName(metaData.getPath().getName());
+            MailboxName mailboxName = new MailboxName(pathConverterFactory.forSession(mailboxSession)
+                .mailboxName(isRelative, metaData.getPath(), mailboxSession));
             MyRightsResponse myRightsResponse = new MyRightsResponse(mailboxName, getRfc4314Rights(mailboxSession, metaData));
             responder.respond(myRightsResponse);
         }
@@ -333,37 +329,6 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser());
         return metaData.getResolvedAcls().getEntries().get(entryKey);
     }
-
-    private MailboxQuery mailboxQuery(MailboxPath basePath, String mailboxName, MailboxSession mailboxSession) {
-        if (basePath.getNamespace().equals(MailboxConstants.USER_NAMESPACE)
-            && basePath.getUser().equals(mailboxSession.getUser())
-            && basePath.getName().isEmpty()
-            && mailboxName.equals("*")) {
-
-            return MailboxQuery.builder()
-                .userAndNamespaceFrom(basePath)
-                .expression(Wildcard.INSTANCE)
-                .build();
-        }
-
-        return MailboxQuery.builder()
-            .userAndNamespaceFrom(basePath)
-            .expression(new PrefixedRegex(
-                basePath.getName(),
-                ModifiedUtf7.decodeModifiedUTF7(mailboxName),
-                mailboxSession.getPathDelimiter()))
-            .build();
-    }
-
-    private MailboxPath computeBasePath(ImapSession session, String finalReferencename, boolean isRelative) {
-        String decodedName = ModifiedUtf7.decodeModifiedUTF7(finalReferencename);
-        if (isRelative) {
-            return MailboxPath.forUser(session.getUserName(), decodedName);
-        } else {
-            return PathConverter.forSession(session).buildFullPath(decodedName);
-        }
-    }
-
 
     /**
      * retrieve mailboxType for specified mailboxPath using provided
