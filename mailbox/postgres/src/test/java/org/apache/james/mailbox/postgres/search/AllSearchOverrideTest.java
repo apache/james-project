@@ -59,6 +59,7 @@ public class AllSearchOverrideTest {
     void emptyQueryShouldBeApplicable() {
         assertThat(testee.applicable(
             SearchQuery.builder()
+                .sorts(SearchQuery.DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
@@ -69,6 +70,7 @@ public class AllSearchOverrideTest {
         assertThat(testee.applicable(
             SearchQuery.builder()
                 .andCriteria(SearchQuery.all())
+                .sorts(SearchQuery.DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
@@ -79,6 +81,7 @@ public class AllSearchOverrideTest {
         assertThat(testee.applicable(
             SearchQuery.builder()
                 .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.MIN_VALUE, MessageUid.MAX_VALUE)))
+                .sorts(SearchQuery.DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
