@@ -62,6 +62,7 @@ public class DeletedWithRangeSearchOverrideTest {
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsSet(DELETED))
                 .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(4), MessageUid.of(45))))
+                .sorts(SearchQuery.DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
