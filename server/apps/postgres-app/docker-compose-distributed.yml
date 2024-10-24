@@ -1,0 +1,83 @@
+version: '3'
+
+services:
+
+  james:
+    depends_on:
+      postgres:
+        condition: service_started
+      opensearch:
+        condition: service_healthy
+      s3:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    image: apache/james:postgres-latest
+    container_name: james
+    hostname: james.local
+    command:
+      - --generate-keystore
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8000:8000"
+    volumes:
+      - ./sample-configuration-distributed/opensearch.properties:/root/conf/opensearch.properties
+      - ./sample-configuration-distributed/blob.properties:/root/conf/blob.properties
+      - ./sample-configuration-distributed/rabbitmq.properties:/root/conf/rabbitmq.properties
+    networks:
+      - james
+
+  opensearch:
+    image: opensearchproject/opensearch:2.8.0
+    container_name: opensearch
+    healthcheck:
+      test: curl -s http://opensearch:9200 >/dev/null || exit 1
+      interval: 3s
+      timeout: 10s
+      retries: 5
+    environment:
+      - discovery.type=single-node
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+    networks:
+      - james
+
+  postgres:
+    image: postgres:16.3
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=james
+      - POSTGRES_USER=james
+      - POSTGRES_PASSWORD=secret1
+    networks:
+      - james
+
+  s3:
+    image: registry.scality.com/cloudserver/cloudserver:8.7.25
+    container_name: s3.docker.test
+    environment:
+      - SCALITY_ACCESS_KEY_ID=accessKey1
+      - SCALITY_SECRET_ACCESS_KEY=secretKey1
+      - LOG_LEVEL=trace
+      - REMOTE_MANAGEMENT_DISABLE=1
+    networks:
+      - james
+
+  rabbitmq:
+    image: rabbitmq:3.12.1-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - james
+
+networks:
+  james:

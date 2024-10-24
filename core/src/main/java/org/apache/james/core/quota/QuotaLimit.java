@@ -26,6 +26,65 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class QuotaLimit {
+    public static class QuotaLimitKey {
+        public static QuotaLimitKey of(QuotaComponent component, QuotaScope scope, String identifier, QuotaType quotaType) {
+            return new QuotaLimitKey(component, scope, identifier, quotaType);
+        }
+
+        private final QuotaComponent quotaComponent;
+        private final QuotaScope quotaScope;
+        private final String identifier;
+        private final QuotaType quotaType;
+
+        public QuotaComponent getQuotaComponent() {
+            return quotaComponent;
+        }
+
+        public QuotaScope getQuotaScope() {
+            return quotaScope;
+        }
+
+        public String getIdentifier() {
+            return identifier;
+        }
+
+        public QuotaType getQuotaType() {
+            return quotaType;
+        }
+
+        private QuotaLimitKey(QuotaComponent quotaComponent, QuotaScope quotaScope, String identifier, QuotaType quotaType) {
+            this.quotaComponent = quotaComponent;
+            this.quotaScope = quotaScope;
+            this.identifier = identifier;
+            this.quotaType = quotaType;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(quotaComponent, quotaScope, identifier, quotaType);
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof QuotaLimitKey) {
+                QuotaLimitKey other = (QuotaLimitKey) o;
+                return Objects.equals(quotaComponent, other.quotaComponent)
+                    && Objects.equals(quotaScope, other.quotaScope)
+                    && Objects.equals(identifier, other.identifier)
+                    && Objects.equals(quotaType, other.quotaType);
+            }
+            return false;
+        }
+
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("quotaComponent", quotaComponent)
+                .add("quotaScope", quotaScope)
+                .add("identifier", identifier)
+                .add("quotaType", quotaType)
+                .toString();
+        }
+    }
 
     public static class Builder {
         private QuotaComponent quotaComponent;

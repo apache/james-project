@@ -1,0 +1,19 @@
+{
+  "name": "SMTP Plugin",
+  "id": "smtp",
+  "instrumentation": [
+    {
+      "className": "org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler",
+      "methodName": "onCommand",
+      "methodParameterTypes": [
+        ".."
+      ],
+      "captureKind": "transaction",
+      "transactionType": "SMTP",
+      "transactionNameTemplate": "SMTP command : {{this.class.name}}",
+      "alreadyInTransactionBehavior": "capture-trace-entry",
+      "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
+      "timerName": "smtpProcessor"
+    }
+  ]
+}

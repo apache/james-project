@@ -1,0 +1,10 @@
+= Postgresql James server benchmark
+:navtitle: James benchmarks
+
+:server-name: Postgresql James server
+:backend-database-extend-sample: PostgreSQL 16 as main database: 1 nodes (OVH instance, 2 CPU / 7 GB RAM, 160 GB SSD)
+:provision_file_url: https://github.com/apache/james-project/blob/d8225ed7c5ca8d79cde3b1c8755ee9ffcf462e29/server/apps/postgres-app/provision.sh
+:benchmark_prepare_extend: servers:postgres/benchmark/benchmark_prepare.adoc
+:james-imap-base-performance-picture: james-imap-base-performance-postgres.png
+
+include::partial$benchmark/james-benchmark.adoc[]

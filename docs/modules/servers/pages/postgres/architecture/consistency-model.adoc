@@ -1,0 +1,11 @@
+= Postgresql James server &mdash; Consistency Model
+:navtitle: Consistency Model
+
+:backend-name: postgres
+:backend-name-cap: Postgres
+:server-name: Postgresql James server
+:mailet-repository-path-prefix: postgres
+:xref-base: postgres
+:data_replication_extend: servers:postgres/architecture/consistency_model_data_replication_extend.adoc
+
+include::partial$architecture/consistency-model.adoc[]

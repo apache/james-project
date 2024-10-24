@@ -26,6 +26,59 @@ import com.google.common.base.Preconditions;
 
 public class QuotaCurrentValue {
 
+    public static class Key {
+
+        public static Key of(QuotaComponent component, String identifier, QuotaType quotaType) {
+            return new Key(component, identifier, quotaType);
+        }
+
+        private final QuotaComponent quotaComponent;
+        private final String identifier;
+        private final QuotaType quotaType;
+
+        public QuotaComponent getQuotaComponent() {
+            return quotaComponent;
+        }
+
+        public String getIdentifier() {
+            return identifier;
+        }
+
+        public QuotaType getQuotaType() {
+            return quotaType;
+        }
+
+        private Key(QuotaComponent quotaComponent, String identifier, QuotaType quotaType) {
+            this.quotaComponent = quotaComponent;
+            this.identifier = identifier;
+            this.quotaType = quotaType;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(quotaComponent, identifier, quotaType);
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Key) {
+                Key other = (Key) o;
+                return Objects.equals(quotaComponent, other.quotaComponent)
+                    && Objects.equals(identifier, other.identifier)
+                    && Objects.equals(quotaType, other.quotaType);
+            }
+            return false;
+        }
+
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("quotaComponent", quotaComponent)
+                .add("identifier", identifier)
+                .add("quotaType", quotaType)
+                .toString();
+        }
+    }
+
     public static class Builder {
         private QuotaComponent quotaComponent;
         private String identifier;

@@ -22,11 +22,12 @@ package org.apache.james.webadmin.data.jmap;
 import static org.apache.james.webadmin.data.jmap.UploadRepositoryCleanupTask.CleanupScope.EXPIRED;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
 
-import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
+import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
@@ -40,6 +41,7 @@ import reactor.core.publisher.Mono;
 public class UploadRepositoryCleanupTask implements Task {
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadRepositoryCleanupTask.class);
     public static final TaskType TASK_TYPE = TaskType.of("UploadRepositoryCleanupTask");
+    public static final Duration EXPIRE_DURATION = Duration.ofDays(7);
 
     enum CleanupScope {
         EXPIRED;
@@ -79,10 +81,10 @@ public class UploadRepositoryCleanupTask implements Task {
         }
     }
 
-    private final CassandraUploadRepository uploadRepository;
+    private final UploadRepository uploadRepository;
     private final CleanupScope scope;
 
-    public UploadRepositoryCleanupTask(CassandraUploadRepository uploadRepository, CleanupScope scope) {
+    public UploadRepositoryCleanupTask(UploadRepository uploadRepository, CleanupScope scope) {
         this.uploadRepository = uploadRepository;
         this.scope = scope;
     }
@@ -90,7 +92,7 @@ public class UploadRepositoryCleanupTask implements Task {
     @Override
     public Result run() {
         if (EXPIRED.equals(scope)) {
-            return uploadRepository.purge()
+            return Mono.from(uploadRepository.deleteByUploadDateBefore(EXPIRE_DURATION))
                 .thenReturn(Result.COMPLETED)
                 .onErrorResume(error -> {
                     LOGGER.error("Error when cleaning upload repository", error);

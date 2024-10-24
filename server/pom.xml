@@ -46,6 +46,7 @@
         <module>apps/jpa-app</module>
         <module>apps/jpa-smtp-app</module>
         <module>apps/memory-app</module>
+        <module>apps/postgres-app</module>
         <module>apps/scaling-pulsar-smtp</module>
         <module>apps/spring-app</module>
         <module>apps/webadmin-cli</module>
@@ -67,10 +68,12 @@
         <module>data/data-file</module>
         <module>data/data-jmap</module>
         <module>data/data-jmap-cassandra</module>
+        <module>data/data-jmap-postgres</module>
         <module>data/data-jpa</module>
         <module>data/data-ldap</module>
         <module>data/data-library</module>
         <module>data/data-memory</module>
+        <module>data/data-postgres</module>
 
         <module>dns-service/dnsservice-api</module>
         <module>dns-service/dnsservice-dnsjava</module>
@@ -120,6 +123,7 @@
         <module>task/task-distributed</module>
         <module>task/task-json</module>
         <module>task/task-memory</module>
+        <module>task/task-postgres</module>
 
         <module>testing</module>
 

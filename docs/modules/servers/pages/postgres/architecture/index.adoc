@@ -1,0 +1,13 @@
+= Postgresql James server &mdash; Architecture
+:navtitle: Architecture
+
+:backend-name: postgres
+:server-name: Postgresql James server
+:backend-storage-introduce: Postgresql is used for metadata storage. Postgresql is efficient for a very high workload.
+:storage-picture-file-name: storage_james_postgres.png
+:mailet-repository-path-prefix: postgres
+:xref-base: postgres
+:mailqueue-combined-extend: servers:postgres/architecture/mailqueue_combined_extend.adoc
+:mailqueue-combined-extend-backend:
+
+include::partial$architecture/index.adoc[]

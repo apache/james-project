@@ -41,6 +41,7 @@
         <module>jpa</module>
         <module>lucenesearch</module>
         <module>opensearch</module>
+        <module>postgres</module>
         <module>rabbitmq</module>
     </modules>
 
@@ -85,6 +86,12 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-jpa-lucene</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-mpt-imapmailbox-postgres</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>

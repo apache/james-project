@@ -38,8 +38,6 @@ import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 
-import reactor.core.publisher.Flux;
-
 public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
     private InMemoryMailboxManager mailboxManager;
 
@@ -77,7 +75,6 @@ public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorit
     }
 
     @Override
-    protected Flux<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-        return Flux.empty();
+    protected void saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
     }
 }

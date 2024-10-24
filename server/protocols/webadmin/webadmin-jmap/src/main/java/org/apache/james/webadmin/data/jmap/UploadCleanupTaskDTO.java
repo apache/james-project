@@ -21,7 +21,7 @@ package org.apache.james.webadmin.data.jmap;
 
 import java.util.Locale;
 
-import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
+import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -48,7 +48,7 @@ public class UploadCleanupTaskDTO implements TaskDTO {
         return scope;
     }
 
-    public static TaskDTOModule<UploadRepositoryCleanupTask, UploadCleanupTaskDTO> module(CassandraUploadRepository uploadRepository) {
+    public static TaskDTOModule<UploadRepositoryCleanupTask, UploadCleanupTaskDTO> module(UploadRepository uploadRepository) {
         return DTOModule
             .forDomainObject(UploadRepositoryCleanupTask.class)
             .convertToDTO(UploadCleanupTaskDTO.class)

@@ -1,4 +1,4 @@
-# 68. Native PostgreSQL adoption
+# 70. Native PostgreSQL adoption
 
 Date: 2023-10-31
 

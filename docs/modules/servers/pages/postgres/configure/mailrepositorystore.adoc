@@ -1,0 +1,9 @@
+= Postgresql James Server &mdash; mailrepositorystore.xml
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:pages-path: postgres
+:server-name: Postgresql James server
+:mailet-repository-path-prefix: postgres
+:mail-repository-protocol: postgres
+:mail-repository-class: org.apache.james.mailrepository.postgres.PostgresMailRepository
+include::partial$configure/mailrepositorystore.adoc[]

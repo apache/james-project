@@ -37,6 +37,7 @@
         <module>event-store-api</module>
         <module>event-store-cassandra</module>
         <module>event-store-memory</module>
+        <module>event-store-postgres</module>
     </modules>
 
 </project>

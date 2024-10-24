@@ -35,6 +35,7 @@
     <modules>
         <module>distributed-webadmin-integration-test</module>
         <module>memory-webadmin-integration-test</module>
+        <module>postgres-webadmin-integration-test</module>
         <module>webadmin-integration-test-common</module>
     </modules>
 </project>

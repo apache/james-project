@@ -52,8 +52,6 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import reactor.core.publisher.Flux;
-
 public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
     private CassandraMailboxManager mailboxManager;
     private CassandraThreadDAO threadDAO;
@@ -94,8 +92,10 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
     }
 
     @Override
-    protected Flux<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-        return threadDAO.insertSome(username, hashMimeMessagesIds(mimeMessageIds), messageId, threadId, hashSubject(baseSubject));
+    protected void saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
+        threadDAO.insertSome(username, hashMimeMessagesIds(mimeMessageIds), messageId, threadId, hashSubject(baseSubject))
+            .then()
+            .block();
     }
 
     @Test

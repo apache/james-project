@@ -1,0 +1,40 @@
+=== Postgresql prepare benchmark
+
+==== Install extension pg_stat_statements
+
+The `pg_stat_statements` extension provides a means for tracking execution statistics of all SQL statements executed by a server.
+The extension is useful for identifying high-traffic queries and for monitoring the performance of the server.
+For more information, see the [PostgreSQL documentation](https://www.postgresql.org/docs/current/pgstatstatements.html).
+
+To install the extension, connect to the database and run the following query:
+
+[source,sql]
+----
+create extension if not exists pg_stat_statements;
+alter system set shared_preload_libraries='pg_stat_statements';
+
+-- restart postgres
+-- optional
+alter system set pg_stat_statements.max = 100000;
+alter system set pg_stat_statements.track = 'all';
+----
+
+To reset statistics, use: `select pg_stat_statements_reset()`;
+
+The response fields that we are interested in are:
+
+- `query`: Text of a representative statement
+
+- `calls`: Number of times the statement was executed
+
+- `total_exec_time`, `mean_exec_time`, `min_exec_time`, `max_exec_time`
+
+To view the statistics, run the following query:
+
+```sql
+select query, mean_exec_time, total_exec_time, calls from pg_stat_statements order by total_exec_time desc;
+```
+
+The result sample:
+
+image::postgres_pg_stat_statements.png[Storage responsibilities for the {server-name}]

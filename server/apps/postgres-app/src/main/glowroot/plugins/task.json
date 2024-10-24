@@ -1,0 +1,19 @@
+{
+  "name": "Task Plugin",
+  "id": "task",
+  "instrumentation": [
+    {
+      "className": "org.apache.james.task.Task",
+      "methodName": "run",
+      "methodParameterTypes": [
+        ".."
+      ],
+      "captureKind": "transaction",
+      "transactionType": "TASK",
+      "transactionNameTemplate": "TASK : {{this.class.name}}",
+      "alreadyInTransactionBehavior": "capture-trace-entry",
+      "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
+      "timerName": "task"
+    }
+  ]
+}

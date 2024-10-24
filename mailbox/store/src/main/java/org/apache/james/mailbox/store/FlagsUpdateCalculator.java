@@ -48,4 +48,11 @@ public class FlagsUpdateCalculator {
         return updatedFlags;
     }
 
+    public Flags providedFlags() {
+        return providedFlags;
+    }
+
+    public MessageManager.FlagsUpdateMode getMode() {
+        return mode;
+    }
 }

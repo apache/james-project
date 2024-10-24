@@ -35,7 +35,9 @@ import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement
 import org.apache.james.jmap.api.filtering.impl.FilterUsernameChangeTaskStep;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
 import org.apache.james.jmap.api.identity.IdentityUserDeletionTaskStep;
+import org.apache.james.jmap.api.projections.DefaultEmailQueryViewManager;
 import org.apache.james.jmap.api.projections.EmailQueryView;
+import org.apache.james.jmap.api.projections.EmailQueryViewManager;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
 import org.apache.james.jmap.api.pushsubscription.PushDeleteUserDataTaskStep;
@@ -95,6 +97,8 @@ public class CassandraJmapModule extends AbstractModule {
 
         bind(CassandraEmailQueryView.class).in(Scopes.SINGLETON);
         bind(EmailQueryView.class).to(CassandraEmailQueryView.class);
+        bind(DefaultEmailQueryViewManager.class).in(Scopes.SINGLETON);
+        bind(EmailQueryViewManager.class).to(DefaultEmailQueryViewManager.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraMessageFastViewProjectionModule.MODULE);
