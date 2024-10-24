@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.UuidBackedAttachmentId;
@@ -38,7 +38,7 @@ class PostgresAttachmentBlobReferenceSourceTest {
 
     private static final AttachmentId ATTACHMENT_ID = UuidBackedAttachmentId.random();
     private static final AttachmentId ATTACHMENT_ID_2 = UuidBackedAttachmentId.random();
-    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+    private static final BlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
@@ -49,7 +49,7 @@ class PostgresAttachmentBlobReferenceSourceTest {
 
     @BeforeEach
     void beforeEach() {
-        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         postgresAttachmentDAO = new PostgresAttachmentDAO(postgresExtension.getDefaultPostgresExecutor(),
             blobIdFactory);
         testee = new PostgresAttachmentBlobReferenceSource(postgresAttachmentDAO);
@@ -69,7 +69,7 @@ class PostgresAttachmentBlobReferenceSourceTest {
             .type("application/json")
             .size(36)
             .build();
-        BlobId blobId1 = BLOB_ID_FACTORY.from("blobId");
+        BlobId blobId1 = BLOB_ID_FACTORY.parse("blobId");
 
         postgresAttachmentDAO.storeAttachment(attachment1, blobId1).block();
 
@@ -79,7 +79,7 @@ class PostgresAttachmentBlobReferenceSourceTest {
             .type("application/json")
             .size(36)
             .build();
-        BlobId blobId2 = BLOB_ID_FACTORY.from("blobId");
+        BlobId blobId2 = BLOB_ID_FACTORY.parse("blobId");
         postgresAttachmentDAO.storeAttachment(attachment2, blobId2).block();
 
         assertThat(testee.listReferencedBlobs().collectList().block())
@@ -94,7 +94,7 @@ class PostgresAttachmentBlobReferenceSourceTest {
             .type("application/json")
             .size(36)
             .build();
-        BlobId blobId = BLOB_ID_FACTORY.from("blobId");
+        BlobId blobId = BLOB_ID_FACTORY.parse("blobId");
         postgresAttachmentDAO.storeAttachment(attachment1, blobId).block();
 
         AttachmentMetadata attachment2 = AttachmentMetadata.builder()

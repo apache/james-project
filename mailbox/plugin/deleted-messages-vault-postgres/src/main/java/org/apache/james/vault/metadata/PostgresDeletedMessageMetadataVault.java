@@ -93,7 +93,7 @@ public class PostgresDeletedMessageMetadataVault implements DeletedMessageMetada
     private Function<Record, StorageInformation> toStorageInformation() {
         return record -> StorageInformation.builder()
             .bucketName(BucketName.of(record.get(BUCKET_NAME)))
-            .blobId(blobIdFactory.from(record.get(BLOB_ID)));
+            .blobId(blobIdFactory.parse(record.get(BLOB_ID)));
     }
 
     @Override
