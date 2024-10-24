@@ -23,6 +23,8 @@ import java.util.Set;
 
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
+import org.apache.james.jmap.method.Method;
+import org.apache.james.jmap.method.SearchSnippetGetMethod;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.NoACLMapper;
@@ -99,9 +101,11 @@ import org.apache.james.modules.webadmin.TasksCleanupRoutesModule;
 import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 
@@ -124,9 +128,17 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new WebAdminMailOverWebModule(),
         new UserIdentityModule());
 
+    public static final Module JMAP_DISTRIBUTED_METHOD_SUPPORTED_MODULE = new AbstractModule() {
+        @Override
+        protected void configure() {
+            Multibinder.newSetBinder(binder(), Method.class).addBinding().to(SearchSnippetGetMethod.class);
+        }
+    };
+
     public static final Module PROTOCOLS = Modules.combine(
         new LMTPServerModule(),
         new JMAPServerModule(),
+        JMAP_DISTRIBUTED_METHOD_SUPPORTED_MODULE,
         new JMAPEventBusModule(),
         new ManageSieveServerModule(),
         new POP3ServerModule(),

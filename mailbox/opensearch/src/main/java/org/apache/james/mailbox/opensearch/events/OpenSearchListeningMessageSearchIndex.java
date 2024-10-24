@@ -271,7 +271,8 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
             SearchCapabilities.FullText,
             SearchCapabilities.Attachment,
             SearchCapabilities.AttachmentFileName,
-            SearchCapabilities.PartialEmailMatch);
+            SearchCapabilities.PartialEmailMatch,
+            SearchCapabilities.HighlightSearch);
     }
 
     @Override
