@@ -61,6 +61,7 @@ public class DeletedSearchOverrideTest {
         assertThat(testee.applicable(
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsSet(DELETED))
+                .sorts(SearchQuery.DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();

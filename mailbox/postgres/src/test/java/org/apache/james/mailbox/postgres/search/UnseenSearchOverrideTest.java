@@ -60,6 +60,7 @@ public class UnseenSearchOverrideTest {
         assertThat(testee.applicable(
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsUnSet(SEEN))
+                .sorts(SearchQuery.DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
@@ -70,6 +71,7 @@ public class UnseenSearchOverrideTest {
         assertThat(testee.applicable(
             SearchQuery.builder()
                 .andCriteria(SearchQuery.not(SearchQuery.flagIsSet(SEEN)))
+                .sorts(SearchQuery.DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
@@ -81,6 +83,7 @@ public class UnseenSearchOverrideTest {
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsUnSet(SEEN))
                 .andCriteria(SearchQuery.all())
+                .sorts(SearchQuery.DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
@@ -92,6 +95,7 @@ public class UnseenSearchOverrideTest {
             SearchQuery.builder()
                 .andCriteria(SearchQuery.not(SearchQuery.flagIsSet(SEEN)))
                 .andCriteria(SearchQuery.all())
+                .sorts(SearchQuery.DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
@@ -103,6 +107,7 @@ public class UnseenSearchOverrideTest {
             SearchQuery.builder()
                 .andCriteria(SearchQuery.flagIsUnSet(SEEN))
                 .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.MIN_VALUE, MessageUid.MAX_VALUE)))
+                .sorts(SearchQuery.DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
@@ -114,6 +119,7 @@ public class UnseenSearchOverrideTest {
             SearchQuery.builder()
                 .andCriteria(SearchQuery.not(SearchQuery.flagIsSet(SEEN)))
                 .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.MIN_VALUE, MessageUid.MAX_VALUE)))
+                .sorts(SearchQuery.DEFAULT_SORTS)
                 .build(),
             MAILBOX_SESSION))
             .isTrue();
