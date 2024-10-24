@@ -21,7 +21,8 @@ package org.apache.james.vault.metadata;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
@@ -34,7 +35,7 @@ class PostgresDeletedMessageMetadataVaultTest implements DeletedMessageMetadataV
 
     @Override
     public DeletedMessageMetadataVault metadataVault() {
-        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         DeletedMessageWithStorageInformationConverter dtoConverter = new DeletedMessageWithStorageInformationConverter(blobIdFactory,
             messageIdFactory, new InMemoryId.Factory());

@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import jakarta.mail.Flags;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -50,7 +50,7 @@ public class UidSearchOverrideTest {
 
     @BeforeEach
     void setUp() {
-        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getDefaultPostgresExecutor(), new HashBlobId.Factory());
+        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getDefaultPostgresExecutor(), new PlainBlobId.Factory());
         postgresMailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExtension.getDefaultPostgresExecutor());
         testee = new UidSearchOverride(postgresExtension.getExecutorFactory());
     }

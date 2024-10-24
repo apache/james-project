@@ -23,9 +23,10 @@ import java.time.Clock;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.upload.UploadRepositoryContract;
@@ -45,7 +46,7 @@ class PostgresUploadRepositoryTest implements UploadRepositoryContract {
     @BeforeEach
     void setUp() {
         clock = new UpdatableTickingClock(Clock.systemUTC().instant());
-        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
         PostgresUploadDAO uploadDAO = new PostgresUploadDAO(postgresExtension.getDefaultPostgresExecutor(), blobIdFactory);
         PostgresUploadDAO.Factory uploadFactory = new PostgresUploadDAO.Factory(blobIdFactory, postgresExtension.getExecutorFactory());

@@ -26,7 +26,7 @@ import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
@@ -55,7 +55,7 @@ public class PostgresMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
-    public static final BlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+    public static final BlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 
     public static PostgresMailboxManager provideMailboxManager(PostgresExtension postgresExtension, PreDeletionHooks preDeletionHooks) {
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, BLOB_ID_FACTORY);
@@ -85,7 +85,7 @@ public class PostgresMailboxManagerProvider {
     }
 
     public static PostgresMailboxSessionMapperFactory provideMailboxSessionMapperFactory(PostgresExtension postgresExtension) {
-        BlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
 
         return provideMailboxSessionMapperFactory(postgresExtension, blobIdFactory, blobStore);

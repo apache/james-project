@@ -113,7 +113,7 @@ public class PostgresMessageRetriever {
 
         private Mono<Content> retrieveFullContent(Record messageRecord) {
             return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(),
-                    blobIdFactory.from(messageRecord.get(BODY_BLOB_ID)),
+                    blobIdFactory.parse(messageRecord.get(BODY_BLOB_ID)),
                     SIZE_BASED))
                 .map(bodyBytes -> new HeaderAndBodyByteContent(messageRecord.get(HEADER_CONTENT), bodyBytes));
         }

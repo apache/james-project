@@ -28,7 +28,7 @@ import java.util.UUID;
 import jakarta.mail.Flags;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageId;
@@ -59,7 +59,7 @@ public class PostgresMessageBlobReferenceSourceTest {
 
     @BeforeEach
     void beforeEach() {
-        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getDefaultPostgresExecutor(), new HashBlobId.Factory());
+        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getDefaultPostgresExecutor(), new PlainBlobId.Factory());
         blobReferenceSource = new PostgresMessageBlobReferenceSource(postgresMessageDAO);
     }
 

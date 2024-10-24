@@ -81,7 +81,7 @@ public class PostgresAttachmentDAO {
                     .messageId(PostgresMessageId.Factory.of(row.get(PostgresAttachmentTable.MESSAGE_ID)))
                     .size(row.get(PostgresAttachmentTable.SIZE))
                     .build(),
-                blobIdFactory.from(row.get(PostgresAttachmentTable.BLOB_ID))));
+                blobIdFactory.parse(row.get(PostgresAttachmentTable.BLOB_ID))));
     }
 
     public Flux<AttachmentMetadata> getAttachments(Collection<AttachmentId> attachmentIds) {
@@ -116,12 +116,12 @@ public class PostgresAttachmentDAO {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(PostgresAttachmentTable.BLOB_ID)
                 .from(PostgresAttachmentTable.TABLE_NAME)
                 .where(PostgresAttachmentTable.MESSAGE_ID.eq(messageId.asUuid()))))
-            .map(row -> blobIdFactory.from(row.get(PostgresAttachmentTable.BLOB_ID)));
+            .map(row -> blobIdFactory.parse(row.get(PostgresAttachmentTable.BLOB_ID)));
     }
 
     public Flux<BlobId> listBlobs() {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(PostgresAttachmentTable.BLOB_ID)
                 .from(PostgresAttachmentTable.TABLE_NAME)))
-            .map(row -> blobIdFactory.from(row.get(PostgresAttachmentTable.BLOB_ID)));
+            .map(row -> blobIdFactory.parse(row.get(PostgresAttachmentTable.BLOB_ID)));
     }
 }

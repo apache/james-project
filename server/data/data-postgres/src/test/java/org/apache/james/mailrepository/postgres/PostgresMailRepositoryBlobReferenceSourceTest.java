@@ -27,7 +27,7 @@ import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -52,7 +52,7 @@ public class PostgresMailRepositoryBlobReferenceSourceTest {
 
     @BeforeEach
     void beforeEach() {
-        BlobId.Factory factory = new HashBlobId.Factory();
+        BlobId.Factory factory = new PlainBlobId.Factory();
         BlobStore blobStore = MemoryBlobStoreFactory.builder()
             .blobIdFactory(factory)
             .defaultBucketName()
