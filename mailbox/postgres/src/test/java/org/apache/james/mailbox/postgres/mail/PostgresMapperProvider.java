@@ -27,7 +27,7 @@ import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -65,7 +65,7 @@ public class PostgresMapperProvider implements MapperProvider {
         this.postgresExtension = postgresExtension;
         this.updatableTickingClock = new UpdatableTickingClock(Instant.now());
         this.messageIdFactory = new PostgresMessageId.Factory();
-        this.blobIdFactory = new HashBlobId.Factory();
+        this.blobIdFactory = new PlainBlobId.Factory();
         this.blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
         this.messageUidProvider = new PostgresUidProvider(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()));
     }

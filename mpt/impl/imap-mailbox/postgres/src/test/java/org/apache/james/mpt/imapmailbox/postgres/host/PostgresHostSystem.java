@@ -28,7 +28,7 @@ import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
 import org.apache.james.backends.postgres.quota.PostgresQuotaLimitDAO;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -106,7 +106,7 @@ public class PostgresHostSystem extends JamesImapHostSystem {
     public void beforeTest() throws Exception {
         super.beforeTest();
 
-        BlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
 
         PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, blobIdFactory,

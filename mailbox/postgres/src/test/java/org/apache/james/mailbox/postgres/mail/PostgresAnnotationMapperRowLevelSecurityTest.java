@@ -28,7 +28,7 @@ import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
@@ -72,7 +72,7 @@ public class PostgresAnnotationMapperRowLevelSecurityTest {
 
     @BeforeEach
     public void setUp() {
-        BlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(),
             new UpdatableTickingClock(Instant.now()),
             new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),

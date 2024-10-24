@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutionException;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -51,7 +51,7 @@ class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
 
     @BeforeEach
     void setUp() {
-        blobStore = new PostgresBlobStoreDAO(postgresExtension.getDefaultPostgresExecutor(), new HashBlobId.Factory());
+        blobStore = new PostgresBlobStoreDAO(postgresExtension.getDefaultPostgresExecutor(), new PlainBlobId.Factory());
     }
 
     @Override
