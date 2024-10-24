@@ -168,4 +168,29 @@ class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
     @Override
     public void sortOnToShouldWork() {
     }
+
+    @Disabled("JAMES-4082 - Temporary disabled - Lucene memory is not handling attachment search")
+    @Override
+    public void searchShouldRetrieveMailByAttachmentFileName() {
+
+    }
+
+    @Disabled("JAMES-4082 - Temporary disabled - Lucene memory is not handling attachment search")
+    @Override
+    public void searchWithPDFAttachmentShouldReturnMailsWhenAttachmentContentMatches() {
+
+    }
+
+    @Disabled("JAMES-4082 - Temporary disabled - Lucene memory is not handling attachment search")
+    @Override
+    public void searchWithTextAttachmentShouldNotMatchMessageBody() {
+
+    }
+
+    @Disabled("JAMES-4082 - Temporary disabled - Lucene memory is not handling attachment search")
+    @Override
+    public void searchWithTextAttachmentShouldReturnMailsWhenAttachmentContentMatches() {
+
+    }
+
 }

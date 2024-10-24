@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -85,6 +88,8 @@ public class LuceneSearchHighlighter implements SearchHighlighter {
         this.formatter = new SimpleHTMLFormatter(searchHighlighterConfiguration.preTagFormatter(), searchHighlighterConfiguration.postTagFormatter());
     }
 
+    @Inject
+    @Singleton
     public LuceneSearchHighlighter(LuceneMessageSearchIndex luceneMessageSearchIndex,
                                    SearchHighlighterConfiguration searchHighlighterConfiguration,
                                    MessageId.Factory messageIdFactory,
@@ -98,7 +103,7 @@ public class LuceneSearchHighlighter implements SearchHighlighter {
 
     @Override
     public Flux<SearchSnippet> highlightSearch(List<MessageId> messageIds, MultimailboxesSearchQuery expression, MailboxSession session) {
-        if (messageIds.isEmpty()) {
+        if (messageIds.isEmpty() || expression.getSearchQuery().getCriteria().isEmpty()) {
             return Flux.empty();
         }
         return storeMailboxManager.getInMailboxIds(expression, session)

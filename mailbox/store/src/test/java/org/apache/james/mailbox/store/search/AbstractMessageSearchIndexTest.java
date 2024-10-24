@@ -1430,7 +1430,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    void searchWithTextAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
+    protected void searchWithTextAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
         assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
         ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
@@ -1445,7 +1445,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    void searchWithTextAttachmentShouldNotMatchMessageBody() throws Exception {
+    protected void searchWithTextAttachmentShouldNotMatchMessageBody() throws Exception {
         assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
         myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
@@ -1460,7 +1460,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    void searchWithPDFAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
+    protected void searchWithPDFAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
         assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
         byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
         Multipart multipart = MultipartBuilder.create("mixed")
@@ -1607,7 +1607,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    void searchShouldRetrieveMailByAttachmentFileName() throws Exception {
+    protected void searchShouldRetrieveMailByAttachmentFileName() throws Exception {
         assumeTrue(messageSearchIndex.getSupportedCapabilities(storeMailboxManager.getSupportedMessageCapabilities())
             .contains(MailboxManager.SearchCapabilities.AttachmentFileName));
 
