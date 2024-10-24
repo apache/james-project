@@ -40,7 +40,6 @@ import reactor.core.publisher.Mono;
 
 public class CassandraEventDeadLettersDAO {
     private final CassandraAsyncExecutor executor;
-    private final EventSerializer eventSerializer;
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement deleteAllEventsOfAGroupStatement;
@@ -49,9 +48,8 @@ public class CassandraEventDeadLettersDAO {
     private final PreparedStatement containEventsStatement;
 
     @Inject
-    public CassandraEventDeadLettersDAO(CqlSession session, EventSerializer eventSerializer) {
+    public CassandraEventDeadLettersDAO(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.eventSerializer = eventSerializer;
         this.insertStatement = prepareInsertStatement(session);
         this.deleteStatement = prepareDeleteStatement(session);
         this.deleteAllEventsOfAGroupStatement = prepareDeleteAllEventsOfAGroupStatement(session);
@@ -103,11 +101,11 @@ public class CassandraEventDeadLettersDAO {
             .build());
     }
 
-    Mono<Void> store(Group group, Event failedEvent, EventDeadLetters.InsertionId insertionId) {
+    Mono<Void> store(Group group, String failedEvent, EventDeadLetters.InsertionId insertionId) {
         return executor.executeVoid(insertStatement.bind()
                 .setString(GROUP, group.asString())
                 .setUuid(INSERTION_ID, insertionId.getId())
-                .setString(EVENT, eventSerializer.toJson(failedEvent)));
+                .setString(EVENT, failedEvent));
     }
 
     Mono<Void> removeEvent(Group group, EventDeadLetters.InsertionId failedInsertionId) {
@@ -121,11 +119,11 @@ public class CassandraEventDeadLettersDAO {
             .setString(GROUP, group.asString()));
     }
 
-    Mono<Event> retrieveFailedEvent(Group group, EventDeadLetters.InsertionId insertionId) {
+    Mono<String> retrieveFailedEvent(Group group, EventDeadLetters.InsertionId insertionId) {
         return executor.executeSingleRow(selectEventStatement.bind()
                 .setString(GROUP, group.asString())
                 .setUuid(INSERTION_ID, insertionId.getId()))
-            .map(row -> deserializeEvent(row.getString(EVENT)));
+            .map(row -> row.getString(EVENT));
     }
 
     Flux<EventDeadLetters.InsertionId> retrieveInsertionIdsWithGroup(Group group) {
@@ -136,9 +134,5 @@ public class CassandraEventDeadLettersDAO {
 
     Mono<Boolean> containEvents() {
         return executor.executeReturnExists(containEventsStatement.bind());
-    }
-
-    private Event deserializeEvent(String serializedEvent) {
-        return eventSerializer.asEvent(serializedEvent);
     }
 }

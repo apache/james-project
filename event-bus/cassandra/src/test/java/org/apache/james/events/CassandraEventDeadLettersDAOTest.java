@@ -39,17 +39,21 @@ class CassandraEventDeadLettersDAOTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraClusterExtension = new CassandraClusterExtension(CassandraEventDeadLettersModule.MODULE);
 
+    static EventSerializer eventSerializer = new EventBusTestFixture.TestEventSerializer();
+    static String EVENT_1_JSON = eventSerializer.toJson(EVENT_1);
+    static String EVENT_2_JSON = eventSerializer.toJson(EVENT_2);
+    static String EVENT_3_JSON = eventSerializer.toJson(EventDeadLettersContract.EVENT_3);
+
     private CassandraEventDeadLettersDAO cassandraEventDeadLettersDAO;
 
     @BeforeEach
     void setUp(CassandraCluster cassandraCluster) {
-        EventSerializer eventSerializer = new EventBusTestFixture.TestEventSerializer();
-        cassandraEventDeadLettersDAO = new CassandraEventDeadLettersDAO(cassandraCluster.getConf(), eventSerializer);
+        cassandraEventDeadLettersDAO = new CassandraEventDeadLettersDAO(cassandraCluster.getConf());
     }
 
     @Test
     void removeEventShouldSucceededWhenRemoveStoredEvent() {
-        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1_JSON, INSERTION_ID_1).block();
 
         cassandraEventDeadLettersDAO.removeEvent(GROUP_A, INSERTION_ID_1).block();
 
@@ -61,9 +65,9 @@ class CassandraEventDeadLettersDAOTest {
 
     @Test
     void removeAllEventsOfAGroupShouldWork() {
-        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
-        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1, INSERTION_ID_2).block();
-        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1, INSERTION_ID_3).block();
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1_JSON, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1_JSON, INSERTION_ID_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1_JSON, INSERTION_ID_3).block();
 
         cassandraEventDeadLettersDAO.removeEvents(GROUP_A).block();
 
@@ -83,13 +87,13 @@ class CassandraEventDeadLettersDAOTest {
 
     @Test
     void retrieveFailedEventShouldReturnStoredEvent() {
-        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1, INSERTION_ID_1).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2, INSERTION_ID_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_A, EVENT_1_JSON, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2_JSON, INSERTION_ID_2).block();
 
         assertThat(cassandraEventDeadLettersDAO
                 .retrieveFailedEvent(GROUP_B, INSERTION_ID_2)
                 .blockOptional().get())
-            .isEqualTo(EVENT_2);
+            .isEqualTo(EVENT_2_JSON);
     }
 
     @Test
@@ -102,9 +106,9 @@ class CassandraEventDeadLettersDAOTest {
 
     @Test
     void retrieveInsertionIdsWithGroupShouldReturnStoredInsertionId() {
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_1).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2, INSERTION_ID_2).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EventDeadLettersContract.EVENT_3, INSERTION_ID_3).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1_JSON, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_2_JSON, INSERTION_ID_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_3_JSON, INSERTION_ID_3).block();
 
         assertThat(cassandraEventDeadLettersDAO
                 .retrieveInsertionIdsWithGroup(GROUP_B)
@@ -114,7 +118,7 @@ class CassandraEventDeadLettersDAOTest {
 
     @Test
     void shouldReturnTrueWhenEventStored() {
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1_JSON, INSERTION_ID_1).block();
         assertThat(cassandraEventDeadLettersDAO.containEvents().block()).isTrue();
     }
 
@@ -125,9 +129,9 @@ class CassandraEventDeadLettersDAOTest {
 
     @Test
     void shouldReturnTrueWhenEventsStoredAndRemovedSome() {
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_1).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_2).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_3).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1_JSON, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1_JSON, INSERTION_ID_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1_JSON, INSERTION_ID_3).block();
 
         assertThat(cassandraEventDeadLettersDAO.containEvents().block()).isTrue();
 
@@ -138,9 +142,9 @@ class CassandraEventDeadLettersDAOTest {
 
     @Test
     void shouldReturnFalseWhenRemovedAllEventsStored() {
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_1).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_2).block();
-        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1, INSERTION_ID_3).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1_JSON, INSERTION_ID_1).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1_JSON, INSERTION_ID_2).block();
+        cassandraEventDeadLettersDAO.store(GROUP_B, EVENT_1_JSON, INSERTION_ID_3).block();
 
         assertThat(cassandraEventDeadLettersDAO.containEvents().block()).isTrue();
 

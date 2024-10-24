@@ -37,8 +37,9 @@ class CassandraEventDeadLettersHealthCheckTest implements EventDeadLettersHealth
     @BeforeEach
     void setUp(CassandraCluster cassandraCluster, DockerCassandra dockerCassandra) {
         EventSerializer eventSerializer = new TestEventSerializer();
-        eventDeadLetters = new CassandraEventDeadLetters(new CassandraEventDeadLettersDAO(cassandraCluster.getConf(), eventSerializer),
-                                                         new CassandraEventDeadLettersGroupDAO(cassandraCluster.getConf()));
+        eventDeadLetters = new CassandraEventDeadLetters(new CassandraEventDeadLettersDAO(cassandraCluster.getConf()),
+            new CassandraEventDeadLettersGroupDAO(cassandraCluster.getConf()),
+            eventSerializer);
         testee = new EventDeadLettersHealthCheck(eventDeadLetters);
         this.dockerCassandra = dockerCassandra;
     }

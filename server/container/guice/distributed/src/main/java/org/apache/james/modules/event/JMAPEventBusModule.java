@@ -32,6 +32,7 @@ import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventSerializer;
 import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
 import org.apache.james.events.RabbitMQEventBus;
@@ -119,5 +120,10 @@ public class JMAPEventBusModule extends AbstractModule {
     @ProvidesIntoSet
     EventBus registerEventBus(@Named(InjectionKeys.JMAP) EventBus eventBus) {
         return eventBus;
+    }
+
+    @ProvidesIntoSet
+    EventSerializer registerEventSerializers(JmapEventSerializer eventSerializer) {
+        return eventSerializer;
     }
 }

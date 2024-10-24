@@ -19,32 +19,34 @@
 
 package org.apache.james.events;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.events.EventBusTestFixture.TestEventSerializer;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import java.util.Optional;
+import java.util.Set;
 
-import com.google.common.collect.ImmutableSet;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
-class CassandraEventDeadLettersTest implements EventDeadLettersContract.AllContracts {
+@Singleton
+public class EventDeserializers {
+    private final Set<EventSerializer> allEventSerializers;
 
-    @RegisterExtension
-    static CassandraClusterExtension cassandraClusterExtension = new CassandraClusterExtension(CassandraEventDeadLettersModule.MODULE);
-
-    private CassandraEventDeadLetters eventDeadLetters;
-
-    @BeforeEach
-    void setUp(CassandraCluster cassandraCluster) {
-        EventSerializer eventSerializer = new TestEventSerializer();
-        eventDeadLetters = new CassandraEventDeadLetters(new CassandraEventDeadLettersDAO(cassandraCluster.getConf()),
-            new CassandraEventDeadLettersGroupDAO(cassandraCluster.getConf()),
-            eventSerializer,
-            new EventDeserializers(ImmutableSet.of(eventSerializer)));
+    @Inject
+    public EventDeserializers(Set<EventSerializer> allEventSerializers) {
+        this.allEventSerializers = allEventSerializers;
     }
 
-    @Override
-    public EventDeadLetters eventDeadLetters() {
-        return eventDeadLetters;
+    public Event deserialize(String json) {
+        return allEventSerializers.stream()
+            .map(eventSerializer -> deserialize(json, eventSerializer))
+            .flatMap(Optional::stream)
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Could not deserialize event: " + json));
+    }
+
+    private Optional<Event> deserialize(String json, EventSerializer eventSerializer) {
+        try {
+            return Optional.of(eventSerializer.asEvent(json));
+        } catch (Exception ex) {
+            return Optional.empty();
+        }
     }
 }
