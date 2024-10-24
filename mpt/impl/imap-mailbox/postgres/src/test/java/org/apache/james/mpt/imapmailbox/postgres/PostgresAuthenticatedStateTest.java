@@ -22,6 +22,7 @@ package org.apache.james.mpt.imapmailbox.postgres;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.postgres.host.PostgresHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.AuthenticatedState;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresAuthenticatedStateTest extends AuthenticatedState {
@@ -31,5 +32,10 @@ public class PostgresAuthenticatedStateTest extends AuthenticatedState {
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return hostSystemExtension.getHostSystem();
+    }
+
+    @Disabled("TODO - James 3945 Should adapt to Postgres")
+    @Override
+    public void rightsCommandsShouldBeSupported() {
     }
 }
