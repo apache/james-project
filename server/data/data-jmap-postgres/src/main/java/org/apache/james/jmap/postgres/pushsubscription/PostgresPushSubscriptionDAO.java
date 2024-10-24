@@ -166,7 +166,7 @@ public class PostgresPushSubscriptionDAO {
 
     private Set<TypeName> extractTypes(Record record) {
         return  Arrays.stream(record.get(PushSubscriptionTable.TYPES))
-            .map(string -> typeStateFactory.parse(string).right().get())
+            .map(string -> typeStateFactory.strictParse(string).right().get())
             .collect(Collectors.toSet());
     }
 }
