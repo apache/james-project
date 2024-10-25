@@ -20,8 +20,11 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
+import org.apache.james.events.EventSerializer;
+import org.apache.james.events.EventSerializersAggregator;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.delivery.EventDelivery;
@@ -46,6 +49,9 @@ public class DefaultEventModule extends AbstractModule {
         bind(MailboxListenersLoaderImpl.class).in(Scopes.SINGLETON);
         bind(InVmEventDelivery.class).in(Scopes.SINGLETON);
         bind(InVMEventBus.class).in(Scopes.SINGLETON);
+        bind(MailboxEventSerializer.class).in(Scopes.SINGLETON);
+
+        bind(EventSerializer.class).to(EventSerializersAggregator.class);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(EventDeadLettersProbe.class);
         bind(MailboxListenersLoader.class).to(MailboxListenersLoaderImpl.class);
@@ -54,6 +60,11 @@ public class DefaultEventModule extends AbstractModule {
 
         bind(RetryBackoffConfiguration.class).toInstance(RetryBackoffConfiguration.DEFAULT);
 
+        Multibinder.newSetBinder(binder(), EventSerializer.class)
+            .addBinding()
+            .to(MailboxEventSerializer.class);
+
+        Multibinder.newSetBinder(binder(), EventBus.class);
         Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class);
         Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class);
     }

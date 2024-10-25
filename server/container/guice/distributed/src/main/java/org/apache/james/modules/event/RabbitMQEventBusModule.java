@@ -31,8 +31,6 @@ import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventDeadLetters;
-import org.apache.james.events.EventSerializer;
-import org.apache.james.events.EventSerializersAggregator;
 import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.NamingStrategy;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
@@ -48,7 +46,6 @@ import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
@@ -59,14 +56,7 @@ public class RabbitMQEventBusModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(EventSerializer.class).to(EventSerializersAggregator.class);
-
         bind(NamingStrategy.class).toInstance(MAILBOX_EVENT_NAMING_STRATEGY);
-        bind(MailboxEventSerializer.class).in(Scopes.SINGLETON);
-
-        Multibinder.newSetBinder(binder(), EventSerializer.class)
-            .addBinding()
-            .to(MailboxEventSerializer.class);
 
         Multibinder.newSetBinder(binder(), RegistrationKey.Factory.class)
             .addBinding().to(MailboxIdRegistrationKey.Factory.class);
