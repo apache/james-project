@@ -20,10 +20,8 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
-import org.apache.james.events.EventSerializer;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.delivery.EventDelivery;
@@ -44,9 +42,6 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 public class DefaultEventModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(MailboxEventSerializer.class).in(Scopes.SINGLETON);
-        bind(EventSerializer.class).to(MailboxEventSerializer.class);
-
         bind(MailboxListenerFactory.class).in(Scopes.SINGLETON);
         bind(MailboxListenersLoaderImpl.class).in(Scopes.SINGLETON);
         bind(InVmEventDelivery.class).in(Scopes.SINGLETON);
@@ -56,10 +51,6 @@ public class DefaultEventModule extends AbstractModule {
         bind(MailboxListenersLoader.class).to(MailboxListenersLoaderImpl.class);
         bind(EventDelivery.class).to(InVmEventDelivery.class);
         bind(EventBus.class).to(InVMEventBus.class);
-
-        Multibinder.newSetBinder(binder(), EventBus.class)
-            .addBinding()
-            .to(EventBus.class);
 
         bind(RetryBackoffConfiguration.class).toInstance(RetryBackoffConfiguration.DEFAULT);
 
