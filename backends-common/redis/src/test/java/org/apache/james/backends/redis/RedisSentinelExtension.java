@@ -21,6 +21,9 @@ package org.apache.james.backends.redis;
 
 import static org.apache.james.backends.redis.DockerRedis.DEFAULT_IMAGE_NAME;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,6 +35,7 @@ import jakarta.inject.Singleton;
 
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.Runnables;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -155,7 +159,7 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
     }
 
     public RedisSentinelExtension(boolean tlsEnable) {
-        this(tlsEnable, Network.newNetwork());
+        this(!tlsEnable, Network.newNetwork());
     }
 
     public RedisSentinelExtension(boolean tlsEnable, Network network) {
@@ -176,8 +180,20 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
     }
 
     @Override
-    public void beforeAll(ExtensionContext extensionContext) {
+    public void beforeAll(ExtensionContext extensionContext) throws IOException, InterruptedException {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(FileSystemImpl.forTesting().getFile("classpath://certificate.crt")));
+            System.out.println("READ-STARTTT");
+            System.out.println(reader.readLine());
+            System.out.println("READ-END");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         redis1.start();
+        System.out.println("READ-STARTTTttt");
+        System.out.println(redis1.execInContainer("cat", "/etc/redis/certificate.crt").getStdout());
+        System.out.println("READ-END");
         redis2.start();
         redis3.start();
         sentinel1.start();
@@ -236,6 +252,15 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
             .withNetworkAliases(alias)
             .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1)
                 .withStartupTimeout(Duration.ofMinutes(2)));
+        genericContainer.withClasspathResourceMapping("certificate.crt",
+                "/etc/redis/certificate.crt",
+                BindMode.READ_WRITE)
+            .withClasspathResourceMapping("private.key",
+                "/etc/redis/private.key",
+                BindMode.READ_WRITE)
+            .withClasspathResourceMapping("rootCA.crt",
+                "/etc/redis/rootCA.crt",
+                BindMode.READ_WRITE);
         if (tlsEnabled) {
             genericContainer.withClasspathResourceMapping("certificate.crt",
                     "/etc/redis/certificate.crt",
