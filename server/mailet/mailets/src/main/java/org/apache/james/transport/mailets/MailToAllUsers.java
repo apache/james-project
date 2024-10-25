@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
@@ -30,11 +31,13 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 /**
  * A mailet that helps to email all users in the system. The emails are sent in batches to manage
@@ -73,39 +76,44 @@ public class MailToAllUsers extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        Flux<Flux<MailAddress>> recipientsBatches = Flux.from(usersRepository.listReactive())
+        Flux.from(usersRepository.listReactive())
             .map(Throwing.function(Username::asMailAddress))
-            .window(batchSize);
-
-        Flux.merge(sendMailToFirstRecipientsBatchDirectly(mail, recipientsBatches),
-                sendMailToRemainingRecipientsBatchAsynchronously(mail, recipientsBatches))
+            .window(batchSize)
+            .index()
+            .flatMap(sendMail(mail))
             .then()
             .block();
     }
 
-    private Mono<Void> sendMailToFirstRecipientsBatchDirectly(Mail mail, Flux<Flux<MailAddress>> recipientsBatches) {
-        return recipientsBatches
-            .take(1)
-            .flatMap(firstRecipientsBatch -> firstRecipientsBatch
-                .collectList()
-                .flatMap(recipients -> Mono.fromRunnable(() -> mail.setRecipients(recipients))))
+    private Function<Tuple2<Long, Flux<MailAddress>>, Publisher<Void>> sendMail(Mail mail) {
+        return tuple -> {
+            boolean firstBatch = tuple.getT1() == 0;
+            if (firstBatch) {
+                return sendMailToFirstRecipientsBatchDirectly(mail, tuple.getT2());
+            }
+            return sendMailToRemainingRecipientsBatchAsynchronously(mail, tuple.getT2());
+        };
+    }
+
+    private Mono<Void> sendMailToFirstRecipientsBatchDirectly(Mail mail, Flux<MailAddress> firstRecipientsBatch) {
+        return firstRecipientsBatch
+            .collectList()
+            .flatMap(recipients -> Mono.fromRunnable(() -> mail.setRecipients(recipients)))
             .then();
     }
 
-    private Mono<Void> sendMailToRemainingRecipientsBatchAsynchronously(Mail mail, Flux<Flux<MailAddress>> recipientsBatches) {
-        return recipientsBatches
-            .skip(1)
-            .flatMap(remainingRecipientsBatch -> remainingRecipientsBatch
-                .collectList()
-                .flatMap(recipients -> Mono.fromRunnable(Throwing.runnable(() -> {
-                    Mail duplicateMail = mail.duplicate();
-                    try {
-                        duplicateMail.setRecipients(recipients);
-                        getMailetContext().sendMail(duplicateMail);
-                    } finally {
-                        LifecycleUtil.dispose(duplicateMail);
-                    }
-                }))))
+    private Mono<Void> sendMailToRemainingRecipientsBatchAsynchronously(Mail mail, Flux<MailAddress> remainingRecipientsBatch) {
+        return remainingRecipientsBatch
+            .collectList()
+            .flatMap(recipients -> Mono.fromRunnable(Throwing.runnable(() -> {
+                Mail duplicateMail = mail.duplicate();
+                try {
+                    duplicateMail.setRecipients(recipients);
+                    getMailetContext().sendMail(duplicateMail);
+                } finally {
+                    LifecycleUtil.dispose(duplicateMail);
+                }
+            })))
             .then();
     }
 
