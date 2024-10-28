@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Set;
 
 import jakarta.annotation.PreDestroy;
-import jakarta.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
@@ -62,7 +61,6 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private KeyRegistrationHandler keyRegistrationHandler;
     private EventDispatcher eventDispatcher;
 
-    @Inject
     public RabbitMQEventBus(NamingStrategy namingStrategy, Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
                             RetryBackoffConfiguration retryBackoff,
                             RoutingKeyConverter routingKeyConverter,
