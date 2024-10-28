@@ -1,7 +1,7 @@
 # Search Snippets
 
-> :warning:
-> Not implemented
+> :information_source:
+> Implemented
 
 When doing a search on a `String` property, the client may wish to show the relevant section of the body that matches the search as a preview and to highlight any matching terms in both this and the subject of the Email. Search snippets represent this data.
 
@@ -23,6 +23,11 @@ A **SearchSnippet** object has the following properties:
 What is a relevant section of the body for preview is server defined. If the server is unable to determine search snippets, it MUST return `null` for both the *subject* and *preview* properties.
 
 Note that unlike most data types, a SearchSnippet DOES NOT have a property called `id`.
+
+## Behavioral changes
+
+When `urn:apache:james:params:jmap:mail:shares` is specified, it allows rendering search snippets not in his account (shared mailboxes).
+
 
 The following JMAP method is supported.
 
