@@ -199,13 +199,13 @@ public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
         if (tlsEnabled) {
             genericContainer.withClasspathResourceMapping("certificate.crt",
                     "/etc/redis/certificate.crt",
-                    BindMode.READ_WRITE)
+                    BindMode.READ_ONLY)
                 .withClasspathResourceMapping("private.key",
                     "/etc/redis/private.key",
-                    BindMode.READ_WRITE)
+                    BindMode.READ_ONLY)
                 .withClasspathResourceMapping("rootCA.crt",
                     "/etc/redis/rootCA.crt",
-                    BindMode.READ_WRITE);
+                    BindMode.READ_ONLY);
             if (isSlave) {
                 genericContainer.withCommand(TLS_REPLICA_COMMAND);
             } else {

@@ -239,13 +239,13 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
         if (tlsEnabled) {
             genericContainer.withClasspathResourceMapping("certificate.crt",
                     "/etc/redis/certificate.crt",
-                    BindMode.READ_WRITE)
+                    BindMode.READ_ONLY)
                 .withClasspathResourceMapping("private.key",
                     "/etc/redis/private.key",
-                    BindMode.READ_WRITE)
+                    BindMode.READ_ONLY)
                 .withClasspathResourceMapping("rootCA.crt",
                     "/etc/redis/rootCA.crt",
-                    BindMode.READ_WRITE);
+                    BindMode.READ_ONLY);
             if (isSlave) {
                 genericContainer.withCommand(TLS_REPLICA_COMMAND);
             } else {
@@ -272,20 +272,20 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
         if (tlsEnabled) {
             genericContainer.withClasspathResourceMapping("sentinel_tls.conf",
                     "/etc/redis/sentinel.conf",
-                    BindMode.READ_WRITE)
+                    BindMode.READ_ONLY)
                 .withClasspathResourceMapping("certificate.crt",
                     "/etc/redis/certificate.crt",
-                    BindMode.READ_WRITE)
+                    BindMode.READ_ONLY)
                 .withClasspathResourceMapping("private.key",
                     "/etc/redis/private.key",
-                    BindMode.READ_WRITE)
+                    BindMode.READ_ONLY)
                 .withClasspathResourceMapping("rootCA.crt",
                     "/etc/redis/rootCA.crt",
-                    BindMode.READ_WRITE);
+                    BindMode.READ_ONLY);
         } else {
             genericContainer.withClasspathResourceMapping("sentinel.conf",
                 "/etc/redis/sentinel.conf",
-                BindMode.READ_WRITE);
+                BindMode.READ_ONLY);
         }
         return genericContainer;
     }

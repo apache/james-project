@@ -94,7 +94,7 @@ public class RedisClusterExtension implements GuiceModuleTestExtension {
             .withNetworkAliases(alias)
             .withClasspathResourceMapping("redis_cluster.conf",
                 "/usr/local/etc/redis/redis.conf",
-                BindMode.READ_WRITE)
+                BindMode.READ_ONLY)
             .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1)
                 .withStartupTimeout(Duration.ofMinutes(2)));
 
