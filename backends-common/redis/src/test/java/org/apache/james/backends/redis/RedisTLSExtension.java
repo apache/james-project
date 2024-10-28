@@ -72,13 +72,13 @@ public class RedisTLSExtension implements GuiceModuleTestExtension {
         .withCommand(START_SERVER_COMMAND)
         .withClasspathResourceMapping("certificate.crt",
             "/etc/redis/certificate.crt",
-            BindMode.READ_WRITE)
+            BindMode.READ_ONLY)
         .withClasspathResourceMapping("private.key",
             "/etc/redis/private.key",
-            BindMode.READ_WRITE)
+            BindMode.READ_ONLY)
         .withClasspathResourceMapping("rootCA.crt",
             "/etc/redis/rootCA.crt",
-            BindMode.READ_WRITE)
+            BindMode.READ_ONLY)
         .withNetworkAliases("redis")
         .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1)
             .withStartupTimeout(Duration.ofMinutes(2)));
