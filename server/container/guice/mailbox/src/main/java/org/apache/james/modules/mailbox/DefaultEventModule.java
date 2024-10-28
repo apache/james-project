@@ -24,6 +24,7 @@ import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.EventSerializer;
+import org.apache.james.events.EventSerializersAggregator;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.delivery.EventDelivery;
@@ -44,25 +45,26 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 public class DefaultEventModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(MailboxEventSerializer.class).in(Scopes.SINGLETON);
-        bind(EventSerializer.class).to(MailboxEventSerializer.class);
-
         bind(MailboxListenerFactory.class).in(Scopes.SINGLETON);
         bind(MailboxListenersLoaderImpl.class).in(Scopes.SINGLETON);
         bind(InVmEventDelivery.class).in(Scopes.SINGLETON);
         bind(InVMEventBus.class).in(Scopes.SINGLETON);
+        bind(MailboxEventSerializer.class).in(Scopes.SINGLETON);
+
+        bind(EventSerializer.class).to(EventSerializersAggregator.class);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(EventDeadLettersProbe.class);
         bind(MailboxListenersLoader.class).to(MailboxListenersLoaderImpl.class);
         bind(EventDelivery.class).to(InVmEventDelivery.class);
         bind(EventBus.class).to(InVMEventBus.class);
 
-        Multibinder.newSetBinder(binder(), EventBus.class)
-            .addBinding()
-            .to(EventBus.class);
-
         bind(RetryBackoffConfiguration.class).toInstance(RetryBackoffConfiguration.DEFAULT);
 
+        Multibinder.newSetBinder(binder(), EventSerializer.class)
+            .addBinding()
+            .to(MailboxEventSerializer.class);
+
+        Multibinder.newSetBinder(binder(), EventBus.class);
         Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class);
         Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class);
     }
