@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import reactor.core.publisher.Mono;
 
 public class IdProcessor extends AbstractMailboxProcessor<IDRequest> implements CapabilityImplementingProcessor {
+    public static final String MDC_KEY = "bound_MDC";
     private static final Logger LOGGER = LoggerFactory.getLogger(IdProcessor.class);
     private static final ImmutableList<Capability> CAPABILITIES = ImmutableList.of(Capability.of("ID"));
 
@@ -53,10 +54,26 @@ public class IdProcessor extends AbstractMailboxProcessor<IDRequest> implements 
     protected Mono<Void> processRequestReactive(IDRequest request, ImapSession session, Responder responder) {
         responder.respond(new IdResponse());
 
-        return ReactorUtils.logAsMono(() -> MDCStructuredLogger.forLogger(LOGGER)
-            .field("parameters", request.getParameters().map(Object::toString).orElse("NIL"))
-            .log(logger -> logger.info("Received id information"))).then(unsolicitedResponses(session, responder, false))
+        String mailUserAgent = request.getParameters().map(Object::toString).orElse("NIL");
+        addMailUserAgentToMDC(session, mailUserAgent);
+
+        return logMailUserAgent(mailUserAgent)
+            .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)));
+    }
+
+    private Mono<Void> logMailUserAgent(String mailUserAgent) {
+        return ReactorUtils.logAsMono(() -> MDCStructuredLogger.forLogger(LOGGER)
+            .field("parameters", mailUserAgent)
+            .log(logger -> logger.info("Received id information")));
+    }
+
+    private void addMailUserAgentToMDC(ImapSession session, String mailUserAgent) {
+        Object maybeMDC = session.getAttribute(MDC_KEY);
+        if (maybeMDC instanceof MDCBuilder boundMDC) {
+            MDCBuilder newMDC = boundMDC.addToContext("mailUserAgent", mailUserAgent);
+            session.setAttribute(MDC_KEY, newMDC);
+        }
     }
 
     @Override
