@@ -82,7 +82,7 @@ class RightsTest extends AnyWordSpec with Matchers {
     }
     "filter out unknown rights" in {
       val acl = new JavaMailboxACL(Map(
-        EntryKey.createUserEntryKey(USERNAME) -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aetok")).asJava)
+        EntryKey.createUserEntryKey(USERNAME) -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aetxk")).asJava)
 
       Rights.fromACL(MailboxACL.fromJava(acl)) must be(Rights.of(USERNAME, Seq(Right.Administer, Right.Expunge, Right.DeleteMessages)))
     }
