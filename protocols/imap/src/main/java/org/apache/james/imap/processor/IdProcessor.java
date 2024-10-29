@@ -32,6 +32,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,13 +51,11 @@ public class IdProcessor extends AbstractMailboxProcessor<IDRequest> implements 
 
     @Override
     protected Mono<Void> processRequestReactive(IDRequest request, ImapSession session, Responder responder) {
-        MDCStructuredLogger.forLogger(LOGGER)
-            .field("parameters", request.getParameters().map(Object::toString).orElse("NIL"))
-            .log(logger -> logger.info("Received id information"));
-
         responder.respond(new IdResponse());
 
-        return unsolicitedResponses(session, responder, false)
+        return ReactorUtils.logAsMono(() -> MDCStructuredLogger.forLogger(LOGGER)
+            .field("parameters", request.getParameters().map(Object::toString).orElse("NIL"))
+            .log(logger -> logger.info("Received id information"))).then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)));
     }
 
