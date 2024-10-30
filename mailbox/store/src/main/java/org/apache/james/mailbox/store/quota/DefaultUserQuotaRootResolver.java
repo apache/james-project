@@ -63,6 +63,11 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
 
         public List<String> toParts(String serializedQuotaRoot) throws MailboxException {
             List<String> parts = Splitter.on(SEPARATOR).splitToList(serializedQuotaRoot);
+
+            if (parts.size() < 2) {
+                throw new MailboxException(serializedQuotaRoot + " used as QuotaRoot should contain at least one \"" + SEPARATOR + "\"");
+            }
+
             if (parts.size() != 2) {
                 return ImmutableList.<String>builder()
                     .add(parts.get(0))
