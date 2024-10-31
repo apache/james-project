@@ -134,6 +134,9 @@
 
         <dt><strong>ignoreIDLEUponProcessing</strong></dt>
         <dd>true or false - Allow disabling the heartbeat handler. Defaults to true.</dd>
+
+      <dt><strong>idCommandResponse.field</strong></dt>
+      <dd>Store the fields response for ID Command, with each tag containing a name-value pair corresponding to the attribute name. Ref: rfc2971</dd>
       </dl>
 
     <subsection name="OIDC set up">
