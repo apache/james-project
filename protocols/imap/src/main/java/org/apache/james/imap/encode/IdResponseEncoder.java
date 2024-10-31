@@ -20,6 +20,7 @@
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.james.imap.message.response.IdResponse;
 
@@ -33,8 +34,7 @@ public class IdResponseEncoder implements ImapResponseEncoder<IdResponse> {
     public void encode(IdResponse existsResponse, ImapResponseComposer composer) throws IOException {
         composer.untagged()
             .message("ID")
-            .openParen()
-            .closeParen()
+            .nil()
             .end();
     }
 }
