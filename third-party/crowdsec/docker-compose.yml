@@ -3,12 +3,14 @@ version: '3'
 services:
 
   james:
-    image: apache/james:memory-latest
+    image: apache/james:memory-crowdsec
     container_name: james
     hostname: james.local
     command:
       - --generate-keystore
     volumes:
+      - ./logback-jackson-0.1.5.jar:/root/libs/logback-jackson-0.1.5.jar
+      - ./logback-json-core-0.1.5.jar:/root/libs/logback-json-core-0.1.5.jar
       - ./sample-configuration/logback.xml:/root/conf/logback.xml
       - ./target/apache-james-crowdsec-jar-with-dependencies.jar:/root/extensions-jars/james-server-crowdsec.jar
       - ./sample-configuration/extensions.properties:/root/conf/extensions.properties
