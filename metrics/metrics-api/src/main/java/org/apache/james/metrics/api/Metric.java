@@ -46,4 +46,13 @@ public interface Metric {
     default double movingAverage() {
         return Long.valueOf(getCount()).doubleValue();
     }
+
+    /**
+     * Mean rate of the events happen in one second.
+     *
+     * Default to count (naive implementation with period starting at boot time)
+     */
+    default double meanRate() {
+        return Long.valueOf(getCount()).doubleValue();
+    }
 }
