@@ -72,4 +72,9 @@ public class DropWizardMetric implements Metric {
     public double movingAverage() {
         return meter.getFiveMinuteRate();
     }
+
+    @Override
+    public double meanRate() {
+        return meter.getMeanRate();
+    }
 }
