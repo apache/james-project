@@ -17,6 +17,12 @@ This module is for developing and delivering extensions to James for the [Crowds
 guice.extension.module=org.apache.james.crowdsec.module.CrowdsecModule
 ```
 
+- Mount the configuration file onto the classpath
+
+You can find a `logback.xml` configuration file in the `sample-configuration` directory. \
+To use this configuration at runtime, ensure the file is available in the application's classpath by placing it in a directory accessible by the application.
+Use a `-Dlogback.configurationFile` JVM argument to specify the file's location when starting the application.
+
 ### CrowdSec support for SMTP
 - Declare the Crowdsec EhloHook in `smtpserver.xml`. Eg:
 
@@ -67,7 +73,21 @@ The EHLO hook will block banned clients with `554 Email rejected` whereas the co
 ```
 mvn clean install -DskipTests
 ```
-then run it: `docker-compose up`
+
+Customise the crowdsec image:
+
+```
+docker build -t apache/james:memory-crowdsec .
+```
+
+Download extra dependencies:
+
+```
+$ wget https://repo1.maven.org/maven2/ch/qos/logback/contrib/logback-jackson/0.1.5/logback-jackson-0.1.5.jar
+$ wget https://repo1.maven.org/maven2/ch/qos/logback/contrib/logback-json-core/0.1.5/logback-json-core-0.1.5.jar
+```
+
+Then run it: `docker-compose up`
 
 ## Crowdsec endpoints
 
