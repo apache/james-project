@@ -33,8 +33,18 @@ public class IdResponseEncoder implements ImapResponseEncoder<IdResponse> {
     @Override
     public void encode(IdResponse existsResponse, ImapResponseComposer composer) throws IOException {
         composer.untagged()
-            .message("ID")
-            .nil()
-            .end();
+            .message("ID");
+
+        if (existsResponse.fields().isEmpty()) {
+            composer.nil();
+        } else {
+            composer.openParen();
+            for (Map.Entry<String, String> keyValue : existsResponse.fields().entrySet()) {
+                composer.quote(keyValue.getKey());
+                composer.quote(keyValue.getValue());
+            }
+            composer.closeParen();
+        }
+        composer.end();
     }
 }

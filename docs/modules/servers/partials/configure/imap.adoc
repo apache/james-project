@@ -142,6 +142,9 @@ Optional integer, defaults to 2 times the count of CPUs.
 
 | lowWriteBufferWaterMark
 | Netty's write buffer low watermark configuration. Unit supported: none, K, M. Netty defaults applied.
+
+| idCommandResponse.field
+| Store the fields response for ID Command, with each tag containing a name-value pair corresponding to the attribute name. Ref: rfc2971
 |===
 
 == OIDC setup

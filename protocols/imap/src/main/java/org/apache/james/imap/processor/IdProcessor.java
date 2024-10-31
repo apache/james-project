@@ -19,10 +19,13 @@
 
 package org.apache.james.imap.processor;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -45,14 +48,22 @@ public class IdProcessor extends AbstractMailboxProcessor<IDRequest> implements 
     private static final Logger LOGGER = LoggerFactory.getLogger(IdProcessor.class);
     private static final ImmutableList<Capability> CAPABILITIES = ImmutableList.of(Capability.of("ID"));
 
+    private final Map<String, String> fields = new HashMap<>();
+
     @Inject
     public IdProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
         super(IDRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+        super.configure(imapConfiguration);
+        fields.putAll(imapConfiguration.getIdFieldsResponse());
+    }
+
+    @Override
     protected Mono<Void> processRequestReactive(IDRequest request, ImapSession session, Responder responder) {
-        responder.respond(new IdResponse());
+        responder.respond(new IdResponse(fields));
 
         String mailUserAgent = request.getParameters().map(Object::toString).orElse("NIL");
         addMailUserAgentToMDC(session, mailUserAgent);
