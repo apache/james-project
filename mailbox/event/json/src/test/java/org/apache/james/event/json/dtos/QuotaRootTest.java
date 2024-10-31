@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.junit.jupiter.api.Test;
 
@@ -75,8 +76,8 @@ class QuotaRootTest {
     @Test
     void emptyQuotaRootShouldBeWellDeSerialized() {
         assertThatThrownBy(() -> DTO_JSON_SERIALIZE.quotaRootReads().reads(new JsString("")).get())
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("username should not be null or empty after being trimmed");
+            .isInstanceOf(MailboxException.class)
+            .hasMessage(" used as QuotaRoot should contain at least one \"&\"");
     }
 
     @Test
