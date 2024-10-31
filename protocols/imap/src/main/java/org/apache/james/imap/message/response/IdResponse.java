@@ -19,9 +19,9 @@
 
 package org.apache.james.imap.message.response;
 
+import java.util.Map;
+
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
-public class IdResponse implements ImapResponseMessage {
-    public IdResponse() {
-    }
+public record IdResponse(Map<String, String> fields) implements ImapResponseMessage {
 }

@@ -3358,4 +3358,38 @@ class IMAPServerTest {
                     .runSuccessfullyWithin(Duration.ofMinutes(10));
         }
     }
+    
+    @Nested
+    class IDCommandTest {
+        IMAPServer imapServer;
+
+        @AfterEach
+        void tearDown() {
+            if (imapServer != null) {   
+                imapServer.destroy();
+            }
+        }
+
+        @Test
+        void idCommandShouldReturnNILWhenNoConfigured() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+
+            assertThat(
+                testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().getFirst().getPort())
+                    .sendCommand("ID (\"name\" \"Apache James\")"))
+                .contains("* ID NIL")
+                .contains("OK ID completed.");
+        }
+
+        @Test
+        void idCommandShouldReturnConfiguredResponse() throws Exception {
+            imapServer = createImapServer("imapServerIdCommandResponseFields.xml");
+            assertThat(
+                testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().getFirst().getPort())
+                    .sendCommand("ID (\"name\" \"Apache James\")"))
+                .contains("* ID (\"name\" \"Apache James\" \"version\" \"3.9.0\")")
+                .contains("OK ID completed.");
+        }
+    }
+
 }

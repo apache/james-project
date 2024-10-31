@@ -21,6 +21,7 @@ package org.apache.james.imapserver.netty;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -49,6 +50,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import io.netty.channel.Channel;
@@ -208,7 +210,19 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                 .concurrentRequests(configuration.getInteger("concurrentRequests", ImapConfiguration.DEFAULT_CONCURRENT_REQUESTS))
                 .isProvisionDefaultMailboxes(configuration.getBoolean("provisionDefaultMailboxes", ImapConfiguration.DEFAULT_PROVISION_DEFAULT_MAILBOXES))
                 .withCustomProperties(configuration.getProperties("customProperties"))
+                .idFieldsResponse(getIdCommandResponseFields(configuration))
                 .build();
+    }
+
+    private static ImmutableMap<String, String> getIdCommandResponseFields(HierarchicalConfiguration<ImmutableNode> configuration) {
+        LinkedHashMap<String, String> fieldsMap = new LinkedHashMap<>();
+        configuration.configurationsAt("idCommandResponse.field")
+            .forEach(field -> {
+                String name = field.getString("[@name]");
+                String value = field.getString("[@value]");
+                fieldsMap.put(name, value);
+            });
+        return ImmutableMap.copyOf(fieldsMap);
     }
 
     private static TimeUnit getTimeIntervalUnit(String timeIntervalUnit) {
