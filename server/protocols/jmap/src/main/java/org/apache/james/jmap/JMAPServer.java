@@ -21,10 +21,13 @@ package org.apache.james.jmap;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static reactor.netty.Metrics.HTTP_CLIENT_PREFIX;
+import static reactor.netty.Metrics.URI;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import jakarta.annotation.PreDestroy;
@@ -39,6 +42,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
 
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.config.MeterFilter;
 import io.netty.handler.codec.http.HttpMethod;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
@@ -90,8 +95,17 @@ public class JMAPServer implements Startable {
                     .orElse(RANDOM_PORT))
                 .handle((request, response) -> handleVersionRoute(request).handleRequest(request, response))
                 .wiretap(wireTapEnabled())
+                .metrics(true, Function.identity())
                 .bindNow());
+
+            configureReactorNettyMetrics();
         }
+    }
+
+    private void configureReactorNettyMetrics() {
+        Metrics.globalRegistry
+            .config()
+            .meterFilter(MeterFilter.maximumAllowableTags(HTTP_CLIENT_PREFIX, URI, 100, MeterFilter.deny()));
     }
 
     private boolean wireTapEnabled() {

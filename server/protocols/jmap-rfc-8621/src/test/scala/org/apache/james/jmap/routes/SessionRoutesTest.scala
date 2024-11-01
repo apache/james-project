@@ -34,9 +34,11 @@ import org.apache.james.jmap.core.JmapRfc8621Configuration.URL_PREFIX_DEFAULT
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{DefaultCapabilities, JmapRfc8621Configuration}
 import org.apache.james.jmap.http.Authenticator
+import org.apache.james.jmap.metrics.HttpClientMetrics
 import org.apache.james.jmap.routes.SessionRoutesTest.{BOB, TEST_CONFIGURATION}
 import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutesHandler, JMAPServer, Version, VersionParser}
 import org.apache.james.mailbox.MailboxSession
+import org.apache.james.metrics.api.NoopGaugeRegistry
 import org.apache.james.user.api.DelegationStore
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
@@ -74,7 +76,8 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       sessionSupplier = new SessionSupplier(DefaultCapabilities.supported(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION), JmapRfc8621Configuration.LOCALHOST_CONFIGURATION),
       delegationStore = mockDelegationStore,
       authenticator = mockedAuthFilter,
-      jmapRfc8621Configuration = JmapRfc8621Configuration.LOCALHOST_CONFIGURATION)
+      jmapRfc8621Configuration = JmapRfc8621Configuration.LOCALHOST_CONFIGURATION,
+      httpClientMetrics = HttpClientMetrics(new NoopGaugeRegistry))
     jmapServer = new JMAPServer(
       TEST_CONFIGURATION,
       Set(new JMAPRoutesHandler(Version.RFC8621, sessionRoutes)).asJava,
