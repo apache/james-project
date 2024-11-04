@@ -30,6 +30,7 @@ import org.apache.commons.lang3.tuple.Pair
 import org.apache.james.core.Username
 import org.apache.james.jmap.HttpConstants.{JSON_CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8}
 import org.apache.james.jmap.JMAPRoutes.CORS_CONTROL
+import org.apache.james.jmap.JMAPServer.REACTOR_NETTY_METRICS_ENABLE
 import org.apache.james.jmap.core.{JmapRfc8621Configuration, ProblemDetails, Session, UrlPrefixes}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
@@ -75,7 +76,12 @@ class SessionRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: 
       .flatMap(session => sendRespond(session, response))
       .onErrorResume(throwable => SMono.fromPublisher(errorHandling(throwable, response)))
       .asJava()
-      .doOnSuccess(_ => httpClientMetrics.update())
+      .doOnSuccess(_ => updateHttpClientMetricsIfNeeded())
+
+  private def updateHttpClientMetricsIfNeeded(): Unit =
+    if (REACTOR_NETTY_METRICS_ENABLE) {
+      httpClientMetrics.update()
+    }
 
   private val redirectToSession: JMAPRoute.Action = JMAPRoutes.redirectTo(JMAP_SESSION)
 

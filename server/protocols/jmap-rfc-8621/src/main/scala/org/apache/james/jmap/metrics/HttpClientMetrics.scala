@@ -27,19 +27,19 @@ import org.apache.james.metrics.api.GaugeRegistry
 import reactor.netty.Metrics.{CONNECTIONS_ACTIVE, CONNECTIONS_TOTAL, DATA_RECEIVED, DATA_SENT, HTTP_SERVER_PREFIX}
 
 object HttpClientMetrics {
-  val NETTY_CONNECTIONS_ACTIVE: String = HTTP_SERVER_PREFIX + CONNECTIONS_ACTIVE
-  val NETTY_CONNECTIONS_TOTAL: String = HTTP_SERVER_PREFIX + CONNECTIONS_TOTAL
-  val NETTY_DATA_RECEIVED: String = HTTP_SERVER_PREFIX + DATA_RECEIVED
-  val NETTY_DATA_SENT: String = HTTP_SERVER_PREFIX + DATA_SENT
+  lazy val NETTY_CONNECTIONS_ACTIVE: String = HTTP_SERVER_PREFIX + CONNECTIONS_ACTIVE
+  lazy val NETTY_CONNECTIONS_TOTAL: String = HTTP_SERVER_PREFIX + CONNECTIONS_TOTAL
+  lazy val NETTY_DATA_RECEIVED: String = HTTP_SERVER_PREFIX + DATA_RECEIVED
+  lazy val NETTY_DATA_SENT: String = HTTP_SERVER_PREFIX + DATA_SENT
 }
 
 @Singleton
 case class HttpClientMetrics @Inject()(gaugeRegistry: GaugeRegistry) {
-  private val activeConnectionGauge: GaugeRegistry.SettableGauge[Integer] = gaugeRegistry.settableGauge(s"jmap.$NETTY_CONNECTIONS_ACTIVE")
-  private val totalConnectionGauge: GaugeRegistry.SettableGauge[Integer] = gaugeRegistry.settableGauge(s"jmap.$NETTY_CONNECTIONS_TOTAL")
-  private val dataReceivedGauge: GaugeRegistry.SettableGauge[Integer] = gaugeRegistry.settableGauge(s"jmap.$NETTY_DATA_RECEIVED")
-  private val dataSentGauge: GaugeRegistry.SettableGauge[Integer] = gaugeRegistry.settableGauge(s"jmap.$NETTY_DATA_SENT")
-  private val nettyCompositeMeterRegistry = globalRegistry.add(new SimpleMeterRegistry())
+  private lazy val activeConnectionGauge: GaugeRegistry.SettableGauge[Integer] = gaugeRegistry.settableGauge(s"jmap.$NETTY_CONNECTIONS_ACTIVE")
+  private lazy val totalConnectionGauge: GaugeRegistry.SettableGauge[Integer] = gaugeRegistry.settableGauge(s"jmap.$NETTY_CONNECTIONS_TOTAL")
+  private lazy val dataReceivedGauge: GaugeRegistry.SettableGauge[Integer] = gaugeRegistry.settableGauge(s"jmap.$NETTY_DATA_RECEIVED")
+  private lazy val dataSentGauge: GaugeRegistry.SettableGauge[Integer] = gaugeRegistry.settableGauge(s"jmap.$NETTY_DATA_SENT")
+  private lazy val nettyCompositeMeterRegistry = globalRegistry.add(new SimpleMeterRegistry())
 
   def update(): Unit = {
     updateActiveConnectionGauge()

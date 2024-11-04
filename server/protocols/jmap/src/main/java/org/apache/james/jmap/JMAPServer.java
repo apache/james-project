@@ -50,6 +50,7 @@ import reactor.netty.http.server.HttpServer;
 import reactor.netty.http.server.HttpServerRequest;
 
 public class JMAPServer implements Startable {
+    public static final boolean REACTOR_NETTY_METRICS_ENABLE = Boolean.parseBoolean(System.getProperty("james.jmap.reactor.netty.metrics.enabled", "false"));
     private static final int RANDOM_PORT = 0;
 
     private final JMAPConfiguration configuration;
@@ -95,10 +96,12 @@ public class JMAPServer implements Startable {
                     .orElse(RANDOM_PORT))
                 .handle((request, response) -> handleVersionRoute(request).handleRequest(request, response))
                 .wiretap(wireTapEnabled())
-                .metrics(true, Function.identity())
+                .metrics(REACTOR_NETTY_METRICS_ENABLE, Function.identity())
                 .bindNow());
 
-            configureReactorNettyMetrics();
+            if (REACTOR_NETTY_METRICS_ENABLE) {
+                configureReactorNettyMetrics();
+            }
         }
     }
 

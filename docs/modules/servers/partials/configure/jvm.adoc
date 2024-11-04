@@ -75,6 +75,18 @@ james.jmap.quota.draft.compatibility=true
 ----
 To enable the compatibility.
 
+== Enable Reactor Netty metrics for JMAP server
+
+Allow to enable https://projectreactor.io/docs/netty/1.1.19/reference/index.html#_metrics_4[Reactor Netty metrics] for JMAP server which would provide useful debug information.
+
+Optional. Boolean. Default to false.
+
+Ex in `jvm.properties`:
+----
+james.jmap.reactor.netty.metrics.enabled=true
+----
+To enable the metrics.
+
 == Enable S3 metrics
 
 James supports extracting some S3 client-level metrics e.g. number of connections being used, time to acquire an S3 connection, total time to finish a S3 request...
