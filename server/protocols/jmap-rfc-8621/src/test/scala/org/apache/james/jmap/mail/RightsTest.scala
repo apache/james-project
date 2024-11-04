@@ -54,6 +54,9 @@ class RightsTest extends AnyWordSpec with Matchers {
     "recognise 't'" in {
       Right.forChar('t') must be(Some(Right.DeleteMessages))
     }
+    "recognise 'p'" in {
+      Right.forChar('p') must be(Some(Right.Post))
+    }
     "return empty when unknown" in {
       Right.forChar('k') must be(None)
     }
@@ -79,7 +82,7 @@ class RightsTest extends AnyWordSpec with Matchers {
     }
     "filter out unknown rights" in {
       val acl = new JavaMailboxACL(Map(
-        EntryKey.createUserEntryKey(USERNAME) -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aetpk")).asJava)
+        EntryKey.createUserEntryKey(USERNAME) -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aetxk")).asJava)
 
       Rights.fromACL(MailboxACL.fromJava(acl)) must be(Rights.of(USERNAME, Seq(Right.Administer, Right.Expunge, Right.DeleteMessages)))
     }
