@@ -144,7 +144,7 @@ public interface DeleteBlobStoreDAOContract {
     @Test
     default void deleteShouldThrowWhenNullBucketName() {
         BlobStoreDAO store = testee();
-        assertThatThrownBy(() -> Mono.from(store.delete(null, TEST_BLOB_ID)).block())
+        assertThatThrownBy(() -> Mono.from(store.delete((BucketName) null, TEST_BLOB_ID)).block())
             .isInstanceOf(NullPointerException.class);
     }
 

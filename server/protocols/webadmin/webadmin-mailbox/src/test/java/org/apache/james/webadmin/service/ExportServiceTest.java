@@ -35,6 +35,7 @@ import java.io.InputStream;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.export.api.FileExtension;
@@ -202,7 +203,7 @@ class ExportServiceTest {
 
         doReturn(Mono.error(new RuntimeException()))
             .when(testSystem.blobStore)
-            .delete(any(), any());
+            .delete(any(BucketName.class), any());
 
         Task.Result result = testee.export(progress, BOB).block();
 
@@ -220,7 +221,7 @@ class ExportServiceTest {
     void exportUserMailboxesDataShouldUpdateProgressWhenExporting() {
         doReturn(Mono.error(new RuntimeException()))
             .when(testSystem.blobStore)
-            .save(any(), any(InputStream.class), any());
+            .save(any(BucketName.class), any(InputStream.class), any());
 
         testee.export(progress, BOB, new ByteArrayInputStream(MESSAGE_CONTENT.getBytes())).block();
 

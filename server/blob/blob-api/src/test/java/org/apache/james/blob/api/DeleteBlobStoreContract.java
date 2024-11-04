@@ -115,7 +115,7 @@ public interface DeleteBlobStoreContract {
     @Test
     default void deleteShouldThrowWhenNullBucketName() {
         BlobStore store = testee();
-        assertThatThrownBy(() -> Mono.from(store.delete(null, blobIdFactory().of("ANY_BLOB_ID"))).block())
+        assertThatThrownBy(() -> Mono.from(store.delete((BucketName) null, blobIdFactory().of("ANY_BLOB_ID"))).block())
             .isInstanceOf(NullPointerException.class);
     }
 

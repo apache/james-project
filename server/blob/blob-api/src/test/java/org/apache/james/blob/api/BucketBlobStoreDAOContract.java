@@ -46,7 +46,7 @@ public interface BucketBlobStoreDAOContract {
     default void deleteBucketShouldThrowWhenNullBucketName() {
         BlobStoreDAO store = testee();
 
-        assertThatThrownBy(() -> Mono.from(store.deleteBucket(null)).block())
+        assertThatThrownBy(() -> Mono.from(store.deleteBucket((BucketName) null)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -76,7 +76,7 @@ public interface BucketBlobStoreDAOContract {
     default void saveBytesShouldThrowWhenNullBucketName() {
         BlobStoreDAO store = testee();
 
-        assertThatThrownBy(() -> Mono.from(store.save(null, TEST_BLOB_ID, SHORT_BYTEARRAY)).block())
+        assertThatThrownBy(() -> Mono.from(store.save((BucketName) null, TEST_BLOB_ID, SHORT_BYTEARRAY)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -84,7 +84,7 @@ public interface BucketBlobStoreDAOContract {
     default void saveStringShouldThrowWhenNullBucketName() {
         BlobStoreDAO store = testee();
 
-        assertThatThrownBy(() -> Mono.from(store.save(null, TEST_BLOB_ID, SHORT_STRING)).block())
+        assertThatThrownBy(() -> Mono.from(store.save((BucketName) null, TEST_BLOB_ID, SHORT_STRING)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -92,7 +92,7 @@ public interface BucketBlobStoreDAOContract {
     default void saveInputStreamShouldThrowWhenNullBucketName() {
         BlobStoreDAO store = testee();
 
-        assertThatThrownBy(() -> Mono.from(store.save(null, TEST_BLOB_ID, new ByteArrayInputStream(SHORT_BYTEARRAY))).block())
+        assertThatThrownBy(() -> Mono.from(store.save((BucketName) null, TEST_BLOB_ID, new ByteArrayInputStream(SHORT_BYTEARRAY))).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -101,7 +101,7 @@ public interface BucketBlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
-        assertThatThrownBy(() -> store.read(null, TEST_BLOB_ID))
+        assertThatThrownBy(() -> store.read((BucketName) null, TEST_BLOB_ID))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -110,7 +110,7 @@ public interface BucketBlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
-        assertThatThrownBy(() -> Mono.from(store.readBytes(null, TEST_BLOB_ID)).block())
+        assertThatThrownBy(() -> Mono.from(store.readBytes((BucketName) null, TEST_BLOB_ID)).block())
             .isInstanceOf(NullPointerException.class);
     }
 

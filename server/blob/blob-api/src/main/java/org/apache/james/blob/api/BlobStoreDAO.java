@@ -23,11 +23,13 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Optional;
 
 import org.reactivestreams.Publisher;
 
 import com.google.common.io.ByteSource;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface BlobStoreDAO {
@@ -58,12 +60,20 @@ public interface BlobStoreDAO {
      */
     InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
 
+    default InputStream read(Bucket bucket, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+        return read(bucket.bucketName(), blobId);
+    }
+
     default Publisher<ReactiveByteSource> readAsByteSource(BucketName bucketName, BlobId blobId) {
         return Mono.from(readBytes(bucketName, blobId))
             .map(bytes -> new ReactiveByteSource(bytes.length, Mono.just(ByteBuffer.wrap(bytes))));
     }
 
     Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId);
+
+    default Publisher<InputStream> readReactive(Bucket bucket, BlobId blobId) {
+        return readReactive(bucket.bucketName(), blobId);
+    }
 
     /**
      * Reads a Blob based on its BucketName and its BlobId
@@ -73,6 +83,10 @@ public interface BlobStoreDAO {
      *  or an IOObjectStoreException when an unexpected IO error occurs
      */
     Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId);
+
+    default Publisher<byte[]> readBytes(Bucket bucket, BlobId blobId) {
+        return readBytes(bucket.bucketName(), blobId);
+    }
 
 
     /**
@@ -85,6 +99,10 @@ public interface BlobStoreDAO {
      */
     Publisher<Void> save(BucketName bucketName, BlobId blobId, byte[] data);
 
+    default Publisher<Void> save(Bucket bucket, BlobId blobId, byte[] data) {
+        return save(bucket.bucketName(), blobId, data);
+    }
+
     /**
      * @see #save(BucketName, BlobId, byte[])
      *
@@ -92,10 +110,18 @@ public interface BlobStoreDAO {
      */
     Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream);
 
+    default Publisher<Void> save(Bucket bucket, BlobId blobId, InputStream inputStream) {
+        return save(bucket.bucketName(), blobId, inputStream);
+    }
+
     /**
      * @see #save(BucketName, BlobId, byte[])
      */
     Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSource content);
+
+    default Publisher<Void> save(Bucket bucket, BlobId blobId, ByteSource content) {
+        return save(bucket.bucketName(), blobId, content);
+    }
 
     /**
      * @see #save(BucketName, BlobId, byte[])
@@ -104,6 +130,10 @@ public interface BlobStoreDAO {
      */
     default Publisher<Void> save(BucketName bucketName, BlobId blobId, String data) {
         return save(bucketName, blobId, data.getBytes(StandardCharsets.UTF_8));
+    }
+
+    default Publisher<Void> save(Bucket bucket, BlobId blobId, String data) {
+        return save(bucket.bucketName(), blobId, data.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -116,7 +146,15 @@ public interface BlobStoreDAO {
      */
     Publisher<Void> delete(BucketName bucketName, BlobId blobId);
 
+    default Publisher<Void> delete(Bucket bucket, BlobId blobId) {
+        return delete(bucket.bucketName(), blobId);
+    }
+
     Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds);
+
+    default Publisher<Void> delete(Bucket bucket, Collection<BlobId> blobIds) {
+        return delete(bucket.bucketName(), blobIds);
+    }
 
     /**
      * Remove a bucket based on its BucketName
@@ -130,7 +168,20 @@ public interface BlobStoreDAO {
      */
     Publisher<Void> deleteBucket(BucketName bucketName);
 
+    default Publisher<Void> deleteBucket(Bucket bucket) {
+        return deleteBucket(bucket.bucketName());
+    }
+
     Publisher<BucketName> listBuckets();
 
+    default Publisher<Bucket> listBuckets(Optional<Tenant> tenant) {
+        return Flux.from(listBuckets())
+            .map(bucketName -> new Bucket(bucketName, tenant));
+    }
+
     Publisher<BlobId> listBlobs(BucketName bucketName);
+
+    default Publisher<BlobId> listBlobs(Bucket bucket) {
+        return listBlobs(bucket.bucketName());
+    }
 }
