@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.lucene.search;
 
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.ATTACHMENT_FILE_NAME_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.ATTACHMENT_TEXT_CONTENT_FIELD;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -47,6 +50,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
@@ -394,6 +398,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageId.Factory messageIdFactory;
+    private final LuceneIndexableDocument indexableDocument;
 
     @VisibleForTesting
     final IndexWriter writer;
@@ -401,7 +406,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     private int maxQueryResults = DEFAULT_MAX_QUERY_RESULTS;
 
-    private boolean suffixMatch = false;
+    private boolean suffixMatch = true;
 
     @Inject
     public LuceneMessageSearchIndex(
@@ -409,8 +414,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         MailboxId.Factory mailboxIdFactory,
         Directory directory,
         MessageId.Factory messageIdFactory,
-        SessionProvider sessionProvider) throws IOException {
-        this(factory, mailboxIdFactory, directory, false, messageIdFactory, sessionProvider);
+        SessionProvider sessionProvider,
+        TextExtractor textExtractor) throws IOException {
+        this(factory, mailboxIdFactory, directory, false, messageIdFactory, sessionProvider, textExtractor);
     }
 
     public LuceneMessageSearchIndex(
@@ -419,10 +425,12 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             Directory directory,
             boolean dropIndexOnStart,
             MessageId.Factory messageIdFactory,
-            SessionProvider sessionProvider) throws IOException {
+            SessionProvider sessionProvider,
+            TextExtractor textExtractor) throws IOException {
         super(factory, ImmutableSet.of(), sessionProvider);
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
+        this.indexableDocument = new LuceneIndexableDocument(textExtractor);
         this.directory = directory;
         try {
             this.writer = new IndexWriter(this.directory, createConfig(LenientImapSearchAnalyzer.INSTANCE, dropIndexOnStart));
@@ -445,8 +453,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities) {
-        return EnumSet.of(SearchCapabilities.MultimailboxSearch);
-
+        return EnumSet.of(SearchCapabilities.MultimailboxSearch,
+            SearchCapabilities.PartialEmailMatch,
+            SearchCapabilities.Text,
+            SearchCapabilities.FullText,
+            SearchCapabilities.AttachmentFileName,
+            SearchCapabilities.Attachment,
+            SearchCapabilities.HighlightSearch);
     }
 
     /**
@@ -1041,19 +1054,20 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.TextCriterion}
      */
-    private Query createTextQuery(SearchQuery.TextCriterion crit) throws UnsupportedSearchException {
+    private Query createTextQuery(SearchQuery.TextCriterion crit) {
         String value = crit.getOperator().getValue().toUpperCase(Locale.US);
-        switch (crit.getType()) {
-        case BODY:
-            return createTermQuery(BODY_FIELD, value);
-        case FULL:
-            BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-            queryBuilder.add(createTermQuery(BODY_FIELD, value), BooleanClause.Occur.SHOULD);
-            queryBuilder.add(createTermQuery(HEADERS_FIELD,value), BooleanClause.Occur.SHOULD);
-            return queryBuilder.build();
-        default:
-            throw new UnsupportedSearchException();
-        }
+        return switch (crit.getType()) {
+            case BODY -> createTermQuery(BODY_FIELD, value);
+            case ATTACHMENTS -> createTermQuery(ATTACHMENT_TEXT_CONTENT_FIELD, value);
+            case ATTACHMENT_FILE_NAME -> createTermQuery(ATTACHMENT_FILE_NAME_FIELD, value);
+            case FULL -> {
+                BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
+                queryBuilder.add(createTermQuery(BODY_FIELD, value), BooleanClause.Occur.SHOULD);
+                queryBuilder.add(createTermQuery(HEADERS_FIELD, value), BooleanClause.Occur.SHOULD);
+                queryBuilder.add(createTermQuery(ATTACHMENT_TEXT_CONTENT_FIELD, value), BooleanClause.Occur.SHOULD);
+                yield queryBuilder.build();
+            }
+        };
     }
 
     /**
@@ -1120,7 +1134,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         } else if (criterion instanceof AttachmentCriterion crit) {
             return createAttachmentQuery(crit.getOperator().isSet());
         } else if (criterion instanceof CustomFlagCriterion crit) {
-            return createFlagQuery(crit.getFlag(), crit.getOperator().isSet(), inMailboxes, recentUids);
+            return createFlagQuery(crit.getFlag().toLowerCase(Locale.US), crit.getOperator().isSet(), inMailboxes, recentUids);
         } else if (criterion instanceof SearchQuery.TextCriterion crit) {
             return createTextQuery(crit);
         } else if (criterion instanceof SearchQuery.AllCriterion) {
@@ -1141,15 +1155,12 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @Override
     public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage membership) {
-        return Mono.fromRunnable(Throwing.runnable(() -> {
-            Document doc = createMessageDocument(session, membership);
-            Document flagsDoc = createFlagsDocument(membership);
-
-            log.trace("Adding document: uid:'{}' with flags: {}", doc.get("uid"), flagsDoc);
-
-            writer.addDocument(doc);
-            writer.addDocument(flagsDoc);
-        }));
+        return indexableDocument.createMessageDocument(membership, session)
+            .flatMap(document -> Mono.fromRunnable(Throwing.runnable(() -> {
+                writer.addDocument(document);
+                writer.addDocument(indexableDocument.createFlagsDocument(membership));
+            })))
+            .then();
     }
 
     @Override
