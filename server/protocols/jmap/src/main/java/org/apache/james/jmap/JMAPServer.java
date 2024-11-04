@@ -51,6 +51,7 @@ import reactor.netty.http.server.HttpServerRequest;
 
 public class JMAPServer implements Startable {
     public static final boolean REACTOR_NETTY_METRICS_ENABLE = Boolean.parseBoolean(System.getProperty("james.jmap.reactor.netty.metrics.enabled", "false"));
+    private static final int REACTOR_NETTY_METRICS_MAX_URI_TAGS = 100;
     private static final int RANDOM_PORT = 0;
 
     private final JMAPConfiguration configuration;
@@ -108,7 +109,7 @@ public class JMAPServer implements Startable {
     private void configureReactorNettyMetrics() {
         Metrics.globalRegistry
             .config()
-            .meterFilter(MeterFilter.maximumAllowableTags(HTTP_CLIENT_PREFIX, URI, 100, MeterFilter.deny()));
+            .meterFilter(MeterFilter.maximumAllowableTags(HTTP_CLIENT_PREFIX, URI, REACTOR_NETTY_METRICS_MAX_URI_TAGS, MeterFilter.deny()));
     }
 
     private boolean wireTapEnabled() {
