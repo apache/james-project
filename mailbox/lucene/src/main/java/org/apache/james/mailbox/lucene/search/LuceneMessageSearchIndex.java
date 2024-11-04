@@ -209,7 +209,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     private int maxQueryResults = DEFAULT_MAX_QUERY_RESULTS;
 
-    private boolean suffixMatch = true;
+    private boolean suffixMatch = false;
 
     @Inject
     public LuceneMessageSearchIndex(
@@ -257,7 +257,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities) {
         return EnumSet.of(SearchCapabilities.MultimailboxSearch,
-            SearchCapabilities.PartialEmailMatch,
             SearchCapabilities.Text,
             SearchCapabilities.FullText,
             SearchCapabilities.AttachmentFileName,
