@@ -31,6 +31,7 @@ import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.SMTPConstants;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.group.ChannelGroup;
 
 /**
  * {@link BasicChannelInboundHandler} which is used by the SMTPServer
@@ -38,18 +39,15 @@ import io.netty.channel.ChannelHandlerContext;
 public class SMTPChannelInboundHandler extends BasicChannelInboundHandler {
 
     private final SmtpMetrics smtpMetrics;
+    private final ChannelGroup smtpChannelGroup;
 
-    public SMTPChannelInboundHandler(Protocol protocol, Encryption encryption, boolean proxyRequired, SmtpMetrics smtpMetrics) {
+    public SMTPChannelInboundHandler(Protocol protocol, Encryption encryption, boolean proxyRequired, SmtpMetrics smtpMetrics, ChannelGroup smtpChannelGroup) {
         super(new SMTPMDCContextFactory(), protocol, encryption, proxyRequired);
         this.smtpMetrics = smtpMetrics;
+        this.smtpChannelGroup = smtpChannelGroup;
         this.resultHandlers.add(recordCommandCount(smtpMetrics));
     }
 
-    public SMTPChannelInboundHandler(Protocol protocol, SmtpMetrics smtpMetrics) {
-        super(new SMTPMDCContextFactory(), protocol);
-        this.smtpMetrics = smtpMetrics;
-        this.resultHandlers.add(recordCommandCount(smtpMetrics));
-    }
 
     private ProtocolHandlerResultHandler recordCommandCount(SmtpMetrics smtpMetrics) {
         return (session, response, executionTime, handler) -> {
@@ -60,12 +58,14 @@ public class SMTPChannelInboundHandler extends BasicChannelInboundHandler {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        smtpChannelGroup.add(ctx.channel());
         super.channelActive(ctx);
         smtpMetrics.getConnectionMetric().increment();
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        smtpChannelGroup.remove(ctx.channel());
         super.channelInactive(ctx);
         smtpMetrics.getConnectionMetric().decrement();
     }

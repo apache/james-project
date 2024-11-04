@@ -24,6 +24,7 @@ import java.util.Set;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.protocols.lib.netty.CertificateReloadable;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.Routes;
@@ -71,6 +72,15 @@ public class ProtocolServerRoutes implements Routes {
                 .flatMap(CertificateReloadable.Factory::certificatesReloadable)
                 .filter(filters(request))
                 .forEach(Throwing.consumer(CertificateReloadable::reloadSSLCertificate));
+
+            return Responses.returnNoContent(response);
+        });
+
+        service.delete(SERVERS + "/users/:user", (request, response) -> {
+            Username username = Username.of(request.params("user"));
+            servers.stream()
+                .flatMap(CertificateReloadable.Factory::certificatesReloadable)
+                .forEach(s -> s.logout(username));
 
             return Responses.returnNoContent(response);
         });

@@ -249,6 +249,17 @@ class IMAPServerTest {
         }
 
         @Test
+        void logoutShouldDisconnectUser() throws Exception {
+            testIMAPClient.connect("127.0.0.1", port)
+                .login(USER.asString(), USER_PASS);
+
+            imapServer.logout(USER);
+
+            assertThatThrownBy(() -> testIMAPClient
+                .append("INBOX", SMALL_MESSAGE));
+        }
+
+        @Test
         void allowConnectWithUnbannedIp() throws IOException {
             imapServer.getConnectionChecks().stream()
                 .filter(check -> check instanceof IpConnectionCheck)
