@@ -37,6 +37,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
@@ -464,5 +465,43 @@ public interface SearchHighLighterContract {
                 .build(), session))
             .collectList()
             .block()).hasSize(0);
+    }
+
+    @Test
+    default void shouldHighlightAttachmentTextContentWhenTextBodyDoesNotMatch() throws Exception {
+        MailboxSession session = session(USERNAME1);
+
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("Hallo, Thx Matthieu for your help")
+                    .setBody("append contentA to inbox", StandardCharsets.UTF_8)),
+            session).getId();
+
+        // m2 has an attachment with text content: "This is a beautiful banana"
+        ComposedMessageId m2 = appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithTextAttachment.eml")),
+            session).getId();
+
+        verifyMessageWasIndexed(2);
+
+        String keywordSearch = "beautiful";
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(
+                new SearchQuery.ConjunctionCriterion(SearchQuery.Conjunction.OR,
+                    List.of(SearchQuery.bodyContains(keywordSearch),
+                        SearchQuery.attachmentContains(keywordSearch)))))
+            .inMailboxes(List.of(m1.getMailboxId(), m2.getMailboxId()))
+            .build();
+
+        List<SearchSnippet> searchSnippets = Flux.from(testee().highlightSearch(List.of(m1.getMessageId(), m2.getMessageId()), multiMailboxSearch, session))
+            .collectList()
+            .block();
+
+        assertThat(searchSnippets).hasSize(1);
+
+        assertThat(searchSnippets.getFirst().highlightedBody())
+            .isPresent()
+            .satisfies(highlightedBody -> assertThat(highlightedBody.get()).contains("This is a <mark>beautiful</mark> banana"));
     }
 }
