@@ -24,6 +24,8 @@ import java.util.function.Predicate;
 import org.apache.james.core.Username;
 
 public interface UserCondition extends Predicate<Username> {
+    UserCondition ALL = any -> true;
+
     default UserCondition and(UserCondition other) {
         return username -> test(username) && other.test(username);
     }

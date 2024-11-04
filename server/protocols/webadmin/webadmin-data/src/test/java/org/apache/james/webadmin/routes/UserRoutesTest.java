@@ -22,10 +22,7 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
-import static org.apache.james.mailbox.DefaultMailboxes.DEFAULT_MAILBOXES;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.apache.james.webadmin.condition.user.HasNoMailboxesCondition.HAS_NO_MAILBOXES_PARAM;
-import static org.apache.james.webadmin.condition.user.HasNotAllSystemMailboxesCondition.HAS_NOT_ALL_SYSTEM_MAILBOXES_PARAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -47,11 +44,6 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
-import org.apache.james.mailbox.DefaultMailboxes;
-import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -69,9 +61,6 @@ import org.apache.james.user.memory.MemoryDelegationStore;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.condition.user.HasNoMailboxesCondition;
-import org.apache.james.webadmin.condition.user.HasNotAllSystemMailboxesCondition;
-import org.apache.james.webadmin.service.UserMailboxesService;
 import org.apache.james.webadmin.service.UserService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -90,8 +79,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import io.restassured.RestAssured;
@@ -130,7 +117,6 @@ class UserRoutesTest {
         final AliasReverseResolver aliasReverseResolver;
         final CanSendFrom canSendFrom;
         final MemoryDelegationStore delegationStore;
-        final MailboxManager mailboxManager;
 
         WebAdminServer webAdminServer;
 
@@ -149,7 +135,6 @@ class UserRoutesTest {
             recipientRewriteTable.setUsersRepository(usersRepository);
             recipientRewriteTable.setUserEntityValidator(validator);
             this.delegationStore = new MemoryDelegationStore();
-            this.mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         }
 
         @Override
@@ -167,8 +152,7 @@ class UserRoutesTest {
             Class<?> parameterType = parameterContext.getParameter().getType();
             return parameterType.isAssignableFrom(UsersRepository.class)
                 || parameterType.isAssignableFrom(RecipientRewriteTable.class)
-                || parameterType.isAssignableFrom(DelegationStore.class)
-                || parameterType.isAssignableFrom(MailboxManager.class);
+                || parameterType.isAssignableFrom(DelegationStore.class);
         }
 
         @Override
@@ -183,18 +167,12 @@ class UserRoutesTest {
             if (parameterType.isAssignableFrom(DelegationStore.class)) {
                 return delegationStore;
             }
-            if (parameterType.isAssignableFrom(MailboxManager.class)) {
-                return mailboxManager;
-            }
             throw new RuntimeException("Unknown parameter type: " + parameterType);
         }
 
         private WebAdminServer startServer(UsersRepository usersRepository) {
-            UserMailboxesService userMailboxService = new UserMailboxesService(mailboxManager, usersRepository);
             WebAdminServer server = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository), canSendFrom, new JsonTransformer(),
-                    delegationStore,
-                    ImmutableMap.of(HAS_NO_MAILBOXES_PARAM, new HasNoMailboxesCondition(userMailboxService),
-                        HAS_NOT_ALL_SYSTEM_MAILBOXES_PARAM, new HasNotAllSystemMailboxesCondition(userMailboxService))))
+                    delegationStore))
                 .start();
 
             RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
@@ -1083,82 +1061,6 @@ class UserRoutesTest {
                 .post("/NOTusername@domain/verify")
             .then()
                 .statusCode(HttpStatus.UNAUTHORIZED_401);
-        }
-
-        @Test
-        void getUsersShouldReturnUsers(UsersRepository usersRepository)
-            throws UsersRepositoryException {
-            usersRepository.addUser(ALICE, "");
-            usersRepository.addUser(BOB, "");
-
-            List<Map<String, String>> users =
-                when()
-                    .get()
-                .then()
-                    .statusCode(HttpStatus.OK_200)
-                    .contentType(ContentType.JSON)
-                    .extract()
-                    .body()
-                    .jsonPath()
-                    .getList(".");
-
-            List<String> expected = ImmutableList.of(ALICE.asString(), BOB.asString());
-            assertThat(users.stream().flatMap(map -> map.values().stream()).toList()).hasSameSizeAs(expected);
-            assertThat(users.stream().flatMap(map -> map.values().stream()).toList()).hasSameElementsAs(expected);
-        }
-
-        @Test
-        void getUsersShouldReturnUsersWithNoMailboxWhenHasNoMailboxesParaIsSet(UsersRepository usersRepository, MailboxManager mailboxManager)
-            throws UsersRepositoryException, MailboxException {
-            usersRepository.addUser(ALICE, "");
-            usersRepository.addUser(BOB, "");
-            mailboxManager.createMailbox(MailboxPath.forUser(ALICE, DefaultMailboxes.INBOX), mailboxManager.createSystemSession(ALICE));
-
-            List<String> users =
-                given()
-                    .queryParam("hasNoMailboxes")
-                .when()
-                    .get()
-                .then()
-                    .statusCode(HttpStatus.OK_200)
-                    .contentType(ContentType.JSON)
-                    .extract()
-                    .body()
-                    .jsonPath()
-                    .getList(".", Map.class)
-                    .stream()
-                    .flatMap(map -> map.values().stream())
-                    .toList();
-
-            assertThat(users).isEqualTo(ImmutableList.of(BOB.asString()));
-        }
-
-        @Test
-        void getUsersShouldReturnUsersNotHavingAllSystemMailboxesWhenHasNotAllSystemMailboxesParaIsSet(UsersRepository usersRepository, MailboxManager mailboxManager)
-            throws UsersRepositoryException, MailboxException {
-            usersRepository.addUser(ALICE, "");
-            usersRepository.addUser(BOB, "");
-            DEFAULT_MAILBOXES.forEach(Throwing.consumer(mailbox -> mailboxManager.createMailbox(MailboxPath.forUser(ALICE, mailbox), mailboxManager.createSystemSession(ALICE))));
-            ImmutableList.of(DefaultMailboxes.INBOX, DefaultMailboxes.SENT)
-                .forEach(Throwing.consumer(mailbox -> mailboxManager.createMailbox(MailboxPath.forUser(BOB, mailbox), mailboxManager.createSystemSession(BOB))));
-
-            List<String> users =
-                given()
-                    .queryParam("hasNotAllSystemMailboxes")
-                .when()
-                    .get()
-                .then()
-                    .statusCode(HttpStatus.OK_200)
-                    .contentType(ContentType.JSON)
-                    .extract()
-                    .body()
-                    .jsonPath()
-                    .getList(".", Map.class)
-                    .stream()
-                    .flatMap(map -> map.values().stream())
-                    .toList();
-
-            assertThat(users).isEqualTo(ImmutableList.of(BOB.asString()));
         }
 
         @Nested

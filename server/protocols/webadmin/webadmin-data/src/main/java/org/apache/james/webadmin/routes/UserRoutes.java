@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
+import static org.apache.james.webadmin.UserCondition.ALL;
 import static spark.Spark.halt;
 
 import java.util.List;
@@ -177,8 +178,7 @@ public class UserRoutes implements Routes {
             .stream()
             .filter(entry -> request.queryParams().contains(entry.getKey()))
             .map(Map.Entry::getValue)
-            .reduce(UserCondition::and)
-            .orElse(any -> true);
+            .reduce(ALL, UserCondition::and);
         return userService.getUsers()
             .stream()
             .filter(userResponse -> combinedCondition.test(Username.of(userResponse.getUsername())))
