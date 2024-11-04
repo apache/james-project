@@ -17,49 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.opensearch.json;
+package org.apache.james.mailbox.store.search.mime;
 
-import java.util.Objects;
+public interface SerializableMessage {
 
-import org.apache.james.mime4j.stream.Field;
-import org.apache.james.mime4j.util.ByteSequence;
-
-public class FieldImpl implements Field {
-    private final String name;
-    private final String body;
-
-    public FieldImpl(String name, String body) {
-        this.name = name;
-        this.body = body;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String getBody() {
-        return body;
-    }
-
-    @Override
-    public ByteSequence getRaw() {
-        return null;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, body);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof  FieldImpl) {
-            FieldImpl otherField = (FieldImpl) o;
-            return Objects.equals(name, otherField.name)
-                && Objects.equals(body, otherField.body);
-        }
-        return false;
-    }
+    String serialize();
 }

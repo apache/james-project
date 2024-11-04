@@ -17,12 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.opensearch.json;
+package org.apache.james.mailbox.store.search.mime;
 
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 
@@ -48,17 +47,14 @@ public class EMailer implements SerializableMessage {
         return s;
     }
 
-    @JsonProperty(JsonMessageConstants.EMailer.NAME)
     public Optional<String> getName() {
         return name;
     }
 
-    @JsonProperty(JsonMessageConstants.EMailer.ADDRESS)
     public String getAddress() {
         return address;
     }
 
-    @JsonProperty(JsonMessageConstants.EMailer.DOMAIN)
     public String getDomain() {
         return domain;
     }

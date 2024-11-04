@@ -27,6 +27,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -36,6 +37,11 @@ import org.apache.james.mailbox.opensearch.IndexBody;
 import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.SearchUtil;
+import org.apache.james.mailbox.store.search.mime.EMailers;
+import org.apache.james.mailbox.store.search.mime.HeaderCollection;
+import org.apache.james.mailbox.store.search.mime.MimePart;
+import org.apache.james.mailbox.store.search.mime.MimePartParser;
+import org.apache.james.mailbox.store.search.mime.Subjects;
 import org.apache.james.mime4j.MimeException;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -226,15 +232,15 @@ public class IndexableMessage {
         return new Builder();
     }
 
-    private final List<MimePart> attachments;
-    private final EMailers bcc;
+    private final List<MimePartDto> attachments;
+    private final EMailersDto bcc;
     private final Optional<String> bodyHtml;
     private final Optional<String> bodyText;
-    private final EMailers cc;
+    private final EMailersDto cc;
     private final String date;
-    private final EMailers from;
+    private final EMailersDto from;
     private final boolean hasAttachment;
-    private final List<HeaderCollection.Header> headers;
+    private final List<HeaderDto> headers;
     private final boolean isAnswered;
     private final boolean isDeleted;
     private final boolean isDraft;
@@ -250,9 +256,9 @@ public class IndexableMessage {
     private final String sentDate;
     private final Optional<String> saveDate;
     private final long size;
-    private final Subjects subjects;
+    private final SubjectsDto subjects;
     private final String subType;
-    private final EMailers to;
+    private final EMailersDto to;
     private final long uid;
     private final String[] userFlags;
     private final Optional<String> mimeMessageID;
@@ -284,15 +290,19 @@ public class IndexableMessage {
                              long uid,
                              String[] userFlags,
                              Optional<String> mimeMessageID) {
-        this.attachments = attachments;
-        this.bcc = bcc;
+        this.attachments = attachments.stream()
+            .map(MimePartDto::from)
+            .toList();
+        this.bcc = EMailersDto.from(bcc);
         this.bodyHtml = bodyHtml;
         this.bodyText = bodyText;
-        this.cc = cc;
+        this.cc = EMailersDto.from(cc);
         this.date = date;
-        this.from = from;
+        this.from = EMailersDto.from(from);
         this.hasAttachment = hasAttachment;
-        this.headers = headers;
+        this.headers = headers.stream()
+            .map(HeaderDto::from)
+            .collect(Collectors.toList());
         this.isAnswered = isAnswered;
         this.isDeleted = isDeleted;
         this.isDraft = isDraft;
@@ -308,21 +318,21 @@ public class IndexableMessage {
         this.sentDate = sentDate;
         this.saveDate = saveDate;
         this.size = size;
-        this.subjects = subjects;
+        this.subjects = new SubjectsDto(subjects.getSubjects());
         this.subType = subType;
-        this.to = to;
+        this.to = EMailersDto.from(to);
         this.uid = uid;
         this.userFlags = userFlags;
         this.mimeMessageID = mimeMessageID;
     }
 
     @JsonProperty(JsonMessageConstants.ATTACHMENTS)
-    public List<MimePart> getAttachments() {
+    public List<MimePartDto> getAttachments() {
         return attachments;
     }
 
     @JsonProperty(JsonMessageConstants.BCC)
-    public EMailers getBcc() {
+    public EMailersDto getBcc() {
         return bcc;
     }
 
@@ -337,7 +347,7 @@ public class IndexableMessage {
     }
 
     @JsonProperty(JsonMessageConstants.CC)
-    public EMailers getCc() {
+    public EMailersDto getCc() {
         return cc;
     }
 
@@ -347,7 +357,7 @@ public class IndexableMessage {
     }
 
     @JsonProperty(JsonMessageConstants.FROM)
-    public EMailers getFrom() {
+    public EMailersDto getFrom() {
         return from;
     }
 
@@ -357,7 +367,7 @@ public class IndexableMessage {
     }
 
     @JsonProperty(JsonMessageConstants.HEADERS)
-    public List<HeaderCollection.Header> getHeaders() {
+    public List<HeaderDto> getHeaders() {
         return headers;
     }
 
@@ -402,7 +412,7 @@ public class IndexableMessage {
     }
 
     @JsonProperty(JsonMessageConstants.SUBJECT)
-    public Subjects getSubjects() {
+    public SubjectsDto getSubjects() {
         return subjects;
     }
 
@@ -412,7 +422,7 @@ public class IndexableMessage {
     }
 
     @JsonProperty(JsonMessageConstants.TO)
-    public EMailers getTo() {
+    public EMailersDto getTo() {
         return to;
     }
 

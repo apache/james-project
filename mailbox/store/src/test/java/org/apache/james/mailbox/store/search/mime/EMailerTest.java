@@ -16,40 +16,27 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.opensearch.json;
 
-import static org.assertj.core.api.Assertions.assertThat;
+package org.apache.james.mailbox.store.search.mime;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
-import org.apache.james.mailbox.extractor.ParsedContent;
-import org.apache.james.mailbox.model.ContentType.MediaType;
-import org.apache.james.mailbox.model.ContentType.SubType;
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 
-class MimePartTest {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
+class EMailerTest {
     @Test
-    void buildShouldWorkWhenTextualContentFromParserIsEmpty() {
-        MimePart.builder(contentType -> true)
-            .addBodyContent(new ByteArrayInputStream(new byte[] {}))
-            .addMediaType(MediaType.of("text"))
-            .addSubType(SubType.of("plain"))
-            .build();
+    void eMailerShouldRespectBeanContract() {
+        EqualsVerifier.forClass(EMailer.class)
+            .verify();
     }
 
     @Test
-    void buildShouldWorkWhenTextualContentFromParserIsNonEmpty() {
-        String body = "text";
-        MimePart mimePart = MimePart.builder(contentType -> true)
-            .addBodyContent(new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)))
-            .addMediaType(MediaType.of("text"))
-            .addSubType(SubType.of("plain"))
-            .build()
-            .asMimePart((in, contentType) -> ParsedContent.empty())
-            .block();
-
-        assertThat(mimePart.getTextualBody()).contains(body);
+    void shouldSupportNullDomain() {
+        assertThatCode(() -> new EMailer(Optional.empty(), "localPart", null))
+            .doesNotThrowAnyException();
     }
 }

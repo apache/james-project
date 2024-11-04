@@ -19,31 +19,9 @@
 
 package org.apache.james.mailbox.opensearch.json;
 
-import java.io.InputStream;
-import java.nio.charset.Charset;
+import java.util.Set;
 
-import org.apache.james.mailbox.model.ContentType.MediaType;
-import org.apache.james.mailbox.model.ContentType.SubType;
-import org.apache.james.mime4j.stream.Field;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-public interface MimePartContainerBuilder {
-
-    MimePart.ParsedMimePart build();
-
-    MimePartContainerBuilder addToHeaders(Field field);
-
-    MimePartContainerBuilder addBodyContent(InputStream bodyContent);
-
-    MimePartContainerBuilder addChild(MimePart.ParsedMimePart mimePart);
-
-    MimePartContainerBuilder addFileName(String fileName);
-
-    MimePartContainerBuilder charset(Charset charset);
-
-    MimePartContainerBuilder addMediaType(MediaType mediaType);
-
-    MimePartContainerBuilder addSubType(SubType subType);
-
-    MimePartContainerBuilder addContentDisposition(String contentDisposition);
-
+public record SubjectsDto(@JsonValue Set<String> subjects) {
 }
