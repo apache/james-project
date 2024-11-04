@@ -234,7 +234,7 @@ public class LuceneIndexableDocument {
                     .orElse(sysFlag.toString()), Field.Store.YES)));
 
         Arrays.stream(messageFlags.getUserFlags())
-            .forEach(userFlag -> doc.add(new StringField(FLAGS_FIELD, userFlag, Field.Store.YES)));
+            .forEach(userFlag -> doc.add(new StringField(FLAGS_FIELD, lowercase(userFlag), Field.Store.YES)));
 
         // if no flags are there we just use a empty field
         if (messageFlags.getSystemFlags().length == 0 && messageFlags.getUserFlags().length == 0) {

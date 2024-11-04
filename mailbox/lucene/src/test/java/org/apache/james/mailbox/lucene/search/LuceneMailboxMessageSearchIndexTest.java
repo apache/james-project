@@ -52,6 +52,7 @@ import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MessageBuilder;
+import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndexContract;
 import org.apache.lucene.store.ByteBuffersDirectory;
@@ -112,7 +113,7 @@ class LuceneMailboxMessageSearchIndexTest {
         id3 = factory.generate();
         id4 = factory.generate();
         id5 = factory.generate();
-        index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new ByteBuffersDirectory(), true, factory, null);
+        index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new ByteBuffersDirectory(), true, factory, null, new JsoupTextExtractor());
         index.setEnableSuffixMatch(true);
         Map<String, String> headersSubject = new HashMap<>();
         headersSubject.put("Subject", "test (fwd)");

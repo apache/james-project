@@ -47,6 +47,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
+import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.lucene.document.Document;
@@ -156,7 +157,7 @@ class LuceneMailboxMessageFlagSearchTest {
                 .listeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
                         preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new ByteBuffersDirectory(),
                         new InMemoryMessageId.Factory(),
-                        preInstanciationStage.getSessionProvider())))
+                        preInstanciationStage.getSessionProvider(), new JsoupTextExtractor())))
                 .noPreDeletionHooks()
                 .storeQuotaManager()
                 .build();

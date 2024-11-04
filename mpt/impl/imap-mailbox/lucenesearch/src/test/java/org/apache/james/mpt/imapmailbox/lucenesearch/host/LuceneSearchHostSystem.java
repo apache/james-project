@@ -34,6 +34,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
@@ -66,7 +67,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             .listeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new ByteBuffersDirectory(),
                 new InMemoryMessageId.Factory(),
-                preInstanciationStage.getSessionProvider())))
+                preInstanciationStage.getSessionProvider(), new DefaultTextExtractor())))
             .noPreDeletionHooks()
             .storeQuotaManager()
             .build();
