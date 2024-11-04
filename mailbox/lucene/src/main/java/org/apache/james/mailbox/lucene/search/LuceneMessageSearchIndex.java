@@ -20,10 +20,45 @@ package org.apache.james.mailbox.lucene.search;
 
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.ATTACHMENT_FILE_NAME_FIELD;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.ATTACHMENT_TEXT_CONTENT_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.BASE_SUBJECT_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.BODY_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.FIRST_CC_MAILBOX_NAME_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.FIRST_FROM_MAILBOX_NAME_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.FIRST_TO_MAILBOX_NAME_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.FLAGS_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.HAS_ATTACHMENT_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.HEADERS_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.ID_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.INTERNAL_DATE_FIELD_DAY_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.INTERNAL_DATE_FIELD_HOUR_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.INTERNAL_DATE_FIELD_MINUTE_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.INTERNAL_DATE_FIELD_MONTH_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.INTERNAL_DATE_FIELD_SECOND_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.INTERNAL_DATE_FIELD_YEAR_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.MAILBOX_ID_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.MESSAGE_ID_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.MODSEQ_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.PREFIX_HEADER_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SAVE_DATE_FIELD_DAY_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SAVE_DATE_FIELD_HOUR_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SAVE_DATE_FIELD_MINUTE_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SAVE_DATE_FIELD_MONTH_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SAVE_DATE_FIELD_SECOND_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SAVE_DATE_FIELD_YEAR_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SENT_DATE_FIELD_DAY_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SENT_DATE_FIELD_HOUR_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SENT_DATE_FIELD_MINUTE_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SENT_DATE_FIELD_MONTH_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SENT_DATE_FIELD_SECOND_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SENT_DATE_FIELD_YEAR_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SIZE_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.THREAD_ID_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.UID_FIELD;
+import static org.apache.james.mailbox.lucene.search.LuceneIndexableDocument.createFlagsIdField;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -41,7 +76,6 @@ import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 import jakarta.mail.Flags.Flag;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
@@ -53,7 +87,6 @@ import org.apache.james.mailbox.exception.UnsupportedSearchException;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -73,31 +106,10 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.SearchUtil;
-import org.apache.james.mime4j.MimeException;
-import org.apache.james.mime4j.dom.Header;
-import org.apache.james.mime4j.dom.address.Address;
-import org.apache.james.mime4j.dom.address.AddressList;
-import org.apache.james.mime4j.dom.address.Group;
-import org.apache.james.mime4j.dom.address.MailboxList;
-import org.apache.james.mime4j.dom.field.DateTimeField;
-import org.apache.james.mime4j.field.address.AddressFormatter;
-import org.apache.james.mime4j.field.address.LenientAddressParser;
-import org.apache.james.mime4j.message.SimpleContentHandler;
-import org.apache.james.mime4j.parser.MimeStreamParser;
-import org.apache.james.mime4j.stream.BodyDescriptor;
-import org.apache.james.mime4j.stream.MimeConfig;
-import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.LongPoint;
-import org.apache.lucene.document.NumericDocValuesField;
-import org.apache.lucene.document.SortedSetDocValuesField;
-import org.apache.lucene.document.StoredField;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexFormatTooOldException;
 import org.apache.lucene.index.IndexReader;
@@ -119,7 +131,6 @@ import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.util.BytesRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,214 +171,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      */
     private static final int DEFAULT_MAX_QUERY_RESULTS = 100000;
 
-    /**
-     * {@link Field} which will contain the unique index of the {@link Document}
-     */
-    @VisibleForTesting
-    static final String ID_FIELD = "id";
-
-
-    /**
-     * {@link Field} which will contain uid of the {@link MailboxMessage}
-     */
-    static final String UID_FIELD = "uid";
-
-    /**
-     * {@link Field} boolean field that say if the message as an attachment or not
-     */
-    private static final String HAS_ATTACHMENT_FIELD = "hasAttachment";
-
-    /**
-     * {@link Field} which will contain the {@link Flags} of the {@link MailboxMessage}
-     */
-    static final String FLAGS_FIELD = "flags";
-
-    /**
-     * {@link Field} which will contain the size of the {@link MailboxMessage}
-     */
-    private static final String SIZE_FIELD = "size";
-
-    /**
-     * {@link Field} which will contain the body of the {@link MailboxMessage}
-     */
-    static final String BODY_FIELD = "body";
-
-    /**
-     * Prefix which will be used for each message header to store it also in a seperate {@link Field}
-     */
-    private static final String PREFIX_HEADER_FIELD = "header_";
-
-    /**
-     * {@link Field} which will contain the whole message header of the {@link MailboxMessage}
-     */
-    private static final String HEADERS_FIELD = "headers";
-
-    /**
-     * {@link Field} which will contain the mod-sequence of the message
-     */
-    private static final String MODSEQ_FIELD = "modSeq";
-
-    /**
-     * {@link Field} which will contain the threadId of the message
-     */
-    private static final String THREAD_ID_FIELD = "threadId";
-
-    /**
-     * {@link Field} which will contain the TO-Address of the message
-     */
-    private static final String TO_FIELD = "to";
-
-    private static final String FIRST_TO_MAILBOX_NAME_FIELD = "firstToMailboxName";
-    private static final String FIRST_TO_MAILBOX_DISPLAY_FIELD = "firstToMailboxDisplay";
-
-    /**
-     * {@link Field} which will contain the CC-Address of the message
-     */
-    private static final String CC_FIELD = "cc";
-
-    private static final String FIRST_CC_MAILBOX_NAME_FIELD = "firstCcMailboxName";
-
-
-    /**
-     * {@link Field} which will contain the FROM-Address of the message
-     */
-    private static final String FROM_FIELD = "from";
-
-    private static final String FIRST_FROM_MAILBOX_NAME_FIELD = "firstFromMailboxName";
-    private static final String FIRST_FROM_MAILBOX_DISPLAY_FIELD = "firstFromMailboxDisplay";
-
-    /**
-     * {@link Field} which will contain the BCC-Address of the message
-     */
-    private static final String BCC_FIELD = "bcc";
-
-
-    static final String BASE_SUBJECT_FIELD = "baseSubject";
-    static final String SUBJECT_FIELD = "subject";
-
-    /**
-     * {@link Field} which contain the internalDate of the message with YEAR-Resolution
-     */
-    private static final String INTERNAL_DATE_FIELD_YEAR_RESOLUTION = "internaldateYearResolution";
-
-
-    /**
-     * {@link Field} which contain the internalDate of the message with MONTH-Resolution
-     */
-    private static final String INTERNAL_DATE_FIELD_MONTH_RESOLUTION = "internaldateMonthResolution";
-
-    /**
-     * {@link Field} which contain the internalDate of the message with DAY-Resolution
-     */
-    private static final String INTERNAL_DATE_FIELD_DAY_RESOLUTION = "internaldateDayResolution";
-
-    /**
-     * {@link Field} which contain the internalDate of the message with HOUR-Resolution
-     */
-    private static final String INTERNAL_DATE_FIELD_HOUR_RESOLUTION = "internaldateHourResolution";
-
-    /**
-     * {@link Field} which contain the internalDate of the message with MINUTE-Resolution
-     */
-    private static final String INTERNAL_DATE_FIELD_MINUTE_RESOLUTION = "internaldateMinuteResolution";
-
-    /**
-     * {@link Field} which contain the internalDate of the message with SECOND-Resolution
-     */
-    private static final String INTERNAL_DATE_FIELD_SECOND_RESOLUTION = "internaldateSecondResolution";
-
-
-    /**
-     * {@link Field} which contain the internalDate of the message with MILLISECOND-Resolution
-     */
-    private static final String INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION = "internaldateMillisecondResolution";
-
-    /**
-     * {@link Field} which contain the saveDate of the message with YEAR-Resolution
-     */
-    private static final String SAVE_DATE_FIELD_YEAR_RESOLUTION = "saveDateYearResolution";
-
-    /**
-     * {@link Field} which contain the saveDate of the message with MONTH-Resolution
-     */
-    private static final String SAVE_DATE_FIELD_MONTH_RESOLUTION = "saveDateMonthResolution";
-
-    /**
-     * {@link Field} which contain the saveDate of the message with DAY-Resolution
-     */
-    private static final String SAVE_DATE_FIELD_DAY_RESOLUTION = "saveDateDayResolution";
-
-    /**
-     * {@link Field} which contain the saveDate of the message with HOUR-Resolution
-     */
-    private static final String SAVE_DATE_FIELD_HOUR_RESOLUTION = "saveDateHourResolution";
-
-    /**
-     * {@link Field} which contain the saveDate of the message with MINUTE-Resolution
-     */
-    private static final String SAVE_DATE_FIELD_MINUTE_RESOLUTION = "saveDateMinuteResolution";
-
-    /**
-     * {@link Field} which contain the saveDate of the message with SECOND-Resolution
-     */
-    private static final String SAVE_DATE_FIELD_SECOND_RESOLUTION = "saveDateSecondResolution";
-
-    /**
-     * {@link Field} which will contain the id of the {@link Mailbox}
-     */
-    static final String MAILBOX_ID_FIELD = "mailboxid";
-
-    /**
-     * {@link Field} which will contain the user of the {@link MailboxSession}
-     */
-    private static final String USERS = "userSession";
-    /**
-     * {@link Field} which will contain the id of the {@link MessageId}
-     */
-    static final String MESSAGE_ID_FIELD = "messageid";
-
-    /**
-     * {@link Field} which contain the Date header of the message with YEAR-Resolution
-     */
-    private static final String SENT_DATE_FIELD_YEAR_RESOLUTION = "sentdateYearResolution";
-
-
-    /**
-     * {@link Field} which contain the Date header of the message with MONTH-Resolution
-     */
-    private static final String SENT_DATE_FIELD_MONTH_RESOLUTION = "sentdateMonthResolution";
-
-    /**
-     * {@link Field} which contain the Date header of the message with DAY-Resolution
-     */
-    private static final String SENT_DATE_FIELD_DAY_RESOLUTION = "sentdateDayResolution";
-
-    /**
-     * {@link Field} which contain the Date header of the message with HOUR-Resolution
-     */
-    private static final String SENT_DATE_FIELD_HOUR_RESOLUTION = "sentdateHourResolution";
-
-    /**
-     * {@link Field} which contain the Date header of the message with MINUTE-Resolution
-     */
-    private static final String SENT_DATE_FIELD_MINUTE_RESOLUTION = "sentdateMinuteResolution";
-
-    /**
-     * {@link Field} which contain the Date header of the message with SECOND-Resolution
-     */
-    private static final String SENT_DATE_FIELD_SECOND_RESOLUTION = "sentdateSecondResolution";
-
-
-    /**
-     * {@link Field} which contain the Date header of the message with MILLISECOND-Resolution
-     */
-    private static final String SENT_DATE_FIELD_MILLISECOND_RESOLUTION = "sentdateMillisecondResolution";
-
-    private static final String SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION = "sentdateSort";
-
-    private static final String MEDIA_TYPE_TEXT = "text";
-    private static final String MEDIA_TYPE_MESSAGE = "message";
-    private static final String DEFAULT_ENCODING = "US-ASCII";
     private static final boolean INCLUDE_LOWER = true;
     private static final boolean INCLUDE_UPPER = true;
 
@@ -562,214 +365,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             queryBuilder.add(new TermQuery(new Term(MAILBOX_ID_FIELD, idAsString)), BooleanClause.Occur.SHOULD);
         }
         return queryBuilder.build();
-    }
-
-    /**
-     * Create a new {@link Document} for the given {@link MailboxMessage}. This Document does not contain any flags data. The {@link Flags} are stored in a seperate Document.
-     * <p>
-     * See {@link #createFlagsDocument(MailboxMessage)}
-     */
-    private Document createMessageDocument(final MailboxSession session, final MailboxMessage membership) throws IOException, MimeException {
-        final Document doc = new Document();
-        // TODO: Better handling
-        doc.add(new StringField(USERS, session.getUser().asString().toUpperCase(Locale.US), Store.YES));
-        doc.add(new StringField(MAILBOX_ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.US), Store.YES));
-        doc.add(new NumericDocValuesField(UID_FIELD, membership.getUid().asLong()));
-        doc.add(new LongPoint(UID_FIELD, membership.getUid().asLong()));
-        doc.add(new StoredField(UID_FIELD, membership.getUid().asLong()));
-        doc.add(new StringField(HAS_ATTACHMENT_FIELD, Boolean.toString(hasAttachment(membership)), Store.YES));
-
-        String serializedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(membership);
-        if (serializedMessageId != null) {
-            doc.add(new StringField(MESSAGE_ID_FIELD, serializedMessageId, Store.YES));
-        }
-        String serializedThreadId = SearchUtil.getSerializedThreadIdIfSupportedByUnderlyingStorageOrNull(membership);
-        if (serializedThreadId != null) {
-            doc.add(new StringField(THREAD_ID_FIELD, serializedThreadId, Store.YES));
-        }
-
-        // create a unique key for the document which can be used later on updates to find the document
-        doc.add(new StringField(ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.US) + "-" + membership.getUid().asLong(), Store.YES));
-
-        doc.add(new StringField(INTERNAL_DATE_FIELD_YEAR_RESOLUTION, DateTools.dateToString(membership.getInternalDate(), DateTools.Resolution.YEAR), Store.NO));
-        doc.add(new StringField(INTERNAL_DATE_FIELD_MONTH_RESOLUTION, DateTools.dateToString(membership.getInternalDate(), DateTools.Resolution.MONTH), Store.NO));
-        doc.add(new StringField(INTERNAL_DATE_FIELD_DAY_RESOLUTION, DateTools.dateToString(membership.getInternalDate(), DateTools.Resolution.DAY), Store.NO));
-        doc.add(new StringField(INTERNAL_DATE_FIELD_HOUR_RESOLUTION, DateTools.dateToString(membership.getInternalDate(), DateTools.Resolution.HOUR), Store.NO));
-        doc.add(new StringField(INTERNAL_DATE_FIELD_MINUTE_RESOLUTION, DateTools.dateToString(membership.getInternalDate(), DateTools.Resolution.MINUTE), Store.NO));
-        doc.add(new StringField(INTERNAL_DATE_FIELD_SECOND_RESOLUTION, DateTools.dateToString(membership.getInternalDate(), DateTools.Resolution.SECOND), Store.NO));
-        doc.add(new NumericDocValuesField(INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION, Long.parseLong(DateTools.dateToString(membership.getInternalDate(), DateTools.Resolution.MILLISECOND))));
-
-        membership.getSaveDate().ifPresent(saveDate -> {
-            doc.add(new StringField(SAVE_DATE_FIELD_YEAR_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.YEAR), Store.NO));
-            doc.add(new StringField(SAVE_DATE_FIELD_MONTH_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.MONTH), Store.NO));
-            doc.add(new StringField(SAVE_DATE_FIELD_DAY_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.DAY), Store.NO));
-            doc.add(new StringField(SAVE_DATE_FIELD_HOUR_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.HOUR), Store.NO));
-            doc.add(new StringField(SAVE_DATE_FIELD_MINUTE_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.MINUTE), Store.NO));
-            doc.add(new StringField(SAVE_DATE_FIELD_SECOND_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.SECOND), Store.NO));
-        });
-
-        doc.add(new LongPoint(SIZE_FIELD, membership.getFullContentOctets()));
-        doc.add(new NumericDocValuesField(SIZE_FIELD, membership.getFullContentOctets()));
-
-        // content handler which will index the headers and the body of the message
-        SimpleContentHandler handler = new SimpleContentHandler() {
-
-
-            @Override
-            public void headers(Header header) {
-
-                Date sentDate = null;
-                String firstFromMailbox = "";
-                String firstToMailbox = "";
-                String firstCcMailbox = "";
-                String firstFromDisplay = "";
-                String firstToDisplay = "";
-
-                for (org.apache.james.mime4j.stream.Field f : header) {
-                    String headerName = f.getName().toUpperCase(Locale.US);
-                    String headerValue = f.getBody().toUpperCase(Locale.US);
-                    String fullValue = f.toString().toUpperCase(Locale.US);
-                    doc.add(new TextField(HEADERS_FIELD, fullValue, Store.NO));
-                    doc.add(new TextField(PREFIX_HEADER_FIELD + headerName, headerValue, Store.NO));
-
-                    if (f instanceof DateTimeField dateTimeField) {
-                        sentDate = dateTimeField.getDate();
-                    }
-                    String field = null;
-                    if ("To".equalsIgnoreCase(headerName)) {
-                        field = TO_FIELD;
-                    } else if ("From".equalsIgnoreCase(headerName)) {
-                        field = FROM_FIELD;
-                    } else if ("Cc".equalsIgnoreCase(headerName)) {
-                        field = CC_FIELD;
-                    } else if ("Bcc".equalsIgnoreCase(headerName)) {
-                        field = BCC_FIELD;
-                    }
-
-
-                    // Check if we can index the address in the right manner
-                    if (field != null) {
-                        // not sure if we really should reparse it. It maybe be better to check just for the right type.
-                        // But this impl was easier in the first place
-                        AddressList aList = LenientAddressParser.DEFAULT.parseAddressList(MimeUtil.unfold(f.getBody()));
-                        for (int i = 0; i < aList.size(); i++) {
-                            Address address = aList.get(i);
-                            if (address instanceof org.apache.james.mime4j.dom.address.Mailbox mailbox) {
-                                String value = AddressFormatter.DEFAULT.encode(mailbox).toUpperCase(Locale.US);
-                                doc.add(new TextField(field, value, Store.NO));
-                                if (i == 0) {
-                                    String mailboxAddress = SearchUtil.getMailboxAddress(mailbox);
-                                    String mailboxDisplay = SearchUtil.getDisplayAddress(mailbox);
-
-                                    if ("To".equalsIgnoreCase(headerName)) {
-                                        firstToMailbox = mailboxAddress;
-                                        firstToDisplay = mailboxDisplay;
-                                    } else if ("From".equalsIgnoreCase(headerName)) {
-                                        firstFromMailbox = mailboxAddress;
-                                        firstFromDisplay = mailboxDisplay;
-
-                                    } else if ("Cc".equalsIgnoreCase(headerName)) {
-                                        firstCcMailbox = mailboxAddress;
-                                    }
-
-                                }
-                            } else if (address instanceof Group) {
-                                MailboxList mList = ((Group) address).getMailboxes();
-                                for (int a = 0; a < mList.size(); a++) {
-                                    org.apache.james.mime4j.dom.address.Mailbox mailbox = mList.get(a);
-                                    String value = AddressFormatter.DEFAULT.encode(mailbox).toUpperCase(Locale.US);
-                                    doc.add(new TextField(field, value, Store.NO));
-
-                                    if (i == 0 && a == 0) {
-                                        String mailboxAddress = SearchUtil.getMailboxAddress(mailbox);
-                                        String mailboxDisplay = SearchUtil.getDisplayAddress(mailbox);
-
-                                        if ("To".equalsIgnoreCase(headerName)) {
-                                            firstToMailbox = mailboxAddress;
-                                            firstToDisplay = mailboxDisplay;
-                                        } else if ("From".equalsIgnoreCase(headerName)) {
-                                            firstFromMailbox = mailboxAddress;
-                                            firstFromDisplay = mailboxDisplay;
-
-                                        } else if ("Cc".equalsIgnoreCase(headerName)) {
-                                            firstCcMailbox = mailboxAddress;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        doc.add(new TextField(field, headerValue, Store.NO));
-
-                    } else if (headerName.equalsIgnoreCase("Subject")) {
-                        doc.add(new StringField(SUBJECT_FIELD, f.getBody(), Store.YES));
-                        doc.add(new StringField(BASE_SUBJECT_FIELD, SearchUtil.getBaseSubject(headerValue), Store.YES));
-                        doc.add(new SortedSetDocValuesField(BASE_SUBJECT_FIELD, new BytesRef(SearchUtil.getBaseSubject(headerValue))));
-                    }
-                }
-                if (sentDate == null) {
-                    sentDate = membership.getInternalDate();
-                } else {
-
-                    doc.add(new StringField(SENT_DATE_FIELD_YEAR_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.YEAR), Store.NO));
-                    doc.add(new StringField(SENT_DATE_FIELD_MONTH_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.MONTH), Store.NO));
-                    doc.add(new StringField(SENT_DATE_FIELD_DAY_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.DAY), Store.NO));
-                    doc.add(new StringField(SENT_DATE_FIELD_HOUR_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.HOUR), Store.NO));
-                    doc.add(new StringField(SENT_DATE_FIELD_MINUTE_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.MINUTE), Store.NO));
-                    doc.add(new StringField(SENT_DATE_FIELD_SECOND_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.SECOND), Store.NO));
-                    doc.add(new StringField(SENT_DATE_FIELD_MILLISECOND_RESOLUTION, DateTools.dateToString(sentDate, DateTools.Resolution.MILLISECOND), Store.NO));
-
-                }
-                // Remove existing SENT_DATE_SORT_FIELD field if it exists
-                doc.removeField(SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION);
-                doc.add(new NumericDocValuesField(SENT_DATE_SORT_FIELD_MILLISECOND_RESOLUTION, Long.parseLong(DateTools.dateToString(sentDate, DateTools.Resolution.MILLISECOND))));
-
-                doc.add(new StringField(FIRST_FROM_MAILBOX_NAME_FIELD, firstFromMailbox, Store.YES));
-                doc.add(new SortedSetDocValuesField(FIRST_FROM_MAILBOX_NAME_FIELD, new BytesRef(firstFromMailbox)));
-                doc.add(new StringField(FIRST_TO_MAILBOX_NAME_FIELD, firstToMailbox, Store.YES));
-                doc.add(new SortedSetDocValuesField(FIRST_TO_MAILBOX_NAME_FIELD, new BytesRef(firstToMailbox)));
-                doc.add(new StringField(FIRST_CC_MAILBOX_NAME_FIELD, firstCcMailbox, Store.YES));
-                doc.add(new SortedSetDocValuesField(FIRST_CC_MAILBOX_NAME_FIELD, new BytesRef(firstCcMailbox)));
-                doc.add(new StringField(FIRST_FROM_MAILBOX_DISPLAY_FIELD, firstFromDisplay, Store.YES));
-                doc.add(new StringField(FIRST_TO_MAILBOX_DISPLAY_FIELD, firstToDisplay, Store.YES));
-
-            }
-
-            @Override
-            public void body(BodyDescriptor desc, InputStream in) throws IOException {
-                String mediaType = desc.getMediaType();
-                if (MEDIA_TYPE_TEXT.equalsIgnoreCase(mediaType) || MEDIA_TYPE_MESSAGE.equalsIgnoreCase(mediaType)) {
-                    String cset = desc.getCharset();
-                    if (cset == null) {
-                        cset = DEFAULT_ENCODING;
-                    }
-                    Charset charset;
-                    try {
-                        charset = Charset.forName(cset);
-                    } catch (Exception e) {
-                        // Invalid charset found so fallback toe the DEFAULT_ENCODING
-                        charset = Charset.forName(DEFAULT_ENCODING);
-                    }
-
-                    String bodyContent = IOUtils.toString(in, charset);
-                    doc.add(new TextField(BODY_FIELD, bodyContent, Store.YES));
-                }
-            }
-
-        };
-        //config.setStrictParsing(false);
-        MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
-        parser.setContentDecoding(true);
-        parser.setContentHandler(handler);
-
-        // parse the message to index headers and body
-        parser.parse(membership.getFullContent());
-
-        return doc;
-    }
-
-    private static boolean hasAttachment(MailboxMessage membership) {
-       return MessageAttachmentMetadata.hasNonInlinedAttachment(membership.getAttachments());
     }
 
     private String toSentDateField(DateResolution res) {
@@ -1175,54 +770,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private void update(MailboxId mailboxId, MessageUid uid, Flags f) throws IOException {
         var flagsID = createFlagsIdField(mailboxId, uid);
         var term = new Term(ID_FIELD, flagsID);
-        var doc = createFlagsDocument(mailboxId, uid, f);
+        var doc = indexableDocument.createFlagsDocument(mailboxId, uid, f);
         log.trace("Updating flags document, mailboxId:{}, message uid: {}, flags:'{}', term: {}, new document: {}",
                 mailboxId, uid, f, term, doc);
         writer.updateDocument(term, doc);
-    }
-
-    /**
-     * Index the {@link Flags} and add it to the {@link Document}
-     */
-    private Document createFlagsDocument(MailboxMessage message) {
-        return createFlagsDocument(message.getMailboxId(), message.getUid(), message.createFlags());
-    }
-
-    private Document createFlagsDocument(MailboxId mailboxId, final MessageUid messageUid, Flags flags) {
-        Document doc = new Document();
-        doc.add(new StringField(ID_FIELD, createFlagsIdField(mailboxId, messageUid), Store.YES));
-        doc.add(new StringField(MAILBOX_ID_FIELD, mailboxId.serialize(), Store.YES));
-
-        doc.add(new NumericDocValuesField(UID_FIELD, messageUid.asLong()));
-        doc.add(new LongPoint(UID_FIELD, messageUid.asLong()));
-        doc.add(new StoredField(UID_FIELD, messageUid.asLong()));
-
-        indexFlags(doc, flags);
-        return doc;
-    }
-
-    private static String createFlagsIdField(MailboxId mailboxId, MessageUid messageUid) {
-        return "flags-" + mailboxId.serialize() + "-" + messageUid.asLong();
-    }
-
-    /**
-     * Add the given {@link Flags} to the {@link Document}
-     */
-    private void indexFlags(Document doc, Flags f) {
-        Flag[] flags = f.getSystemFlags();
-        for (Flag flag : flags) {
-            doc.add(new StringField(FLAGS_FIELD, toString(flag), Store.YES));
-        }
-
-        String[] userFlags = f.getUserFlags();
-        for (String userFlag : userFlags) {
-            doc.add(new StringField(FLAGS_FIELD, userFlag, Store.YES));
-        }
-
-        // if no flags are there we just use a empty field
-        if (flags.length == 0 && userFlags.length == 0) {
-            doc.add(new StringField(FLAGS_FIELD, "",Store.NO));
-        }
     }
 
     private Query createQuery(MessageRange range) {

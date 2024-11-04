@@ -20,9 +20,9 @@
 package org.apache.james.mailbox.lucene.search;
 
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.ATTACHMENT_TEXT_CONTENT_FIELD;
-import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.BODY_FIELD;
-import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.MESSAGE_ID_FIELD;
-import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.SUBJECT_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.BODY_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.MESSAGE_ID_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SUBJECT_FIELD;
 
 import java.io.IOException;
 import java.util.Arrays;
