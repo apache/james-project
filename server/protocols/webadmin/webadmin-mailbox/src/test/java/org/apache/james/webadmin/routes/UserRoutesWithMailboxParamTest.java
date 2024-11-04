@@ -122,9 +122,7 @@ public class UserRoutesWithMailboxParamTest {
                 .flatMap(map -> map.values().stream())
                 .toList();
 
-        List<String> expected = ImmutableList.of(ALICE.asString(), BOB.asString());
-        assertThat(users).hasSameSizeAs(expected);
-        assertThat(users).hasSameElementsAs(expected);
+        assertThat(users).containsExactlyInAnyOrder(ALICE.asString(), BOB.asString());
     }
 
     @Test

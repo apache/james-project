@@ -32,9 +32,12 @@ import org.apache.james.webadmin.dto.MailboxResponse;
 import org.apache.james.webadmin.service.UserMailboxesService;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class HasNotAllSystemMailboxesCondition implements UserCondition {
     public static final String HAS_NOT_ALL_SYSTEM_MAILBOXES_PARAM = "hasNotAllSystemMailboxes";
+
+    private static final Set<String> DEFAULT_MAILBOX_SET = DEFAULT_MAILBOXES.stream().collect(ImmutableSet.toImmutableSet());
 
     private final UserMailboxesService userMailboxesService;
 
@@ -50,7 +53,7 @@ public class HasNotAllSystemMailboxesCondition implements UserCondition {
                 .stream()
                 .map(MailboxResponse::getMailboxName)
                 .collect(ImmutableSet.toImmutableSet());
-            return DEFAULT_MAILBOXES.stream().anyMatch(defaultMailbox -> !mailboxes.contains(defaultMailbox));
+            return !Sets.difference(DEFAULT_MAILBOX_SET, mailboxes).isEmpty();
         } catch (UsersRepositoryException e) {
             throw new RuntimeException(e);
         }
