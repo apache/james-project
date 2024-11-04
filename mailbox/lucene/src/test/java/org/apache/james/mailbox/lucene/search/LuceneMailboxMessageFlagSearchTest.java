@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.lucene.search;
 
-import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.ID_FIELD;
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.ID_FIELD;
 import static org.apache.james.mailbox.lucene.search.LuceneTestsUtils.documentStringFormatter;
 import static org.apache.james.mailbox.lucene.search.LuceneTestsUtils.getAllDocumentsFromRepository;
 import static org.assertj.core.api.Assertions.assertThat;
