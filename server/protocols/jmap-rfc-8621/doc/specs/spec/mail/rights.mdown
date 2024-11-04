@@ -39,6 +39,7 @@ The following `Right`s are defined:
  - `"w"` Write: the user can alter the Keywords of messages contained in this Mailbox, except the `$Seen` keyword
  - `"s"` Seen: the user can alter the `$Seen` keyword of messages contained in this Mailbox
  - `"e"` Expunge: the user can mark Email as Expunged in this Mailbox. This action is not achievable using JMAP.
+ - `"p"` Post: the user can send an Email to this Mailbox. This is used with the identifier `anyone` in the context of subaddressing.
 
 `UserRights` is an array of `Right`, representing the actions a user can perform on a mailbox.
 
