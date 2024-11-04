@@ -19,32 +19,11 @@
 
 package org.apache.james.mailbox.opensearch.json;
 
-import java.util.Set;
+import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Subjects implements SerializableMessage {
-
-    public static Subjects from(Set<String> subjects) {
-        Preconditions.checkNotNull(subjects, "'subjects' is mandatory");
-        return new Subjects(subjects);
-    }
-
-    private final Set<String> subjects;
-
-    private Subjects(Set<String> subjects) {
-        this.subjects = subjects;
-    }
-
-    @JsonValue
-    public Set<String> getSubjects() {
-        return subjects;
-    }
-
-    @Override
-    public String serialize() {
-        return Joiner.on(" ").join(subjects);
-    }
+public record EMailerDto(@JsonProperty(JsonMessageConstants.EMailer.NAME) Optional<String> name,
+                         @JsonProperty(JsonMessageConstants.EMailer.ADDRESS) String address,
+                         @JsonProperty(JsonMessageConstants.EMailer.DOMAIN) String domain) {
 }

@@ -19,7 +19,14 @@
 
 package org.apache.james.mailbox.opensearch.json;
 
-public interface SerializableMessage {
+import org.apache.james.mailbox.store.search.mime.HeaderCollection;
 
-    String serialize();
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record HeaderDto(@JsonProperty(JsonMessageConstants.HEADER.NAME) String headerName,
+                        @JsonProperty(JsonMessageConstants.HEADER.VALUE) String value) {
+
+    public static HeaderDto from(HeaderCollection.Header header) {
+        return new HeaderDto(header.getHeaderName(), header.getValue());
+    }
 }
