@@ -17,26 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.opensearch.json;
+package org.apache.james.mailbox.store.search.mime;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
+import java.util.Set;
 
-import java.util.Optional;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 
-import org.junit.jupiter.api.Test;
+public class Subjects implements SerializableMessage {
 
-import nl.jqno.equalsverifier.EqualsVerifier;
-
-class EMailerTest {
-    @Test
-    void eMailerShouldRespectBeanContract() {
-        EqualsVerifier.forClass(EMailer.class)
-            .verify();
+    public static Subjects from(Set<String> subjects) {
+        Preconditions.checkNotNull(subjects, "'subjects' is mandatory");
+        return new Subjects(subjects);
     }
 
-    @Test
-    void shouldSupportNullDomain() {
-        assertThatCode(() -> new EMailer(Optional.empty(), "localPart", null))
-            .doesNotThrowAnyException();
+    private final Set<String> subjects;
+
+    private Subjects(Set<String> subjects) {
+        this.subjects = subjects;
+    }
+
+    public Set<String> getSubjects() {
+        return subjects;
+    }
+
+    @Override
+    public String serialize() {
+        return Joiner.on(" ").join(subjects);
     }
 }

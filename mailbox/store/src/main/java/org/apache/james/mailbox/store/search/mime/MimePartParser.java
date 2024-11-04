@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.opensearch.json;
+package org.apache.james.mailbox.store.search.mime;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.opensearch.json;
+package org.apache.james.mailbox.store.search.mime;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -32,7 +32,6 @@ import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.MimeUtil;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -48,12 +47,10 @@ public class HeaderCollection {
             this.value = value;
         }
 
-        @JsonProperty(JsonMessageConstants.HEADER.NAME)
         public String getHeaderName() {
             return headerName;
         }
 
-        @JsonProperty(JsonMessageConstants.HEADER.VALUE)
         public String getValue() {
             return value;
         }

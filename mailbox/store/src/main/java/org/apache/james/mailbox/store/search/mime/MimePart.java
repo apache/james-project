@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.opensearch.json;
+package org.apache.james.mailbox.store.search.mime;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -39,8 +39,6 @@ import org.apache.james.mime4j.stream.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.Lists;
 
@@ -249,53 +247,43 @@ public class MimePart {
         this.bodyTextContent = bodyTextContent;
     }
 
-    @JsonIgnore
     public List<MimePart> getAttachments() {
         return attachments;
     }
 
-    @JsonIgnore
     public HeaderCollection getHeaderCollection() {
         return headerCollection;
     }
 
-    @JsonProperty(JsonMessageConstants.Attachment.FILENAME)
     public Optional<String> getFileName() {
         return fileName;
     }
 
-    @JsonProperty(JsonMessageConstants.Attachment.FILE_EXTENSION)
     public Optional<String> getFileExtension() {
         return fileExtension;
     }
 
-    @JsonProperty(JsonMessageConstants.Attachment.MEDIA_TYPE)
     public Optional<String> getMediaType() {
         return mediaType.map(MediaType::asString);
     }
 
-    @JsonProperty(JsonMessageConstants.Attachment.SUBTYPE)
     public Optional<String> getSubType() {
         return subType.map(SubType::asString);
     }
 
-    @JsonProperty(JsonMessageConstants.Attachment.CONTENT_DISPOSITION)
     public Optional<String> getContentDisposition() {
         return contentDisposition;
     }
 
-    @JsonProperty(JsonMessageConstants.Attachment.TEXT_CONTENT)
     public Optional<String> getTextualBody() {
         return bodyTextContent;
     }
 
-    @JsonIgnore
     public Optional<String> locateFirstTextBody() {
         return firstBody(textAttachments()
                 .filter(this::isPlainSubType));
     }
 
-    @JsonIgnore
     public Optional<String> locateFirstHtmlBody() {
         if (locateFirstTextBody().isEmpty()) {
             return firstBody(textAttachments()
@@ -339,7 +327,6 @@ public class MimePart {
                 .isPresent();
     }
 
-    @JsonIgnore
     public Stream<MimePart> getAttachmentsStream() {
         return attachments.stream()
                 .flatMap(mimePart -> Stream.concat(Stream.of(mimePart), mimePart.getAttachmentsStream()))

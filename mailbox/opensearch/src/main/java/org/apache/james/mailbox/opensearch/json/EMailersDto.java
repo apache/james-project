@@ -22,31 +22,15 @@ package org.apache.james.mailbox.opensearch.json;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.james.mailbox.store.search.mime.EMailers;
+
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.base.Preconditions;
 
-public class EMailers implements SerializableMessage {
+public record EMailersDto(@JsonValue Set<EMailerDto> emailers) {
 
-    public static EMailers from(Set<EMailer> emailers) {
-        Preconditions.checkNotNull(emailers, "'emailers' is mandatory");
-        return new EMailers(emailers);
-    }
-
-    private final Set<EMailer> emailers;
-
-    private EMailers(Set<EMailer> emailers) {
-        this.emailers = emailers;
-    }
-
-    @JsonValue
-    public Set<EMailer> getEmailers() {
-        return emailers;
-    }
-
-    @Override
-    public String serialize() {
-        return emailers.stream()
-            .map(EMailer::serialize)
-            .collect(Collectors.joining(" "));
+    public static EMailersDto from(EMailers eMailers) {
+        return new EMailersDto(eMailers.getEmailers().stream()
+            .map(emailer -> new EMailerDto(emailer.getName(), emailer.getAddress(), emailer.getDomain()))
+            .collect(Collectors.toSet()));
     }
 }
