@@ -65,6 +65,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.TooLongFrameException;
 import io.netty.handler.ssl.NotSslRecordException;
@@ -93,6 +94,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         private ReactiveThrottler reactiveThrottler;
         private Set<ConnectionCheck> connectionChecks;
         private boolean proxyRequired;
+        private ChannelGroup imapChannelGroup;
 
         public ImapChannelUpstreamHandlerBuilder reactiveThrottler(ReactiveThrottler reactiveThrottler) {
             this.reactiveThrottler = reactiveThrottler;
@@ -154,8 +156,13 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             return this;
         }
 
+        public ImapChannelUpstreamHandlerBuilder imapChannelGroup(ChannelGroup imapChannelGroup) {
+            this.imapChannelGroup = imapChannelGroup;
+            return this;
+        }
+
         public ImapChannelUpstreamHandler build() {
-            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration, ignoreIDLEUponProcessing, (int) heartbeatInterval.toSeconds(), reactiveThrottler, connectionChecks, proxyRequired);
+            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration, ignoreIDLEUponProcessing, (int) heartbeatInterval.toSeconds(), reactiveThrottler, connectionChecks, proxyRequired, imapChannelGroup);
         }
     }
 
@@ -181,11 +188,12 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     private final ReactiveThrottler reactiveThrottler;
     private final Set<ConnectionCheck> connectionChecks;
     private final boolean proxyRequired;
+    private final ChannelGroup imapChannelGroup;
 
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
                                       Encryption secure, ImapMetrics imapMetrics, AuthenticationConfiguration authenticationConfiguration,
                                       boolean ignoreIDLEUponProcessing, int heartbeatIntervalSeconds, ReactiveThrottler reactiveThrottler,
-                                      Set<ConnectionCheck> connectionChecks, boolean proxyRequired) {
+                                      Set<ConnectionCheck> connectionChecks, boolean proxyRequired, ChannelGroup imapChannelGroup) {
         this.hello = hello;
         this.processor = processor;
         this.encoder = encoder;
@@ -199,10 +207,12 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         this.reactiveThrottler = reactiveThrottler;
         this.connectionChecks = connectionChecks;
         this.proxyRequired = proxyRequired;
+        this.imapChannelGroup = imapChannelGroup;
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        imapChannelGroup.add(ctx.channel());
         SessionId sessionId = SessionId.generate();
         ImapSession imapsession = new NettyImapSession(ctx.channel(), secure, compress, authenticationConfiguration.isSSLRequired(),
             authenticationConfiguration.isPlainAuthEnabled(), sessionId,
@@ -262,6 +272,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         // remove the stored attribute for the channel to free up resources
         // See JAMES-1195
+        imapChannelGroup.remove(ctx.channel());
         ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).getAndSet(null);
         try (Closeable closeable = mdc(imapSession).build()) {
             InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();

@@ -20,6 +20,8 @@ package org.apache.james.protocols.lib.netty;
 
 import java.util.stream.Stream;
 
+import org.apache.james.core.Username;
+
 public interface CertificateReloadable {
     interface Factory {
         Stream<? extends CertificateReloadable> certificatesReloadable();
@@ -28,4 +30,8 @@ public interface CertificateReloadable {
     void reloadSSLCertificate() throws Exception;
 
     int getPort();
+
+    default void logout(Username user) {
+
+    }
 }

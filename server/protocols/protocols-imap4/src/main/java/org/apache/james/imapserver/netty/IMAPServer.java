@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ConnectionCheck;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapConstants;
@@ -53,11 +54,15 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 
 /**
@@ -138,6 +143,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private final ImapMetrics imapMetrics;
     private final GaugeRegistry gaugeRegistry;
     private final Set<ConnectionCheck> connectionChecks;
+    private final DefaultChannelGroup imapChannelGroup;
 
     private String hello;
     private boolean compress;
@@ -152,6 +158,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private Duration heartbeatInterval;
     private ReactiveThrottler reactiveThrottler;
 
+
     public IMAPServer(ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor, ImapMetrics imapMetrics, GaugeRegistry gaugeRegistry, Set<ConnectionCheck> connectionChecks) {
         this.processor = processor;
         this.encoder = encoder;
@@ -159,6 +166,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         this.imapMetrics = imapMetrics;
         this.gaugeRegistry = gaugeRegistry;
         this.connectionChecks = connectionChecks;
+        this.imapChannelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     }
 
     @Override
@@ -187,6 +195,15 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         heartbeatInterval = imapConfiguration.idleTimeIntervalAsDuration();
         reactiveThrottler = new ReactiveThrottler(gaugeRegistry, imapConfiguration.getConcurrentRequests(), imapConfiguration.getMaxQueueSize());
         processor.configure(imapConfiguration);
+    }
+
+    public void logout(Username user) {
+        imapChannelGroup.stream()
+            .filter(channel -> Optional.ofNullable(channel.attr(IMAP_SESSION_ATTRIBUTE_KEY).get())
+                .flatMap(session -> Optional.ofNullable(session.getUserName()))
+                .map(user::equals)
+                .orElse(false))
+            .forEach(channel -> channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE));
     }
 
     private static Integer parseLiteralSizeLimit(HierarchicalConfiguration<ImmutableNode> configuration) {
@@ -315,6 +332,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .heartbeatInterval(heartbeatInterval)
             .ignoreIDLEUponProcessing(ignoreIDLEUponProcessing)
             .proxyRequired(proxyRequired)
+            .imapChannelGroup(imapChannelGroup)
             .build();
     }
 

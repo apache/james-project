@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver.netty;
 
+import static org.apache.james.protocols.netty.BasicChannelInboundHandler.SESSION_ATTRIBUTE_KEY;
 import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounceMode.ALWAYS;
 import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounceMode.NEVER;
 
@@ -32,6 +33,7 @@ import jakarta.inject.Inject;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
@@ -44,6 +46,7 @@ import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPProtocol;
+import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.smtpserver.CoreCmdHandlerLoader;
 import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.jmx.JMXHandlersLoader;
@@ -53,7 +56,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.util.concurrent.GlobalEventExecutor;
+
 
 /**
  * NIO SMTPServer which use Netty
@@ -184,6 +192,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
      */
     private final SMTPConfiguration theConfigData = new SMTPHandlerConfigurationDataImpl();
     private final SmtpMetrics smtpMetrics;
+    private final DefaultChannelGroup smtpChannelGroup;
     private Set<String> disabledFeatures = ImmutableSet.of();
 
     private boolean addressBracketsEnforcement = true;
@@ -195,6 +204,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     public SMTPServer(SmtpMetrics smtpMetrics) {
         this.smtpMetrics = smtpMetrics;
+        this.smtpChannelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     }
 
     @Inject
@@ -392,7 +402,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
-        return new SMTPChannelInboundHandler(transport, getEncryption(), proxyRequired, smtpMetrics);
+        return new SMTPChannelInboundHandler(transport, getEncryption(), proxyRequired, smtpMetrics, smtpChannelGroup);
     }
 
     @Override
@@ -412,5 +422,17 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     public AuthenticationAnnounceMode getAuthRequired() {
         return authenticationConfiguration.getAuthenticationAnnounceMode();
+    }
+
+    @Override
+    public void logout(Username user) {
+        smtpChannelGroup.stream()
+            .filter(channel -> {
+                if (channel.attr(SESSION_ATTRIBUTE_KEY).get() instanceof SMTPSession smtpSession) {
+                    return user.equals(smtpSession.getUsername());
+                }
+                return false;
+            })
+            .forEach(channel -> channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE));
     }
 }
