@@ -19,15 +19,18 @@
 
 package org.apache.james.mailbox.lucene.search;
 
+import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.ATTACHMENT_TEXT_CONTENT_FIELD;
 import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.BODY_FIELD;
 import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.MESSAGE_ID_FIELD;
 import static org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex.SUBJECT_FIELD;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
@@ -44,6 +47,7 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -62,6 +66,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class LuceneSearchHighlighter implements SearchHighlighter {
+
     private static Analyzer defaultAnalyzer() {
         return new StandardAnalyzer();
     }
@@ -156,8 +161,9 @@ public class LuceneSearchHighlighter implements SearchHighlighter {
 
     private SearchSnippet buildSearchSnippet(Document doc, SearchQuery searchQuery) throws IOException, InvalidTokenOffsetsException {
         MessageId messageId = messageIdFactory.fromString(doc.get(MESSAGE_ID_FIELD));
-        String highlightedSubject = getHighlightedSubject(doc, searchQuery);
-        String highlightedBody = getHighlightedBody(doc, searchQuery);
+        Optional<String> highlightedSubject = Optional.ofNullable(getHighlightedSubject(doc, searchQuery));
+        Optional<String> highlightedBody = Optional.ofNullable(getHighlightedBody(doc, searchQuery))
+            .or(() -> getHighlightAttachmentTextBody(doc, searchQuery));
 
         return new SearchSnippet(messageId, highlightedSubject, highlightedBody);
     }
@@ -168,5 +174,13 @@ public class LuceneSearchHighlighter implements SearchHighlighter {
 
     private String getHighlightedBody(Document doc, SearchQuery searchQuery) throws IOException, InvalidTokenOffsetsException {
         return highlighter(searchQuery).getBestFragment(analyzer, BODY_FIELD, doc.get(BODY_FIELD));
+    }
+
+    private Optional<String> getHighlightAttachmentTextBody(Document doc, SearchQuery searchQuery) {
+        Highlighter highlighter = highlighter(searchQuery);
+        return Stream.ofNullable(doc.getFields(ATTACHMENT_TEXT_CONTENT_FIELD)).flatMap(Arrays::stream)
+            .map(IndexableField::stringValue)
+            .map(Throwing.function(contentType -> highlighter.getBestFragment(analyzer, ATTACHMENT_TEXT_CONTENT_FIELD, contentType)))
+            .findFirst();
     }
 }
