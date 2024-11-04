@@ -113,7 +113,7 @@ C: A012 DELETE appendexpunge
 S: A012 OK DELETE completed.
 
 C: A001 NAMESPACE
-S: \* NAMESPACE \(\((\"\"|\"#private\.\") \".\"\)\) NIL NIL
+S: \* NAMESPACE \(\((\"\"|\"#private\.\") \".\"\)\) \(\(\"#user.\" \".\"\)\) NIL
 S: A001 OK NAMESPACE completed.
 
 C: A2 CREATE testmailbox
