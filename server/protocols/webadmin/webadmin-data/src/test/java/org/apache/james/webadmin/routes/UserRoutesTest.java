@@ -172,7 +172,8 @@ class UserRoutesTest {
 
         private WebAdminServer startServer(UsersRepository usersRepository) {
             WebAdminServer server = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository), canSendFrom, new JsonTransformer(),
-                    delegationStore))
+                    delegationStore,
+                    ImmutableMap.of()))
                 .start();
 
             RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)

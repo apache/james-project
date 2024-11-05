@@ -20,9 +20,11 @@
 package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
+import static org.apache.james.webadmin.UserCondition.ALL;
 import static spark.Spark.halt;
 
 import java.util.List;
+import java.util.Map;
 
 import jakarta.inject.Inject;
 
@@ -38,7 +40,9 @@ import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.UserCondition;
 import org.apache.james.webadmin.dto.AddUserRequest;
+import org.apache.james.webadmin.dto.UserResponse;
 import org.apache.james.webadmin.dto.VerifyUserRequest;
 import org.apache.james.webadmin.service.UserService;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -61,7 +65,6 @@ import spark.Response;
 import spark.Service;
 
 public class UserRoutes implements Routes {
-
     private static final String USER_NAME = ":userName";
     private static final String DELEGATED_USER_NAME = ":delegatedUserName";
     private static final Logger LOGGER = LoggerFactory.getLogger(UserRoutes.class);
@@ -77,17 +80,23 @@ public class UserRoutes implements Routes {
     private final CanSendFrom canSendFrom;
     private final JsonExtractor<AddUserRequest> jsonExtractor;
     private final DelegationStore delegationStore;
+    private final Map<String, UserCondition> userConditionMap;
 
     private Service service;
 
     @Inject
-    public UserRoutes(UserService userService, CanSendFrom canSendFrom, JsonTransformer jsonTransformer, DelegationStore delegationStore) {
+    public UserRoutes(UserService userService,
+                      CanSendFrom canSendFrom,
+                      JsonTransformer jsonTransformer,
+                      DelegationStore delegationStore,
+                      Map<String, UserCondition> userConditionMap) {
         this.userService = userService;
         this.jsonTransformer = jsonTransformer;
         this.canSendFrom = canSendFrom;
         this.jsonExtractor = new JsonExtractor<>(AddUserRequest.class);
         this.jsonExtractorVerify = new JsonExtractor<>(VerifyUserRequest.class);
         this.delegationStore = delegationStore;
+        this.userConditionMap = userConditionMap;
     }
 
     @Override
@@ -154,7 +163,7 @@ public class UserRoutes implements Routes {
 
     public void defineGetUsers() {
         service.get(USERS,
-            (request, response) -> userService.getUsers(),
+            this::getUsers,
             jsonTransformer);
     }
 
@@ -162,6 +171,18 @@ public class UserRoutes implements Routes {
         service.get(USERS + SEPARATOR + USER_NAME + SEPARATOR + "allowedFromHeaders",
             this::allowedFromHeaders,
             jsonTransformer);
+    }
+
+    private List<UserResponse> getUsers(Request request, Response response) throws UsersRepositoryException {
+        UserCondition combinedCondition = userConditionMap.entrySet()
+            .stream()
+            .filter(entry -> request.queryParams().contains(entry.getKey()))
+            .map(Map.Entry::getValue)
+            .reduce(ALL, UserCondition::and);
+        return userService.getUsers()
+            .stream()
+            .filter(userResponse -> combinedCondition.test(Username.of(userResponse.getUsername())))
+            .toList();
     }
 
     private String removeUser(Request request, Response response) {

@@ -27,6 +27,7 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.UserCondition;
 import org.apache.james.webadmin.dto.DTOModuleInjections;
 import org.apache.james.webadmin.dto.MappingsModule;
 import org.apache.james.webadmin.mdc.RequestLogger;
@@ -53,6 +54,7 @@ import org.apache.james.webadmin.service.UsernameChangeTaskDTO;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Named;
@@ -78,6 +80,7 @@ public class DataRoutesModules extends AbstractModule {
         jsonTransformerModuleMultibinder.addBinding().to(MappingsModule.class);
 
         Multibinder.newSetBinder(binder(), RequestLogger.class).addBinding().to(UserCreationRequestLogger.class);
+        MapBinder.newMapBinder(binder(), String.class, UserCondition.class);
     }
 
     @ProvidesIntoSet
