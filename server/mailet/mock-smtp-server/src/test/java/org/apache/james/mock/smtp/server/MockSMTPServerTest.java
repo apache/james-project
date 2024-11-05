@@ -200,7 +200,7 @@ class MockSMTPServerTest {
             try {
                 smtpClient.connect("localhost", mockServer.getPort().getValue());
                 smtpClient.ehlo("localhost");
-                smtpClient.mail("<bob@james.org> MT-PRIORITY=3 RET=HDRS ENVID=gabouzomeuh");
+                smtpClient.mail("<bob@james.org> MT-PRIORITY=3 REQUIRETLS RET=HDRS SMTPUTF8 ENVID=gabouzomeuh");
                 smtpClient.rcpt("<alice@james.org>");
                 smtpClient.sendShortMessageData("A short message...");
             } finally {
@@ -220,6 +220,12 @@ class MockSMTPServerTest {
                     .name("MT-PRIORITY")
                     .value("3")
                     .build())
+                .addMailParameter(Mail.Parameter.builder()
+                    .name("REQUIRETLS")
+                    .build())
+                .addMailParameter(Mail.Parameter.builder()
+                        .name("SMTPUTF8")
+                        .build())
                 .from(new MailAddress(BOB))
                 .addRecipientMailAddress(new MailAddress(ALICE))
                 .build();

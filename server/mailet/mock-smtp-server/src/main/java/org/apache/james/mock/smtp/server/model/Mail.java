@@ -41,6 +41,9 @@ import com.google.common.collect.ImmutableSet;
 
 @JsonDeserialize(builder = Mail.Builder.class)
 public class Mail {
+
+    public static final List<String> smtpParametersWithoutValues = List.of("REQUIRETLS", "SMTPUTF8");
+
     @JsonDeserialize(builder = Parameter.Builder.class)
     public static class Parameter {
         @JsonPOJOBuilder(withPrefix = "")
@@ -64,8 +67,10 @@ public class Mail {
 
             public Parameter build() {
                 Preconditions.checkState(name != null, "'name' field cannot be omitted");
+                if (smtpParametersWithoutValues.contains(name)) {
+                    return new Parameter(name, "");
+                }
                 Preconditions.checkState(value != null, "'value' field cannot be omitted");
-
                 return new Parameter(name, value);
             }
         }
@@ -76,19 +81,24 @@ public class Mail {
 
         public static Collection<Mail.Parameter> fromArgLine(String argLine) {
             return Splitter.on(' ').splitToStream(argLine)
-                .filter(argString -> argString.contains("="))
-                .map(Parameter::fromString)
-                .collect(ImmutableList.toImmutableList());
+                    .filter(argString -> smtpParametersWithoutValues.contains(argString) || argString.contains("="))
+                    .map(Parameter::fromString)
+                    .collect(ImmutableList.toImmutableList());
         }
 
         public static Parameter fromString(String argString) {
+            if (smtpParametersWithoutValues.contains(argString)) {
+                return Mail.Parameter.builder()
+                        .name(argString)
+                        .build();
+            }
             Preconditions.checkArgument(argString.contains("="));
             int index = argString.indexOf('=');
 
             return Mail.Parameter.builder()
-                .name(argString.substring(0, index))
-                .value(argString.substring(index + 1))
-                .build();
+                    .name(argString.substring(0, index))
+                    .value(argString.substring(index + 1))
+                    .build();
         }
 
         private final String name;
@@ -113,7 +123,7 @@ public class Mail {
                 Parameter that = (Parameter) o;
 
                 return Objects.equals(this.name, that.name)
-                    && Objects.equals(this.value, that.value);
+                        && Objects.equals(this.value, that.value);
             }
             return false;
         }
@@ -126,9 +136,9 @@ public class Mail {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                .add("name", name)
-                .add("value", value)
-                .toString();
+                    .add("name", name)
+                    .add("value", value)
+                    .toString();
         }
     }
 
@@ -195,7 +205,7 @@ public class Mail {
                 Recipient that = (Recipient) o;
 
                 return Objects.equals(this.address, that.address)
-                    && Objects.equals(this.parameters, that.parameters);
+                        && Objects.equals(this.parameters, that.parameters);
             }
             return false;
         }
@@ -208,9 +218,9 @@ public class Mail {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                .add("address", address)
-                .add("parameters", parameters)
-                .toString();
+                    .add("address", address)
+                    .add("parameters", parameters)
+                    .toString();
         }
     }
 
@@ -282,8 +292,8 @@ public class Mail {
 
         public static Envelope ofAddresses(MailAddress from, MailAddress... recipients) {
             return new Envelope(from, Stream.of(recipients)
-                .map(Recipient::of)
-                .collect(ImmutableSet.toImmutableSet()), ImmutableSet.of());
+                    .map(Recipient::of)
+                    .collect(ImmutableSet.toImmutableSet()), ImmutableSet.of());
         }
 
         public static Envelope of(MailAddress from, Recipient... recipients) {
@@ -322,8 +332,8 @@ public class Mail {
                 Envelope envelope = (Envelope) o;
 
                 return Objects.equals(this.from, envelope.from)
-                    && Objects.equals(this.recipients, envelope.recipients)
-                    && Objects.equals(this.mailParameters, envelope.mailParameters);
+                        && Objects.equals(this.recipients, envelope.recipients)
+                        && Objects.equals(this.mailParameters, envelope.mailParameters);
             }
             return false;
         }
@@ -336,10 +346,10 @@ public class Mail {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                .add("from", from)
-                .add("recipients", recipients)
-                .add("mailParameters", mailParameters)
-                .toString();
+                    .add("from", from)
+                    .add("recipients", recipients)
+                    .add("mailParameters", mailParameters)
+                    .toString();
         }
     }
 
@@ -390,7 +400,7 @@ public class Mail {
             Mail mail = (Mail) o;
 
             return Objects.equals(this.envelope, mail.envelope)
-                && Objects.equals(this.message, mail.message);
+                    && Objects.equals(this.message, mail.message);
         }
         return false;
     }
@@ -403,8 +413,8 @@ public class Mail {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("envelope", envelope)
-            .add("message", message)
-            .toString();
+                .add("envelope", envelope)
+                .add("message", message)
+                .toString();
     }
 }
