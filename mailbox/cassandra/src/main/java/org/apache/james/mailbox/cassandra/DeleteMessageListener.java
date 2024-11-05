@@ -291,8 +291,8 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
 
     private Mono<MessageRepresentation> deleteMessageBlobs(MessageRepresentation message) {
         return Flux.merge(
-                blobStore.delete(blobStore.getDefaultBucketName(), message.getHeaderId()),
-                blobStore.delete(blobStore.getDefaultBucketName(), message.getBodyId()))
+                blobStore.delete(blobStore.getDefaultBucketName().asBucket(), message.getHeaderId()),
+                blobStore.delete(blobStore.getDefaultBucketName().asBucket(), message.getBodyId()))
             .then()
             .thenReturn(message);
     }
@@ -305,7 +305,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         return Flux.fromIterable(message.getAttachments())
             .concatMap(attachment -> attachmentDAO.getAttachment(attachment.getAttachmentId())
                 .map(CassandraAttachmentDAOV2.DAOAttachment::getBlobId)
-                .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId)))
+                .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName().asBucket(), blobId)))
                 .then(attachmentDAO.delete(attachment.getAttachmentId())))
             .then();
     }

@@ -20,13 +20,13 @@
 package org.apache.james.blob.api;
 
 import static org.apache.james.blob.api.BlobStoreDAOFixture.CUSTOM_BUCKET;
-import static org.apache.james.blob.api.BlobStoreDAOFixture.CUSTOM_BUCKET_NAME;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.CUSTOM_BUCKET_NO_TENANT;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.OTHER_TEST_BLOB_ID;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.SHORT_BYTEARRAY;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.SHORT_STRING;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BLOB_ID;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET;
-import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NO_TENANT;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_TENANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -215,7 +215,7 @@ public interface TenancyBucketBlobStoreDAOContract {
         Mono.from(store.save(CUSTOM_BUCKET, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
         assertThat(Flux.from(store.listBuckets()).collectList().block())
-            .containsOnly(TEST_BUCKET_NAME, CUSTOM_BUCKET_NAME);
+            .containsOnly(TEST_BUCKET_NO_TENANT.bucketName(), CUSTOM_BUCKET_NO_TENANT.bucketName());
     }
 
     @Test

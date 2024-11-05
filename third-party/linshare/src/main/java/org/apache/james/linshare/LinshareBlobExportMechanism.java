@@ -69,7 +69,7 @@ public class LinshareBlobExportMechanism implements BlobExportMechanism {
                             Optional<FileExtension> fileExtension) throws IOException {
         String fileName = ExportedFileNamesGenerator.generateFileName(fileCustomPrefix, blobId, fileExtension);
         File tempFile = new File(tempDir, fileName);
-        try (InputStream in = blobStore.read(blobStore.getDefaultBucketName(), blobId, LOW_COST)) {
+        try (InputStream in = blobStore.read(blobStore.getDefaultBucketName().asBucket(), blobId, LOW_COST)) {
             FileUtils.copyInputStreamToFile(in, tempFile);
             uploadDocumentToTargetMail(mailAddress, tempFile);
         } finally {

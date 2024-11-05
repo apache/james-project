@@ -75,7 +75,7 @@ class LinshareBlobExportMechanismTest {
 
     @Test
     void exportShouldUploadTheDocumentToTargetUserViaLinshare() throws Exception {
-        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), FILE_CONTENT, LOW_COST)).block();
+        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName().asBucket(), FILE_CONTENT, LOW_COST)).block();
         String filePrefix = "deleted-message-of-bob@james.org-";
 
         testee.blobId(blobId)
@@ -93,7 +93,7 @@ class LinshareBlobExportMechanismTest {
 
     @Test
     void exportShouldUploadTheDocumentAndAllowDownloadViaLinshare(LinshareAPIForTechnicalAccountTesting delegationAPIForTesting) throws Exception {
-        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), FILE_CONTENT, LOW_COST)).block();
+        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName().asBucket(), FILE_CONTENT, LOW_COST)).block();
 
         testee.blobId(blobId)
             .with(new MailAddress(USER_2.getUsername()))
@@ -123,7 +123,7 @@ class LinshareBlobExportMechanismTest {
 
     @Test
     void exportWithFilePrefixShouldCreateFileWithCustomPrefix() throws Exception {
-        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), FILE_CONTENT, LOW_COST)).block();
+        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName().asBucket(), FILE_CONTENT, LOW_COST)).block();
         String filePrefix = "deleted-message-of-bob@james.org";
 
         testee.blobId(blobId)

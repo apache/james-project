@@ -112,7 +112,7 @@ public class ExportService {
     Mono<Task.Result> export(Progress progress, Username username, InputStream inputStream) {
         return Mono.fromRunnable(() -> progress.setStage(Stage.EXPORTING))
             .then(Mono.usingWhen(
-                blobStore.save(blobStore.getDefaultBucketName(), inputStream, BlobStore.StoragePolicy.LOW_COST),
+                blobStore.save(blobStore.getDefaultBucketName().asBucket(), inputStream, BlobStore.StoragePolicy.LOW_COST),
                 blobId -> export(username, blobId),
                 this::deleteBlob)
             .doOnSuccess(any -> progress.setStage(Stage.COMPLETED))
@@ -137,7 +137,7 @@ public class ExportService {
     }
 
     private Mono<Void> deleteBlob(BlobId blobId) {
-        return Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId))
+        return Mono.from(blobStore.delete(blobStore.getDefaultBucketName().asBucket(), blobId))
             .onErrorResume(e -> {
                 LOGGER.error("Error deleting Blob with blobId: {}", blobId.asString(), e);
                 return Mono.empty();

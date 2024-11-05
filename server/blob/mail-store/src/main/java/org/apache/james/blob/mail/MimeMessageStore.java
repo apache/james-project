@@ -86,13 +86,13 @@ public class MimeMessageStore {
                     try {
                         MimeMessageInputStream stream = new MimeMessageInputStream(message);
                         MailHeaders mailHeaders = new MailHeaders(stream);
-                        return Mono.from(blobStore.save(bucketName, mailHeaders.toByteArray(), SIZE_BASED));
+                        return Mono.from(blobStore.save(bucketName.asBucket(), mailHeaders.toByteArray(), SIZE_BASED));
                     } catch (MessagingException e) {
                         throw new RuntimeException(e);
                     }
                 }),
                 Pair.of(BODY_BLOB_TYPE, (bucketName, blobStore) ->
-                    Mono.from(blobStore.save(bucketName, new ByteSource() {
+                    Mono.from(blobStore.save(bucketName.asBucket(), new ByteSource() {
                         @Override
                         public InputStream openStream() throws IOException {
                             try {

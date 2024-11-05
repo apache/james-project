@@ -43,6 +43,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.Bucket;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
@@ -78,7 +79,7 @@ class BlobRoutesTest {
     private static final String BASE_PATH = "/blobs";
     private static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
     private static final ZonedDateTime TIMESTAMP = ZonedDateTime.parse("2015-10-30T16:12:00Z");
-    private static final BucketName DEFAULT_BUCKET = BucketName.of("default");
+    private static final Bucket DEFAULT_BUCKET = BucketName.of("default").asBucket();
     private static final GenerationAwareBlobId.Configuration GENERATION_AWARE_BLOB_ID_CONFIGURATION = GenerationAwareBlobId.Configuration.DEFAULT;
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
         .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
@@ -101,7 +102,7 @@ class BlobRoutesTest {
         GenerationAwareBlobId.Factory generationAwareBlobIdFactory = new GenerationAwareBlobId.Factory(clock, BLOB_ID_FACTORY, GENERATION_AWARE_BLOB_ID_CONFIGURATION);
 
         BlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
-        blobStore = new DeDuplicationBlobStore(blobStoreDAO, DEFAULT_BUCKET, generationAwareBlobIdFactory);
+        blobStore = new DeDuplicationBlobStore(blobStoreDAO, DEFAULT_BUCKET.bucketName(), generationAwareBlobIdFactory);
         JsonTransformer jsonTransformer = new JsonTransformer();
         TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(BlobGCTaskAdditionalInformationDTO.SERIALIZATION_MODULE));
         BlobRoutes blobRoutes = new BlobRoutes(
@@ -109,7 +110,7 @@ class BlobRoutesTest {
             jsonTransformer,
             clock,
             blobStoreDAO,
-            DEFAULT_BUCKET,
+            DEFAULT_BUCKET.bucketName(),
             ImmutableSet.of(blobReferenceSource),
             GENERATION_AWARE_BLOB_ID_CONFIGURATION,
             generationAwareBlobIdFactory);

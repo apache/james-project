@@ -30,6 +30,7 @@ import java.time.temporal.ChronoUnit;
 import jakarta.inject.Inject;
 
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.Bucket;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.Upload;
@@ -47,7 +48,7 @@ import reactor.core.publisher.Mono;
 
 public class CassandraUploadRepository implements UploadRepository {
 
-    public static final BucketName UPLOAD_BUCKET = BucketName.of("jmap-uploads");
+    public static final Bucket UPLOAD_BUCKET = BucketName.of("jmap-uploads").asBucket();
     public static final Duration EXPIRE_DURATION = Duration.ofDays(7);
     private final UploadDAO uploadDAO;
     private final BlobStore blobStore;

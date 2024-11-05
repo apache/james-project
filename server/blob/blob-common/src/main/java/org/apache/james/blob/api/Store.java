@@ -116,7 +116,7 @@ public interface Store<T, I> {
         }
 
         private Mono<CloseableByteSource> readByteSource(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
-            return Mono.usingWhen(blobStore.readReactive(bucketName, blobId, storagePolicy),
+            return Mono.usingWhen(blobStore.readReactive(bucketName.asBucket(), blobId, storagePolicy),
                 Throwing.function(in -> {
                     FileBackedOutputStream out = new FileBackedOutputStream(FILE_THRESHOLD);
                     try {
@@ -138,7 +138,7 @@ public interface Store<T, I> {
         @Override
         public Publisher<Void> delete(I blobIds) {
             return Flux.fromIterable(blobIds.asMap().values())
-                .flatMap(id -> blobStore.delete(bucketName, id), DEFAULT_CONCURRENCY)
+                .flatMap(id -> blobStore.delete(bucketName.asBucket(), id), DEFAULT_CONCURRENCY)
                 .then();
         }
     }

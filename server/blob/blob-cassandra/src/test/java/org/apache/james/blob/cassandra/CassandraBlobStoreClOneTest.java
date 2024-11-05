@@ -106,12 +106,12 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
     public void readShouldNotReturnInvalidResultsWhenPartialDataPresent() {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), longString, LOW_COST)).block();
+        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName().asBucket(), longString, LOW_COST)).block();
 
         when(defaultBucketDAO().readPartClOne(blobId, 1)).thenReturn(Mono.empty());
         when(defaultBucketDAO().readPart(blobId, 1)).thenReturn(Mono.empty());
 
-        assertThatThrownBy(() -> IOUtils.toString(testee().read(testee().getDefaultBucketName(), blobId), StandardCharsets.UTF_8))
+        assertThatThrownBy(() -> IOUtils.toString(testee().read(testee().getDefaultBucketName().asBucket(), blobId), StandardCharsets.UTF_8))
             .isInstanceOf(ObjectStoreException.class)
             .hasMessageContaining("Missing blob part for blobId");
     }
@@ -121,12 +121,12 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
     public void readBytesShouldNotReturnInvalidResultsWhenPartialDataPresent() {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), longString, LOW_COST)).block();
+        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName().asBucket(), longString, LOW_COST)).block();
 
         when(defaultBucketDAO().readPartClOne(blobId, 1)).thenReturn(Mono.empty());
         when(defaultBucketDAO().readPart(blobId, 1)).thenReturn(Mono.empty());
 
-        assertThatThrownBy(() -> Mono.from(testee().readBytes(testee().getDefaultBucketName(), blobId)).block())
+        assertThatThrownBy(() -> Mono.from(testee().readBytes(testee().getDefaultBucketName().asBucket(), blobId)).block())
             .isInstanceOf(ObjectStoreException.class)
             .hasMessageContaining("Missing blob part for blobId");
     }
@@ -135,11 +135,11 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
     void readShouldReturnValidResultWhenDataMissingInOneNodeButPresentInOthers() throws IOException {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), longString, LOW_COST)).block();
+        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName().asBucket(), longString, LOW_COST)).block();
 
         when(defaultBucketDAO().selectRowCountClOne(blobId)).thenReturn(Mono.empty());
 
-        String data = IOUtils.toString(testee().read(testee().getDefaultBucketName(), blobId), StandardCharsets.UTF_8);
+        String data = IOUtils.toString(testee().read(testee().getDefaultBucketName().asBucket(), blobId), StandardCharsets.UTF_8);
 
         assertThat(data).isEqualTo(longString);
     }
@@ -148,11 +148,11 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
     void readBytesShouldReturnValidResultWhenDataMissingInOneNodeButPresentInOthers() {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), longString, LOW_COST)).block();
+        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName().asBucket(), longString, LOW_COST)).block();
 
         when(defaultBucketDAO().selectRowCountClOne(blobId)).thenReturn(Mono.empty());
 
-        byte[] bytes = Mono.from(testee().readBytes(testee().getDefaultBucketName(), blobId)).block();
+        byte[] bytes = Mono.from(testee().readBytes(testee().getDefaultBucketName().asBucket(), blobId)).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
     }
@@ -161,11 +161,11 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
     void readShouldReturnValidResultWhenPartialDataMissingInOneNodeButPresentInOthers() throws IOException {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), longString, LOW_COST)).block();
+        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName().asBucket(), longString, LOW_COST)).block();
 
         when(defaultBucketDAO().readPartClOne(blobId, 1)).thenReturn(Mono.empty());
 
-        String data = IOUtils.toString(testee().read(testee().getDefaultBucketName(), blobId), StandardCharsets.UTF_8);
+        String data = IOUtils.toString(testee().read(testee().getDefaultBucketName().asBucket(), blobId), StandardCharsets.UTF_8);
 
         assertThat(data).isEqualTo(longString);
     }
@@ -174,11 +174,11 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
     void readBytesShouldReturnValidResultWhenPartialDataMissingInOneNodeButPresentInOthers() {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), longString, LOW_COST)).block();
+        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName().asBucket(), longString, LOW_COST)).block();
 
         when(defaultBucketDAO().readPartClOne(blobId, 1)).thenReturn(Mono.empty());
 
-        byte[] bytes = Mono.from(testee().readBytes(testee().getDefaultBucketName(), blobId)).block();
+        byte[] bytes = Mono.from(testee().readBytes(testee().getDefaultBucketName().asBucket(), blobId)).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
     }
@@ -187,8 +187,8 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
     void readShouldPublishHitRatioClOneMetric() {
         BlobStore store = testee();
 
-        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
-        store.read(store.getDefaultBucketName(), blobId);
+        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName().asBucket(), BYTES_CONTENT, LOW_COST)).block();
+        store.read(store.getDefaultBucketName().asBucket(), blobId);
 
         await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().countFor(CASSANDRA_BLOBSTORE_CL_ONE_HIT_COUNT_METRIC_NAME))
@@ -199,8 +199,8 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
     void readBytesShouldPublishHitRatioClOneMetric() {
         BlobStore store = testee();
 
-        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
-        Mono.from(store.readBytes(store.getDefaultBucketName(), blobId)).block();
+        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName().asBucket(), BYTES_CONTENT, LOW_COST)).block();
+        Mono.from(store.readBytes(store.getDefaultBucketName().asBucket(), blobId)).block();
 
         await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().countFor(CASSANDRA_BLOBSTORE_CL_ONE_HIT_COUNT_METRIC_NAME))
@@ -211,13 +211,13 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
     void readShouldPublishMissRatioClOneMetric() {
         BlobStore store = testee();
 
-        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
+        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName().asBucket(), BYTES_CONTENT, LOW_COST)).block();
 
         when(defaultBucketDAO().selectRowCountClOne(blobId)).thenReturn(Mono.empty());
-        store.read(store.getDefaultBucketName(), blobId);
+        store.read(store.getDefaultBucketName().asBucket(), blobId);
 
         when(defaultBucketDAO().readPartClOne(blobId, 1)).thenReturn(Mono.empty());
-        store.read(store.getDefaultBucketName(), blobId);
+        store.read(store.getDefaultBucketName().asBucket(), blobId);
 
         await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().countFor(CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME))
@@ -228,13 +228,13 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
     void readBytesShouldPublishMissRatioClOneMetric() {
         BlobStore store = testee();
 
-        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
+        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName().asBucket(), BYTES_CONTENT, LOW_COST)).block();
 
         when(defaultBucketDAO().selectRowCountClOne(blobId)).thenReturn(Mono.empty());
-        Mono.from(store.readBytes(store.getDefaultBucketName(), blobId)).block();
+        Mono.from(store.readBytes(store.getDefaultBucketName().asBucket(), blobId)).block();
 
         when(defaultBucketDAO().readPartClOne(blobId, 1)).thenReturn(Mono.empty());
-        Mono.from(store.readBytes(store.getDefaultBucketName(), blobId)).block();
+        Mono.from(store.readBytes(store.getDefaultBucketName().asBucket(), blobId)).block();
 
         await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().countFor(CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME))

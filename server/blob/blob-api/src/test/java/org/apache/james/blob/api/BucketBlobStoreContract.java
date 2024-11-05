@@ -37,7 +37,7 @@ import reactor.core.publisher.Mono;
 public interface BucketBlobStoreContract {
     String SHORT_STRING = "toto";
     byte[] SHORT_BYTEARRAY = SHORT_STRING.getBytes(StandardCharsets.UTF_8);
-    BucketName CUSTOM = BucketName.of("custom");
+    Bucket CUSTOM = BucketName.of("custom").asBucket();
 
     BlobStore testee();
 
@@ -47,7 +47,7 @@ public interface BucketBlobStoreContract {
     default void deleteBucketShouldThrowWhenNullBucketName() {
         BlobStore store = testee();
 
-        assertThatThrownBy(() -> Mono.from(store.deleteBucket((BucketName) null)).block())
+        assertThatThrownBy(() -> Mono.from(store.deleteBucket(null)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -77,7 +77,7 @@ public interface BucketBlobStoreContract {
     default void saveBytesShouldThrowWhenNullBucketName() {
         BlobStore store = testee();
 
-        assertThatThrownBy(() -> Mono.from(store.save((BucketName) null, SHORT_BYTEARRAY, LOW_COST)).block())
+        assertThatThrownBy(() -> Mono.from(store.save(null, SHORT_BYTEARRAY, LOW_COST)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -85,7 +85,7 @@ public interface BucketBlobStoreContract {
     default void saveStringShouldThrowWhenNullBucketName() {
         BlobStore store = testee();
 
-        assertThatThrownBy(() -> Mono.from(store.save((BucketName) null, SHORT_STRING, LOW_COST)).block())
+        assertThatThrownBy(() -> Mono.from(store.save(null, SHORT_STRING, LOW_COST)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -93,7 +93,7 @@ public interface BucketBlobStoreContract {
     default void saveInputStreamShouldThrowWhenNullBucketName() {
         BlobStore store = testee();
 
-        assertThatThrownBy(() -> Mono.from(store.save((BucketName) null, new ByteArrayInputStream(SHORT_BYTEARRAY), LOW_COST)).block())
+        assertThatThrownBy(() -> Mono.from(store.save(null, new ByteArrayInputStream(SHORT_BYTEARRAY), LOW_COST)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -101,8 +101,8 @@ public interface BucketBlobStoreContract {
     default void readShouldThrowWhenNullBucketName() {
         BlobStore store = testee();
 
-        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT, SHORT_BYTEARRAY, LOW_COST)).block();
-        assertThatThrownBy(() -> store.read((BucketName) null, blobId))
+        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT.asBucket(), SHORT_BYTEARRAY, LOW_COST)).block();
+        assertThatThrownBy(() -> store.read(null, blobId))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -110,8 +110,8 @@ public interface BucketBlobStoreContract {
     default void readBytesStreamShouldThrowWhenNullBucketName() {
         BlobStore store = testee();
 
-        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT, SHORT_BYTEARRAY, LOW_COST)).block();
-        assertThatThrownBy(() -> Mono.from(store.readBytes((BucketName) null, blobId)).block())
+        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT.asBucket(), SHORT_BYTEARRAY, LOW_COST)).block();
+        assertThatThrownBy(() -> Mono.from(store.readBytes(null, blobId)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -119,7 +119,7 @@ public interface BucketBlobStoreContract {
     default void readStringShouldThrowWhenBucketDoesNotExist() {
         BlobStore store = testee();
 
-        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT, SHORT_BYTEARRAY, LOW_COST)).block();
+        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT.asBucket(), SHORT_BYTEARRAY, LOW_COST)).block();
         assertThatThrownBy(() -> store.read(CUSTOM, blobId).read())
             .isInstanceOf(ObjectStoreException.class);
     }
@@ -128,7 +128,7 @@ public interface BucketBlobStoreContract {
     default void readBytesStreamShouldThrowWhenBucketDoesNotExist() {
         BlobStore store = testee();
 
-        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT, SHORT_BYTEARRAY, LOW_COST)).block();
+        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT.asBucket(), SHORT_BYTEARRAY, LOW_COST)).block();
         assertThatThrownBy(() -> Mono.from(store.readBytes(CUSTOM, blobId)).block())
             .isInstanceOf(ObjectStoreException.class);
     }
@@ -137,10 +137,10 @@ public interface BucketBlobStoreContract {
     default void shouldBeAbleToSaveDataInMultipleBuckets() {
         BlobStore store = testee();
 
-        BlobId blobIdDefault = Mono.from(store.save(BucketName.DEFAULT, SHORT_BYTEARRAY, LOW_COST)).block();
+        BlobId blobIdDefault = Mono.from(store.save(BucketName.DEFAULT.asBucket(), SHORT_BYTEARRAY, LOW_COST)).block();
         BlobId blobIdCustom = Mono.from(store.save(CUSTOM, SHORT_BYTEARRAY, LOW_COST)).block();
 
-        byte[] bytesDefault = Mono.from(store.readBytes(BucketName.DEFAULT, blobIdDefault)).block();
+        byte[] bytesDefault = Mono.from(store.readBytes(BucketName.DEFAULT.asBucket(), blobIdDefault)).block();
         byte[] bytesCustom = Mono.from(store.readBytes(CUSTOM, blobIdCustom)).block();
 
         assertThat(bytesDefault).isEqualTo(bytesCustom);
@@ -185,7 +185,7 @@ public interface BucketBlobStoreContract {
         Mono.from(store.save(CUSTOM, SHORT_BYTEARRAY, LOW_COST)).block();
 
         assertThat(Flux.from(store.listBuckets()).collectList().block())
-            .containsOnly(store.getDefaultBucketName(), CUSTOM);
+            .containsOnly(store.getDefaultBucketName(), CUSTOM.bucketName());
     }
 
     @Test

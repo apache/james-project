@@ -287,7 +287,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     }
 
     private void assertThatStoreIsEmpty() {
-        var blobIds = Flux.from(memoryBlobStore.listBlobs(BucketName.DEFAULT))
+        var blobIds = Flux.from(memoryBlobStore.listBlobs(BucketName.DEFAULT.asBucket()))
                 .map(Objects::toString)
                 .collectList()
                 .defaultIfEmpty(List.of())

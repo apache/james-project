@@ -19,6 +19,11 @@
 
 package org.apache.james.mailrepository.blob
 
+import java.io.{ByteArrayInputStream, InputStream}
+import java.util
+import java.util.Date
+import java.util.stream.Stream
+
 import com.google.common.collect.ImmutableMap
 import jakarta.mail.MessagingException
 import jakarta.mail.internet.MimeMessage
@@ -38,10 +43,6 @@ import reactor.core.publisher.{Flux, Mono}
 import reactor.core.scala.publisher.SMono
 import reactor.util.function.Tuples
 
-import java.io.{ByteArrayInputStream, InputStream}
-import java.util
-import java.util.Date
-import java.util.stream.Stream
 import scala.jdk.CollectionConverters.IterableHasAsJava
 import scala.jdk.StreamConverters._
 
@@ -85,7 +86,7 @@ object BlobMailRepository {
 
       val save: Impl.ValueToSave = (bucketName, blobStore) =>
         Mono.from(blobStore.save(
-          bucketName,
+          bucketName.asBucket,
           new ByteArrayInputStream(payload.getBytes),
           (data:InputStream)=>SMono.just(Tuples.of(blobId,data)).asJava(),
           BlobStore.StoragePolicy.SIZE_BASED
@@ -171,14 +172,14 @@ class BlobMailRepository(val mailMetaDataBlobStore: BlobStore,
 
   @throws[MessagingException]
   override def size: Long =
-    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName.asBucket))
     .filter(this.belongsToMailRepository)
     .count()
     .block()
 
   @throws[MessagingException]
   override def list: util.Iterator[MailKey] =
-    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName.asBucket))
     .filter(this.belongsToMailRepository)
     .map[MailKey](blobId => new MailKey(blobId.asString))
     .toIterable
@@ -219,7 +220,7 @@ class BlobMailRepository(val mailMetaDataBlobStore: BlobStore,
 
   @throws[MessagingException]
   override def removeAll(): Unit = {
-    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName.asBucket))
       .flatMap(blobId => this.remove(MailPartsId(blobId)))
       .blockLast()
   }

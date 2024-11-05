@@ -69,7 +69,7 @@ public class DeletedMessageVaultDeletionCallback implements DeleteMessageListene
 
     @Override
     public Mono<Void> forMessage(DeleteMessageListener.DeletedMessageCopyCommand copyCommand) {
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), copyCommand.getHeaderId(), BlobStore.StoragePolicy.LOW_COST))
+        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName().asBucket(), copyCommand.getHeaderId(), BlobStore.StoragePolicy.LOW_COST))
             .flatMap(bytes -> {
                 Optional<Message> mimeMessage = parseMessage(new ByteArrayInputStream(bytes), copyCommand.getMessageId());
                 DeletedMessage deletedMessage = DeletedMessage.builder()
@@ -85,7 +85,7 @@ public class DeletedMessageVaultDeletionCallback implements DeleteMessageListene
                     .subject(mimeMessage.map(Message::getSubject))
                     .build();
 
-                return Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), copyCommand.getBodyId(), BlobStore.StoragePolicy.LOW_COST))
+                return Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName().asBucket(), copyCommand.getBodyId(), BlobStore.StoragePolicy.LOW_COST))
                     .map(bodyStream -> new SequenceInputStream(new ByteArrayInputStream(bytes), bodyStream))
                     .flatMap(bodyStream -> Mono.from(deletedMessageVault.append(deletedMessage, bodyStream)));
             });

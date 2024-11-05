@@ -1986,7 +1986,7 @@ class DeletedMessagesVaultRoutesTest {
 
             byte[] expectedZippedData = zippedMessagesData();
 
-            assertThat(blobStore.read(blobStore.getDefaultBucketName(), blobExporting.getExportedBlobId().get()))
+            assertThat(blobStore.read(blobStore.getDefaultBucketName().asBucket(), blobExporting.getExportedBlobId().get()))
                 .hasSameContentAs(new ByteArrayInputStream(expectedZippedData));
         }
 
@@ -2107,7 +2107,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 doReturn(Mono.error(new RuntimeException("mock exception")))
                     .when(blobStore)
-                    .deleteBucket(BucketName.of("deleted-messages-2010-10-01"));
+                    .deleteBucket(BucketName.of("deleted-messages-2010-10-01").asBucket());
 
                 clock.setInstant(NOW.toInstant());
 

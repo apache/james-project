@@ -23,12 +23,12 @@ import java.nio.charset.StandardCharsets;
 import com.google.common.base.Strings;
 
 public interface BlobStoreDAOFixture {
-    BucketName TEST_BUCKET_NAME = BucketName.of("my-test-bucket");
+    Bucket TEST_BUCKET_NO_TENANT = BucketName.of("my-test-bucket").asBucket();
     Tenant TEST_TENANT = new Tenant("test.com");
-    Bucket TEST_BUCKET = Bucket.of(TEST_BUCKET_NAME, TEST_TENANT);
-    BucketName CUSTOM_BUCKET_NAME = BucketName.of("custom");
+    Bucket TEST_BUCKET = Bucket.of(BucketName.of("my-test-bucket"), TEST_TENANT);
+    Bucket CUSTOM_BUCKET_NO_TENANT = BucketName.of("custom").asBucket();
     Tenant CUSTOM_TENANT = new Tenant("custom.com");
-    Bucket CUSTOM_BUCKET = Bucket.of(CUSTOM_BUCKET_NAME, CUSTOM_TENANT);
+    Bucket CUSTOM_BUCKET = Bucket.of(BucketName.of("custom"), CUSTOM_TENANT);
     BlobId TEST_BLOB_ID = new TestBlobId("test-blob-id");
     BlobId OTHER_TEST_BLOB_ID = new TestBlobId("other-test-blob-id");
     String SHORT_STRING = "toto";

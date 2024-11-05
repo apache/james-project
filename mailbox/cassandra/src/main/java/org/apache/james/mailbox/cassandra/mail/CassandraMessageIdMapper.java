@@ -135,7 +135,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             return Mono.just(metadata.asMailboxMessage(EMPTY_BYTE_ARRAY));
         }
         if (fetchType == FetchType.HEADERS && metadata.isComplete()) {
-            return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), metadata.getHeaderContent().get(), SIZE_BASED))
+            return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName().asBucket(), metadata.getHeaderContent().get(), SIZE_BASED))
                 .map(metadata::asMailboxMessage);
         }
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)

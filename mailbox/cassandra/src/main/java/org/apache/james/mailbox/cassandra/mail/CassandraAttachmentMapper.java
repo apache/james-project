@@ -92,7 +92,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public InputStream loadAttachmentContent(AttachmentId attachmentId) throws AttachmentNotFoundException {
         return attachmentDAOV2.getAttachment(attachmentId)
-            .map(daoAttachment -> blobStore.read(blobStore.getDefaultBucketName(), daoAttachment.getBlobId(), LOW_COST))
+            .map(daoAttachment -> blobStore.read(blobStore.getDefaultBucketName().asBucket(), daoAttachment.getBlobId(), LOW_COST))
             .blockOptional()
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.toString()));
     }
@@ -100,7 +100,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public Mono<InputStream> loadAttachmentContentReactive(AttachmentId attachmentId) {
         return attachmentDAOV2.getAttachment(attachmentId)
-            .flatMap(daoAttachment -> Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), daoAttachment.getBlobId(), LOW_COST)))
+            .flatMap(daoAttachment -> Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName().asBucket(), daoAttachment.getBlobId(), LOW_COST)))
             .switchIfEmpty(Mono.error(() -> new AttachmentNotFoundException(attachmentId.toString())));
     }
 
@@ -133,7 +133,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
             AttachmentId attachmentId = attachmentIdFactory.random();
             ByteSource content = parsedAttachment.getContent();
             long size = content.size();
-            return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), content, LOW_COST))
+            return Mono.from(blobStore.save(blobStore.getDefaultBucketName().asBucket(), content, LOW_COST))
                 .map(blobId -> new DAOAttachment(ownerMessageId, attachmentId, blobId, parsedAttachment.getContentType(), size))
                 .flatMap(this::storeAttachmentWithIndex)
                 .thenReturn(parsedAttachment.asMessageAttachment(attachmentId, size, ownerMessageId));

@@ -35,7 +35,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Optional;
 
-import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.Bucket;
 import org.apache.james.blob.export.file.FileSystemExtension;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.json.DTOConverter;
@@ -297,7 +297,7 @@ class MailboxesExportRequestToTaskTest {
 
         doReturn(Mono.error(new RuntimeException()))
             .when(testSystem.blobStore)
-            .save(any(BucketName.class), any(InputStream.class), any());
+            .save(any(Bucket.class), any(InputStream.class), any());
 
         String taskId = with()
             .queryParam("action", "export")

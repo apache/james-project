@@ -46,6 +46,10 @@ public final class BucketName {
         return value;
     }
 
+    public Bucket asBucket() {
+        return Bucket.of(this);
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof BucketName) {

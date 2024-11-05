@@ -32,6 +32,7 @@ import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.Bucket;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
@@ -93,23 +94,23 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStream read(Bucket bucket, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         try {
-            return decrypt(underlying.read(bucketName, blobId));
+            return decrypt(underlying.read(bucket, blobId));
         } catch (IOException e) {
             throw new ObjectStoreIOException("Error reading blob " + blobId.asString(), e);
         }
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.from(underlying.readReactive(bucketName, blobId))
+    public Publisher<InputStream> readReactive(Bucket bucket, BlobId blobId) {
+        return Mono.from(underlying.readReactive(bucket, blobId))
             .map(Throwing.function(this::decrypt));
     }
 
     @Override
-    public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return Mono.from(underlying.readBytes(bucketName, blobId))
+    public Publisher<byte[]> readBytes(Bucket bucket, BlobId blobId) {
+        return Mono.from(underlying.readBytes(bucket, blobId))
             .map(Throwing.function(bytes -> {
                 InputStream inputStream = decrypt(new ByteArrayInputStream(bytes));
                 try (UnsynchronizedByteArrayOutputStream outputStream = UnsynchronizedByteArrayOutputStream.builder()
@@ -122,23 +123,23 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
-        Preconditions.checkNotNull(bucketName);
+    public Publisher<Void> save(Bucket bucket, BlobId blobId, byte[] data) {
+        Preconditions.checkNotNull(bucket.bucketName());
         Preconditions.checkNotNull(blobId);
         Preconditions.checkNotNull(data);
 
-        return save(bucketName, blobId, new ByteArrayInputStream(data));
+        return save(bucket, blobId, new ByteArrayInputStream(data));
     }
 
     @Override
-    public Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
-        Preconditions.checkNotNull(bucketName);
+    public Publisher<Void> save(Bucket bucket, BlobId blobId, InputStream inputStream) {
+        Preconditions.checkNotNull(bucket.bucketName());
         Preconditions.checkNotNull(blobId);
         Preconditions.checkNotNull(inputStream);
 
         return Mono.usingWhen(
                 Mono.fromCallable(() -> encrypt(inputStream)),
-                pair -> Mono.from(underlying.save(bucketName, blobId, byteSourceWithSize(pair.getLeft().asByteSource(), pair.getRight()))),
+                pair -> Mono.from(underlying.save(bucket, blobId, byteSourceWithSize(pair.getLeft().asByteSource(), pair.getRight()))),
                 Throwing.function(pair -> Mono.fromRunnable(Throwing.runnable(pair.getLeft()::reset)).subscribeOn(Schedulers.boundedElastic())))
             .subscribeOn(Schedulers.boundedElastic())
             .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving bytearray", e));
@@ -164,30 +165,30 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
-        Preconditions.checkNotNull(bucketName);
+    public Publisher<Void> save(Bucket bucket, BlobId blobId, ByteSource content) {
+        Preconditions.checkNotNull(bucket.bucketName());
         Preconditions.checkNotNull(blobId);
         Preconditions.checkNotNull(content);
 
         return Mono.using(content::openStream,
-            in -> Mono.from(save(bucketName, blobId, in)),
+            in -> Mono.from(save(bucket, blobId, in)),
             Throwing.consumer(InputStream::close))
             .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
-    public Publisher<Void> delete(BucketName bucketName, BlobId blobId) {
-        return underlying.delete(bucketName, blobId);
+    public Publisher<Void> delete(Bucket bucket, BlobId blobId) {
+        return underlying.delete(bucket, blobId);
     }
 
     @Override
-    public Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds) {
-        return underlying.delete(bucketName, blobIds);
+    public Publisher<Void> delete(Bucket bucket, Collection<BlobId> blobIds) {
+        return underlying.delete(bucket, blobIds);
     }
 
     @Override
-    public Publisher<Void> deleteBucket(BucketName bucketName) {
-        return underlying.deleteBucket(bucketName);
+    public Publisher<Void> deleteBucket(Bucket bucket) {
+        return underlying.deleteBucket(bucket);
     }
 
     @Override
@@ -196,7 +197,7 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<BlobId> listBlobs(BucketName bucketName) {
-        return underlying.listBlobs(bucketName);
+    public Publisher<BlobId> listBlobs(Bucket bucket) {
+        return underlying.listBlobs(bucket);
     }
 }

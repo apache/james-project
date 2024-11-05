@@ -147,7 +147,7 @@ class MimeMessageStoreTest {
                 BlobId headerBlobId = parts.getHeaderBlobId();
                 BlobId bodyBlobId = parts.getBodyBlobId();
 
-                softly.assertThat(new String(Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), headerBlobId)).block(), StandardCharsets.UTF_8))
+                softly.assertThat(new String(Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName().asBucket(), headerBlobId)).block(), StandardCharsets.UTF_8))
                     .isEqualTo("Date: Thu, 6 Sep 2018 13:29:13 +0700 (ICT)\r\n" +
                         "From: any@any.com\r\n" +
                         "To: toddy@any.com\r\n" +
@@ -156,7 +156,7 @@ class MimeMessageStoreTest {
                         "MIME-Version: 1.0\r\n" +
                         "Content-Type: text/plain; charset=UTF-8\r\n" +
                         "Content-Transfer-Encoding: 7bit\r\n\r\n");
-                softly.assertThat(new String(Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), bodyBlobId)).block(), StandardCharsets.UTF_8))
+                softly.assertThat(new String(Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName().asBucket(), bodyBlobId)).block(), StandardCharsets.UTF_8))
                     .isEqualTo("Important mail content");
             });
     }

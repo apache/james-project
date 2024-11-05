@@ -19,44 +19,44 @@
 
 package org.apache.james.server.blob.deduplication
 
+import java.io.{ByteArrayInputStream, InputStream}
+import java.util.UUID
+
 import com.google.common.base.Preconditions
 import com.google.common.io.ByteSource
 import jakarta.inject.{Inject, Named}
 import org.apache.james.blob.api.BlobStore.BlobIdProvider
-import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
+import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, Bucket, BucketName}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
 import reactor.core.scala.publisher.{SMono, tupleTwo2ScalaTuple2}
 import reactor.core.scheduler.Schedulers
 import reactor.util.function.{Tuple2, Tuples}
 
-import java.io.{ByteArrayInputStream, InputStream}
-import java.util.UUID
-
 class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
                                      @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) defaultBucketName: BucketName,
                                      blobIdFactory: BlobId.Factory) extends BlobStore {
 
-  override def save(bucketName: BucketName, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    save(bucketName, data, withBlobId, storagePolicy)
+  override def save(bucket: Bucket, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+    save(bucket, data, withBlobId, storagePolicy)
   }
 
-  override def save(bucketName: BucketName, data: InputStream, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    save(bucketName, data, withBlobId, storagePolicy)
+  override def save(bucket: Bucket, data: InputStream, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+    save(bucket, data, withBlobId, storagePolicy)
   }
 
-  override def save(bucketName: BucketName, data: ByteSource, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    save(bucketName, data, withBlobId, storagePolicy)
+  override def save(bucket: Bucket, data: ByteSource, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+    save(bucket, data, withBlobId, storagePolicy)
   }
 
-  override def save(bucketName: BucketName, data: Array[Byte], blobIdProvider: BlobIdProvider, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    Preconditions.checkNotNull(bucketName)
+  override def save(bucket: Bucket, data: Array[Byte], blobIdProvider: BlobIdProvider, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+    Preconditions.checkNotNull(bucket.bucketName())
     Preconditions.checkNotNull(data)
-    save(bucketName, new ByteArrayInputStream(data), blobIdProvider, storagePolicy)
+    save(bucket, new ByteArrayInputStream(data), blobIdProvider, storagePolicy)
   }
 
-  override def save(bucketName: BucketName, data: ByteSource, blobIdProvider: BlobIdProvider, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    Preconditions.checkNotNull(bucketName)
+  override def save(bucket: Bucket, data: ByteSource, blobIdProvider: BlobIdProvider, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+    Preconditions.checkNotNull(bucket.bucketName())
     Preconditions.checkNotNull(data)
 
     SMono.fromCallable(() => data.openStream())
@@ -65,7 +65,7 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
           .subscribeOn(Schedulers.boundedElastic())
           .map(tupleTwo2ScalaTuple2)
           .flatMap { case (blobId, inputStream) =>
-            SMono(blobStoreDAO.save(bucketName, blobId, inputStream))
+            SMono(blobStoreDAO.save(bucket, blobId, inputStream))
               .`then`(SMono.just(blobId))
           })(
         release = _.close())
@@ -73,17 +73,17 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   }
 
   override def save(
-                     bucketName: BucketName,
+                     bucket: Bucket,
                      data: InputStream,
                      blobIdProvider: BlobIdProvider,
                      storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    Preconditions.checkNotNull(bucketName)
+    Preconditions.checkNotNull(bucket.bucketName())
     Preconditions.checkNotNull(data)
 
     SMono(blobIdProvider(data))
       .subscribeOn(Schedulers.boundedElastic())
       .flatMap { tuple =>
-        SMono(blobStoreDAO.save(bucketName, tuple.getT1, tuple.getT2))
+        SMono(blobStoreDAO.save(bucket, tuple.getT1, tuple.getT2))
           .`then`(SMono.just(tuple.getT1))
       }
   }
@@ -91,39 +91,39 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   private def withBlobId(data: InputStream): Publisher[Tuple2[BlobId, InputStream]] =
     SMono.just(Tuples.of(blobIdFactory.of(UUID.randomUUID.toString), data))
 
-  override def readBytes(bucketName: BucketName, blobId: BlobId): Publisher[Array[Byte]] = {
-    Preconditions.checkNotNull(bucketName)
+  override def readBytes(bucket: Bucket, blobId: BlobId): Publisher[Array[Byte]] = {
+    Preconditions.checkNotNull(bucket.bucketName())
 
-    blobStoreDAO.readBytes(bucketName, blobId)
+    blobStoreDAO.readBytes(bucket, blobId)
   }
 
-  override def read(bucketName: BucketName, blobId: BlobId): InputStream = {
-    Preconditions.checkNotNull(bucketName)
+  override def read(bucket: Bucket, blobId: BlobId): InputStream = {
+    Preconditions.checkNotNull(bucket.bucketName())
 
-    blobStoreDAO.read(bucketName, blobId)
+    blobStoreDAO.read(bucket, blobId)
   }
 
-  override def readReactive(bucketName: BucketName, blobId: BlobId): Publisher[InputStream] = {
-    Preconditions.checkNotNull(bucketName)
+  override def readReactive(bucket: Bucket, blobId: BlobId): Publisher[InputStream] = {
+    Preconditions.checkNotNull(bucket.bucketName())
 
-    blobStoreDAO.readReactive(bucketName, blobId)
+    blobStoreDAO.readReactive(bucket, blobId)
   }
 
   override def getDefaultBucketName: BucketName = defaultBucketName
 
-  override def deleteBucket(bucketName: BucketName): Publisher[Void] = {
-    blobStoreDAO.deleteBucket(bucketName)
+  override def deleteBucket(bucket: Bucket): Publisher[Void] = {
+    blobStoreDAO.deleteBucket(bucket)
   }
 
-  override def delete(bucketName: BucketName, blobId: BlobId): Publisher[java.lang.Boolean] = {
-    Preconditions.checkNotNull(bucketName)
+  override def delete(bucket: Bucket, blobId: BlobId): Publisher[java.lang.Boolean] = {
+    Preconditions.checkNotNull(bucket.bucketName())
     Preconditions.checkNotNull(blobId)
 
-    SMono.fromPublisher(blobStoreDAO.delete(bucketName, blobId))
+    SMono.fromPublisher(blobStoreDAO.delete(bucket, blobId))
       .`then`(SMono.just(Boolean.box(true)))
   }
 
   override def listBuckets(): Publisher[BucketName] = Flux.concat(blobStoreDAO.listBuckets(), Flux.just(defaultBucketName)).distinct()
 
-  override def listBlobs(bucketName: BucketName): Publisher[BlobId] = blobStoreDAO.listBlobs(bucketName)
+  override def listBlobs(bucket: Bucket): Publisher[BlobId] = blobStoreDAO.listBlobs(bucket)
 }

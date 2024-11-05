@@ -21,7 +21,7 @@ package org.apache.james.blob.objectstorage.aws;
 
 import static org.apache.james.blob.api.BlobStoreDAOFixture.SHORT_BYTEARRAY;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BLOB_ID;
-import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NO_TENANT;
 import static org.apache.james.blob.objectstorage.aws.DockerAwsS3Container.ACCESS_KEY_ID;
 import static org.apache.james.blob.objectstorage.aws.DockerAwsS3Container.SECRET_ACCESS_KEY;
 import static org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration.UPLOAD_RETRY_EXCEPTION_PREDICATE;
@@ -106,7 +106,7 @@ public class S3MinioTest implements BlobStoreDAOContract {
     @BeforeEach
     void beforeEach() throws Exception {
         // Why? https://github.com/apache/james-project/pull/1981#issuecomment-2380396460
-        createBucket(TEST_BUCKET_NAME.asString());
+        createBucket(TEST_BUCKET_NO_TENANT.bucketName().asString());
     }
 
     private void createBucket(String bucketName) throws Exception {
@@ -131,21 +131,21 @@ public class S3MinioTest implements BlobStoreDAOContract {
     @Test
     void saveWillThrowWhenBlobIdHasSlashCharacters() {
         BlobId invalidBlobId = new TestBlobId("test-blob//id");
-        assertThatThrownBy(() -> Mono.from(testee.save(TEST_BUCKET_NAME, invalidBlobId, SHORT_BYTEARRAY)).block())
+        assertThatThrownBy(() -> Mono.from(testee.save(TEST_BUCKET_NO_TENANT, invalidBlobId, SHORT_BYTEARRAY)).block())
             .isInstanceOf(S3Exception.class)
             .hasMessageContaining("Object name contains unsupported characters");
     }
 
     @Test
     void saveShouldWorkWhenValidBlobId() {
-        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
-        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block()).isEqualTo(SHORT_BYTEARRAY);
+        Mono.from(testee.save(TEST_BUCKET_NO_TENANT, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NO_TENANT, TEST_BLOB_ID)).block()).isEqualTo(SHORT_BYTEARRAY);
     }
 
     @Test
     @Override
     public void listBucketsShouldReturnEmptyWhenNone() {
-        deleteBucket(TEST_BUCKET_NAME.asString());
+        deleteBucket(TEST_BUCKET_NO_TENANT.bucketName().asString());
 
         BlobStoreDAO store = testee();
 

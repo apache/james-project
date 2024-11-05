@@ -128,8 +128,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+    public InputStream read(org.apache.james.blob.api.Bucket bucket, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucket.bucketName());
 
         return ReactorUtils.toInputStream(getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
@@ -139,8 +139,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+    public Publisher<InputStream> readReactive(org.apache.james.blob.api.Bucket bucket, BlobId blobId) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucket.bucketName());
 
         return getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
@@ -150,8 +150,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<ReactiveByteSource> readAsByteSource(BucketName bucketName, BlobId blobId) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+    public Publisher<ReactiveByteSource> readAsByteSource(org.apache.james.blob.api.Bucket bucket, BlobId blobId) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucket.bucketName());
 
         return getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
@@ -200,8 +200,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
 
 
     @Override
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+    public Mono<byte[]> readBytes(org.apache.james.blob.api.Bucket bucket, BlobId blobId) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucket.bucketName());
 
         return Mono.fromFuture(() ->
                 client.getObject(
@@ -215,8 +215,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+    public Mono<Void> save(org.apache.james.blob.api.Bucket bucket, BlobId blobId, byte[] data) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucket.bucketName());
 
         return Mono.fromFuture(() ->
                 client.putObject(
@@ -228,18 +228,18 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
+    public Mono<Void> save(org.apache.james.blob.api.Bucket bucket, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(inputStream);
 
-        return uploadUsingFile(bucketName, blobId, inputStream);
+        return uploadUsingFile(bucket, blobId, inputStream);
     }
 
-    private Mono<Void> uploadUsingFile(BucketName bucketName, BlobId blobId, InputStream inputStream) {
+    private Mono<Void> uploadUsingFile(org.apache.james.blob.api.Bucket bucket, BlobId blobId, InputStream inputStream) {
         return Mono.using(
             () -> new FileBackedOutputStream(FILE_THRESHOLD),
             fileBackedOutputStream ->
                 Mono.fromCallable(() -> IOUtils.copy(inputStream, fileBackedOutputStream))
-                    .flatMap(size -> save(bucketName, blobId, new FileBackedOutputStreamByteSource(fileBackedOutputStream, size))),
+                    .flatMap(size -> save(bucket, blobId, new FileBackedOutputStreamByteSource(fileBackedOutputStream, size))),
             Throwing.consumer(FileBackedOutputStream::reset),
             LAZY)
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
@@ -247,8 +247,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+    public Mono<Void> save(org.apache.james.blob.api.Bucket bucket, BlobId blobId, ByteSource content) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucket.bucketName());
 
         return Mono.fromCallable(content::size)
             .subscribeOn(Schedulers.boundedElastic())
@@ -297,8 +297,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+    public Mono<Void> delete(org.apache.james.blob.api.Bucket bucket, BlobId blobId) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucket.bucketName());
 
         return Mono.fromFuture(() ->
                 client.deleteObject(delete -> delete.bucket(resolvedBucketName.asString()).key(blobId.asString())))
@@ -308,8 +308,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds) {
-        return deleteObjects(bucketName,
+    public Publisher<Void> delete(org.apache.james.blob.api.Bucket bucket, Collection<BlobId> blobIds) {
+        return deleteObjects(bucket.bucketName(),
             blobIds.stream()
                 .map(BlobId::asString)
                 .map(id -> ObjectIdentifier.builder().key(id).build())
@@ -319,8 +319,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Mono<Void> deleteBucket(BucketName bucketName) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+    public Mono<Void> deleteBucket(org.apache.james.blob.api.Bucket bucket) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucket.bucketName());
 
         return deleteResolvedBucket(resolvedBucketName);
     }
@@ -375,8 +375,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<BlobId> listBlobs(BucketName bucketName) {
-        return Flux.from(client.listObjectsV2Paginator(builder -> builder.bucket(bucketName.asString())))
+    public Publisher<BlobId> listBlobs(org.apache.james.blob.api.Bucket bucket) {
+        return Flux.from(client.listObjectsV2Paginator(builder -> builder.bucket(bucket.bucketName().asString())))
             .flatMapIterable(ListObjectsV2Response::contents)
             .map(S3Object::key)
             .map(blobIdFactory::parse)

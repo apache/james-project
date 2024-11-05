@@ -27,6 +27,7 @@ import java.util.Collection;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.Bucket;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
@@ -50,35 +51,35 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return readBytes(bucketName, blobId)
+    public InputStream read(Bucket bucket, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+        return readBytes(bucket, blobId)
             .map(ByteArrayInputStream::new)
             .block();
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return readBytes(bucketName, blobId)
+    public Publisher<InputStream> readReactive(Bucket bucket, BlobId blobId) {
+        return readBytes(bucket, blobId)
             .map(ByteArrayInputStream::new);
     }
 
     @Override
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return Mono.fromCallable(() -> blobs.get(bucketName, blobId))
-            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException(String.format("blob '%s' not found in bucket '%s'", blobId.asString(), bucketName.asString()))));
+    public Mono<byte[]> readBytes(Bucket bucket, BlobId blobId) {
+        return Mono.fromCallable(() -> blobs.get(bucket.bucketName(), blobId))
+            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException(String.format("blob '%s' not found in bucket '%s'", blobId.asString(), bucket.bucketName().asString()))));
     }
 
     @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
+    public Mono<Void> save(Bucket bucket, BlobId blobId, byte[] data) {
         return Mono.fromRunnable(() -> {
             synchronized (blobs) {
-                blobs.put(bucketName, blobId, data);
+                blobs.put(bucket.bucketName(), blobId, data);
             }
         });
     }
 
     @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
+    public Mono<Void> save(Bucket bucket, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(inputStream);
         return Mono.fromCallable(() -> {
                 try {
@@ -87,11 +88,11 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
                     throw new ObjectStoreIOException("IOException occured", e);
                 }
             })
-            .flatMap(bytes -> save(bucketName, blobId, bytes));
+            .flatMap(bytes -> save(bucket, blobId, bytes));
     }
 
     @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
+    public Mono<Void> save(Bucket bucket, BlobId blobId, ByteSource content) {
         return Mono.fromCallable(() -> {
                 try {
                     return content.read();
@@ -99,31 +100,31 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
                     throw new ObjectStoreIOException("IOException occured", e);
                 }
             })
-            .flatMap(bytes -> save(bucketName, blobId, bytes));
+            .flatMap(bytes -> save(bucket, blobId, bytes));
     }
 
     @Override
-    public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
-        Preconditions.checkNotNull(bucketName);
+    public Mono<Void> delete(Bucket bucket, BlobId blobId) {
+        Preconditions.checkNotNull(bucket.bucketName());
         return Mono.fromRunnable(() -> {
             synchronized (blobs) {
-                blobs.remove(bucketName, blobId);
+                blobs.remove(bucket.bucketName(), blobId);
             }
         });
     }
 
     @Override
-    public Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds) {
+    public Publisher<Void> delete(Bucket bucket, Collection<BlobId> blobIds) {
         return Flux.fromIterable(blobIds)
-            .flatMap(id -> delete(bucketName, id))
+            .flatMap(id -> delete(bucket, id))
             .then();
     }
 
     @Override
-    public Mono<Void> deleteBucket(BucketName bucketName) {
+    public Mono<Void> deleteBucket(Bucket bucket) {
         return Mono.fromRunnable(() -> {
             synchronized (blobs) {
-                blobs.row(bucketName).clear();
+                blobs.row(bucket.bucketName()).clear();
             }
         });
     }
@@ -134,7 +135,7 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<BlobId> listBlobs(BucketName bucketName) {
-        return Flux.fromIterable(ImmutableSet.copyOf(blobs.row(bucketName).keySet()));
+    public Publisher<BlobId> listBlobs(Bucket bucket) {
+        return Flux.fromIterable(ImmutableSet.copyOf(blobs.row(bucket.bucketName()).keySet()));
     }
 }

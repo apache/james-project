@@ -19,7 +19,7 @@
 package org.apache.james.blob.objectstorage.aws;
 
 import static org.apache.james.blob.api.BlobStoreDAOFixture.ELEVEN_KILOBYTES;
-import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NO_TENANT;
 import static org.apache.james.blob.objectstorage.aws.JamesS3MetricPublisher.DEFAULT_S3_METRICS_PREFIX;
 import static org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration.UPLOAD_RETRY_EXCEPTION_PREDICATE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -94,11 +94,11 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
 
         final int count = 1500;
         Flux.range(0, count)
-            .concatMap(i -> store.save(TEST_BUCKET_NAME, new TestBlobId("test-blob-id-" + i),
+            .concatMap(i -> store.save(TEST_BUCKET_NO_TENANT, new TestBlobId("test-blob-id-" + i),
                 ByteSource.wrap(ELEVEN_KILOBYTES)))
             .blockLast();
 
-        assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NAME)).count().block())
+        assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NO_TENANT)).count().block())
             .isEqualTo(count);
     }
 
@@ -107,11 +107,11 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         TestBlobId blobId = new TestBlobId("id");
-        Mono.from(store.save(TEST_BUCKET_NAME, blobId, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
+        Mono.from(store.save(TEST_BUCKET_NO_TENANT, blobId, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
 
         assertThatCode(() -> IntStream.range(0, 256)
             .forEach(i -> {
-                InputStream inputStream = store.read(TEST_BUCKET_NAME, blobId);
+                InputStream inputStream = store.read(TEST_BUCKET_NO_TENANT, blobId);
                 // Close the stream without reading it
                 try {
                     inputStream.close();

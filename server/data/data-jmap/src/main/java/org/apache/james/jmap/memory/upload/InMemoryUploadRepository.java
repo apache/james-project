@@ -70,7 +70,7 @@ public class InMemoryUploadRepository implements UploadRepository {
         Preconditions.checkNotNull(user);
 
         return Mono.fromCallable(() -> new CountingInputStream(data))
-            .flatMap(dataAsByte -> Mono.from(blobStore.save(bucketName, dataAsByte, BlobStore.StoragePolicy.LOW_COST))
+            .flatMap(dataAsByte -> Mono.from(blobStore.save(bucketName.asBucket(), dataAsByte, BlobStore.StoragePolicy.LOW_COST))
                 .map(blobId -> {
                     UploadId uploadId = UploadId.random();
                     Instant uploadDate = clock.instant();
@@ -110,7 +110,7 @@ public class InMemoryUploadRepository implements UploadRepository {
     }
 
     private Mono<Upload> retrieveUpload(UploadMetaData uploadMetaData) {
-        return Mono.from(blobStore.readBytes(bucketName, uploadMetaData.blobId()))
+        return Mono.from(blobStore.readBytes(bucketName.asBucket(), uploadMetaData.blobId()))
             .map(content -> Upload.from(uploadMetaData, () -> new ByteArrayInputStream(content)));
     }
 }

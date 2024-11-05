@@ -33,6 +33,7 @@ import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.Bucket;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
@@ -135,71 +136,71 @@ public class CachedBlobStore implements BlobStore {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStream read(Bucket bucket, BlobId blobId, StoragePolicy storagePolicy) throws ObjectStoreIOException, ObjectNotFoundException {
         if (storagePolicy == LOW_COST) {
-            return backend.read(bucketName, blobId);
+            return backend.read(bucket, blobId);
         }
-        return readInputStream(bucketName, blobId)
+        return readInputStream(bucket, blobId)
             .blockOptional()
             .orElseThrow(() -> new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId.asString())));
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
+    public Publisher<InputStream> readReactive(Bucket bucket, BlobId blobId, StoragePolicy storagePolicy) {
         if (storagePolicy == LOW_COST) {
-            return backend.readReactive(bucketName, blobId);
+            return backend.readReactive(bucket, blobId);
         }
-        return readInputStream(bucketName, blobId)
+        return readInputStream(bucket, blobId)
             .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId.asString()))));
     }
 
-    private Mono<InputStream> readInputStream(BucketName bucketName, BlobId blobId) {
-        if (bucketName.equals(getDefaultBucketName())) {
-            return readInDefaultBucket(bucketName, blobId);
+    private Mono<InputStream> readInputStream(Bucket bucket, BlobId blobId) {
+        if (bucket.bucketName().equals(getDefaultBucketName())) {
+            return readInDefaultBucket(bucket, blobId);
         }
-        return readFromBackend(bucketName, blobId);
+        return readFromBackend(bucket, blobId);
     }
 
-    private Mono<InputStream> readInDefaultBucket(BucketName bucketName, BlobId blobId) {
+    private Mono<InputStream> readInDefaultBucket(Bucket bucket, BlobId blobId) {
         return readFromCache(blobId)
             .<InputStream>map(ByteArrayInputStream::new)
-            .switchIfEmpty(readFromBackend(bucketName, blobId)
+            .switchIfEmpty(readFromBackend(bucket, blobId)
                 .flatMap(inputStream ->
                     Mono.fromCallable(() -> ReadAheadInputStream.eager().of(inputStream).length(sizeThresholdInBytes))
                         .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-                        .flatMap(readAheadInputStream -> putInCacheIfNeeded(bucketName, readAheadInputStream, blobId)
+                        .flatMap(readAheadInputStream -> putInCacheIfNeeded(bucket.bucketName(), readAheadInputStream, blobId)
                             .thenReturn(readAheadInputStream.in))));
     }
 
     @Override
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
+    public Mono<byte[]> readBytes(Bucket bucket, BlobId blobId, StoragePolicy storagePolicy) {
         if (storagePolicy == LOW_COST) {
-            return readBytesFromBackend(bucketName, blobId);
+            return readBytesFromBackend(bucket, blobId);
         }
-        if (getDefaultBucketName().equals(bucketName)) {
-            return readBytesInDefaultBucket(bucketName, blobId);
+        if (getDefaultBucketName().equals(bucket.bucketName())) {
+            return readBytesInDefaultBucket(bucket, blobId);
         }
-        return readBytesFromBackend(bucketName, blobId);
+        return readBytesFromBackend(bucket, blobId);
     }
 
     @Override
-    public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return readBytes(bucketName, blobId, LOW_COST);
+    public Publisher<byte[]> readBytes(Bucket bucket, BlobId blobId) {
+        return readBytes(bucket, blobId, LOW_COST);
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) {
-        return read(bucketName, blobId, LOW_COST);
+    public InputStream read(Bucket bucket, BlobId blobId) {
+        return read(bucket, blobId, LOW_COST);
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return readReactive(bucketName, blobId, LOW_COST);
+    public Publisher<InputStream> readReactive(Bucket bucket, BlobId blobId) {
+        return readReactive(bucket, blobId, LOW_COST);
     }
 
-    private Mono<byte[]> readBytesInDefaultBucket(BucketName bucketName, BlobId blobId) {
+    private Mono<byte[]> readBytesInDefaultBucket(Bucket bucket, BlobId blobId) {
         return readFromCache(blobId).switchIfEmpty(
-            readBytesFromBackend(bucketName, blobId)
+            readBytesFromBackend(bucket, blobId)
                 .flatMap(bytes -> {
                     if (isAbleToCache(bytes)) {
                         metricRetrieveMissCount.increment();
@@ -211,10 +212,10 @@ public class CachedBlobStore implements BlobStore {
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, byte[] bytes, StoragePolicy storagePolicy) {
-        return Mono.from(backend.save(bucketName, bytes, storagePolicy))
+    public Publisher<BlobId> save(Bucket bucket, byte[] bytes, StoragePolicy storagePolicy) {
+        return Mono.from(backend.save(bucket, bytes, storagePolicy))
             .flatMap(blobId -> {
-                if (isAbleToCache(bucketName, bytes, storagePolicy)) {
+                if (isAbleToCache(bucket.bucketName(), bytes, storagePolicy)) {
                     return saveInCache(blobId, bytes).thenReturn(blobId);
                 }
                 return Mono.just(blobId);
@@ -222,41 +223,41 @@ public class CachedBlobStore implements BlobStore {
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, InputStream inputStream, StoragePolicy storagePolicy) {
+    public Publisher<BlobId> save(Bucket bucket, InputStream inputStream, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(inputStream, "InputStream must not be null");
 
-        if (isAbleToCache(bucketName, storagePolicy)) {
+        if (isAbleToCache(bucket.bucketName(), storagePolicy)) {
             return saveInCache(
-                    bucketName,
+                    bucket.bucketName(),
                     inputStream,
                     storagePolicy,
                     readAhead ->
-                            Mono.from(backend.save(bucketName, readAhead.in, storagePolicy))
+                            Mono.from(backend.save(bucket, readAhead.in, storagePolicy))
                     );
         }
 
-        return backend.save(bucketName, inputStream, storagePolicy);
+        return backend.save(bucket, inputStream, storagePolicy);
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, ByteSource byteSource, StoragePolicy storagePolicy) {
+    public Publisher<BlobId> save(Bucket bucket, ByteSource byteSource, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(byteSource, "ByteSource must not be null");
 
-        if (isAbleToCache(bucketName, storagePolicy)) {
+        if (isAbleToCache(bucket.bucketName(), storagePolicy)) {
             return saveInCache(
                     byteSource,
-                    () -> Mono.from(backend.save(bucketName, byteSource, storagePolicy))
+                    () -> Mono.from(backend.save(bucket, byteSource, storagePolicy))
             );
         }
 
-        return backend.save(bucketName, byteSource, storagePolicy);
+        return backend.save(bucket, byteSource, storagePolicy);
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, byte[] bytes, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
-        return Mono.from(backend.save(bucketName, bytes, blobIdProvider, storagePolicy))
+    public Mono<BlobId> save(Bucket bucket, byte[] bytes, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
+        return Mono.from(backend.save(bucket, bytes, blobIdProvider, storagePolicy))
             .flatMap(blobId -> {
-                if (isAbleToCache(bucketName, bytes, storagePolicy)) {
+                if (isAbleToCache(bucket.bucketName(), bytes, storagePolicy)) {
                     return saveInCache(blobId, bytes).thenReturn(blobId);
                 }
                 return Mono.just(blobId);
@@ -264,33 +265,33 @@ public class CachedBlobStore implements BlobStore {
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, InputStream inputStream, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
+    public Publisher<BlobId> save(Bucket bucket, InputStream inputStream, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(inputStream, "InputStream must not be null");
 
-        if (isAbleToCache(bucketName, storagePolicy)) {
+        if (isAbleToCache(bucket.bucketName(), storagePolicy)) {
             return saveInCache(
-                    bucketName,
+                    bucket.bucketName(),
                     inputStream,
                     storagePolicy,
-                    readAhead -> Mono.from(backend.save(bucketName, readAhead.in, blobIdProvider, storagePolicy))
+                    readAhead -> Mono.from(backend.save(bucket, readAhead.in, blobIdProvider, storagePolicy))
             );
         }
 
-        return backend.save(bucketName, inputStream, blobIdProvider, storagePolicy);
+        return backend.save(bucket, inputStream, blobIdProvider, storagePolicy);
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, ByteSource byteSource, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
+    public Publisher<BlobId> save(Bucket bucket, ByteSource byteSource, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(byteSource, "ByteSource must not be null");
 
-        if (isAbleToCache(bucketName, storagePolicy)) {
+        if (isAbleToCache(bucket.bucketName(), storagePolicy)) {
             return saveInCache(
                     byteSource,
-                    () -> Mono.from(backend.save(bucketName, byteSource, blobIdProvider, storagePolicy))
+                    () -> Mono.from(backend.save(bucket, byteSource, blobIdProvider, storagePolicy))
             );
         }
 
-        return backend.save(bucketName, byteSource, blobIdProvider, storagePolicy);
+        return backend.save(bucket, byteSource, blobIdProvider, storagePolicy);
     }
 
     @FunctionalInterface
@@ -315,10 +316,10 @@ public class CachedBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<Boolean> delete(BucketName bucketName, BlobId blobId) {
-        return Mono.from(backend.delete(bucketName, blobId))
+    public Mono<Boolean> delete(Bucket bucket, BlobId blobId) {
+        return Mono.from(backend.delete(bucket, blobId))
             .flatMap(deleted -> {
-                if (backend.getDefaultBucketName().equals(bucketName) && deleted) {
+                if (backend.getDefaultBucketName().equals(bucket.bucketName()) && deleted) {
                     return Mono.from(cache.remove(blobId)).thenReturn(deleted);
                 }
                 return Mono.just(deleted);
@@ -326,8 +327,8 @@ public class CachedBlobStore implements BlobStore {
     }
 
     @Override
-    public Publisher<Void> deleteBucket(BucketName bucketName) {
-        return Mono.from(backend.deleteBucket(bucketName));
+    public Publisher<Void> deleteBucket(Bucket bucket) {
+        return Mono.from(backend.deleteBucket(bucket));
     }
 
     @FunctionalInterface
@@ -386,14 +387,14 @@ public class CachedBlobStore implements BlobStore {
             .doOnNext(any -> metricRetrieveHitCount.increment());
     }
 
-    private Mono<InputStream> readFromBackend(BucketName bucketName, BlobId blobId) {
+    private Mono<InputStream> readFromBackend(Bucket bucket, BlobId blobId) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME,
-            Mono.from(backend.readReactive(bucketName, blobId))));
+            Mono.from(backend.readReactive(bucket, blobId))));
     }
 
-    private Mono<byte[]> readBytesFromBackend(BucketName bucketName, BlobId blobId) {
+    private Mono<byte[]> readBytesFromBackend(Bucket bucket, BlobId blobId) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME,
-            backend.readBytes(bucketName, blobId)));
+            backend.readBytes(bucket, blobId)));
     }
 
     @Override
@@ -402,7 +403,7 @@ public class CachedBlobStore implements BlobStore {
     }
 
     @Override
-    public Publisher<BlobId> listBlobs(BucketName bucketName) {
-        return backend.listBlobs(bucketName);
+    public Publisher<BlobId> listBlobs(Bucket bucket) {
+        return backend.listBlobs(bucket);
     }
 }

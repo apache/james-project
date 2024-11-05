@@ -101,7 +101,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     }
 
     private Mono<Void> appendMessage(DeletedMessage deletedMessage, InputStream mimeMessage, BucketName bucketName) {
-        return Mono.from(blobStore.save(bucketName, mimeMessage, LOW_COST))
+        return Mono.from(blobStore.save(bucketName.asBucket(), mimeMessage, LOW_COST))
             .map(blobId -> StorageInformation.builder()
                 .bucketName(bucketName)
                 .blobId(blobId))
@@ -122,7 +122,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     }
 
     private Mono<InputStream> loadMimeMessage(StorageInformation storageInformation, Username username, MessageId messageId) {
-        return Mono.from(blobStore.readReactive(storageInformation.getBucketName(), storageInformation.getBlobId(), LOW_COST))
+        return Mono.from(blobStore.readReactive(storageInformation.getBucketName().asBucket(), storageInformation.getBlobId(), LOW_COST))
             .onErrorResume(
                 ObjectNotFoundException.class,
                 ex -> Mono.error(new DeletedMessageContentNotFoundException(username, messageId)));
@@ -162,7 +162,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         return Mono.from(messageMetadataVault.retrieveStorageInformation(username, messageId))
             .flatMap(storageInformation -> Mono.from(messageMetadataVault.remove(storageInformation.getBucketName(), username, messageId))
                 .thenReturn(storageInformation))
-            .flatMap(storageInformation -> Mono.from(blobStoreDAO.delete(storageInformation.getBucketName(), storageInformation.getBlobId())));
+            .flatMap(storageInformation -> Mono.from(blobStoreDAO.delete(storageInformation.getBucketName().asBucket(), storageInformation.getBlobId())));
     }
 
     @Override
@@ -201,7 +201,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     }
 
     private Mono<Void> deleteBucketData(BucketName bucketName) {
-        return Mono.from(blobStore.deleteBucket(bucketName))
+        return Mono.from(blobStore.deleteBucket(bucketName.asBucket()))
             .then(Mono.from(messageMetadataVault.removeMetadataRelatedToBucket(bucketName)));
     }
 }

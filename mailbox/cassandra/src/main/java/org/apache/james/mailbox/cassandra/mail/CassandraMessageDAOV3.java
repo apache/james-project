@@ -234,8 +234,8 @@ public class CassandraMessageDAOV3 {
                     }
                 };
 
-                Mono<BlobId> headerFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), headerContent, SIZE_BASED));
-                Mono<BlobId> bodyFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyByteSource, LOW_COST));
+                Mono<BlobId> headerFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName().asBucket(), headerContent, SIZE_BASED));
+                Mono<BlobId> bodyFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName().asBucket(), bodyByteSource, LOW_COST));
 
                 return headerFuture.zipWith(bodyFuture);
             });
@@ -413,7 +413,7 @@ public class CassandraMessageDAOV3 {
     }
 
     private Mono<byte[]> getContent(BlobId blobId, BlobStore.StoragePolicy storagePolicy) {
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobId, storagePolicy));
+        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName().asBucket(), blobId, storagePolicy));
     }
 
     private BlobId retrieveBlobId(CqlIdentifier field, Row row) {

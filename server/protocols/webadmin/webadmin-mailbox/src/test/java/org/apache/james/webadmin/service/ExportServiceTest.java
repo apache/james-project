@@ -35,7 +35,7 @@ import java.io.InputStream;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.Bucket;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.export.api.FileExtension;
@@ -190,9 +190,9 @@ class ExportServiceTest {
         String blobId = fileName.substring(fileName.lastIndexOf("-") + 1);
 
         SoftAssertions.assertSoftly(softly -> {
-            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.parse(blobId)))
+            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName().asBucket(), FACTORY.parse(blobId)))
                 .isInstanceOf(ObjectNotFoundException.class);
-            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.parse(blobId)))
+            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName().asBucket(), FACTORY.parse(blobId)))
                 .hasMessage(String.format("blob '%s' not found in bucket '%s'", blobId, testSystem.blobStore.getDefaultBucketName().asString()));
         });
     }
@@ -203,7 +203,7 @@ class ExportServiceTest {
 
         doReturn(Mono.error(new RuntimeException()))
             .when(testSystem.blobStore)
-            .delete(any(BucketName.class), any());
+            .delete(any(Bucket.class), any());
 
         Task.Result result = testee.export(progress, BOB).block();
 
@@ -221,7 +221,7 @@ class ExportServiceTest {
     void exportUserMailboxesDataShouldUpdateProgressWhenExporting() {
         doReturn(Mono.error(new RuntimeException()))
             .when(testSystem.blobStore)
-            .save(any(BucketName.class), any(InputStream.class), any());
+            .save(any(Bucket.class), any(InputStream.class), any());
 
         testee.export(progress, BOB, new ByteArrayInputStream(MESSAGE_CONTENT.getBytes())).block();
 

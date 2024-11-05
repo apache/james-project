@@ -19,7 +19,7 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
-import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NO_TENANT;
 
 import java.nio.charset.StandardCharsets;
 
@@ -82,7 +82,7 @@ class S3DeDuplicationBlobStoreTest implements BlobStoreContract, DeduplicationBl
         Flux.range(0, 1000)
                 .concatMap(i -> {
                     byte[] payload = RandomStringUtils.random(128).getBytes(StandardCharsets.UTF_8);
-                    return testee.save(TEST_BUCKET_NAME, payload, BlobStore.StoragePolicy.LOW_COST);
+                    return testee.save(TEST_BUCKET_NO_TENANT, payload, BlobStore.StoragePolicy.LOW_COST);
                 })
                 .then()
                 .block();

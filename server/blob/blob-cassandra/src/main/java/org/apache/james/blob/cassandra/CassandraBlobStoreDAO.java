@@ -36,6 +36,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.Bucket;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
@@ -97,45 +98,45 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return ReactorUtils.toInputStream(readBlobParts(bucketName, blobId));
+    public InputStream read(Bucket bucket, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+        return ReactorUtils.toInputStream(readBlobParts(bucket.bucketName(), blobId));
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.just(read(bucketName, blobId));
+    public Publisher<InputStream> readReactive(Bucket bucket, BlobId blobId) {
+        return Mono.just(read(bucket, blobId));
     }
 
     @Override
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return readBlobParts(bucketName, blobId)
+    public Mono<byte[]> readBytes(Bucket bucket, BlobId blobId) {
+        return readBlobParts(bucket.bucketName(), blobId)
             .collectList()
             .map(this::byteBuffersToBytesArray);
     }
 
     @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
+    public Mono<Void> save(Bucket bucket, BlobId blobId, byte[] data) {
         Preconditions.checkNotNull(data);
 
         return Mono.fromCallable(() -> DataChunker.chunk(data, configuration.getBlobPartSize()))
-            .flatMap(chunks -> save(bucketName, blobId, chunks));
+            .flatMap(chunks -> save(bucket.bucketName(), blobId, chunks));
     }
 
     @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
-        Preconditions.checkNotNull(bucketName);
+    public Mono<Void> save(Bucket bucket, BlobId blobId, InputStream inputStream) {
+        Preconditions.checkNotNull(bucket.bucketName());
         Preconditions.checkNotNull(inputStream);
 
         return Mono.fromCallable(() -> ReactorUtils.toChunks(inputStream, configuration.getBlobPartSize())
                 .subscribeOn(Schedulers.boundedElastic()))
-            .flatMap(chunks -> save(bucketName, blobId, chunks))
+            .flatMap(chunks -> save(bucket.bucketName(), blobId, chunks))
             .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving input stream", e));
     }
 
     @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
+    public Mono<Void> save(Bucket bucket, BlobId blobId, ByteSource content) {
         return Mono.using(content::openBufferedStream,
-            stream -> save(bucketName, blobId, stream),
+            stream -> save(bucket, blobId, stream),
             Throwing.consumer(InputStream::close).sneakyThrow(),
             LAZY);
     }
@@ -177,32 +178,32 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
-        if (isDefaultBucket(bucketName)) {
+    public Mono<Void> delete(Bucket bucket, BlobId blobId) {
+        if (isDefaultBucket(bucket.bucketName())) {
             return defaultBucketDAO.deletePosition(blobId)
                 .then(defaultBucketDAO.deleteParts(blobId));
         } else {
-            return bucketDAO.deletePosition(bucketName, blobId)
-                .then(bucketDAO.deleteParts(bucketName, blobId));
+            return bucketDAO.deletePosition(bucket.bucketName(), blobId)
+                .then(bucketDAO.deleteParts(bucket.bucketName(), blobId));
         }
     }
 
     @Override
-    public Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds) {
+    public Publisher<Void> delete(Bucket bucket, Collection<BlobId> blobIds) {
         return Flux.fromIterable(blobIds)
-            .flatMap(id -> delete(bucketName, id), DEFAULT_CONCURRENCY)
+            .flatMap(id -> delete(bucket, id), DEFAULT_CONCURRENCY)
             .then();
     }
 
     @Override
-    public Mono<Void> deleteBucket(BucketName bucketName) {
-        Preconditions.checkNotNull(bucketName);
-        Preconditions.checkArgument(!isDefaultBucket(bucketName), "Deleting the default bucket is forbidden");
+    public Mono<Void> deleteBucket(Bucket bucket) {
+        Preconditions.checkNotNull(bucket.bucketName());
+        Preconditions.checkArgument(!isDefaultBucket(bucket.bucketName()), "Deleting the default bucket is forbidden");
 
         return bucketDAO.listAll()
-            .filter(bucketNameBlobIdPair -> bucketNameBlobIdPair.getKey().equals(bucketName))
+            .filter(bucketNameBlobIdPair -> bucketNameBlobIdPair.getKey().equals(bucket.bucketName()))
             .map(Pair::getValue)
-            .flatMap(blobId -> delete(bucketName, blobId), DEFAULT_CONCURRENCY)
+            .flatMap(blobId -> delete(bucket, blobId), DEFAULT_CONCURRENCY)
             .then();
     }
 
@@ -292,11 +293,11 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<BlobId> listBlobs(BucketName bucketName) {
-        if (isDefaultBucket(bucketName)) {
+    public Publisher<BlobId> listBlobs(Bucket bucket) {
+        if (isDefaultBucket(bucket.bucketName())) {
             return defaultBucketDAO.listBlobs();
         } else {
-            return bucketDAO.listAll(bucketName);
+            return bucketDAO.listAll(bucket.bucketName());
         }
     }
 }

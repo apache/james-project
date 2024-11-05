@@ -53,41 +53,28 @@ public interface BlobStoreDAO {
 
 
     /**
-     * Reads a Blob based on its BucketName and its BlobId.
+     * Reads a Blob based on its Bucket and its BlobId.
      *
      * @throws ObjectNotFoundException when the blobId or the bucket is not found
      * @throws ObjectStoreIOException when an unexpected IO error occurs
      */
-    InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
+    InputStream read(Bucket bucket, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
 
-    default InputStream read(Bucket bucket, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return read(bucket.bucketName(), blobId);
-    }
-
-    default Publisher<ReactiveByteSource> readAsByteSource(BucketName bucketName, BlobId blobId) {
-        return Mono.from(readBytes(bucketName, blobId))
+    default Publisher<ReactiveByteSource> readAsByteSource(Bucket bucket, BlobId blobId) {
+        return Mono.from(readBytes(bucket, blobId))
             .map(bytes -> new ReactiveByteSource(bytes.length, Mono.just(ByteBuffer.wrap(bytes))));
     }
 
-    Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId);
-
-    default Publisher<InputStream> readReactive(Bucket bucket, BlobId blobId) {
-        return readReactive(bucket.bucketName(), blobId);
-    }
+    Publisher<InputStream> readReactive(Bucket bucket, BlobId blobId);
 
     /**
-     * Reads a Blob based on its BucketName and its BlobId
+     * Reads a Blob based on its Bucket and its BlobId
      *
      * @return a Mono containing the content of the blob or
      *  an ObjectNotFoundException in its error channel when the blobId or the bucket is not found
      *  or an IOObjectStoreException when an unexpected IO error occurs
      */
-    Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId);
-
-    default Publisher<byte[]> readBytes(Bucket bucket, BlobId blobId) {
-        return readBytes(bucket.bucketName(), blobId);
-    }
-
+    Publisher<byte[]> readBytes(Bucket bucket, BlobId blobId);
 
     /**
      * Save the blob with the provided blob id, and overwrite the previous blob with the same id if it already exists
@@ -97,67 +84,43 @@ public interface BlobStoreDAO {
      * @return an empty Mono when the save succeed,
      *  otherwise an IOObjectStoreException in its error channel
      */
-    Publisher<Void> save(BucketName bucketName, BlobId blobId, byte[] data);
-
-    default Publisher<Void> save(Bucket bucket, BlobId blobId, byte[] data) {
-        return save(bucket.bucketName(), blobId, data);
-    }
+    Publisher<Void> save(Bucket bucket, BlobId blobId, byte[] data);
 
     /**
-     * @see #save(BucketName, BlobId, byte[])
+     * @see #save(Bucket, BlobId, byte[])
      *
      * The InputStream should be closed after the call to this method
      */
-    Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream);
-
-    default Publisher<Void> save(Bucket bucket, BlobId blobId, InputStream inputStream) {
-        return save(bucket.bucketName(), blobId, inputStream);
-    }
+    Publisher<Void> save(Bucket bucket, BlobId blobId, InputStream inputStream);
 
     /**
-     * @see #save(BucketName, BlobId, byte[])
+     * @see #save(Bucket, BlobId, byte[])
      */
-    Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSource content);
-
-    default Publisher<Void> save(Bucket bucket, BlobId blobId, ByteSource content) {
-        return save(bucket.bucketName(), blobId, content);
-    }
+    Publisher<Void> save(Bucket bucket, BlobId blobId, ByteSource content);
 
     /**
-     * @see #save(BucketName, BlobId, byte[])
+     * @see #save(Bucket, BlobId, byte[])
      *
      * The String is stored as UTF-8.
      */
-    default Publisher<Void> save(BucketName bucketName, BlobId blobId, String data) {
-        return save(bucketName, blobId, data.getBytes(StandardCharsets.UTF_8));
-    }
-
     default Publisher<Void> save(Bucket bucket, BlobId blobId, String data) {
-        return save(bucket.bucketName(), blobId, data.getBytes(StandardCharsets.UTF_8));
+        return save(bucket, blobId, data.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
-     * Remove a Blob based on its BucketName and its BlobId.
+     * Remove a Blob based on its Bucket and its BlobId.
      * This operation should be atomic
      *
      * @return a successful Mono if the Blob is deleted or did not exist
      * (either the blob doesn't exist in the bucket or the bucket itself doesn't exist)
      *  otherwise an IOObjectStoreException in its error channel
      */
-    Publisher<Void> delete(BucketName bucketName, BlobId blobId);
+    Publisher<Void> delete(Bucket bucket, BlobId blobId);
 
-    default Publisher<Void> delete(Bucket bucket, BlobId blobId) {
-        return delete(bucket.bucketName(), blobId);
-    }
-
-    Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds);
-
-    default Publisher<Void> delete(Bucket bucket, Collection<BlobId> blobIds) {
-        return delete(bucket.bucketName(), blobIds);
-    }
+    Publisher<Void> delete(Bucket bucket, Collection<BlobId> blobIds);
 
     /**
-     * Remove a bucket based on its BucketName
+     * Remove a bucket based on its Bucket
      *
      * Deleting a bucket is not guaranteed to be atomic nor isolated.
      * Saving or reading blobs concurrently of bucket deletion can lead
@@ -166,11 +129,7 @@ public interface BlobStoreDAO {
      * @return a successful Publisher if the bucket is deleted or did not exist
      *  otherwise an IOObjectStoreException in its error channel
      */
-    Publisher<Void> deleteBucket(BucketName bucketName);
-
-    default Publisher<Void> deleteBucket(Bucket bucket) {
-        return deleteBucket(bucket.bucketName());
-    }
+    Publisher<Void> deleteBucket(Bucket bucket);
 
     Publisher<BucketName> listBuckets();
 
@@ -179,9 +138,5 @@ public interface BlobStoreDAO {
             .map(bucketName -> new Bucket(bucketName, tenant));
     }
 
-    Publisher<BlobId> listBlobs(BucketName bucketName);
-
-    default Publisher<BlobId> listBlobs(Bucket bucket) {
-        return listBlobs(bucket.bucketName());
-    }
+    Publisher<BlobId> listBlobs(Bucket bucket);
 }

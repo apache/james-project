@@ -51,65 +51,65 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
-        return metricFactory.decoratePublisherWithTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
+    public Publisher<BlobId> save(Bucket bucket, byte[] data, StoragePolicy storagePolicy) {
+        return metricFactory.decoratePublisherWithTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucket, data, storagePolicy));
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
-        return metricFactory.decoratePublisherWithTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
+    public Publisher<BlobId> save(Bucket bucket, InputStream data, StoragePolicy storagePolicy) {
+        return metricFactory.decoratePublisherWithTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucket, data, storagePolicy));
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, ByteSource data, StoragePolicy storagePolicy) {
-        return metricFactory.decoratePublisherWithTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
+    public Publisher<BlobId> save(Bucket bucket, ByteSource data, StoragePolicy storagePolicy) {
+        return metricFactory.decoratePublisherWithTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucket, data, storagePolicy));
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, byte[] data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
-        return metricFactory.decoratePublisherWithTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucketName, data, blobIdProvider, storagePolicy));
+    public Publisher<BlobId> save(Bucket bucket, byte[] data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
+        return metricFactory.decoratePublisherWithTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucket, data, blobIdProvider, storagePolicy));
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, InputStream data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
-        return metricFactory.decoratePublisherWithTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, blobIdProvider, storagePolicy));
+    public Publisher<BlobId> save(Bucket bucket, InputStream data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
+        return metricFactory.decoratePublisherWithTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucket, data, blobIdProvider, storagePolicy));
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, ByteSource data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
-        return metricFactory.decoratePublisherWithTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, blobIdProvider, storagePolicy));
+    public Publisher<BlobId> save(Bucket bucket, ByteSource data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
+        return metricFactory.decoratePublisherWithTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucket, data, blobIdProvider, storagePolicy));
     }
 
     @Override
-    public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return metricFactory.decoratePublisherWithTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(bucketName, blobId));
+    public Publisher<byte[]> readBytes(Bucket bucket, BlobId blobId) {
+        return metricFactory.decoratePublisherWithTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(bucket, blobId));
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) {
+    public InputStream read(Bucket bucket, BlobId blobId) {
         return metricFactory
-            .decorateSupplierWithTimerMetric(READ_TIMER_NAME, () -> blobStoreImpl.read(bucketName, blobId));
+            .decorateSupplierWithTimerMetric(READ_TIMER_NAME, () -> blobStoreImpl.read(bucket, blobId));
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return metricFactory.decoratePublisherWithTimerMetric(READ_TIMER_NAME, blobStoreImpl.readReactive(bucketName, blobId));
+    public Publisher<InputStream> readReactive(Bucket bucket, BlobId blobId) {
+        return metricFactory.decoratePublisherWithTimerMetric(READ_TIMER_NAME, blobStoreImpl.readReactive(bucket, blobId));
     }
 
     @Override
-    public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
-        return metricFactory.decoratePublisherWithTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(bucketName, blobId, storagePolicy));
+    public Publisher<byte[]> readBytes(Bucket bucket, BlobId blobId, StoragePolicy storagePolicy) {
+        return metricFactory.decoratePublisherWithTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(bucket, blobId, storagePolicy));
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
+    public InputStream read(Bucket bucket, BlobId blobId, StoragePolicy storagePolicy) {
         return metricFactory
-            .decorateSupplierWithTimerMetric(READ_TIMER_NAME, () -> blobStoreImpl.read(bucketName, blobId, storagePolicy));
+            .decorateSupplierWithTimerMetric(READ_TIMER_NAME, () -> blobStoreImpl.read(bucket, blobId, storagePolicy));
     }
 
     @Override
-    public Publisher<Void> deleteBucket(BucketName bucketName) {
-        return metricFactory.decoratePublisherWithTimerMetric(DELETE_BUCKET_TIMER_NAME, blobStoreImpl.deleteBucket(bucketName));
+    public Publisher<Void> deleteBucket(Bucket bucket) {
+        return metricFactory.decoratePublisherWithTimerMetric(DELETE_BUCKET_TIMER_NAME, blobStoreImpl.deleteBucket(bucket));
     }
 
     @Override
@@ -118,8 +118,8 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public Publisher<Boolean> delete(BucketName bucketName, BlobId blobId) {
-        return metricFactory.decoratePublisherWithTimerMetric(DELETE_TIMER_NAME, blobStoreImpl.delete(bucketName, blobId));
+    public Publisher<Boolean> delete(Bucket bucket, BlobId blobId) {
+        return metricFactory.decoratePublisherWithTimerMetric(DELETE_TIMER_NAME, blobStoreImpl.delete(bucket, blobId));
     }
 
     @Override
@@ -128,7 +128,7 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public Publisher<BlobId> listBlobs(BucketName bucketName) {
-        return blobStoreImpl.listBlobs(bucketName);
+    public Publisher<BlobId> listBlobs(Bucket bucket) {
+        return blobStoreImpl.listBlobs(bucket);
     }
 }

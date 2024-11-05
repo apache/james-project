@@ -125,7 +125,7 @@ public class LocalFileBlobExportMechanism implements BlobExportMechanism {
             String fileName = ExportedFileNamesGenerator.generateFileName(fileCustomPrefix, blobId, fileExtension);
             String fileURL = configuration.exportDirectory + "/" + fileName;
             File file = fileSystem.getFile(fileURL);
-            try (InputStream in = blobStore.read(blobStore.getDefaultBucketName(), blobId, LOW_COST)) {
+            try (InputStream in = blobStore.read(blobStore.getDefaultBucketName().asBucket(), blobId, LOW_COST)) {
                 FileUtils.copyToFile(in, file);
             }
 

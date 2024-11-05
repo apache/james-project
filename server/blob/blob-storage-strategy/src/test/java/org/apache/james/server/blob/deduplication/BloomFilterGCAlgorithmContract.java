@@ -59,7 +59,7 @@ public interface BloomFilterGCAlgorithmContract {
 
     PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
     ZonedDateTime NOW = ZonedDateTime.parse("2015-10-30T16:12:00Z");
-    BucketName DEFAULT_BUCKET = BucketName.of("default");
+    BucketName DEFAULT_BUCKET_NAME = BucketName.of("default");
     GenerationAwareBlobId.Configuration GENERATION_AWARE_BLOB_ID_CONFIGURATION = GenerationAwareBlobId.Configuration.DEFAULT;
     int EXPECTED_BLOB_COUNT = 100;
     int DELETION_WINDOW_SIZE = 10;
@@ -84,7 +84,7 @@ public interface BloomFilterGCAlgorithmContract {
     }
 
     default BlobStore blobStore() {
-        return new DeDuplicationBlobStore(blobStoreDAO(), DEFAULT_BUCKET, GENERATION_AWARE_BLOB_ID_FACTORY);
+        return new DeDuplicationBlobStore(blobStoreDAO(), DEFAULT_BUCKET_NAME, GENERATION_AWARE_BLOB_ID_FACTORY);
     }
 
     default BloomFilterGCAlgorithm bloomFilterGCAlgorithm() {
@@ -98,13 +98,13 @@ public interface BloomFilterGCAlgorithmContract {
     @RepeatedTest(10)
     default void gcShouldRemoveOrphanBlob() {
         BlobStore blobStore = blobStore();
-        BlobId blobId = Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
+        BlobId blobId = Mono.from(blobStore.save(DEFAULT_BUCKET_NAME.asBucket(), UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
         when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.empty());
         CLOCK.setInstant(NOW.plusMonths(2).toInstant());
 
         Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
         BloomFilterGCAlgorithm bloomFilterGCAlgorithm = bloomFilterGCAlgorithm();
-        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET_NAME, context)).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.snapshot())
@@ -116,19 +116,19 @@ public interface BloomFilterGCAlgorithmContract {
                 .bloomFilterExpectedBlobCount(100)
                 .bloomFilterAssociatedProbability(ASSOCIATED_PROBABILITY)
                 .build());
-        assertThatThrownBy(() -> blobStore.read(DEFAULT_BUCKET, blobId))
+        assertThatThrownBy(() -> blobStore.read(DEFAULT_BUCKET_NAME.asBucket(), blobId))
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
     @Test
     default void gcShouldNotRemoveUnExpireBlob() {
         BlobStore blobStore = blobStore();
-        BlobId blobId = Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
+        BlobId blobId = Mono.from(blobStore.save(DEFAULT_BUCKET_NAME.asBucket(), UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
         when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.empty());
 
         Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
         BloomFilterGCAlgorithm bloomFilterGCAlgorithm = bloomFilterGCAlgorithm();
-        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET_NAME, context)).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.snapshot())
@@ -140,20 +140,20 @@ public interface BloomFilterGCAlgorithmContract {
                 .bloomFilterExpectedBlobCount(100)
                 .bloomFilterAssociatedProbability(ASSOCIATED_PROBABILITY)
                 .build());
-        assertThat(blobStore.read(DEFAULT_BUCKET, blobId))
+        assertThat(blobStore.read(DEFAULT_BUCKET_NAME.asBucket(), blobId))
             .isNotNull();
     }
 
     @RepeatedTest(10)
     default void gcShouldNotRemoveReferencedBlob() {
         BlobStore blobStore = blobStore();
-        BlobId blobId = Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
+        BlobId blobId = Mono.from(blobStore.save(DEFAULT_BUCKET_NAME.asBucket(), UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
 
         when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.just(blobId));
 
         Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
         BloomFilterGCAlgorithm bloomFilterGCAlgorithm = bloomFilterGCAlgorithm();
-        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET_NAME, context)).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.snapshot())
@@ -165,7 +165,7 @@ public interface BloomFilterGCAlgorithmContract {
                 .bloomFilterExpectedBlobCount(100)
                 .bloomFilterAssociatedProbability(ASSOCIATED_PROBABILITY)
                 .build());
-        assertThat(blobStore.read(DEFAULT_BUCKET, blobId))
+        assertThat(blobStore.read(DEFAULT_BUCKET_NAME.asBucket(), blobId))
             .isNotNull();
     }
 
@@ -173,10 +173,10 @@ public interface BloomFilterGCAlgorithmContract {
     default void gcShouldSuccessWhenMixCase() {
         BlobStore blobStore = blobStore();
         List<BlobId> referencedBlobIds = IntStream.range(0, 100)
-            .mapToObj(index -> Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block())
+            .mapToObj(index -> Mono.from(blobStore.save(DEFAULT_BUCKET_NAME.asBucket(), UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block())
             .collect(Collectors.toList());
         List<BlobId> orphanBlobIds = IntStream.range(0, 50)
-            .mapToObj(index -> Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block())
+            .mapToObj(index -> Mono.from(blobStore.save(DEFAULT_BUCKET_NAME.asBucket(), UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block())
             .collect(Collectors.toList());
 
         when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.fromIterable(referencedBlobIds));
@@ -184,7 +184,7 @@ public interface BloomFilterGCAlgorithmContract {
 
         Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
         BloomFilterGCAlgorithm bloomFilterGCAlgorithm = bloomFilterGCAlgorithm();
-        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET_NAME, context)).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         Context.Snapshot snapshot = context.snapshot();
@@ -199,7 +199,7 @@ public interface BloomFilterGCAlgorithmContract {
             .isGreaterThan(0);
 
         referencedBlobIds.forEach(blobId ->
-            assertThat(blobStore.read(DEFAULT_BUCKET, blobId))
+            assertThat(blobStore.read(DEFAULT_BUCKET_NAME.asBucket(), blobId))
                 .isNotNull());
     }
 
@@ -207,10 +207,10 @@ public interface BloomFilterGCAlgorithmContract {
     default void allOrphanBlobIdsShouldRemovedAfterMultipleRunningTimesGC() {
         BlobStore blobStore = blobStore();
         List<BlobId> referencedBlobIds = IntStream.range(0, 100)
-            .mapToObj(index -> Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block())
+            .mapToObj(index -> Mono.from(blobStore.save(DEFAULT_BUCKET_NAME.asBucket(), UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block())
             .collect(Collectors.toList());
         List<BlobId> orphanBlobIds = IntStream.range(0, 50)
-            .mapToObj(index -> Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block())
+            .mapToObj(index -> Mono.from(blobStore.save(DEFAULT_BUCKET_NAME.asBucket(), UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block())
             .collect(Collectors.toList());
 
         when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.fromIterable(referencedBlobIds));
@@ -221,12 +221,12 @@ public interface BloomFilterGCAlgorithmContract {
                     EXPECTED_BLOB_COUNT,
                     DELETION_WINDOW_SIZE,
                     ASSOCIATED_PROBABILITY,
-                    DEFAULT_BUCKET,
+                    DEFAULT_BUCKET_NAME,
                     new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY)))
                 .block();
 
             orphanBlobIds.forEach(blobId ->
-                assertThatThrownBy(() -> blobStore.read(DEFAULT_BUCKET, blobId))
+                assertThatThrownBy(() -> blobStore.read(DEFAULT_BUCKET_NAME.asBucket(), blobId))
                     .isInstanceOf(ObjectNotFoundException.class));
         });
     }
@@ -236,8 +236,8 @@ public interface BloomFilterGCAlgorithmContract {
         when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.empty());
         BlobStoreDAO blobStoreDAO = mock(BlobStoreDAO.class);
         BlobId blobId = GENERATION_AWARE_BLOB_ID_FACTORY.of(UUID.randomUUID().toString());
-        when(blobStoreDAO.listBlobs(DEFAULT_BUCKET)).thenReturn(Flux.just(blobId));
-        when(blobStoreDAO.delete(ArgumentMatchers.eq(DEFAULT_BUCKET), any(Collection.class))).thenReturn(Mono.error(new RuntimeException("test")));
+        when(blobStoreDAO.listBlobs(DEFAULT_BUCKET_NAME.asBucket())).thenReturn(Flux.just(blobId));
+        when(blobStoreDAO.delete(ArgumentMatchers.eq(DEFAULT_BUCKET_NAME.asBucket()), any(Collection.class))).thenReturn(Mono.error(new RuntimeException("test")));
 
         CLOCK.setInstant(NOW.plusMonths(2).toInstant());
 
@@ -248,7 +248,7 @@ public interface BloomFilterGCAlgorithmContract {
             GENERATION_AWARE_BLOB_ID_FACTORY,
             GENERATION_AWARE_BLOB_ID_CONFIGURATION,
             CLOCK);
-        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+        Task.Result result = Mono.from(bloomFilterGCAlgorithm.gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET_NAME, context)).block();
 
         assertThat(result).isEqualTo(Task.Result.PARTIAL);
         assertThat(context.snapshot())

@@ -21,7 +21,7 @@ package org.apache.james.blob.aes;
 
 import static org.apache.james.blob.api.BlobStoreDAOFixture.SHORT_BYTEARRAY;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BLOB_ID;
-import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NO_TENANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
@@ -60,27 +60,27 @@ class AESBlobStoreDAOTest implements BlobStoreDAOContract {
 
     @Test
     void underlyingDataShouldBeEncrypted() {
-        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(testee.save(TEST_BUCKET_NO_TENANT, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
-        byte[] bytes = Mono.from(underlying.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
+        byte[] bytes = Mono.from(underlying.readBytes(TEST_BUCKET_NO_TENANT, TEST_BLOB_ID)).block();
 
         assertThat(bytes).isNotEqualTo(SHORT_BYTEARRAY);
     }
 
     @Test
     void underlyingDataShouldBeEncryptedWhenUsingStream() {
-        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, new ByteArrayInputStream(SHORT_BYTEARRAY))).block();
+        Mono.from(testee.save(TEST_BUCKET_NO_TENANT, TEST_BLOB_ID, new ByteArrayInputStream(SHORT_BYTEARRAY))).block();
 
-        byte[] bytes = Mono.from(underlying.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
+        byte[] bytes = Mono.from(underlying.readBytes(TEST_BUCKET_NO_TENANT, TEST_BLOB_ID)).block();
 
         assertThat(bytes).isNotEqualTo(SHORT_BYTEARRAY);
     }
 
     @Test
     void underlyingDataShouldBeEncryptedWhenUsingByteSource() {
-        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ByteSource.wrap(SHORT_BYTEARRAY))).block();
+        Mono.from(testee.save(TEST_BUCKET_NO_TENANT, TEST_BLOB_ID, ByteSource.wrap(SHORT_BYTEARRAY))).block();
 
-        byte[] bytes = Mono.from(underlying.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
+        byte[] bytes = Mono.from(underlying.readBytes(TEST_BUCKET_NO_TENANT, TEST_BLOB_ID)).block();
 
         assertThat(bytes).isNotEqualTo(SHORT_BYTEARRAY);
     }
