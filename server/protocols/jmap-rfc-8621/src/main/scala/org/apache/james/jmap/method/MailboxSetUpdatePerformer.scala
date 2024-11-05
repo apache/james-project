@@ -29,7 +29,7 @@ import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, MailboxGet, MailboxPatchObject, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, ServerSetPropertyException, UnparsedMailboxId, UnsupportedPropertyUpdatedException, ValidatedMailboxPatchObject}
 import org.apache.james.jmap.method.MailboxSetUpdatePerformer.{MailboxUpdateFailure, MailboxUpdateResult, MailboxUpdateResults, MailboxUpdateSuccess}
 import org.apache.james.mailbox.MailboxManager.{MailboxSearchFetchType, RenameOption}
-import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
+import org.apache.james.mailbox.exception.{DifferentDomainException, InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.search.{MailboxQuery, PrefixedWildcard}
 import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
@@ -87,6 +87,9 @@ object MailboxSetUpdatePerformer {
       case e: IllegalArgumentException =>
         LOGGER.info("Illegal argument in Mailbox/set update", e)
         SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
+      case e: DifferentDomainException =>
+        LOGGER.info("Invalid arguments in Mailbox/set update", e)
+        SetError.invalidArguments(SetErrorDescription("Invalid arguments in Mailbox/set update: different domains"), None)
       case e =>
         LOGGER.error("Failed to update mailbox", e)
         SetError.serverFail(SetErrorDescription(e.getMessage))
