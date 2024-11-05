@@ -19,6 +19,8 @@
 
 package org.apache.james.modules.server;
 
+import static org.apache.james.webadmin.condition.user.HasNoMailboxesCondition.HAS_NO_MAILBOXES_PARAM;
+import static org.apache.james.webadmin.condition.user.HasNotAllSystemMailboxesCondition.HAS_NOT_ALL_SYSTEM_MAILBOXES_PARAM;
 import static org.apache.james.webadmin.routes.MailboxesRoutes.ALL_MAILBOXES_TASKS;
 import static org.apache.james.webadmin.routes.MailboxesRoutes.ONE_MAILBOX_TASKS;
 import static org.apache.james.webadmin.routes.MailboxesRoutes.ONE_MAIL_TASKS;
@@ -28,6 +30,9 @@ import static org.apache.james.webadmin.routes.UserQuotaRoutes.USER_QUOTAS_OPERA
 import org.apache.james.mailbox.quota.task.RecomputeMailboxCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeSingleComponentCurrentQuotasService;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.UserCondition;
+import org.apache.james.webadmin.condition.user.HasNoMailboxesCondition;
+import org.apache.james.webadmin.condition.user.HasNotAllSystemMailboxesCondition;
 import org.apache.james.webadmin.jackson.QuotaModule;
 import org.apache.james.webadmin.routes.DomainQuotaRoutes;
 import org.apache.james.webadmin.routes.EventDeadLettersRoutes;
@@ -41,6 +46,7 @@ import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
@@ -74,5 +80,9 @@ public class MailboxRoutesModule extends AbstractModule {
 
         userBoundTasks.addBinding().to(SubscribeAllRequestToTask.class);
         allMailboxesTasks.addBinding().to(CreateMissingParentsRequestToTask.class);
+
+        MapBinder<String, UserCondition> userConditionMapBinder = MapBinder.newMapBinder(binder(), String.class, UserCondition.class);
+        userConditionMapBinder.addBinding(HAS_NO_MAILBOXES_PARAM).to(HasNoMailboxesCondition.class);
+        userConditionMapBinder.addBinding(HAS_NOT_ALL_SYSTEM_MAILBOXES_PARAM).to(HasNotAllSystemMailboxesCondition.class);
     }
 }

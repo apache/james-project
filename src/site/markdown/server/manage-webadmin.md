@@ -492,6 +492,18 @@ Response codes:
 
  - 200: The user name list was successfully retrieved
 
+Additional query parameters are supported:
+
+- `hasNoMailboxes` allows you to select users who don't have any mailboxes (also means that they have never logged in and received any emails).
+```
+curl -XGET http://ip:port/users?hasNoMailboxes
+```
+
+- `hasNotAllSystemMailboxes` allows you to select users who don't have enough system mailboxes (also means that they have never logged in but received some emails).
+```
+curl -XGET http://ip:port/users?hasNotAllSystemMailboxes
+```
+
 ### Retrieving the list of allowed `From` headers for a given user
 
 ```
