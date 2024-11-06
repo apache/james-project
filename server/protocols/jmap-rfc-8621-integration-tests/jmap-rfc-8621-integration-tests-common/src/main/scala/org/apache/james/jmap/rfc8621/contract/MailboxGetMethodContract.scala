@@ -955,6 +955,49 @@ trait MailboxGetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def getMailboxesShouldNotReturnAnyoneRightsAsSharee(server: GuiceJamesServer): Unit = {
+    val toUser1: String = "touser1@" + DOMAIN.asString
+    val sharedMailboxName: String = "AndreShared"
+    val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, toUser1, new MailboxACL.Rfc4314Rights(Right.Lookup))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, "anyone", new MailboxACL.Rfc4314Rights(Right.Write))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+      .when
+      .post
+      .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.list", hasSize(1))
+      .body(s"$FIRST_MAILBOX.name", equalTo(sharedMailboxName))
+      .body(s"$FIRST_MAILBOX.rights['${BOB.asString}']", contains(LOOKUP))
+      .body(s"$FIRST_MAILBOX.rights['$toUser1']", nullValue)
+      .body(s"$FIRST_MAILBOX.rights['anyone']", nullValue)
+  }
+
+  @Test
   def getMailboxesShouldReturnPartiallyAllowedMayPropertiesWhenDelegated(server: GuiceJamesServer): Unit = {
     val toUser1: String = "touser1@" + DOMAIN.asString
     val sharedMailboxName: String = "AndreShared"
