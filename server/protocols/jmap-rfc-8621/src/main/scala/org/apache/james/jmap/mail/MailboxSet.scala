@@ -24,7 +24,6 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Properties.toProperties
@@ -34,6 +33,7 @@ import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
 import org.apache.james.jmap.method.{MailboxCreationParseException, SetRequest, WithAccountId}
+import org.apache.james.mailbox.model.MailboxACL.EntryKey
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
 import org.apache.james.mailbox.{MailboxSession, Role}
 import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue}
@@ -136,7 +136,7 @@ case class MailboxPatchObject(value: Map[String, JsValue]) {
       }).headOption
 
     val partialRightsUpdates: Seq[SharedWithPartialUpdate] = asUpdatedIterable.flatMap(x => x match {
-      case scala.Right(SharedWithPartialUpdate(username, rights)) => Some(SharedWithPartialUpdate(username, rights))
+      case scala.Right(SharedWithPartialUpdate(entryKey, rights)) => Some(SharedWithPartialUpdate(entryKey, rights))
       case _ => None
     }).toSeq
 
@@ -290,15 +290,15 @@ object SharedWithPartialUpdate {
   def parse(serializer: MailboxSerializer, capabilities: Set[CapabilityIdentifier])
            ( property: String, newValue: JsValue): Either[PatchUpdateValidationException, Update] =
     if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
-      parseUsername(property)
-        .flatMap(username => parseRights(newValue, property, serializer)
-          .map(rights => SharedWithPartialUpdate(username, rights)))
+      parseEntryKey(property)
+        .flatMap(entryKey => parseRights(newValue, property, serializer)
+          .map(rights => SharedWithPartialUpdate(entryKey, rights)))
     } else {
       MailboxPatchObject.notFound(property)
     }
 
-  def parseUsername(property: String): Either[PatchUpdateValidationException, Username] = try {
-    scala.Right(Username.of(property.substring(MailboxPatchObject.sharedWithPrefix.length)))
+  def parseEntryKey(property: String): Either[PatchUpdateValidationException, EntryKey] = try {
+    scala.Right(EntryKey.deserialize(property.substring(MailboxPatchObject.sharedWithPrefix.length)))
   } catch {
     case e: Exception => Left(InvalidPropertyException(property, e.getMessage))
   }
@@ -336,8 +336,8 @@ sealed trait Update
 case class NameUpdate(newName: String) extends Update
 case class SharedWithResetUpdate(rights: Rights) extends Update
 case class IsSubscribedUpdate(isSubscribed: Option[IsSubscribed]) extends Update
-case class SharedWithPartialUpdate(username: Username, rights: Rfc4314Rights) extends Update {
-  def asACLCommand(): JavaMailboxACL.ACLCommand = JavaMailboxACL.command().forUser(username).rights(rights.asJava).asReplacement()
+case class SharedWithPartialUpdate(entryKey: EntryKey, rights: Rfc4314Rights) extends Update {
+  def asACLCommand(): JavaMailboxACL.ACLCommand = JavaMailboxACL.command().key(entryKey).rights(rights.asJava).asReplacement()
 }
 
 class PatchUpdateValidationException() extends IllegalArgumentException

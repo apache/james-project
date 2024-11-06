@@ -5923,7 +5923,7 @@ trait MailboxSetMethodContract {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
-         |          "type": "invalidPatch",
+         |          "type": "invalidArguments",
          |          "description": "Domain parts ASCII chars must be a-z A-Z 0-9 - or _"
          |        }
          |      }
