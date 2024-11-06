@@ -19,7 +19,7 @@
 
 package org.apache.james.imapserver.netty;
 
-import static org.apache.james.imapserver.netty.ImapChannelUpstreamHandler.MDC_KEY;
+import static org.apache.james.imap.api.process.ImapSession.MDC_KEY;
 
 import java.net.InetSocketAddress;
 import java.util.Set;
