@@ -1,0 +1,7 @@
+=== FoldLongLines
+
+This mailet fold (wrap) any header lines of the mail that exceed the maximum number of characters.
+
+It takes only one parameter:
+
+* maxCharacters: maximum number of characters. Default to 998.
