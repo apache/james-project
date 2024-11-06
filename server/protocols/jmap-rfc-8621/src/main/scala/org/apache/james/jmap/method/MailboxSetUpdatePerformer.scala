@@ -255,7 +255,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
           .action("Mailbox/set update")
           .parameters(() => ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser.toScala.map(_.asString()).getOrElse(""),
             "delegator", mailboxSession.getUser.asString(),
-            "delegatee", partialUpdate.username.asString(),
+            "delegatee", partialUpdate.entryKey.getName,
             "mailboxId", mailboxId.serialize(),
             "rights", partialUpdate.rights.asJava.serialize()))
           .log("JMAP mailbox shared.")),
