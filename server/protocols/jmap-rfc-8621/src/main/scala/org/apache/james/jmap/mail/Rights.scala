@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.mail
 
-import org.apache.james.core.Username
 import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Rfc4314Rights => JavaRfc4314Rights, Right => JavaRight}
 import org.apache.james.mailbox.model.{MailboxACL => JavaMailboxACL}
 import org.slf4j.{Logger, LoggerFactory}
@@ -87,12 +86,12 @@ object Rights {
 
   val EMPTY = Rights(Map())
 
-  def of(username: Username, right: Right): Rights = of(username, Seq(right))
+  def of(entryKey: EntryKey, right: Right): Rights = of(entryKey, Seq(right))
 
-  def of(username: Username, rights: Seq[Right]): Rights = {
+  def of(entryKey: EntryKey, rights: Seq[Right]): Rights = {
     require(rights.nonEmpty, "'rights' should not be empty")
 
-    Rights(Map(username -> rights))
+    Rights(Map(entryKey -> rights))
   }
 
   def fromACL(acl: MailboxACL): Rights = acl.entries
@@ -104,15 +103,17 @@ object Rights {
     }
     .fold(EMPTY)(_ combine _)
 
-  private def toRights(entryKey: EntryKey, aclRights: Rfc4314Rights): Rights = of(Username.of(entryKey.getName), aclRights.toRights)
+  private def toRights(entryKey: EntryKey, aclRights: Rfc4314Rights): Rights = of(entryKey, aclRights.toRights)
 
   private def isSupported(key: EntryKey): Boolean = key match {
     case k if k.isNegative =>
       LOGGER.info("Negative keys are not supported")
       false
-    case JavaMailboxACL.OWNER_KEY => false
-    case k if k.getNameType ne JavaMailboxACL.NameType.user =>
-      LOGGER.info("{} is not supported. Only 'user' is.", key.getNameType)
+    case k if k.getNameType == JavaMailboxACL.NameType.special && k.getName != JavaMailboxACL.SpecialName.anyone.name() =>
+      LOGGER.info("Special name {} is not supported. Only 'anyone' is.", key.getName)
+      false
+    case k if k.getNameType == JavaMailboxACL.NameType.group =>
+      LOGGER.info("Name type {} is not supported. Only 'user' and 'special.anyone' are.", key.getNameType)
       false
     case _ => true
   }
@@ -123,39 +124,39 @@ case object Applicable extends RightsApplicability
 case object NotApplicable extends RightsApplicability
 case object Unsupported extends RightsApplicability
 
-case class Rights(rights: Map[Username, Seq[Right]]) {
-  def removeEntriesFor(username: Username) = copy(rights = rights - username)
+case class Rights(rights: Map[EntryKey, Seq[Right]]) {
+  def removeEntriesFor(entryKey: EntryKey) = copy(rights = rights - entryKey)
 
   def toMailboxAcl: MailboxACL = {
     val map: Map[EntryKey, Rfc4314Rights] = rights.view
       .mapValues(Rfc4314Rights.fromRights)
       .toMap
       .map {
-        case (user, rfc4314Rights) => (EntryKey.createUserEntryKey(user), rfc4314Rights)
+        case (entryKey, rfc4314Rights) => (entryKey, rfc4314Rights)
       }
     MailboxACL(map)
   }
 
-  def append(username: Username, right: Right): Rights = append(username, Seq(right))
+  def append(entryKey: EntryKey, right: Right): Rights = append(entryKey, Seq(right))
 
-  def append(username: Username, rights: Seq[Right]): Rights = copy(rights = this.rights + (username -> rights))
+  def append(entryKey: EntryKey, rights: Seq[Right]): Rights = copy(rights = this.rights + (entryKey -> rights))
 
   def combine(that: Rights): Rights = Rights(this.rights ++ that.rights)
 
-  def mayReadItems(username: Username): RightsApplicability = containsRight(username, Right.Read)
+  def mayReadItems(entryKey: EntryKey): RightsApplicability = containsRight(entryKey, Right.Read)
 
-  def mayAddItems(username: Username): RightsApplicability = containsRight(username, Right.Insert)
+  def mayAddItems(entryKey: EntryKey): RightsApplicability = containsRight(entryKey, Right.Insert)
 
-  def mayRemoveItems(username: Username): RightsApplicability = containsRight(username, Right.DeleteMessages)
+  def mayRemoveItems(entryKey: EntryKey): RightsApplicability = containsRight(entryKey, Right.DeleteMessages)
 
-  def mayCreateChild(username: Username): RightsApplicability = Unsupported
+  def mayCreateChild(entryKey: EntryKey): RightsApplicability = Unsupported
 
-  def mayRename(username: Username): RightsApplicability = Unsupported
+  def mayRename(entryKey: EntryKey): RightsApplicability = Unsupported
 
-  def mayDelete(username: Username): RightsApplicability = Unsupported
+  def mayDelete(entryKey: EntryKey): RightsApplicability = Unsupported
 
-  private def containsRight(username: Username, right: Right): RightsApplicability = {
-    val contains = rights.get(username)
+  private def containsRight(entryKey: EntryKey, right: Right): RightsApplicability = {
+    val contains = rights.get(entryKey)
       .map(_.contains(right))
     contains match {
       case Some(true) => Applicable

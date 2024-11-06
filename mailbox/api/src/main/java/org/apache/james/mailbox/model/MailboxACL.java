@@ -375,15 +375,19 @@ public class MailboxACL {
         }
 
         public static EntryKey createUserEntryKey(Username name) {
-            return new EntryKey(name.asString(), NameType.user, POSITIVE_KEY);
-        }
-
-        public static EntryKey createNegativeUserEntryKey(Username name) {
-            return new EntryKey(name.asString(), NameType.user, NEGATIVE_KEY);
+            return createUserEntryKey(name.asString());
         }
 
         public static EntryKey createUserEntryKey(Username name, boolean negative) {
-            return new EntryKey(name.asString(), NameType.user, negative);
+            return createUserEntryKey(name.asString(), negative);
+        }
+
+        public static EntryKey createUserEntryKey(String name) {
+            return createUserEntryKey(name, POSITIVE_KEY);
+        }
+
+        public static EntryKey createUserEntryKey(String name, boolean negative) {
+            return new EntryKey(name, NameType.user, negative);
         }
 
         private final String name;
