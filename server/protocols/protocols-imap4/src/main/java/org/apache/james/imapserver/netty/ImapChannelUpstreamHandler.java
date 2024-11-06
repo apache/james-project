@@ -300,7 +300,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             } else if (isNotSslRecordException(cause)) {
                 LOGGER.info("Not an SSL record {}", cause.getMessage());
             } else if (!(cause instanceof ClosedChannelException)) {
-                LOGGER.warn("Error while processing imap request", cause);
+                LOGGER.error("Error while processing imap request", cause);
             }
 
             if (cause instanceof TooLongFrameException) {
