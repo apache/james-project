@@ -25,8 +25,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
 import org.apache.james.jmap.JMAPListenerModule;
-import org.apache.james.jmap.method.Method;
-import org.apache.james.jmap.method.SearchSnippetGetMethod;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -103,10 +101,8 @@ import org.apache.james.queue.pulsar.module.PulsarQueueModule;
 import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 
@@ -132,13 +128,6 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new MessagesRoutesModule(),
         new WebAdminMailOverWebModule());
 
-    public static final Module JMAP_DISTRIBUTED_METHOD_SUPPORTED_MODULE = new AbstractModule() {
-        @Override
-        protected void configure() {
-            Multibinder.newSetBinder(binder(), Method.class).addBinding().to(SearchSnippetGetMethod.class);
-        }
-    };
-
     public static final Module PROTOCOLS = Modules.combine(
         new CassandraJmapModule(),
         new CassandraVacationModule(),
@@ -149,7 +138,6 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         new JMAPServerModule(),
-        JMAP_DISTRIBUTED_METHOD_SUPPORTED_MODULE,
         new JmapEventBusModule(),
         WEBADMIN);
 
