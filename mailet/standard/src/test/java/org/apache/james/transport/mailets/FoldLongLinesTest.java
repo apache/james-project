@@ -79,7 +79,7 @@ public class FoldLongLinesTest {
     }
 
     @Test
-    void serviceShouldNotFoldLinesWhenTheyExceedMaxCharacters() throws MessagingException {
+    void serviceShouldNotFoldLinesWhenTheyDoNotExceedMaxCharacters() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .mailetContext(mailetContext)

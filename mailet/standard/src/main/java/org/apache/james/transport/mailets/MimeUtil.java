@@ -26,7 +26,7 @@ public class MimeUtil {
      * encoded words; see <a href='http://www.faqs.org/rfcs/rfc2047.html'>RFC
      * 2047</a> section 2). If the string contains non-whitespace sequences
      * longer than the maximum number of characters a line break is inserted at the whitespace
-     * character following the sequence resulting in a line longer than 76
+     * character following the sequence resulting in a line longer than the maximum number of
      * characters.
      *
      * @param s

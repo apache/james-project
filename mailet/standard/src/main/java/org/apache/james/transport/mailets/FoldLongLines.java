@@ -30,16 +30,24 @@ import org.apache.mailet.base.GenericMailet;
 
 import com.github.fge.lambdas.Throwing;
 
+/**
+ * This mailet fold (wrap) any header lines of the mail that exceed the maximum number of characters.
+ * <br />
+ * It takes only one parameter:
+ * <ul>
+ * <li>maxCharacters: maximum number of characters. Default to 998.
+ * </ul>
+ */
 public class FoldLongLines extends GenericMailet {
     public static final String MAX_CHARACTERS_PARAMETER_NAME = "maxCharacters";
 
-    private static final int MAX_CHARACTERS = 998;
+    private static final int DEFAULT_MAX_CHARACTERS = 998;
 
     private Integer maxCharacters;
 
     @Override
     public void init() throws MessagingException {
-        maxCharacters = getInitParameterAsOptional(MAX_CHARACTERS_PARAMETER_NAME).map(Integer::parseInt).orElse(MAX_CHARACTERS);
+        maxCharacters = getInitParameterAsOptional(MAX_CHARACTERS_PARAMETER_NAME).map(Integer::parseInt).orElse(DEFAULT_MAX_CHARACTERS);
     }
 
     @Override
