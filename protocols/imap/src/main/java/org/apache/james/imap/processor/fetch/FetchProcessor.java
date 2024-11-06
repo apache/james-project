@@ -153,12 +153,27 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         IdRange[] idSet = request.getIdSet();
         FetchData fetch = computeFetchData(request, session);
         long changedSince = fetch.getChangedSince();
-        MailboxSession mailboxSession = session.getMailboxSession();
-        SelectedMailbox selected = session.getSelected();
 
-        return Optional.ofNullable(selected)
-            .map(s -> Mono.from(getMailboxManager().getMailboxReactive(s.getMailboxId(), mailboxSession)))
-            .orElseGet(() -> Mono.error(new MailboxException("Session not in SELECTED state")))
+        return Mono.fromCallable(() -> Optional.ofNullable(session.getSelected()))
+            .<SelectedMailbox>handle((a, sink) -> a.ifPresentOrElse(sink::next, () -> sink.error(new MailboxException("Session not in SELECTED state"))))
+            .flatMap(selected -> processFetch(request, session, responder, selected, fetch, changedSince))
+            .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}",
+                Optional.ofNullable(session.getSelected()).map(SelectedMailbox::getMailboxId), idSet, e)))
+            .onErrorResume(MessageRangeException.class, e -> {
+                taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
+                return Mono.empty();
+            })
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Fetch failed for mailbox {} and sequence-set {}",
+                Optional.ofNullable(session.getSelected()).map(SelectedMailbox::getMailboxId), idSet, e)))
+            .onErrorResume(MailboxException.class, e -> {
+                no(request, responder, HumanReadableText.SEARCH_FAILED);
+                return Mono.empty();
+            });
+    }
+
+    private Mono<Void> processFetch(FetchRequest request, ImapSession session, Responder responder, SelectedMailbox selected, FetchData fetch, long changedSince) {
+        MailboxSession mailboxSession = session.getMailboxSession();
+        return Mono.from(getMailboxManager().getMailboxReactive(selected.getMailboxId(), mailboxSession))
             .flatMap(Throwing.<MessageManager, Mono<Void>>function(mailbox -> {
                 boolean vanished = fetch.getVanished();
                 if (vanished && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
@@ -184,16 +199,6 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
                 return doFetch(selected, request, responder, fetch, mailboxSession, mailbox, session);
             }).sneakyThrow())
-            .doOnEach(logOnError(MessageRangeException.class, e -> LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", selected.getMailboxId(), idSet, e)))
-            .onErrorResume(MessageRangeException.class, e -> {
-                taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
-                return Mono.empty();
-            })
-            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Fetch failed for mailbox {} and sequence-set {}", selected.getMailboxId(), idSet, e)))
-            .onErrorResume(MailboxException.class, e -> {
-                no(request, responder, HumanReadableText.SEARCH_FAILED);
-                return Mono.empty();
-            })
             .then();
     }
 
