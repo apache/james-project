@@ -23,6 +23,9 @@ import static org.apache.james.transport.mailets.FoldLongLines.MAX_CHARACTERS_PA
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.util.List;
+
+import jakarta.mail.Header;
 import jakarta.mail.MessagingException;
 
 import org.apache.commons.lang3.stream.Streams;
@@ -74,8 +77,9 @@ public class FoldLongLinesTest {
             .build();
         foldMailet.service(mail);
 
-        String actual = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).findFirst().get().getValue();
-        assertThat(actual).isEqualTo(FOLDED_LINE);
+        List<Header> headers = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).toList();
+        assertThat(headers).hasSize(1);
+        assertThat(headers.getFirst().getValue()).isEqualTo(FOLDED_LINE);
     }
 
     @Test
@@ -92,7 +96,7 @@ public class FoldLongLinesTest {
             .build();
         foldMailet.service(mail);
 
-        String actual = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).findFirst().get().getValue();
-        assertThat(actual).isEqualTo(HEADER_VALUE);
+        List<Header> headers = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).toList();
+        assertThat(headers.getFirst().getValue()).isEqualTo(HEADER_VALUE);
     }
 }
