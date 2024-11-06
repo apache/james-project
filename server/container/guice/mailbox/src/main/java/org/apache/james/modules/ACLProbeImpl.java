@@ -46,18 +46,20 @@ public class ACLProbeImpl implements GuiceProbe, ACLProbe {
     }
 
     @Override
-    public void replaceRights(MailboxPath mailboxPath, String targetUser, Rfc4314Rights rights) throws MailboxException {
+    public void replaceRights(MailboxPath mailboxPath, String targetIdentifier, Rfc4314Rights rights) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
 
-        ACLCommand command = MailboxACL.command().forUser(Username.of(targetUser)).rights(rights).asReplacement();
+        MailboxACL.EntryKey targetEntryKey = MailboxACL.EntryKey.deserialize(targetIdentifier);
+        ACLCommand command = MailboxACL.command().key(targetEntryKey).rights(rights).asReplacement();
         mailboxManager.applyRightsCommand(mailboxPath, command, mailboxSession);
     }
 
     @Override
-    public void addRights(MailboxPath mailboxPath, String targetUser, Rfc4314Rights rights) throws MailboxException {
+    public void addRights(MailboxPath mailboxPath, String targetIdentifier, Rfc4314Rights rights) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
-        ACLCommand command = MailboxACL.command().forUser(Username.of(targetUser)).rights(rights).asAddition();
 
+        MailboxACL.EntryKey targetEntryKey = MailboxACL.EntryKey.deserialize(targetIdentifier);
+        ACLCommand command = MailboxACL.command().key(targetEntryKey).rights(rights).asReplacement();
         mailboxManager.applyRightsCommand(mailboxPath, command, mailboxSession);
     }
 
