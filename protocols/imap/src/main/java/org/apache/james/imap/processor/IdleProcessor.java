@@ -79,6 +79,11 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
     @Override
     protected Mono<Void> processRequestReactive(IdleRequest request, ImapSession session, Responder responder) {
+        return Mono.fromRunnable(() -> idle(request,session, responder))
+            .then(unsolicitedResponses(session, responder, false));
+    }
+
+    private void idle(IdleRequest request, ImapSession session, Responder responder) {
         SelectedMailbox sm = session.getSelected();
         if (sm != null) {
             sm.registerIdle(new IdleMailboxListener(session, responder));
@@ -144,7 +149,6 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         // Write the response after the listener was add
         // IMAP-341
         responder.respond(new ContinuationResponse(HumanReadableText.IDLING));
-        return unsolicitedResponses(session, responder, false);
     }
 
     @Override
