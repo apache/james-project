@@ -29,8 +29,9 @@ import scala.jdk.CollectionConverters._
 
 class RightsTest extends AnyWordSpec with Matchers {
   val NEGATIVE = true
-  val USERNAME: Username = Username.of("user")
-  val OTHER_USERNAME: Username = Username.of("otherUser")
+  val USER: String = "user"
+  val USER_ENTRYKEY: EntryKey = EntryKey.createUserEntryKey(USER)
+  val OTHER_USER_ENTRYKEY: EntryKey = EntryKey.createUserEntryKey("otherUser")
 
   "Right ofCharacter" should  {
     "recognise 'a'" in {
@@ -70,21 +71,21 @@ class RightsTest extends AnyWordSpec with Matchers {
     }
     "filter out negative users" in {
       val acl = new JavaMailboxACL(Map(
-        EntryKey.createUserEntryKey(USERNAME, NEGATIVE) -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aet")).asJava)
+        EntryKey.createUserEntryKey(USER, NEGATIVE) -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aet")).asJava)
 
       Rights.fromACL(MailboxACL.fromJava(acl)) must be(Rights.EMPTY)
     }
     "accept users" in {
       val acl = new JavaMailboxACL(Map(
-        EntryKey.createUserEntryKey(USERNAME) -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aet")).asJava)
+        USER_ENTRYKEY -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aet")).asJava)
 
-      Rights.fromACL(MailboxACL.fromJava(acl)) must be(Rights.of(USERNAME, Seq(Right.Administer, Right.Expunge, Right.DeleteMessages)))
+      Rights.fromACL(MailboxACL.fromJava(acl)) must be(Rights.of(USER_ENTRYKEY, Seq(Right.Administer, Right.Expunge, Right.DeleteMessages)))
     }
     "filter out unknown rights" in {
       val acl = new JavaMailboxACL(Map(
-        EntryKey.createUserEntryKey(USERNAME) -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aetxk")).asJava)
+        USER_ENTRYKEY -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aetxk")).asJava)
 
-      Rights.fromACL(MailboxACL.fromJava(acl)) must be(Rights.of(USERNAME, Seq(Right.Administer, Right.Expunge, Right.DeleteMessages)))
+      Rights.fromACL(MailboxACL.fromJava(acl)) must be(Rights.of(USER_ENTRYKEY, Seq(Right.Administer, Right.Expunge, Right.DeleteMessages)))
     }
   }
   "To ACL" should  {
@@ -92,11 +93,11 @@ class RightsTest extends AnyWordSpec with Matchers {
       Rights.EMPTY.toMailboxAcl.asJava must be(new JavaMailboxACL())
     }
     "return acl conversion" in {
-      val user1 = Username.of("user1")
-      val user2 = Username.of("user2")
+      val user1 = EntryKey.createUserEntryKey("user1")
+      val user2 = EntryKey.createUserEntryKey("user2")
       val expected = new JavaMailboxACL(Map(
-          EntryKey.createUserEntryKey(user1) -> new JavaRfc4314Rights(JavaRight.Administer, JavaRight.DeleteMessages),
-          EntryKey.createUserEntryKey(user2) -> new JavaRfc4314Rights(JavaRight.PerformExpunge, JavaRight.Lookup))
+          user1 -> new JavaRfc4314Rights(JavaRight.Administer, JavaRight.DeleteMessages),
+          user2 -> new JavaRfc4314Rights(JavaRight.PerformExpunge, JavaRight.Lookup))
         .asJava)
       val jmapPojo = Rights.of(user1, Seq(Right.Administer, Right.DeleteMessages))
         .append(user2, Seq(Right.Expunge, Right.Lookup))
@@ -106,72 +107,72 @@ class RightsTest extends AnyWordSpec with Matchers {
   }
   "Remove entries" should  {
     "return empty when empty" in {
-      Rights.EMPTY.removeEntriesFor(USERNAME) must be(Rights.EMPTY)
+      Rights.EMPTY.removeEntriesFor(USER_ENTRYKEY) must be(Rights.EMPTY)
     }
     "return empty when only user" in {
-      Rights.of(USERNAME, Right.Lookup)
-        .removeEntriesFor(USERNAME) must be(Rights.EMPTY)
+      Rights.of(USER_ENTRYKEY, Right.Lookup)
+        .removeEntriesFor(USER_ENTRYKEY) must be(Rights.EMPTY)
     }
     "only remove specified users" in {
-      val expected = Rights.of(OTHER_USERNAME, Right.Lookup)
+      val expected = Rights.of(OTHER_USER_ENTRYKEY, Right.Lookup)
 
-      Rights.of(USERNAME, Right.Lookup)
-        .append(OTHER_USERNAME, Right.Lookup)
-        .removeEntriesFor(USERNAME) must be(expected)
+      Rights.of(USER_ENTRYKEY, Right.Lookup)
+        .append(OTHER_USER_ENTRYKEY, Right.Lookup)
+        .removeEntriesFor(USER_ENTRYKEY) must be(expected)
     }
   }
   "mayAddItems" should  {
     "return empty when no user" in {
-      Rights.EMPTY.mayAddItems(USERNAME) must be(NotApplicable)
+      Rights.EMPTY.mayAddItems(USER_ENTRYKEY) must be(NotApplicable)
     }
     "return false when no insert right" in {
-      Rights.of(USERNAME, Seq(Right.Administer, Right.Expunge, Right.Lookup, Right.DeleteMessages, Right.Read, Right.Seen, Right.Write))
-        .mayAddItems(USERNAME) must be(NotApplicable)
+      Rights.of(USER_ENTRYKEY, Seq(Right.Administer, Right.Expunge, Right.Lookup, Right.DeleteMessages, Right.Read, Right.Seen, Right.Write))
+        .mayAddItems(USER_ENTRYKEY) must be(NotApplicable)
     }
     "return true when insert right" in {
-      Rights.of(USERNAME, Right.Insert)
-        .mayAddItems(USERNAME) must be(Applicable)
+      Rights.of(USER_ENTRYKEY, Right.Insert)
+        .mayAddItems(USER_ENTRYKEY) must be(Applicable)
     }
   }
   "mayReadItems" should  {
     "return empty when no user" in {
-      Rights.EMPTY.mayReadItems(USERNAME) must be(NotApplicable)
+      Rights.EMPTY.mayReadItems(USER_ENTRYKEY) must be(NotApplicable)
     }
     "return false when no read right" in {
-      Rights.of(USERNAME, Seq(Right.Administer, Right.Expunge, Right.Lookup, Right.DeleteMessages, Right.Administer, Right.Seen, Right.Write))
-        .mayReadItems(USERNAME) must be(NotApplicable)
+      Rights.of(USER_ENTRYKEY, Seq(Right.Administer, Right.Expunge, Right.Lookup, Right.DeleteMessages, Right.Administer, Right.Seen, Right.Write))
+        .mayReadItems(USER_ENTRYKEY) must be(NotApplicable)
     }
     "return true when read right" in {
-      Rights.of(USERNAME, Right.Read)
-        .mayReadItems(USERNAME) must be(Applicable)
+      Rights.of(USER_ENTRYKEY, Right.Read)
+        .mayReadItems(USER_ENTRYKEY) must be(Applicable)
     }
   }
   "mayRemoveItems" should  {
     "return empty when no user" in {
-      Rights.EMPTY.mayRemoveItems(USERNAME) must be(NotApplicable)
+      Rights.EMPTY.mayRemoveItems(USER_ENTRYKEY) must be(NotApplicable)
     }
     "return false when no delete right" in {
-      Rights.of(USERNAME, Seq(Right.Administer, Right.Expunge, Right.Lookup, Right.Read, Right.Administer, Right.Seen, Right.Write))
-        .mayRemoveItems(USERNAME) must be(NotApplicable)
+      Rights.of(USER_ENTRYKEY, Seq(Right.Administer, Right.Expunge, Right.Lookup, Right.Read, Right.Administer, Right.Seen, Right.Write))
+        .mayRemoveItems(USER_ENTRYKEY) must be(NotApplicable)
     }
     "return true when delete right" in {
-      Rights.of(USERNAME, Right.DeleteMessages)
-        .mayRemoveItems(USERNAME) must be(Applicable)
+      Rights.of(USER_ENTRYKEY, Right.DeleteMessages)
+        .mayRemoveItems(USER_ENTRYKEY) must be(Applicable)
     }
   }
   "mayRename" should  {
     "return unsupported" in {
-      Rights.EMPTY.mayRename(USERNAME) must be(Unsupported)
+      Rights.EMPTY.mayRename(USER_ENTRYKEY) must be(Unsupported)
     }
   }
   "mayDelete" should  {
     "return unsupported" in {
-      Rights.EMPTY.mayDelete(USERNAME) must be(Unsupported)
+      Rights.EMPTY.mayDelete(USER_ENTRYKEY) must be(Unsupported)
     }
   }
   "mayCreateChild" should  {
     "return unsupported" in {
-      Rights.EMPTY.mayCreateChild(USERNAME) must be(Unsupported)
+      Rights.EMPTY.mayCreateChild(USER_ENTRYKEY) must be(Unsupported)
     }
   }
 }

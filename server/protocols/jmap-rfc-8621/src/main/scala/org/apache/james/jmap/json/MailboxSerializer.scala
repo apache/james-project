@@ -22,13 +22,13 @@ package org.apache.james.jmap.json
 import eu.timepit.refined
 import eu.timepit.refined._
 import jakarta.inject.Inject
-import org.apache.james.core.{Domain, Username}
+import org.apache.james.core.Domain
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{ClientId, Properties, SetError, UuidState}
 import org.apache.james.jmap.mail.{Ids, IsSubscribed, Mailbox, MailboxChangesRequest, MailboxChangesResponse, MailboxCreationId, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnparsedMailboxId, UnreadEmails, UnreadThreads, Value}
 import org.apache.james.mailbox.Role
-import org.apache.james.mailbox.model.MailboxACL.{Right => JavaRight}
+import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Right => JavaRight}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
 import play.api.libs.json._
 
@@ -92,13 +92,13 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val mailboxJavaRightReads: Reads[JavaRight] = value => rightRead.reads(value).map(right => right.toMailboxRight)
   private implicit val mailboxRfc4314RightsReads: Reads[Rfc4314Rights] = Json.valueReads[Rfc4314Rights]
   private implicit val rightSeqWrites: Writes[Seq[Right]] = seq => JsArray(seq.map(rightWrites.writes))
-  private implicit val rightsMapWrites: Writes[Map[Username, Seq[Right]]] =
-    mapWrites[Username, Seq[Right]](_.asString(), rightSeqWrites)
+  private implicit val rightsMapWrites: Writes[Map[EntryKey, Seq[Right]]] =
+    mapWrites[EntryKey, Seq[Right]](_.toString(), rightSeqWrites)
   private implicit val rightsWrites: Writes[Rights] = Json.valueWrites[Rights]
 
-  private implicit val mapRightsReads: Reads[Map[Username, Seq[Right]]] = _.validate[Map[String, Seq[Right]]]
+  private implicit val mapRightsReads: Reads[Map[EntryKey, Seq[Right]]] = _.validate[Map[String, Seq[Right]]]
     .map(rawMap =>
-      rawMap.map(entry => (Username.of(entry._1), entry._2)))
+      rawMap.map(entry => (EntryKey.deserialize(entry._1), entry._2)))
   private implicit val rightsReads: Reads[Rights] = json => mapRightsReads.reads(json).map(rawMap => Rights(rawMap))
 
   private implicit val domainWrites: Writes[Domain] = domain => JsString(domain.asString)

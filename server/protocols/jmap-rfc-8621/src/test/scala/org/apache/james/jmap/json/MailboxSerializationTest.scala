@@ -21,11 +21,12 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.apache.james.core.{Domain, Username}
+import org.apache.james.core.Domain
 import org.apache.james.jmap.json.MailboxSerializationTest.MAILBOX
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.{IsSubscribed, Mailbox, MailboxNamespace, MailboxRights, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
 import org.apache.james.mailbox.Role
+import org.apache.james.mailbox.model.MailboxACL.EntryKey
 import org.apache.james.mailbox.model.{MailboxId, TestId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -56,8 +57,8 @@ object MailboxSerializationTest {
     maySubmit = MaySubmit(false)
   )
 
-  private val RIGHTS: Rights = Rights.of(Username.of("bob"), Seq(Right.Expunge, Right.Lookup))
-    .append(Username.of("alice"), Seq(Right.Read, Right.Write))
+  private val RIGHTS: Rights = Rights.of(EntryKey.createUserEntryKey("bob"), Seq(Right.Expunge, Right.Lookup))
+    .append(EntryKey.createUserEntryKey("alice"), Seq(Right.Read, Right.Write))
 
   private val QUOTAS = Quotas(Map(
     QuotaId(QuotaRoot("quotaRoot", None)) -> Quota(Map(
