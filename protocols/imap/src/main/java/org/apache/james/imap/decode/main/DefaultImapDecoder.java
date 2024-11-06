@@ -70,7 +70,7 @@ public class DefaultImapDecoder implements ImapDecoder {
             Tag tag = request.tag();
             return decodeCommandTagged(request, tag, session);
         } catch (DecodingException e) {
-            LOGGER.debug("Cannot parse tag", e);
+            session.withMDC(() -> LOGGER.debug("Cannot parse tag", e));
             return unknownCommand(null, session);
         }
     }
@@ -80,7 +80,7 @@ public class DefaultImapDecoder implements ImapDecoder {
             String commandName = request.atom();
             return decodeCommandNamed(request, tag, commandName, session);
         } catch (DecodingException e) {
-            LOGGER.info("Error during initial request parsing", e);
+            session.withMDC(() -> LOGGER.info("Error during initial request parsing", e));
             return unknownCommand(tag, session);
         }
     }

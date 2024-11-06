@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import static org.apache.james.imap.api.process.ImapSession.MDC_KEY;
 import static org.apache.james.imapserver.netty.IMAPServer.AuthenticationConfiguration;
 
 import java.io.Closeable;
@@ -78,7 +79,6 @@ import reactor.core.publisher.Mono;
 @ChannelHandler.Sharable
 public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter implements NettyConstants {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImapChannelUpstreamHandler.class);
-    public static final String MDC_KEY = "bound_MDC";
 
     public static class ImapChannelUpstreamHandlerBuilder {
         private String hello;
@@ -254,12 +254,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
     private MDCBuilder mdc(ImapSession imapSession) {
         return Optional.ofNullable(imapSession)
-            .map(session -> {
-                MDCBuilder boundMDC = (MDCBuilder) session.getAttribute(MDC_KEY);
-
-                return IMAPMDCContext.from(session)
-                    .addToContext(boundMDC);
-            })
+            .map(ImapSession::mdc)
             .orElseGet(MDCBuilder::create);
     }
 
@@ -297,7 +292,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).getAndSet(null);
         String username = retrieveUsername(imapSession);
-        try (Closeable closeable = mdc(ctx).build()) {
+        try (Closeable closeable = mdc(imapSession).build()) {
             if (cause instanceof SocketException) {
                 LOGGER.info("Socket exception encountered for user {}: {}", username, cause.getMessage());
             } else if (isSslHandshkeException(cause)) {
