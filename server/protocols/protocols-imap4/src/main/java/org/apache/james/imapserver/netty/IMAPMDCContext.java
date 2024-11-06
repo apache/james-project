@@ -23,8 +23,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Optional;
 
-import org.apache.james.core.Username;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.protocols.netty.ProtocolMDCContextFactory;
 import org.apache.james.util.MDCBuilder;
 
@@ -70,14 +68,5 @@ public class IMAPMDCContext {
             return address.getHostName();
         }
         return remoteAddress.toString();
-    }
-
-    public static MDCBuilder from(ImapSession imapSession) {
-        return MDCBuilder.create()
-            .addToContext(MDCBuilder.USER, Optional.ofNullable(imapSession.getUserName())
-                .map(Username::asString)
-                .orElse(""))
-            .addToContextIfPresent("selectedMailbox", Optional.ofNullable(imapSession.getSelected())
-                .map(selectedMailbox -> selectedMailbox.getMailboxId().serialize()));
     }
 }
