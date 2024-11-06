@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.api.process;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Objects;
@@ -32,6 +34,7 @@ import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.util.MDCBuilder;
 
 import reactor.core.publisher.Mono;
 
@@ -43,6 +46,8 @@ import reactor.core.publisher.Mono;
  * @version $Revision: 109034 $
  */
 public interface ImapSession extends CommandDetectionSession {
+    String MDC_KEY = "bound_MDC";
+
     class SessionId {
         private static final RandomStringGenerator RANDOM_STRING_GENERATOR = new RandomStringGenerator.Builder()
             .withinRange('a', 'z')
@@ -250,6 +255,21 @@ public interface ImapSession extends CommandDetectionSession {
     boolean isPlainAuthEnabled();
 
     boolean supportsOAuth();
+
+    default void withMDC(Runnable runnable) {
+        try (Closeable c = mdc().build()) {
+            runnable.run();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    default MDCBuilder mdc() {
+        if (getAttribute(MDC_KEY) instanceof MDCBuilder mdcBuilder) {
+            return mdcBuilder;
+        }
+        return MDCBuilder.create();
+    }
 
     /**
      * Return the {@link InetSocketAddress} of the remote peer
