@@ -21,6 +21,7 @@ package org.apache.james.protocols.smtp.core.esmtp;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import jakarta.inject.Inject;
 
@@ -132,7 +133,7 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
     }
 
     private static String removeEmIPV6Prefix(String ipv6) {
-        if (ipv6.startsWith("IPv6:")) {
+        if (ipv6.toLowerCase(Locale.US).startsWith("ipv6:")) {
             ipv6 = ipv6.substring(5);
         }
         return ipv6;

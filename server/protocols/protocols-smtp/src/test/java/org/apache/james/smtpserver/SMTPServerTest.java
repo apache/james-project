@@ -536,7 +536,9 @@ public class SMTPServerTest {
     @ParameterizedTest
     @ValueSource(strings = {"good", "127.0.0.1", "adomain.com", "sub.domain.com", "[abc.def]", "[124.54.67.43]",
         "fe80::1ff:fe23:4567:890a", "[fe80::1ff:fe23:4567:890a]",
-        "2001:db8:85a3:8d3:1319:8a2e:370:7348", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]"})
+        "2001:db8:85a3:8d3:1319:8a2e:370:7348", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]",
+        "IPV6:2a01:cb06:b841:bf5d:38ff:861a:1646:ab00", "ipv6:2a01:cb06:b841:bf5d:38ff:861a:1646:ab00",
+        "[IPV6:2a01:cb06:b841:bf5d:38ff:861a:1646:ab00]", "[ipv6:2a01:cb06:b841:bf5d:38ff:861a:1646:ab00]"})
     public void testValidEHLO(String helo) throws Exception {
         init(smtpConfiguration);
 
