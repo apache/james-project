@@ -1,6 +1,6 @@
 === FoldLongLines
 
-This mailet fold (wrap) any header lines of the mail that exceed the maximum number of characters.
+This mailet fold (wrap) any header lines of the mail that exceed the maximum number of characters. This sanitizing of EML message will prevent downstream server from applying it, and prevent them to break the DKIM signature positioned by James.
 
 It takes only one parameter:
 

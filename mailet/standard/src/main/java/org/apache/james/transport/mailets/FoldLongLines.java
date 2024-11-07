@@ -19,7 +19,9 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.mail.Header;
 import jakarta.mail.MessagingException;
@@ -29,6 +31,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * This mailet fold (wrap) any header lines of the mail that exceed the maximum number of characters.
@@ -40,25 +44,45 @@ import com.github.fge.lambdas.Throwing;
  */
 public class FoldLongLines extends GenericMailet {
     public static final String MAX_CHARACTERS_PARAMETER_NAME = "maxCharacters";
+    public static final String HEADER_SEPARATOR = ": ";
 
     private static final int DEFAULT_MAX_CHARACTERS = 998;
+    private static final String SEPARATE_LINE_REGEX = "\r\n|\n";
 
     private Integer maxCharacters;
 
     @Override
     public void init() throws MessagingException {
-        maxCharacters = getInitParameterAsOptional(MAX_CHARACTERS_PARAMETER_NAME).map(Integer::parseInt).orElse(DEFAULT_MAX_CHARACTERS);
+        Integer maxCharacters = getInitParameterAsOptional(MAX_CHARACTERS_PARAMETER_NAME).map(Integer::parseInt).orElse(DEFAULT_MAX_CHARACTERS);
+        Preconditions.checkArgument(maxCharacters > 0, "maxCharacters must be positive");
+        this.maxCharacters = maxCharacters;
     }
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        List<Header> foldedHeaders = Streams.of(mail.getMessage().getAllHeaders().asIterator()).map(this::fold).toList();
-        foldedHeaders.forEach(Throwing.consumer(header -> mail.getMessage().setHeader(header.getName(), header.getValue())));
+        // get all header names of headers that exceed line limit
+        Set<String> longHeaders = Streams.of(mail.getMessage().getAllHeaders().asIterator()).filter(this::exceedLineLimit).map(Header::getName).collect(ImmutableSet.toImmutableSet());
+        // get all headers that have the same name as above headers
+        List<Header> headers = Streams.of(mail.getMessage().getAllHeaders().asIterator()).filter(header -> longHeaders.contains(header.getName())).toList();
+        // remove all long headers (as well as headers with same name)
+        longHeaders.forEach(Throwing.consumer(header -> mail.getMessage().removeHeader(header)));
+        headers.forEach(Throwing.consumer(header -> {
+            if (exceedLineLimit(header)) {
+                mail.getMessage().addHeader(header.getName(), fold(header));
+            } else {
+                mail.getMessage().addHeader(header.getName(), header.getValue());
+            }
+        }));
+        mail.getMessage().saveChanges();
     }
 
-    private Header fold(Header header) {
-        // TODO After new release of mime4j, update to use MimeUtil of mime4j and remove MimeUtil class file
-        String folded = MimeUtil.fold(header.getValue(), header.getName().length() + 2, maxCharacters);
-        return new Header(header.getName(), folded);
+    private String fold(Header header) {
+        // TODO After new release of mime4j with commit https://github.com/apache/james-mime4j/commit/66a09219457854c7a26e5b7c0e4c9dd59b4b0c32, update to use MimeUtil of mime4j and remove MimeUtil class file
+        return MimeUtil.fold(header.getValue(), header.getName().length() + HEADER_SEPARATOR.length(), maxCharacters);
+    }
+
+    private boolean exceedLineLimit(Header header) {
+        String fullHeader = header.getName() + HEADER_SEPARATOR + header.getValue();
+        return Arrays.stream(fullHeader.split(SEPARATE_LINE_REGEX)).anyMatch(line -> line.length() > maxCharacters);
     }
 }

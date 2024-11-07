@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.apache.james.transport.mailets.FoldLongLines.HEADER_SEPARATOR;
 import static org.apache.james.transport.mailets.FoldLongLines.MAX_CHARACTERS_PARAMETER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -43,24 +44,18 @@ import org.slf4j.Logger;
 public class FoldLongLinesTest {
     static final String HEADER_NAME = "References";
     static final String HEADER_VALUE = "<a1@gmailcom> <a2@gmailcom> <a3@gmailcom>";
-    static final String FOLDED_LINE = "<a1@gmailcom>\r\n" +
-        " <a2@gmailcom> <a3@gmailcom>";
+    static final String FOLDED_LINE = "<a1@gmailcom> <a2@gmailcom>\r\n" +
+        " <a3@gmailcom>";
 
     private Mailet foldMailet;
     private MailetContext mailetContext;
 
     @BeforeEach
-    void beforeEach() throws MessagingException {
+    void beforeEach() {
         foldMailet = new FoldLongLines();
         mailetContext = FakeMailContext.builder()
             .logger(mock(Logger.class))
             .build();
-        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-            .mailetName("Test")
-            .mailetContext(mailetContext)
-            .setProperty(MAX_CHARACTERS_PARAMETER_NAME, "30")
-            .build();
-        foldMailet.init(mailetConfig);
     }
 
     @Test
@@ -68,7 +63,7 @@ public class FoldLongLinesTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("Test")
             .mailetContext(mailetContext)
-            .setProperty(MAX_CHARACTERS_PARAMETER_NAME, "30")
+            .setProperty(MAX_CHARACTERS_PARAMETER_NAME, String.valueOf(HEADER_NAME.length() + HEADER_SEPARATOR.length() + HEADER_VALUE.length() - 1))
             .build();
         foldMailet.init(mailetConfig);
 
@@ -80,6 +75,27 @@ public class FoldLongLinesTest {
         List<Header> headers = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).toList();
         assertThat(headers).hasSize(1);
         assertThat(headers.getFirst().getValue()).isEqualTo(FOLDED_LINE);
+    }
+
+    @Test
+    void serviceShouldFoldLinesWhenTheyExceedMaxCharactersAndTheHeaderHasMultiLines() throws MessagingException {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .mailetContext(mailetContext)
+            .setProperty(MAX_CHARACTERS_PARAMETER_NAME, "30")
+            .build();
+        foldMailet.init(mailetConfig);
+
+        Mail mail = FakeMail.builder()
+            .name("mail").mimeMessage(MimeMessageBuilder.mimeMessageBuilder().addHeader(HEADER_NAME, "<a1@gmailcom>\n<a2@gmailcom> <a3@gmailcom> <a4@gmailcom>").build())
+            .build();
+        foldMailet.service(mail);
+
+        List<Header> headers = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).toList();
+        assertThat(headers).hasSize(1);
+        assertThat(headers.getFirst().getValue()).isEqualTo("<a1@gmailcom>\n" +
+            "<a2@gmailcom>\r\n" +
+            " <a3@gmailcom> <a4@gmailcom>");
     }
 
     @Test
@@ -97,6 +113,74 @@ public class FoldLongLinesTest {
         foldMailet.service(mail);
 
         List<Header> headers = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).toList();
+        assertThat(headers).hasSize(1);
         assertThat(headers.getFirst().getValue()).isEqualTo(HEADER_VALUE);
+    }
+
+    @Test
+    void serviceShouldNotFoldLinesWhenTheirLengthEqualToMaxCharacters() throws MessagingException {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .mailetContext(mailetContext)
+            .setProperty(MAX_CHARACTERS_PARAMETER_NAME, String.valueOf(HEADER_NAME.length() + HEADER_SEPARATOR.length() + HEADER_VALUE.length()))
+            .build();
+        foldMailet.init(mailetConfig);
+
+        Mail mail = FakeMail.builder()
+            .name("mail").mimeMessage(MimeMessageBuilder.mimeMessageBuilder().addHeader(HEADER_NAME, HEADER_VALUE).build())
+            .build();
+        foldMailet.service(mail);
+
+        List<Header> headers = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).toList();
+        assertThat(headers).hasSize(1);
+        assertThat(headers.getFirst().getValue()).isEqualTo(HEADER_VALUE);
+    }
+
+    @Test
+    void serviceShouldNotRemoveTheHeaderThatHasTheSameNameAsHeadersWithLongLine() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .mailetContext(mailetContext)
+            .setProperty(MAX_CHARACTERS_PARAMETER_NAME, "40")
+            .build();
+        foldMailet.init(mailetConfig);
+
+        Mail mail = FakeMail.builder()
+            .name("mail").mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader(HEADER_NAME, "<b1@gmailcom>")
+                .addHeader(HEADER_NAME, HEADER_VALUE)
+                .build()
+            )
+            .build();
+        foldMailet.service(mail);
+
+        List<Header> headers = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).toList();
+        assertThat(headers).hasSize(2);
+        assertThat(headers.getFirst().getValue()).isEqualTo("<b1@gmailcom>");
+        assertThat(headers.getLast().getValue()).isEqualTo(FOLDED_LINE);
+    }
+
+    @Test
+    void serviceShouldNotChangeTheRelativePositionOfTheHeaderThatHasTheSameNameAsHeadersWithLongLine() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .mailetContext(mailetContext)
+            .setProperty(MAX_CHARACTERS_PARAMETER_NAME, "30")
+            .build();
+        foldMailet.init(mailetConfig);
+
+        Mail mail = FakeMail.builder()
+            .name("mail").mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader(HEADER_NAME, HEADER_VALUE)
+                .addHeader(HEADER_NAME, "<b1@gmailcom>")
+                .addHeader(HEADER_NAME, HEADER_VALUE)
+                .build()
+            )
+            .build();
+        foldMailet.service(mail);
+
+        List<Header> headers = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).toList();
+        assertThat(headers).hasSize(3);
+        assertThat(headers.get(1).getValue()).isEqualTo("<b1@gmailcom>");
     }
 }
