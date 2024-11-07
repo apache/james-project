@@ -33,10 +33,12 @@ import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
 import org.apache.james.jmap.method.{MailboxCreationParseException, SetRequest, WithAccountId}
-import org.apache.james.mailbox.model.MailboxACL.EntryKey
+import org.apache.james.mailbox.model.MailboxACL.{ANYONE_KEY, ANYONE_NEGATIVE_KEY, EntryKey}
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
 import org.apache.james.mailbox.{MailboxSession, Role}
 import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue}
+
+import scala.collection.convert.ImplicitConversions.`collection asJava`
 
 case class MailboxSetRequest(accountId: AccountId,
                              ifInState: Option[UuidState],
@@ -265,19 +267,6 @@ object NameUpdate {
   }
 }
 
-object SharedWithResetUpdate {
-  def parse(serializer: MailboxSerializer, capabilities: Set[CapabilityIdentifier])
-           (newValue: JsValue): Either[PatchUpdateValidationException, Update] =
-    if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
-      serializer.deserializeRights(input = newValue) match {
-        case JsSuccess(value, _) => scala.Right(SharedWithResetUpdate(value))
-        case JsError(errors) => Left(InvalidUpdateException("sharedWith", s"Specified value do not match the expected JSON format: $errors"))
-      }
-    } else {
-      MailboxPatchObject.notFound("sharedWith")
-    }
-}
-
 object IsSubscribedUpdate {
   def parse(newValue: JsValue): Either[PatchUpdateValidationException, Update] = newValue match {
     case JsBoolean(value) => scala.Right(IsSubscribedUpdate(Some(IsSubscribed(value))))
@@ -286,15 +275,45 @@ object IsSubscribedUpdate {
   }
 }
 
+object SharedWithAnyoneValidator {
+  def isValidPatch(entryKey: EntryKey, rights: Seq[Right]): Boolean = {
+    !((entryKey == ANYONE_KEY || entryKey == ANYONE_NEGATIVE_KEY) && rights.exists(_ != Right.Post))}
+
+  def areValidPatches(rightsMap: Map[EntryKey, Seq[Right]]): Boolean =
+    rightsMap.forall { case (entryKey, rightsSeq) => isValidPatch(entryKey, rightsSeq)}
+}
+
+object SharedWithResetUpdate {
+  def parse(serializer: MailboxSerializer, capabilities: Set[CapabilityIdentifier])
+           (newValue: JsValue): Either[PatchUpdateValidationException, Update] =
+    if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
+      serializer.deserializeRights(input = newValue) match {
+        case JsSuccess(value, _) if !SharedWithAnyoneValidator.areValidPatches(value.rights) =>
+          Left(InvalidPatchException("only the `Post` right can be granted to the identifier `anyone`"))
+        case JsSuccess(value, _) => scala.Right(SharedWithResetUpdate(value))
+        case JsError(errors) => Left(InvalidUpdateException("sharedWith", s"Specified value do not match the expected JSON format: $errors"))
+      }
+    } else {
+      MailboxPatchObject.notFound("sharedWith")
+    }
+}
+
 object SharedWithPartialUpdate {
   def parse(serializer: MailboxSerializer, capabilities: Set[CapabilityIdentifier])
            ( property: String, newValue: JsValue): Either[PatchUpdateValidationException, Update] =
     if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
       parseEntryKey(property)
         .flatMap(entryKey => parseRights(newValue, property, serializer)
-          .map(rights => SharedWithPartialUpdate(entryKey, rights)))
+        .flatMap(rights => createUpdateIfValidPatch(entryKey, rights)))
     } else {
       MailboxPatchObject.notFound(property)
+    }
+
+  private def createUpdateIfValidPatch(entryKey: EntryKey, rights: Rfc4314Rights): Either[PatchUpdateValidationException, Update] =
+    if (SharedWithAnyoneValidator.isValidPatch(entryKey, rights.toRights)) {
+      scala.Right(SharedWithPartialUpdate(entryKey, rights))
+    } else {
+      scala.Left(InvalidPatchException("only the `Post` right can be granted to the identifier `anyone`"))
     }
 
   def parseEntryKey(property: String): Either[PatchUpdateValidationException, EntryKey] = try {
