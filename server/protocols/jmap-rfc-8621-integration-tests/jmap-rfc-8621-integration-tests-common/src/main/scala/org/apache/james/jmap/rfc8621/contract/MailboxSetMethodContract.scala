@@ -6006,6 +6006,64 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  def partialRightsUpdateShouldNotGrantAnyoneRightOtherThanPost(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(BOB, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize}": {
+         |                      "sharedWith/anyone": ["r", "l"]
+         |                    }
+         |                }
+         |           },
+         |    "c1"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState",
+        "methodResponses[1][1].state")
+      .isEqualTo(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [
+           |    ["Mailbox/set", {
+           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "notUpdated": {
+           |        "${mailboxId.serialize}": {
+           |          "type": "invalidPatch",
+           |          "description": "only the `Post` right can be granted to the identifier `anyone`"
+           |        }
+           |      }
+           |    }, "c1"]
+           |  ]
+           |}""".stripMargin)
+  }
+
+  @Test
   def resetRightsUpdateShouldCorrectlyHandleAnyoneKeyword(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.forUser(BOB, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
@@ -6082,6 +6140,66 @@ trait MailboxSetMethodContract {
     assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
       .getEntries)
       .containsKey(MailboxACL.ANYONE_KEY)
+  }
+
+  @Test
+  def resetRightsUpdateShouldNotGrantAnyoneRightOtherThanPost(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(BOB, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId.serialize}": {
+         |                      "sharedWith": {
+         |                        "anyone":["r", "l"]
+         |                      }
+         |                    }
+         |                }
+         |           },
+         |    "c1"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+      .when
+      .post
+      .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState",
+        "methodResponses[1][1].state")
+      .isEqualTo(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [
+           |    ["Mailbox/set", {
+           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "notUpdated": {
+           |        "${mailboxId.serialize}": {
+           |          "type": "invalidPatch",
+           |          "description": "only the `Post` right can be granted to the identifier `anyone`"
+           |        }
+           |      }
+           |    }, "c1"]
+           |  ]
+           |}""".stripMargin)
   }
 
   @Test
