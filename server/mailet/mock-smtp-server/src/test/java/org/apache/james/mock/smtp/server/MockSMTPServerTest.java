@@ -224,8 +224,8 @@ class MockSMTPServerTest {
                     .name("REQUIRETLS")
                     .build())
                 .addMailParameter(Mail.Parameter.builder()
-                        .name("SMTPUTF8")
-                        .build())
+                    .name("SMTPUTF8")
+                    .build())
                 .from(new MailAddress(BOB))
                 .addRecipientMailAddress(new MailAddress(ALICE))
                 .build();

@@ -40,8 +40,7 @@ public class Mails {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof Mails) {
-            Mails that = (Mails) o;
+        if (o instanceof Mails that) {
 
             return Objects.equals(this.mailList, that.mailList);
         }
