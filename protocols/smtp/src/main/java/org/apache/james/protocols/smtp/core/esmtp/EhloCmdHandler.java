@@ -82,7 +82,7 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
      */
     private Response doEHLO(SMTPSession session, String argument) {
         if (!isValid(argument)) {
-            LOGGER.error("Invalid EHLO argument received: {}. Must be a domain name or an IP address.", argument);
+            LOGGER.error("Invalid EHLO argument received: {} which must be a domain name or an IP address.", argument);
             return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
                 DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Invalid domain name or ip supplied as HELO argument");
         }
