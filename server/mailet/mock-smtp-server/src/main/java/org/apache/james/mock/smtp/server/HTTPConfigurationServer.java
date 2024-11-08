@@ -99,6 +99,7 @@ public class HTTPConfigurationServer {
     static final String VERSION = "/version";
     static final String SMTP_MAILS = "/smtpMails";
     static final String SMTP_MAILS_COUNT = "/smtpMailsCount";
+    static final String JSON_SERIALIZATION_ERROR_MESSAGE = "Could not serialize JSON ";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
         .registerModule(new Jdk8Module())
@@ -156,7 +157,7 @@ public class HTTPConfigurationServer {
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .sendString(Mono.just(OBJECT_MAPPER.writeValueAsString(mockSmtpBehaviors)));
         } catch (JsonProcessingException e) {
-            LOGGER.error("Could not serialize JSON", e);
+            LOGGER.error(JSON_SERIALIZATION_ERROR_MESSAGE, e);
             return res.status(INTERNAL_SERVER_ERROR).send();
         }
     }
@@ -169,7 +170,7 @@ public class HTTPConfigurationServer {
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .sendString(Mono.just(OBJECT_MAPPER.writeValueAsString(extensions)));
         } catch (JsonProcessingException e) {
-            LOGGER.error("Could not serialize JSON", e);
+            LOGGER.error(JSON_SERIALIZATION_ERROR_MESSAGE, e);
             return res.status(INTERNAL_SERVER_ERROR).send();
         }
     }
@@ -225,7 +226,7 @@ public class HTTPConfigurationServer {
                     .header(CONTENT_TYPE, APPLICATION_JSON)
                     .sendString(Mono.just(OBJECT_MAPPER.writeValueAsString(mailsRemoved)));
         } catch (JsonProcessingException e) {
-            LOGGER.error("Could not serialize JSON", e);
+            LOGGER.error(JSON_SERIALIZATION_ERROR_MESSAGE, e);
             return res.status(INTERNAL_SERVER_ERROR).send();
         }
     }
@@ -238,7 +239,7 @@ public class HTTPConfigurationServer {
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .sendString(Mono.just(OBJECT_MAPPER.writeValueAsString(mails)));
         } catch (JsonProcessingException e) {
-            LOGGER.error("Could not serialize JSON", e);
+            LOGGER.error(JSON_SERIALIZATION_ERROR_MESSAGE, e);
             return res.status(INTERNAL_SERVER_ERROR).send();
         }
     }
@@ -251,7 +252,7 @@ public class HTTPConfigurationServer {
                     .header(CONTENT_TYPE, APPLICATION_JSON)
                     .sendString(Mono.just(OBJECT_MAPPER.writeValueAsString(count)));
         } catch (JsonProcessingException e) {
-            LOGGER.error("Could not serialize JSON", e);
+            LOGGER.error(JSON_SERIALIZATION_ERROR_MESSAGE, e);
             return res.status(INTERNAL_SERVER_ERROR).send();
         }
     }

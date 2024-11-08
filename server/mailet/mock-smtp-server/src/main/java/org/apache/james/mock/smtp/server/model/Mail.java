@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -41,15 +42,16 @@ import com.google.common.collect.ImmutableSet;
 
 @JsonDeserialize(builder = Mail.Builder.class)
 public class Mail {
+
     @JsonDeserialize(builder = Parameter.Builder.class)
     public static class Parameter {
         @JsonPOJOBuilder(withPrefix = "")
         public static class Builder {
             private String name;
-            private String value;
+            private Optional<String> value;
 
             public Builder() {
-
+                this.value = Optional.empty();
             }
 
             public Builder name(String name) {
@@ -58,15 +60,13 @@ public class Mail {
             }
 
             public Builder value(String value) {
-                this.value = value;
+                this.value = Optional.ofNullable(value);
                 return this;
             }
 
             public Parameter build() {
                 Preconditions.checkState(name != null, "'name' field cannot be omitted");
-                Preconditions.checkState(value != null, "'value' field cannot be omitted");
-
-                return new Parameter(name, value);
+                return new Parameter(name, value.orElse(""));
             }
         }
 
@@ -76,12 +76,17 @@ public class Mail {
 
         public static Collection<Mail.Parameter> fromArgLine(String argLine) {
             return Splitter.on(' ').splitToStream(argLine)
-                .filter(argString -> argString.contains("="))
+                .filter(argString -> !argString.contains(":"))
                 .map(Parameter::fromString)
                 .collect(ImmutableList.toImmutableList());
         }
 
         public static Parameter fromString(String argString) {
+            if (!argString.contains("=")) {
+                return Mail.Parameter.builder()
+                    .name(argString)
+                    .build();
+            }
             Preconditions.checkArgument(argString.contains("="));
             int index = argString.indexOf('=');
 
@@ -109,8 +114,7 @@ public class Mail {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof Parameter) {
-                Parameter that = (Parameter) o;
+            if (o instanceof Parameter that) {
 
                 return Objects.equals(this.name, that.name)
                     && Objects.equals(this.value, that.value);
@@ -170,7 +174,7 @@ public class Mail {
         }
 
         public static Recipient of(MailAddress address) {
-            return new Recipient(address, ImmutableList.of());
+            return new Recipient(address, List.of());
         }
 
         private final MailAddress address;
@@ -191,8 +195,7 @@ public class Mail {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof Recipient) {
-                Recipient that = (Recipient) o;
+            if (o instanceof Recipient that) {
 
                 return Objects.equals(this.address, that.address)
                     && Objects.equals(this.parameters, that.parameters);
@@ -283,11 +286,11 @@ public class Mail {
         public static Envelope ofAddresses(MailAddress from, MailAddress... recipients) {
             return new Envelope(from, Stream.of(recipients)
                 .map(Recipient::of)
-                .collect(ImmutableSet.toImmutableSet()), ImmutableSet.of());
+                .collect(ImmutableSet.toImmutableSet()), Set.of());
         }
 
         public static Envelope of(MailAddress from, Recipient... recipients) {
-            return new Envelope(from, ImmutableSet.copyOf(Arrays.asList(recipients)), ImmutableSet.of());
+            return new Envelope(from, ImmutableSet.copyOf(Arrays.asList(recipients)), Set.of());
         }
 
         private final MailAddress from;
@@ -318,8 +321,7 @@ public class Mail {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof Envelope) {
-                Envelope envelope = (Envelope) o;
+            if (o instanceof Envelope envelope) {
 
                 return Objects.equals(this.from, envelope.from)
                     && Objects.equals(this.recipients, envelope.recipients)
@@ -386,8 +388,7 @@ public class Mail {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof Mail) {
-            Mail mail = (Mail) o;
+        if (o instanceof Mail mail) {
 
             return Objects.equals(this.envelope, mail.envelope)
                 && Objects.equals(this.message, mail.message);

@@ -47,8 +47,7 @@ public class MockSmtpBehaviors {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof MockSmtpBehaviors) {
-            MockSmtpBehaviors that = (MockSmtpBehaviors) o;
+        if (o instanceof MockSmtpBehaviors that) {
 
             return Objects.equals(this.behaviorList, that.behaviorList);
         }
