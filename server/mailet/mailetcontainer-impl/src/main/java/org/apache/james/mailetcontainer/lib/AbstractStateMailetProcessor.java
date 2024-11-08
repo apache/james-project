@@ -232,7 +232,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 // if no matcher is configured throw an Exception
                 throw new ConfigurationException("Please configure only match or nomatch per mailet");
             } else if (matcherName != null) {
-                matcher = matcherLoader.getMatcher(createMatcherConfig(matcherName));
+                matcher = loadMatcher(compMap, matcherName);
                 if (matcher instanceof CompositeMatcher) {
                     CompositeMatcher compMatcher = (CompositeMatcher) matcher;
 
@@ -295,13 +295,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                     // if no matcher is configured throw an Exception
                     throw new ConfigurationException("Please configure only match or nomatch per mailet");
                 } else if (matcherName != null) {
-                    // try to load from compositeMatchers first
-                    matcher = compositeMatchers.get(matcherName);
-                    if (matcher == null) {
-                        // no composite Matcher found, try to load it via
-                        // MatcherLoader
-                        matcher = matcherLoader.getMatcher(createMatcherConfig(matcherName));
-                    }
+                    matcher = loadMatcher(compositeMatchers, matcherName);
                 } else if (invertedMatcherName != null) {
                     // no composite Matcher found, try to load it via MatcherLoader
                     matcher = matcherLoader.getMatcher(createMatcherConfig(invertedMatcherName));
@@ -341,6 +335,18 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 throw new ConfigurationException("Unable to load Mailet or Matcher");
             }
         }
+    }
+
+    private Matcher loadMatcher(Map<String, Matcher> compositeMatchers, String matcherName) throws MessagingException {
+        Matcher matcher;
+        // try to load from compositeMatchers first
+        matcher = compositeMatchers.get(matcherName);
+        if (matcher == null) {
+            // no composite Matcher found, try to load it via
+            // MatcherLoader
+            matcher = matcherLoader.getMatcher(createMatcherConfig(matcherName));
+        }
+        return matcher;
     }
 
     /**
