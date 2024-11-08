@@ -52,8 +52,8 @@
             </mailet>
         </processor>
 
-
-        <processor state="transport" enableJmx="false">
+        <!-- Dummy processor to test chaining composite matchers-->
+        <processor state="dummy" enableJmx="false">
             <matcher name="relay-allowed" match="org.apache.james.mailetcontainer.impl.matchers.Or">
                 <matcher match="SMTPAuthSuccessful"/>
                 <matcher match="SMTPIsAuthNetwork"/>
@@ -67,6 +67,9 @@
                 <matcher notmatch="relay-allowed"/>
             </matcher>
             <mailet notmatch="chaining-not-matcher" class="org.apache.james.transport.mailets.debug.Counter"/>
+        </processor>
+
+        <processor state="transport" enableJmx="false">
             <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
                 <name>X-UserIsAuth</name>
                 <value>true</value>
