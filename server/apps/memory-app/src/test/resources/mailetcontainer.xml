@@ -54,6 +54,15 @@
 
 
         <processor state="transport" enableJmx="false">
+            <matcher name="relay-allowed" match="org.apache.james.mailetcontainer.impl.matchers.Or">
+                <matcher match="SMTPAuthSuccessful"/>
+                <matcher match="SMTPIsAuthNetwork"/>
+                <matcher match="SentByMailet"/>
+                <matcher match="org.apache.james.jmap.mailet.SentByJmap"/>
+            </matcher>
+            <matcher name="chaining-matcher" match="org.apache.james.mailetcontainer.impl.matchers.Not">
+                <matcher match="relay-allowed"/>
+            </matcher>
             <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
                 <name>X-UserIsAuth</name>
                 <value>true</value>
