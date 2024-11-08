@@ -63,6 +63,9 @@
             <matcher name="chaining-matcher" match="org.apache.james.mailetcontainer.impl.matchers.Not">
                 <matcher match="relay-allowed"/>
             </matcher>
+            <matcher name="chaining-not-matcher" match="org.apache.james.mailetcontainer.impl.matchers.Not">
+                <matcher notmatch="relay-allowed"/>
+            </matcher>
             <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
                 <name>X-UserIsAuth</name>
                 <value>true</value>
