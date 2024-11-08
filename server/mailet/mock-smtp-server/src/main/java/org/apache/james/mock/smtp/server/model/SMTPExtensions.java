@@ -45,8 +45,7 @@ public class SMTPExtensions {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof SMTPExtensions) {
-            SMTPExtensions that = (SMTPExtensions) o;
+        if (o instanceof SMTPExtensions that) {
 
             return Objects.equals(this.smtpExtensions, that.smtpExtensions);
         }

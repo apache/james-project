@@ -55,8 +55,7 @@ public class MockSMTPBehavior {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof NumberOfAnswersPolicy) {
-                NumberOfAnswersPolicy that = (NumberOfAnswersPolicy) o;
+            if (o instanceof NumberOfAnswersPolicy that) {
 
                 return Objects.equals(this.numberOfAnswers, that.numberOfAnswers);
             }
@@ -147,8 +146,7 @@ public class MockSMTPBehavior {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof MockSMTPBehavior) {
-            MockSMTPBehavior that = (MockSMTPBehavior) o;
+        if (o instanceof MockSMTPBehavior that) {
 
             return Objects.equals(this.smtpCommand, that.smtpCommand)
                 && Objects.equals(this.condition, that.condition)

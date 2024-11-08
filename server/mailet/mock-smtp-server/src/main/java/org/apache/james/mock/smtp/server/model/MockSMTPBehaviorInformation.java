@@ -132,8 +132,7 @@ public class MockSMTPBehaviorInformation {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof MockSMTPBehaviorInformation) {
-            MockSMTPBehaviorInformation that = (MockSMTPBehaviorInformation) o;
+        if (o instanceof MockSMTPBehaviorInformation that) {
 
             return Objects.equals(this.behavior, that.behavior)
                 && Objects.equals(this.remainingAnswersCounter(), that.remainingAnswersCounter());

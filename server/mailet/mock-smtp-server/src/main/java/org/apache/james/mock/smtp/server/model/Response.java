@@ -102,8 +102,7 @@ public class Response {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof Response) {
-            Response response = (Response) o;
+        if (o instanceof Response response) {
 
             return Objects.equals(this.code, response.code)
                 && Objects.equals(this.message, response.message);

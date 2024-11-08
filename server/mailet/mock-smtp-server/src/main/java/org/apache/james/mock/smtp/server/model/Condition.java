@@ -104,8 +104,7 @@ public interface Condition {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof OperatorCondition) {
-                OperatorCondition condition = (OperatorCondition) o;
+            if (o instanceof OperatorCondition condition) {
 
                 return Objects.equals(this.operator, condition.operator)
                     && Objects.equals(this.matchingValue, condition.matchingValue);

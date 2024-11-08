@@ -46,7 +46,7 @@ public class MockSmtpServerExtension implements AfterEachCallback, BeforeAllCall
 
         DockerMockSmtp() {
             mockSmtpServer = DockerContainer.fromName(Images.MOCK_SMTP_SERVER)
-                .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP: " + outputFrame.getUtf8String()))
+                .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP: {}", outputFrame.getUtf8String()))
                 .withExposedPorts(25, 8000)
                 .waitingFor(Wait.forLogMessage(".*Mock SMTP server started.*", 1))
                 .withName("james-testing-mock-smtp-server-" + UUID.randomUUID());
