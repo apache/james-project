@@ -53,8 +53,12 @@ public class GuiceGenericLoader {
         }
 
         public T instantiate(ClassName className) throws ClassNotFoundException {
-            Class<T> clazz = locateClass(className, namingSheme);
-            return injector.getInstance(clazz);
+            try {
+                Class<T> clazz = locateClass(className, namingSheme);
+                return injector.getInstance(clazz);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to load " + className.getName(), e);
+            }
         }
 
         private Class<T> locateClass(ClassName className, NamingScheme namingScheme) throws ClassNotFoundException {
