@@ -297,8 +297,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 } else if (matcherName != null) {
                     matcher = loadMatcher(compositeMatchers, matcherName);
                 } else if (invertedMatcherName != null) {
-                    // no composite Matcher found, try to load it via MatcherLoader
-                    matcher = matcherLoader.getMatcher(createMatcherConfig(invertedMatcherName));
+                    matcher = loadMatcher(compositeMatchers, invertedMatcherName);
                     matcher = new MatcherInverter(matcher);
 
                 } else {
