@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+// TODO After new release of mime4j with commit https://github.com/apache/james-mime4j/commit/66a09219457854c7a26e5b7c0e4c9dd59b4b0c32, remove this class
 public class MimeUtil {
     /**
      * Splits the specified string into a multiple-line representation with

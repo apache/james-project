@@ -61,18 +61,20 @@ public class FoldLongLines extends GenericMailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         Set<String> longHeaders = getHeadersExceedingMaxCharacters(mail);
-        List<Header> headers = getHeadersWithTheSameNameAsLongHeaders(mail, longHeaders);
 
-        // remove all long headers (as well as headers with same name)
-        longHeaders.forEach(Throwing.consumer(header -> mail.getMessage().removeHeader(header)));
-        headers.forEach(Throwing.consumer(header -> {
-            if (exceedLineLimit(header)) {
-                mail.getMessage().addHeader(header.getName(), fold(header));
-            } else {
-                mail.getMessage().addHeader(header.getName(), header.getValue());
-            }
-        }));
         if (!longHeaders.isEmpty()) {
+            List<Header> headers = getHeadersWithTheSameNameAsLongHeaders(mail, longHeaders);
+
+            // remove all long headers (as well as headers with same name)
+            longHeaders.forEach(Throwing.consumer(header -> mail.getMessage().removeHeader(header)));
+
+            headers.forEach(Throwing.consumer(header -> {
+                if (exceedLineLimit(header)) {
+                    mail.getMessage().addHeader(header.getName(), fold(header));
+                } else {
+                    mail.getMessage().addHeader(header.getName(), header.getValue());
+                }
+            }));
             mail.getMessage().saveChanges();
         }
     }
