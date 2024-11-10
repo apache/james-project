@@ -28,7 +28,6 @@ import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.github.fge.lambdas.Throwing;
 import jakarta.inject.Inject;
 
 import org.apache.james.events.Event;
@@ -53,6 +52,7 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
