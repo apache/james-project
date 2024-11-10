@@ -445,11 +445,13 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     ctx.fireChannelReadComplete();
                     if (signal.isOnComplete() || signal.isOnError()) {
                         if (waitingMessage != null && signal.isOnComplete()) {
-                            channelRead(ctx, waitingMessage);
+                            ctx.channel().eventLoop().execute(
+                                () -> channelRead(ctx, waitingMessage));
                         }
                     }
                 }))
-                .contextWrite(ReactorUtils.context("imap", mdc(session))), message)
+                .contextWrite(ReactorUtils.context("imap", mdc(session))), message,
+                runnable -> ctx.channel().eventLoop().execute(runnable))
             // Manage throttling errors
             .doOnError(ctx::fireExceptionCaught)
             .doFinally(Throwing.consumer(any -> {
