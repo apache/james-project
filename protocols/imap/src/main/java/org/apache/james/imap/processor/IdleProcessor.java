@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_IDLE;
+import static org.apache.james.util.ReactorUtils.logAsMono;
 
 import java.time.Duration;
 import java.util.List;
@@ -80,7 +81,11 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     @Override
     protected Mono<Void> processRequestReactive(IdleRequest request, ImapSession session, Responder responder) {
         return Mono.fromRunnable(() -> idle(request,session, responder))
-            .then(unsolicitedResponses(session, responder, false));
+            .then(unsolicitedResponses(session, responder, false))
+            .onErrorResume(e -> {
+                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                return logAsMono(() -> LOGGER.error("Encountered error executing IMAP IDLE", e));
+            });
     }
 
     private void idle(IdleRequest request, ImapSession session, Responder responder) {
