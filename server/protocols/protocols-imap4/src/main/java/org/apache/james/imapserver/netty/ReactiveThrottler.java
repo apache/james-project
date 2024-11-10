@@ -25,11 +25,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.reactivestreams.Publisher;
 
+import com.google.common.annotations.VisibleForTesting;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -38,10 +40,12 @@ import reactor.core.scheduler.Schedulers;
 public class ReactiveThrottler {
     private static class TaskHolder {
         private final Publisher<Void> task;
+        private final Consumer<Runnable> ctx;
         private final AtomicReference<Disposable> disposable = new AtomicReference<>();
 
-        private TaskHolder(Publisher<Void> task) {
+        private TaskHolder(Publisher<Void> task, Consumer<Runnable> ctx) {
             this.task = task;
+            this.ctx = ctx;
         }
     }
 
@@ -75,15 +79,20 @@ public class ReactiveThrottler {
 
         sink.asFlux()
             .subscribeOn(Schedulers.parallel())
-            .subscribe(taskHolder -> {
+            .subscribe(taskHolder -> taskHolder.ctx.accept(() -> {
                     Disposable disposable = Mono.from(taskHolder.task)
                         .doFinally(any -> onRequestDone())
                         .subscribe();
                     taskHolder.disposable.set(disposable);
-                });
+                }));
     }
 
+    @VisibleForTesting
     public Mono<Void> throttle(Publisher<Void> task, ImapMessage imapMessage) {
+        return throttle(task, imapMessage, Runnable::run);
+    }
+
+    public Mono<Void> throttle(Publisher<Void> task, ImapMessage imapMessage, Consumer<Runnable> ctx) {
         if (maxConcurrentRequests < 0) {
             return Mono.from(task);
         }
@@ -104,7 +113,7 @@ public class ReactiveThrottler {
                     }
                     return Mono.from(task);
                 })
-                .then(Mono.fromRunnable(() -> one.emitEmpty(Sinks.EmitFailureHandler.FAIL_FAST))));
+                .then(Mono.fromRunnable(() -> one.emitEmpty(Sinks.EmitFailureHandler.FAIL_FAST))), ctx);
             queue.add(taskHolder);
             // Let the caller await task completion
             return one.asMono()
