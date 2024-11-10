@@ -12,4 +12,5 @@
     <literalSizeLimit>128K</literalSizeLimit>
     <plainAuthDisallowed>false</plainAuthDisallowed>
     <gracefulShutdown>false</gracefulShutdown>
+    <concurrentRequests>20</concurrentRequests>
 </imapserver>

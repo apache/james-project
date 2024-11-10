@@ -222,7 +222,6 @@ class IMAPServerTest {
     class ConnectionCheckTest {
 
         IMAPServer imapServer;
-        private final IpConnectionCheck ipConnectionCheck = new IpConnectionCheck();
         private int port;
 
         @BeforeEach
@@ -2687,11 +2686,12 @@ class IMAPServerTest {
         private MailboxSession mailboxSession;
         private MessageManager inbox;
         private SocketChannel clientConnection;
+        private int port;
 
         @BeforeEach
         void beforeEach() throws Exception {
             imapServer = createImapServer("imapServer.xml");
-            int port = imapServer.getListenAddresses().get(0).getPort();
+            port = imapServer.getListenAddresses().get(0).getPort();
             mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
             memoryIntegrationResources.getMailboxManager()
                 .createMailbox(MailboxPath.inbox(USER), mailboxSession);
@@ -2722,6 +2722,28 @@ class IMAPServerTest {
                 .sendCommand("COMPRESS DEFLATE");
 
             assertThat(reply).contains("AAAB BAD COMPRESS failed. Unknown command.");
+        }
+
+        @Test
+        void linearizerShouldBeUsableConcurrently() throws Exception {
+            ConcurrentTestRunner.builder()
+                .operation((a, b) ->  {
+                    SocketChannel clientConnection = SocketChannel.open();
+                    clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
+                    readBytes(clientConnection);
+
+                    clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+                    readBytes(clientConnection);
+
+                    for (int i = 0; i < 100; i++) {
+                        clientConnection.write(ByteBuffer.wrap("a0 SELECT INBOX\r\na0 UNSELECT\r\n".getBytes()));
+                    }
+                    clientConnection.write(ByteBuffer.wrap("a1 NOOP\r\n".getBytes()));
+
+                    readStringUntil(clientConnection, s -> s.contains("a1 OK"));
+                }).threadCount(32)
+                .operationCount(1)
+                .runSuccessfullyWithin(Duration.ofMinutes(10));
         }
 
         @Test
