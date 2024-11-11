@@ -22,7 +22,6 @@ package org.apache.james.transport.mailets;
 import static org.apache.james.transport.mailets.FoldLongLines.HEADER_SEPARATOR;
 import static org.apache.james.transport.mailets.FoldLongLines.MAX_CHARACTERS_PARAMETER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 import java.util.List;
 
@@ -37,9 +36,9 @@ import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
 
 public class FoldLongLinesTest {
     static final String HEADER_NAME = "References";
@@ -53,9 +52,7 @@ public class FoldLongLinesTest {
     @BeforeEach
     void beforeEach() {
         foldMailet = new FoldLongLines();
-        mailetContext = FakeMailContext.builder()
-            .logger(mock(Logger.class))
-            .build();
+        mailetContext = FakeMailContext.defaultContext();
     }
 
     @Test
@@ -156,8 +153,10 @@ public class FoldLongLinesTest {
 
         List<Header> headers = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).toList();
         assertThat(headers).hasSize(2);
-        assertThat(headers.getFirst().getValue()).isEqualTo("<b1@gmailcom>");
-        assertThat(headers.getLast().getValue()).isEqualTo(FOLDED_LINE);
+        SoftAssertions.assertSoftly(softly -> {
+            assertThat(headers.getFirst().getValue()).isEqualTo("<b1@gmailcom>");
+            assertThat(headers.getLast().getValue()).isEqualTo(FOLDED_LINE);
+        });
     }
 
     @Test

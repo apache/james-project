@@ -49,11 +49,11 @@ public class FoldLongLines extends GenericMailet {
     private static final int DEFAULT_MAX_CHARACTERS = 998;
     private static final String SEPARATOR = "\n";
 
-    private Integer maxCharacters;
+    private int maxCharacters;
 
     @Override
     public void init() throws MessagingException {
-        Integer maxCharacters = getInitParameterAsOptional(MAX_CHARACTERS_PARAMETER_NAME).map(Integer::parseInt).orElse(DEFAULT_MAX_CHARACTERS);
+        int maxCharacters = getInitParameterAsOptional(MAX_CHARACTERS_PARAMETER_NAME).map(Integer::parseInt).orElse(DEFAULT_MAX_CHARACTERS);
         Preconditions.checkArgument(maxCharacters > 0, "maxCharacters must be positive");
         this.maxCharacters = maxCharacters;
     }
