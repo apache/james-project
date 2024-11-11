@@ -23,6 +23,7 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.apache.james.transport.mailets.FoldLongLines.MAX_CHARACTERS_PARAMETER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
@@ -43,6 +44,7 @@ import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.ExtractAttributeStub;
+import org.apache.james.transport.mailets.FoldLongLines;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -98,6 +100,12 @@ class DKIMIntegrationTest {
         .matcher(All.class)
         .mailet(ExtractAttributeStub.class)
         .addProperty("attributeName", DKIMVerify.DKIM_AUTH_RESULT.asString())
+        .build();
+
+    private static final MailetConfiguration FOLD_LONG_LINES_MAILET = MailetConfiguration.builder()
+        .matcher(All.class)
+        .mailet(FoldLongLines.class)
+        .addProperty(MAX_CHARACTERS_PARAMETER_NAME, "78")
         .build();
 
     private static final PublicKeyRecordRetriever MOCK_PUBLIC_KEY_RECORD_RETRIEVER = new MockPublicKeyRecordRetriever(
@@ -231,13 +239,64 @@ class DKIMIntegrationTest {
             .hasValueSatisfying(result -> assertThat(result).startsWith("fail"));
     }
 
-    private void initJamesServer(File temporaryFolder, Module... overrideGuiceModules) throws Exception {
+    @Test
+    void incomingMessageShouldPassDKIMVerificationWhenLongHeadersAreFoldedBeforeSigning(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
+                .addMailet(FOLD_LONG_LINES_MAILET)
                 .addMailet(DKIMSIGN_MAILET)
                 .addMailet(DKIMVERIFY_MAILET)
                 .addMailet(STUB_MAILET)
                 .addMailetsFrom(CommonProcessors.transport()));
+        initJamesServer(mailetContainer, temporaryFolder, binder -> binder.bind(PublicKeyRecordRetriever.class).toInstance(MOCK_PUBLIC_KEY_RECORD_RETRIEVER));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessageWithHeaders(FROM, ImmutableList.of(RECIPIENT), "Return-Path: <btellier@linagora.com>\n" +
+                "Content-Type: multipart/mixed; boundary=\"------------dsVZbfyUhMRjfuWnqQ80tHvc\"\n" +
+                "Message-ID: <a7a376a1-cadb-45bc-9deb-39f749f62b6d@linagora.com>\n" +
+                "Date: Tue, 7 Nov 2023 12:14:47 +0100\n" +
+                "MIME-Version: 1.0\n" +
+                "User-Agent: Mozilla Thunderbird\n" +
+                "Content-Language: en-US\n" +
+                "To: btellier@linagora.com\n" +
+                "From: \"btellier@linagora.com\" <btellier@linagora.com>\n" +
+                "References: <a1@gmail.com> <a2@gmail.com> <a3@gmail.com> <a4@gmail.com> <a5@gmail.com> <a6@gmail.com> <a7@gmail.com> <a8@gmail.com>\n" +
+                "Subject: Simple message\n" +
+                "\n" +
+                "This is a multi-part message in MIME format.\n" +
+                "--------------dsVZbfyUhMRjfuWnqQ80tHvc\n" +
+                "Content-Type: text/plain; charset=UTF-8; format=flowed\n" +
+                "Content-Transfer-Encoding: 7bit\n" +
+                "\n" +
+                "Simple body\n" +
+                "\n" +
+                "--------------dsVZbfyUhMRjfuWnqQ80tHvc\n" +
+                "Content-Type: message/rfc822; name=\"BNPP ADVICE LOLO.eml\"\n" +
+                "Content-Disposition: attachment; filename=\"BNPP.eml\"\n" +
+                "\n" +
+                "\n" +
+                "--------------dsVZbfyUhMRjfuWnqQ80tHvc--");
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        assertThat(dkimAuthResults)
+            .hasSize(1);
+        assertThat(dkimAuthResults.get(0))
+            .hasValueSatisfying(result -> assertThat(result).startsWith("pass"));
+
+        assertThat(testIMAPClient.readFirstMessageHeaders())
+            .contains("DKIM-Signature");
+
+        assertThat(testIMAPClient.readFirstMessageHeaders())
+            .contains("References: <a1@gmail.com> <a2@gmail.com> <a3@gmail.com> <a4@gmail.com>\r\n" +
+                " <a5@gmail.com> <a6@gmail.com> <a7@gmail.com> <a8@gmail.com>");
+    }
+
+    private void initJamesServer(MailetContainer.Builder mailetContainer, File temporaryFolder, Module... overrideGuiceModules) throws Exception {
         jamesServer = TemporaryJamesServer
             .builder()
             .withBase(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
@@ -250,5 +309,15 @@ class DKIMIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(FROM, PASSWORD);
+    }
+
+    private void initJamesServer(File temporaryFolder, Module... overrideGuiceModules) throws Exception {
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
+            .putProcessor(ProcessorConfiguration.transport()
+                .addMailet(DKIMSIGN_MAILET)
+                .addMailet(DKIMVERIFY_MAILET)
+                .addMailet(STUB_MAILET)
+                .addMailetsFrom(CommonProcessors.transport()));
+        initJamesServer(mailetContainer, temporaryFolder, overrideGuiceModules);
     }
 }
