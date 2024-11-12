@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 import jakarta.annotation.PostConstruct;
@@ -54,6 +55,7 @@ import org.apache.mailet.base.MatcherInverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -336,16 +338,9 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
         }
     }
 
-    private Matcher loadMatcher(Map<String, Matcher> compositeMatchers, String matcherName) throws MessagingException {
-        Matcher matcher;
-        // try to load from compositeMatchers first
-        matcher = compositeMatchers.get(matcherName);
-        if (matcher == null) {
-            // no composite Matcher found, try to load it via
-            // MatcherLoader
-            matcher = matcherLoader.getMatcher(createMatcherConfig(matcherName));
-        }
-        return matcher;
+    private Matcher loadMatcher(Map<String, Matcher> compositeMatchers, String matcherName) {
+        return Optional.ofNullable(compositeMatchers.get(matcherName))
+            .orElseGet(Throwing.supplier(() -> matcherLoader.getMatcher(createMatcherConfig(matcherName))));
     }
 
     /**
