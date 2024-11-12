@@ -73,21 +73,24 @@ class MatcherInverterTest {
 
     @Test
     void testOneMatch() throws MessagingException {
-        final MailAddress address1 = new MailAddress("user", "domain");
-        final MailAddress address2 = new MailAddress("user", "domain2");
+        MailAddress errorRecipient = new MailAddress("error@domain.tld");
+        MailAddress validRecipient = new MailAddress("valid@domain.tld");
 
-        MatcherInverter inverter = new MatcherInverter(new GenericMatcher() {
+        // e.g. <mailet notMatch="RecipientIs=error@domain.tld" class="org.apache.james.Whatever"/>
+        MatcherInverter notErrorRecipientMatcher = new MatcherInverter(new GenericMatcher() {
             @Override
-            public Collection<MailAddress> match(Mail mail) throws MessagingException {
-                return Arrays.asList(address1);
+            public Collection<MailAddress> match(Mail mail) {
+                return Arrays.asList(errorRecipient);
             }
         });
 
-        FakeMail mail = FakeMail.builder()
-                .name("mail")
-                .recipients(address1, address2)
-                .build();
+        FakeMail mailToBothValidAndErrorRecipient = FakeMail.builder()
+            .name("mail")
+            .recipients(validRecipient, errorRecipient)
+            .build();
 
-        assertThat(inverter.match(mail).iterator().next().toString()).describedAs("Should match one recipient").isEqualTo(address2.toString());
+        assertThat(notErrorRecipientMatcher.match(mailToBothValidAndErrorRecipient))
+            .describedAs("Only valid address should not match the error recipient")
+            .containsOnly(validRecipient);
     }
 }
