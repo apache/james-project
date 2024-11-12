@@ -2215,6 +2215,10 @@ trait MailboxSetMethodContract {
       .body
       .asString
 
+    val childMailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .getMailboxId("#private", ANDRE.asString(), "mailbox.childMailbox")
+      .serialize
+
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
       .isEqualTo(
@@ -2226,7 +2230,7 @@ trait MailboxSetMethodContract {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "created":{
          |        "C42":{
-         |          "id":"3",
+         |          "id":"${childMailboxId}",
          |          "isSubscribed":true,
          |          "myRights":{
          |            "mayAddItems":true,
