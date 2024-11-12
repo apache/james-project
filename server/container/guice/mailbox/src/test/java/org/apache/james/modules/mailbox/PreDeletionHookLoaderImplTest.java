@@ -50,7 +50,8 @@ class PreDeletionHookLoaderImplTest {
     @Test
     void createHookShouldThrowWhenClassNotFound() {
         assertThatThrownBy(() -> testee.createHook(PreDeletionHookConfiguration.forClass("invalid")))
-            .isInstanceOf(ClassNotFoundException.class);
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Failed to load invalid");
     }
 
     @Test
