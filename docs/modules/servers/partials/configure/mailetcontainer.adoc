@@ -39,20 +39,31 @@ instead.
 
 == The Mailet Tag
 
-Consider the following simple *mailet* tag:</p>
+The mailet tag has two required attributes, condition tag and *class* tag.
 
-[source,xml]
-....
-<mailet match="RemoteAddrNotInNetwork=127.0.0.1" class="ToProcessor">
-    <processor>spam</processor>
-</mailet>
-....
+The condition tag need to be one of these tag:
 
-The mailet tag has two required attributes, *match* and *class*.
-
-The *match* attribute is set to the value of the specific Matcher class to be instantiated with a an
+- The *match* attribute is set to the value of the specific Matcher class to be instantiated with a an
 optional argument.  If present, the argument is separated from the Matcher class name by an '='.  Semantic
 interpretation of the argument is left to the particular mailet.
+  Example:
+
+    [source,xml]
+    ....
+    <mailet match="RemoteAddrNotInNetwork=127.0.0.1" class="ToProcessor">
+        <processor>spam</processor>
+    </mailet>
+    ....
+
+- The *notmatch* attribute inverts the according Matcher condition.
+  Example:
+
+    [source,xml]
+    ....
+    <mailet notmatch="RemoteAddrInNetwork=127.0.0.1" class="ToProcessor">
+        <processor>spam</processor>
+    </mailet>
+    ....
 
 The *class* attribute is set to the value of the Mailet class that is to be instantiated.
 
