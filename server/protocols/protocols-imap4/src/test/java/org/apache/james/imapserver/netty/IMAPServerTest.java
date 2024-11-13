@@ -2198,6 +2198,63 @@ class IMAPServerTest {
         }
 
         @Test
+        void idleShouldBeAllowedWhenAuthenticatedState() throws Exception {
+            // Given an authenticated user
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            // When IDLE command is issued (Authenticated state)
+            clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            // Then the server should respond Idling response
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(clientConnection, s -> s.contains("+ Idling")))
+                    .isNotNull());
+        }
+
+        @Test
+        void idleShouldDoNothingResponseWhenAuthenticatedStateAndHasNewMessages() throws Exception {
+            // Given an authenticated user
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            // When IDLE command is issued (Authenticated state)
+            clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("+ Idling"));
+
+            // And a new message is appended
+            inbox.appendMessage(MessageManager.AppendCommand.builder().build("h: value\r\n\r\nbody".getBytes()), mailboxSession);
+
+            ImmutableList.Builder<String> listenerResult = ImmutableList.builder();
+            Mono.fromCallable(() -> new String(readBytes(clientConnection), StandardCharsets.US_ASCII))
+                .doOnNext(listenerResult::add)
+                .subscribeOn(Schedulers.boundedElastic()).subscribe();
+
+            Thread.sleep(200);
+            // Then the server should not send any response
+            assertThat(listenerResult.build()).isEmpty();
+        }
+
+        @Test
+        void idleShouldBeInterruptibleWhenAuthenticatedState() throws Exception {
+            // Given an authenticated user
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            // When IDLE command is issued (Authenticated state)
+            clientConnection.write(ByteBuffer.wrap(("a3 IDLE\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("+ Idling"));
+
+            // And DONE command is issued
+            clientConnection.write(ByteBuffer.wrap(("DONE\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            // Then the server should respond IDLE completed
+            Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
+                assertThat(readStringUntil(clientConnection, s -> s.contains("a3 OK IDLE completed.")))
+                    .isNotNull());
+        }
+
+        @Test
         void idleShouldSendInitialContinuation() throws Exception {
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
