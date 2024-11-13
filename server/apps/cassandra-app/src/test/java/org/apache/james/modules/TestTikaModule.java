@@ -19,14 +19,10 @@
 
 package org.apache.james.modules;
 
-import java.net.URISyntaxException;
-
 import jakarta.inject.Singleton;
 
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaContainer;
-import org.apache.james.mailbox.tika.TikaHttpClient;
-import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -46,11 +42,12 @@ public class TestTikaModule extends AbstractModule {
 
     @Provides
     @Singleton
-    protected TikaHttpClient provideTikaHttpClient() throws URISyntaxException {
-        return new TikaHttpClientImpl(TikaConfiguration.builder()
-                .host(tika.getIp())
-                .port(tika.getPort())
-                .timeoutInMillis(tika.getTimeoutInMillis())
-                .build());
+    protected TikaConfiguration provideTikaConfiguration() {
+        return TikaConfiguration.builder()
+            .enabled()
+            .host(tika.getIp())
+            .port(tika.getPort())
+            .timeoutInMillis(tika.getTimeoutInMillis())
+            .build();
     }
 }
