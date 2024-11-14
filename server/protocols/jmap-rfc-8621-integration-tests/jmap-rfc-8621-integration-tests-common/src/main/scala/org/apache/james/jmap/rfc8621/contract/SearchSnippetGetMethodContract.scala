@@ -199,6 +199,97 @@ trait SearchSnippetGetMethodContract {
   }
 
   @Test
+  def searchSnippetGetShouldSupportBackReference(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val messageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        Message.Builder
+          .of
+          .setBody("You can close this page and return to the IDE intellij", StandardCharsets.UTF_8)
+          .setSubject("Yet another day in paradise")
+          .build))
+      .getMessageId
+
+    val request: String =
+      s"""{
+         |    "using": [
+         |        "urn:ietf:params:jmap:core",
+         |        "urn:ietf:params:jmap:mail"
+         |    ],
+         |    "methodCalls": [
+         |        [
+         |            "Email/query",
+         |            {
+         |                "accountId": "$ACCOUNT_ID",
+         |                "filter": {
+         |                    "body": "IDE"
+         |                },
+         |                "sort": [
+         |                    {
+         |                        "isAscending": false,
+         |                        "property": "receivedAt"
+         |                    }
+         |                ],
+         |                "limit": 20
+         |            },
+         |            "c0"
+         |        ],
+         |        [
+         |            "SearchSnippet/get",
+         |            {
+         |                "accountId": "$ACCOUNT_ID",
+         |                "filter": {
+         |                    "body": "IDE"
+         |                },
+         |                "#emailIds": {
+         |                    "resultOf": "c0",
+         |                    "name": "Email/query",
+         |                    "path": "/ids/*"
+         |                }
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response: ResponseBodyExtractionOptions = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract()
+        .body
+
+      assertThatJson(response.asString())
+        .withOptions(IGNORING_ARRAY_ORDER)
+        .inPath("methodResponses[1]")
+        .isEqualTo(
+          s"""[
+             |  "SearchSnippet/get",
+             |  {
+             |    "accountId": "$ACCOUNT_ID",
+             |    "list": [
+             |      {
+             |        "emailId": "${messageId.serialize}",
+             |        "subject": null,
+             |        "preview": "$${json-unit.ignore}"
+             |      }
+             |    ],
+             |    "notFound": []
+             |  },
+             |  "c1"
+             |]""".stripMargin)
+
+      assertThat(response.jsonPath().get("methodResponses[1][1].list[0].preview").toString)
+        .contains("return to the <mark>IDE</mark> intellij")
+    }
+  }
+
+  @Test
   def searchSnippetShouldAcceptSharedMailboxesWhenExtension(server: GuiceJamesServer): Unit = {
     // Given: andres inbox with a message
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
