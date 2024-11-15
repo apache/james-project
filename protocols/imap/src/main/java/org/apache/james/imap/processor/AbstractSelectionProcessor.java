@@ -52,6 +52,7 @@ import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest.Cli
 import org.apache.james.imap.message.response.ExistsResponse;
 import org.apache.james.imap.message.response.RecentResponse;
 import org.apache.james.imap.processor.base.SelectedMailboxImpl;
+import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -78,6 +79,7 @@ import com.google.common.collect.ImmutableList;
 import io.vavr.Tuple;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<R> implements PermitEnableCapabilityProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelectionProcessor.class);
@@ -88,15 +90,17 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     private final PathConverter.Factory pathConverterFactory;
     private final boolean openReadOnly;
     private final EventBus eventBus;
+    private final MailboxCounterCorrector mailboxCounterCorrector;
 
     public AbstractSelectionProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, PathConverter.Factory pathConverterFactory, boolean openReadOnly,
-                                      MetricFactory metricFactory, EventBus eventBus) {
+                                      MetricFactory metricFactory, EventBus eventBus, MailboxCounterCorrector mailboxCounterCorrector) {
         super(acceptableClass, mailboxManager, statusResponseFactory, metricFactory);
         this.statusResponseFactory = statusResponseFactory;
         this.pathConverterFactory = pathConverterFactory;
         this.openReadOnly = openReadOnly;
 
         this.eventBus = eventBus;
+        this.mailboxCounterCorrector = mailboxCounterCorrector;
     }
 
     @Override
@@ -140,7 +144,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
                     mailboxId(responder, selected.getMailboxId());
                     flags(responder, selected);
-                    exists(responder, metaData);
+                    exists(responder, metaData, selected);
                     recent(responder, selected);
                     uidValidity(responder, metaData);
                 })
@@ -384,10 +388,17 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         responder.respond(recentResponse);
     }
 
-    private void exists(Responder responder, MailboxMetaData metaData) {
-        final long messageCount = metaData.getMessageCount();
-        final ExistsResponse existsResponse = new ExistsResponse(messageCount);
-        responder.respond(existsResponse);
+    private void exists(Responder responder, MailboxMetaData metaData, SelectedMailbox selectedMailbox) {
+        long messageCount = metaData.getMessageCount();
+        long realMessageCount = selectedMailbox.existsCount();
+
+        responder.respond(new ExistsResponse(realMessageCount));
+
+        if (messageCount != realMessageCount) {
+            mailboxCounterCorrector.fixCountersFor(selectedMailbox.getMessageManager())
+                .subscribeOn(Schedulers.parallel())
+                .subscribe();
+        }
     }
 
     private void mailboxId(Responder responder, MailboxId mailboxId) {

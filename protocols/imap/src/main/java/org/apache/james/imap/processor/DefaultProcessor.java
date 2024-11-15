@@ -34,6 +34,7 @@ import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.base.ImapResponseMessageProcessor;
 import org.apache.james.imap.processor.fetch.FetchProcessor;
+import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -55,6 +56,7 @@ public class DefaultProcessor implements ImapProcessor {
                                                        MailboxTyper mailboxTyper,
                                                        QuotaManager quotaManager,
                                                        QuotaRootResolver quotaRootResolver,
+                                                       MailboxCounterCorrector mailboxCounterCorrector,
                                                        MetricFactory metricFactory) {
         PathConverter.Factory pathConverterFactory = PathConverter.Factory.DEFAULT;
 
@@ -76,7 +78,7 @@ public class DefaultProcessor implements ImapProcessor {
         builder.add(new AuthenticateProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new ExpungeProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new ReplaceProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
-        builder.add(new ExamineProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new ExamineProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory, pathConverterFactory, mailboxCounterCorrector));
         builder.add(new AppendProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new StoreProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new NoopProcessor(mailboxManager, statusResponseFactory, metricFactory));
@@ -87,7 +89,7 @@ public class DefaultProcessor implements ImapProcessor {
         builder.add(new XListProcessor(mailboxManager, statusResponseFactory, mailboxTyper, metricFactory, subscriptionManager, pathConverterFactory));
         builder.add(new ListProcessor<>(mailboxManager, statusResponseFactory, metricFactory, subscriptionManager, statusProcessor, mailboxTyper, pathConverterFactory));
         builder.add(new SearchProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new SelectProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(new SelectProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory, pathConverterFactory, mailboxCounterCorrector));
         builder.add(new NamespaceProcessor(mailboxManager, statusResponseFactory, metricFactory, new NamespaceSupplier.Default()));
         builder.add(new FetchProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new StartTLSProcessor(statusResponseFactory));
