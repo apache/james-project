@@ -20,6 +20,7 @@
 package org.apache.james.imap.main;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
@@ -160,11 +161,11 @@ public interface PathConverter {
             return sb.toString();
         }
 
-        public String mailboxName(boolean relative, MailboxPath path, MailboxSession session) {
+        public Optional<String> mailboxName(boolean relative, MailboxPath path, MailboxSession session) {
             if (relative && path.belongsTo(session)) {
-                return path.getName();
+                return Optional.of(path.getName());
             } else {
-                return joinMailboxPath(path, session);
+                return Optional.of(joinMailboxPath(path, session));
             }
         }
 
@@ -244,7 +245,7 @@ public interface PathConverter {
 
     MailboxPath buildFullPath(String mailboxName);
 
-    String mailboxName(boolean relative, MailboxPath path, MailboxSession session);
+    Optional<String> mailboxName(boolean relative, MailboxPath path, MailboxSession session);
 
     MailboxQuery mailboxQuery(String finalReferencename, String mailboxName, ImapSession session);
 }

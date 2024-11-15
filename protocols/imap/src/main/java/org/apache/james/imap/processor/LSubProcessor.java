@@ -81,7 +81,7 @@ public class LSubProcessor extends AbstractMailboxProcessor<LsubRequest> {
         try {
             PathConverter pathConverter = pathConverterFactory.forSession(session);
             Mono<List<String>> mailboxesMono = Flux.from(subscriptionManager.subscriptionsReactive(mailboxSession))
-                .map(path -> pathConverter.mailboxName(RELATIVE, path, mailboxSession))
+                .<String>handle((path, sink) -> pathConverter.mailboxName(RELATIVE, path, mailboxSession).ifPresent(sink::next))
                 .collectList();
 
             String decodedMailName = ModifiedUtf7.decodeModifiedUTF7(referenceName);

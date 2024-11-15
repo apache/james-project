@@ -213,13 +213,14 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .doOnNext(metaData -> {
                 MailboxType mailboxType = getMailboxType(request, session, metaData.getPath());
                 if (!request.getSelectOptions().contains(SPECIAL_USE) || mailboxType.getRfc6154attributeName() != null) {
-                    responder.respond(
-                        createResponse(metaData.inferiors(),
-                            metaData.getSelectability(),
-                            pathConverterFactory.forSession(session).mailboxName(isRelative, metaData.getPath(), mailboxSession),
-                            metaData.getHierarchyDelimiter(),
-                            mailboxType,
-                            isSubscribed.test(metaData.getPath())));
+                    pathConverterFactory.forSession(session).mailboxName(isRelative, metaData.getPath(), mailboxSession)
+                            .ifPresent(mailboxName -> responder.respond(
+                                createResponse(metaData.inferiors(),
+                                    metaData.getSelectability(),
+                                    mailboxName,
+                                    metaData.getHierarchyDelimiter(),
+                                    mailboxType,
+                                    isSubscribed.test(metaData.getPath()))));
                 }
             })
             .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData, isRelative))
@@ -267,23 +268,24 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         allSubscribedSearch.stream()
             .filter(subscribed -> !listRecursiveMatchPath.contains(subscribed))
             .filter(mailboxQuery::isPathMatch)
-            .map(subscribed -> buildListResponse(listRequest, searchedResultMap, session, relative, subscribed))
+            .flatMap(subscribed -> buildListResponse(listRequest, searchedResultMap, session, relative, subscribed).stream())
             .filter(pair -> !listRequest.getSelectOptions().contains(SPECIAL_USE) || mailboxTyper.getMailboxType(session, pair.getKey()).getRfc6154attributeName() != null)
             .forEach(pair -> responseBuilders.add(Triple.of(pair.getLeft(), pair.getRight(), Optional.ofNullable(searchedResultMap.get(pair.getLeft())))));
 
         return responseBuilders.build();
     }
 
-    private Pair<MailboxPath, ListResponse> buildListResponse(ListRequest listRequest, Map<MailboxPath, MailboxMetaData> searchedResultMap, ImapSession session, boolean relative, MailboxPath subscribed) {
-        return Pair.of(subscribed, Optional.ofNullable(searchedResultMap.get(subscribed))
+    private Optional<Pair<MailboxPath, ListResponse>> buildListResponse(ListRequest listRequest, Map<MailboxPath, MailboxMetaData> searchedResultMap, ImapSession session, boolean relative, MailboxPath subscribed) {
+        return pathConverterFactory.forSession(session).mailboxName(relative, subscribed, session.getMailboxSession())
+            .map(name -> Pair.of(subscribed, Optional.ofNullable(searchedResultMap.get(subscribed))
             .map(mailboxMetaData -> ListResponse.builder()
                 .returnSubscribed(RETURN_SUBSCRIBED)
                 .forMetaData(mailboxMetaData)
-                .name(pathConverterFactory.forSession(session).mailboxName(relative, subscribed, session.getMailboxSession()))
+                .name(name)
                 .returnNonExistent(!RETURN_NON_EXISTENT)
                 .mailboxType(getMailboxType(listRequest, session, mailboxMetaData.getPath())))
             .orElseGet(() -> ListResponse.builder().nonExitingSubscribedMailbox(subscribed))
-            .build());
+            .build()));
     }
 
     private List<Pair<MailboxPath, ListResponse>> listRecursiveMatch(ImapSession session, Map<MailboxPath, MailboxMetaData> searchedResultMap,
@@ -299,26 +301,28 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
         return searchedResultMap.entrySet().stream()
             .filter(pair -> allSubscribedSearchParent.contains(pair.getKey()))
-            .map(pair -> {
+            .flatMap(pair -> {
                 MailboxMetaData metaData = pair.getValue();
-                ListResponse listResponse = ListResponse.builder()
+                Optional<String> maybeMailboxName = pathConverterFactory.forSession(session).mailboxName(relative, metaData.getPath(), mailboxSession);
+                return maybeMailboxName.map(mailboxName -> Pair.of(pair.getKey(), ListResponse.builder()
                     .forMetaData(metaData)
-                    .name(pathConverterFactory.forSession(session).mailboxName(relative, metaData.getPath(), mailboxSession))
+                    .name(mailboxName)
                     .childInfos(ListResponse.ChildInfo.SUBSCRIBED)
                     .returnSubscribed(allSubscribedSearch.contains(pair.getKey()))
                     .mailboxType(getMailboxType(listRequest, session, metaData.getPath()))
-                    .build();
-                return Pair.of(pair.getKey(), listResponse);
+                    .build()))
+                    .stream();
             })
             .collect(Collectors.toList());
     }
 
     private void respondMyRights(T request, Responder responder, MailboxSession mailboxSession, MailboxMetaData metaData, boolean isRelative) {
         if (request.getReturnOptions().contains(ListRequest.ListReturnOption.MYRIGHTS)) {
-            MailboxName mailboxName = new MailboxName(pathConverterFactory.forSession(mailboxSession)
-                .mailboxName(isRelative, metaData.getPath(), mailboxSession));
-            MyRightsResponse myRightsResponse = new MyRightsResponse(mailboxName, getRfc4314Rights(mailboxSession, metaData));
-            responder.respond(myRightsResponse);
+            pathConverterFactory.forSession(mailboxSession)
+                .mailboxName(isRelative, metaData.getPath(), mailboxSession)
+                .map(MailboxName::new)
+                .map(mailboxName -> new MyRightsResponse(mailboxName, getRfc4314Rights(mailboxSession, metaData)))
+                .ifPresent(responder::respond);
         }
     }
 
