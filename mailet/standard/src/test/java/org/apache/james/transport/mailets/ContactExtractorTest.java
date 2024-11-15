@@ -121,7 +121,13 @@ public class ContactExtractorTest {
             .build();
         mailet.init(mailetConfig);
 
-        String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"" + TO + "\" ]}";
+        String expectedMessage =
+            """
+            {
+                "userEmail" : "%s",
+                "emails" : [ "%s" ]
+            }
+            """.formatted(SENDER, TO);
         mailet.service(mail);
 
         assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
@@ -143,7 +149,13 @@ public class ContactExtractorTest {
             .build();
         mailet.init(mailetConfig);
 
-        String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"To <" + TO + ">\" ]}";
+        String expectedMessage =
+            """
+            {
+                "userEmail" : "%s",
+                "emails" : [ "To <%s>" ]
+            }
+            """.formatted(SENDER, TO);
         mailet.service(mail);
 
         assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
@@ -165,7 +177,13 @@ public class ContactExtractorTest {
             .build();
         mailet.init(mailetConfig);
 
-        String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"Benoît TELLIER <tellier@linagora.com>\" ]}";
+        String expectedMessage =
+            """
+            {
+                "userEmail" : "%s",
+                "emails" : [ "Benoît TELLIER <tellier@linagora.com>" ]
+            }
+            """.formatted(SENDER);
         mailet.service(mail);
 
         assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
@@ -174,11 +192,14 @@ public class ContactExtractorTest {
 
     @Test
     public void serviceShouldUnscrambleRecipientsWhenNameContainsSuperiors() throws Exception {
-        String rawMessage = "From: sender@example.com\r\n"
-            + "To: =?UTF-8?Q?recip_>>_Fr=c3=a9d=c3=a9ric_RECIPIENT?= <frecipient@example.com>\r\n"
-            + "Subject: extract this recipient please\r\n"
-            + "\r\n"
-            + "Please!";
+        String rawMessage =
+            """
+            From: sender@example.com
+            To: =?UTF-8?Q?recip_>>_Fr=c3=a9d=c3=a9ric_RECIPIENT?= <frecipient@example.com>
+            Subject: extract this recipient please
+            
+            Please!
+            """;
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
         FakeMail mail = FakeMail.builder()
             .name("mail")
@@ -188,7 +209,13 @@ public class ContactExtractorTest {
             .build();
         mailet.init(mailetConfig);
 
-        String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"\\\"recip >> Frédéric RECIPIENT\\\" <frecipient@example.com>\" ]}";
+        String expectedMessage =
+            """
+            {
+                "userEmail" : "%s",
+                 "emails" : [ "\\"recip >> Frédéric RECIPIENT\\" <frecipient@example.com>" ]
+             }
+            """.formatted(SENDER);
         mailet.service(mail);
 
         assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
@@ -197,11 +224,14 @@ public class ContactExtractorTest {
 
     @Test
     public void serviceShouldParseMultipleRecipients() throws Exception {
-        String rawMessage = "From: sender@example.com\r\n"
-            + "To: User 1 <user1@example.com>, =?UTF-8?Q?recip_>>_Fr=c3=a9d=c3=a9ric_RECIPIENT?= <frecipient@example.com>\r\n"
-            + "Subject: extract this recipient please\r\n"
-            + "\r\n"
-            + "Please!";
+        String rawMessage =
+            """
+            From: sender@example.com
+            To: User 1 <user1@example.com>, =?UTF-8?Q?recip_>>_Fr=c3=a9d=c3=a9ric_RECIPIENT?= <frecipient@example.com>
+            Subject: extract this recipient please
+            
+            Please!
+            """;
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
         FakeMail mail = FakeMail.builder()
             .name("mail")
@@ -211,7 +241,13 @@ public class ContactExtractorTest {
             .build();
         mailet.init(mailetConfig);
 
-        String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"User 1 <user1@example.com>\", \"\\\"recip >> Frédéric RECIPIENT\\\" <frecipient@example.com>\" ]}";
+        String expectedMessage =
+            """
+            {
+                "userEmail" : "%s",
+                "emails" : [ "User 1 <user1@example.com>", "\\"recip >> Frédéric RECIPIENT\\" <frecipient@example.com>" ]
+            }
+            """.formatted(SENDER);
         mailet.service(mail);
 
         assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
@@ -220,11 +256,14 @@ public class ContactExtractorTest {
 
     @Test
     public void serviceShouldParseRecipientWithCommaInName() throws Exception {
-        String rawMessage = "From: sender@example.com\r\n"
-            + "To: \"User, the first one\" <user1@example.com>\r\n"
-            + "Subject: extract this recipient please\r\n"
-            + "\r\n"
-            + "Please!";
+        String rawMessage =
+            """
+            From: sender@example.com
+            To: "User, the first one" <user1@example.com>
+            Subject: extract this recipient please
+            
+            Please!
+            """;
         MimeMessage message = MimeMessageUtil.mimeMessageFromString(rawMessage);
         FakeMail mail = FakeMail.builder()
             .name("mail")
@@ -234,7 +273,13 @@ public class ContactExtractorTest {
             .build();
         mailet.init(mailetConfig);
 
-        String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"\\\"User, the first one\\\" <user1@example.com>\" ]}";
+        String expectedMessage =
+            """
+            {
+                "userEmail" : "%s",
+                "emails" : [ "\\"User, the first one\\" <user1@example.com>" ]
+            }
+            """.formatted(SENDER);
         mailet.service(mail);
 
         assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
@@ -255,7 +300,13 @@ public class ContactExtractorTest {
             .build();
         mailet.init(mailetConfig);
 
-        String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"To <" + TO + ">\" ]}";
+        String expectedMessage =
+                """
+                {
+                    "userEmail" : "%s",
+                    "emails" : [ "To <%s>" ]
+                }
+                """.formatted(SENDER, TO);
         mailet.service(mail);
 
         assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
@@ -277,7 +328,13 @@ public class ContactExtractorTest {
             .build();
         mailet.init(mailetConfig);
 
-        String expectedMessage = "{\"userEmail\" : \"" + SENDER + "\", \"emails\" : [ \"To <" + TO + ">\" ]}";
+        String expectedMessage =
+                """
+                {
+                    "userEmail" : "%s",
+                    "emails" : [ "To <%s>" ]
+                 }
+                """.formatted(SENDER, TO);
         mailet.service(mail);
 
         assertThat(mail.getAttribute(ATTRIBUTE_NAME)).hasValueSatisfying(json ->
