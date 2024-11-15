@@ -144,21 +144,6 @@ public class ContactExtractor extends GenericMailet implements Mailet {
             .map(MimeUtil::unscrambleHeaderValue);
     }
 
-    public static class ExtractedContacts {
-        private final String userEmail;
-        private final ImmutableList<String> emails;
-
-        public ExtractedContacts(String userEmail, ImmutableList<String> emails) {
-            this.emails = emails;
-            this.userEmail = userEmail;
-        }
-
-        public ImmutableList<String> getEmails() {
-            return emails;
-        }
-
-        public String getUserEmail() {
-            return userEmail;
-        }
+    public record ExtractedContacts(String userEmail, ImmutableList<String> emails) {
     }
 }
