@@ -19,23 +19,11 @@
 
 package org.apache.james.mailbox;
 
-import org.apache.james.mailbox.exception.MailboxException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import reactor.core.publisher.Mono;
 
 public interface MailboxCounterCorrector {
-    Logger LOGGER = LoggerFactory.getLogger(MailboxCounterCorrector.class);
 
-    MailboxCounterCorrector DEFAULT = id -> {
-        try {
-            LOGGER.warn("Invalid counter for {}", id.getMailboxEntity().getMailboxId().serialize());
-            return Mono.empty();
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
-    };
+    MailboxCounterCorrector DEFAULT = id -> Mono.empty();
 
     Mono<Void> fixCountersFor(MessageManager mailbox);
 }

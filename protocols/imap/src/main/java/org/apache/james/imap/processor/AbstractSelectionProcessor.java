@@ -395,6 +395,8 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         responder.respond(new ExistsResponse(realMessageCount));
 
         if (messageCount != realMessageCount) {
+            LOGGER.warn("Invalid counter for {}, was {} and should have been {}", selectedMailbox.getMessageManager().getId().serialize(),
+                messageCount, realMessageCount);
             mailboxCounterCorrector.fixCountersFor(selectedMailbox.getMessageManager())
                 .subscribeOn(Schedulers.parallel())
                 .subscribe();
