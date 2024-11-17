@@ -30,8 +30,4 @@ public interface CertificateReloadable {
     void reloadSSLCertificate() throws Exception;
 
     int getPort();
-
-    default void logout(Username user) {
-
-    }
 }

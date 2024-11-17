@@ -26,6 +26,8 @@ import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Disconnector;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.metrics.api.MetricFactory;
@@ -33,7 +35,7 @@ import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 
-public class SMTPServerFactory extends AbstractServerFactory {
+public class SMTPServerFactory extends AbstractServerFactory implements Disconnector {
 
     protected final DNSService dns;
     protected final ProtocolHandlerLoader loader;
@@ -71,4 +73,11 @@ public class SMTPServerFactory extends AbstractServerFactory {
         return servers;
     }
 
+    @Override
+    public void disconnect(Username username) {
+        getServers()
+            .stream()
+            .map(server -> (SMTPServer) server)
+            .forEach(smtpServer -> smtpServer.disconnect(username));
+    }
 }
