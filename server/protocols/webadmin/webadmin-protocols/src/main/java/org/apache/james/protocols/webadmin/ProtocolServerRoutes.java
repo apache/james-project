@@ -24,6 +24,7 @@ import java.util.Set;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.core.Disconnector;
 import org.apache.james.core.Username;
 import org.apache.james.protocols.lib.netty.CertificateReloadable;
 import org.apache.james.util.Port;
@@ -43,10 +44,12 @@ public class ProtocolServerRoutes implements Routes {
     public static final String SERVERS = "servers";
 
     private final Set<CertificateReloadable.Factory> servers;
+    private final Disconnector disconnector;
 
     @Inject
-    public ProtocolServerRoutes(Set<CertificateReloadable.Factory> servers) {
+    public ProtocolServerRoutes(Set<CertificateReloadable.Factory> servers, Disconnector disconnector) {
         this.servers = servers;
+        this.disconnector = disconnector;
     }
 
     @Override
@@ -77,10 +80,7 @@ public class ProtocolServerRoutes implements Routes {
         });
 
         service.delete(SERVERS + "/users/:user", (request, response) -> {
-            Username username = Username.of(request.params("user"));
-            servers.stream()
-                .flatMap(CertificateReloadable.Factory::certificatesReloadable)
-                .forEach(s -> s.logout(username));
+            disconnector.disconnect(Username.of(request.params("user")));
 
             return Responses.returnNoContent(response);
         });

@@ -21,6 +21,7 @@ package org.apache.james.modules.protocols;
 
 import org.apache.james.ProtocolConfigurationSanitizer;
 import org.apache.james.RunArguments;
+import org.apache.james.core.Disconnector;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.protocols.lib.netty.CertificateReloadable;
@@ -46,6 +47,7 @@ public class SMTPServerModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SmtpGuiceProbe.class);
 
         Multibinder.newSetBinder(binder(), CertificateReloadable.Factory.class).addBinding().to(SMTPServerFactory.class);
+        Multibinder.newSetBinder(binder(), Disconnector.class).addBinding().to(SMTPServerFactory.class);
     }
 
     @ProvidesIntoSet

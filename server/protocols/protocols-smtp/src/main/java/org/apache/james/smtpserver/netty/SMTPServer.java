@@ -33,6 +33,7 @@ import jakarta.inject.Inject;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Disconnector;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
@@ -66,7 +67,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 /**
  * NIO SMTPServer which use Netty
  */
-public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServerMBean {
+public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServerMBean, Disconnector {
     private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServer.class);
     private SMTPProtocol transport;
 
@@ -425,7 +426,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     }
 
     @Override
-    public void logout(Username user) {
+    public void disconnect(Username user) {
         smtpChannelGroup.stream()
             .filter(channel -> {
                 if (channel.attr(SESSION_ATTRIBUTE_KEY).get() instanceof SMTPSession smtpSession) {

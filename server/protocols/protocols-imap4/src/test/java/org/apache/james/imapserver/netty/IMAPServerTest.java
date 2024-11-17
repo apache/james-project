@@ -253,7 +253,7 @@ class IMAPServerTest {
             testIMAPClient.connect("127.0.0.1", port)
                 .login(USER.asString(), USER_PASS);
 
-            imapServer.logout(USER);
+            imapServer.disconnect(USER);
 
             assertThatThrownBy(() -> testIMAPClient
                 .append("INBOX", SMALL_MESSAGE));

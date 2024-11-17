@@ -25,6 +25,8 @@ import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Disconnector;
+import org.apache.james.core.Username;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.imap.ImapSuite;
 import org.apache.james.imap.api.ConnectionCheckFactory;
@@ -38,7 +40,7 @@ import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 
 import com.github.fge.lambdas.functions.ThrowingFunction;
 
-public class IMAPServerFactory extends AbstractServerFactory {
+public class IMAPServerFactory extends AbstractServerFactory implements Disconnector {
 
     protected final FileSystem fileSystem;
     protected final ThrowingFunction<HierarchicalConfiguration<ImmutableNode>, ImapSuite> imapSuiteProvider;
@@ -93,5 +95,13 @@ public class IMAPServerFactory extends AbstractServerFactory {
             .filter(AbstractConfigurableAsyncServer::isEnabled)
             .map(IMAPServer.class::cast)
             .toList();
+    }
+
+    @Override
+    public void disconnect(Username username) {
+        getServers()
+            .stream()
+            .map(server -> (IMAPServer) server)
+            .forEach(imapServer -> imapServer.disconnect(username));
     }
 }

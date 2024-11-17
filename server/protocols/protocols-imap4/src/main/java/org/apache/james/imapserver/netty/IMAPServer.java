@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Disconnector;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ConnectionCheck;
 import org.apache.james.imap.api.ImapConfiguration;
@@ -68,7 +69,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 /**
  * NIO IMAP Server which use Netty.
  */
-public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapConstants, IMAPServerMBean, NettyConstants {
+public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapConstants, IMAPServerMBean, NettyConstants, Disconnector {
     private static final Logger LOG = LoggerFactory.getLogger(IMAPServer.class);
 
     public static class AuthenticationConfiguration {
@@ -197,7 +198,8 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         processor.configure(imapConfiguration);
     }
 
-    public void logout(Username user) {
+    @Override
+    public void disconnect(Username user) {
         imapChannelGroup.stream()
             .filter(channel -> Optional.ofNullable(channel.attr(IMAP_SESSION_ATTRIBUTE_KEY).get())
                 .flatMap(session -> Optional.ofNullable(session.getUserName()))
