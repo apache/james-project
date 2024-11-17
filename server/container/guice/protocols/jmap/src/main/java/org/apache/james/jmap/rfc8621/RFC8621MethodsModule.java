@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.core.Disconnector;
 import org.apache.james.jmap.JMAPRoutes;
 import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.Version;
@@ -199,6 +200,10 @@ public class RFC8621MethodsModule extends AbstractModule {
         blobResolverMultibinder.addBinding().to(MessageBlobResolver.class);
         blobResolverMultibinder.addBinding().to(UploadResolver.class);
         blobResolverMultibinder.addBinding().to(MessagePartBlobResolver.class);
+
+        Multibinder<Disconnector> disconnectorMultibinder = Multibinder.newSetBinder(binder(), Disconnector.class);
+        disconnectorMultibinder.addBinding().to(WebSocketRoutes.class);
+        disconnectorMultibinder.addBinding().to(EventSourceRoutes.class);
     }
 
     @ProvidesIntoSet
