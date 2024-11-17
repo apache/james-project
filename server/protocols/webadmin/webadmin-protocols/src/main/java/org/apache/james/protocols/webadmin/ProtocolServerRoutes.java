@@ -24,7 +24,7 @@ import java.util.Set;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.core.Disconnector;
+import org.apache.james.DisconnectorNotifier;
 import org.apache.james.core.Username;
 import org.apache.james.protocols.lib.netty.CertificateReloadable;
 import org.apache.james.util.Port;
@@ -44,10 +44,10 @@ public class ProtocolServerRoutes implements Routes {
     public static final String SERVERS = "servers";
 
     private final Set<CertificateReloadable.Factory> servers;
-    private final Disconnector disconnector;
+    private final DisconnectorNotifier disconnector;
 
     @Inject
-    public ProtocolServerRoutes(Set<CertificateReloadable.Factory> servers, Disconnector disconnector) {
+    public ProtocolServerRoutes(Set<CertificateReloadable.Factory> servers, DisconnectorNotifier disconnector) {
         this.servers = servers;
         this.disconnector = disconnector;
     }
