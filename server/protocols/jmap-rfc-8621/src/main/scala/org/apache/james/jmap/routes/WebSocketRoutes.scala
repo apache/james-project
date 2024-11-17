@@ -22,12 +22,11 @@ package org.apache.james.jmap.routes
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicReference
 import java.util.stream
-
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import io.netty.handler.codec.http.{HttpHeaderNames, HttpMethod}
 import jakarta.inject.{Inject, Named}
-import org.apache.james.core.Username
+import org.apache.james.core.{Disconnector, Username}
 import org.apache.james.events.{EventBus, Registration, RegistrationKey}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP_WS
@@ -81,9 +80,10 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
                                  pushSerializer: PushSerializer,
                                  typeStateFactory: TypeStateFactory,
                                  delegationStore: DelegationStore,
-                                 metricFactory: MetricFactory) extends JMAPRoutes {
+                                 metricFactory: MetricFactory) extends JMAPRoutes with Disconnector {
   private val openingConnectionsMetric: Metric = metricFactory.generate("jmap_websocket_opening_connections_count")
   private val requestCountMetric: Metric = metricFactory.generate("jmap_websocket_requests_count")
+  private val connectedUsers: java.util.concurrent.ConcurrentHashMap[ClientContext, ClientContext] = new java.util.concurrent.ConcurrentHashMap[ClientContext, ClientContext]
 
   override def routes(): stream.Stream[JMAPRoute] = stream.Stream.of(
     JMAPRoute.builder
@@ -118,10 +118,13 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
         frame.content().readBytes(bytes)
         new String(bytes, StandardCharsets.UTF_8)
       })
+      .doOnNext(_ => connectedUsers.put(context, context))
       .doOnNext(_ => requestCountMetric.increment())
       .flatMap(message => handleClientMessages(context)(message))
       .doOnTerminate(context.clean)
       .doOnCancel(context.clean)
+      .doOnTerminate(() => connectedUsers.remove(context))
+      .doOnCancel(() => connectedUsers.remove(context))
 
     out.sendString(
       SFlux.merge(Seq(responseFlux, sink.asFlux()))
@@ -151,6 +154,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
               .doOnNext(newRegistration => clientContext.withRegistration(newRegistration))
               .`then`(sendPushStateIfRequested(pushEnable, clientContext))
           case WebSocketPushDisable => SMono.fromCallable(() => clientContext.clean())
+            .`then`(SMono.fromCallable(() => connectedUsers.remove(clientContext)))
           .`then`(SMono.empty)
       })
 
@@ -190,4 +194,17 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       .sendString(SMono.fromCallable(() => ResponseSerializer.serialize(details).toString),
         StandardCharsets.UTF_8)
       .`then`)
+
+  override def disconnect(username: Username): Unit = {
+    val contexts = connectedUsers.values()
+      .stream()
+      .filter(context => username.equals(context.session.getUser))
+      .toList
+
+    contexts
+      .forEach(context => {
+        context.clean()
+        connectedUsers.remove(context)
+      })
+  }
 }
