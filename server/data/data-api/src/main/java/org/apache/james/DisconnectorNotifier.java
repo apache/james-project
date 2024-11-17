@@ -16,16 +16,26 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.protocols.lib.netty;
 
-import java.util.stream.Stream;
+package org.apache.james;
 
-public interface CertificateReloadable {
-    interface Factory {
-        Stream<? extends CertificateReloadable> certificatesReloadable();
+import jakarta.inject.Inject;
+
+import org.apache.james.core.Disconnector;
+import org.apache.james.core.Username;
+
+public interface DisconnectorNotifier extends Disconnector {
+    class InVMDisconnectorNotifier implements DisconnectorNotifier {
+        private final Disconnector disconnector;
+
+        @Inject
+        public InVMDisconnectorNotifier(Disconnector disconnector) {
+            this.disconnector = disconnector;
+        }
+
+        @Override
+        public void disconnect(Username username) {
+            disconnector.disconnect(username);
+        }
     }
-
-    void reloadSSLCertificate() throws Exception;
-
-    int getPort();
 }
