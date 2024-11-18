@@ -100,6 +100,15 @@ S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
 }
 S: a12 OK LIST completed.
 
+C: a13 LIST "" "#user.*"
+SUB {
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
+}
+S: a13 OK LIST completed.
+
 C: b01 SUBSCRIBE INBOX
 S: b01 OK SUBSCRIBE completed.
 C: b02 SUBSCRIBE #user.diana.sharedMailbox
