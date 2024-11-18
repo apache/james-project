@@ -41,6 +41,7 @@ import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
 import org.apache.james.imap.message.request.SelectRequest;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
+import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
@@ -66,11 +67,13 @@ class SelectProcessorTest {
         InMemoryIntegrationResources integrationResources = InMemoryIntegrationResources.defaultResources();
 
         mailboxManager = integrationResources.getMailboxManager();
+        MailboxCounterCorrector mailboxCounterCorrector = null;
         testee = new SelectProcessor(mailboxManager,
             integrationResources.getEventBus(),
             new UnpooledStatusResponseFactory(),
             new RecordingMetricFactory(),
-            PathConverter.Factory.DEFAULT);
+            PathConverter.Factory.DEFAULT,
+            mailboxCounterCorrector);
 
         mailboxSession = mailboxManager.createSystemSession(Username.of("bob"));
         mailboxManager.createMailbox(MailboxPath.inbox(BOB), mailboxSession);

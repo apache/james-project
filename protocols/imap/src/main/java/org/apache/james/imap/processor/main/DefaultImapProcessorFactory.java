@@ -27,6 +27,7 @@ import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.imap.processor.DefaultProcessor;
 import org.apache.james.imap.processor.base.UnknownRequestProcessor;
+import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -48,7 +49,7 @@ public class DefaultImapProcessorFactory {
         UnknownRequestProcessor unknownRequestImapProcessor = new UnknownRequestProcessor(statusResponseFactory);
 
         return DefaultProcessor.createDefaultProcessor(unknownRequestImapProcessor, mailboxManager,
-            eventBus, subscriptionManager, statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver, metricFactory);
+            eventBus, subscriptionManager, statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver, MailboxCounterCorrector.DEFAULT, metricFactory);
     }
 
 }

@@ -41,6 +41,7 @@ import org.apache.james.mailbox.AttachmentIdFactory;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
+import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MessageIdManager;
@@ -131,6 +132,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(AttachmentContentLoader.class).to(AttachmentManager.class);
 
         bind(DeletedMessageMetadataVault.class).to(MemoryDeletedMessageMetadataVault.class);
+        bind(MailboxCounterCorrector.class).toInstance(MailboxCounterCorrector.DEFAULT);
 
         bind(InMemoryMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(InMemoryModSeqProvider.class).in(Scopes.SINGLETON);

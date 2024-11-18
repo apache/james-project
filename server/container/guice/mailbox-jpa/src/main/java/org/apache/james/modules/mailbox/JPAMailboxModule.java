@@ -33,6 +33,7 @@ import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentIdFactory;
 import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
+import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.SessionProvider;
@@ -120,6 +121,7 @@ public class JPAMailboxModule extends AbstractModule {
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
         bind(AttachmentIdFactory.class).to(StringBackedAttachmentIdFactory.class);
         bind(AttachmentContentLoader.class).to(JPAAttachmentContentLoader.class);
+        bind(MailboxCounterCorrector.class).toInstance(MailboxCounterCorrector.DEFAULT);
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
         

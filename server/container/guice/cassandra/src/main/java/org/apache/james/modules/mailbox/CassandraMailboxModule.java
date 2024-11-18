@@ -55,6 +55,7 @@ import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentIdFactory;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
+import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MessageIdManager;
@@ -89,6 +90,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.MessageBlobReferenceSource;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
+import org.apache.james.mailbox.cassandra.mail.task.CassandraMailboxCounterCorrector;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
@@ -180,6 +182,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
         bind(EmailChangeRepositoryDAO.class).in(Scopes.SINGLETON);
         bind(MailboxChangeRepositoryDAO.class).in(Scopes.SINGLETON);
+        bind(CassandraMailboxCounterCorrector.class).in(Scopes.SINGLETON);
 
         bind(ReIndexerImpl.class).in(Scopes.SINGLETON);
         bind(MessageIdReIndexerImpl.class).in(Scopes.SINGLETON);
@@ -211,6 +214,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(RightManager.class).to(StoreRightManager.class);
         bind(SessionProvider.class).to(SessionProviderImpl.class);
         bind(AttachmentContentLoader.class).to(AttachmentManager.class);
+        bind(MailboxCounterCorrector.class).to(CassandraMailboxCounterCorrector.class);
 
         bind(Limit.class).annotatedWith(Names.named(CassandraEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
         bind(Limit.class).annotatedWith(Names.named(CassandraMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
