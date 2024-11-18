@@ -298,6 +298,9 @@ public class DKIMHook implements JamesMessageHook {
 
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
+        if (session.isRelayingAllowed()) {
+            return HookResult.DECLINED;
+        }
         if (!dkimCheckNeeded.test(mail)) {
             return HookResult.DECLINED;
         }
