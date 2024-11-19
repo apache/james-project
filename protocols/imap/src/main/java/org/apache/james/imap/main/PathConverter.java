@@ -177,6 +177,12 @@ public interface PathConverter {
                         .matchesAllMailboxNames()
                         .build();
                 }
+                int delimiterPosition = mailboxName.indexOf(mailboxSession.getPathDelimiter());
+                if (mailboxName.startsWith("#") && delimiterPosition > 0 && delimiterPosition + 1 < mailboxName.length()) {
+                    return mailboxQuery(mailboxName.substring(0, delimiterPosition),
+                        mailboxName.substring(delimiterPosition + 1),
+                        session);
+                }
                 return MailboxQuery.builder()
                     .expression(new PrefixedRegex(
                         "",
