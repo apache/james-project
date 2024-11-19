@@ -95,30 +95,12 @@ object Rights {
   }
 
   def fromACL(acl: MailboxACL): Rights = acl.entries
-    .filter {
-      case (entryKey, _) => isSupported(entryKey)
-    }
     .map {
       case (entryKey, aclRights) => toRights(entryKey, aclRights)
     }
     .fold(EMPTY)(_ combine _)
 
   private def toRights(entryKey: EntryKey, aclRights: Rfc4314Rights): Rights = of(entryKey, aclRights.toRights)
-
-  private def isSupported(key: EntryKey): Boolean = key match {
-    case k if k.isNegative =>
-      LOGGER.info("Negative keys are not supported")
-      false
-    case k if k.getNameType == JavaMailboxACL.NameType.special && k.getName != JavaMailboxACL.SpecialName.anyone.name() =>
-      if (!k.getName.equals(JavaMailboxACL.SpecialName.owner.name())) {
-        LOGGER.info("Special name {} is not supported. Only 'anyone' is.", key.getName)
-      }
-      false
-    case k if k.getNameType == JavaMailboxACL.NameType.group =>
-      LOGGER.info("Name type {} is not supported. Only 'user' and 'special.anyone' are.", key.getNameType)
-      false
-    case _ => true
-  }
 }
 
 sealed trait RightsApplicability
