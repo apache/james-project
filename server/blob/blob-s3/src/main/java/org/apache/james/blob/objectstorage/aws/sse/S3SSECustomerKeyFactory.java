@@ -29,6 +29,7 @@ import org.reactivestreams.Publisher;
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public interface S3SSECustomerKeyFactory {
 
@@ -56,6 +57,26 @@ public interface S3SSECustomerKeyFactory {
         @Override
         public Mono<SSECustomerKey> generate(BucketName bucketName, BlobId blobId) {
             return Mono.just(sseCustomerKey);
+        }
+    }
+
+    class DerivedCustomerKeyFactory implements S3SSECustomerKeyFactory {
+
+        private final S3SSECConfiguration.KeyDerivationEnabled sseCustomerConfiguration;
+        private final S3SSECustomerKeyGenerator sseCustomerKeyGenerator;
+
+        public DerivedCustomerKeyFactory(S3SSECConfiguration.KeyDerivationEnabled sseCustomerConfiguration) {
+            this.sseCustomerConfiguration = sseCustomerConfiguration;
+            this.sseCustomerKeyGenerator = sseCustomerConfiguration.customerKeyFactoryAlgorithm()
+                .map(Throwing.function(S3SSECustomerKeyGenerator::new))
+                .orElseGet(Throwing.supplier(S3SSECustomerKeyGenerator::new));
+        }
+
+        @Override
+        public Mono<SSECustomerKey> generate(BucketName bucketName, BlobId blobId) {
+            return Mono.fromCallable(() -> sseCustomerKeyGenerator.generateCustomerKey(bucketName.asString(), blobId.asString()))
+                .map(customerKey -> new SSECustomerKey(customerKey, sseCustomerKeyGenerator.generateCustomerKeyMd5(customerKey), sseCustomerConfiguration.ssecAlgorithm()))
+                .subscribeOn(Schedulers.boundedElastic());
         }
     }
 }
