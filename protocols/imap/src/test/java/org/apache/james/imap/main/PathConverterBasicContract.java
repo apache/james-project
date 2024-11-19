@@ -43,6 +43,7 @@ public interface PathConverterBasicContract {
     boolean RELATIVE = true;
 
     MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME);
+
     PathConverter pathConverter();
 
     @Test
@@ -178,6 +179,7 @@ public interface PathConverterBasicContract {
     @Nested
     interface WithEmail {
         MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME_WITH_MAIL);
+
         PathConverter pathConverter();
 
         @Test
