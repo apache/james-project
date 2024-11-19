@@ -98,7 +98,7 @@ public interface PathConverter {
             return asMailboxPath(Splitter.on(mailboxSession.getPathDelimiter()).splitToList(absolutePath), mailboxSession);
         }
 
-        private MailboxPath asMailboxPath(List<String> mailboxPathParts, MailboxSession session) {
+        protected MailboxPath asMailboxPath(List<String> mailboxPathParts, MailboxSession session) {
             String namespace = mailboxPathParts.get(NAMESPACE);
             if (namespace.equalsIgnoreCase("#private")) {
                 String mailboxName = Joiner.on(session.getPathDelimiter()).join(Iterables.skip(mailboxPathParts, 1));
@@ -121,7 +121,7 @@ public interface PathConverter {
             }
         }
 
-        private String sanitizeMailboxName(String mailboxName) {
+        protected String sanitizeMailboxName(String mailboxName) {
             // use uppercase for INBOX
             // See IMAP-349
             if (mailboxName.equalsIgnoreCase(MailboxConstants.INBOX)) {
@@ -133,7 +133,7 @@ public interface PathConverter {
         /**
          * Joins the elements of a mailboxPath together and returns them as a string
          */
-        private String joinMailboxPath(MailboxPath mailboxPath, MailboxSession session) {
+        protected String joinMailboxPath(MailboxPath mailboxPath, MailboxSession session) {
             StringBuilder sb = new StringBuilder();
             if (mailboxPath.getNamespace() != null && !mailboxPath.getNamespace().isEmpty()) {
                 if (mailboxPath.getNamespace().equalsIgnoreCase(MailboxConstants.USER_NAMESPACE)
