@@ -114,14 +114,23 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     private final S3AsyncClient client;
     private final S3BlobStoreConfiguration configuration;
     private final BlobId.Factory blobIdFactory;
+    private final S3RequestOption s3RequestOption;
 
     @Inject
     public S3BlobStoreDAO(S3ClientFactory s3ClientFactory,
-                   S3BlobStoreConfiguration configuration,
-                   BlobId.Factory blobIdFactory) {
+                          S3BlobStoreConfiguration configuration,
+                          BlobId.Factory blobIdFactory) {
+       this(s3ClientFactory, configuration, blobIdFactory, S3RequestOption.DEFAULT);
+    }
+
+    public S3BlobStoreDAO(S3ClientFactory s3ClientFactory,
+                          S3BlobStoreConfiguration configuration,
+                          BlobId.Factory blobIdFactory,
+                          S3RequestOption s3RequestOption) {
         this.configuration = configuration;
         this.client = s3ClientFactory.get();
         this.blobIdFactory = blobIdFactory;
+        this.s3RequestOption = s3RequestOption;
 
         bucketNameResolver = BucketNameResolver.builder()
             .prefix(configuration.getBucketPrefix())
@@ -216,9 +225,20 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     private Mono<GetObjectRequest.Builder> buildGetObjectRequestBuilder(BucketName bucketName, BlobId blobId) {
-        return Mono.just(GetObjectRequest.builder()
+        GetObjectRequest.Builder baseBuilder = GetObjectRequest.builder()
             .bucket(bucketName.asString())
-            .key(blobId.asString()));
+            .key(blobId.asString());
+
+        if (s3RequestOption.ssec().enable()) {
+            return Mono.from(s3RequestOption.ssec().sseCustomerKeyFactory().get()
+                    .generate(bucketName, blobId))
+                .map(sseCustomerKey -> baseBuilder
+                    .sseCustomerAlgorithm(sseCustomerKey.ssecAlgorithm())
+                    .sseCustomerKey(sseCustomerKey.customerKey())
+                    .sseCustomerKeyMD5(sseCustomerKey.md5()));
+        }
+
+        return Mono.just(baseBuilder);
     }
 
     @Override
@@ -279,10 +299,20 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     private Mono<PutObjectRequest.Builder> buildPutObjectRequestBuilder(BucketName bucketName, long contentLength, BlobId blobId) {
-        return Mono.just(PutObjectRequest.builder()
+        PutObjectRequest.Builder baseBuilder = PutObjectRequest.builder()
             .bucket(bucketName.asString())
-            .contentLength(contentLength)
-            .key(blobId.asString()));
+            .key(blobId.asString())
+            .contentLength(contentLength);
+
+        if (s3RequestOption.ssec().enable()) {
+            return Mono.from(s3RequestOption.ssec().sseCustomerKeyFactory().get().generate(bucketName, blobId))
+                .map(sseCustomerKey -> baseBuilder
+                    .sseCustomerAlgorithm(sseCustomerKey.ssecAlgorithm())
+                    .sseCustomerKey(sseCustomerKey.customerKey())
+                    .sseCustomerKeyMD5(sseCustomerKey.md5()));
+        }
+
+        return Mono.just(baseBuilder);
     }
 
     private Flux<ByteBuffer> chunkStream(int chunkSize, InputStream stream) {
