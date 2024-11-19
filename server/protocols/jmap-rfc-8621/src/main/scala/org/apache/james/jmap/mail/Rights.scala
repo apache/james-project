@@ -110,7 +110,9 @@ object Rights {
       LOGGER.info("Negative keys are not supported")
       false
     case k if k.getNameType == JavaMailboxACL.NameType.special && k.getName != JavaMailboxACL.SpecialName.anyone.name() =>
-      LOGGER.info("Special name {} is not supported. Only 'anyone' is.", key.getName)
+      if (!k.getName.equals(JavaMailboxACL.SpecialName.owner.name())) {
+        LOGGER.info("Special name {} is not supported. Only 'anyone' is.", key.getName)
+      }
       false
     case k if k.getNameType == JavaMailboxACL.NameType.group =>
       LOGGER.info("Name type {} is not supported. Only 'user' and 'special.anyone' are.", key.getNameType)
