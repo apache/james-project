@@ -137,49 +137,49 @@ class PathConverterTest {
     @Test
     void mailboxNameShouldReturnNameOnlyWhenRelativeAndUserMailbox() {
         assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME, "abc"), mailboxSession))
-            .isEqualTo("abc");
+            .contains("abc");
     }
 
     @Test
     void mailboxNameShouldReturnFQDNWhenRelativeAndOtherUserMailbox() {
         assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME2, "abc"), mailboxSession))
-            .isEqualTo("#user.username2.abc");
+            .contains("#user.username2.abc");
     }
 
     @Test
     void mailboxNameShouldEscapeDotInUsername() {
         assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME_WITH_DOT, "abc"), mailboxSession))
-            .isEqualTo("#user.username__with__dot.abc");
+            .contains("#user.username__with__dot.abc");
     }
 
     @Test
     void mailboxNameShouldEscapeUnderscoreInUsername() {
         assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME_WITH_UNDERSCORE, "abc"), mailboxSession))
-            .isEqualTo("#user.username_-with_-underscore.abc");
+            .contains("#user.username_-with_-underscore.abc");
     }
 
     @Test
     void mailboxNameShouldReturnFQDNWhenRelativeAndSharedMailbox() {
         assertThat(pathConverter.mailboxName(RELATIVE, new MailboxPath("#Shared", Username.of("marketing"), "abc"), mailboxSession))
-            .isEqualTo("#Shared.marketing.abc");
+            .contains("#Shared.marketing.abc");
     }
 
     @Test
     void mailboxNameShouldReturnFQDNWhenNotRelativeAndUserMailbox() {
         assertThat(pathConverter.mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME, "abc"), mailboxSession))
-            .isEqualTo("#private.abc");
+            .contains("#private.abc");
     }
 
     @Test
     void mailboxNameShouldReturnFQDNWhenNotRelativeAndOtherUserMailbox() {
         assertThat(pathConverter.mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME2, "abc"), mailboxSession))
-            .isEqualTo("#user.username2.abc");
+            .contains("#user.username2.abc");
     }
 
     @Test
     void mailboxNameShouldReturnFQDNWhenNotRelativeAndSharedMailbox() {
         assertThat(pathConverter.mailboxName(!RELATIVE, new MailboxPath("#Shared", Username.of("marketing"), "abc"), mailboxSession))
-            .isEqualTo("#Shared.marketing.abc");
+            .contains("#Shared.marketing.abc");
     }
     
     @Nested
@@ -257,37 +257,37 @@ class PathConverterTest {
         @Test
         void mailboxNameShouldReturnNameOnlyWhenRelativeAndUserMailbox() {
             assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME_WITH_MAIL, "abc"), mailboxSession))
-                .isEqualTo("abc");
+                .contains("abc");
         }
 
         @Test
         void mailboxNameShouldReturnFQDNWhenRelativeAndOtherUserMailbox() {
             assertThat(pathConverter.mailboxName(RELATIVE, MailboxPath.forUser(USERNAME2_WITH_MAIL, "abc"), mailboxSession))
-                .isEqualTo("#user.username2.abc");
+                .contains("#user.username2.abc");
         }
 
         @Test
         void mailboxNameShouldReturnFQDNWhenRelativeAndSharedMailbox() {
             assertThat(pathConverter.mailboxName(RELATIVE, new MailboxPath("#Shared", Username.of("marketing@apache.org"), "abc"), mailboxSession))
-                .isEqualTo("#Shared.marketing.abc");
+                .contains("#Shared.marketing.abc");
         }
 
         @Test
         void mailboxNameShouldReturnFQDNWhenNotRelativeAndUserMailbox() {
             assertThat(pathConverter.mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME_WITH_MAIL, "abc"), mailboxSession))
-                .isEqualTo("#private.abc");
+                .contains("#private.abc");
         }
 
         @Test
         void mailboxNameShouldReturnFQDNWhenNotRelativeAndOtherUserMailbox() {
             assertThat(pathConverter.mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME2_WITH_MAIL, "abc"), mailboxSession))
-                .isEqualTo("#user.username2.abc");
+                .contains("#user.username2.abc");
         }
 
         @Test
         void mailboxNameShouldReturnFQDNWhenNotRelativeAndSharedMailbox() {
             assertThat(pathConverter.mailboxName(!RELATIVE, new MailboxPath("#Shared", Username.of("marketing@apache.org"), "abc"), mailboxSession))
-                .isEqualTo("#Shared.marketing.abc");
+                .contains("#Shared.marketing.abc");
         }
     }
 }

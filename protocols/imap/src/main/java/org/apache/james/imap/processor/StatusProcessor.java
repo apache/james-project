@@ -186,12 +186,15 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
                 Long unseen = unseen(statusDataItems, metaData);
                 ModSeq highestModSeq = highestModSeq(statusDataItems, metaData);
                 MailboxId mailboxId = mailboxId(statusDataItems, mailbox);
+                String mailboxName = pathConverterFactory.forSession(mailboxSession)
+                    .mailboxName(RELATIVE, mailbox.getMailboxPath(), mailboxSession)
+                    .orElseThrow(() -> new RuntimeException("Not exposed mailbox"));
                 return new MailboxStatusResponse(
                     appendLimit,
                     maybeIterationResult.flatMap(result -> result.getSize(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeleted(statusDataItems)).orElse(null),
                     maybeIterationResult.flatMap(result -> result.getDeletedStorage(statusDataItems)).orElse(null),
-                    messages, recent, uidNext, highestModSeq, uidValidity, unseen, pathConverterFactory.forSession(mailboxSession).mailboxName(RELATIVE, mailbox.getMailboxPath(), mailboxSession), mailboxId);
+                    messages, recent, uidNext, highestModSeq, uidValidity, unseen, mailboxName, mailboxId);
             });
     }
 
