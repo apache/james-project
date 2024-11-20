@@ -15,7 +15,7 @@ To provide a more efficient encryption option, the team has decided to integrate
 ## Decision
 
 Integrate SSE-C with S3 Object Storage in Apache James to improve user data security. 
-James will manage the master key and salt, using them to create customer keys when calling S3 APIs, such as PUT, GET, and HEAD on objects.M
+James will manage the master key and salt, using them to create customer keys when calling S3 APIs, such as PUT, GET, and HEAD on objects.
 
 Two approaches are proposed for providing the customer key:
 
