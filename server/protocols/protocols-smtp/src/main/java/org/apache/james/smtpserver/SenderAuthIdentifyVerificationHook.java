@@ -79,11 +79,14 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
 
     private HookResult doCheckRelaxed(SMTPSession session, MaybeSender sender) {
         if (senderDoesNotMatchAuthUser(session, sender)) {
+            LOGGER.warn("{} tried to send an email as {}", session.getUsername(), sender.asString());
             return INVALID_AUTH;
         } else if (unauthenticatedSenderIsLocalUser(session, sender)) {
             if (mxHeuristic(session)) {
                 return HookResult.DECLINED;
             } else {
+                LOGGER.info("Authentication is required for sending emails as a local user ({})" +
+                    " - we infered the sender not to be a MX so the check is enforced.", sender.asString());
                 return AUTH_REQUIRED;
             }
         } else {
