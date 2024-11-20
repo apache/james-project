@@ -27,6 +27,7 @@ import java.net.URISyntaxException;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import jakarta.inject.Inject;
 
@@ -426,11 +427,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     }
 
     @Override
-    public void disconnect(Username user) {
+    public void disconnect(Predicate<Username> user) {
         smtpChannelGroup.stream()
             .filter(channel -> {
                 if (channel.attr(SESSION_ATTRIBUTE_KEY).get() instanceof SMTPSession smtpSession) {
-                    return user.equals(smtpSession.getUsername());
+                    return user.test(smtpSession.getUsername());
                 }
                 return false;
             })

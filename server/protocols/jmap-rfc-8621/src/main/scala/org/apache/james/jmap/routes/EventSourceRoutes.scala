@@ -52,6 +52,7 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
+import java.util.function.Predicate
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
@@ -236,10 +237,10 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
         StandardCharsets.UTF_8)
       .`then`)
 
-  override def disconnect(username: Username): Unit = {
+  override def disconnect(username: Predicate[Username]): Unit = {
     val contexts = connectedUsers.values()
       .stream()
-      .filter(context => username.equals(context.session.getUser))
+      .filter(context => username.test(context.session.getUser))
       .toList
 
     contexts

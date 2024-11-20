@@ -20,6 +20,7 @@
 package org.apache.james.core;
 
 import java.util.Set;
+import java.util.function.Predicate;
 
 import jakarta.inject.Inject;
 
@@ -28,7 +29,7 @@ public interface Disconnector {
 
     };
 
-    void disconnect(Username username);
+    void disconnect(Predicate<Username> username);
 
     class CompositeDisconnector implements Disconnector {
         private final Set<Disconnector> disconnectorSet;
@@ -39,7 +40,7 @@ public interface Disconnector {
         }
 
         @Override
-        public void disconnect(Username username) {
+        public void disconnect(Predicate<Username> username) {
             disconnectorSet.forEach(disconnector -> disconnector.disconnect(username));
         }
     }

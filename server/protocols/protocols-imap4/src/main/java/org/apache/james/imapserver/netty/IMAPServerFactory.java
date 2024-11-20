@@ -20,6 +20,7 @@ package org.apache.james.imapserver.netty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import jakarta.inject.Inject;
 
@@ -98,7 +99,7 @@ public class IMAPServerFactory extends AbstractServerFactory implements Disconne
     }
 
     @Override
-    public void disconnect(Username username) {
+    public void disconnect(Predicate<Username> username) {
         getServers()
             .stream()
             .map(server -> (IMAPServer) server)

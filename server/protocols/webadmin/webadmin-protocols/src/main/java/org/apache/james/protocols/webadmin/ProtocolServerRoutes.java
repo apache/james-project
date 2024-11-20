@@ -80,7 +80,14 @@ public class ProtocolServerRoutes implements Routes {
         });
 
         service.delete(SERVERS + "/users/:user", (request, response) -> {
-            disconnector.disconnect(Username.of(request.params("user")));
+            Username username = Username.of(request.params("user"));
+            disconnector.disconnect(username::equals);
+
+            return Responses.returnNoContent(response);
+        });
+
+        service.delete(SERVERS + "/users", (request, response) -> {
+            disconnector.disconnect(any -> true);
 
             return Responses.returnNoContent(response);
         });

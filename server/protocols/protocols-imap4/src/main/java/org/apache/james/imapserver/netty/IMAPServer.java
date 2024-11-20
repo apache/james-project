@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -199,11 +200,11 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     }
 
     @Override
-    public void disconnect(Username user) {
+    public void disconnect(Predicate<Username> user) {
         imapChannelGroup.stream()
             .filter(channel -> Optional.ofNullable(channel.attr(IMAP_SESSION_ATTRIBUTE_KEY).get())
                 .flatMap(session -> Optional.ofNullable(session.getUserName()))
-                .map(user::equals)
+                .map(user::test)
                 .orElse(false))
             .forEach(channel -> channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE));
     }
