@@ -4,7 +4,7 @@ Date: 2024-11-15
 
 ## Status
 
-In progress
+Accepted (lazy consensus)
 
 ## Context
 
@@ -39,6 +39,7 @@ Enabling SSE-C is fully optional. By default, it is disabled and requires config
 - Incompatibility with Deduplication feature.
 - Data Migration Challenges: Currently, S3 APIs do not support migrating encrypted data from AESBlobStoreDAO (client-side encryption) to the new SSE-C endpoint.
 - Replication: SSE-C does not support bucket replication.
+- SSE-C is less secure than AESBlobStoreDAO (Client-Side Encryption).
 
 ## Alternatives
 
