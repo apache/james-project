@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import java.util.function.Predicate;
+
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Disconnector;
@@ -34,7 +36,7 @@ public interface DisconnectorNotifier extends Disconnector {
         }
 
         @Override
-        public void disconnect(Username username) {
+        public void disconnect(Predicate<Username> username) {
             disconnector.disconnect(username);
         }
     }
