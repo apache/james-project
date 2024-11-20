@@ -29,6 +29,8 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailHook;
 import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -48,6 +50,7 @@ public abstract class AbstractSenderAuthIdentifyVerificationHook implements Mail
         .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
             + " Authentication Required")
         .build();
+    public static final Logger LOGGER = LoggerFactory.getLogger(AbstractSenderAuthIdentifyVerificationHook.class);
 
     /*
      * Check if the sender address is the same as the user which was used to authenticate.
@@ -68,8 +71,10 @@ public abstract class AbstractSenderAuthIdentifyVerificationHook implements Mail
 
     protected HookResult doCheck(SMTPSession session, MaybeSender sender) {
         if (senderDoesNotMatchAuthUser(session, sender)) {
+            LOGGER.warn("{} tried to send an email as {}", session.getUsername(), sender.asString());
             return INVALID_AUTH;
         } else if (unauthenticatedSenderIsLocalUser(session, sender)) {
+            LOGGER.info("Authentication is required for sending emails as a local user ({})", sender.asString());
             return AUTH_REQUIRED;
         } else {
             return HookResult.DECLINED;
