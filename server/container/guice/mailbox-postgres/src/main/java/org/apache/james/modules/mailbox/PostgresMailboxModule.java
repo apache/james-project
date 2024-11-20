@@ -40,6 +40,7 @@ import org.apache.james.mailbox.AttachmentIdFactory;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
+import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MessageIdManager;
@@ -141,6 +142,7 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
         bind(AttachmentContentLoader.class).to(AttachmentManager.class);
         bind(AttachmentMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
+        bind(MailboxCounterCorrector.class).toInstance(MailboxCounterCorrector.DEFAULT);
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
         bind(MessageIdReIndexer.class).to(MessageIdReIndexerImpl.class);
