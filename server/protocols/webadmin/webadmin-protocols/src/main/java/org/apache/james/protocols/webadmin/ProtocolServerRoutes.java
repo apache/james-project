@@ -88,14 +88,14 @@ public class ProtocolServerRoutes implements Routes {
             return Responses.returnNoContent(response);
         });
 
-        service.delete(SERVERS + "/users/:user", (request, response) -> {
+        service.delete(SERVERS + "/channels/:user", (request, response) -> {
             Username username = Username.of(request.params("user"));
             disconnector.disconnect(username::equals);
 
             return Responses.returnNoContent(response);
         });
 
-        service.delete(SERVERS + "/users", (request, response) -> {
+        service.delete(SERVERS + "/channels", (request, response) -> {
             String body = request.body();
 
             if (Strings.isNullOrEmpty(body)) {
