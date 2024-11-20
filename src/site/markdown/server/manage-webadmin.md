@@ -4921,7 +4921,10 @@ Response codes :
  - 201: the taskId of the created task
  - 400: Invalid action argument for performing operation on mappings data
 
-## Reloading server certificates
+
+## Server administration
+
+### Reloading server certificates
 
 Certificates for TCP based protocols (IMAP, SMTP, POP3, LMTP and ManageSieve) can be updated at
 runtime, without service interuption and without closing existing connections.
@@ -4943,3 +4946,51 @@ Return code:
 
  - 204: the certificate is reloaded
  - 400: Invalid request.
+
+### Disconnecting users
+
+James maintains a set of stateful connections and provide an API allowing to close any of the existing
+connections, including:
+
+- IMAP protocol
+- SMTP protocol
+- JMAP websocket and event source sub protocols
+
+James keeps track of active channels and would iterate through them, destroying corresponding channels.
+
+#### Disconnecting a specific user
+
+```
+curl -XDELETE /servers/channels/bob@domain.tld
+```
+
+Will destroy channels belonging to `bob@domain.tld`.
+
+Return code:
+
+- 204: the certificate is reloaded
+
+#### Disconnecting all users
+
+```
+curl -XDELETE /servers/channels
+```
+
+Will close all channels.
+
+Return code:
+
+- 204: the certificate is reloaded
+
+#### Disconnecting a group of users
+
+```
+curl -XDELETE /servers/channels -d `["badGuy1@domain.tld","badGuy1@domain.tld"]`
+```
+
+Will disconnect `badGuy1@domain.tld` and `badGuy2@domain.tld`.
+
+Return code:
+
+- 204: the certificate is reloaded
+- 400: Invalid request
