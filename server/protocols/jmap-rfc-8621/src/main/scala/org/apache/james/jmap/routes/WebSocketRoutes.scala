@@ -51,6 +51,7 @@ import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 import reactor.netty.http.websocket.{WebsocketInbound, WebsocketOutbound}
 
+import java.util.function.Predicate
 import scala.jdk.CollectionConverters._
 
 object WebSocketRoutes {
@@ -195,10 +196,10 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
         StandardCharsets.UTF_8)
       .`then`)
 
-  override def disconnect(username: Username): Unit = {
+  override def disconnect(username: Predicate[Username]): Unit = {
     val contexts = connectedUsers.values()
       .stream()
-      .filter(context => username.equals(context.session.getUser))
+      .filter(context => username.test(context.session.getUser))
       .toList
 
     contexts
