@@ -19,6 +19,7 @@
 
 package org.apache.james.protocols.webadmin;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -33,15 +34,23 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 
 import spark.Request;
 import spark.Service;
 
 public class ProtocolServerRoutes implements Routes {
     public static final String SERVERS = "servers";
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    public static final TypeReference<List<String>> LIST_OF_STRING = new TypeReference<>() {
+
+    };
 
     private final Set<CertificateReloadable.Factory> servers;
     private final DisconnectorNotifier disconnector;
@@ -87,7 +96,17 @@ public class ProtocolServerRoutes implements Routes {
         });
 
         service.delete(SERVERS + "/users", (request, response) -> {
-            disconnector.disconnect(any -> true);
+            String body = request.body();
+
+            if (Strings.isNullOrEmpty(body)) {
+                disconnector.disconnect(any -> true);
+            } else {
+                ImmutableSet<Username> userSet = OBJECT_MAPPER.readValue(body, LIST_OF_STRING)
+                    .stream()
+                    .map(Username::of)
+                    .collect(ImmutableSet.toImmutableSet());
+                disconnector.disconnect(userSet::contains);
+            }
 
             return Responses.returnNoContent(response);
         });

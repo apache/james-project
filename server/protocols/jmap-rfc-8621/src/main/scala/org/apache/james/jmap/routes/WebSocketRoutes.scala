@@ -21,7 +21,9 @@ package org.apache.james.jmap.routes
 
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Predicate
 import java.util.stream
+
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import io.netty.handler.codec.http.{HttpHeaderNames, HttpMethod}
@@ -51,7 +53,6 @@ import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 import reactor.netty.http.websocket.{WebsocketInbound, WebsocketOutbound}
 
-import java.util.function.Predicate
 import scala.jdk.CollectionConverters._
 
 object WebSocketRoutes {
