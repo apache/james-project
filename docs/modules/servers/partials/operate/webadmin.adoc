@@ -4805,3 +4805,93 @@ Return code:
 
 - 204: the certificate is reloaded
 - 400: Invalid request
+
+=== Listing connected users
+
+....
+curl -XDELETE /servers/connectedUsers
+....
+
+Will return a list of users having channels opened on the server:
+
+....
+[
+    "alice@domain.tld",
+    "bob@domain.tld"
+]
+....
+
+=== Listing channels of a user
+
+....
+curl -XGET /servers/channels/bob@domain
+....
+
+Will return a description and statistics for channels of a user:
+
+....
+[
+    {
+        "protocol": "IMAP",
+        "endpoint": "imapserver",
+        "remoteAddress": "127.0.0.1",
+        "connectionDate": "2024-11-21T10:46:37.476425406Z",
+        "isActive": true,
+        "isOpen": true,
+        "isWritable": true,
+        "isEncrypted": false,
+        "username": "bob@domain",
+        "protocolSpecificInformation": {
+            "loggedInUser": "bob@domain",
+            "isCompressed": "false",
+            "selectedMailbox": "1",
+            "isIdling": "false",
+            "requestCount": "3",
+            "userAgent": "{name=Thunderbird, version=102.7.1}",
+            "cumulativeWrittenBytes": "448",
+            "cumulativeReadBytes": "103",
+            "liveReadThroughputBytePerSecond": "0",
+            "liveWriteThroughputBytePerSecond": "0"
+        }
+    }
+]
+....
+
+
+=== Listing all channels
+
+....
+curl -XGET /servers/channels
+....
+
+Will return a description and statistics for channels of a user:
+
+....
+[
+    {
+        "protocol": "IMAP",
+        "endpoint": "imapserver",
+        "remoteAddress": "127.0.0.1",
+        "connectionDate": "2024-11-21T10:46:37.476425406Z",
+        "isActive": true,
+        "isOpen": true,
+        "isWritable": true,
+        "isEncrypted": false,
+        "username": "bob@domain",
+        "protocolSpecificInformation": {
+            "loggedInUser": "bob@domain",
+            "isCompressed": "false",
+            "selectedMailbox": "1",
+            "isIdling": "false",
+            "requestCount": "3",
+            "userAgent": "{name=Thunderbird, version=102.7.1}",
+            "cumulativeWrittenBytes": "448",
+            "cumulativeReadBytes": "103",
+            "liveReadThroughputBytePerSecond": "0",
+            "liveWriteThroughputBytePerSecond": "0"
+        }
+    }
+]
+....
+
+Be warned that the output can be very large if a significant count of channels is opened.
