@@ -48,6 +48,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
@@ -401,6 +402,10 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                     imapSession.map(ImapSession::isTLSActive).orElse(false),
                     imapSession.flatMap(session -> Optional.ofNullable(session.getUserName())),
                     ImmutableMap.<String, String>builder()
+                        .put("loggedInUser", imapSession.flatMap(s -> Optional.ofNullable(s.getMailboxSession()))
+                            .flatMap(MailboxSession::getLoggedInUser)
+                            .map(Username::asString)
+                            .orElse(""))
                         .put("isCompressed", Boolean.toString(imapSession.map(ImapSession::isCompressionActive).orElse(false)))
                         .put("selectedMailbox", imapSession.flatMap(session -> Optional.ofNullable(session.getSelected()))
                             .map(SelectedMailbox::getMailboxId)
