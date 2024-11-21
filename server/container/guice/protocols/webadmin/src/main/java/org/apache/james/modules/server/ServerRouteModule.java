@@ -20,6 +20,7 @@
 package org.apache.james.modules.server;
 
 import org.apache.james.DisconnectorNotifier;
+import org.apache.james.core.ConnectionDescriptionSupplier;
 import org.apache.james.core.Disconnector;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 import org.apache.james.protocols.webadmin.ProtocolServerRoutes;
@@ -39,9 +40,13 @@ public class ServerRouteModule extends AbstractModule {
             .to(ProtocolServerRoutes.class);
 
         Multibinder.newSetBinder(binder(), Disconnector.class);
+        Multibinder.newSetBinder(binder(), ConnectionDescriptionSupplier.class);
 
         bind(Disconnector.class).to(Disconnector.CompositeDisconnector.class);
         bind(Disconnector.CompositeDisconnector.class).in(Scopes.SINGLETON);
+
+        bind(ConnectionDescriptionSupplier.class).to(ConnectionDescriptionSupplier.CompositeConnectionDescriptionSupplier.class);
+        bind(ConnectionDescriptionSupplier.CompositeConnectionDescriptionSupplier.class).in(Scopes.SINGLETON);
 
         bind(DisconnectorNotifier.class).to(DisconnectorNotifier.InVMDisconnectorNotifier.class);
         bind(DisconnectorNotifier.InVMDisconnectorNotifier.class).in(Scopes.SINGLETON);

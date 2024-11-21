@@ -21,11 +21,14 @@ package org.apache.james.imapserver.netty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.ConnectionDescription;
+import org.apache.james.core.ConnectionDescriptionSupplier;
 import org.apache.james.core.Disconnector;
 import org.apache.james.core.Username;
 import org.apache.james.filesystem.api.FileSystem;
@@ -41,7 +44,7 @@ import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 
 import com.github.fge.lambdas.functions.ThrowingFunction;
 
-public class IMAPServerFactory extends AbstractServerFactory implements Disconnector {
+public class IMAPServerFactory extends AbstractServerFactory implements Disconnector, ConnectionDescriptionSupplier {
 
     protected final FileSystem fileSystem;
     protected final ThrowingFunction<HierarchicalConfiguration<ImmutableNode>, ImapSuite> imapSuiteProvider;
@@ -104,5 +107,13 @@ public class IMAPServerFactory extends AbstractServerFactory implements Disconne
             .stream()
             .map(server -> (IMAPServer) server)
             .forEach(imapServer -> imapServer.disconnect(username));
+    }
+
+    @Override
+    public Stream<ConnectionDescription> describeConnections() {
+        return getServers()
+            .stream()
+            .map(server -> (IMAPServer) server)
+            .flatMap(IMAPServer::describeConnections);
     }
 }

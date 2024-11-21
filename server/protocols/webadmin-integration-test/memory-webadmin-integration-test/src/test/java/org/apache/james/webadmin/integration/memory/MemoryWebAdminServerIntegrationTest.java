@@ -19,16 +19,28 @@
 
 package org.apache.james.webadmin.integration.memory;
 
+import static io.restassured.RestAssured.when;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
+import static org.hamcrest.Matchers.is;
 
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.webadmin.integration.WebAdminServerIntegrationTest;
+import org.eclipse.jetty.http.HttpStatus;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest {
+    private static final String DOMAIN = "domain";
+    private static final String USERNAME = "bob@" + DOMAIN;
+    private static final String PASSWORD = "password";
 
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
@@ -39,4 +51,29 @@ class MemoryWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest 
             .build())
         .server(MemoryJamesServerMain::createServer)
         .build();
+
+    @RegisterExtension
+    TestIMAPClient testIMAPClient = new TestIMAPClient();
+
+    @Test
+    void shouldDescribeConnectedImapChannels(GuiceJamesServer server) throws Exception {
+        int imapPort = server.getProbe(ImapGuiceProbe.class).getImapPort();
+
+        server.getProbe(DataProbeImpl.class).addUser(USERNAME, PASSWORD);
+
+        testIMAPClient.connect(LOCALHOST_IP, imapPort)
+            .login(USERNAME, PASSWORD)
+            .select("INBOX");
+
+        when()
+            .get("/servers/channels/" + USERNAME)
+            .prettyPeek()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("[0].protocol", is("IMAP"))
+            .body("[0].endpoint", is("imapserver"))
+            .body("[0].username", is("bob@domain"))
+            .body("[0].isEncrypted", is(false))
+            .body("[0].isEncrypted", is(false));
+    }
 }

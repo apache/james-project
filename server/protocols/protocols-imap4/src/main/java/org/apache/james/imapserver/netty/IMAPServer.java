@@ -18,7 +18,9 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.SocketAddress;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -26,18 +28,24 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.ConnectionDescription;
+import org.apache.james.core.ConnectionDescriptionSupplier;
 import org.apache.james.core.Disconnector;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ConnectionCheck;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.process.ImapProcessor;
+import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
@@ -59,6 +67,7 @@ import com.google.common.collect.ImmutableSet;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -70,7 +79,8 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 /**
  * NIO IMAP Server which use Netty.
  */
-public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapConstants, IMAPServerMBean, NettyConstants, Disconnector {
+public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapConstants, IMAPServerMBean, NettyConstants,
+    Disconnector, ConnectionDescriptionSupplier {
     private static final Logger LOG = LoggerFactory.getLogger(IMAPServer.class);
 
     public static class AuthenticationConfiguration {
@@ -355,5 +365,38 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     @VisibleForTesting
     ReactiveThrottler getReactiveThrottler() {
         return reactiveThrottler;
+    }
+
+    @Override
+    public Stream<ConnectionDescription> describeConnections() {
+        return imapChannelGroup.stream()
+            .map(channel -> {
+                Optional<ImapSession> imapSession = Optional.ofNullable(channel.attr(IMAP_SESSION_ATTRIBUTE_KEY).get());
+                return new ConnectionDescription(
+                    "IMAP",
+                    jmxName,
+                    Optional.ofNullable(channel.remoteAddress()).map(this::addressAsString),
+                    channel.isActive(),
+                    channel.isOpen(),
+                    channel.isWritable(),
+                    imapSession.map(ImapSession::isTLSActive).orElse(false),
+                    imapSession.flatMap(session -> Optional.ofNullable(session.getUserName())),
+                    ImmutableMap.of(
+                        "isCompressed", Boolean.toString(imapSession.map(ImapSession::isCompressionActive).orElse(false)),
+                        "selectedMailbox", imapSession.flatMap(session -> Optional.ofNullable(session.getSelected()))
+                            .map(SelectedMailbox::getMailboxId)
+                            .map(MailboxId::serialize)
+                            .orElse(""),
+                        "isIdling", Boolean.toString(imapSession.flatMap(session -> Optional.ofNullable(session.getSelected()))
+                            .map(SelectedMailbox::isIdling)
+                            .orElse(false))));
+            });
+    }
+
+    private String addressAsString(SocketAddress socketAddress) {
+        if (socketAddress instanceof InetSocketAddress address) {
+            return address.getAddress().getHostAddress();
+        }
+        return socketAddress.toString();
     }
 }
