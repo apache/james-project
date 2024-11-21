@@ -19,12 +19,15 @@
 
 package org.apache.james.protocols.webadmin;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.inject.Inject;
 
 import org.apache.james.DisconnectorNotifier;
@@ -54,6 +57,7 @@ public class ProtocolServerRoutes implements Routes {
         String protocol,
         String endpoint,
         Optional<String> remoteAddress,
+        Optional<Instant> connectionDate,
         boolean isActive,
         boolean isOpen,
         boolean isWritable,
@@ -65,6 +69,7 @@ public class ProtocolServerRoutes implements Routes {
             return new ConnectionDescriptionDTO(domainObject.protocol(),
                 domainObject.endpoint(),
                 domainObject.remoteAddress(),
+                domainObject.connectionDate(),
                 domainObject.isActive(),
                 domainObject.isOpen(),
                 domainObject.isWritable(),
@@ -82,6 +87,8 @@ public class ProtocolServerRoutes implements Routes {
 
     static {
         OBJECT_MAPPER.registerModule(new Jdk8Module());
+        OBJECT_MAPPER.registerModule(new JavaTimeModule());
+        OBJECT_MAPPER.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
     private final Set<CertificateReloadable.Factory> servers;
