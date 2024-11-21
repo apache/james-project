@@ -178,7 +178,7 @@ class MailboxesExportRequestToTaskTest {
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
             .body("message", is("Invalid arguments supplied in the user request"))
-            .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _"));
+            .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in {} [bad@bad]"));
     }
 
     @Test

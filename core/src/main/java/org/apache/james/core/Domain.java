@@ -55,14 +55,15 @@ public class Domain implements Serializable {
             "Domain name length should not exceed %s characters", MAXIMUM_DOMAIN_LENGTH);
 
         String domainWithoutBrackets = removeBrackets(domain);
-        Preconditions.checkArgument(PART_CHAR_MATCHER.matchesAllOf(domainWithoutBrackets), "Domain parts ASCII chars must be a-z A-Z 0-9 - or _");
+        Preconditions.checkArgument(PART_CHAR_MATCHER.matchesAllOf(domainWithoutBrackets),
+            "Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in {}", domain);
 
         int pos = 0;
         int nextDot = domainWithoutBrackets.indexOf('.');
 
         while (nextDot > -1) {
             if (pos + 1 > domainWithoutBrackets.length()) {
-                throw new IllegalArgumentException("Last domain part should not be empty");
+                throw new IllegalArgumentException("Last domain part should not be empty in " + domain);
             }
             Domain.assertValidPart(domainWithoutBrackets, pos, nextDot);
             pos = nextDot + 1;
