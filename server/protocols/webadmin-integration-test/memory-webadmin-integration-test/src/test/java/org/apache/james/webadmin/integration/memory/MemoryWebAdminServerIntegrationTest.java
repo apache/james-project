@@ -61,8 +61,9 @@ class MemoryWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest 
 
         server.getProbe(DataProbeImpl.class).addUser(USERNAME, PASSWORD);
 
-        testIMAPClient.connect(LOCALHOST_IP, imapPort)
-            .login(USERNAME, PASSWORD)
+        testIMAPClient.connect(LOCALHOST_IP, imapPort);
+        testIMAPClient.sendCommand("ID (\"name\" \"Thunderbird\" \"version\" \"102.7.1\")");
+        testIMAPClient.login(USERNAME, PASSWORD)
             .select("INBOX");
 
         when()
@@ -74,6 +75,7 @@ class MemoryWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest 
             .body("[0].endpoint", is("imapserver"))
             .body("[0].username", is("bob@domain"))
             .body("[0].isEncrypted", is(false))
-            .body("[0].isEncrypted", is(false));
+            .body("[0].isEncrypted", is(false))
+            .body("[0].protocolSpecificInformation.userAgent", is("{name=Thunderbird, version=102.7.1}"));
     }
 }

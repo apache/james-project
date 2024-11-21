@@ -22,7 +22,9 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.SocketAddress;
 import java.net.URISyntaxException;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.Set;
@@ -67,7 +69,6 @@ import com.google.common.collect.ImmutableSet;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -389,7 +390,10 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                             .orElse(""),
                         "isIdling", Boolean.toString(imapSession.flatMap(session -> Optional.ofNullable(session.getSelected()))
                             .map(SelectedMailbox::isIdling)
-                            .orElse(false))));
+                            .orElse(false)),
+                        "userAgent", imapSession.flatMap(s -> Optional.ofNullable(s.getAttribute("userAgent")))
+                            .map(Object::toString)
+                            .orElse("")));
             });
     }
 
