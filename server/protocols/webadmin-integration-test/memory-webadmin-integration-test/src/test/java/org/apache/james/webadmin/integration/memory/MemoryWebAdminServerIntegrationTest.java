@@ -68,7 +68,6 @@ class MemoryWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest 
 
         when()
             .get("/servers/channels/" + USERNAME)
-            .prettyPeek()
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("[0].protocol", is("IMAP"))
@@ -76,6 +75,7 @@ class MemoryWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest 
             .body("[0].username", is("bob@domain"))
             .body("[0].isEncrypted", is(false))
             .body("[0].isEncrypted", is(false))
+            .body("[0].protocolSpecificInformation.loggedInUser", is("bob@domain"))
             .body("[0].protocolSpecificInformation.userAgent", is("{name=Thunderbird, version=102.7.1}"))
             .body("[0].protocolSpecificInformation.requestCount", is("3"));
     }
