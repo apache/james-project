@@ -67,6 +67,7 @@ public class IdProcessor extends AbstractMailboxProcessor<IDRequest> implements 
 
         String mailUserAgent = request.getParameters().map(Object::toString).orElse("NIL");
         addMailUserAgentToMDC(session, mailUserAgent);
+        session.setAttribute("userAgent", mailUserAgent);
 
         return logMailUserAgent(mailUserAgent)
             .then(unsolicitedResponses(session, responder, false))
