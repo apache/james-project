@@ -37,6 +37,12 @@ under the License.
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <plainAuthDisallowed>false</plainAuthDisallowed>
         <gracefulShutdown>false</gracefulShutdown>
+        <trafficShaping>
+            <writeTrafficPerSecond>0</writeTrafficPerSecond>
+            <readTrafficPerSecond>0</readTrafficPerSecond>
+            <checkInterval>1</checkInterval>
+            <maxDelays>30</maxDelays>
+        </trafficShaping>
     </imapserver>
     <imapserver enabled="true">
         <jmxName>imapserver-ssl</jmxName>
