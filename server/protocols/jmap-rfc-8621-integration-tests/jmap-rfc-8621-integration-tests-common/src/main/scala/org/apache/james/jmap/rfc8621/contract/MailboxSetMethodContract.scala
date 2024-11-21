@@ -5924,7 +5924,7 @@ trait MailboxSetMethodContract {
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
-         |          "description": "Domain parts ASCII chars must be a-z A-Z 0-9 - or _"
+         |          "description": "Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in {} [invalid@domain.tld]"
          |        }
          |      }
          |    }, "c1"]

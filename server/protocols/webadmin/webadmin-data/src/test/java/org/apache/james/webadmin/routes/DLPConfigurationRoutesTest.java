@@ -329,7 +329,7 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _"));
+                .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in {} [dr@strange.com]"));
         }
 
         @Test
@@ -646,7 +646,7 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _"));
+                .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in {} [dr@strange.com]"));
         }
     }
 
@@ -859,7 +859,7 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _"));
+                .body("details", is("Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in {} [dr@strange.com]"));
         }
     }
     
