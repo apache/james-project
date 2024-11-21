@@ -50,6 +50,8 @@ public interface SelectedMailbox {
 
     void unregisterIdle();
 
+    boolean isIdling();
+
     /**
      * Return the msg index of the given uid or {@link NullableMessageSequenceNumber#noMessage()} instance if no
      * message with the given uid was found

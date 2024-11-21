@@ -28,6 +28,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.ProtocolConfigurationSanitizer;
 import org.apache.james.RunArguments;
+import org.apache.james.core.ConnectionDescriptionSupplier;
 import org.apache.james.core.Disconnector;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.filesystem.api.FileSystem;
@@ -119,6 +120,7 @@ public class IMAPServerModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(IMAPHealthCheck.class);
 
         Multibinder.newSetBinder(binder(), Disconnector.class).addBinding().to(IMAPServerFactory.class);
+        Multibinder.newSetBinder(binder(), ConnectionDescriptionSupplier.class).addBinding().to(IMAPServerFactory.class);
     }
 
     @Provides

@@ -176,6 +176,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     }
 
     @Override
+    public boolean isIdling() {
+        return idleEventListener.get() != null;
+    }
+
+    @Override
     public Optional<MessageUid> getFirstUid() {
         return uidMsnConverter.getFirstUid();
     }
