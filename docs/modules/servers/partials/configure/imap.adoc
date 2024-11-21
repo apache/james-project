@@ -154,6 +154,32 @@ Please configure `auth.oidc` part to use this.
 We do supply an link:https://github.com/apache/james-project/tree/master/examples/oidc[example] of such a setup.
 It uses the Keycloak OIDC provider, but usage of similar technologies is definitely doable.
 
+== Traffic Shaping
+
+James ships optional link:https://netty.io/4.0/api/io/netty/handler/traffic/ChannelTrafficShapingHandler.html[Netty built in Traffic Shaping] that can be optionally configured.
+
+This enables both:
+ - Record per channel bandwidth consumption
+ - Allows defining per channel bandwidth limit, which helps at fairness and maintaining a good quality of service.
+
+Example:
+
+....
+    <imapserver>
+        <!-- ... -->
+        <trafficShaping>
+            <writeTrafficPerSecond>0</writeTrafficPerSecond>
+            <readTrafficPerSecond>0</readTrafficPerSecond>
+            <checkInterval>1</checkInterval>
+            <maxDelays>30</maxDelays>
+        </trafficShaping>
+    </imapserver>
+....
+
+Those tags maps to the corresponding Netty argument.
+
+If omitted no traffic handle is added to the channel pipeline.
+
 == Extending IMAP
 
 IMAP decoders, processors and encoder can be customized. xref:customization:imap.adoc[Read more].

@@ -145,6 +145,34 @@
         <p>We do supply an <a href="https://github.com/apache/james-project/tree/master/examples/oidc">example</a> of such a setup. It uses the
             <a href="https://www.keycloak.org/">Keycloack</a> OIDC provider, but usage of similar technologies is definitely doable.</p>
     </subsection>
+    <subsection name="Traffic Shaping">
+
+        <p>James ships optional <a href="https://netty.io/4.0/api/io/netty/handler/traffic/ChannelTrafficShapingHandler.html">Netty built in Traffic Shaping</a>
+            that can be optionally configured.</p>
+
+        <ul>This enables both:
+            <li>Record per channel bandwidth consumption</li>
+            <li>Allows defining per channel bandwidth limit, which helps at fairness and maintaining a good quality of service.</li>
+        </ul>
+
+        <p>Example:</p>
+
+        <pre><code>
+&lt;imapserver&gt;
+    &lt;!-- ... --&gt;
+        &lt;trafficShaping&gt;
+            &lt;writeTrafficPerSecond&gt;0&lt;/writeTrafficPerSecond&gt;
+            &lt;readTrafficPerSecond&gt;0&lt;/readTrafficPerSecond&gt;
+            &lt;checkInterval&gt;1&lt;/checkInterval&gt;
+            &lt;maxDelays&gt;30&lt;/maxDelays&gt;
+        &lt;/trafficShaping&gt;
+&lt;/imapserver&gt;
+        </code></pre>
+
+        <p>Those tags maps to the corresponding Netty argument.</p>
+
+        <p>If omitted no traffic handle is added to the channel pipeline.</p>
+    </subsection>
 
     <subsection name="Extending IMAP">
         <p><b>WARNING: </b>IMAP extension applies only for Guice based distributions</p>
