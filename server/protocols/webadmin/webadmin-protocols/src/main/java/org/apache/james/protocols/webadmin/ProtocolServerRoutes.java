@@ -163,6 +163,12 @@ public class ProtocolServerRoutes implements Routes {
                 .map(ConnectionDescriptionDTO::from)
                 .toList());
         });
+
+        service.get(SERVERS + "/connectedUsers", (request, response) -> OBJECT_MAPPER.writeValueAsString(connectionDescriptionSupplier.describeConnections()
+            .flatMap(connectionDescription -> connectionDescription.username().stream())
+            .distinct()
+            .map(Username::asString)
+            .toList()));
     }
 
     private Predicate<CertificateReloadable> filters(Request request) {
