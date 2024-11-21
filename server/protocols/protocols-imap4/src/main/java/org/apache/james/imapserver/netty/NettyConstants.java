@@ -19,6 +19,7 @@
 package org.apache.james.imapserver.netty;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.imap.api.process.ImapSession;
 
@@ -41,6 +42,7 @@ public interface NettyConstants {
     String HEARTBEAT_HANDLER = "heartbeatHandler";
 
     AttributeKey<ImapSession> IMAP_SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("ImapSession");
+    AttributeKey<AtomicLong> REQUEST_COUNTER = AttributeKey.valueOf("RequestCounter");
     AttributeKey<Disposable> REQUEST_IN_FLIGHT_ATTRIBUTE_KEY = AttributeKey.valueOf("requestInFlight");
     AttributeKey<ImapChannelUpstreamHandler.ImapLinerarizer> LINEARIZER_ATTRIBUTE_KEY = AttributeKey.valueOf("linearizer");
     AttributeKey<Runnable> BACKPRESSURE_CALLBACK = AttributeKey.valueOf("BACKPRESSURE_CALLBACK");

@@ -76,6 +76,7 @@ class MemoryWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest 
             .body("[0].username", is("bob@domain"))
             .body("[0].isEncrypted", is(false))
             .body("[0].isEncrypted", is(false))
-            .body("[0].protocolSpecificInformation.userAgent", is("{name=Thunderbird, version=102.7.1}"));
+            .body("[0].protocolSpecificInformation.userAgent", is("{name=Thunderbird, version=102.7.1}"))
+            .body("[0].protocolSpecificInformation.requestCount", is("3"));
     }
 }

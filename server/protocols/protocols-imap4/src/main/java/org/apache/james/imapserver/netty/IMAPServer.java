@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -74,6 +75,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 
@@ -83,6 +85,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapConstants, IMAPServerMBean, NettyConstants,
     Disconnector, ConnectionDescriptionSupplier {
     private static final Logger LOG = LoggerFactory.getLogger(IMAPServer.class);
+    public static final AttributeKey<Instant> CONNECTION_DATE = AttributeKey.newInstance("connectionDate");
 
     public static class AuthenticationConfiguration {
         private static final boolean PLAIN_AUTH_DISALLOWED_DEFAULT = true;
@@ -288,6 +291,8 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
             @Override
             public void initChannel(Channel channel) {
+                channel.attr(CONNECTION_DATE).set(Clock.systemUTC().instant());
+
                 ChannelPipeline pipeline = channel.pipeline();
                 channel.config().setWriteBufferWaterMark(writeBufferWaterMark);
                 pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
@@ -377,6 +382,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                     "IMAP",
                     jmxName,
                     Optional.ofNullable(channel.remoteAddress()).map(this::addressAsString),
+                    Optional.ofNullable(channel.attr(CONNECTION_DATE)).flatMap(attribute -> Optional.ofNullable(attribute.get())),
                     channel.isActive(),
                     channel.isOpen(),
                     channel.isWritable(),
@@ -391,6 +397,10 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                         "isIdling", Boolean.toString(imapSession.flatMap(session -> Optional.ofNullable(session.getSelected()))
                             .map(SelectedMailbox::isIdling)
                             .orElse(false)),
+                        "requestCount", Long.toString(Optional.ofNullable(channel.attr(REQUEST_COUNTER))
+                            .flatMap(attribute -> Optional.ofNullable(attribute.get()))
+                            .map(AtomicLong::get)
+                            .orElse(0L)),
                         "userAgent", imapSession.flatMap(s -> Optional.ofNullable(s.getAttribute("userAgent")))
                             .map(Object::toString)
                             .orElse("")));

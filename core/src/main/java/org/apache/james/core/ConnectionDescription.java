@@ -19,6 +19,7 @@
 
 package org.apache.james.core;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
@@ -26,6 +27,7 @@ public record ConnectionDescription(
     String protocol,
     String endpoint,
     Optional<String> remoteAddress,
+    Optional<Instant> connectionDate,
     boolean isActive,
     boolean isOpen,
     boolean isWritable,
