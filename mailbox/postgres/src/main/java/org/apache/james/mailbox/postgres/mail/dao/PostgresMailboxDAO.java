@@ -53,9 +53,11 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.mail.PostgresMailbox;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
+import org.jooq.Condition;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultDataType;
@@ -203,10 +205,18 @@ public class PostgresMailboxDAO {
     public Flux<PostgresMailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
         String pathLike = MailboxExpressionBackwardCompatibility.getPathLike(query);
 
+        Function<MailboxQuery.UserBound, Condition> getQueryCondition = mailboxQuery -> {
+            Condition baseCondition = USER_NAME.eq(mailboxQuery.getFixedUser().asString())
+                .and(MAILBOX_NAMESPACE.eq(mailboxQuery.getFixedNamespace()));
+
+            if (Wildcard.INSTANCE.equals(mailboxQuery.getMailboxNameExpression())) {
+                return baseCondition;
+            }
+            return baseCondition.and(MAILBOX_NAME.like(pathLike));
+        };
+
         return postgresExecutor.executeRows(dsl -> Flux.from(dsl.selectFrom(TABLE_NAME)
-            .where(MAILBOX_NAME.like(pathLike)
-                .and(USER_NAME.eq(query.getFixedUser().asString()))
-                .and(MAILBOX_NAMESPACE.eq(query.getFixedNamespace())))))
+            .where(getQueryCondition.apply(query))))
             .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION)
             .filter(query::matches)
             .collectList()
@@ -247,7 +257,6 @@ public class PostgresMailboxDAO {
             .map(record -> record.get(MAILBOX_LAST_UID))
             .map(MessageUid::of);
     }
-
 
     public Mono<ModSeq> findHighestModSeqByMailboxId(MailboxId mailboxId) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(MAILBOX_HIGHEST_MODSEQ)
