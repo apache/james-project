@@ -271,7 +271,14 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         String usernameAttribute = ldapConfiguration.getUsernameAttribute().orElse(ldapConfiguration.getUserIdAttribute());
         Optional<String> userName = Optional.ofNullable(userAttributes.getAttributeValue(usernameAttribute));
         return userName
-            .map(Username::of)
+            .flatMap(name -> {
+                try {
+                    return Optional.of(Username.of(name));
+                } catch (Exception e) {
+                    LOGGER.warn("Invalid username in the LDAP: {}", name, e);
+                    return Optional.empty();
+                }
+            })
             .map(username -> new ReadOnlyLDAPUser(username, userDN, ldapConnectionPool));
     }
 
