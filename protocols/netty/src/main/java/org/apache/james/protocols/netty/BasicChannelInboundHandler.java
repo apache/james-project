@@ -25,6 +25,8 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.channels.ClosedChannelException;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,6 +67,7 @@ import io.netty.util.AttributeKey;
  */
 public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter implements LineHandlerAware {
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicChannelInboundHandler.class);
+    public static final AttributeKey<Instant> CONNECTION_DATE = AttributeKey.newInstance("smtpConnectionDate");
     public static final ProtocolSession.AttachmentKey<MDCBuilder> MDC_ATTRIBUTE_KEY = ProtocolSession.AttachmentKey.of("bound_MDC", MDCBuilder.class);
     public static final AttributeKey<CommandDetectionSession> SESSION_ATTRIBUTE_KEY =
             AttributeKey.valueOf("session");
@@ -97,6 +100,7 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         MDCBuilder boundMDC = mdcContextFactory.onBound(protocol, ctx);
+        ctx.channel().attr(CONNECTION_DATE).set(Clock.systemUTC().instant());
         try (Closeable closeable = boundMDC.build()) {
             ProtocolSession session = createSession(ctx);
             session.setAttachment(MDC_ATTRIBUTE_KEY, boundMDC, Connection);
