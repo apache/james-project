@@ -22,11 +22,14 @@ package org.apache.james.smtpserver.netty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.ConnectionDescription;
+import org.apache.james.core.ConnectionDescriptionSupplier;
 import org.apache.james.core.Disconnector;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
@@ -36,7 +39,7 @@ import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 
-public class SMTPServerFactory extends AbstractServerFactory implements Disconnector {
+public class SMTPServerFactory extends AbstractServerFactory implements Disconnector, ConnectionDescriptionSupplier {
 
     protected final DNSService dns;
     protected final ProtocolHandlerLoader loader;
@@ -80,5 +83,13 @@ public class SMTPServerFactory extends AbstractServerFactory implements Disconne
             .stream()
             .map(server -> (SMTPServer) server)
             .forEach(smtpServer -> smtpServer.disconnect(username));
+    }
+
+    @Override
+    public Stream<ConnectionDescription> describeConnections() {
+        return getServers()
+            .stream()
+            .map(server -> (SMTPServer) server)
+            .flatMap(SMTPServer::describeConnections);
     }
 }
