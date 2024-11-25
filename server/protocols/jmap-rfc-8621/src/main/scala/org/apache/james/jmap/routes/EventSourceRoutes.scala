@@ -22,16 +22,17 @@ package org.apache.james.jmap.routes
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Predicate
-import java.util.stream
+import java.util.{Optional, stream}
 
 import cats.implicits._
+import com.google.common.collect.ImmutableMap
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.{HttpMethod, QueryStringDecoder}
 import jakarta.inject.{Inject, Named}
-import org.apache.james.core.{Disconnector, Username}
+import org.apache.james.core.{ConnectionDescription, ConnectionDescriptionSupplier, Disconnector, Username}
 import org.apache.james.events.{EventBus, Registration, RegistrationKey}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.EVENT_SOURCE
@@ -161,7 +162,7 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
                                   @Named(JMAPInjectionKeys.JMAP) eventBus: EventBus,
                                   pushSerializer: PushSerializer,
                                   typeStateFactory: TypeStateFactory,
-                                  delegationStore: DelegationStore) extends JMAPRoutes with Disconnector {
+                                  delegationStore: DelegationStore) extends JMAPRoutes with Disconnector with ConnectionDescriptionSupplier {
   private val connectedUsers: java.util.concurrent.ConcurrentHashMap[ClientContext, ClientContext] = new java.util.concurrent.ConcurrentHashMap[ClientContext, ClientContext]
 
   override def routes(): stream.Stream[JMAPRoute] = stream.Stream.of(
@@ -249,5 +250,23 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
         context.clean()
         connectedUsers.remove(context)
       })
+  }
+
+  override def describeConnections(): stream.Stream[ConnectionDescription] = {
+    val writable = true
+    val encrypted = true
+    connectedUsers.values()
+      .stream()
+      .map(context => new ConnectionDescription(
+        "JMAP",
+        "EventSource",
+        Optional.empty(),
+        Optional.empty(),
+        context.pushRegistration.get() != null,
+        context.pushRegistration.get() != null,
+        writable,
+        !encrypted,
+        Optional.ofNullable(context.session.getUser),
+        ImmutableMap.of()))
   }
 }
