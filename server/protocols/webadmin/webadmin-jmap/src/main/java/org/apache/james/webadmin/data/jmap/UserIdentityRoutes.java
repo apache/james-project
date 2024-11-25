@@ -42,6 +42,8 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.eclipse.jetty.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -62,6 +64,7 @@ public class UserIdentityRoutes implements Routes {
     private static final String USER_NAME = ":userName";
     private static final String IDENTITY_ID = ":identityId";
     public static final String USERS_IDENTITY_BASE_PATH = USERS + SEPARATOR + USER_NAME + SEPARATOR + IDENTITIES;
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserIdentityRoutes.class);
 
     private Service service;
     private final IdentityRepository identityRepository;
@@ -105,20 +108,31 @@ public class UserIdentityRoutes implements Routes {
     }
 
     private List<UserIdentity> listIdentities(Request request, Response response) {
-        Username username = extractUsername(request);
-        Optional<Boolean> defaultFilter = ParametersExtractor.extractBoolean(request, "default");
+        try {
+            Username username = extractUsername(request);
+            Optional<Boolean> defaultFilter = ParametersExtractor.extractBoolean(request, "default");
 
-        List<UserIdentity> identities = Flux.from(identityRepository.list(username))
-            .map(UserIdentity::from)
-            .collectList()
-            .block();
+            List<UserIdentity> identities = Flux.from(identityRepository.list(username))
+                .map(UserIdentity::from)
+                .collectList()
+                .block();
 
-        return defaultFilter
-            .filter(FunctionalUtils.identityPredicate())
-            .map(queryDefault -> getDefaultIdentity(identities)
-                .map(List::of)
-                .orElseThrow(() -> throw404("Default identity can not be found")))
-            .orElse(identities);
+            return defaultFilter
+                .filter(FunctionalUtils.identityPredicate())
+                .map(queryDefault -> getDefaultIdentity(identities)
+                    .map(List::of)
+                    .orElseThrow(() -> throw404("Default identity can not be found")))
+                .orElse(identities);
+        } catch (IllegalStateException e) {
+            LOGGER.info("Invalid argument while listing identities at {}", request.uri(), e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid argument while listing identities")
+                .cause(e)
+                .haltError();
+        }
+
     }
 
     private HaltException createIdentity(Request request, Response response) {
@@ -132,6 +146,14 @@ public class UserIdentityRoutes implements Routes {
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message("JSON payload of the request is not valid")
+                .cause(e)
+                .haltError();
+        } catch (IllegalStateException e) {
+            LOGGER.info("Invalid argument while creating identity at {}", request.uri(), e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid argument while creating identity")
                 .cause(e)
                 .haltError();
         }
@@ -156,6 +178,14 @@ public class UserIdentityRoutes implements Routes {
                 .haltError();
         } catch (IdentityNotFoundException notFoundException) {
             throw throw404(String.format("IdentityId '%s' can not be found", identityId.id().toString()));
+        } catch (IllegalStateException e) {
+            LOGGER.info("Invalid argument while updating identity at {}", request.uri(), e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid argument while updating identity")
+                .cause(e)
+                .haltError();
         }
     }
 
