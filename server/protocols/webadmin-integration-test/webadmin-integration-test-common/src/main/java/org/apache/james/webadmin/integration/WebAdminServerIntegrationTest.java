@@ -326,6 +326,68 @@ public abstract class WebAdminServerIntegrationTest {
             .body("message", is("Default identity can not be found"));
     }
 
+    @Test
+    void getIdentitiesOfInvalidUserShouldReturnBadRequest() {
+        given()
+            .get(String.format("/users/%s/identities?default=true", "John Doe"))
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @Test
+    void createIdentitiesForInvalidUserShouldReturnBadRequest() {
+        given()
+            .body("{\n" +
+                "  \"name\": \"create name 1\",\n" +
+                "  \"email\": \"bob@domain.tld\",\n" +
+                "  \"textSignature\": \"create textSignature1\",\n" +
+                "  \"htmlSignature\": \"create htmlSignature1\",\n" +
+                "  \"sortOrder\": 99,\n" +
+                "  \"bcc\": [\n" +
+                "    {\n" +
+                "      \"name\": \"create bcc 1\",\n" +
+                "      \"email\": \"create_boss_bcc_1@domain.tld\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"replyTo\": [\n" +
+                "    {\n" +
+                "      \"name\": \"create replyTo 1\",\n" +
+                "      \"email\": \"create_boss1@domain.tld\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}")
+            .post(String.format("/users/%s/identities", "John Doe"))
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @Test
+    void updateIdentitiesForInvalidUserShouldReturnBadRequest() {
+        given()
+            .body("{\n" +
+                "  \"name\": \"create name 1\",\n" +
+                "  \"email\": \"bob@domain.tld\",\n" +
+                "  \"textSignature\": \"create textSignature1\",\n" +
+                "  \"htmlSignature\": \"create htmlSignature1\",\n" +
+                "  \"sortOrder\": 99,\n" +
+                "  \"bcc\": [\n" +
+                "    {\n" +
+                "      \"name\": \"create bcc 1\",\n" +
+                "      \"email\": \"create_boss_bcc_1@domain.tld\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"replyTo\": [\n" +
+                "    {\n" +
+                "      \"name\": \"create replyTo 1\",\n" +
+                "      \"email\": \"create_boss1@domain.tld\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}")
+            .put(String.format("/users/%s/identities/b1c924a3-5b86-44fa-a036-77825ec0e3e6", "John Doe"))
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
     // Immutable
     @Test
     void validateHealthChecksShouldReturnOk() {
