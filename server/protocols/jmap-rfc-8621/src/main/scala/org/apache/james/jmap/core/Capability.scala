@@ -317,7 +317,7 @@ case object DelegationCapabilityFactory extends CapabilityFactory {
 }
 
 final case class SharesCapabilityProperties() extends CapabilityProperties {
-  override def jsonify(): JsObject = Json.obj()
+  override def jsonify(): JsObject = Json.obj("subaddressingSupported" -> true)
 }
 
 case object SharesCapabilityFactory extends CapabilityFactory {
