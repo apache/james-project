@@ -32,6 +32,7 @@ import org.apache.james.jmap.JMAPRoutes;
 import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.Version;
 import org.apache.james.jmap.api.model.TypeName;
+import org.apache.james.jmap.api.pushsubscription.PushSubscriptionDisconnector;
 import org.apache.james.jmap.api.upload.UploadService;
 import org.apache.james.jmap.api.upload.UploadServiceDefaultImpl;
 import org.apache.james.jmap.change.EmailDeliveryTypeName$;
@@ -204,6 +205,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         Multibinder<Disconnector> disconnectorMultibinder = Multibinder.newSetBinder(binder(), Disconnector.class);
         disconnectorMultibinder.addBinding().to(WebSocketRoutes.class);
         disconnectorMultibinder.addBinding().to(EventSourceRoutes.class);
+        disconnectorMultibinder.addBinding().to(PushSubscriptionDisconnector.class);
     }
 
     @ProvidesIntoSet
