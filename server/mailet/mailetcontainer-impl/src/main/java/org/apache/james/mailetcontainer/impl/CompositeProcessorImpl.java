@@ -62,7 +62,7 @@ public class CompositeProcessorImpl extends AbstractStateCompositeProcessor {
 
     @Override
     protected MailProcessor createMailProcessor(String name, HierarchicalConfiguration<ImmutableNode> config) throws Exception {
-        MailetProcessorImpl processor = new MailetProcessorImpl(metricFactory);
+        MailetProcessorImpl processor = new MailetProcessorImpl(name, metricFactory);
         try {
             processor.setMailetContext(mailetContext);
             processor.setMailetLoader(mailetLoader);
