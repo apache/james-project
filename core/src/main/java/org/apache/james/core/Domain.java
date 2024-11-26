@@ -56,7 +56,7 @@ public class Domain implements Serializable {
 
         String domainWithoutBrackets = removeBrackets(domain);
         Preconditions.checkArgument(PART_CHAR_MATCHER.matchesAllOf(domainWithoutBrackets),
-            "Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in {}", domain);
+            "Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in %s", domain);
 
         int pos = 0;
         int nextDot = domainWithoutBrackets.indexOf('.');
