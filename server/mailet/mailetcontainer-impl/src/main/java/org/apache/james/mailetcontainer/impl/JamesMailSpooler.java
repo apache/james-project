@@ -129,7 +129,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         }
 
         private void performProcessMail(MailQueueItem queueItem, Mail mail) {
-            LOGGER.debug("==== Begin processing mail {} ====", mail.getName());
+            LOGGER.debug("==== Begin processing mail {} with state {} ====", mail.getName(), mail.getState());
             ImmutableList<MailAddress> originalRecipients = ImmutableList.copyOf(mail.getRecipients());
             try {
                 mailProcessor.service(mail);

@@ -37,7 +37,7 @@ public class MailetProcessorImplTest extends AbstractStateMailetProcessorTest {
     protected AbstractStateMailetProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> configuration) throws Exception {
         MailetProcessorImpl processor = null;
         try {
-            processor = new MailetProcessorImpl(new RecordingMetricFactory());
+            processor = new MailetProcessorImpl("anyName", new RecordingMetricFactory());
             processor.setMailetContext(FakeMailContext.defaultContext());
             processor.setMailetLoader(new MockMailetLoader());
             processor.setMatcherLoader(new MockMatcherLoader());
