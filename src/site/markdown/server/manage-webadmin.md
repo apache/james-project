@@ -4998,7 +4998,7 @@ Return code:
 ### Listing connected users
 
 ```
-curl -XDELETE /servers/connectedUsers
+curl -XGET /servers/connectedUsers
 ```
 
 Will return a list of users having channels opened on the server:
@@ -5053,7 +5053,7 @@ Will return a description and statistics for channels of a user:
 curl -XGET /servers/channels
 ```
 
-Will return a description and statistics for channels of a user:
+Will return a description and statistics for channels of all users:
 
 ```
 [
