@@ -118,4 +118,7 @@ public class ProcessorImpl {
         }
     }
 
+    public String mailetName() {
+        return mailet.getMailetInfo();
+    }
 }

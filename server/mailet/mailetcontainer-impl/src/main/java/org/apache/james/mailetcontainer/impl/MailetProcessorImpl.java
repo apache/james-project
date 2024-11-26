@@ -167,6 +167,7 @@ public class MailetProcessorImpl extends AbstractStateMailetProcessor {
         afterMatching.stream()
             .filter(mail -> !mail.getState().equals(getState()))
             .filter(mail -> !mail.getState().equals(Mail.GHOST))
+            .peek(mail -> LOGGER.debug("Switching processor to {} for {} after {}", mail.getState(), mail.getName(), pair.getValue().mailetName()))
             .forEach(Throwing.consumer(this::toProcessor).sneakyThrow());
 
         return step.nextStepBuilder()
