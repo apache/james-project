@@ -21,6 +21,14 @@ If specified, behavioral changes and additional fields defined hereafter MUST ap
 
 If unspecified no additional fields to the Mailbox object are returned, and the behaviour needs to be exactly the one of `urn:ietf:params:jmap:mail`.
 
+## Addition to the capability object
+
+Servers supporting *subaddressing* need to advertise it through the session capabilities by adding the following field to the `urn:apache:james:params:jmap:mail:shares` capability object:
+
+- `subaddressingSupported`: *true*
+
+If this field is not present, then it should be assumed that subaddressing is NOT supported.
+
 ## Addition to existing data types
 
 The following data types are defined:
