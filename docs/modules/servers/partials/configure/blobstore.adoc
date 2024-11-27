@@ -126,6 +126,26 @@ BucketPrefix is the prefix of bucket names in James BlobStore
 Unless a special case like storing blobs of deleted messages.
 |===
 
+==== SSE-C Configuration
+
+.SSE-C configuration
+|===
+| Property name | explanation
+
+| encryption.s3.sse.c.enable
+| optional: Boolean. Default is false. Controls whether to use Server-Side Encryption with Customer-Provided Keys (SSE-C) for S3 blobs.
+
+| encryption.s3.sse.c.master.key.algorithm
+| String. Required if `encryption.s3.sse.c.enable` is true. The algorithm used to derive the master key from the provided password. Eg: AES256
+
+| encryption.s3.sse.c.master.key.password
+| String. Required if `encryption.s3.sse.c.enable` is true. The password used to generate the customer key.
+
+| encryption.s3.sse.c.master.key.salt
+| String. Required if `encryption.s3.sse.c.enable` is true. The salt used to generate the customer key.
+
+|===
+
 == Blob Export
 
 Blob Exporting is the mechanism to help James to export a blob from an user to another user.

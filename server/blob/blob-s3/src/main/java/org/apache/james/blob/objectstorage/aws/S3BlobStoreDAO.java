@@ -119,12 +119,6 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     @Inject
     public S3BlobStoreDAO(S3ClientFactory s3ClientFactory,
                           S3BlobStoreConfiguration configuration,
-                          BlobId.Factory blobIdFactory) {
-       this(s3ClientFactory, configuration, blobIdFactory, S3RequestOption.DEFAULT);
-    }
-
-    public S3BlobStoreDAO(S3ClientFactory s3ClientFactory,
-                          S3BlobStoreConfiguration configuration,
                           BlobId.Factory blobIdFactory,
                           S3RequestOption s3RequestOption) {
         this.configuration = configuration;

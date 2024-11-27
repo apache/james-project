@@ -214,6 +214,34 @@ generate salt with : openssl rand -hex 16
                     </dl>
                 </subsection>
             </subsection>
+            <subsection name="SSE-C Configuration">
+                <dl>
+                    <dt><strong>encryption.s3.sse.c.enable</strong></dt>
+                    <dd>
+                        optional: Boolean. Default is false.
+                        Controls whether to use Server-Side Encryption with Customer-Provided Keys (SSE-C) for S3 blobs
+                    </dd>
+
+                    <dt><strong>encryption.s3.sse.c.master.key.algorithm</strong></dt>
+                    <dd>
+                        String. Required if `encryption.s3.sse.c.enable` is true.
+                        The algorithm used to derive the master key from the provided password. Eg: AES256
+                    </dd>
+
+                    <dt><strong>encryption.s3.sse.c.master.key.password</strong></dt>
+                    <dd>
+                        String. Required if `encryption.s3.sse.c.enable` is true.
+                        The password used to generate the customer key.
+                    </dd>
+
+                    <dt><strong>encryption.s3.sse.c.master.key.salt</strong></dt>
+                    <dd>
+                        String. Required if `encryption.s3.sse.c.enable` is true.
+                        The salt used to generate the customer key.
+                    </dd>
+
+                </dl>
+            </subsection>
         </section>
 
     </body>

@@ -51,7 +51,7 @@ public class S3HealthCheckTest {
             .build();
 
         S3ClientFactory s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
-        BlobStoreDAO s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory());
+        BlobStoreDAO s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory(), S3RequestOption.DEFAULT);
         s3HealthCheck = new ObjectStorageHealthCheck(s3BlobStoreDAO);
     }
 

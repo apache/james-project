@@ -70,7 +70,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         s3ClientFactory = new S3ClientFactory(s3Configuration, () -> new JamesS3MetricPublisher(new RecordingMetricFactory(), new NoopGaugeRegistry(),
             DEFAULT_S3_METRICS_PREFIX));
 
-        testee = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory());
+        testee = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory(), S3RequestOption.DEFAULT);
     }
 
     @AfterEach

@@ -50,6 +50,7 @@ public class S3BlobStoreConfigurationReader {
     private static final String OBJECTSTORAGE_S3_IN_MEMORY_READ_LIMIT = "objectstorage.s3.in.read.limit";
     private static final String OBJECTSTORAGE_S3_UPLOAD_RETRY_MAX_ATTEMPTS = "objectstorage.s3.upload.retry.maxAttempts";
     private static final String OBJECTSTORAGE_S3_UPLOAD_RETRY_BACKOFF_DURATION_MILLIS = "objectstorage.s3.upload.retry.backoffDurationMillis";
+    private static final String OBJECTSTORAGE_S3_ENCRYPTION_SSEC_ENABLE_PROPERTY = "encryption.s3.sse.c.enable";
 
     public static S3BlobStoreConfiguration from(Configuration configuration) throws ConfigurationException {
         Optional<Integer> httpConcurrency = Optional.ofNullable(configuration.getInteger(OBJECTSTORAGE_S3_HTTP_CONCURRENCY, null));
@@ -75,7 +76,9 @@ public class S3BlobStoreConfigurationReader {
                 .jitter(UPLOAD_RETRY_BACKOFF_JETTY_DEFAULT)
                 .filter(SdkException.class::isInstance));
 
-        return S3BlobStoreConfiguration.builder()
+        boolean ssecEnabled = configuration.getBoolean(OBJECTSTORAGE_S3_ENCRYPTION_SSEC_ENABLE_PROPERTY, false);
+
+        S3BlobStoreConfiguration.Builder.ReadyToBuild configBuilder = S3BlobStoreConfiguration.builder()
             .authConfiguration(AwsS3ConfigurationReader.from(configuration))
             .region(region)
             .defaultBucketName(namespace.map(BucketName::of))
@@ -85,8 +88,12 @@ public class S3BlobStoreConfigurationReader {
             .readTimeout(readTimeout)
             .writeTimeout(writeTimeout)
             .connectionTimeout(connectionTimeout)
-            .uploadRetrySpec(uploadRetrySpec)
-            .build();
+            .uploadRetrySpec(uploadRetrySpec);
+
+        if (ssecEnabled) {
+            configBuilder.ssecEnabled().ssecConfiguration(configuration);
+        }
+        return configBuilder.build();
     }
 
 }
