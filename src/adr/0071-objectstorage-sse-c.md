@@ -8,20 +8,19 @@ Accepted (lazy consensus)
 
 ## Context
 
-To enhance data security for users, Apache James currently supports client-side encryption through AESBlobStoreDAO. However, this solution consumes significant CPU resources for encryption and decryption, impacting overall system performance.
+To enhance data security for users, Apache James currently supports client-side encryption through AESBlobStoreDAO. However, this solution consumes significant CPU resources for encryption and decryption, impacting overall system performance. Moreover, it pushes synchronous concepts like `InputStream` into an otherwise reactive interface.
 
-To provide a more efficient encryption option, the team has decided to integrate Server-Side Encryption with Customer-provided keys (SSE-C) for S3 Object Storage. This will allow for enhanced security with optimized performance. SSE-C provides high-level security without the CPU overhead experienced with client-side encryption in James.
+Some object storage providers offer Server-Side Encryption with Customer-provided keys (SSE-C), where users supply their own encryption keys, while the service performs encryption and securely stores the data.
 
 ## Decision
 
-Integrate SSE-C with S3 Object Storage in Apache James to improve user data security. 
+We have decided to integrate SSE-C option for James S3 Object Storage implement. 
+
 James will manage the master key and salt, using them to create customer keys when calling S3 APIs, such as PUT, GET, and HEAD on objects.
 
-Two approaches are proposed for providing the customer key:
+In order to provide the customer key, we have made it an interface to allow for potential variations in key and salt derivation. The default implementation will be:
 
-1. Single customer key: A single master key and salt will be used across all objects in the system. These values will be configured in the configuration file, similar to the current `AESBlobStoreDAO` approach.
-
-2. Derived customer key: A more secure option where the master key and salt are dynamic, based on the bucketName and blobId. This approach generates a unique customer key for each different blobId, enhancing security. However, it also has a higher CPU resource impact and depends on the configured key generation algorithm.
+- Single customer key: A single master key and salt will be used across all objects in the system. These values will be configured in the configuration file, similar to the current `AESBlobStoreDAO` approach.
 
 The current library (`awssdk s3`), fully supports the required APIs for this feature, enabling seamless integration of SSE-C without any compatibility issues.
 
@@ -31,20 +30,19 @@ Enabling SSE-C is fully optional. By default, it is disabled and requires config
 
 ### Benefits
 
-- Performance Improvement: SSE-C takes advantage of S3’s security capabilities without taxing James’s CPU.
+- Potential Performance Improvement: SSE-C leverages S3’s security capabilities, potentially reducing CPU load on James servers by offloading encryption and decryption tasks to S3.
 - Security: Provides robust security without fully shifting encryption to the client or to S3 alone.
 
 ### Limitations
 
-- Incompatibility with Deduplication feature.
 - Data Migration Challenges: Currently, S3 APIs do not support migrating encrypted data from AESBlobStoreDAO (client-side encryption) to the new SSE-C endpoint.
-- Replication: SSE-C does not support bucket replication.
-- SSE-C is less secure than AESBlobStoreDAO (Client-Side Encryption).
+- Replication: Some object storage provider does not support bucket replication when enable SSE-C. Eg: OVH Object Storage, S3-Minio only support from version 2024-03-30.
+- SSE-C may be considered less secure than AESBlobStoreDAO (Client-Side Encryption) because the encryption key must be provided to the S3 service for encryption and decryption operations.
 
 ## Alternatives
 
 - Continue using client-side encryption with AESBlobStoreDAO.
-- Using SSE-S3 (Server-Side Encryption with S3-managed keys) for enhanced security without the need for client-side management.
+- Using SSE-S3 (Server-Side Encryption with S3-managed keys) for enhanced security eliminates the need for client-side key management. However, this trade-off means SSE-S3 relies entirely on Object storage provider for key management, which may not satisfy stricter security or compliance requirements.
 
 ## References
 - [AWS SSE-C Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerSideEncryptionCustomerKeys.html)
