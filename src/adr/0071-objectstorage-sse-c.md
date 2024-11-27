@@ -37,7 +37,7 @@ Enabling SSE-C is fully optional. By default, it is disabled and requires config
 
 - Data Migration Challenges: Currently, S3 APIs do not support migrating encrypted data from AESBlobStoreDAO (client-side encryption) to the new SSE-C endpoint.
 - Replication: Some object storage provider does not support bucket replication when enable SSE-C. Eg: OVH Object Storage, S3-Minio only support from version 2024-03-30.
-- SSE-C may be considered less secure than AESBlobStoreDAO (Client-Side Encryption) because the encryption key must be provided to the S3 service for encryption and decryption operations.
+- SSE-C may be considered less secure than AESBlobStoreDAO (Client-Side Encryption) because the encryption key must be provided to the S3 service for encryption and decryption operations. Even if the S3 storage provider do not persist the keys.
 
 ## Alternatives
 
