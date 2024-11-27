@@ -24,7 +24,6 @@ import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.BODY
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.MESSAGE_ID_FIELD;
 import static org.apache.james.mailbox.lucene.search.DocumentFieldConstants.SUBJECT_FIELD;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -57,7 +56,6 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.highlight.Formatter;
 import org.apache.lucene.search.highlight.Highlighter;
-import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.search.highlight.SimpleSpanFragmenter;
@@ -164,7 +162,7 @@ public class LuceneSearchHighlighter implements SearchHighlighter {
         return Throwing.supplier(() -> parser.parse(queryValue)).get();
     }
 
-    private SearchSnippet buildSearchSnippet(Document doc, SearchQuery searchQuery) throws IOException, InvalidTokenOffsetsException {
+    private SearchSnippet buildSearchSnippet(Document doc, SearchQuery searchQuery) {
         MessageId messageId = messageIdFactory.fromString(doc.get(MESSAGE_ID_FIELD));
         Optional<String> highlightedSubject = Optional.ofNullable(getHighlightedSubject(doc, searchQuery));
         Optional<String> highlightedBody = Optional.ofNullable(getHighlightedBody(doc, searchQuery))
@@ -173,12 +171,16 @@ public class LuceneSearchHighlighter implements SearchHighlighter {
         return new SearchSnippet(messageId, highlightedSubject, highlightedBody);
     }
 
-    private String getHighlightedSubject(Document doc, SearchQuery searchQuery) throws InvalidTokenOffsetsException, IOException {
-        return highlighter(searchQuery).getBestFragment(analyzer, SUBJECT_FIELD, doc.get(SUBJECT_FIELD));
+    private String getHighlightedSubject(Document doc, SearchQuery searchQuery) {
+        return Optional.ofNullable(doc.get(SUBJECT_FIELD))
+            .map(Throwing.function(subject -> highlighter(searchQuery).getBestFragment(analyzer, SUBJECT_FIELD, subject)))
+            .orElse(null);
     }
 
-    private String getHighlightedBody(Document doc, SearchQuery searchQuery) throws IOException, InvalidTokenOffsetsException {
-        return highlighter(searchQuery).getBestFragment(analyzer, BODY_FIELD, doc.get(BODY_FIELD));
+    private String getHighlightedBody(Document doc, SearchQuery searchQuery) {
+        return Optional.ofNullable(doc.get(BODY_FIELD))
+            .map(Throwing.function(body -> highlighter(searchQuery).getBestFragment(analyzer, BODY_FIELD, body)))
+            .orElse(null);
     }
 
     private Optional<String> getHighlightAttachmentTextBody(Document doc, SearchQuery searchQuery) {
