@@ -1,0 +1,240 @@
+Return-Path: <hmavu@example.com>
+org.apache.james.rspamd.flag: NO
+org.apache.james.rspamd.status: No, actions=no action score=0.0 requiredScore=15.0
+Delivered-To: dphamhoang@example.com
+Received: from 172.17.0.1 (EHLO incoming.example.com) ([172.17.0.1])
+          by incoming.example.com (JAMES SMTP Server ) with ESMTP ID c8ca0690;
+          Wed, 10 May 2022 03:16:53 +0000 (UTC)
+Received: from smtp.example.com (smtp.example.com [54.36.8.78])
+	by incoming.example.com (Postfix) with ESMTPS id 48A1C9C401;
+	Wed, 10 May 2022 03:16:53 +0000 (UTC)
+Received: from ?Open?PaaS?SMTP?server?for?example? (unknown [51.83.109.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.example.com (Postfix) with ESMTPSA id 0F0B73EE62;
+	Wed, 10 May 2022 05:16:54 +0200 (CEST)
+DKIM-Signature: a=rsa-sha256; b=clyJAm7d7I1D+H1Q9461DlJT10TYuocQAkK0z1ybeYYKqrjax6BjH3t+Cxkq/B1qt5hibD6Hg9rSVKMn6nG8ye3ghzYSGJg5CYNl/ozEWIUM976+JVpf2qDmTlukRzs25GAESKeBt0UTmsn6lusiXtf0kR5hWr0j8ryT5Z8UpzaaLlnMtWBXvx3mQzVltj7OTyd4mx8JRiZE5bV65dS1S0SZOmp9iCEq9+vNQaL3M3m6N7s1xGV2J5Htz7tRVy3NWczJdDVtRHY0u3xJNetYjSVbzxCsciqPy+xSFYj1DHyPMVqVjLGxALBpJ953qFBZi4d17D9BfRONbg6yCmbxkg==; s=smtpoutjames; d=example.com; v=1; bh=A/3l3MmJvs/qsqAqSuiuPhfTOrrap3TVn5YAOKn155E=; h=from : reply-to : subject : date : to : cc : resent-date : resent-from : resent-sender : resent-to : resent-cc : in-reply-to : references : list-id : list-help : list-unsubscribe : list-subscribe : list-post : list-owner : list-archive;
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-example-Copy-Delivery-Done: 1
+From: Ha Minh Anh VU <hmavu@example.com>
+Sender: Ha Minh Anh VU <hmavu@example.com>
+Reply-To: hmavu@example.com
+To: Anton SHEPILOV <ashepilov@example.com>
+Cc: Dat PHAM HOANG <dphamhoang@example.com>, The Dat VU
+ <tdvu@example.com>, VN HR <vnhr@example.com>,
+ =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <btellier@example.com>
+Subject: Re: Cong hoa Xa Hoi Chu Nghia Viet Nam
+Message-ID: <Mime4j.7a.a9c00d8d7ab83180.18803a95977@example.com>
+Date: Wed, 10 May 2022 03:16:50 +0000
+References: <Mime4j.671.1acd13bc529da6f9.187fa2ec03e@example.com>
+ <Mime4j.49.89784d872ecab223.1880019b684@example.com>
+
+<p>Dear Anton, </p><p>Can we arrange an interview for you and XXXXXXXXXXXX =
+XXXXXXXXXXXX Developer at 04 p=2Em (Paris Time) on this Thursday (11/05/202=
+3)?</p><p>If you are not available at that time, kindly suggest us your ava=
+ilable time</p><p>Thank you &amp; Best regards,</p><div class=3D"openpaas-s=
+ignature">-- 
+<p><span style=3D"color:rgb(51, 51, 51);">Vu Ha Minh Anh (Ms)=
+&nbsp;</span><br style=3D"color:rgb(51, 51, 51);"><span style=3D"color:rgb(=
+51, 51, 51);">HR Department&nbsp;</span><br style=3D"color:rgb(51, 51, 51);=
+"><font color=3D"#9c0000"><b>example VIETNAM</b></font><br style=3D"color:=
+rgb(51, 51, 51);"><span style=3D"color:rgb(51, 51, 51);">5 Dien Bien Phu St=
+r=2E, Ba Dinh Dist=2E, Ha Noi</span><br style=3D"color:rgb(51, 51, 51);"><s=
+pan style=3D"color:rgb(51, 51, 51);">(+84) 901735987&nbsp;</span><br style=
+=3D"color:rgb(51, 51, 51);"><font color=3D"#424242">https://example=2Evn</=
+font><br></p></div><cite>On May 10, 2023 6:35 AM, from gagagagagaga@example=
+=2Ecom</cite><blockquote>Hi Anton,&nbsp;<div><br></div><div>Because at that=
+ time, before the barcamp, we was considering about the Matrix, about organ=
+ization, =E2=80=A6 so we postponed the process=2E&nbsp;</div><div>At the mo=
+ment, when we need people for TDrive, Twake and maybe Timex Yen re-launch t=
+he process with this potential candidate=2E</div><div><br></div><div>Thanks=
+ and BRs=2E<br><div><br><blockquote type=3D"cite"><div>On 9 May 2022, at 17=
+:41, Anton SHEPILOV &lt;ashepilov@example=2Ecom&gt; wrote:</div><br class=
+=3D"x_Apple-interchange-newline"><div><p>Yes, let's have an interview with =
+hime</p><p>@Dat and whats happened two months ago? Why we didn't hire him?<=
+/p><cite>On May 8, 2022 9:39 AM, from dphamhoang@example=2Ecom</cite><bloc=
+kquote>Hi Anton,<div><br></div><div>This is Minh, a candidate who we had th=
+e interview more than 2 months ago=2E</div><div>We scanned him on the skill=
+ of technical:</div><div>&nbsp;- More than 2 years experience in Flutter=2E=
+ But not too much experience in Flutter web</div><div>&nbsp;- Good knowledg=
+e in Android and React Native=2E</div><div>&nbsp;- Have good attitude in wo=
+rk</div><div><br></div><div>If you agree with this guys, please scan him mo=
+re in your side, IMO, it is a good candidate for not only TDrive, TMail and=
+ Twake=2E</div><div><br></div><div>Thanks and BRs=2E</div><div><div><br><bl=
+ockquote type=3D"cite"><div>On 8 May 2022, at 14:06, Hoang Yen &lt;tyhoang@=
+example=2Ecom&gt; wrote:</div><br class=3D"x_x_Apple-interchange-newline">=
+<div><p>Dear Anton,</p><p>Please check the CVs_Flutter below=2E He had alre=
+ady interviewed with Dat Pham &amp; Dat Pham says <b>big GO </b>with him</p=
+><p><b>He will replace Manh_Flutter dev (just resigned in company on April,=
+2022)=2E</b>&nbsp;</p><p>For more info, kindly check with Dat Pham=2E <b>@D=
+at:</b> kindly give us your feedback about techinal, culture,=2E=2E=2Eof th=
+is candidates to follow=2E</p><p><b>@Anton</b>: kindly give us your decisio=
+n soon!</p><p>Thank you so much!</p><div class=3D"x_x_tmail-signature">--<b=
+r><p><span style=3D"color: rgb(51, 51, 51); font-family: roboto; font-size:=
+ 13px; background-color: rgb(255, 255, 255);">HOANG Thi Yen (Ms)&nbsp;</spa=
+n><br style=3D"box-sizing: border-box; -webkit-font-smoothing: antialiased;=
+ color: rgb(51, 51, 51); font-family: roboto; font-size: 13px; background-c=
+olor: rgb(255, 255, 255); outline: none !important; -webkit-tap-highlight-c=
+olor: rgba(0, 0, 0, 0) !important;"><span style=3D"color: rgb(51, 51, 51); =
+font-family: roboto; font-size: 13px; background-color: rgb(255, 255, 255);=
+">HR department&nbsp;</span><br style=3D"box-sizing: border-box; -webkit-fo=
+nt-smoothing: antialiased; color: rgb(51, 51, 51); font-family: roboto; fon=
+t-size: 13px; background-color: rgb(255, 255, 255); outline: none !importan=
+t; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;"><font color=
+=3D"#9c0000" style=3D"box-sizing: border-box; -webkit-font-smoothing: antia=
+liased; font-family: roboto; font-size: 13px; background-color: rgb(255, 25=
+5, 255); outline: none !important; -webkit-tap-highlight-color: rgba(0, 0, =
+0, 0) !important;"><b style=3D"box-sizing: border-box; -webkit-font-smoothi=
+ng: antialiased; outline: none !important; -webkit-tap-highlight-color: rgb=
+a(0, 0, 0, 0) !important;">example VIETNAM</b></font><br style=3D"box-sizi=
+ng: border-box; -webkit-font-smoothing: antialiased; color: rgb(51, 51, 51)=
+; font-family: roboto; font-size: 13px; background-color: rgb(255, 255, 255=
+); outline: none !important; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) =
+!important;"><span style=3D"color: rgb(51, 51, 51); font-family: roboto; fo=
+nt-size: 13px; background-color: rgb(255, 255, 255);">5 Dien Bien Phu Str=
+=2E, Ba Dinh Dist=2E, Ha Noi</span><br style=3D"box-sizing: border-box; -we=
+bkit-font-smoothing: antialiased; color: rgb(51, 51, 51); font-family: robo=
+to; font-size: 13px; background-color: rgb(255, 255, 255); outline: none !i=
+mportant; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;"><span =
+style=3D"color: rgb(51, 51, 51); font-family: roboto; font-size: 13px; back=
+ground-color: rgb(255, 255, 255);">(+84) 372019465</span><br style=3D"box-s=
+izing: border-box; -webkit-font-smoothing: antialiased; color: rgb(51, 51, =
+51); font-family: roboto; font-size: 13px; background-color: rgb(255, 255, =
+255); outline: none !important; -webkit-tap-highlight-color: rgba(0, 0, 0, =
+0) !important;"><font color=3D"#424242" style=3D"box-sizing: border-box; -w=
+ebkit-font-smoothing: antialiased; font-family: roboto; font-size: 13px; ba=
+ckground-color: rgb(255, 255, 255); outline: none !important; -webkit-tap-h=
+ighlight-color: rgba(0, 0, 0, 0) !important;">https://example=2Evn</font><=
+br></p><br></div><cite>On Mar 15, 2022 4:08 PM, from Thi Yen Hoang </cite><=
+blockquote style=3D"margin-left:8px;margin-right:8px;padding-left:12px;padd=
+ing-right:12px;border-left:5px solid #eee;"><p><span style=3D"color: rgb(51=
+, 51, 51); font-size: 16=2E25px;">Dear Dat,</span><br></p><p style=3D"box-s=
+izing: border-box; -webkit-font-smoothing: antialiased; outline: none !impo=
+rtant; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important; margin: 0p=
+x 0px 20px; font-family: roboto; font-size: 13px; font-style: normal; font-=
+variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; let=
+ter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-=
+transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit=
+-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoratio=
+n-style: initial; text-decoration-color: initial; color: rgb(51, 51, 51); b=
+ackground-color: rgb(255, 255, 255);"><span style=3D"box-sizing: border-box=
+; -webkit-font-smoothing: antialiased; outline: none !important; -webkit-ta=
+p-highlight-color: rgba(0, 0, 0, 0) !important; font-size: 16=2E25px; color=
+: hsl(var(--text-color-h), var(--text-color-s), var(--text-color-l));">Plea=
+se help to scan the profile attached and let me know your feedback soon=2E<=
+/span></p><p style=3D"box-sizing: border-box; -webkit-font-smoothing: antia=
+liased; outline: none !important; -webkit-tap-highlight-color: rgba(0, 0, 0=
+, 0) !important; margin: 0px 0px 20px; font-family: roboto; font-size: 13px=
+; font-style: normal; font-variant-ligatures: normal; font-variant-caps: no=
+rmal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: sta=
+rt; text-indent: 0px; text-transform: none; white-space: normal; widows: 2;=
+ word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickne=
+ss: initial; text-decoration-style: initial; text-decoration-color: initial=
+; color: rgb(51, 51, 51); background-color: rgb(255, 255, 255);"><span styl=
+e=3D"box-sizing: border-box; -webkit-font-smoothing: antialiased; outline: =
+none !important; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important; =
+color: rgb(51, 51, 51); font-size: 16=2E25px;">Please kindly refer to some =
+highlights:</span></p><ul style=3D"box-sizing: border-box; -webkit-font-smo=
+othing: antialiased; outline: none !important; -webkit-tap-highlight-color:=
+ rgba(0, 0, 0, 0) !important; margin-top: 0px; margin-bottom: 9px; font-fam=
+ily: roboto; font-size: 13px; font-style: normal; font-variant-ligatures: n=
+ormal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal;=
+ orphans: 2; text-align: start; text-indent: 0px; text-transform: none; whi=
+te-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: =
+0px; text-decoration-thickness: initial; text-decoration-style: initial; te=
+xt-decoration-color: initial; color: rgb(51, 51, 51); background-color: rgb=
+(255, 255, 255);"><li style=3D"box-sizing: border-box; -webkit-font-smoothi=
+ng: antialiased; outline: none !important; -webkit-tap-highlight-color: rgb=
+a(0, 0, 0, 0) !important; background-color: rgb(255, 255, 255);"><span styl=
+e=3D"box-sizing: border-box; -webkit-font-smoothing: antialiased; outline: =
+none !important; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;"=
+><font style=3D"box-sizing: border-box; -webkit-font-smoothing: antialiased=
+; outline: none !important; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !=
+important; color: rgb(51, 51, 51); font-family: roboto; font-size: 13px; fo=
+nt-style: normal; font-variant-ligatures: normal; font-variant-caps: normal=
+; font-weight: 400; letter-spacing: normal; text-transform: none; white-spa=
+ce: normal; word-spacing: 0px; -webkit-text-stroke-width: 0px;" color=3D"#3=
+33333"><span style=3D"box-sizing: border-box; -webkit-font-smoothing: antia=
+liased; outline: none !important; -webkit-tap-highlight-color: rgba(0, 0, 0=
+, 0) !important; font-size: 16=2E25px;"><b style=3D"box-sizing: border-box;=
+ -webkit-font-smoothing: antialiased; outline: none !important; -webkit-tap=
+-highlight-color: rgba(0, 0, 0, 0) !important; font-weight: bold;">He got B=
+achelor with major in Electronics and Telecommunications</b></span></font><=
+font style=3D"box-sizing: border-box; -webkit-font-smoothing: antialiased; =
+outline: none !important; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !im=
+portant;" color=3D"#333333"><span style=3D"box-sizing: border-box; -webkit-=
+font-smoothing: antialiased; outline: none !important; -webkit-tap-highligh=
+t-color: rgba(0, 0, 0, 0) !important;"><span style=3D"box-sizing: border-bo=
+x; -webkit-font-smoothing: antialiased; outline: none !important; -webkit-t=
+ap-highlight-color: rgba(0, 0, 0, 0) !important;"><span style=3D"box-sizing=
+: border-box; -webkit-font-smoothing: antialiased; outline: none !important=
+; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important; font-size: 16=
+=2E25px;"><b style=3D"box-sizing: border-box; -webkit-font-smoothing: antia=
+liased; outline: none !important; -webkit-tap-highlight-color: rgba(0, 0, 0=
+, 0) !important; font-weight: bold;">- Hanoi University of science and tech=
+nology</b></span></span></span></font></span></li><li style=3D"box-sizing: =
+border-box; -webkit-font-smoothing: antialiased; outline: none !important; =
+-webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important; color: rgb(51, 51=
+, 51); font-family: roboto; font-size: 13px; font-style: normal; font-varia=
+nt-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-s=
+pacing: normal; text-transform: none; white-space: normal; word-spacing: 0p=
+x; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255);"><=
+b style=3D"box-sizing: border-box; -webkit-font-smoothing: antialiased; out=
+line: none !important; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !impor=
+tant; font-weight: bold; color: rgb(51, 51, 51); font-family: roboto; font-=
+size: 16=2E25px; font-style: normal; font-variant-ligatures: normal; font-v=
+ariant-caps: normal; letter-spacing: normal; text-transform: none; white-sp=
+ace: normal; word-spacing: 0px; -webkit-text-stroke-width: 0px;">He has mor=
+e than 4 years of experience in MB development,&nbsp;especially in Android =
+native/Flutter/React native development=2E</b></li><li style=3D"box-sizing:=
+ border-box; -webkit-font-smoothing: antialiased; outline: none !important;=
+ -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important; color: rgb(51, 5=
+1, 51); font-family: roboto; font-size: 13px; font-style: normal; font-vari=
+ant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-=
+spacing: normal; text-transform: none; white-space: normal; word-spacing: 0=
+px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255);">=
+<b style=3D"box-sizing: border-box; -webkit-font-smoothing: antialiased; ou=
+tline: none !important; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !impo=
+rtant; font-weight: bold; font-size: 16=2E25px;">He opens to new opportunit=
+ies</b></li><li style=3D"box-sizing: border-box; -webkit-font-smoothing: an=
+tialiased; outline: none !important; -webkit-tap-highlight-color: rgba(0, 0=
+, 0, 0) !important; color: rgb(51, 51, 51); font-family: roboto; font-size:=
+ 16=2E25px; font-style: normal; font-variant-ligatures: normal; font-varian=
+t-caps: normal; font-weight: 400; letter-spacing: normal; text-transform: n=
+one; white-space: normal; word-spacing: 0px; -webkit-text-stroke-width: 0px=
+; background-color: rgb(255, 255, 255);"><b style=3D"box-sizing: border-box=
+; -webkit-font-smoothing: antialiased; outline: none !important; -webkit-ta=
+p-highlight-color: rgba(0, 0, 0, 0) !important; font-weight: bold;">He can =
+communicate in English (level: fluent)</b></li></ul><p><br></p><p style=3D"=
+box-sizing: border-box; -webkit-font-smoothing: antialiased; outline: none =
+!important; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important; margi=
+n: 0px 0px 20px; font-family: roboto; font-size: 13px; font-style: normal; =
+font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400=
+; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; =
+text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -w=
+ebkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-deco=
+ration-style: initial; text-decoration-color: initial; color: rgb(51, 51, 5=
+1); background-color: rgb(255, 255, 255);"><span style=3D"box-sizing: borde=
+r-box; -webkit-font-smoothing: antialiased; outline: none !important; -webk=
+it-tap-highlight-color: rgba(0, 0, 0, 0) !important; font-size: 16=2E25px;"=
+>If you need further information, please kindly let me know=2E</span><br st=
+yle=3D"box-sizing: border-box; -webkit-font-smoothing: antialiased; outline=
+: none !important; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important=
+;"></p><p style=3D"box-sizing: border-box; -webkit-font-smoothing: antialia=
+sed; outline: none !important; -webkit-tap-highlight-color: rgba(0, 0, 0, 0=
+) !important; margin: 0px 0px 20px; font-family: roboto; font-size: 13px; f=
+ont-style: normal; font-variant-ligatures: normal; font-variant-caps: norma=
+l; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start;=
+ text-indent: 0px; text-transform: none; white-space: normal; widows: 2; wo=
+rd-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness:=
+ initial; text-decoration-style: initial; text-decoration-color: initial; c=
+olor: rgb(51, 51, 51); background-color: rgb(255, 255, 255);"><span style=
+=3D"box-sizing: border-box; -webkit-font-smoothing: antialiased; outline: n=
+one !important; -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important; f=
+ont-size: 16=2E25px;">Best regards,</span></p></blockquote><span id=3D"x_x_=
+cid:3D4F0954-2788-487E-8533-2D6C65A93912">&lt;CV_2022=2E03_W11_XXXXXX XXXXX=
+ XXXX_Mobile_FB=2Epdf&gt;</span></div></blockquote></div><br></div></blockq=
+uote>
+</div></blockquote></div><br></div></blockquote>

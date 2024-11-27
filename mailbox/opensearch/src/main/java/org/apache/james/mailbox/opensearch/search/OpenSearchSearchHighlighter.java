@@ -88,6 +88,7 @@ public class OpenSearchSearchHighlighter implements SearchHighlighter {
         Optional<String> highlightedSubject =  Optional.ofNullable(highlightHit.get(JsonMessageConstants.SUBJECT))
             .map(List::getFirst);
         Optional<String> highlightedTextBody = Optional.ofNullable(highlightHit.get(JsonMessageConstants.TEXT_BODY))
+            .or(() -> Optional.ofNullable(highlightHit.get(JsonMessageConstants.HTML_BODY)))
             .or(() -> Optional.ofNullable(highlightHit.get(ATTACHMENT_TEXT_CONTENT_FIELD)))
             .map(List::getFirst);
 

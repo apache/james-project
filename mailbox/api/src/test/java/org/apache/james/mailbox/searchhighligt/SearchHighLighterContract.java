@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.searchhighligt;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
@@ -37,6 +36,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
@@ -503,5 +503,33 @@ public interface SearchHighLighterContract {
         assertThat(searchSnippets.getFirst().highlightedBody())
             .isPresent()
             .satisfies(highlightedBody -> assertThat(highlightedBody.get()).contains("This is a <mark>beautiful</mark> banana"));
+    }
+
+    @Test
+    default void shouldHighLightBodyWhenHTMLBodyMatched() throws Exception {
+        Message message1 = Message.Builder.of()
+            .setBody(MultipartBuilder.create("report")
+                .addBinaryPart("content <b>barcamp</b> <i>HTML</i> xinchao".getBytes(StandardCharsets.UTF_8), "text/html")
+                .build())
+            .build();
+        MailboxSession session = session(USERNAME1);
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(message1), session).getId();
+
+        verifyMessageWasIndexed(1);
+
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(
+                SearchQuery.bodyContains("barcamp")))
+            .inMailboxes(List.of(m1.getMailboxId()))
+            .build();
+
+        List<SearchSnippet> searchSnippets = Flux.from(testee().highlightSearch(List.of(m1.getMessageId()), multiMailboxSearch, session))
+            .collectList()
+            .block();
+        assertThat(searchSnippets).hasSize(1);
+        assertSoftly(softly -> {
+            softly.assertThat(searchSnippets.getFirst().messageId()).isEqualTo(m1.getMessageId());
+            softly.assertThat(searchSnippets.getFirst().highlightedBody()).isPresent();
+            softly.assertThat(searchSnippets.getFirst().highlightedBody().get()).contains("<mark>barcamp</mark>");
+        });
     }
 }
