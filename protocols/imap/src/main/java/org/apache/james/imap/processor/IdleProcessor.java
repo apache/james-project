@@ -173,7 +173,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
         public IdleMailboxListener(ImapSession session, Responder responder, CountDownLatch countDownLatch) {
             this.session = session;
-            this.responder = responder;
+            this.responder = session.threadSafe(responder);
             this.countDownLatch = countDownLatch;
         }
 
@@ -185,7 +185,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         @Override
         public Publisher<Void> reactiveEvent(Event event) {
             return Mono.fromRunnable(Throwing.runnable(countDownLatch::await))
-                .then(Mono.defer(() -> unsolicitedResponses(session, session.threadSafe(responder), false)))
+                .then(Mono.defer(() -> unsolicitedResponses(session, responder, false)))
                 .then(Mono.fromRunnable(responder::flush));
         }
 
