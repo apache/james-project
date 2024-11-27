@@ -21,7 +21,6 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.mail.MessagingException;
@@ -30,13 +29,9 @@ import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
-import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 import reactor.core.publisher.Flux;
 
@@ -47,51 +42,27 @@ class MailToAllUsersTest {
     private static final Username USER_4 = Username.of("user4@gov.org");
 
     private UsersRepository usersRepository;
-    private MailetContext mailetContext;
     private MailToAllUsers testee;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         usersRepository = mock(UsersRepository.class);
-        mailetContext = Mockito.mock(MailetContext.class);
         testee = new MailToAllUsers(usersRepository);
     }
 
     @Test
-    void firstUsersBatchShouldBeSentDirectly() throws Exception {
+    void shouldSendAMailToAllUsers() throws Exception {
         when(usersRepository.listReactive())
             .thenReturn(Flux.just(USER_1, USER_2, USER_3, USER_4));
-
-        testee.init(FakeMailetConfig.builder()
-            .mailetContext(mailetContext)
-            .setProperty("batchSize", "2")
-            .build());
 
         Mail originalMail = createMail();
         testee.service(originalMail);
 
         assertThat(originalMail.getRecipients())
-            .containsExactlyInAnyOrder(USER_1.asMailAddress(), USER_2.asMailAddress());
+            .containsExactlyInAnyOrder(USER_1.asMailAddress(), USER_2.asMailAddress(),
+                USER_3.asMailAddress(), USER_4.asMailAddress());
     }
 
-    @Test
-    void remainingUsersBatchesShouldBeSentAsync() throws Exception {
-        when(usersRepository.listReactive())
-            .thenReturn(Flux.just(USER_1, USER_2, USER_3, USER_4));
-
-        testee.init(FakeMailetConfig.builder()
-            .mailetContext(mailetContext)
-            .setProperty("batchSize", "2")
-            .build());
-
-        Mail originalMail = createMail();
-        testee.service(originalMail);
-
-        ArgumentCaptor<Mail> mailCaptor = ArgumentCaptor.forClass(Mail.class);
-        verify(mailetContext).sendMail(mailCaptor.capture());
-        assertThat(mailCaptor.getValue().getRecipients())
-            .containsExactly(USER_3.asMailAddress(), USER_4.asMailAddress());
-    }
 
     private Mail createMail() throws MessagingException {
         return FakeMail.builder()
