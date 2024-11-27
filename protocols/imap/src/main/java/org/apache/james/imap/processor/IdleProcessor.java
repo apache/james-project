@@ -185,7 +185,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         @Override
         public Publisher<Void> reactiveEvent(Event event) {
             return Mono.fromRunnable(Throwing.runnable(countDownLatch::await))
-                .then(Mono.defer(() -> unsolicitedResponses(session, responder, false)))
+                .then(Mono.defer(() -> unsolicitedResponses(session, session.threadSafe(responder), false)))
                 .then(Mono.fromRunnable(responder::flush));
         }
 
