@@ -36,9 +36,10 @@ import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.MailboxPath.inbox
-import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, MessageId}
+import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, MessageId}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
+import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
@@ -996,4 +997,94 @@ trait SearchSnippetGetMethodContract {
            |]""".stripMargin)
   }
 
+
+  @Test
+  def shouldReturnMatchingResultWhenSearchSnippetInHTMLBody(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val inboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val messageId1: MessageId = mailboxProbe
+      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/html_body.eml")))
+      .getMessageId
+
+    val keywordSearch: String = "barcamp"
+
+    val request: String =
+      s"""{
+         |    "using": [
+         |        "urn:ietf:params:jmap:core",
+         |        "urn:ietf:params:jmap:mail"
+         |    ],
+         |    "methodCalls": [
+         |        [
+         |            "Email/query",
+         |            {
+         |                "accountId": "$ACCOUNT_ID",
+         |                "filter": {
+         |                    "body": "$keywordSearch"
+         |                },
+         |                "sort": [
+         |                    {
+         |                        "isAscending": false,
+         |                        "property": "receivedAt"
+         |                    }
+         |                ],
+         |                "limit": 20
+         |            },
+         |            "c0"
+         |        ],
+         |        [
+         |            "SearchSnippet/get",
+         |            {
+         |                "accountId": "$ACCOUNT_ID",
+         |                "filter": {
+         |                    "body": "$keywordSearch"
+         |                },
+         |                "#emailIds": {
+         |                    "resultOf": "c0",
+         |                    "name": "Email/query",
+         |                    "path": "/ids/*"
+         |                }
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response: ResponseBodyExtractionOptions = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract()
+        .body
+
+      assertThatJson(response.asString())
+        .withOptions(IGNORING_ARRAY_ORDER)
+        .inPath("methodResponses[1]")
+        .isEqualTo(
+          s"""[
+             |  "SearchSnippet/get",
+             |  {
+             |    "accountId": "$ACCOUNT_ID",
+             |    "list": [
+             |      {
+             |        "emailId": "${messageId1.serialize()}",
+             |        "subject": null,
+             |        "preview": "$${json-unit.ignore}"
+             |      }
+             |    ],
+             |    "notFound": []
+             |  },
+             |  "c1"
+             |]""".stripMargin)
+
+      assertThat(response.jsonPath().get("methodResponses[1][1].list[0].preview").toString)
+        .contains(s"<mark>$keywordSearch</mark>")
+    }
+  }
 }
