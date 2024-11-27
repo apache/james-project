@@ -21,6 +21,8 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import jakarta.mail.MessagingException;
+
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
@@ -29,9 +31,8 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
-import jakarta.mail.MessagingException;
+import com.google.common.collect.ImmutableList;
 
 class SplitMailTest {
     private static final Username USER_1 = Username.of("user1@gov.org");
