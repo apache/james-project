@@ -20,6 +20,7 @@
 package org.apache.james.user.postgres;
 
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
+import static org.apache.james.backends.postgres.utils.PostgresExecutor.EAGER_FETCH;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.ALGORITHM;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.AUTHORIZED_USERS;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.DELEGATED_USERS;
@@ -32,7 +33,6 @@ import static org.jooq.impl.DSL.count;
 
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.function.Function;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -141,10 +141,9 @@ public class PostgresUsersDAO implements UsersDAO {
 
     @Override
     public Flux<Username> listReactive() {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectFrom(TABLE_NAME)))
-            .map(record -> Username.of(record.get(USERNAME)))
-            .collectList()
-            .flatMapIterable(Function.identity());
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(USERNAME)
+                .from(TABLE_NAME)), EAGER_FETCH)
+            .map(record -> Username.of(record.get(USERNAME)));
     }
 
     @Override
