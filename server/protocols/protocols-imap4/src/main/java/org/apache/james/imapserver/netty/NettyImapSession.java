@@ -125,7 +125,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
             @Override
             public void flush() {
-            channel.eventLoop().execute(responder::flush);
+                channel.eventLoop().execute(responder::flush);
             }
         };
     }
