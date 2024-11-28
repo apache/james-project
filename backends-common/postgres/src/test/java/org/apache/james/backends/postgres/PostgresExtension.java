@@ -50,8 +50,8 @@ import reactor.core.publisher.Mono;
 
 public class PostgresExtension implements GuiceModuleTestExtension {
     public enum PoolSize {
-        SMALL(1, 2),
-        LARGE(10, 20);
+        SMALL(10, 20),
+        LARGE(20, 40);
 
         private final int min;
         private final int max;

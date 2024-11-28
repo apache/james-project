@@ -19,13 +19,25 @@
 
 package org.apache.james.backends.postgres.utils;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.jooq.exception.DataAccessException;
+
+import com.google.common.base.Preconditions;
 
 public class PostgresUtils {
     private static final String UNIQUE_CONSTRAINT_VIOLATION_MESSAGE = "duplicate key value violates unique constraint";
 
     public static final Predicate<Throwable> UNIQUE_CONSTRAINT_VIOLATION_PREDICATE =
         throwable -> throwable instanceof DataAccessException && throwable.getMessage().contains(UNIQUE_CONSTRAINT_VIOLATION_MESSAGE);
+
+    public static final int QUERY_BATCH_SIZE_DEFAULT_VALUE = 5000;
+    public static final int QUERY_BATCH_SIZE = Optional.ofNullable(System.getProperty("james.postgresql.query.batch.size"))
+        .map(Integer::valueOf)
+        .map(batchSize -> {
+            Preconditions.checkArgument(batchSize > 0, "james.postgresql.query.batch.size must be positive");
+            return batchSize;
+        })
+        .orElse(QUERY_BATCH_SIZE_DEFAULT_VALUE);
 }
