@@ -16,29 +16,22 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
-
  
 package org.apache.james.transport.matchers;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
-import java.util.StringTokenizer;
-import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import jakarta.mail.MessagingException;
-import jakarta.mail.Multipart;
 import jakarta.mail.Part;
-import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
+import org.apache.james.transport.matchers.utils.MimeWalk;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
@@ -63,131 +56,6 @@ import com.google.common.annotations.VisibleForTesting;
 public class AttachmentFileNameIs extends GenericMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttachmentFileNameIs.class);
 
-    record MimeWalkConfiguration(Mask[] masks, boolean isDebug, boolean unzipIsRequested) {
-        public static MimeWalkConfiguration DEFAULT = new MimeWalkConfiguration(null, false, false);
-
-        public static MimeWalkConfiguration parse(String condition) {
-            StringTokenizer st = new StringTokenizer(condition, ", ", false);
-            ArrayList<Mask> theMasks = new ArrayList<>(20);
-            boolean unzipIsRequested = false;
-            boolean isDebug = false;
-            while (st.hasMoreTokens()) {
-                String fileName = st.nextToken();
-
-                // check possible parameters at the beginning of the condition
-                if (theMasks.isEmpty() && fileName.equalsIgnoreCase(UNZIP_REQUEST_PARAMETER)) {
-                    unzipIsRequested = true;
-                    LOGGER.info("zip file analysis requested");
-                    continue;
-                }
-                if (theMasks.isEmpty() && fileName.equalsIgnoreCase(DEBUG_REQUEST_PARAMETER)) {
-                    isDebug = true;
-                    LOGGER.info("debug requested");
-                    continue;
-                }
-                Mask mask = new Mask();
-                if (fileName.startsWith("*")) {
-                    mask.suffixMatch = true;
-                    mask.matchString = fileName.substring(1);
-                } else {
-                    mask.suffixMatch = false;
-                    mask.matchString = fileName;
-                }
-                mask.matchString = cleanFileName(mask.matchString);
-                theMasks.add(mask);
-            }
-            return new MimeWalkConfiguration(theMasks.toArray(Mask[]::new), isDebug, unzipIsRequested);
-        }
-    }
-
-    public static class MimeWalk {
-        @FunctionalInterface
-        interface PartMatch {
-            boolean partMatch(Part part) throws MessagingException, IOException;
-        }
-
-        private final MimeWalkConfiguration configuration;
-        private final PartMatch partMatch;
-
-        public MimeWalk(MimeWalkConfiguration configuration, PartMatch partMatch) {
-            this.configuration = configuration;
-            this.partMatch = partMatch;
-        }
-
-        private Collection<MailAddress> matchMail(Mail mail) throws MessagingException {
-            try {
-                MimeMessage message = mail.getMessage();
-
-                if (matchFound(message)) {
-                    return mail.getRecipients();
-                } else {
-                    return null;
-                }
-
-            } catch (Exception e) {
-                if (configuration.isDebug()) {
-                    LOGGER.debug("Malformed message", e);
-                }
-                throw new MessagingException("Malformed message", e);
-            }
-        }
-
-        /**
-         * Checks if <I>part</I> matches with at least one of the <CODE>masks</CODE>.
-         *
-         * @param part
-         */
-        protected boolean matchFound(Part part) throws Exception {
-
-            /*
-             * if there is an attachment and no inline text,
-             * the content type can be anything
-             */
-
-            if (part.getContentType() == null ||
-                part.getContentType().startsWith("multipart/alternative")) {
-                return false;
-            }
-
-            Object content;
-
-            try {
-                content = part.getContent();
-            } catch (UnsupportedEncodingException uee) {
-                // in this case it is not an attachment, so ignore it
-                return false;
-            }
-
-            Exception anException = null;
-
-            if (content instanceof Multipart) {
-                Multipart multipart = (Multipart) content;
-                for (int i = 0; i < multipart.getCount(); i++) {
-                    try {
-                        Part bodyPart = multipart.getBodyPart(i);
-                        if (matchFound(bodyPart)) {
-                            return true; // matching file found
-                        }
-                    } catch (MessagingException e) {
-                        anException = e;
-                    } // remember any messaging exception and process next bodypart
-                }
-            } else {
-                if (partMatch.partMatch(part)) {
-                    return true;
-                }
-            }
-
-            // if no matching attachment was found and at least one exception was catched rethrow it up
-            if (anException != null) {
-                throw anException;
-            }
-
-            return false;
-        }
-    }
-
-
     /**
      * Transforms <I>fileName<I> in a trimmed lowercase string usable for matching agains the masks.
      * Also decode encoded words.
@@ -196,45 +64,23 @@ public class AttachmentFileNameIs extends GenericMatcher {
         return DecoderUtil.decodeEncodedWords(fileName.toLowerCase(Locale.US).trim(), DecodeMonitor.SILENT);
     }
     
-    /** Unzip request parameter. */
-    protected static final String UNZIP_REQUEST_PARAMETER = "-z";
-    
-    /** Debug request parameter. */
-    protected static final String DEBUG_REQUEST_PARAMETER = "-d";
-    
     /** Match string for zip files. */
     protected static final String ZIP_SUFFIX = ".zip";
     
     /**
      * represents a single parsed file name mask.
      */
-    private static class Mask {
-        /** true if the mask starts with a wildcard asterisk */
-        public boolean suffixMatch;
-        
-        /** file name mask not including the wildcard asterisk */
-        public String matchString;
-
-        public boolean match(String fileName) {
-            //XXX: file names in mail may contain directory - theoretically
-            if (this.suffixMatch) {
-                return fileName.endsWith(this.matchString);
-            } else {
-                return fileName.equals(this.matchString);
-            }
-        }
-    }
     
     /**
      * Controls certain log messages.
      */
     @VisibleForTesting
-    MimeWalkConfiguration configuration = MimeWalkConfiguration.DEFAULT;
+    MimeWalk.Configuration configuration = MimeWalk.Configuration.DEFAULT;
     
 
     @Override
     public void init() throws MessagingException {
-        configuration = MimeWalkConfiguration.parse(getCondition());
+        configuration = MimeWalk.Configuration.parse(getCondition());
     }
 
     /** 
@@ -271,7 +117,7 @@ public class AttachmentFileNameIs extends GenericMatcher {
      * @param fileName
      */
     protected boolean matchFound(String fileName) {
-        for (Mask mask1 : configuration.masks) {
+        for (MimeWalk.Mask mask1 : configuration.masks()) {
             if (mask1.match(fileName)) {
                 return true; // matching file found
             }
@@ -293,7 +139,7 @@ public class AttachmentFileNameIs extends GenericMatcher {
                 }
                 String fileName = zipEntry.getName();
                 if (matchFound(fileName)) {
-                    if (configuration.unzipIsRequested) {
+                    if (configuration.unzipIsRequested()) {
                         LOGGER.debug("matched {}({})", part.getFileName(), fileName);
                     }
                     return true;
