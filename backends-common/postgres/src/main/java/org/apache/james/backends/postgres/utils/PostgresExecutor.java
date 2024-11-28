@@ -62,6 +62,7 @@ public class PostgresExecutor {
     public static final Duration MIN_BACKOFF = Duration.ofMillis(1);
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresExecutor.class);
     private static final String JOOQ_TIMEOUT_ERROR_LOG = "Time out executing Postgres query. May need to check either jOOQ reactive issue or Postgres DB performance.";
+    public static final boolean EAGER_FETCH = true;
 
     public static class Factory {
 
@@ -125,16 +126,40 @@ public class PostgresExecutor {
     }
 
     public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
+        return executeRows(queryFunction, !EAGER_FETCH);
+    }
+
+    /**
+     * @param isEagerFetch
+     * Because an R2DBC postgres connection can only execute one query at a time, when `isEagerFetch` is set to `true`, all elements are fetched and stored in a list (using the `.collectList` API).
+     * <p>
+     * This approach allows the connection to early complete its current query and return to the pool, helping to avoid Reactor pipeline hanging caused by depleting the available connection pool.
+     * <p>
+     * It is recommended to set `isEagerFetch` to `true` when the number of elements to fetch is small, such as the number of mailboxes for a single user.
+     * <p>
+     * In cases where the number of elements is large, consider using pagination-based queries.
+     * <p>
+     * Reference:
+     * - <a href="https://github.com/apache/james-project/pull/2514#issuecomment-2490348291">james-project</a>
+     * - <a href="https://github.com/pgjdbc/r2dbc-postgresql/issues/650">r2dbc-postgresql</a>
+     */
+    public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction, boolean isEagerFetch) {
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
             Flux.usingWhen(getConnection(domain),
-                connection -> dslContext(connection)
-                    .flatMapMany(queryFunction)
-                    .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
-                    .collectList()
-                    .flatMapIterable(list -> list) // Mitigation fix for https://github.com/jOOQ/jOOQ/issues/16556
-                    .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                        .filter(preparedStatementConflictException())),
+                connection -> {
+                    Flux<Record> recordFlux = dslContext(connection)
+                        .flatMapMany(queryFunction)
+                        .timeout(postgresConfiguration.getJooqReactiveTimeout())
+                        .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                        .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                            .filter(preparedStatementConflictException()));
+
+                    if (isEagerFetch) {
+                        return recordFlux.collectList().flatMapIterable(list -> list);
+                    } else {
+                        return recordFlux;
+                    }
+                },
                 jamesPostgresConnectionFactory::closeConnection)));
     }
 
@@ -145,8 +170,6 @@ public class PostgresExecutor {
                     .flatMapMany(queryFunction)
                     .timeout(postgresConfiguration.getJooqReactiveTimeout())
                     .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
-                    .collectList()
-                    .flatMapIterable(list -> list) // The convert Flux -> Mono<List> -> Flux to avoid a hanging issue. See: https://github.com/jOOQ/jOOQ/issues/16055
                     .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                         .filter(preparedStatementConflictException())),
                 jamesPostgresConnectionFactory::closeConnection)));
