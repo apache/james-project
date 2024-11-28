@@ -58,7 +58,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class PostgresMessageMapperRowLevelSecurityTest {
     private static final int BODY_START = 16;
     private static final UidValidity UID_VALIDITY = UidValidity.of(42);
-    private static final Username BENWA = Username.of("benwa");
+    private static final Username BENWA = Username.of("benwa@domain.org");
     protected static final MailboxPath benwaInboxPath = MailboxPath.forUser(BENWA, "INBOX");
     private static final MailboxSession aliceSession = MailboxSessionUtil.create(Username.of("alice@domain1"));
     private static final MailboxSession bobSession = MailboxSessionUtil.create(Username.of("bob@domain1"));
