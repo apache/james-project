@@ -53,7 +53,7 @@ import com.google.common.collect.ImmutableSet;
 class PostgresRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServiceContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresModule.aggregateModules(
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(
         PostgresMailboxAggregateModule.MODULE,
         PostgresQuotaModule.MODULE,
         PostgresUserModule.MODULE));
