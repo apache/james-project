@@ -1,12 +1,6 @@
 === MailToAllUsers
 
-A mailet that helps to email to all users in the system. The emails are sent in batches to manage
-the load. The first batch is sent directly, while the remaining batches are sent asynchronously.
-
-==== Configuration parameters
-
-*batchSize*::
-The number of recipients to include in each batch. Optional, default to 100.
+A mailet that helps to email to all users in the system.
 
 ==== Sample configuration
 
@@ -16,9 +10,7 @@ The number of recipients to include in each batch. Optional, default to 100.
     <matcher match="SenderIs=admin@gov.org"/>
     <matcher match="RecipientIs=all@gov.org"/>
 </matcher>
-<mailet match="notify-matcher" class="MailToAllUsers">
-    <batchSize>100</batchSize>
-</mailet>
+<mailet match="notify-matcher" class="MailToAllUsers"/>
 ----
 
 
