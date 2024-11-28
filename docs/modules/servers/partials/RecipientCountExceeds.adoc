@@ -1,0 +1,9 @@
+=== RecipientCountExceeds
+
+Matches mail with more recipients than the configured limit.
+
+Eg:
+
+....
+<mailet match="RecipientCountExceeds=36"; class="Null"\>
+....
