@@ -108,6 +108,7 @@ public class SendMailHandler implements JamesMessageHook {
                                 .map(Throwing.function(MimeMessage::getMessageID))
                                 .orElse(""),
                             "sender", mail.getMaybeSender().asString(),
+                            "size", Long.toString(mail.getMessageSize()),
                             "recipients", StringUtils.join(mail.getRecipients()),
                             "holdFor", holdFor.value().toString())))
                         .log("SMTP mail spooled.");
@@ -133,6 +134,7 @@ public class SendMailHandler implements JamesMessageHook {
                                 .map(Throwing.function(MimeMessage::getMessageID))
                                 .orElse(""),
                             "sender", mail.getMaybeSender().asString(),
+                            "size", Long.toString(mail.getMessageSize()),
                             "recipients", StringUtils.join(mail.getRecipients()))))
                         .log("SMTP mail spooled.");
                 }));
