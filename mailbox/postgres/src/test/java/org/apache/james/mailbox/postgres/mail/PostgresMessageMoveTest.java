@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresMessageMoveTest extends MessageMoveTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
     @Override
     protected MapperProvider createMapperProvider() {
