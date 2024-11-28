@@ -29,16 +29,21 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 import jakarta.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.PostgresUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
+import org.jooq.impl.DSL;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -151,9 +156,25 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Flux<BlobId> listBlobs(BucketName bucketName) {
+        return Flux.defer(() -> listBlobsBatch(bucketName, Optional.empty(), PostgresUtils.QUERY_BATCH_SIZE))
+            .expand(blobIds -> {
+                if (blobIds.isEmpty() || blobIds.size() < PostgresUtils.QUERY_BATCH_SIZE) {
+                    return Mono.empty();
+                }
+                return listBlobsBatch(bucketName, Optional.of(blobIds.getLast()), PostgresUtils.QUERY_BATCH_SIZE);
+            })
+            .flatMapIterable(Function.identity());
+    }
+
+    private Mono<List<BlobId>> listBlobsBatch(BucketName bucketName, Optional<BlobId> blobIdFrom, int batchSize) {
         return postgresExecutor.executeRows(dsl -> Flux.from(dsl.select(BLOB_ID)
                 .from(TABLE_NAME)
-                .where(BUCKET_NAME.eq(bucketName.asString()))))
-            .map(record -> blobIdFactory.parse(record.get(BLOB_ID)));
+                .where(BUCKET_NAME.eq(bucketName.asString()))
+                .and(blobIdFrom.map(blobId -> BLOB_ID.greaterThan(blobId.asString())).orElseGet(DSL::noCondition))
+                .orderBy(BLOB_ID.asc())
+                .limit(batchSize)))
+            .map(record -> blobIdFactory.parse(record.get(BLOB_ID)))
+            .collectList()
+            .switchIfEmpty(Mono.just(ImmutableList.of()));
     }
 }
