@@ -57,6 +57,8 @@ include::partial$IsSMIMESigned.adoc[]
 
 include::partial$IsX509CertificateSubject.adoc[]
 
+include::partial$PartHasContentType.adoc[]
+
 include::partial$RecipientDomainIs.adoc[]
 
 include::partial$RecipientIs.adoc[]

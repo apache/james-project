@@ -67,10 +67,6 @@ public class MimeWalk {
             }
         }
 
-        public boolean isSuffixMatch() {
-            return suffixMatch;
-        }
-
         public String getMatchString() {
             return matchString;
         }

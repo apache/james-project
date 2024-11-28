@@ -1,0 +1,12 @@
+=== PartHasContentType
+
+Checks if at least one attachment has a content type header which matches any
+element of a comma-separated or space-separated list of content type masks.
+
+Syntax: *match="PartHasContentType=[-d] masks"*
+
+The match is case-insensitive.
+
+Multiple content types name masks can be specified, e.g.: 'application/json,image/png'.
+
+If '*-d*' is coded, some debug info will be logged.
