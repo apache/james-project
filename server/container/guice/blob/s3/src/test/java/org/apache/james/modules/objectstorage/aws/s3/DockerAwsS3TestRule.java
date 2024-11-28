@@ -28,6 +28,7 @@ import org.apache.james.blob.objectstorage.aws.DockerAwsS3Container;
 import org.apache.james.blob.objectstorage.aws.DockerAwsS3Singleton;
 import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
+import org.apache.james.blob.objectstorage.aws.S3RequestOption;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -79,6 +80,7 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
             binder.bind(Region.class).toInstance(region);
             binder.bind(AwsS3AuthConfiguration.class).toInstance(authConfiguration);
             binder.bind(S3BlobStoreConfiguration.class).toInstance(configuration);
+            binder.bind(S3RequestOption.class).toInstance(S3RequestOption.DEFAULT);
         };
     }
 
