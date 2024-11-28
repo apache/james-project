@@ -56,7 +56,7 @@ import reactor.core.publisher.Flux;
 
 public class PostgresThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
     private PostgresMailboxManager mailboxManager;
     private PostgresThreadDAO.Factory threadDAOFactory;
