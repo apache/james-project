@@ -449,9 +449,9 @@ public class PostgresMailboxMessageDAO {
 
         if (addFlags.getUserFlags() != null && addFlags.getUserFlags().length > 0) {
             if (addFlags.getUserFlags().length == 1) {
-                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, PostgresDSL.arrayAppend(USER_FLAGS, addFlags.getUserFlags()[0])));
+                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, DSL.arrayAppend(USER_FLAGS, addFlags.getUserFlags()[0])));
             } else {
-                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, PostgresDSL.arrayCat(USER_FLAGS, addFlags.getUserFlags())));
+                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, DSL.arrayConcat(USER_FLAGS, addFlags.getUserFlags())));
             }
         }
 
@@ -488,7 +488,7 @@ public class PostgresMailboxMessageDAO {
 
         if (removeFlags.getUserFlags() != null && removeFlags.getUserFlags().length > 0) {
             if (removeFlags.getUserFlags().length == 1) {
-                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, PostgresDSL.arrayRemove(USER_FLAGS, removeFlags.getUserFlags()[0])));
+                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, DSL.arrayRemove(USER_FLAGS, removeFlags.getUserFlags()[0])));
             } else {
                 updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, DSL.function(REMOVE_ELEMENTS_FROM_ARRAY_FUNCTION_NAME, String[].class,
                     USER_FLAGS,
