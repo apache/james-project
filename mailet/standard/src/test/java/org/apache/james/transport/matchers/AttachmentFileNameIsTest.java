@@ -27,6 +27,7 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class AttachmentFileNameIsTest {
@@ -535,51 +536,26 @@ class AttachmentFileNameIsTest {
             .isNull();
     }
 
-    @Test
-    void shouldSupportDebugMode() throws Exception {
-        AttachmentFileNameIs testee = new AttachmentFileNameIs();
+    @Nested
+    class MimeWalkConfigurationTest {
+        @Test
+        void shouldSupportDebugMode() {
+            assertThat(AttachmentFileNameIs.MimeWalkConfiguration.parse("-d test.txt").isDebug()).isTrue();
+        }
 
-        testee.init(FakeMatcherConfig.builder()
-            .matcherName("AttachmentFileNameIs")
-            .condition("-d file.txt")
-            .build());
+        @Test
+        void debugModeShouldBeFalseByDefault() {
+            assertThat(AttachmentFileNameIs.MimeWalkConfiguration.parse("test.txt").isDebug()).isFalse();
+        }
 
-        assertThat(testee.isDebug).isTrue();
-    }
+        @Test
+        void shouldSupportUnzipMode() {
+            assertThat(AttachmentFileNameIs.MimeWalkConfiguration.parse("-z test.txt").unzipIsRequested()).isTrue();
+        }
 
-    @Test
-    void debugModeShouldBeFalseByDefault() throws Exception {
-        AttachmentFileNameIs testee = new AttachmentFileNameIs();
-
-        testee.init(FakeMatcherConfig.builder()
-            .matcherName("AttachmentFileNameIs")
-            .condition("file.txt")
-            .build());
-
-        assertThat(testee.isDebug).isFalse();
-    }
-
-    @Test
-    void shouldSupportUnzipMode() throws Exception {
-        AttachmentFileNameIs testee = new AttachmentFileNameIs();
-
-        testee.init(FakeMatcherConfig.builder()
-            .matcherName("AttachmentFileNameIs")
-            .condition("-z file.txt")
-            .build());
-
-        assertThat(testee.unzipIsRequested).isTrue();
-    }
-
-    @Test
-    void unzipModeShouldBeFalseByDefault() throws Exception {
-        AttachmentFileNameIs testee = new AttachmentFileNameIs();
-
-        testee.init(FakeMatcherConfig.builder()
-            .matcherName("AttachmentFileNameIs")
-            .condition("file.txt")
-            .build());
-
-        assertThat(testee.unzipIsRequested).isFalse();
+        @Test
+        void unzipModeShouldBeFalseByDefault() {
+            assertThat(AttachmentFileNameIs.MimeWalkConfiguration.parse("test.txt").unzipIsRequested()).isFalse();
+        }
     }
 }
