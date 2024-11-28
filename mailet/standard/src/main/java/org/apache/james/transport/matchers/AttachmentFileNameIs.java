@@ -204,19 +204,8 @@ public class AttachmentFileNameIs extends GenericMatcher {
                 } // remember any messaging exception and process next bodypart
             }
         } else {
-            String fileName = part.getFileName();
-            if (fileName != null) {
-                fileName = cleanFileName(fileName);
-                // check the file name
-                if (matchFound(fileName)) {
-                    if (mimeWalkConfiguration.isDebug()) {
-                        LOGGER.debug("matched {}", fileName);
-                    }
-                    return true;
-                }
-                if (mimeWalkConfiguration.unzipIsRequested() && fileName.endsWith(ZIP_SUFFIX) && matchFoundInZip(part)) {
-                    return true;
-                }
+            if (partMatch(part)) {
+                return true;
             }
         }
         
@@ -225,6 +214,24 @@ public class AttachmentFileNameIs extends GenericMatcher {
             throw anException;
         }
         
+        return false;
+    }
+
+    private boolean partMatch(Part part) throws MessagingException, IOException {
+        String fileName = part.getFileName();
+        if (fileName != null) {
+            fileName = cleanFileName(fileName);
+            // check the file name
+            if (matchFound(fileName)) {
+                if (mimeWalkConfiguration.isDebug()) {
+                    LOGGER.debug("matched {}", fileName);
+                }
+                return true;
+            }
+            if (mimeWalkConfiguration.unzipIsRequested() && fileName.endsWith(ZIP_SUFFIX) && matchFoundInZip(part)) {
+                return true;
+            }
+        }
         return false;
     }
 
