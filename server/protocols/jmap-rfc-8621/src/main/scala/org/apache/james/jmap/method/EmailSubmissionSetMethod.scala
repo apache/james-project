@@ -308,6 +308,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
               .getOrElse(""),
             "sender", mail.getMaybeSender.asString,
             "recipients", StringUtils.join(mail.getRecipients),
+            "size", mail.getMessageSize.toString,
             "loggedInUser", mailboxSession.getLoggedInUser.toScala
               .map(_.asString())
               .getOrElse("")))
@@ -321,6 +322,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
             "mimeMessageId", Option(mail.getMessage)
               .flatMap(message => Option(message.getMessageID))
               .getOrElse(""),
+            "size", mail.getMessageSize.toString,
             "sender", mail.getMaybeSender.asString,
             "recipients", StringUtils.join(mail.getRecipients),
             "holdFor", delay.toString,
