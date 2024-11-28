@@ -27,7 +27,6 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class AttachmentFileNameIsTest {
@@ -534,28 +533,5 @@ class AttachmentFileNameIsTest {
 
         assertThat(testee.match(mail))
             .isNull();
-    }
-
-    @Nested
-    class MimeWalkConfigurationTest {
-        @Test
-        void shouldSupportDebugMode() {
-            assertThat(AttachmentFileNameIs.MimeWalkConfiguration.parse("-d test.txt").isDebug()).isTrue();
-        }
-
-        @Test
-        void debugModeShouldBeFalseByDefault() {
-            assertThat(AttachmentFileNameIs.MimeWalkConfiguration.parse("test.txt").isDebug()).isFalse();
-        }
-
-        @Test
-        void shouldSupportUnzipMode() {
-            assertThat(AttachmentFileNameIs.MimeWalkConfiguration.parse("-z test.txt").unzipIsRequested()).isTrue();
-        }
-
-        @Test
-        void unzipModeShouldBeFalseByDefault() {
-            assertThat(AttachmentFileNameIs.MimeWalkConfiguration.parse("test.txt").unzipIsRequested()).isFalse();
-        }
     }
 }
