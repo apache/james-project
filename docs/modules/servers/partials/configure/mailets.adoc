@@ -45,6 +45,8 @@ include::partial$MailAttributesListToMimeHeaders.adoc[]
 
 include::partial$MailAttributesToMimeHeaders.adoc[]
 
+include::partial$MailToAllUsers.adoc[]
+
 include::partial$MetricsMailet.adoc[]
 
 include::partial$MimeDecodingMailet.adoc[]
@@ -96,6 +98,8 @@ include::partial$SMIMESign.adoc[]
 include::partial$SpamAssassin.adoc[]
 
 include::partial$StripAttachment.adoc[]
+
+include::partial$SplitMail.adoc[]
 
 include::partial$TextCalendarBodyToAttachment.adoc[]
 

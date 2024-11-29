@@ -1,0 +1,16 @@
+=== SplitMail
+
+A mailet to split email with too much recipients. The first batch is sent directly, while the remaining batches are sent asynchronously.
+The batch size can be configured via the <b>batchSize</b> parameter (optional, defaults to 100).
+
+==== Sample configuration
+
+[source,xml]
+----
+<mailet match="notify-matcher" class="SplitMail">
+  <batchSize>100</batchSize>
+</mailet>
+----
+
+
+
