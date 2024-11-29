@@ -66,7 +66,7 @@ public class PostgresAnnotationMapperRowLevelSecurityTest {
 
     private MailboxId generateMailboxId() {
         PostgresExecutor postgresExecutor = postgresExtension.getExecutorFactory().create(BENWA.getDomainPart());
-        MailboxMapper mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExecutor));
+        MailboxMapper mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExecutor), null);
         return mailboxMapper.create(benwaInboxPath, UID_VALIDITY).block().getMailboxId();
     }
 
@@ -77,7 +77,8 @@ public class PostgresAnnotationMapperRowLevelSecurityTest {
             new UpdatableTickingClock(Instant.now()),
             new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
             blobIdFactory,
-            PostgresConfiguration.builder().username("a").password("a").build());
+            PostgresConfiguration.builder().username("a").password("a").build(),
+            null);
 
         mailboxId = generateMailboxId();
     }

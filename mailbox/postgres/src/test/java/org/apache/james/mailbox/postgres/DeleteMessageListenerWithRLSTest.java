@@ -76,7 +76,8 @@ public class DeleteMessageListenerWithRLSTest extends DeleteMessageListenerContr
             Clock.systemUTC(),
             blobStore,
             blobIdFactory,
-            PostgresConfiguration.builder().username("a").password("a").build());
+            PostgresConfiguration.builder().username("a").password("a").build(),
+            null);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();

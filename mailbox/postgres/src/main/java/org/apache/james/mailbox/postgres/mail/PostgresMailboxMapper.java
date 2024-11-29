@@ -19,10 +19,19 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
+import java.util.Set;
 import java.util.function.Function;
 
 import org.apache.james.core.Username;
+import org.apache.james.event.MailboxAggregateId;
+import org.apache.james.event.acl.ACLUpdated;
+import org.apache.james.eventsourcing.Command;
+import org.apache.james.eventsourcing.CommandHandler;
+import org.apache.james.eventsourcing.EventSourcingSystem;
+import org.apache.james.eventsourcing.Subscriber;
+import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
@@ -30,18 +39,30 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
+import org.apache.james.mailbox.postgres.mail.eventsourcing.acl.PostgresAclEventSubscriber;
+import org.apache.james.mailbox.postgres.mail.eventsourcing.acl.DeleteMailboxCommand;
+import org.apache.james.mailbox.postgres.mail.eventsourcing.acl.SetACLCommand;
+import org.apache.james.mailbox.postgres.mail.eventsourcing.acl.UpdateACLCommand;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresMailboxMapper implements MailboxMapper {
     private final PostgresMailboxDAO postgresMailboxDAO;
+    private final EventSourcingSystem eventSourcingSystem;
 
-    public PostgresMailboxMapper(PostgresMailboxDAO postgresMailboxDAO) {
+    public PostgresMailboxMapper(PostgresMailboxDAO postgresMailboxDAO,
+                                 EventStore eventStore) {
         this.postgresMailboxDAO = postgresMailboxDAO;
+        Set<CommandHandler<? extends Command>> commandHandlers = ImmutableSet.of(new DeleteMailboxCommand.CommandHandler(eventStore),
+            new UpdateACLCommand.CommandHandler(eventStore),
+            new SetACLCommand.CommandHandler(eventStore));
+        Set<Subscriber> subscribers = ImmutableSet.of(new PostgresAclEventSubscriber(postgresMailboxDAO));
+        eventSourcingSystem = EventSourcingSystem.fromJava(commandHandlers, subscribers, eventStore);
     }
 
     @Override
@@ -96,20 +117,30 @@ public class PostgresMailboxMapper implements MailboxMapper {
 
     @Override
     public Mono<ACLDiff> updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) {
-        return upsertACL(mailbox,
-            mailbox.getACL(),
-            Throwing.supplier(() -> mailbox.getACL().apply(mailboxACLCommand)).get());
+        return Mono.from(eventSourcingSystem.dispatch(new UpdateACLCommand(new MailboxAggregateId(mailbox.getMailboxId()), mailboxACLCommand)))
+            .flatMapIterable(events -> events)
+            .filter(ACLUpdated.class::isInstance)
+            .map(ACLUpdated.class::cast)
+            .map(ACLUpdated::getAclDiff)
+            .next()
+            .switchIfEmpty(Mono.error(() -> new MailboxException("Unable to update ACL")));
     }
 
     @Override
     public Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL) {
-        return upsertACL(mailbox, mailbox.getACL(), mailboxACL);
+        return Mono.from(eventSourcingSystem.dispatch(new SetACLCommand(new MailboxAggregateId(mailbox.getMailboxId()), mailboxACL)))
+            .flatMapIterable(events -> events)
+            .filter(ACLUpdated.class::isInstance)
+            .map(ACLUpdated.class::cast)
+            .map(ACLUpdated::getAclDiff)
+            .next()
+            .switchIfEmpty(Mono.error(() -> new MailboxException("Unable to set ACL")));
     }
 
     private Mono<ACLDiff> upsertACL(Mailbox mailbox, MailboxACL oldACL, MailboxACL newACL) {
         return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), newACL)
             .then(Mono.fromCallable(() -> {
-                mailbox.setACL(newACL);
+//                mailbox.setACL(newACL);
                 return ACLDiff.computeDiff(oldACL, newACL);
             }));
     }

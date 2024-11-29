@@ -43,7 +43,7 @@ public class PostgresMailboxMapperTest extends MailboxMapperTest {
 
     @Override
     protected MailboxMapper createMailboxMapper() {
-        return new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()));
+        return new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()), null);
     }
 
     @Override

@@ -39,6 +39,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
@@ -49,11 +50,13 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
+import org.apache.james.mailbox.postgres.PostgresMailboxAnnotationModule;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.mail.PostgresMailbox;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
@@ -67,6 +70,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -283,4 +287,30 @@ public class PostgresMailboxDAO {
             .map(record -> Pair.of(MessageUid.of(record.get(MAILBOX_LAST_UID)), ModSeq.of(record.get(MAILBOX_HIGHEST_MODSEQ))));
     }
 
+    public Mono<Void> updateACL(PostgresMailboxId mailboxId, MailboxACL.ACLCommand command) {
+        switch (command.getEditMode()) {
+            case ADD, REPLACE:
+                return postgresExecutor.executeVoid(dslContext ->
+                    Mono.from(dslContext.update(TABLE_NAME)
+                        .set(DSL.field(MAILBOX_ACL.getName() + "[?]",
+                                command.getEntryKey().serialize()),
+                            command.getRights().serialize())
+                        .where(MAILBOX_ID.eq((mailboxId).asUuid()))));
+            case REMOVE:
+                return postgresExecutor.executeVoid(dslContext ->
+                    Mono.from(dslContext.update(TABLE_NAME)
+                        .set(DSL.field(MAILBOX_ACL.getName()),
+                            (Object) DSL.function("delete",
+                                DefaultDataType.getDefaultDataType("hstore"),
+                                MAILBOX_ACL,
+                                DSL.val(command.getEntryKey().serialize())))
+                        .where(PostgresMailboxAnnotationModule.PostgresMailboxAnnotationTable.MAILBOX_ID.eq(mailboxId.asUuid()))));
+            default:
+                throw new NotImplementedException(command.getEditMode() + " is not supported");
+        }
+    }
+
+    private Hstore aclAsHstore(MailboxACL.ACLCommand command) {
+        return Hstore.hstore(ImmutableMap.of(command.getEntryKey().serialize(), command.getRights().serialize()));
+    }
 }

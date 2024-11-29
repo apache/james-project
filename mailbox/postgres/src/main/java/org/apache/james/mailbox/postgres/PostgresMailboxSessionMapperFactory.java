@@ -27,6 +27,7 @@ import org.apache.james.backends.postgres.RowLevelSecurity;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.postgres.mail.PostgresAnnotationMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresAttachmentMapper;
@@ -62,18 +63,21 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final BlobId.Factory blobIdFactory;
     private final Clock clock;
     private final RowLevelSecurity rowLevelSecurity;
+    private final EventStore eventStore;
 
     @Inject
     public PostgresMailboxSessionMapperFactory(PostgresExecutor.Factory executorFactory,
                                                Clock clock,
                                                BlobStore blobStore,
                                                BlobId.Factory blobIdFactory,
-                                               PostgresConfiguration postgresConfiguration) {
+                                               PostgresConfiguration postgresConfiguration,
+                                               EventStore eventStore) {
         this.executorFactory = executorFactory;
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
         this.clock = clock;
         this.rowLevelSecurity = postgresConfiguration.getRowLevelSecurity();
+        this.eventStore = eventStore;
     }
 
     @Override
@@ -83,7 +87,7 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
             return new RLSSupportPostgresMailboxMapper(mailboxDAO,
                 new PostgresMailboxMemberDAO(executorFactory.create(session.getUser().getDomainPart())));
         } else {
-            return new PostgresMailboxMapper(mailboxDAO);
+            return new PostgresMailboxMapper(mailboxDAO, eventStore);
         }
     }
 

@@ -20,17 +20,30 @@
 package org.apache.james.mailbox.postgres.mail;
 
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
+import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStore;
+import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDAO;
+import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreModule;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
+import org.apache.james.mailbox.postgres.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperACLTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresMailboxMapperACLTest extends MailboxMapperACLTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresMailboxModule.MODULE, PostgresEventStoreModule.MODULE));
 
     @Override
     protected MailboxMapper createMailboxMapper() {
-        return new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()));
+        JsonEventSerializer jsonEventSerializer = JsonEventSerializer
+            .forModules(ACLModule.ACL_UPDATE)
+            .withoutNestedType();
+
+        EventStore eventStore = new PostgresEventStore(new PostgresEventStoreDAO(postgresExtension.getDefaultPostgresExecutor(), jsonEventSerializer));
+
+        return new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()), eventStore);
     }
 }

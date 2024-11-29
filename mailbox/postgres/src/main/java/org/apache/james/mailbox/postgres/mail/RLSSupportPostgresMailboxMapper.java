@@ -39,7 +39,7 @@ public class RLSSupportPostgresMailboxMapper extends PostgresMailboxMapper {
     private final PostgresMailboxMemberDAO postgresMailboxMemberDAO;
 
     public RLSSupportPostgresMailboxMapper(PostgresMailboxDAO postgresMailboxDAO, PostgresMailboxMemberDAO postgresMailboxMemberDAO) {
-        super(postgresMailboxDAO);
+        super(postgresMailboxDAO, null);
         this.postgresMailboxDAO = postgresMailboxDAO;
         this.postgresMailboxMemberDAO = postgresMailboxMemberDAO;
     }

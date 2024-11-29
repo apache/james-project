@@ -69,7 +69,7 @@ public class PostgresTestSystemFixture {
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
 
         return new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, blobIdFactory,
-            PostgresConfiguration.builder().username("a").password("a").build());
+            PostgresConfiguration.builder().username("a").password("a").build(), null);
     }
 
     public static PostgresMailboxManager createMailboxManager(PostgresMailboxSessionMapperFactory mapperFactory) {
