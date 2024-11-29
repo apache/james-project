@@ -162,7 +162,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |    "urn:apache:james:params:jmap:delegation": {},
                          |    "urn:apache:james:params:jmap:mail:quota": {},
                          |    "urn:ietf:params:jmap:quota": {},
-                         |    "urn:apache:james:params:jmap:mail:shares": {},
+                         |    "urn:apache:james:params:jmap:mail:shares": {"subaddressingSupported":true},
                          |    "urn:ietf:params:jmap:vacationresponse":{}
                          |  },
                          |  "accounts" : {
@@ -201,7 +201,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |        "urn:ietf:params:jmap:quota": {},
                          |        "urn:apache:james:params:jmap:mail:identity:sortorder": {},
                          |        "urn:apache:james:params:jmap:delegation": {},
-                         |        "urn:apache:james:params:jmap:mail:shares": {},
+                         |        "urn:apache:james:params:jmap:mail:shares": {"subaddressingSupported":true},
                          |        "urn:ietf:params:jmap:vacationresponse":{}
                          |      }
                          |    }
