@@ -53,7 +53,7 @@ class S3PrefixTest implements BlobStoreContract {
 
         PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
-        s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, blobIdFactory);
+        s3BlobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, blobIdFactory, S3RequestOption.DEFAULT);
 
         testee = BlobStoreFactory.builder()
             .blobStoreDAO(s3BlobStoreDAO)

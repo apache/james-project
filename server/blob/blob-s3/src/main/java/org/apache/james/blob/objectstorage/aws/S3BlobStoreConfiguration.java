@@ -23,10 +23,13 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.configuration2.Configuration;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.objectstorage.aws.sse.S3SSECConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 
 import reactor.util.retry.Retry;
@@ -50,6 +53,15 @@ public class S3BlobStoreConfiguration {
             ReadyToBuild region(Region region);
         }
 
+        @FunctionalInterface
+        interface RequireSSECConfiguration {
+            ReadyToBuild ssecConfiguration(S3SSECConfiguration ssecConfiguration);
+
+            default ReadyToBuild ssecConfiguration(Configuration configuration) {
+                return ssecConfiguration(S3SSECConfiguration.from(configuration));
+            }
+        }
+
         class ReadyToBuild {
 
             private final AwsS3AuthConfiguration specificAuthConfiguration;
@@ -63,6 +75,8 @@ public class S3BlobStoreConfiguration {
             private Optional<Long> inMemoryReadLimit;
             private Region region;
             private Optional<Retry> uploadRetrySpec;
+            private boolean ssecEnabled;
+            private Optional<S3SSECConfiguration> ssecConfiguration = Optional.empty();
 
             public ReadyToBuild(AwsS3AuthConfiguration specificAuthConfiguration, Region region) {
                 this.specificAuthConfiguration = specificAuthConfiguration;
@@ -127,10 +141,25 @@ public class S3BlobStoreConfiguration {
                 return this;
             }
 
+            public RequireSSECConfiguration ssecEnabled() {
+                this.ssecEnabled = true;
+                return ssecConfiguration -> {
+                    Preconditions.checkArgument(ssecConfiguration != null, "SSEC configuration is mandatory when SSEC is enabled");
+                    this.ssecConfiguration = Optional.of(ssecConfiguration);
+                    return this;
+                };
+            }
+
+            public ReadyToBuild ssecDisabled() {
+                this.ssecEnabled = false;
+                return this;
+            }
+
             public S3BlobStoreConfiguration build() {
                 return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region,
                     specificAuthConfiguration, httpConcurrency.orElse(DEFAULT_HTTP_CONCURRENCY),
-                    inMemoryReadLimit, readTimeout, writeTimeout, connectionTimeout, uploadRetrySpec.orElse(DEFAULT_UPLOAD_RETRY_SPEC));
+                    inMemoryReadLimit, readTimeout, writeTimeout, connectionTimeout, uploadRetrySpec.orElse(DEFAULT_UPLOAD_RETRY_SPEC),
+                    ssecEnabled, ssecConfiguration);
             }
         }
 
@@ -148,10 +177,12 @@ public class S3BlobStoreConfiguration {
     private final int httpConcurrency;
     private final Optional<Long> inMemoryReadLimit;
     private final Retry uploadRetrySpec;
+    private final boolean ssecEnabled;
+    private final Optional<S3SSECConfiguration> ssecConfiguration;
 
-    private Optional<Duration> readTimeout;
-    private Optional<Duration> writeTimeout;
-    private Optional<Duration> connectionTimeout;
+    private final Optional<Duration> readTimeout;
+    private final Optional<Duration> writeTimeout;
+    private final Optional<Duration> connectionTimeout;
 
     @VisibleForTesting
     S3BlobStoreConfiguration(Optional<String> bucketPrefix,
@@ -163,7 +194,9 @@ public class S3BlobStoreConfiguration {
                              Optional<Duration> readTimeout,
                              Optional<Duration> writeTimeout,
                              Optional<Duration> connectionTimeout,
-                             Retry uploadRetrySpec) {
+                             Retry uploadRetrySpec,
+                             boolean ssecEnabled,
+                             Optional<S3SSECConfiguration> ssecConfiguration) {
         this.bucketPrefix = bucketPrefix;
         this.namespace = namespace;
         this.region = region;
@@ -174,6 +207,8 @@ public class S3BlobStoreConfiguration {
         this.writeTimeout = writeTimeout;
         this.connectionTimeout = connectionTimeout;
         this.uploadRetrySpec = uploadRetrySpec;
+        this.ssecEnabled = ssecEnabled;
+        this.ssecConfiguration = ssecConfiguration;
     }
 
     public Optional<Long> getInMemoryReadLimit() {
@@ -216,11 +251,17 @@ public class S3BlobStoreConfiguration {
         return uploadRetrySpec;
     }
 
+    public boolean ssecEnabled() {
+        return ssecEnabled;
+    }
+
+    public Optional<S3SSECConfiguration> getSSECConfiguration() {
+        return ssecConfiguration;
+    }
+
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof S3BlobStoreConfiguration) {
-            S3BlobStoreConfiguration that = (S3BlobStoreConfiguration) o;
-
+        if (o instanceof S3BlobStoreConfiguration that) {
             return Objects.equals(this.namespace, that.namespace)
                 && Objects.equals(this.bucketPrefix, that.bucketPrefix)
                 && Objects.equals(this.region, that.region)
@@ -230,7 +271,9 @@ public class S3BlobStoreConfiguration {
                 && Objects.equals(this.writeTimeout, that.writeTimeout)
                 && Objects.equals(this.connectionTimeout, that.connectionTimeout)
                 && Objects.equals(this.uploadRetrySpec, that.uploadRetrySpec)
-                && Objects.equals(this.specificAuthConfiguration, that.specificAuthConfiguration);
+                && Objects.equals(this.specificAuthConfiguration, that.specificAuthConfiguration)
+                && Objects.equals(this.ssecEnabled, that.ssecEnabled)
+                && Objects.equals(this.ssecConfiguration, that.ssecConfiguration);
         }
         return false;
     }
@@ -238,7 +281,8 @@ public class S3BlobStoreConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(namespace, bucketPrefix, httpConcurrency, specificAuthConfiguration,
-            readTimeout, writeTimeout, connectionTimeout, uploadRetrySpec);
+            readTimeout, writeTimeout, connectionTimeout, uploadRetrySpec, ssecConfiguration, region,
+            inMemoryReadLimit, ssecEnabled);
     }
 
     @Override
@@ -254,6 +298,8 @@ public class S3BlobStoreConfiguration {
             .add("writeTimeout", writeTimeout)
             .add("connectionTimeout", connectionTimeout)
             .add("uploadRetrySpec", uploadRetrySpec)
+            .add("ssecEnabled", ssecEnabled)
+            .add("ssecConfiguration", ssecConfiguration)
             .toString();
     }
 }

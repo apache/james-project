@@ -17,79 +17,51 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.objectstorage.aws.s3;
+package org.apache.james.modules;
 
 import java.util.UUID;
 
-import org.apache.james.GuiceModuleTestRule;
+import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.DockerAwsS3Container;
-import org.apache.james.blob.objectstorage.aws.DockerAwsS3Singleton;
 import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
-import org.apache.james.blob.objectstorage.aws.S3RequestOption;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.apache.james.blob.objectstorage.aws.S3MinioDocker;
+import org.apache.james.blob.objectstorage.aws.S3MinioExtension;
+import org.apache.james.blob.objectstorage.aws.sse.S3SSECConfiguration;
 
 import com.google.inject.Module;
 
-public class DockerAwsS3TestRule implements GuiceModuleTestRule {
+public class S3SSECBlobStoreExtension extends S3MinioExtension implements GuiceModuleTestExtension {
 
-    public DockerAwsS3TestRule() {
-    }
+    private final S3SSECConfiguration ssecConfiguration;
 
-    @Override
-    public Statement apply(Statement base, Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                ensureAwsS3started();
-                base.evaluate();
-            }
-        };
-    }
-
-    private void ensureAwsS3started() {
-        DockerAwsS3Singleton.singleton.dockerAwsS3();
-    }
-
-    @Override
-    public void await() {
+    public S3SSECBlobStoreExtension(S3SSECConfiguration ssecConfiguration) {
+        this.ssecConfiguration = ssecConfiguration;
     }
 
     @Override
     public Module getModule() {
+        S3MinioDocker s3MinioDocker = minioDocker();
         BucketName defaultBucketName = BucketName.of(UUID.randomUUID().toString());
-        AwsS3AuthConfiguration authConfiguration = AwsS3AuthConfiguration.builder()
-            .endpoint(DockerAwsS3Singleton.singleton.getEndpoint())
-            .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
-            .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
-            .build();
+        AwsS3AuthConfiguration awsS3AuthConfiguration = s3MinioDocker.getAwsS3AuthConfiguration();
 
         Region region = DockerAwsS3Container.REGION;
         S3BlobStoreConfiguration configuration = S3BlobStoreConfiguration.builder()
-            .authConfiguration(authConfiguration)
+            .authConfiguration(awsS3AuthConfiguration)
             .region(region)
             .defaultBucketName(defaultBucketName)
             .bucketPrefix(UUID.randomUUID().toString())
+            .ssecEnabled()
+            .ssecConfiguration(ssecConfiguration)
             .build();
 
         return binder -> {
             binder.bind(BucketName.class).toInstance(defaultBucketName);
             binder.bind(Region.class).toInstance(region);
-            binder.bind(AwsS3AuthConfiguration.class).toInstance(authConfiguration);
+            binder.bind(AwsS3AuthConfiguration.class).toInstance(awsS3AuthConfiguration);
             binder.bind(S3BlobStoreConfiguration.class).toInstance(configuration);
-            binder.bind(S3RequestOption.class).toInstance(S3RequestOption.DEFAULT);
         };
     }
-
-    public void start() {
-        ensureAwsS3started();
-    }
-
-    public void stop() {
-        //nothing to stop
-    }
 }
-

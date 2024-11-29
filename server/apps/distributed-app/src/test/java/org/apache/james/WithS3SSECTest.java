@@ -17,22 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage.aws;
+package org.apache.james;
 
-import java.util.Optional;
+import org.apache.james.blob.objectstorage.aws.sse.S3SSECConfiguration;
+import org.apache.james.jmap.JmapJamesServerContract;
+import org.apache.james.modules.S3SSECBlobStoreExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import org.apache.james.blob.objectstorage.aws.sse.S3SSECustomerKeyFactory;
+public class WithS3SSECTest implements JmapJamesServerContract, MailsShouldBeWellReceivedConcreteContract {
+    static S3SSECConfiguration s3SSECConfiguration = new S3SSECConfiguration.Basic("AES256", "masterPassword", "salt");
 
-import com.google.common.base.Preconditions;
-
-public record S3RequestOption(SSEC ssec) {
-    public static S3RequestOption DEFAULT = new S3RequestOption(S3RequestOption.SSEC.DISABLED);
-
-    public record SSEC(boolean enable, java.util.Optional<S3SSECustomerKeyFactory> sseCustomerKeyFactory) {
-        static S3RequestOption.SSEC DISABLED = new S3RequestOption.SSEC(false, Optional.empty());
-
-        public SSEC {
-            Preconditions.checkArgument(!enable || sseCustomerKeyFactory.isPresent(), "SSE Customer Key Factory must be present when SSE is enabled");
-        }
-    }
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
+        .extension(new S3SSECBlobStoreExtension(s3SSECConfiguration))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .build();
 }

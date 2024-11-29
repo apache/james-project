@@ -19,6 +19,8 @@
 
 package org.apache.james.modules.blobstore;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +32,12 @@ import org.apache.james.blob.api.ObjectStorageHealthCheck;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
 import org.apache.james.blob.file.FileBlobStoreDAO;
+import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
+import org.apache.james.blob.objectstorage.aws.S3RequestOption;
+import org.apache.james.blob.objectstorage.aws.sse.S3SSECConfiguration;
+import org.apache.james.blob.objectstorage.aws.sse.S3SSECustomerKeyFactory;
+import org.apache.james.blob.objectstorage.aws.sse.S3SSECustomerKeyFactory.SingleCustomerKeyFactory;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.modules.blobstore.validation.BlobStoreConfigurationValidationStartUpCheck.StorageStrategySupplier;
 import org.apache.james.modules.blobstore.validation.StoragePolicyConfigurationSanityEnforcementModule;
@@ -42,6 +49,7 @@ import org.apache.james.modules.objectstorage.S3BucketModule;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.server.blob.deduplication.PassThroughBlobStore;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
+import org.apache.james.server.core.MissingArgumentException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
@@ -75,6 +83,19 @@ public class BlobStoreModulesChooser {
             bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(S3BlobStoreDAO.class)
                 .in(Scopes.SINGLETON);
             Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(ObjectStorageHealthCheck.class);
+        }
+
+        @Provides
+        @Singleton
+        S3RequestOption provideS3RequestOption(S3BlobStoreConfiguration configuration) throws InvalidKeySpecException, NoSuchAlgorithmException {
+            if (!configuration.ssecEnabled()) {
+                return S3RequestOption.DEFAULT;
+            }
+            S3SSECConfiguration ssecConfiguration = configuration.getSSECConfiguration()
+                .orElseThrow(() -> new MissingArgumentException("SSEC is enabled but no configuration is provided"));
+
+            S3SSECustomerKeyFactory sseCustomerKeyFactory = new SingleCustomerKeyFactory((S3SSECConfiguration.Basic) ssecConfiguration);
+            return new S3RequestOption(new S3RequestOption.SSEC(true, Optional.of(sseCustomerKeyFactory)));
         }
     }
 
