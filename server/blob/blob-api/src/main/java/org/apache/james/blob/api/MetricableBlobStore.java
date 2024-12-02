@@ -66,17 +66,17 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, byte[] data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
+    public Publisher<BlobId> save(BucketName bucketName, byte[] data, BlobIdProvider<byte[]> blobIdProvider, StoragePolicy storagePolicy) {
         return metricFactory.decoratePublisherWithTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucketName, data, blobIdProvider, storagePolicy));
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, InputStream data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
+    public Publisher<BlobId> save(BucketName bucketName, InputStream data, BlobIdProvider<InputStream> blobIdProvider, StoragePolicy storagePolicy) {
         return metricFactory.decoratePublisherWithTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, blobIdProvider, storagePolicy));
     }
 
     @Override
-    public Publisher<BlobId> save(BucketName bucketName, ByteSource data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy) {
+    public Publisher<BlobId> save(BucketName bucketName, ByteSource data, BlobIdProvider<ByteSource> blobIdProvider, StoragePolicy storagePolicy) {
         return metricFactory.decoratePublisherWithTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, blobIdProvider, storagePolicy));
     }
 
