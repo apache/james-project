@@ -102,6 +102,10 @@ public interface ImapSession extends CommandDetectionSession {
         runnable.run();
     }
 
+    default ImapProcessor.Responder threadSafe(ImapProcessor.Responder responder) {
+        return responder;
+    }
+
     /**
      * Logs out the session. Marks the connection for closure;
      */

@@ -32,7 +32,9 @@ import javax.net.ssl.SSLSession;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionState;
+import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapLineHandler;
+import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.encode.ImapResponseWriter;
@@ -111,6 +113,21 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
             channel.config().setAutoRead(true);
         });
+    }
+
+    @Override
+    public ImapProcessor.Responder threadSafe(ImapProcessor.Responder responder) {
+        return new ImapProcessor.Responder() {
+            @Override
+            public void respond(ImapResponseMessage message) {
+                channel.eventLoop().execute(() -> responder.respond(message));
+            }
+
+            @Override
+            public void flush() {
+                channel.eventLoop().execute(responder::flush);
+            }
+        };
     }
 
     @Override

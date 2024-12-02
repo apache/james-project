@@ -173,7 +173,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
         public IdleMailboxListener(ImapSession session, Responder responder, CountDownLatch countDownLatch) {
             this.session = session;
-            this.responder = responder;
+            this.responder = session.threadSafe(responder);
             this.countDownLatch = countDownLatch;
         }
 
