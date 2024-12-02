@@ -42,6 +42,7 @@ import org.apache.james.core.quota.QuotaType;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaChangeNotifier;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -53,10 +54,12 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
     private static final String GLOBAL_IDENTIFIER = "global";
 
     private final CassandraQuotaLimitDao cassandraQuotaLimitDao;
+    private final QuotaChangeNotifier quotaChangeNotifier;
 
     @Inject
-    public CassandraPerUserMaxQuotaManagerV2(CassandraQuotaLimitDao cassandraQuotaLimitDao) {
+    public CassandraPerUserMaxQuotaManagerV2(CassandraQuotaLimitDao cassandraQuotaLimitDao, QuotaChangeNotifier quotaChangeNotifier) {
         this.cassandraQuotaLimitDao = cassandraQuotaLimitDao;
+        this.quotaChangeNotifier = quotaChangeNotifier;
     }
 
     @Override
@@ -72,7 +75,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
                 .quotaComponent(QuotaComponent.MAILBOX)
                 .quotaType(QuotaType.SIZE)
                 .quotaLimit(QuotaCodec.quotaValueToLong(maxStorageQuota))
-                .build());
+                .build())
+            .then(Mono.from(quotaChangeNotifier.notifyUpdate(quotaRoot)));
     }
 
     @Override
@@ -88,7 +92,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
                 .quotaComponent(QuotaComponent.MAILBOX)
                 .quotaType(QuotaType.COUNT)
                 .quotaLimit(QuotaCodec.quotaValueToLong(maxMessageCount))
-                .build());
+                .build())
+            .then(Mono.from(quotaChangeNotifier.notifyUpdate(quotaRoot)));
     }
 
     @Override
@@ -104,7 +109,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
                 .quotaComponent(QuotaComponent.MAILBOX)
                 .quotaType(QuotaType.COUNT)
                 .quotaLimit(QuotaCodec.quotaValueToLong(count))
-                .build());
+                .build())
+            .then(Mono.from(quotaChangeNotifier.notifyUpdate(domain)));
     }
 
     @Override
@@ -120,7 +126,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
                 .quotaComponent(QuotaComponent.MAILBOX)
                 .quotaType(QuotaType.SIZE)
                 .quotaLimit(QuotaCodec.quotaValueToLong(size))
-                .build());
+                .build())
+            .then(Mono.from(quotaChangeNotifier.notifyUpdate(domain)));
     }
 
     @Override
@@ -130,7 +137,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeDomainMaxMessageReactive(Domain domain) {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, domain.asString(), QuotaType.COUNT));
+        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, domain.asString(), QuotaType.COUNT))
+            .then(Mono.from(quotaChangeNotifier.notifyUpdate(domain)));
     }
 
     @Override
@@ -140,7 +148,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeDomainMaxStorageReactive(Domain domain) {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, domain.asString(), QuotaType.SIZE));
+        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, domain.asString(), QuotaType.SIZE))
+            .then(Mono.from(quotaChangeNotifier.notifyUpdate(domain)));
     }
 
     @Override
@@ -170,7 +179,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeMaxMessageReactive(QuotaRoot quotaRoot) {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.USER, quotaRoot.getValue(), QuotaType.COUNT));
+        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.USER, quotaRoot.getValue(), QuotaType.COUNT))
+            .then(Mono.from(quotaChangeNotifier.notifyUpdate(quotaRoot)));
     }
 
     @Override
@@ -180,7 +190,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeMaxStorageReactive(QuotaRoot quotaRoot) {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.USER, quotaRoot.getValue(), QuotaType.SIZE));
+        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.USER, quotaRoot.getValue(), QuotaType.SIZE))
+            .then(Mono.from(quotaChangeNotifier.notifyUpdate(quotaRoot)));
     }
 
     @Override
@@ -195,7 +206,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
                 .quotaComponent(QuotaComponent.MAILBOX)
                 .quotaType(QuotaType.SIZE)
                 .quotaLimit(QuotaCodec.quotaValueToLong(globalMaxStorage))
-                .build());
+                .build())
+            .then(Mono.from(quotaChangeNotifier.notifyGlobalUpdate()));
     }
 
     @Override
@@ -205,7 +217,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeGlobalMaxStorageReactive() {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.GLOBAL, GLOBAL_IDENTIFIER, QuotaType.SIZE));
+        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.GLOBAL, GLOBAL_IDENTIFIER, QuotaType.SIZE))
+            .then(Mono.from(quotaChangeNotifier.notifyGlobalUpdate()));
     }
 
     @Override
@@ -220,7 +233,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
                 .quotaComponent(QuotaComponent.MAILBOX)
                 .quotaType(QuotaType.COUNT)
                 .quotaLimit(QuotaCodec.quotaValueToLong(globalMaxMessageCount))
-                .build());
+                .build())
+            .then(Mono.from(quotaChangeNotifier.notifyGlobalUpdate()));
     }
 
     @Override
@@ -230,7 +244,8 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeGlobalMaxMessageReactive() {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.GLOBAL, GLOBAL_IDENTIFIER, QuotaType.COUNT));
+        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.GLOBAL, GLOBAL_IDENTIFIER, QuotaType.COUNT))
+            .then(Mono.from(quotaChangeNotifier.notifyGlobalUpdate()));
     }
 
     @Override
