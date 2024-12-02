@@ -58,7 +58,6 @@ public class BlobDeduplicationGCModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(PlainBlobId.Factory.class).in(Scopes.SINGLETON);
-        bind(BlobId.Factory.class).to(GenerationAwareBlobId.Factory.class);
 
         bind(MetricableBlobStore.class).in(Scopes.SINGLETON);
         bind(BlobStore.class).to(MetricableBlobStore.class);
@@ -68,7 +67,7 @@ public class BlobDeduplicationGCModule extends AbstractModule {
 
     @Singleton
     @Provides
-    public GenerationAwareBlobId.Factory generationAwareBlobIdFactory(Clock clock, PlainBlobId.Factory delegate, GenerationAwareBlobId.Configuration configuration) {
+    public BlobId.Factory generationAwareBlobIdFactory(Clock clock, PlainBlobId.Factory delegate, GenerationAwareBlobId.Configuration configuration) {
         return new GenerationAwareBlobId.Factory(clock, delegate, configuration);
     }
 
@@ -85,7 +84,7 @@ public class BlobDeduplicationGCModule extends AbstractModule {
 
     @ProvidesIntoSet
     public TaskDTOModule<? extends Task, ? extends TaskDTO> blobGCTask(BlobStoreDAO blobStoreDAO,
-                                                                       GenerationAwareBlobId.Factory generationAwareBlobIdFactory,
+                                                                       BlobId.Factory generationAwareBlobIdFactory,
                                                                        GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration,
                                                                        Set<BlobReferenceSource> blobReferenceSources,
                                                                        Clock clock) {
