@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
@@ -50,7 +51,6 @@ public class BloomFilterGCAlgorithm {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BloomFilterGCAlgorithm.class);
     private static final Funnel<CharSequence> BLOOM_FILTER_FUNNEL = Funnels.stringFunnel(StandardCharsets.US_ASCII);
-    private static final int DELETION_BATCH_SIZE = 1000;
 
     public static class Context {
 
@@ -242,7 +242,7 @@ public class BloomFilterGCAlgorithm {
 
     private final BlobReferenceSource referenceSource;
     private final BlobStoreDAO blobStoreDAO;
-    private final GenerationAwareBlobId.Factory generationAwareBlobIdFactory;
+    private final BlobId.Factory blobIdFactory;
     private final GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration;
     private final Instant now;
 
@@ -251,12 +251,12 @@ public class BloomFilterGCAlgorithm {
 
     public BloomFilterGCAlgorithm(BlobReferenceSource referenceSource,
                                   BlobStoreDAO blobStoreDAO,
-                                  GenerationAwareBlobId.Factory generationAwareBlobIdFactory,
+                                  BlobId.Factory generationAwareBlobIdFactory,
                                   GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration,
                                   Clock clock) {
         this.referenceSource = referenceSource;
         this.blobStoreDAO = blobStoreDAO;
-        this.generationAwareBlobIdFactory = generationAwareBlobIdFactory;
+        this.blobIdFactory = generationAwareBlobIdFactory;
         this.generationAwareBlobIdConfiguration = generationAwareBlobIdConfiguration;
         this.salt = UUID.randomUUID().toString();
         this.now = clock.instant();
@@ -274,8 +274,13 @@ public class BloomFilterGCAlgorithm {
     private Mono<Result> gc(BloomFilter<CharSequence> bloomFilter, BucketName bucketName, Context context, int deletionWindowSize) {
         return Flux.from(blobStoreDAO.listBlobs(bucketName))
             .doOnNext(blobId -> context.incrementBlobCount())
-            .flatMap(blobId -> Mono.fromCallable(() -> generationAwareBlobIdFactory.parse(blobId.asString())))
-            .filter(blobId -> !blobId.inActiveGeneration(generationAwareBlobIdConfiguration, now))
+            .flatMap(blobId -> Mono.fromCallable(() -> blobIdFactory.parse(blobId.asString())))
+            .filter(blobId -> {
+                if (blobId instanceof GenerationAware generationAware) {
+                    return !generationAware.inActiveGeneration(generationAwareBlobIdConfiguration, now);
+                }
+                return false;
+            })
             .filter(blobId -> !bloomFilter.mightContain(salt + blobId.asString()))
             .window(deletionWindowSize)
             .flatMap(blobIdFlux -> handlePagedDeletion(bucketName, context, blobIdFlux), DEFAULT_CONCURRENCY)
@@ -283,7 +288,7 @@ public class BloomFilterGCAlgorithm {
             .switchIfEmpty(Mono.just(Result.COMPLETED));
     }
 
-    private Mono<Result> handlePagedDeletion(BucketName bucketName, Context context, Flux<GenerationAwareBlobId> blobIdFlux) {
+    private Mono<Result> handlePagedDeletion(BucketName bucketName, Context context, Flux<BlobId> blobIdFlux) {
         return blobIdFlux.collectList()
             .flatMap(orphanBlobIds -> Mono.from(blobStoreDAO.delete(bucketName, (Collection) orphanBlobIds))
                 .then(Mono.fromCallable(() -> {

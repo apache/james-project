@@ -23,6 +23,7 @@ import java.time.Clock;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
@@ -53,7 +54,7 @@ public class BlobGCTaskDTO implements TaskDTO {
     }
 
     public static TaskDTOModule<BlobGCTask, BlobGCTaskDTO> module(BlobStoreDAO blobStoreDAO,
-                                                                  GenerationAwareBlobId.Factory generationAwareBlobIdFactory,
+                                                                  BlobId.Factory generationAwareBlobIdFactory,
                                                                   GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration,
                                                                   Set<BlobReferenceSource> blobReferenceSources,
                                                                   Clock clock) {

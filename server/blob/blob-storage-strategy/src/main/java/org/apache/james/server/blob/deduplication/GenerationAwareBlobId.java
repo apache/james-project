@@ -33,7 +33,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-public class GenerationAwareBlobId implements BlobId {
+public class GenerationAwareBlobId implements BlobId, GenerationAware {
 
     public static class Configuration {
         public static final Duration DEFAULT_DURATION = Duration.ofDays(30);
@@ -157,7 +157,7 @@ public class GenerationAwareBlobId implements BlobId {
     public static final int NO_FAMILY = 0;
     public static final int NO_GENERATION = 0;
 
-    private static long computeGeneration(Configuration configuration, Instant now) {
+    static long computeGeneration(Configuration configuration, Instant now) {
         return now.getEpochSecond() / configuration.getDuration().toSeconds();
     }
 
@@ -182,6 +182,7 @@ public class GenerationAwareBlobId implements BlobId {
         return family + "_" + generation + "_" + delegate.asString();
     }
 
+    @Override
     public boolean inActiveGeneration(Configuration configuration, Instant now) {
         return configuration.getFamily() == this.family &&
             generation + 1 >= computeGeneration(configuration, now);
