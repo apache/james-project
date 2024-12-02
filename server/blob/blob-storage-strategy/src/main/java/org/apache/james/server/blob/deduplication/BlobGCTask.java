@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
@@ -150,7 +151,7 @@ public class BlobGCTask implements Task {
 
         @FunctionalInterface
         public interface RequireGenerationAwareBlobIdFactory {
-            RequireGenerationAwareBlobIdConfiguration generationAwareBlobIdFactory(GenerationAwareBlobId.Factory generationAwareBlobIdFactory);
+            RequireGenerationAwareBlobIdConfiguration generationAwareBlobIdFactory(BlobId.Factory generationAwareBlobIdFactory);
         }
 
         @FunctionalInterface
@@ -159,7 +160,7 @@ public class BlobGCTask implements Task {
         }
 
         private final BlobStoreDAO blobStoreDAO;
-        private final GenerationAwareBlobId.Factory generationAwareBlobIdFactory;
+        private final BlobId.Factory generationAwareBlobIdFactory;
         private final GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration;
         private final Set<BlobReferenceSource> blobReferenceSources;
         private final Clock clock;
@@ -168,7 +169,7 @@ public class BlobGCTask implements Task {
         private final double associatedProbability;
         private Optional<Integer> deletionWindowSize;
 
-        public Builder(BlobStoreDAO blobStoreDAO, GenerationAwareBlobId.Factory generationAwareBlobIdFactory,
+        public Builder(BlobStoreDAO blobStoreDAO, BlobId.Factory generationAwareBlobIdFactory,
                        GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration,
                        Set<BlobReferenceSource> blobReferenceSources, Clock clock, BucketName bucketName,
                        int expectedBlobCount, double associatedProbability) {
@@ -223,7 +224,7 @@ public class BlobGCTask implements Task {
 
 
     private final BlobStoreDAO blobStoreDAO;
-    private final GenerationAwareBlobId.Factory generationAwareBlobIdFactory;
+    private final BlobId.Factory generationAwareBlobIdFactory;
     private final GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration;
     private final Set<BlobReferenceSource> blobReferenceSources;
     private final Clock clock;
@@ -235,7 +236,7 @@ public class BlobGCTask implements Task {
 
 
     public BlobGCTask(BlobStoreDAO blobStoreDAO,
-                      GenerationAwareBlobId.Factory generationAwareBlobIdFactory,
+                      BlobId.Factory generationAwareBlobIdFactory,
                       GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration,
                       Set<BlobReferenceSource> blobReferenceSources,
                       BucketName bucketName,

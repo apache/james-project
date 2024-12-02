@@ -26,6 +26,7 @@ import java.util.Set;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
@@ -56,7 +57,7 @@ public class BlobRoutes implements Routes {
     private final BucketName bucketName;
     private final Set<BlobReferenceSource> blobReferenceSources;
     private final GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration;
-    private final GenerationAwareBlobId.Factory generationAwareBlobIdFactory;
+    private final BlobId.Factory generationAwareBlobIdFactory;
 
     @Inject
     public BlobRoutes(TaskManager taskManager,
@@ -66,7 +67,7 @@ public class BlobRoutes implements Routes {
                       @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) BucketName defaultBucketName,
                       Set<BlobReferenceSource> blobReferenceSources,
                       GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration,
-                      GenerationAwareBlobId.Factory generationAwareBlobIdFactory) {
+                      BlobId.Factory generationAwareBlobIdFactory) {
         this.taskManager = taskManager;
         this.jsonTransformer = jsonTransformer;
         this.clock = clock;
