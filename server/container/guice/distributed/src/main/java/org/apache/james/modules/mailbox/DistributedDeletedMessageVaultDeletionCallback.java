@@ -26,6 +26,7 @@ import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.Optional;
 
@@ -232,6 +233,7 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
             CopyCommandDTO copyCommandDTO = objectMapper.readValue(delivery.getBody(), CopyCommandDTO.class);
 
             return callback.forMessage(copyCommandDTO.asPojo(mailboxIdFactory, messageIdFactory, blobIdFactory))
+                .timeout(Duration.ofMinutes(5))
                 .doOnError(e -> {
                     LOGGER.error("Failed executing deletion callback for {}", copyCommandDTO.messageId, e);
                     delivery.nack(REQUEUE);
