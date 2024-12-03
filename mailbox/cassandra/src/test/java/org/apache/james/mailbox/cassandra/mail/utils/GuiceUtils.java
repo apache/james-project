@@ -46,6 +46,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.quota.QuotaChangeNotifier;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
@@ -99,6 +100,7 @@ public class GuiceUtils {
             binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
             binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration),
             binder -> binder.bind(Clock.class).toInstance(Clock.systemUTC()),
-            binder -> binder.bind(AttachmentIdFactory.class).to(StringBackedAttachmentIdFactory.class));
+            binder -> binder.bind(AttachmentIdFactory.class).to(StringBackedAttachmentIdFactory.class),
+            binder -> binder.bind(QuotaChangeNotifier.class).toInstance(QuotaChangeNotifier.NOOP));
     }
 }
