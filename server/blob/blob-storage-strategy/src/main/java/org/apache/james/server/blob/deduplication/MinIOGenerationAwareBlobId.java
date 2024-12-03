@@ -63,16 +63,26 @@ public class MinIOGenerationAwareBlobId implements BlobId, GenerationAware {
             try {
                 int family = Integer.parseInt(id.substring(0, separatorIndex1));
                 int generation = Integer.parseInt(id.substring(separatorIndex1 + 1, separatorIndex2));
-                String blobIdPart = id.substring(separatorIndex2 + 1);
-                BlobId wrapped = delegate.parse(blobIdPart.charAt(0) + "/" +
-                    blobIdPart.charAt(1) + "/" +
-                    blobIdPart.charAt(2) + "/" +
-                    blobIdPart.charAt(3) + "/" +
-                    blobIdPart.substring(4));
+                if (family < 0 || generation < 0) {
+                    return decorateWithoutGeneration(id);
+                }
+                BlobId wrapped = delegate.parse(id.substring(separatorIndex2 + 1));
                 return new MinIOGenerationAwareBlobId(generation, family, wrapped);
             } catch (NumberFormatException e) {
                 return delegate.parse(id.substring(separatorIndex2 + 1));
             }
+        }
+
+        private static String injectFoldersInBlobId(String blobIdPart) {
+            int folderDepthToCreate = 4;
+            if (blobIdPart.length() > folderDepthToCreate) {
+                return blobIdPart.charAt(0) + "/" +
+                    blobIdPart.charAt(1) + "/" +
+                    blobIdPart.charAt(2) + "/" +
+                    blobIdPart.charAt(3) + "/" +
+                    blobIdPart.substring(4);
+            }
+            return blobIdPart;
         }
 
         private GenerationAwareBlobId decorateWithoutGeneration(String id) {
@@ -81,7 +91,7 @@ public class MinIOGenerationAwareBlobId implements BlobId, GenerationAware {
 
         @Override
         public BlobId of(String id) {
-            return decorate(delegate.of(id));
+            return decorate(delegate.of(injectFoldersInBlobId(id)));
         }
 
         private MinIOGenerationAwareBlobId decorate(BlobId blobId) {
@@ -135,8 +145,7 @@ public class MinIOGenerationAwareBlobId implements BlobId, GenerationAware {
 
     @Override
     public final boolean equals(Object obj) {
-        if (obj instanceof MinIOGenerationAwareBlobId) {
-            MinIOGenerationAwareBlobId other = (MinIOGenerationAwareBlobId) obj;
+        if (obj instanceof MinIOGenerationAwareBlobId other) {
             return Objects.equals(generation, other.generation)
                 && Objects.equals(delegate, other.delegate)
                 && Objects.equals(family, other.family);
