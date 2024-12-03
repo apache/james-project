@@ -82,7 +82,7 @@ case object EmailSubmissionSetMethodFutureReleaseContract {
       |    "urn:ietf:params:jmap:quota": {},
       |    "urn:apache:james:params:jmap:mail:identity:sortorder": {},
       |    "urn:apache:james:params:jmap:delegation": {},
-      |    "urn:apache:james:params:jmap:mail:shares": {},
+      |    "urn:apache:james:params:jmap:mail:shares": {"subaddressingSupported":true},
       |    "urn:ietf:params:jmap:vacationresponse":{},
       |    "urn:ietf:params:jmap:mdn":{}
       |  },
@@ -122,7 +122,7 @@ case object EmailSubmissionSetMethodFutureReleaseContract {
       |        "urn:ietf:params:jmap:quota": {},
       |        "urn:apache:james:params:jmap:mail:identity:sortorder": {},
       |        "urn:apache:james:params:jmap:delegation": {},
-      |        "urn:apache:james:params:jmap:mail:shares": {},
+      |        "urn:apache:james:params:jmap:mail:shares": {"subaddressingSupported":true},
       |        "urn:ietf:params:jmap:vacationresponse":{},
       |        "urn:ietf:params:jmap:mdn":{}
       |      }

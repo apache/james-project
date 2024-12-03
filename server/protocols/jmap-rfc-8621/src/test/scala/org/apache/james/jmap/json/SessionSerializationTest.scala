@@ -145,7 +145,7 @@ class SessionSerializationTest extends AnyWordSpec with Matchers {
           |      "mayCreateTopLevelMailbox": true
           |    },
           |    "urn:apache:james:params:jmap:mail:quota":{},
-          |    "urn:apache:james:params:jmap:mail:shares":{},
+          |    "urn:apache:james:params:jmap:mail:shares":{"subaddressingSupported":true},
           |    "urn:ietf:params:jmap:vacationresponse":{}
           |  },
           |  "accounts": {
