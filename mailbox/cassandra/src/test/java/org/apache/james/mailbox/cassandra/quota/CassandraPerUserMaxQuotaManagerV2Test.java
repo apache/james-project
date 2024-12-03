@@ -26,9 +26,10 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
-import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
+import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaChangeNotifier;
 import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,8 +43,8 @@ public class CassandraPerUserMaxQuotaManagerV2Test extends GenericMaxQuotaManage
 
     @Override
     protected MaxQuotaManager provideMaxQuotaManager() {
-        return GuiceUtils.testInjector(cassandraCluster.getCassandraCluster())
-            .getInstance(CassandraPerUserMaxQuotaManagerV2.class);
+        return new CassandraPerUserMaxQuotaManagerV2(new CassandraQuotaLimitDao(cassandraCluster.getCassandraCluster().getConf()),
+            QuotaChangeNotifier.NOOP);
     }
 
     @Test

@@ -100,7 +100,6 @@ public class GuiceUtils {
             binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
             binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration),
             binder -> binder.bind(Clock.class).toInstance(Clock.systemUTC()),
-            binder -> binder.bind(AttachmentIdFactory.class).to(StringBackedAttachmentIdFactory.class),
-            binder -> binder.bind(QuotaChangeNotifier.class).toInstance(QuotaChangeNotifier.NOOP));
+            binder -> binder.bind(AttachmentIdFactory.class).to(StringBackedAttachmentIdFactory.class));
     }
 }
