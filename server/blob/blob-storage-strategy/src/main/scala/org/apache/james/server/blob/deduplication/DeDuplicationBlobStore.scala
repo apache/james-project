@@ -28,11 +28,11 @@ import org.apache.james.blob.api.BlobStore.BlobIdProvider
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.{Flux, Mono}
-import reactor.core.scala.publisher.{SMono, tupleTwo2ScalaTuple2}
+import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
-import reactor.util.function.{Tuple2, Tuples}
+import reactor.util.function.Tuples
 
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.InputStream
 import java.util.concurrent.Callable
 import scala.compat.java8.FunctionConverters._
 
@@ -67,7 +67,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   private val baseEncoding = Option(System.getProperty(HASH_BLOB_ID_ENCODING_TYPE_PROPERTY)).map(DeDuplicationBlobStore.baseEncodingFrom).getOrElse(HASH_BLOB_ID_ENCODING_DEFAULT)
 
   override def save(bucketName: BucketName, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    save(bucketName, data, withBlobId, storagePolicy)
+    save(bucketName, data, withBlobIdFromArray, storagePolicy)
   }
 
   override def save(bucketName: BucketName, data: InputStream, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
@@ -75,32 +75,30 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   }
 
   override def save(bucketName: BucketName, data: ByteSource, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    save(bucketName, data, withBlobId, storagePolicy)
+    save(bucketName, data, withBlobIdFromByteSource, storagePolicy)
   }
 
-  override def save(bucketName: BucketName, data: Array[Byte], blobIdProvider: BlobIdProvider, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+  override def save(bucketName: BucketName, data: Array[Byte], blobIdProvider: BlobIdProvider[Array[Byte]], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(data)
-    save(bucketName, new ByteArrayInputStream(data), blobIdProvider, storagePolicy)
+    SMono(blobIdProvider.apply(data))
+      .map(_.getT1)
+      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, data))
+      .`then`(SMono.just(blobId)))
   }
 
-  override def save(bucketName: BucketName, data: ByteSource, blobIdProvider: BlobIdProvider, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+  override def save(bucketName: BucketName, data: ByteSource, blobIdProvider: BlobIdProvider[ByteSource], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(data)
 
-    SMono.fromCallable(() => data.openStream())
-      .using(
-        use = stream => SMono(blobIdProvider.apply(stream))
-          .subscribeOn(Schedulers.boundedElastic())
-          .map(tupleTwo2ScalaTuple2)
-          .flatMap { case (blobId, inputStream) =>
-            SMono(blobStoreDAO.save(bucketName, blobId, inputStream))
-              .`then`(SMono.just(blobId))
-          })(
-        release = _.close())
+    SMono(blobIdProvider.apply(data))
+      .map(_.getT1)
+      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, data))
+          .`then`(SMono.just(blobId)))
+      .subscribeOn(Schedulers.boundedElastic())
   }
 
-  private def withBlobId(data: InputStream): Publisher[Tuple2[BlobId, InputStream]] = {
+  private def withBlobId: BlobIdProvider[InputStream] = data => {
     val hashingInputStream = new HashingInputStream(Hashing.sha256, data)
     val ressourceSupplier: Callable[FileBackedOutputStream] = () => new FileBackedOutputStream(DeDuplicationBlobStore.FILE_THRESHOLD)
     val sourceSupplier: FileBackedOutputStream => Mono[(BlobId, InputStream)] =
@@ -114,9 +112,22 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
       ressourceSupplier,
       sourceSupplier.asJava,
       ((fileBackedOutputStream: FileBackedOutputStream) => fileBackedOutputStream.reset()).asJava,
-      DeDuplicationBlobStore.LAZY_RESOURCE_CLEANUP
-    ) .subscribeOn(Schedulers.boundedElastic())
+      DeDuplicationBlobStore.LAZY_RESOURCE_CLEANUP)
+      .subscribeOn(Schedulers.boundedElastic())
       .map{ case (blobId, data) => Tuples.of(blobId, data)}
+  }
+
+  private def withBlobIdFromByteSource: BlobIdProvider[ByteSource] =
+    data => Mono.fromCallable(() => data.hash(Hashing.sha256()))
+      .subscribeOn(Schedulers.boundedElastic())
+      .map(base64)
+      .map(blobIdFactory.of)
+      .map(blobId => Tuples.of(blobId, data))
+
+  private def withBlobIdFromArray: BlobIdProvider[Array[Byte]] = data => {
+    val code = Hashing.sha256.hashBytes(data)
+    val blobId = blobIdFactory.of(base64(code))
+    Mono.just(Tuples.of(blobId, data))
   }
 
   private def base64(hashCode: HashCode) = {
@@ -126,7 +137,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
 
   override def save(bucketName: BucketName,
                     data: InputStream,
-                    blobIdProvider: BlobIdProvider,
+                    blobIdProvider: BlobIdProvider[InputStream],
                     storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(data)

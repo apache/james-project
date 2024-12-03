@@ -37,8 +37,8 @@ public interface BlobStore {
     }
 
     @FunctionalInterface
-    interface BlobIdProvider {
-        Publisher<Tuple2<BlobId, InputStream>> apply(InputStream stream);
+    interface BlobIdProvider<T> {
+        Publisher<Tuple2<BlobId, T>> apply(T stream);
     }
 
     Publisher<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy);
@@ -47,11 +47,11 @@ public interface BlobStore {
 
     Publisher<BlobId> save(BucketName bucketName, ByteSource data, StoragePolicy storagePolicy);
 
-    Publisher<BlobId> save(BucketName bucketName, byte[] data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy);
+    Publisher<BlobId> save(BucketName bucketName, byte[] data, BlobIdProvider<byte[]> blobIdProvider, StoragePolicy storagePolicy);
 
-    Publisher<BlobId> save(BucketName bucketName, InputStream data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy);
+    Publisher<BlobId> save(BucketName bucketName, InputStream data, BlobIdProvider<InputStream> blobIdProvider, StoragePolicy storagePolicy);
 
-    Publisher<BlobId> save(BucketName bucketName, ByteSource data, BlobIdProvider blobIdProvider, StoragePolicy storagePolicy);
+    Publisher<BlobId> save(BucketName bucketName, ByteSource data, BlobIdProvider<ByteSource> blobIdProvider, StoragePolicy storagePolicy);
 
     default Publisher<BlobId> save(BucketName bucketName, String data, StoragePolicy storagePolicy) {
         return save(bucketName, data.getBytes(StandardCharsets.UTF_8), storagePolicy);

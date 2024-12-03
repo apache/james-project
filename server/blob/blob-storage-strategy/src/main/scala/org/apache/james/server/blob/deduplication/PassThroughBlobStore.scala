@@ -38,7 +38,7 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
                                      blobIdFactory: BlobId.Factory) extends BlobStore {
 
   override def save(bucketName: BucketName, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    save(bucketName, data, withBlobId, storagePolicy)
+    save(bucketName, data, withBlobIdByteArray, storagePolicy)
   }
 
   override def save(bucketName: BucketName, data: InputStream, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
@@ -46,36 +46,33 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   }
 
   override def save(bucketName: BucketName, data: ByteSource, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
-    save(bucketName, data, withBlobId, storagePolicy)
+    save(bucketName, data, withBlobIdByteSource, storagePolicy)
   }
 
-  override def save(bucketName: BucketName, data: Array[Byte], blobIdProvider: BlobIdProvider, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+  override def save(bucketName: BucketName, data: Array[Byte], blobIdProvider: BlobIdProvider[Array[Byte]], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(data)
-    save(bucketName, new ByteArrayInputStream(data), blobIdProvider, storagePolicy)
+    SMono(blobIdProvider.apply(data))
+      .map(_.getT1)
+      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, data))
+        .`then`(SMono.just(blobId)))
   }
 
-  override def save(bucketName: BucketName, data: ByteSource, blobIdProvider: BlobIdProvider, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+  override def save(bucketName: BucketName, data: ByteSource, blobIdProvider: BlobIdProvider[ByteSource], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(data)
 
-    SMono.fromCallable(() => data.openStream())
-      .using(
-        use = stream => SMono(blobIdProvider.apply(stream))
-          .subscribeOn(Schedulers.boundedElastic())
-          .map(tupleTwo2ScalaTuple2)
-          .flatMap { case (blobId, inputStream) =>
-            SMono(blobStoreDAO.save(bucketName, blobId, inputStream))
-              .`then`(SMono.just(blobId))
-          })(
-        release = _.close())
-
+    SMono(blobIdProvider.apply(data))
+      .map(_.getT1)
+      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, data))
+        .`then`(SMono.just(blobId)))
+      .subscribeOn(Schedulers.boundedElastic())
   }
 
   override def save(
                      bucketName: BucketName,
                      data: InputStream,
-                     blobIdProvider: BlobIdProvider,
+                     blobIdProvider: BlobIdProvider[InputStream],
                      storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(data)
@@ -88,7 +85,11 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
       }
   }
 
-  private def withBlobId(data: InputStream): Publisher[Tuple2[BlobId, InputStream]] =
+  private def withBlobId: BlobIdProvider[InputStream] = data =>
+    SMono.just(Tuples.of(blobIdFactory.of(UUID.randomUUID.toString), data))
+  private def withBlobIdByteArray: BlobIdProvider[Array[Byte]] = data =>
+    SMono.just(Tuples.of(blobIdFactory.of(UUID.randomUUID.toString), data))
+  private def withBlobIdByteSource: BlobIdProvider[ByteSource] = data =>
     SMono.just(Tuples.of(blobIdFactory.of(UUID.randomUUID.toString), data))
 
   override def readBytes(bucketName: BucketName, blobId: BlobId): Publisher[Array[Byte]] = {
