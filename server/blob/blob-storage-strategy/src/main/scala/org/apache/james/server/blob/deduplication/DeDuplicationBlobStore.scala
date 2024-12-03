@@ -81,7 +81,10 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   override def save(bucketName: BucketName, data: Array[Byte], blobIdProvider: BlobIdProvider[Array[Byte]], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(data)
-    save(bucketName, data, blobIdProvider, storagePolicy)
+    SMono(blobIdProvider.apply(data))
+      .map(_.getT1)
+      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, data))
+      .`then`(SMono.just(blobId)))
   }
 
   override def save(bucketName: BucketName, data: ByteSource, blobIdProvider: BlobIdProvider[ByteSource], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
