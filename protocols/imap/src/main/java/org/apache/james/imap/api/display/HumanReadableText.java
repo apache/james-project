@@ -85,6 +85,8 @@ public class HumanReadableText {
 
     public static final HumanReadableText FAILURE_NO_SUCH_MAILBOX = new HumanReadableText("org.apache.james.imap.FAILURE_NO_SUCH_MAILBOX", "failed. No such mailbox.");
 
+    public static final HumanReadableText FAILURE_DELETE_INBOX_NOT_ALLOWED = new HumanReadableText("org.apache.james.imap.DELETE_INBOX_NOT_ALLOWED", "failed. Deleting INBOX is forbidden.");
+
     public static final HumanReadableText FAILURE_OVERQUOTA = new HumanReadableText("org.apache.james.imap.OVERQUOTA", "failed. Over quota.");
 
     public static final HumanReadableText FAILURE_NO_QUOTA_RESOURCE = new HumanReadableText("org.apache.james.imap.FAILURE_NO_SUCH_QUOTA_RESOURCE", "failed. No such quota resource.");
