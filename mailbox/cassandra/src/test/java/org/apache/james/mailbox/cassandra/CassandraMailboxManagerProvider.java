@@ -40,6 +40,7 @@ import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV2;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManagerV2;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaChangeNotifier;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
@@ -115,7 +116,7 @@ public class CassandraMailboxManagerProvider {
             LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
 
         SessionProviderImpl sessionProvider = new SessionProviderImpl(noAuthenticator, noAuthorizator);
-        MaxQuotaManager maxQuotaManager = new CassandraPerUserMaxQuotaManagerV2(new CassandraQuotaLimitDao(session));
+        MaxQuotaManager maxQuotaManager = new CassandraPerUserMaxQuotaManagerV2(new CassandraQuotaLimitDao(session), QuotaChangeNotifier.NOOP);
         CassandraCurrentQuotaManagerV2 currentQuotaUpdater = new CassandraCurrentQuotaManagerV2(new CassandraQuotaCurrentValueDao(session));
         StoreQuotaManager storeQuotaManager = new StoreQuotaManager(currentQuotaUpdater, maxQuotaManager);
         QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);

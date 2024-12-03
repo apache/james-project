@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -37,6 +38,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
 import org.apache.james.mailbox.cassandra.quota.migration.CassandraPerUserMaxQuotaManagerMigration;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaChangeNotifier;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
@@ -74,7 +76,8 @@ public class CassandraPerUserMaxQuotaManagerMigrationTest {
         usersRepository = new UsersRepositoryImpl<>(domainList, usersDAO);
         Injector testInjector = GuiceUtils.testInjector(cassandraCluster.getCassandraCluster());
         oldMaxQuotaManager = testInjector.getInstance(CassandraPerUserMaxQuotaManagerV1.class);
-        newMaxQuotaManager = testInjector.getInstance(CassandraPerUserMaxQuotaManagerV2.class);
+        newMaxQuotaManager = new CassandraPerUserMaxQuotaManagerV2(new CassandraQuotaLimitDao(cassandraCluster.getCassandraCluster().getConf()),
+            QuotaChangeNotifier.NOOP);
         UserQuotaRootResolver userQuotaRootResolver = Mockito.mock(UserQuotaRootResolver.class);
         Mockito.when(userQuotaRootResolver.forUser(USERNAME)).thenReturn(QUOTA_ROOT);
         migration = new CassandraPerUserMaxQuotaManagerMigration(usersRepository,
