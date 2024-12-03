@@ -329,6 +329,7 @@ public abstract class WebAdminServerIntegrationTest {
     @Test
     void getIdentitiesOfInvalidUserShouldReturnBadRequest() {
         given()
+            .urlEncodingEnabled(true)
             .get(String.format("/users/%s/identities?default=true", "John Doe"))
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400);
@@ -337,6 +338,7 @@ public abstract class WebAdminServerIntegrationTest {
     @Test
     void createIdentitiesForInvalidUserShouldReturnBadRequest() {
         given()
+            .urlEncodingEnabled(true)
             .body("{\n" +
                 "  \"name\": \"create name 1\",\n" +
                 "  \"email\": \"bob@domain.tld\",\n" +
@@ -364,6 +366,7 @@ public abstract class WebAdminServerIntegrationTest {
     @Test
     void updateIdentitiesForInvalidUserShouldReturnBadRequest() {
         given()
+            .urlEncodingEnabled(true)
             .body("{\n" +
                 "  \"name\": \"create name 1\",\n" +
                 "  \"email\": \"bob@domain.tld\",\n" +
