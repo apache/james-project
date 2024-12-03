@@ -37,9 +37,9 @@ public class ReceivedHeaderGenerator {
     private static final String EHLO = "EHLO";
     private static final String SMTP = "SMTP";
     private static final String ESMTPA = "ESMTPA";
-    private static final String ESMTPSA = "ESMTPA";
+    private static final String ESMTPSA = "ESMTPSA";
     private static final String ESMTP = "ESMTP";
-    private static final String ESMTPS = "ESMTP";
+    private static final String ESMTPS = "ESMTPS";
     private final ProtocolSession.AttachmentKey<Integer> mtPriority = ProtocolSession.AttachmentKey.of("MT-PRIORITY", Integer.class);
 
     /**
@@ -60,9 +60,9 @@ public class ReceivedHeaderGenerator {
                 // The new keyword "ESMTPA" indicates the use of ESMTP when the SMTP
                 // AUTH [3] extension is also used and authentication is successfully achieved.
                 if (session.isTLSStarted()) {
-                    return ESMTPA;
-                } else {
                     return ESMTPSA;
+                } else {
+                    return ESMTPA;
                 }
             }
         } else {
