@@ -20,6 +20,7 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.utils.InitializationOperation;
@@ -68,6 +69,9 @@ public class DistributedDeletedMessageVaultModule extends AbstractModule {
             .addBinding()
             .to(DistributedDeletedMessageVaultDeletionCallback.class);
         bind(DistributedDeletedMessageVaultDeletionCallback.class).in(Scopes.SINGLETON);
+
+        Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
+        reconnectionHandlerMultibinder.addBinding().to(DeletedMessageVaultWorkQueueReconnectionHandler.class);
     }
 
     @ProvidesIntoSet

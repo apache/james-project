@@ -34,6 +34,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.core.Username;
 import org.apache.james.lifecycle.api.Startable;
@@ -167,7 +168,7 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageId.Factory messageIdFactory;
     private final BlobId.Factory blobIdFactory;
-    private Receiver receiver;
+    private final ReceiverProvider receiverProvider;
     private Disposable disposable;
 
     @Inject
@@ -177,7 +178,8 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
                                                           DeletedMessageVaultDeletionCallback callback,
                                                           MailboxId.Factory mailboxIdFactory,
                                                           MessageId.Factory messageIdFactory,
-                                                          BlobId.Factory blobIdFactory) {
+                                                          BlobId.Factory blobIdFactory,
+                                                          ReceiverProvider receiverProvider) {
         this.sender = sender;
         this.rabbitMQConfiguration = rabbitMQConfiguration;
         this.callback = callback;
@@ -186,6 +188,7 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
         this.blobIdFactory = blobIdFactory;
         this.objectMapper = new ObjectMapper();
         this.channelPool = channelPool;
+        this.receiverProvider = receiverProvider;
     }
 
     public void init() {
@@ -214,17 +217,28 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
             .then()
             .block();
 
-        receiver = channelPool.createReceiver();
-        disposable = receiver.consumeManualAck(QUEUE, new ConsumeOptions().qos(QOS))
+        disposable = consumeDeletedMessageVaultWorkQueue();
+    }
+
+    private Disposable consumeDeletedMessageVaultWorkQueue() {
+        return Flux.using(
+                receiverProvider::createReceiver,
+                receiver -> receiver.consumeManualAck(QUEUE, new ConsumeOptions().qos(QOS)),
+                Receiver::close)
             .flatMap(this::handleMessage)
             .subscribeOn(Schedulers.boundedElastic())
             .subscribe();
     }
 
+    public void restart() {
+        Disposable previousConsumer = disposable;
+        disposable = consumeDeletedMessageVaultWorkQueue();
+        previousConsumer.dispose();
+    }
+
     @PreDestroy
     public void stop() {
         Optional.ofNullable(disposable).ifPresent(Disposable::dispose);
-        Optional.ofNullable(receiver).ifPresent(Receiver::close);
     }
 
     private Mono<Void> handleMessage(AcknowledgableDelivery delivery) {
