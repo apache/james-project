@@ -475,4 +475,10 @@ public abstract class AuthenticatedState extends BasicImapCommands {
             .withLocale(Locale.KOREA)
             .run("Rights");
     }
+
+    @Test
+    public void testDeleteInbox() throws Exception {
+        simpleScriptedTestProtocol
+            .run("DeleteInbox");
+    }
 }
