@@ -53,7 +53,7 @@ public class ReceivedDataLineFilter extends org.apache.james.protocols.smtp.core
                     if (session.isTLSStarted()) {
                         return SERVICE_TYPE_SSL_AUTH;
                     } else {
-                        return SERVICE_TYPE_SSL;
+                        return SERVICE_TYPE_AUTH;
                     }
                 }
             }
