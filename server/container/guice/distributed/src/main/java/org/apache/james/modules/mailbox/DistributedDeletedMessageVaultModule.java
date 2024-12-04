@@ -67,6 +67,7 @@ public class DistributedDeletedMessageVaultModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class)
             .addBinding()
             .to(DistributedDeletedMessageVaultDeletionCallback.class);
+        bind(DistributedDeletedMessageVaultDeletionCallback.class).in(Scopes.SINGLETON);
     }
 
     @ProvidesIntoSet
