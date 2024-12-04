@@ -28,7 +28,9 @@ import static org.eclipse.angus.mail.smtp.SMTPMessage.RETURN_HDRS;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -46,13 +48,11 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.james.core.MailAddress;
-import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
-import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.Converter7Bit;
 import org.eclipse.angus.mail.smtp.SMTPMessage;
 import org.eclipse.angus.mail.smtp.SMTPTransport;
@@ -67,8 +67,11 @@ public class MailDelivrerToHost {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailDelivrerToHost.class);
     public static final String BIT_MIME_8 = "8BITMIME";
     public static final String REQUIRE_TLS = "REQUIRETLS";
-    public static final String TLS_REQUIRED = "TLS-Required: No";
-    public static final String MT_PRIORITY = "MT_PRIORITY";
+    public static final String TLS_REQUIRED_NO = "TLS-Required: No";
+    public static final String MT_PRIORITY = "MT-PRIORITY";
+    public static final String MAIL_PRIORITY_ATTRIBUTE_NAME = "MAIL_PRIORITY";
+    private static final List<String> supportedSmtpExtensionsList = List.of(MT_PRIORITY, REQUIRE_TLS);
+    private static final List<String> supportedMailAttributesList = List.of(MAIL_PRIORITY_ATTRIBUTE_NAME, REQUIRE_TLS);
 
     private final RemoteDeliveryConfiguration configuration;
     private final Converter7Bit converter7Bit;
@@ -129,20 +132,17 @@ public class MailDelivrerToHost {
             transport.setLocalHost(props.getProperty(inContext(session, "mail.smtp.localhost"), configuration.getHeloNameProvider().getHeloName()));
             if (isTlsRequired(mail)) {
                 transport.setStartTLS(true);
-
+            } else {
+                mail.removeAttribute(REQUIRE_TLS);
             }
             connect(outgoingMailServer, transport);
-            if (transport.supportsExtension("REQUIRETLS")) {
-                SMTPMessage smtpMessage = new SMTPMessage(adaptToTransport(mail.getMessage(), transport));
-                smtpMessage.setMailExtension("REQUIRETLS");
-                transport.sendMessage(adaptToTransport(smtpMessage, transport), addr.toArray(InternetAddress[]::new));
-            }
             if (mail.dsnParameters().isPresent()) {
                 sendDSNAwareEmail(mail, transport, addr);
-            } else if (transport.supportsExtension(MT_PRIORITY)) {
-                sendEmailWithPriority(mail, transport, addr);
+            } else if (extensionsSupported(transport)) {
+                SMTPMessage smtpMessage = new SMTPMessage(adaptToTransport(mail.getMessage(), transport));
+                transport.sendMessage(toSmtpMessageWithExtensions(mail, smtpMessage), addr.toArray(InternetAddress[]::new));
             } else {
-              //  transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr.toArray(InternetAddress[]::new));
+                transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr.toArray(InternetAddress[]::new));
             }
             LOGGER.info("Mail ({}) with messageId {} sent successfully to {} at {} from {} for {}",
                     mail.getName(), getMessageId(mail), outgoingMailServer.getHostName(),
@@ -152,13 +152,6 @@ public class MailDelivrerToHost {
             releaseSession(outgoingMailServer, session);
         }
         return ExecutionResult.success();
-    }
-
-    private static boolean isTlsRequired(Mail mail) {
-        return mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS)) &&
-                !mail.getPerRecipientSpecificHeaders()
-                        .getHeadersByRecipient()
-                        .containsValue(PerRecipientHeaders.Header.fromString(TLS_REQUIRED));
     }
 
     private String getMessageId(Mail mail) {
@@ -234,24 +227,40 @@ public class MailDelivrerToHost {
                         smtpMessage.setMailExtension("ENVID=" + envId.asString());
                     }
                 });
-        if (transport.supportsExtension("REQUIRETLS")) {
-            smtpMessage.setMailExtension("REQUIRETLS");
-        }
-        if (transport.supportsExtension(MT_PRIORITY)) {
-            return toSmtpMessageWithPriorityExtension(mail, smtpMessage);
+
+        if (extensionsSupported(transport)) {
+            return toSmtpMessageWithExtensions(mail, smtpMessage);
         }
         return smtpMessage;
     }
 
-    private void sendEmailWithPriority(Mail mail, SMTPTransport transport, Collection<InternetAddress> addresses) throws MessagingException {
-        SMTPMessage smtpMessage = new SMTPMessage(adaptToTransport(mail.getMessage(), transport));
-        transport.sendMessage(toSmtpMessageWithPriorityExtension(mail, smtpMessage), addresses.toArray(InternetAddress[]::new));
+    private static boolean extensionsSupported(SMTPTransport transport) {
+        return supportedSmtpExtensionsList.stream().anyMatch(transport::supportsExtension);
     }
 
-    private SMTPMessage toSmtpMessageWithPriorityExtension(Mail mail, SMTPMessage smtpMessage) {
-        Optional<Attribute> priorityAttribute = Optional.ofNullable(mail.attributesMap().get(AttributeName.of(MT_PRIORITY)));
-        priorityAttribute.ifPresent(attribute -> smtpMessage.setMailExtension(smtpMessage.getMailExtension() +
-                " " + MT_PRIORITY + "=" + attribute.getValue().value()));
+    private static boolean isTlsRequired(Mail mail) {
+        try {
+            return mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS)) &&
+                    Collections.list(mail.getMessage().getAllHeaderLines()).stream()
+                            .noneMatch(header -> header.equals(TLS_REQUIRED_NO));
+        } catch (MessagingException e) {
+            LOGGER.debug("failed to extract headers from message {}", mail.getName(), e);
+            return mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS));
+        }
+    }
+
+    private SMTPMessage toSmtpMessageWithExtensions(Mail mail, SMTPMessage smtpMessage) {
+        mail.attributesMap().forEach((attributeName, attribute) -> {
+            if (supportedMailAttributesList.contains(attributeName.asString())) {
+                switch (attributeName.asString()) {
+                    case MAIL_PRIORITY_ATTRIBUTE_NAME ->
+                            smtpMessage.setMailExtension(smtpMessage.getMailExtension() + " " +
+                                    MT_PRIORITY + "=" + attribute.getValue().value());
+                    case REQUIRE_TLS ->
+                            smtpMessage.setMailExtension(smtpMessage.getMailExtension() + " " + REQUIRE_TLS);
+                }
+            }
+        });
         return smtpMessage;
     }
 

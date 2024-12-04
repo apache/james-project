@@ -84,8 +84,7 @@ class RemoteDeliveryTest {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof MailProjection) {
-                MailProjection mailProjection = (MailProjection) o;
+            if (o instanceof MailProjection mailProjection) {
 
                 return Objects.equals(this.name, mailProjection.name)
                         && Objects.equals(this.attributes, mailProjection.attributes)
@@ -285,7 +284,6 @@ class RemoteDeliveryTest {
         Mail mail = FakeMail.builder()
                 .name(MAIL_NAME)
                 .recipients(MailAddressFixture.ANY_AT_JAMES)
-                .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
                 .attribute(new Attribute(AttributeName.of(REQUIRETLS), AttributeValue.of(true)))
                 .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
                 .build();
@@ -297,7 +295,6 @@ class RemoteDeliveryTest {
                 .extracting(MailProjection::from)
                 .containsOnly(MailProjection.from(FakeMail.builder()
                         .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
-                        .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
                         .attribute(new Attribute(AttributeName.of(REQUIRETLS), AttributeValue.of(true)))
                         .recipient(MailAddressFixture.ANY_AT_JAMES)
                         .build()));

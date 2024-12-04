@@ -75,6 +75,24 @@ public class SmtpConfigurationTest {
     }
 
     @Test
+    public void startTlsDisabledByDefault() throws IOException {
+
+        assertThat(SmtpConfiguration.builder()
+                        .build()
+                        .serializeAsXml(),
+                hasXPath("//tls/@startTLS", is("false")));
+    }
+
+    @Test
+    public void startTlsCanBeCustomized() throws IOException {
+
+        assertThat(SmtpConfiguration.builder()
+                        .requireStartTls()
+                        .build().serializeAsXml(),
+                hasXPath("//tls/@startTLS", is("true")));
+    }
+
+    @Test
     public void maxMessageSizeCanBeCustomized() throws IOException {
         assertThat(SmtpConfiguration.builder()
                 .withMaxMessageSize("36")

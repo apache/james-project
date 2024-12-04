@@ -20,21 +20,21 @@
 package org.apache.james.smtp.tls;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.net.smtp.AuthenticatingSMTPClient.AUTH_METHOD.PLAIN;
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.TEN_MINUTES;
 import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Base64;
 
-import org.apache.commons.net.smtp.AuthenticatingSMTPClient;
 import org.apache.commons.net.smtp.SMTPSClient;
+import org.apache.commons.net.smtp.SimpleSMTPHeader;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
@@ -57,6 +57,9 @@ import org.apache.james.smtpserver.dsn.DSNEhloHook;
 import org.apache.james.smtpserver.dsn.DSNMailParameterHook;
 import org.apache.james.smtpserver.dsn.DSNMessageHook;
 import org.apache.james.smtpserver.dsn.DSNRcptParameterHook;
+import org.apache.james.smtpserver.priority.SmtpMtPriorityEhloHook;
+import org.apache.james.smtpserver.priority.SmtpMtPriorityMessageHook;
+import org.apache.james.smtpserver.priority.SmtpMtPriorityParameterHook;
 import org.apache.james.smtpserver.tls.SmtpTlsEhloHook;
 import org.apache.james.smtpserver.tls.SmtpTlsMessageHook;
 import org.apache.james.smtpserver.tls.SmtpTlsParameterHook;
@@ -95,31 +98,42 @@ class SmtpRequireTlsRelayTest {
 
     @BeforeEach
     void setUp(@TempDir File temporaryFolder, DockerMockSmtp mockSmtp, TestInfo testInfo) throws Exception {
-        boolean startTls = testInfo.getTags().stream().anyMatch(tag -> tag.contains("startTls=true"));
-
+        boolean usePriority = testInfo.getTags().stream().anyMatch(tag -> tag.contains("usePriority=true"));
 
         inMemoryDNSService = new InMemoryDNSService()
                 .registerMxRecord(DEFAULT_DOMAIN, LOCALHOST_IP)
                 .registerMxRecord(ANOTHER_DOMAIN, mockSmtp.getIPAddress());
 
+        SmtpConfiguration.Builder smtpConfiguration = SmtpConfiguration.builder()
+                .requireStartTls()
+                .addHook(DSNEhloHook.class.getName())
+                .addHook(DSNMailParameterHook.class.getName())
+                .addHook(DSNRcptParameterHook.class.getName())
+                .addHook(DSNMessageHook.class.getName())
+                .addHook(SmtpTlsEhloHook.class.getName())
+                .addHook(SmtpTlsParameterHook.class.getName())
+                .addHook(SmtpTlsMessageHook.class.getName())
+                .withAutorizedAddresses("0.0.0.0/0.0.0.0");
+
+        if (usePriority) {
+            smtpConfiguration
+                    .addHook(SmtpMtPriorityEhloHook.class.getName())
+                    .addHook(SmtpMtPriorityParameterHook.class.getName())
+                    .addHook(SmtpMtPriorityMessageHook.class.getName());
+        }
+
         jamesServer = TemporaryJamesServer.builder()
                 .withBase(SMTP_AND_IMAP_MODULE)
+
                 .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
                 .withMailetContainer(MailetContainer.builder()
                         .putProcessor(CommonProcessors.simpleRoot())
                         .putProcessor(CommonProcessors.error())
-                        .putProcessor(directResolutionTransport(true))
+                        .putProcessor(directResolutionTransport(usePriority))
                         .putProcessor(CommonProcessors.bounces()))
-                .withSmtpConfiguration(SmtpConfiguration.builder()
-                        .addHook(DSNEhloHook.class.getName())
-                        .addHook(DSNMailParameterHook.class.getName())
-                        .addHook(DSNRcptParameterHook.class.getName())
-                        .addHook(DSNMessageHook.class.getName())
-                        .addHook(SmtpTlsEhloHook.class.getName())
-                        .addHook(SmtpTlsParameterHook.class.getName())
-                        .addHook(SmtpTlsMessageHook.class.getName())
-                        .withAutorizedAddresses("0.0.0.0/0.0.0.0"))
+                .withSmtpConfiguration(smtpConfiguration)
                 .build(temporaryFolder);
+
         jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
@@ -131,22 +145,7 @@ class SmtpRequireTlsRelayTest {
         assertThat(mockSmtp.getConfigurationClient().version()).isEqualTo("0.4");
     }
 
-    private ProcessorConfiguration.Builder directResolutionTransport(Boolean useStartTls) {
-       /* return ProcessorConfiguration.transport()
-                .addMailet(MailetConfiguration.BCC_STRIPPER)
-                .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(RecipientRewriteTable.class))
-                .addMailet(MailetConfiguration.builder()
-                        .mailet(RemoteDelivery.class)
-                        .matcher(All.class)
-                        .addProperty("startTls", "true")
-                        .addProperty("sslEnable", "true")
-                        .addProperty("outgoingQueue", "outgoing")
-                        .addProperty("delayTime", "3 * 10 ms")
-                        .addProperty("maxRetries", "3")
-                        .addProperty("deliveryThreads", "2")
-                        .addProperty("sendpartial", "true"));*/
+    private ProcessorConfiguration.Builder directResolutionTransport(Boolean usePriority) {
         return ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
                 .addMailet(MailetConfiguration.builder()
@@ -155,9 +154,7 @@ class SmtpRequireTlsRelayTest {
                 .addMailet(MailetConfiguration.builder()
                         .mailet(RemoteDelivery.class)
                         .matcher(All.class)
-                       // .addProperty("usePriority", usePriority.toString())
-        /*                .addProperty("tls.startTLS", "true")
-                        .addProperty("sslEnable", "true")*/
+                        .addProperty("usePriority", usePriority.toString())
                         .addProperty("outgoingQueue", "outgoing")
                         .addProperty("delayTime", "3 * 10 ms")
                         .addProperty("maxRetries", "3")
@@ -166,17 +163,57 @@ class SmtpRequireTlsRelayTest {
     }
 
     @Test
-    @Tag("startTls=true")
+    @Tag("usePriority=false")
     void remoteDeliveryShouldRequireTls(DockerMockSmtp mockSmtp) throws Exception {
 
-        //AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
-        SMTPSClient smtpClient = new SMTPSClient(false, BogusSslContextFactory.getClientContext());
-        smtpClient.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
-        smtpClient.connect("localhost", jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
-        //smtpClient.execTLS();
-        smtpClient.sendCommand("EHLO james.org");
-        //   authenticate(smtpClient);
+        SMTPSClient smtpClient = initSMTPSClient();
         smtpClient.mail("<" + FROM + "> REQUIRETLS");
+        smtpClient.rcpt("<" + RECIPIENT + ">");
+        smtpClient.sendShortMessageData("A short message...");
+
+        calmlyAwait.atMost(TEN_MINUTES).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
+                .hasSize(1)
+                .extracting(Mail::getEnvelope)
+                .containsExactly(Mail.Envelope.builder()
+                        .from(new MailAddress(FROM))
+                        .addMailParameter(Mail.Parameter.builder()
+                                .name("REQUIRETLS")
+                                .build())
+                        .addRecipient(Mail.Recipient.builder()
+                                .address(new MailAddress(RECIPIENT))
+                                .build())
+                        .build()));
+    }
+
+    @Test
+    @Tag("usePriority=false")
+    void remoteDeliveryShouldNotRequireTlsWhenTlsRequiredHeaderExists(DockerMockSmtp mockSmtp) throws Exception {
+
+        SMTPSClient smtpClient = initSMTPSClient();
+        SimpleSMTPHeader header = new SimpleSMTPHeader(FROM, RECIPIENT, "Just testing");
+        header.addHeaderField("TLS-Required", "No");
+        smtpClient.mail("<" + FROM + "> REQUIRETLS");
+        smtpClient.rcpt("<" + RECIPIENT + ">");
+        smtpClient.sendShortMessageData(header + "A short message...");
+
+        calmlyAwait.atMost(TEN_MINUTES).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
+                .hasSize(1)
+                .extracting(Mail::getEnvelope)
+                .containsExactly(Mail.Envelope.builder()
+                        .from(new MailAddress(FROM))
+                        .addRecipient(Mail.Recipient.builder()
+                                .address(new MailAddress(RECIPIENT))
+                                .build())
+                        .build()));
+    }
+
+    @Test
+    @Tag("usePriority=true")
+    void remoteDeliveryWhenShouldRequireTlsAndDsnAndMtPriorityTogether(DockerMockSmtp mockSmtp) throws Exception {
+        String expectedPriorityValue = "3";
+
+        SMTPSClient smtpClient = initSMTPSClient();
+        smtpClient.mail("<" + FROM + "> MT-PRIORITY=" + expectedPriorityValue + " REQUIRETLS RET=HDRS ENVID=gabouzomeuh");
         smtpClient.rcpt("<" + RECIPIENT + ">");
         smtpClient.sendShortMessageData("A short message...");
 
@@ -186,46 +223,26 @@ class SmtpRequireTlsRelayTest {
                 .containsExactly(Mail.Envelope.builder()
                         .from(new MailAddress(FROM))
                         .addMailParameter(Mail.Parameter.builder()
-                                .name("REQUIRETLS")
+                                .name("MT-PRIORITY")
+                                .value(expectedPriorityValue)
                                 .build())
-                        .addRecipient(Mail.Recipient.builder()
-                                .address(new MailAddress(RECIPIENT))
-                                .build())
-                        .build()));
-    }
-
-    @Test
-    void remoteDeliveryShouldCaryMailPriorityWhenAuthorized(DockerMockSmtp mockSmtp) throws Exception {
-
-        AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
-        try {
-            smtpClient.connect("localhost", jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
-            smtpClient.auth(PLAIN, FROM, PASSWORD);
-            smtpClient.ehlo(DEFAULT_DOMAIN);
-           // smtpClient.execTLS();
-
-            smtpClient.mail("<" + FROM + "> REQUIRETLS");
-            smtpClient.rcpt("<" + RECIPIENT + ">");
-            smtpClient.sendShortMessageData("A short message...");
-
-        } finally {
-            smtpClient.disconnect();
-        }
-
-        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
-                .hasSize(1)
-                .extracting(Mail::getEnvelope)
-                .containsExactly(Mail.Envelope.builder()
-                        .from(new MailAddress(FROM))
                         .addMailParameter(Mail.Parameter.builder()
                                 .name("REQUIRETLS")
+                                .value("true")
+                                .build())
+                        .addMailParameter(Mail.Parameter.builder()
+                                .name("RET")
+                                .value("HDRS")
+                                .build())
+                        .addMailParameter(Mail.Parameter.builder()
+                                .name("ENVID")
+                                .value("gabouzomeuh")
                                 .build())
                         .addRecipient(Mail.Recipient.builder()
                                 .address(new MailAddress(RECIPIENT))
                                 .build())
                         .build()));
     }
-
 
     @AfterEach
     void tearDown() {
@@ -238,5 +255,15 @@ class SmtpRequireTlsRelayTest {
         assertThat(smtpProtocol.getReplyCode())
                 .as("authenticated")
                 .isEqualTo(235);
+    }
+
+    private SMTPSClient initSMTPSClient() throws IOException {
+        SMTPSClient smtpClient = new SMTPSClient(false, BogusSslContextFactory.getClientContext());
+        smtpClient.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
+        smtpClient.connect("localhost", jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
+        smtpClient.execTLS();
+        smtpClient.sendCommand("EHLO james.org");
+        authenticate(smtpClient);
+        return smtpClient;
     }
 }

@@ -164,7 +164,6 @@ public class RemoteDelivery extends GenericMailet {
 
     public static final String NAME_JUNCTION = "-to-";
     private static final AttributeName MAIL_PRIORITY_ATTRIBUTE_NAME = AttributeName.of("MAIL_PRIORITY");
-    private static final AttributeName REQUIRE_TLS_ATTRIBUTE_NAME = AttributeName.of("REQUIRETLS");
 
     private final DNSService dnsServer;
     private final DomainList domainList;

@@ -49,7 +49,7 @@ public class SmtpTlsParameterHook implements MailParametersHook {
                 .smtpDescription("The Mail parameter cannot contain more than one REQUIRETLS parameter at the same time")
                 .build();
         }
-        if (paramName.equals(REQUIRETLS) /*&& session.isStartTLSSupported() && session.isTLSStarted()*/) {
+        if (paramName.equals(REQUIRETLS) && session.isStartTLSSupported() && session.isTLSStarted()) {
             session.setAttachment(REQUIRETLS_KEY, true, Transaction);
             String userName = Optional.ofNullable(session.getUsername()).map(Username::asString).orElse("unauthorized");
             LOGGER.info("SMTP sessionID: {}, User: {}, REQUIRETLS=true", session.getSessionID(), userName);
