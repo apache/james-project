@@ -124,11 +124,12 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
       .map(blobIdFactory.of)
       .map(blobId => Tuples.of(blobId, data))
 
-  private def withBlobIdFromArray: BlobIdProvider[Array[Byte]] = data => {
-    val code = Hashing.sha256.hashBytes(data)
-    val blobId = blobIdFactory.of(base64(code))
-    Mono.just(Tuples.of(blobId, data))
-  }
+  private def withBlobIdFromArray: BlobIdProvider[Array[Byte]] = data =>
+    SMono.fromCallable(() => {
+      val code = Hashing.sha256.hashBytes(data)
+      val blobId = blobIdFactory.of(base64(code))
+      Tuples.of(blobId, data)
+    }).subscribeOn(Schedulers.parallel())
 
   private def base64(hashCode: HashCode) = {
     val bytes = hashCode.asBytes
