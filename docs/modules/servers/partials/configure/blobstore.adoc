@@ -146,6 +146,20 @@ Unless a special case like storing blobs of deleted messages.
 
 |===
 
+==== Improve listing support for MinIO
+
+Due to blobs being stored in folder, adding `/` in blobs name emulates folder and avoids blobs to be all stored in a
+same folder, thus improving listing.
+
+Instead of `1_628_36825033-d835-4490-9f5a-eef120b1e85c` the following blob id will be used: `1/628/3/6/8/2/5033-d835-4490-9f5a-eef120b1e85c`
+
+To enable blob hierarchy compatible with MinIO add in `jvm.properties`:
+
+----
+james.s3.minio.compatibility.mode=true
+----
+
+
 == Blob Export
 
 Blob Exporting is the mechanism to help James to export a blob from an user to another user.
