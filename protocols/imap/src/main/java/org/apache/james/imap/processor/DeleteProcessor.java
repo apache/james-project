@@ -57,7 +57,7 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
         MailboxManager mailboxManager = getMailboxManager();
         MailboxPath mailboxPath = pathConverterFactory.forSession(session).buildFullPath(request.getMailboxName());
         if (DefaultMailboxes.INBOX.equalsIgnoreCase(mailboxPath.getName())) {
-            LOGGER.info("Deleting INBOX mailbox is not allowed");
+            LOGGER.info("Deleting INBOX mailbox is not allowed (request from user {})", session.getMailboxSession().getUser().asString());
             no(request, responder, HumanReadableText.FAILURE_DELETE_INBOX_NOT_ALLOWED);
             return Mono.empty();
         }
