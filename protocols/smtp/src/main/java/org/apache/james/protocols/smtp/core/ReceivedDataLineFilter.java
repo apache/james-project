@@ -18,65 +18,34 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core;
 
-import java.io.UnsupportedEncodingException;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 
-import com.google.common.collect.ImmutableList;
-
 /**
  * {@link SeparatingDataLineFilter} which adds the Received header for the message.
  */
 public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
-
-    private static final String EHLO = "EHLO";
-    private static final String SMTP = "SMTP";
-    private static final String ESMTPA = "ESMTPA";
-    private static final String ESMTP = "ESMTP";
-
-    private static final DateTimeFormatter DATEFORMAT = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z (zzz)", Locale.US);
-
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
     private final ProtocolSession.AttachmentKey<Boolean> headersPrefixAdded = ProtocolSession.AttachmentKey.of("HEADERS_PREFIX_ADDED" + COUNTER.incrementAndGet(), Boolean.class);
     private final ProtocolSession.AttachmentKey<Boolean> headersSuffixAdded = ProtocolSession.AttachmentKey.of("HEADERS_SUFFIX_ADDED" + COUNTER.incrementAndGet(), Boolean.class);
-    private final ProtocolSession.AttachmentKey<Integer> mtPriority = ProtocolSession.AttachmentKey.of("MT-PRIORITY", Integer.class);
+    protected final ReceivedHeaderGenerator receivedHeaderGenerator;
 
-    /**
-     * Return the service type which will be used in the Received headers.
-     */
-    protected String getServiceType(SMTPSession session, String heloMode) {
-        // Check if EHLO was used
-        if (EHLO.equals(heloMode)) {
-            // Not successful auth
-            if (session.getUsername() == null) {
-                return ESMTP;
-            } else {
-                // See RFC3848
-                // The new keyword "ESMTPA" indicates the use of ESMTP when
-                // the
-                // SMTP
-                // AUTH [3] extension is also used and authentication is
-                // successfully
-                // achieved.
-                return ESMTPA;
-            }
-        } else {
-            return SMTP;
-        }
+    public ReceivedDataLineFilter(ReceivedHeaderGenerator receivedHeaderGenerator) {
+        this.receivedHeaderGenerator = receivedHeaderGenerator;
+    }
+
+    public ReceivedDataLineFilter() {
+        this(new ReceivedHeaderGenerator());
     }
 
     /**
@@ -90,60 +59,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
      * Returns the Received header for the message.
      */
     protected Collection<Header> headers(SMTPSession session) {
-
-        StringBuilder headerLineBuffer = new StringBuilder();
-
-        Optional<String> heloMode = session.getAttachment(SMTPSession.CURRENT_HELO_MODE, State.Connection);
-        Optional<String> heloName = session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Connection);
-
-        // Put our Received header first
-        headerLineBuffer.append("from ").append(session.getRemoteAddress().getHostName());
-
-        if (heloName.isPresent() && heloMode.isPresent()) {
-            headerLineBuffer.append(" (").append(heloMode.get()).append(" ").append(heloName.get()).append(")");
-        }
-        headerLineBuffer.append(" ([").append(session.getRemoteAddress().getAddress().getHostAddress()).append("])");
-        Header header = new Header("Received", headerLineBuffer.toString());
-        
-        headerLineBuffer = new StringBuilder();
-
-        session.getSSLSession()
-            .map(sslSession -> String.format("(using %s with cipher %s)",
-                sslSession.getProtocol(),
-                Optional.ofNullable(sslSession.getCipherSuite())
-                    .orElse("")))
-            .ifPresent(header::add);
-
-        headerLineBuffer.append("by ").append(session.getConfiguration().getHelloName()).append(" (").append(session.getConfiguration().getSoftwareName()).append(") with ").append(getServiceType(session, heloMode.orElse("NOT-DEFINED")));
-        headerLineBuffer.append(" ID ").append(session.getSessionID());
-
-        List<MailAddress> rcptList = session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction).orElse(ImmutableList.of());
-
-        String priorityValue = session.getAttachment(mtPriority, State.Transaction)
-            .map(p -> " (PRIORITY " + p + ")").orElse("");
-
-        if (rcptList.size() == 1) {
-            // Only indicate a recipient if they're the only recipient
-            // (prevents email address harvesting and large headers in
-            // bulk email)
-            header.add(headerLineBuffer.toString());
-
-            headerLineBuffer = new StringBuilder();
-            headerLineBuffer.append("for <").append(rcptList.getFirst().toString()).append(">");
-            headerLineBuffer.append(priorityValue).append(";");
-        } else {
-            // Put the ; on the end of the 'by' line
-            headerLineBuffer.append(priorityValue).append(";");
-        }
-        header.add(headerLineBuffer.toString());
-        headerLineBuffer = new StringBuilder();
-
-        headerLineBuffer.append(DATEFORMAT.format(ZonedDateTime.now()));
-
-        header.add(headerLineBuffer.toString());
-        
-        return Collections.singletonList(header);
-    
+        return Collections.singletonList(receivedHeaderGenerator.generateReceivedHeader(session));
     }
 
     @Override
@@ -214,26 +130,22 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
          * @return response
          */
         public Response transferTo(SMTPSession session, LineHandler<SMTPSession> handler) {
-            String charset = session.getCharset().name();
+            Charset charset = session.getCharset();
 
-            try {
-                Response response = null;
-                for (int i = 0; i < values.size(); i++) {
-                    String line;
-                    if (i == 0) {
-                        line = name + ": " + values.get(i);
-                    } else {
-                        line = MULTI_LINE_PREFIX + values.get(i);
-                    }
-                    response = handler.onLine(session, (line + session.getLineDelimiter()).getBytes(charset));
-                    if (response != null) {
-                        break;
-                    }
+            Response response = null;
+            for (int i = 0; i < values.size(); i++) {
+                String line;
+                if (i == 0) {
+                    line = name + ": " + values.get(i);
+                } else {
+                    line = MULTI_LINE_PREFIX + values.get(i);
                 }
-                return response;
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("NO " + charset + " support ?", e);
+                response = handler.onLine(session, (line + session.getLineDelimiter()).getBytes(charset));
+                if (response != null) {
+                    break;
+                }
             }
+            return response;
         }
     }
 }

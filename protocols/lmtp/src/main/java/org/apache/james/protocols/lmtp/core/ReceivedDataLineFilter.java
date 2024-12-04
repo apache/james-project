@@ -19,6 +19,7 @@
 package org.apache.james.protocols.lmtp.core;
 
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.core.ReceivedHeaderGenerator;
 
 /**
  * {@link ReceivedDataLineFilter} which will add the Received header to the message
@@ -26,12 +27,37 @@ import org.apache.james.protocols.smtp.SMTPSession;
 public class ReceivedDataLineFilter extends org.apache.james.protocols.smtp.core.ReceivedDataLineFilter {
 
     private static final String SERVICE_TYPE = "LMTP";
-    
-    /**
-     * Always returns <code>LMTP</code>
-     */
-    @Override
-    protected String getServiceType(SMTPSession session, String heloMode) {
-        return SERVICE_TYPE;
+    private static final String SERVICE_TYPE_AUTH = "LMTPA";
+    private static final String SERVICE_TYPE_SSL = "LMTPS";
+    private static final String SERVICE_TYPE_SSL_AUTH = "LMTPSA";
+
+    public ReceivedDataLineFilter() {
+        super(new ReceivedHeaderGenerator() {
+
+            /**
+             * Always returns <code>LMTP</code>
+             */
+            @Override
+            protected String getServiceType(SMTPSession session, String heloMode) {
+                // Not successful auth
+                if (session.getUsername() == null) {
+                    if (session.isTLSStarted()) {
+                        return SERVICE_TYPE_SSL;
+                    } else {
+                        return SERVICE_TYPE;
+                    }
+                } else {
+                    // See RFC3848:
+                    // The new keyword "ESMTPA" indicates the use of ESMTP when the SMTP
+                    // AUTH [3] extension is also used and authentication is successfully achieved.
+                    if (session.isTLSStarted()) {
+                        return SERVICE_TYPE_SSL_AUTH;
+                    } else {
+                        return SERVICE_TYPE_AUTH;
+                    }
+                }
+            }
+        });
     }
+
 }
