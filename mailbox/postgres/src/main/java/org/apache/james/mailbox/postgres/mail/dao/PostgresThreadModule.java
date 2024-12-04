@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.postgres.mail.dao;
 
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.HASH_MIME_MESSAGE_ID_INDEX;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.MESSAGE_ID_INDEX;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.TABLE;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.THREAD_ID_INDEX;
@@ -63,16 +62,11 @@ public interface PostgresThreadModule {
         PostgresIndex THREAD_ID_INDEX = PostgresIndex.name("thread_thread_id_index")
             .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, USERNAME, THREAD_ID));
-
-        PostgresIndex HASH_MIME_MESSAGE_ID_INDEX = PostgresIndex.name("thread_has_mime_message_id_index")
-            .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
-                .on(TABLE_NAME, USERNAME, HASH_MIME_MESSAGE_ID));
     }
 
     PostgresModule MODULE = PostgresModule.builder()
         .addTable(TABLE)
         .addIndex(MESSAGE_ID_INDEX)
         .addIndex(THREAD_ID_INDEX)
-        .addIndex(HASH_MIME_MESSAGE_ID_INDEX)
         .build();
 }
