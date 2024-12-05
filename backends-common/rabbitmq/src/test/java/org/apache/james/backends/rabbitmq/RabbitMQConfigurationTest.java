@@ -682,6 +682,22 @@ class RabbitMQConfigurationTest {
                 Host.from("rabbitmqhost2", 5672));
     }
 
+    @Test
+    void shouldReturnQuorumQueueReplicationFactorWhenConfigured() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String amqpUri = "amqp://james:james@rabbitmqhost:5672";
+        configuration.addProperty("uri", amqpUri);
+        String managementUri = "http://james:james@rabbitmqhost:15672/api/";
+        configuration.addProperty("management.uri", managementUri);
+        configuration.addProperty("management.user", DEFAULT_USER);
+        configuration.addProperty("management.password", DEFAULT_PASSWORD_STRING);
+
+        configuration.addProperty("quorum.queues.replication.factor", 3);
+
+        assertThat(RabbitMQConfiguration.from(configuration).getQuorumQueueReplicationFactor())
+            .isEqualTo(3);
+    }
+
     @Nested
     class SSLConfigurationTest {
 
