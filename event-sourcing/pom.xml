@@ -36,6 +36,7 @@
         <module>event-sourcing-pojo</module>
         <module>event-store-api</module>
         <module>event-store-cassandra</module>
+        <module>event-store-jpa</module>
         <module>event-store-memory</module>
     </modules>
 
