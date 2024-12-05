@@ -883,6 +883,10 @@ public class RabbitMQConfiguration {
         return quorumQueueDeliveryLimit;
     }
 
+    public int getQuorumQueueReplicationFactor() {
+        return quorumQueueReplicationFactor;
+    }
+
     public boolean eventBusPropagateDispatchError() {
         return eventBusPropagateDispatchError;
     }
