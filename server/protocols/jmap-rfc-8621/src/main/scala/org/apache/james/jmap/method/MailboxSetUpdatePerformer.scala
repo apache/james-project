@@ -251,16 +251,19 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
 
     val partialUpdatesOperation: SMono[Unit] = SFlux.fromIterable(validatedPatch.rightsPartialUpdates)
       .flatMap(partialUpdate => SMono.fromCallable(() => mailboxManager.applyRightsCommand(mailboxId, partialUpdate.asACLCommand(), mailboxSession))
-        .doOnSuccess(_ => AuditTrail.entry
-          .username(() => mailboxSession.getUser.asString())
-          .protocol("JMAP")
-          .action("Mailbox/set update")
-          .parameters(() => ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser.toScala.map(_.asString()).getOrElse(""),
-            "delegator", mailboxSession.getUser.asString(),
-            "delegatee", partialUpdate.entryKey.getName,
-            "mailboxId", mailboxId.serialize(),
-            "rights", partialUpdate.rights.asJava.serialize()))
-          .log("JMAP mailbox shared.")),
+        .subscriberContext(context => {
+          ReactorUtils.logWithContext(() => AuditTrail.entry
+            .username(() => mailboxSession.getUser.asString())
+            .protocol("JMAP")
+            .action("Mailbox/set update")
+            .parameters(() => ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser.toScala.map(_.asString()).getOrElse(""),
+              "delegator", mailboxSession.getUser.asString(),
+              "delegatee", partialUpdate.entryKey.getName,
+              "mailboxId", mailboxId.serialize(),
+              "rights", partialUpdate.rights.asJava.serialize()))
+            .log("JMAP mailbox shared."), context)
+          context
+        }),
         maxConcurrency = 5)
       .`then`()
 

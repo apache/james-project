@@ -194,7 +194,7 @@ public class ReactorUtils {
         return signal -> logWithContext(logStatement, signal.getContextView());
     }
 
-    private static void logWithContext(Runnable logStatement, ContextView contextView) {
+    public static void logWithContext(Runnable logStatement, ContextView contextView) {
         try (Closeable mdc = retrieveMDCBuilder(contextView).build()) {
             logStatement.run();
         } catch (IOException e) {

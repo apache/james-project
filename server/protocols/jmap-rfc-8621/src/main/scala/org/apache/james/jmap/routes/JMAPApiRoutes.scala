@@ -37,6 +37,7 @@ import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
+import org.apache.james.util.{MDCBuilder, ReactorUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import reactor.core.publisher.{Mono, SynchronousSink}
@@ -75,6 +76,9 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
       .onErrorResume(throwable => handleError(throwable, httpServerResponse))
       .asJava()
       .`then`()
+      .contextWrite(ReactorUtils.context("MDCBuilder.IP", MDCBuilder.create()
+        .addToContext(MDCBuilder.IP, Option(httpServerRequest.hostAddress()).map(_.toString()).getOrElse(""))
+        .addToContext("x-forwarded-for", Option(httpServerRequest.requestHeaders().get("X-Forwarded-For")).getOrElse(""))))
 
   private def requestAsJsonStream(httpServerRequest: HttpServerRequest): SMono[RequestObject] =
     SMono.fromPublisher(httpServerRequest
