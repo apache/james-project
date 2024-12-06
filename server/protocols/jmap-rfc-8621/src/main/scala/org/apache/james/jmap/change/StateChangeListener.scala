@@ -34,7 +34,11 @@ case class StateChangeListener(types: Set[TypeName], sink: Sinks.Many[OutboundMe
       case stateChangeEvent: StateChangeEvent =>
         SMono.fromCallable(() =>
           stateChangeEvent.asStateChange.filter(types)
-            .foreach(next => sink.emitNext(next, FAIL_FAST)))
+            .foreach(next => {
+              sink.synchronized {
+                sink.emitNext(next, FAIL_FAST)
+              }
+            }))
           .asJava().`then`()
       case _ => SMono.empty
     }
