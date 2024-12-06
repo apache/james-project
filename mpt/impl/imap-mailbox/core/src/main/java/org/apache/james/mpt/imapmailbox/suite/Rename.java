@@ -108,4 +108,10 @@ public abstract class Rename implements ImapTestConstants {
             .withLocale(Locale.KOREA)
             .run("RenameSelected");
     }
+
+    @Test
+    public void testRenameInbox() throws Exception {
+        simpleScriptedTestProtocol
+            .run("RenameInbox");
+    }
 }
