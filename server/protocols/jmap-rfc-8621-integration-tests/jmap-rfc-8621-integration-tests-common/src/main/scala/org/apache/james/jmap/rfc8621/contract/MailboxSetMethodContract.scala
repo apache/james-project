@@ -3857,7 +3857,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldRenameInbox(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
+        AppendCommand.from(Message.Builder.of.setSubject("test").setBody("testmail", StandardCharsets.UTF_8).build))
 
     val request =
       s"""
@@ -3877,7 +3880,7 @@ trait MailboxSetMethodContract {
          |      ["Mailbox/get",
          |         {
          |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |           "properties": ["id", "name"],
+         |           "properties": ["id", "name", "totalEmails"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
          |       "c2"]
@@ -3915,7 +3918,8 @@ trait MailboxSetMethodContract {
            |      "state": "${INSTANCE.value}",
            |      "list": [{
            |        "id": "${mailboxId.serialize}",
-           |        "name": "newName"
+           |        "name": "newName",
+           |        "totalEmails": 1
            |      }],
            |      "notFound": []
            |    }, "c2"]
@@ -3925,7 +3929,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def renameInboxShouldCreateNewInbox(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.INBOX))
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
+      AppendCommand.from(Message.Builder.of.setSubject("test").setBody("testmail", StandardCharsets.UTF_8).build))
 
     val request =
       s"""
@@ -3941,7 +3948,14 @@ trait MailboxSetMethodContract {
          |                 }
          |               }
          |          },
-         |   "c2"]
+         |   "c2"],
+         |      ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "properties": ["id", "name"],
+         |           "ids": ["${mailboxId.serialize}"]
+         |          },
+         |       "c2"]
          |   ]
          |}
          |""".stripMargin
@@ -3959,8 +3973,55 @@ trait MailboxSetMethodContract {
       .body
       .asString
 
-    val mailboxes = server.getProbe(classOf[MailboxProbeImpl]).listUserMailboxes(BOB.asString());
-    assertThat(mailboxes).contains(DefaultMailboxes.INBOX)
+    val newInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", BOB.asString(), MailboxConstants.INBOX)
+
+    val request2 =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |      ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "properties": ["id", "name", "totalEmails"],
+         |           "ids": ["${newInboxId.serialize}"]
+         |          },
+         |       "c2"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response2 = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request2)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response2)
+      .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[0][1].newState", "methodResponses[0][1].oldState")
+      .isEqualTo(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [
+           |    ["Mailbox/get", {
+           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "state": "${INSTANCE.value}",
+           |      "list": [{
+           |        "id": "${newInboxId.serialize}",
+           |        "name": "INBOX",
+           |        "totalEmails": 0
+           |      }],
+           |      "notFound": []
+           |    }, "c2"]
+           |  ]
+           |}""".stripMargin)
   }
 
   @Test
