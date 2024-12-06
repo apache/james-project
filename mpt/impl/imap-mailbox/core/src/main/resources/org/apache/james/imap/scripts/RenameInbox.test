@@ -1,0 +1,75 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+C: A0 APPEND INBOX {185+}
+C: From: Timothy Tayler <timothy@example.org>
+C: To: Samual Smith <samual@example.org>
+C: Date: Thu, 14 Feb 2008 12:00:00 +0000 (GMT)
+C: Subject: A Simple Email
+C:
+C: This is a very simple email.
+C:
+S: A0 OK (\[.+\] )?APPEND completed\.
+
+C: A1 CREATE INBOX.child
+S: A1 OK \[MAILBOXID \(.+\)\] CREATE completed\.
+
+C: A2 RENAME INBOX testmailbox
+S: A2 OK RENAME completed\.
+
+C: A3 SELECT testmailbox
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 1 EXISTS
+S: \* 1 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[UNSEEN 1].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 2\].*
+S: A3 OK \[READ-WRITE\] SELECT completed\.
+
+C: A4 SELECT INBOX
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\].*
+S: A4 OK \[READ-WRITE\] SELECT completed\.
+
+C: A5 SELECT INBOX.child
+S: \* OK \[MAILBOXID \(.+\)\] Ok
+S: \* FLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\Seen\)
+S: \* 0 EXISTS
+S: \* 0 RECENT
+S: \* OK \[UIDVALIDITY \d+\].*
+S: \* OK \[PERMANENTFLAGS \(\\Answered \\Deleted \\Draft \\Flagged \\\Seen( \\\*)?\)\].*
+S: \* OK \[HIGHESTMODSEQ \d+\].*
+S: \* OK \[UIDNEXT 1\].*
+S: A5 OK \[READ-WRITE\] SELECT completed\.
+
+C: A6 LIST "" "*"
+S: \* LIST \(\\HasChildren\) "\." "INBOX"
+S: \* LIST \(\\HasNoChildren\) "\." "INBOX\.child"
+S: \* LIST \(\\HasNoChildren\) "\." "selected"
+S: \* LIST \(\\HasNoChildren\) "\." "testmailbox"
+S: A6 OK LIST completed\.

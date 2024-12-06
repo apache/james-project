@@ -37,6 +37,7 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.events.EventBus;
+import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxAnnotationManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -689,22 +690,7 @@ public class StoreMailboxManager implements MailboxManager {
                 resultBuilder.add(new MailboxRenamedResult(mailboxId, from, newMailboxPath));
                 return mailboxId;
             })
-            .then(Mono.from(locker.executeReactiveWithLockReactive(from, mapper.findMailboxWithPathLike(query)
-                    .concatMap(sub -> {
-                        String subOriginalName = sub.getName();
-                        String subNewName = newMailboxPath.getName() + subOriginalName.substring(from.getName().length());
-                        MailboxPath fromPath = new MailboxPath(from, subOriginalName);
-                        sub.setName(subNewName);
-                        sub.setUser(toSession.getUser());
-                        return mapper.rename(sub)
-                            .map(mailboxId -> {
-                                resultBuilder.add(new MailboxRenamedResult(sub.getMailboxId(), fromPath, sub.generateAssociatedPath()));
-                                return mailboxId;
-                            })
-                            .retryWhen(Retry.backoff(5, Duration.ofMillis(10)))
-                            .then(Mono.fromRunnable(() -> LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName)));
-                    }, LOW_CONCURRENCY)
-                    .then(), MailboxPathLocker.LockType.Write)))
+            .then(Mono.from(renameSubMailboxes(newMailboxPath, toSession, mapper, from, query, resultBuilder)))
             .then(Mono.defer(() -> Flux.fromIterable(resultBuilder.build())
                 .concatMap(result -> eventBus.dispatch(EventFactory.mailboxRenamed()
                         .randomEventId()
@@ -716,6 +702,29 @@ public class StoreMailboxManager implements MailboxManager {
                     new MailboxIdRegistrationKey(result.getMailboxId())))
                 .then()))
             .then(Mono.fromCallable(resultBuilder::build));
+    }
+
+    private Publisher<Void> renameSubMailboxes(MailboxPath newMailboxPath, MailboxSession toSession, MailboxMapper mapper,
+                                               MailboxPath from, MailboxQuery.UserBound query, ImmutableList.Builder<MailboxRenamedResult> resultBuilder) {
+        if (DefaultMailboxes.INBOX.equalsIgnoreCase(from.getName())) {
+            return Mono.empty();
+        }
+        return locker.executeReactiveWithLockReactive(from, mapper.findMailboxWithPathLike(query)
+            .concatMap(sub -> {
+                String subOriginalName = sub.getName();
+                String subNewName = newMailboxPath.getName() + subOriginalName.substring(from.getName().length());
+                MailboxPath fromPath = new MailboxPath(from, subOriginalName);
+                sub.setName(subNewName);
+                sub.setUser(toSession.getUser());
+                return mapper.rename(sub)
+                    .map(mailboxId -> {
+                        resultBuilder.add(new MailboxRenamedResult(sub.getMailboxId(), fromPath, sub.generateAssociatedPath()));
+                        return mailboxId;
+                    })
+                    .retryWhen(Retry.backoff(5, Duration.ofMillis(10)))
+                    .then(Mono.fromRunnable(() -> LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName)));
+            }, LOW_CONCURRENCY)
+            .then(), MailboxPathLocker.LockType.Write);
     }
 
     @Override
