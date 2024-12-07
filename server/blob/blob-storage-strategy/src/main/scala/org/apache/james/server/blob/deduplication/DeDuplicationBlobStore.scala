@@ -26,6 +26,7 @@ import jakarta.inject.{Inject, Named}
 import org.apache.commons.io.IOUtils
 import org.apache.james.blob.api.BlobStore.BlobIdProvider
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
+import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore.THREAD_SWITCH_THRESHOLD
 import org.reactivestreams.Publisher
 import reactor.core.publisher.{Flux, Mono}
 import reactor.core.scala.publisher.SMono
@@ -38,7 +39,8 @@ import scala.compat.java8.FunctionConverters._
 
 object DeDuplicationBlobStore {
   val LAZY_RESOURCE_CLEANUP = false
-  val FILE_THRESHOLD = 10000
+  val FILE_THRESHOLD = Integer.parseInt(System.getProperty("james.deduplicating.blobstore.file.threshold", "10240"))
+  val THREAD_SWITCH_THRESHOLD = Integer.parseInt(System.getProperty("james.deduplicating.blobstore.thread.switch.threshold", "32768"));
 
   private def baseEncodingFrom(encodingType: String): BaseEncoding = encodingType match {
     case "base16" =>
@@ -124,12 +126,19 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
       .map(blobIdFactory.of)
       .map(blobId => Tuples.of(blobId, data))
 
-  private def withBlobIdFromArray: BlobIdProvider[Array[Byte]] = data =>
-    SMono.fromCallable(() => {
+  private def withBlobIdFromArray: BlobIdProvider[Array[Byte]] = data => {
+    if (data.length < THREAD_SWITCH_THRESHOLD) {
       val code = Hashing.sha256.hashBytes(data)
       val blobId = blobIdFactory.of(base64(code))
-      Tuples.of(blobId, data)
-    }).subscribeOn(Schedulers.parallel())
+      Mono.just(Tuples.of(blobId, data))
+    } else {
+      SMono.fromCallable(() => {
+        val code = Hashing.sha256.hashBytes(data)
+        val blobId = blobIdFactory.of(base64(code))
+        Tuples.of(blobId, data)
+      })
+    }
+  }
 
   private def base64(hashCode: HashCode) = {
     val bytes = hashCode.asBytes

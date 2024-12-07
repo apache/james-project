@@ -153,4 +153,14 @@ Ex in `jvm.properties`
 ----
 james.relaxed.mailbox.name.validation=true
 ----
-To relax validating `\*` and `%` characters in the mailbox name. Be careful as `%` and `*` are ambiguous for the LIST / LSUB commands that interpret those as wildcard thus returning all mailboxes matching the pattern.
+To relax validat ing `\*` and `%` characters in the mailbox name. Be careful as `%` and `*` are ambiguous for the LIST / LSUB commands that interpret those as wildcard thus returning all mailboxes matching the pattern.
+
+== Customizing blob deduplication settings
+
+----
+# Count of octet from which hashing shall be done out of the IO threads in deduplicating blob store
+james.deduplicating.blobstore.thread.switch.threshold=32768
+
+# Count of octet from which streams are buffered to files and not to memory
+james.deduplicating.blobstore.file.threshold=10240
+----
