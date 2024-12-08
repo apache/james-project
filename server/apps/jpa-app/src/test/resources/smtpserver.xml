@@ -81,7 +81,7 @@
         <jmxName>smtpserver-authenticated</jmxName>
         <bind>0.0.0.0:0</bind>
         <connectionBacklog>200</connectionBacklog>
-        <tls socketTLS="false" startTLS="false">
+        <tls socketTLS="false" startTLS="true">
             <keystore>file://conf/keystore</keystore>
             <secret>james72laBalle</secret>
             <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
@@ -92,7 +92,7 @@
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <auth>
             <announce>forUnauthorizedAddresses</announce>
-            <requireSSL>false</requireSSL>
+            <requireSSL>true</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <!-- Trust authenticated users -->
