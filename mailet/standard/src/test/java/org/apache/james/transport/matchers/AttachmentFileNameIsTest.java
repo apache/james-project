@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 
+import jakarta.mail.internet.MimeMessage;
+
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.MimeMessageUtil;
@@ -31,8 +33,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.Test;
-
-import jakarta.mail.internet.MimeMessage;
 
 class AttachmentFileNameIsTest {
     @Test
