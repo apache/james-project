@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ACL;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ACL_VERSION;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_HIGHEST_MODSEQ;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_LAST_UID;
@@ -55,6 +56,7 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
+import org.apache.james.mailbox.postgres.mail.PostgresACLUpsertException;
 import org.apache.james.mailbox.postgres.mail.PostgresMailbox;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.jooq.Condition;
@@ -150,13 +152,32 @@ public class PostgresMailboxDAO {
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailbox.getMailboxId())));
     }
 
+    public Mono<Void> upsertACL(MailboxId mailboxId, MailboxACL acl, Long currentAclVersion) {
+        return postgresExecutor.executeReturnAffectedRowsCount(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
+                .set(MAILBOX_ACL, MAILBOX_ACL_TO_HSTORE_FUNCTION.apply(acl))
+                .set(MAILBOX_ACL_VERSION, currentAclVersion + 1)
+                .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))
+                .and(MAILBOX_ACL_VERSION.eq(currentAclVersion))))
+            .filter(count -> count > 0)
+            .switchIfEmpty(Mono.error(new PostgresACLUpsertException("Upsert mailbox acl failed with mailboxId " + mailboxId.serialize())))
+            .then();
+    }
+
     public Mono<Void> upsertACL(MailboxId mailboxId, MailboxACL acl) {
         return postgresExecutor.executeReturnAffectedRowsCount(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
-            .set(MAILBOX_ACL, MAILBOX_ACL_TO_HSTORE_FUNCTION.apply(acl))
-            .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))))
+                .set(MAILBOX_ACL, MAILBOX_ACL_TO_HSTORE_FUNCTION.apply(acl))
+                .set(DSL.field(MAILBOX_ACL_VERSION.getName()), (Object) DSL.field(MAILBOX_ACL_VERSION.getName() + " + 1"))
+                .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))))
             .filter(count -> count > 0)
             .switchIfEmpty(Mono.error(new RuntimeException("Upsert mailbox acl failed with mailboxId " + mailboxId.serialize())))
             .then();
+    }
+
+    public Mono<Pair<MailboxACL, Long>> getACL(MailboxId mailboxId) {
+        return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(MAILBOX_ACL, MAILBOX_ACL_VERSION)
+                .from(TABLE_NAME)
+                .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))))
+            .map(record -> Pair.of(Optional.ofNullable(record.get(MAILBOX_ACL)).map(HSTORE_TO_MAILBOX_ACL_FUNCTION).orElse(new MailboxACL()), record.get(MAILBOX_ACL_VERSION)));
     }
 
     public Flux<PostgresMailbox> findMailboxesByUsername(Username userName) {

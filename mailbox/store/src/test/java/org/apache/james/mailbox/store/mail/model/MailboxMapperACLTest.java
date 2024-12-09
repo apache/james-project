@@ -43,7 +43,7 @@ public abstract class MailboxMapperACLTest {
     private static final Username USER_1 = Username.of("user1");
     private static final Username USER_2 = Username.of("user2");
 
-    private Mailbox benwaInboxMailbox;
+    protected Mailbox benwaInboxMailbox;
 
     private MailboxMapper mailboxMapper;
 
