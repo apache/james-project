@@ -24,6 +24,7 @@ import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
@@ -43,10 +44,14 @@ public class LoginCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        Username userid = Username.of(request.astring());
-        String password = request.astring();
-        request.eol();
+        try {
+            Username userid = Username.of(request.astring());
+            String password = request.astring();
+            request.eol();
 
-        return new LoginRequest(userid, password, tag);
+            return new LoginRequest(userid, password, tag);
+        } catch (IllegalArgumentException e) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, e.getMessage(), e);
+        }
     }
 }
