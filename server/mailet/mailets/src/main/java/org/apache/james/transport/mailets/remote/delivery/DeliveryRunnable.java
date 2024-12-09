@@ -187,6 +187,7 @@ public class DeliveryRunnable implements Disposable {
                         "mimeMessageId", Optional.ofNullable(mail.getMessage())
                             .map(Throwing.function(MimeMessage::getMessageID))
                             .orElse(""),
+                            "exceptionMessage", executionResult.getException().map(Throwable::getMessage).orElse("<no message>"),
                         "sender", mail.getMaybeSender().asString(),
                         "recipients", StringUtils.join(mail.getRecipients()))))
                     .log("Remote delivering mail failed temporarily.");
@@ -200,6 +201,7 @@ public class DeliveryRunnable implements Disposable {
                         "mimeMessageId", Optional.ofNullable(mail.getMessage())
                             .map(Throwing.function(MimeMessage::getMessageID))
                             .orElse(""),
+                        "exceptionMessage", executionResult.getException().map(Throwable::getMessage).orElse("<no message>"),
                         "sender", mail.getMaybeSender().asString(),
                         "recipients", StringUtils.join(mail.getRecipients()))))
                     .log("Remote delivering mail failed permanently.");
