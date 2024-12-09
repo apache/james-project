@@ -103,15 +103,14 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       .flatMap((mailboxSession: MailboxSession) => userProvisioner.provisionUser(mailboxSession)
         .`then`
         .`then`(SMono(httpServerResponse.addHeader(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, "jmap")
-          .sendWebsocket((in, out) => handleWebSocketConnection(mailboxSession)(in, out)))
-          .doOnSubscribe(_ => openingConnectionsMetric.increment())
-          .doOnTerminate(() => openingConnectionsMetric.decrement())))
+          .sendWebsocket((in, out) => handleWebSocketConnection(mailboxSession)(in, out)))))
       .onErrorResume(throwable => handleHttpHandshakeError(throwable, httpServerResponse))
       .asJava()
       .`then`()
 
   private def handleWebSocketConnection(session: MailboxSession)(in: WebsocketInbound, out: WebsocketOutbound): Mono[Void] = {
     val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
+    openingConnectionsMetric.increment()
 
     val context = ClientContext(sink, new AtomicReference[Registration](), session)
     val responseFlux: SFlux[OutboundMessage] = SFlux[WebSocketFrame](in.aggregateFrames()
@@ -124,10 +123,16 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       .doOnNext(_ => connectedUsers.put(context, context))
       .doOnNext(_ => requestCountMetric.increment())
       .flatMap(message => handleClientMessages(context)(message))
-      .doOnTerminate(context.clean)
-      .doOnCancel(context.clean)
-      .doOnTerminate(() => connectedUsers.remove(context))
-      .doOnCancel(() => connectedUsers.remove(context))
+      .doOnTerminate(() => {
+        context.clean()
+        connectedUsers.remove(context)
+        openingConnectionsMetric.decrement()
+      })
+      .doOnCancel(() => {
+        context.clean()
+        connectedUsers.remove(context)
+        openingConnectionsMetric.decrement()
+      })
 
     out.sendString(
       SFlux.merge(Seq(responseFlux, sink.asFlux()))
