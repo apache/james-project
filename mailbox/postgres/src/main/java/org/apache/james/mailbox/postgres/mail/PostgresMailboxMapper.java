@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
+import java.time.Duration;
 import java.util.function.Function;
 
 import org.apache.james.core.Username;
@@ -35,6 +36,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 public class PostgresMailboxMapper implements MailboxMapper {
     private final PostgresMailboxDAO postgresMailboxDAO;
@@ -104,7 +106,8 @@ public class PostgresMailboxMapper implements MailboxMapper {
                 } catch (UnsupportedRightException e) {
                     throw new RuntimeException(e);
                 }
-            });
+            }).retryWhen(Retry.backoff(3, Duration.ofMillis(100))
+                .filter(throwable -> throwable instanceof PostgresACLUpsertException));
     }
 
     @Override

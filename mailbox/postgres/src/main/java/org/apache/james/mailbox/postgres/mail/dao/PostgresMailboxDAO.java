@@ -56,6 +56,7 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
+import org.apache.james.mailbox.postgres.mail.PostgresACLUpsertException;
 import org.apache.james.mailbox.postgres.mail.PostgresMailbox;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.jooq.Condition;
@@ -153,12 +154,12 @@ public class PostgresMailboxDAO {
 
     public Mono<Void> upsertACL(MailboxId mailboxId, MailboxACL acl, Long currentAclVersion) {
         return postgresExecutor.executeReturnAffectedRowsCount(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
-            .set(MAILBOX_ACL, MAILBOX_ACL_TO_HSTORE_FUNCTION.apply(acl))
-            .set(MAILBOX_ACL_VERSION, currentAclVersion + 1)
-            .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))
-            .and(MAILBOX_ACL_VERSION.eq(currentAclVersion))))
+                .set(MAILBOX_ACL, MAILBOX_ACL_TO_HSTORE_FUNCTION.apply(acl))
+                .set(MAILBOX_ACL_VERSION, currentAclVersion + 1)
+                .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))
+                .and(MAILBOX_ACL_VERSION.eq(currentAclVersion))))
             .filter(count -> count > 0)
-            .switchIfEmpty(Mono.error(new RuntimeException("Upsert mailbox acl failed with mailboxId " + mailboxId.serialize())))
+            .switchIfEmpty(Mono.error(new PostgresACLUpsertException("Upsert mailbox acl failed with mailboxId " + mailboxId.serialize())))
             .then();
     }
 

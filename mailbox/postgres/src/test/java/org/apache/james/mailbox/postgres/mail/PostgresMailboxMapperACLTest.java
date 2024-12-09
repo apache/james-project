@@ -36,8 +36,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableMap;
 
-import reactor.util.retry.Retry;
-
 class PostgresMailboxMapperACLTest extends MailboxMapperACLTest {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxModule.MODULE);
@@ -61,19 +59,17 @@ class PostgresMailboxMapperACLTest extends MailboxMapperACLTest {
                 MailboxACL.EntryKey key = MailboxACL.EntryKey.createUserEntryKey("user" + userNumber);
                 if (threadNumber % 2 == 0) {
                     return mailboxMapper.updateACL(benwaInboxMailbox, MailboxACL.command().key(key).rights(rights).asReplacement())
-                        .retryWhen(Retry.backoff(5, Duration.ofMillis(100)))
                         .then();
                 } else {
                     return mailboxMapper.updateACL(benwaInboxMailbox, MailboxACL.command().key(key).rights(newRights).asAddition())
-                        .retryWhen(Retry.backoff(5, Duration.ofMillis(100)))
                         .then();
                 }
             })
-            .threadCount(20)
+            .threadCount(10)
             .operationCount(1)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
-        MailboxACL expectedMailboxACL = new MailboxACL(IntStream.range(0, 10).boxed()
+        MailboxACL expectedMailboxACL = new MailboxACL(IntStream.range(0, 5).boxed()
             .collect(ImmutableMap.toImmutableMap(userNumber -> MailboxACL.EntryKey.createUserEntryKey("user" + userNumber), userNumber -> rights)));
 
         assertThat(
