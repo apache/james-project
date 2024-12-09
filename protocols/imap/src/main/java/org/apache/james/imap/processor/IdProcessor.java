@@ -47,6 +47,7 @@ public class IdProcessor extends AbstractMailboxProcessor<IDRequest> implements 
     public static final String MDC_KEY = "bound_MDC";
     private static final Logger LOGGER = LoggerFactory.getLogger(IdProcessor.class);
     private static final ImmutableList<Capability> CAPABILITIES = ImmutableList.of(Capability.of("ID"));
+    public static final String USER_AGENT = "userAgent";
 
     private final Map<String, String> fields = new HashMap<>();
 
@@ -66,8 +67,11 @@ public class IdProcessor extends AbstractMailboxProcessor<IDRequest> implements 
         responder.respond(new IdResponse(fields));
 
         String mailUserAgent = request.getParameters().map(Object::toString).orElse("NIL");
-        addMailUserAgentToMDC(session, mailUserAgent);
-        session.setAttribute("userAgent", mailUserAgent);
+
+        if (session.getAttribute(USER_AGENT) == null) {
+            addMailUserAgentToMDC(session, mailUserAgent);
+        }
+        session.setAttribute(USER_AGENT, mailUserAgent);
 
         return logMailUserAgent(mailUserAgent)
             .then(unsolicitedResponses(session, responder, false))
