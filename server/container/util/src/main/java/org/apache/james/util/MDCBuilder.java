@@ -147,6 +147,10 @@ public class MDCBuilder {
         return contextMap.build();
     }
 
+    public Map<String, String> snapshotContextMap() {
+        return ImmutableMap.copyOf(buildContextMap());
+    }
+
     public <T> T execute(Supplier<T> supplier) {
         return MDCBuilder.withMdc(this, supplier);
     }

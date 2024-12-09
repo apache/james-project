@@ -45,6 +45,7 @@ import reactor.core.publisher.Mono;
 
 public class IdProcessor extends AbstractMailboxProcessor<IDRequest> implements CapabilityImplementingProcessor {
     public static final String MDC_KEY = "bound_MDC";
+    public static final String MAIL_USER_AGENT_KEY = "mailUserAgent";
     private static final Logger LOGGER = LoggerFactory.getLogger(IdProcessor.class);
     private static final ImmutableList<Capability> CAPABILITIES = ImmutableList.of(Capability.of("ID"));
 
@@ -83,7 +84,10 @@ public class IdProcessor extends AbstractMailboxProcessor<IDRequest> implements 
     private void addMailUserAgentToMDC(ImapSession session, String mailUserAgent) {
         Object maybeMDC = session.getAttribute(MDC_KEY);
         if (maybeMDC instanceof MDCBuilder boundMDC) {
-            MDCBuilder newMDC = boundMDC.addToContext("mailUserAgent", mailUserAgent);
+            if (boundMDC.snapshotContextMap().containsKey(MAIL_USER_AGENT_KEY)) {
+                return;
+            }
+            MDCBuilder newMDC = boundMDC.addToContext(MAIL_USER_AGENT_KEY, mailUserAgent);
             session.setAttribute(MDC_KEY, newMDC);
         }
     }
