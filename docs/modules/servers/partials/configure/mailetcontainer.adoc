@@ -101,6 +101,6 @@ Here is a short example to illustrate this:
 ....
 <mailet match=RecipientIsLocal class="LocalDelivery">
     <onMailetException>deliveryError</onMailetException>
-    <onMatcherException>nomatch</onMatcherException>
+    <onMatchException>nomatch</onMatcheException>
 </mailet>
 ....
