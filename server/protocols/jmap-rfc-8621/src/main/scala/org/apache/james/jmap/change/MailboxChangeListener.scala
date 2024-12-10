@@ -20,6 +20,7 @@
 package org.apache.james.jmap.change
 
 import java.time.{Clock, ZonedDateTime}
+import java.util
 
 import jakarta.inject.{Inject, Named}
 import org.apache.james.core.Username
@@ -39,6 +40,7 @@ import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
 import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
 import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
+import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
@@ -60,7 +62,27 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
   override def reactiveEvent(event: Event): Publisher[Void] =
     jmapChanges(event.asInstanceOf[MailboxEvent])
       .flatMap(saveChangeEvent, DEFAULT_CONCURRENCY)
+      .map(toStateChangeEvent)
+      .flatMap(dispactChangeEvent, DEFAULT_CONCURRENCY)
       .`then`()
+
+  override def reactiveEvent(events: util.List[Event]): Publisher[Void] =
+    SFlux.fromIterable(events.asScala)
+      .filter(isHandling)
+      .concatMap(event => jmapChanges(event.asInstanceOf[MailboxEvent]))
+      .concatMap(saveChangeEvent, DEFAULT_CONCURRENCY)
+      .groupBy(_.getAccountId)
+      .flatMap(group => group.map(a => toStateChangeEvent(a))
+        .fold[StateChangeEvent](StateChangeEvent(EventId.random(), Username.of(group.key().getIdentifier), Map())) {
+          (a, b) => mergeStateChangeEvents(a, b)
+        })
+      .flatMap(dispactChangeEvent, DEFAULT_CONCURRENCY)
+      .`then`()
+
+  private def mergeStateChangeEvents(one: StateChangeEvent, other: StateChangeEvent): StateChangeEvent = StateChangeEvent(
+    one.eventId,
+    one.username,
+    one.map ++ other.map) // will keep the rightmost value
 
   override def getDefaultGroup: Group = MailboxChangeListenerGroup()
 
@@ -99,13 +121,16 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
     }
   }
 
-  private def saveChangeEvent(jmapChange: JmapChange): Publisher[Void] =
+  private def saveChangeEvent(jmapChange: JmapChange): Publisher[JmapChange] =
     SMono(jmapChange match {
-      case mailboxChange: MailboxChange => mailboxChangeRepository.save(mailboxChange)
-      case emailChange: EmailChange => emailChangeRepository.save(emailChange)
+      case mailboxChange: MailboxChange => mailboxChangeRepository.save(mailboxChange).`then`(Mono.just(jmapChange))
+      case emailChange: EmailChange => emailChangeRepository.save(emailChange).`then`(Mono.just(jmapChange))
       case mailboxAndEmailChange: MailboxAndEmailChange => mailboxChangeRepository.save(mailboxAndEmailChange.getMailboxChange)
-        .`then`(emailChangeRepository.save(mailboxAndEmailChange.getEmailChange))
-    }).`then`(SMono(eventBus.dispatch(toStateChangeEvent(jmapChange), AccountIdRegistrationKey(jmapChange.getAccountId))))
+        .`then`(emailChangeRepository.save(mailboxAndEmailChange.getEmailChange)).`then`(Mono.just(jmapChange))
+    })
+
+  private def dispactChangeEvent(jmapChange: StateChangeEvent): Publisher[Void] =
+    SMono(eventBus.dispatch(jmapChange, AccountIdRegistrationKey(AccountId.fromUsername(jmapChange.getUsername))))
 
   private def getSharees(mailboxId: MailboxId, username: Username): SMono[List[AccountId]] = {
     val session = mailboxManager.createSystemSession(username)

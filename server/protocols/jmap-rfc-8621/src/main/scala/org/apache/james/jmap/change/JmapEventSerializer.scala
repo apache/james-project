@@ -19,11 +19,10 @@
 
 package org.apache.james.jmap.change
 
-import java.util.Optional
 import java.util
+import java.util.Optional
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.google.api.client.util.Preconditions
 import com.google.common.collect.ImmutableList
 import jakarta.inject.Inject
 import org.apache.james.core.Username
