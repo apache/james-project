@@ -270,7 +270,7 @@ trait EmailParseMethodContract {
            |                        "references": null,
            |                        "bodyValues": {
            |                            "2": {
-           |                                "value": "test body\\r\\n",
+           |                                "value": "test body\\n",
            |                                "isEncodingProblem": false,
            |                                "isTruncated": false
            |                            }
