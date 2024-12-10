@@ -20,6 +20,7 @@
 package org.apache.james.event.json
 
 import java.time.Instant
+import java.util
 import java.util.{TreeMap => JavaTreeMap}
 
 import jakarta.inject.Inject
@@ -398,18 +399,27 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     implicit val eventOFormat: OFormat[Event] = derived.oformat()
 
     def toJson(event: Event): String = Json.toJson(event).toString()
+    def toJson(event: Iterable[Event]): String = Json.toJson(event).toString()
     def toJsonBytes(event: Event): Array[Byte] = Json.toBytes(Json.toJson(event))
     def fromJson(json: String): JsResult[Event] = Json.fromJson[Event](Json.parse(json))
+    def fromJsonAsEvents(json: String): JsResult[List[Event]] = if (json.startsWith("{")) {
+      Json.fromJson[Event](Json.parse(json)).map(event => List(event))
+    } else {
+      Json.fromJson[List[Event]](Json.parse(json))
+    }
   }
 
   private val eventSerializerPrivateWrapper = new EventSerializerPrivateWrapper()
   def toJson(event: JavaEvent): String = eventSerializerPrivateWrapper.toJson(ScalaConverter.toScala(event))
+  def toJson(event: util.Collection[JavaEvent]): String = eventSerializerPrivateWrapper.toJson(event.asScala.map(ScalaConverter.toScala))
   def toJsonBytes(event: JavaEvent): Array[Byte] = eventSerializerPrivateWrapper.toJsonBytes(ScalaConverter.toScala(event))
   def fromJson(json: String): JsResult[JavaEvent] = eventSerializerPrivateWrapper.fromJson(json)
     .map(event => event.toJava)
+  def fromJsonAsEvents(json: String): JsResult[List[JavaEvent]] = eventSerializerPrivateWrapper.fromJsonAsEvents(json)
+    .map(event => event.map(_.toJava))
 }
 
-class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) extends EventSerializer{
+class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) extends EventSerializer {
   private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory, quotaRootDeserializer)
 
   override def toJson(event: JavaEvent): String = jsonSerialize.toJson(event)
@@ -417,6 +427,10 @@ class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, mess
   override def toJsonBytes(event: JavaEvent): Array[Byte] = jsonSerialize.toJsonBytes(event)
 
   def fromJson(json: String): JsResult[JavaEvent] = jsonSerialize.fromJson(json)
+
+  override def toJson(event: util.Collection[JavaEvent]): String = jsonSerialize.toJson(event)
+
+  override def asEvents(serialized: String): util.List[JavaEvent] = jsonSerialize.fromJsonAsEvents(serialized).get.asJava
 
   override def asEvent(serialized: String): JavaEvent = fromJson(serialized).get
 }
