@@ -71,13 +71,23 @@ public interface EventBus {
 
     Mono<Void> dispatch(Event event, Set<RegistrationKey> key);
 
-    Mono<Void> reDeliver(Group group, Event event);
-
-    EventBusName eventBusName();
-
     default Mono<Void> dispatch(Event event, RegistrationKey key) {
         return dispatch(event, ImmutableSet.of(key));
     }
+
+    record EventWithRegistrationKey(Event event, Set<RegistrationKey> keys) {
+
+    }
+
+    default Mono<Void> dispatch(Collection<EventWithRegistrationKey> events) {
+        return Flux.fromIterable(events)
+            .concatMap(event -> dispatch(event.event(), event.keys()))
+            .then();
+    }
+
+    Mono<Void> reDeliver(Group group, Event event);
+
+    EventBusName eventBusName();
 
     default Registration register(EventListener.GroupEventListener groupListener) {
         return register(EventListener.wrapReactive(groupListener));
