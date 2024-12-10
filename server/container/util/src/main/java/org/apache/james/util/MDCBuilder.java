@@ -44,6 +44,9 @@ public class MDCBuilder {
             return answerSupplier.get();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }  catch (IllegalArgumentException e) {
+            LOGGER.warn("Got IllegalArgumentException, logging its context", e);
+            throw e;
         } catch (RuntimeException e) {
             LOGGER.error("Got error, logging its context", e);
             throw e;
