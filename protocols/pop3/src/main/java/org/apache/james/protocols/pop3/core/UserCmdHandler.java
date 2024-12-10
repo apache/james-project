@@ -70,9 +70,14 @@ public class UserCmdHandler extends AbstractPOP3CommandHandler implements CapaCa
         LOGGER.trace("USER command received");
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.AUTHENTICATION_READY && parameters != null) {
-            session.setUsername(Username.of(parameters));
-            session.setHandlerState(POP3Session.AUTHENTICATION_USERSET);
-            return POP3Response.OK;
+            try {
+                session.setUsername(Username.of(parameters));
+                session.setHandlerState(POP3Session.AUTHENTICATION_USERSET);
+                return POP3Response.OK;
+            } catch (IllegalArgumentException e) {
+                LOGGER.info("USER command input error", e);
+                return POP3Response.ERR;
+            }
         } else {
             return POP3Response.ERR;
         }
