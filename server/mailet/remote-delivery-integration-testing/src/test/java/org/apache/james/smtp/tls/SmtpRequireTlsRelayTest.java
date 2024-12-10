@@ -24,18 +24,20 @@ import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
+import static org.apache.james.mock.smtp.server.model.Response.SMTPStatusCode.COMMAND_PARAMETER_NOT_IMPLEMENTED_504;
+import static org.apache.james.mock.smtp.server.model.SMTPCommand.MAIL_FROM;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Durations.TEN_MINUTES;
 import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Base64;
+import java.util.List;
 
 import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.commons.net.smtp.SimpleSMTPHeader;
-import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -45,11 +47,15 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
+import org.apache.james.mock.smtp.server.model.Condition;
 import org.apache.james.mock.smtp.server.model.Mail;
+import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
+import org.apache.james.mock.smtp.server.model.Response;
 import org.apache.james.mock.smtp.server.model.SMTPExtension;
 import org.apache.james.mock.smtp.server.model.SMTPExtensions;
 import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension;
 import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension.DockerMockSmtp;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
@@ -63,13 +69,11 @@ import org.apache.james.smtpserver.priority.SmtpMtPriorityParameterHook;
 import org.apache.james.smtpserver.tls.SmtpTlsEhloHook;
 import org.apache.james.smtpserver.tls.SmtpTlsMessageHook;
 import org.apache.james.smtpserver.tls.SmtpTlsParameterHook;
-import org.apache.james.transport.mailets.RecipientRewriteTable;
 import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.SMTPMessageSender;
-import org.apache.james.utils.SMTPMessageSenderExtension;
 import org.apache.james.utils.TestIMAPClient;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -86,13 +90,9 @@ class SmtpRequireTlsRelayTest {
     private InMemoryDNSService inMemoryDNSService;
 
     @RegisterExtension
-    public static MockSmtpServerExtension mockSmtpExtension = new MockSmtpServerExtension();
-    @RegisterExtension
-    SMTPMessageSenderExtension smtpSenderExtension = new SMTPMessageSenderExtension(Domain.of(DEFAULT_DOMAIN));
-    @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
     @RegisterExtension
-    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
+    public static MockSmtpServerExtension mockSmtpExtension = new MockSmtpServerExtension();
 
     private TemporaryJamesServer jamesServer;
 
@@ -124,7 +124,6 @@ class SmtpRequireTlsRelayTest {
 
         jamesServer = TemporaryJamesServer.builder()
                 .withBase(SMTP_AND_IMAP_MODULE)
-
                 .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
                 .withMailetContainer(MailetContainer.builder()
                         .putProcessor(CommonProcessors.simpleRoot())
@@ -133,7 +132,6 @@ class SmtpRequireTlsRelayTest {
                         .putProcessor(CommonProcessors.bounces()))
                 .withSmtpConfiguration(smtpConfiguration)
                 .build(temporaryFolder);
-
         jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
@@ -148,16 +146,15 @@ class SmtpRequireTlsRelayTest {
     private ProcessorConfiguration.Builder directResolutionTransport(Boolean usePriority) {
         return ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.BCC_STRIPPER)
-                .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(RecipientRewriteTable.class))
+                .addMailet(MailetConfiguration.LOCAL_DELIVERY)
                 .addMailet(MailetConfiguration.builder()
                         .mailet(RemoteDelivery.class)
                         .matcher(All.class)
                         .addProperty("usePriority", usePriority.toString())
                         .addProperty("outgoingQueue", "outgoing")
                         .addProperty("delayTime", "3 * 10 ms")
-                        .addProperty("maxRetries", "3")
+                        .addProperty("maxRetries", "1")
+                        .addProperty("maxDnsProblemRetries", "0")
                         .addProperty("deliveryThreads", "2")
                         .addProperty("sendpartial", "true"));
     }
@@ -171,7 +168,7 @@ class SmtpRequireTlsRelayTest {
         smtpClient.rcpt("<" + RECIPIENT + ">");
         smtpClient.sendShortMessageData("A short message...");
 
-        calmlyAwait.atMost(TEN_MINUTES).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
+        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
                 .hasSize(1)
                 .extracting(Mail::getEnvelope)
                 .containsExactly(Mail.Envelope.builder()
@@ -196,7 +193,7 @@ class SmtpRequireTlsRelayTest {
         smtpClient.rcpt("<" + RECIPIENT + ">");
         smtpClient.sendShortMessageData(header + "A short message...");
 
-        calmlyAwait.atMost(TEN_MINUTES).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
+        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
                 .hasSize(1)
                 .extracting(Mail::getEnvelope)
                 .containsExactly(Mail.Envelope.builder()
@@ -228,7 +225,6 @@ class SmtpRequireTlsRelayTest {
                                 .build())
                         .addMailParameter(Mail.Parameter.builder()
                                 .name("REQUIRETLS")
-                                .value("true")
                                 .build())
                         .addMailParameter(Mail.Parameter.builder()
                                 .name("RET")
@@ -242,6 +238,33 @@ class SmtpRequireTlsRelayTest {
                                 .address(new MailAddress(RECIPIENT))
                                 .build())
                         .build()));
+    }
+
+    @Test
+    void remoteDeliveryShouldFailsWhenServerNotAllowStartTls(DockerMockSmtp mockSmtp) throws Exception {
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(FROM, PASSWORD);
+
+        MockSMTPBehavior startTlsBehavior = new MockSMTPBehavior(
+                MAIL_FROM,
+                Condition.MATCH_ALL,
+                new Response(COMMAND_PARAMETER_NOT_IMPLEMENTED_504, "The server has not implemented a command parameter"),
+                MockSMTPBehavior.NumberOfAnswersPolicy.anytime());
+
+        mockSmtp.getConfigurationClient().setBehaviors(List.of(startTlsBehavior));
+
+        SMTPSClient smtpClient = initSMTPSClient();
+        smtpClient.mail("<" + FROM + "> REQUIRETLS");
+        smtpClient.rcpt("<" + RECIPIENT + ">");
+        smtpClient.sendShortMessageData("A short message...");
+
+        String dsnMessage = testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(FROM, PASSWORD)
+                .select(TestIMAPClient.INBOX)
+                .awaitMessageCount(awaitAtMostOneMinute, 1)
+                .readFirstMessage();
+
+        Assertions.assertThat(dsnMessage).contains("504 The server has not implemented a command parameter");
     }
 
     @AfterEach

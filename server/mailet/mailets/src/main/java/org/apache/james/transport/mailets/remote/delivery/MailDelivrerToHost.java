@@ -130,12 +130,10 @@ public class MailDelivrerToHost {
         try {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost(props.getProperty(inContext(session, "mail.smtp.localhost"), configuration.getHeloNameProvider().getHeloName()));
-            if (isTlsRequired(mail)) {
-                transport.setStartTLS(true);
-            } else {
+            connect(outgoingMailServer, transport);
+            if (!isTlsRequired(mail)) {
                 mail.removeAttribute(REQUIRE_TLS);
             }
-            connect(outgoingMailServer, transport);
             if (mail.dsnParameters().isPresent()) {
                 sendDSNAwareEmail(mail, transport, addr);
             } else if (extensionsSupported(transport)) {
