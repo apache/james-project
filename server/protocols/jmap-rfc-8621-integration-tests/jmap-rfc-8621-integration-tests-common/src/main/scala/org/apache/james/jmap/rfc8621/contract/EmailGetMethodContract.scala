@@ -4698,7 +4698,7 @@ trait EmailGetMethodContract {
          |                        ],
          |                        "bodyValues": {
          |                            "2": {
-         |                                "value": "Main test message...\\n",
+         |                                "value": "Main test message...\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
@@ -4819,7 +4819,7 @@ trait EmailGetMethodContract {
          |						}
          |					],
          |					"subject": "My subject",
-         |					"size": 970
+         |					"size": 1011
          |				}]
          |			},
          |			"c1"
@@ -4962,7 +4962,7 @@ trait EmailGetMethodContract {
          |						}
          |					],
          |					"subject": "My subject",
-         |					"size": 970
+         |					"size": 1011
          |				}]
          |			},
          |			"c1"
