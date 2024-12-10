@@ -47,6 +47,7 @@ public interface PostgresMailboxModule {
         Field<Long> MAILBOX_LAST_UID = DSL.field("mailbox_last_uid", BIGINT);
         Field<Long> MAILBOX_HIGHEST_MODSEQ = DSL.field("mailbox_highest_modseq", BIGINT);
         Field<Hstore> MAILBOX_ACL = DSL.field("mailbox_acl", org.jooq.impl.DefaultDataType.getDefaultDataType("hstore").asConvertedDataType(new HstoreBinding()));
+        Field<Long> MAILBOX_ACL_VERSION = DSL.field("mailbox_acl_version", BIGINT.notNull().defaultValue(DSL.field("0", BIGINT)));
 
         Name MAILBOX_NAME_USER_NAME_NAMESPACE_UNIQUE_CONSTRAINT = DSL.name("mailbox_mailbox_name_user_name_mailbox_namespace_key");
 
@@ -60,6 +61,7 @@ public interface PostgresMailboxModule {
                 .column(MAILBOX_LAST_UID)
                 .column(MAILBOX_HIGHEST_MODSEQ)
                 .column(MAILBOX_ACL)
+                .column(MAILBOX_ACL_VERSION)
                 .constraint(DSL.primaryKey(MAILBOX_ID))
                 .constraint(DSL.constraint(MAILBOX_NAME_USER_NAME_NAMESPACE_UNIQUE_CONSTRAINT).unique(MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE))))
             .supportsRowLevelSecurity()
