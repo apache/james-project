@@ -984,32 +984,31 @@ public class StoreMessageManager implements MessageManager {
                         .targetMailboxIds(to.getMailboxEntity().getMailboxId())
                         .build();
 
-                    return Flux.concat(
-                            eventBus.dispatch(EventFactory.added()
-                                    .randomEventId()
-                                    .mailboxSession(session)
-                                    .mailbox(to.getMailboxEntity())
-                                    .metaData(moveUids)
-                                    .isDelivery(!IS_DELIVERY)
-                                    .isAppended(!IS_APPENDED)
-                                    .movedFrom(getId())
-                                    .build(),
-                                new MailboxIdRegistrationKey(to.getMailboxEntity().getMailboxId())),
-                            eventBus.dispatch(EventFactory.expunged()
-                                    .randomEventId()
-                                    .mailboxSession(session)
-                                    .mailbox(getMailboxEntity())
-                                    .addMetaData(moveResult.getOriginalMessages())
-                                    .movedTo(to.getId())
-                                    .build(),
-                                new MailboxIdRegistrationKey(mailbox.getMailboxId())),
-                            eventBus.dispatch(EventFactory.moved()
-                                    .messageMoves(messageMoves)
-                                    .messageId(messageIds)
-                                    .session(session)
-                                    .build(),
-                                messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(ImmutableSet.toImmutableSet())))
-                        .then()
+                    EventBus.EventWithRegistrationKey added = new EventBus.EventWithRegistrationKey(EventFactory.added()
+                        .randomEventId()
+                        .mailboxSession(session)
+                        .mailbox(to.getMailboxEntity())
+                        .metaData(moveUids)
+                        .isDelivery(!IS_DELIVERY)
+                        .isAppended(!IS_APPENDED)
+                        .movedFrom(getId())
+                        .build(),
+                        ImmutableSet.of(new MailboxIdRegistrationKey(to.getMailboxEntity().getMailboxId())));
+                    EventBus.EventWithRegistrationKey expunged = new EventBus.EventWithRegistrationKey(EventFactory.expunged()
+                        .randomEventId()
+                        .mailboxSession(session)
+                        .mailbox(getMailboxEntity())
+                        .addMetaData(moveResult.getOriginalMessages())
+                        .movedTo(to.getId())
+                        .build(),
+                        ImmutableSet.of(new MailboxIdRegistrationKey(mailbox.getMailboxId())));
+                    EventBus.EventWithRegistrationKey  moved = new EventBus.EventWithRegistrationKey(EventFactory.moved()
+                        .messageMoves(messageMoves)
+                        .messageId(messageIds)
+                        .session(session)
+                        .build(),
+                        messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(ImmutableSet.toImmutableSet()));
+                    return Mono.from(eventBus.dispatch(ImmutableList.of(added, expunged, moved)))
                         .thenReturn(moveUids);
                 })));
     }
