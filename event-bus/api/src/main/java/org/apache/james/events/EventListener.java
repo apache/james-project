@@ -19,6 +19,7 @@
 
 package org.apache.james.events;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.apache.james.util.ReactorUtils;
@@ -26,6 +27,7 @@ import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -35,6 +37,12 @@ public interface EventListener {
 
     interface ReactiveEventListener extends EventListener {
         Publisher<Void> reactiveEvent(Event event);
+
+        default Publisher<Void> reactiveEvent(List<Event> event) {
+            return Flux.fromIterable(event)
+                .concatMap(this::reactiveEvent)
+                .then();
+        }
 
         default void event(Event event) throws Exception {
             Mono.from(reactiveEvent(event))

@@ -95,7 +95,9 @@ case class JmapEventSerializer @Inject()(stateChangeEventDTOFactory: StateChange
   override def fromBytes(serialized: Array[Byte]): Event = genericSerializer.deserializeFromBytes(serialized)
 
   override def toJson(event: util.Collection[Event]): String = {
-    Preconditions.checkArgument(event.size() == 1, "Not supported for multiple events, please serialize separately")
+    if (event.size() != 1) {
+      throw new IllegalArgumentException("Not supported for multiple events, please serialize separately")
+    }
     toJson(event.iterator().next())
   }
 
