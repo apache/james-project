@@ -19,23 +19,32 @@
 
 package org.apache.james.modules;
 
+import static org.apache.james.jmap.core.JmapRfc8621Configuration.LOCALHOST_CONFIGURATION;
+
 import java.io.FileNotFoundException;
+import java.util.Map;
 import java.util.Optional;
 
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.jmap.JMAPConfiguration;
+import org.apache.james.jmap.core.JmapRfc8621Configuration;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.modules.mailbox.FastRetryBackoffModule;
+import org.apache.james.utils.PropertiesProvider;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 
 public class TestJMAPServerModule extends AbstractModule {
+
+    private final Map<String, Object> overrideJmapProperties;
 
     private static final String PUBLIC_PEM_KEY =
         "-----BEGIN PUBLIC KEY-----\n" +
@@ -80,6 +89,13 @@ public class TestJMAPServerModule extends AbstractModule {
             "ICQil1aaN7/2au+p7E4n7nzfYG7nRX5syDoqgBbdhpJxV8/5ohA=\n" +
             "-----END RSA PRIVATE KEY-----\n";
 
+    public TestJMAPServerModule(Map<String, Object> overrideJmapProperties) {
+        this.overrideJmapProperties = overrideJmapProperties;
+    }
+
+    public TestJMAPServerModule() {
+        this(ImmutableMap.of());
+    }
 
     @Override
     protected void configure() {
@@ -88,7 +104,7 @@ public class TestJMAPServerModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JMAPConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException {
+    JMAPConfiguration provideConfiguration() {
         return JMAPConfiguration.builder()
             .enable()
             .randomPort()
@@ -102,5 +118,17 @@ public class TestJMAPServerModule extends AbstractModule {
     @Named("jmap")
     JwtTokenVerifier providesJwtTokenVerifier() {
         return JwtTokenVerifier.create(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY)));
+    }
+
+    @Provides
+    @Singleton
+    JmapRfc8621Configuration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        try {
+            Configuration configuration = propertiesProvider.getConfiguration("jmap");
+            overrideJmapProperties.forEach(configuration::setProperty);
+            return JmapRfc8621Configuration.from(configuration);
+        } catch (FileNotFoundException e) {
+            return LOCALHOST_CONFIGURATION();
+        }
     }
 }
