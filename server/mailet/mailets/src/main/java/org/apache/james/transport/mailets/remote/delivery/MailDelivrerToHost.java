@@ -28,7 +28,6 @@ import static org.eclipse.angus.mail.smtp.SMTPMessage.RETURN_HDRS;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -69,7 +68,6 @@ public class MailDelivrerToHost {
     public static final String BIT_MIME_8 = "8BITMIME";
     public static final String REQUIRE_TLS = "REQUIRETLS";
     public static final String STARTTLS = "STARTTLS";
-    public static final String TLS_REQUIRED_NO = "TLS-Required: No";
     public static final String MT_PRIORITY = "MT-PRIORITY";
     public static final String MAIL_PRIORITY_ATTRIBUTE_NAME = "MAIL_PRIORITY";
     private static final List<String> supportedSmtpExtensionsList = List.of(MT_PRIORITY, STARTTLS);
