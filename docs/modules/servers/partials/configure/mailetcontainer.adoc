@@ -90,7 +90,7 @@ exception, propagating it to the execution context. In an SMTP execution context
 the item and automatic retries will be setted up - note that attempts will be done for each recipients. In LMTP
 (if LMTP is configured to execute the mailetContainer), the entire mail transaction is reported as failed to the caller.
 
-Moreover, the *onMatcherException* allows you to override matcher error handling. You can
+Moreover, the *onMatchException* allows you to override matcher error handling. You can
 specify another processor than the *error* one for handling the errors of this mailet. The *matchall*
 special value also allows you to match all recipients when there is an error. The *nomatch*
 special value also allows you to match no recipients when there is an error.
@@ -101,6 +101,6 @@ Here is a short example to illustrate this:
 ....
 <mailet match=RecipientIsLocal class="LocalDelivery">
     <onMailetException>deliveryError</onMailetException>
-    <onMatcherException>nomatch</onMatcherException>
+    <onMatchException>nomatch</onMatchException>
 </mailet>
 ....

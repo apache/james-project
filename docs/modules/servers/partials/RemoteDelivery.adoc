@@ -37,7 +37,7 @@ Default is 0.
 be delivered to for DSN bounce processing. Default is to send a traditional message containing the bounce details.
 * *onSuccess* (optional) - if specified, this processor is called for each email successfully sent to remote third parties.
 
-When using bounceProcessor or onSuccess processors, take special care of error handling (see onMailetException and onMatcherException)
+When using bounceProcessor or onSuccess processors, take special care of error handling (see onMailetException and onMatchException)
  to avoid confusing situations. Also remember that on partial delivery, both processors will be used: *onSuccess* with successfull recipients,
  and *bounceProcessor* with failed recipients.
 
