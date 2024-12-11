@@ -689,7 +689,7 @@ class MailetErrorsTest {
     }
 
     @Test
-    void onMatcherExceptionIgnoreShouldNotMatchWhenRuntimeExceptionAndNoMatchConfigured(@TempDir File temporaryFolder) throws Exception {
+    void onMatchExceptionIgnoreShouldNotMatchWhenRuntimeExceptionAndNoMatchConfigured(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -717,7 +717,7 @@ class MailetErrorsTest {
     }
 
     @Test
-    void onMatcherExceptionIgnoreShouldNotMatchWhenMessagingExceptionAndNoMatchConfigured(@TempDir File temporaryFolder) throws Exception {
+    void onMatchExceptionIgnoreShouldNotMatchWhenMessagingExceptionAndNoMatchConfigured(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -745,7 +745,7 @@ class MailetErrorsTest {
     }
 
     @Test
-    void onMatcherExceptionIgnoreShouldMatchWhenRuntimeExceptionAndAllMatchConfigured(@TempDir File temporaryFolder) throws Exception {
+    void onMatchExceptionIgnoreShouldMatchWhenRuntimeExceptionAndAllMatchConfigured(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -773,7 +773,7 @@ class MailetErrorsTest {
     }
 
     @Test
-    void onMatcherExceptionIgnoreShouldMatchWhenMessagingExceptionAndAllMatchConfigured(@TempDir File temporaryFolder) throws Exception {
+    void onMatchExceptionIgnoreShouldMatchWhenMessagingExceptionAndAllMatchConfigured(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()

@@ -92,7 +92,7 @@ import com.google.common.collect.ImmutableMap;
  * be delivered to for DSN bounce processing. Default is to send a traditional message containing the bounce details.</li>
  * <li><b>onSuccess</b> (optional) - if specified, this processor is called for each email successfully sent to remote third parties.</li>
  * <p>
- * When using bounceProcessor or onSuccess processors, take special care of error handling (see onMailetException and onMatcherException)
+ * When using bounceProcessor or onSuccess processors, take special care of error handling (see onMailetException and onMatchException)
  * to avoid confusing situations. Also remember that on partial delivery, both processors will be used: <code>onSuccess</code> with successfull recipients,
  * and <code>bounceProcessor</code> with failed recipients.
  *
