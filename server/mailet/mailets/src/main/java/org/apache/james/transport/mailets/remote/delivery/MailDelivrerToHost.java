@@ -35,6 +35,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.SendFailedException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
@@ -67,10 +68,11 @@ public class MailDelivrerToHost {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailDelivrerToHost.class);
     public static final String BIT_MIME_8 = "8BITMIME";
     public static final String REQUIRE_TLS = "REQUIRETLS";
+    public static final String STARTTLS = "STARTTLS";
     public static final String TLS_REQUIRED_NO = "TLS-Required: No";
     public static final String MT_PRIORITY = "MT-PRIORITY";
     public static final String MAIL_PRIORITY_ATTRIBUTE_NAME = "MAIL_PRIORITY";
-    private static final List<String> supportedSmtpExtensionsList = List.of(MT_PRIORITY, REQUIRE_TLS);
+    private static final List<String> supportedSmtpExtensionsList = List.of(MT_PRIORITY, STARTTLS);
     private static final List<String> supportedMailAttributesList = List.of(MAIL_PRIORITY_ATTRIBUTE_NAME, REQUIRE_TLS);
 
     private final RemoteDeliveryConfiguration configuration;
@@ -131,6 +133,9 @@ public class MailDelivrerToHost {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost(props.getProperty(inContext(session, "mail.smtp.localhost"), configuration.getHeloNameProvider().getHeloName()));
             connect(outgoingMailServer, transport);
+            if (!transport.getLastServerResponse().contains("STARTTLS")) {
+                return ExecutionResult.permanentFailure(new SendFailedException("Mail delivery failed, the receiver server do not support startTLS"));
+            }
             if (!isTlsRequired(mail)) {
                 mail.removeAttribute(REQUIRE_TLS);
             }

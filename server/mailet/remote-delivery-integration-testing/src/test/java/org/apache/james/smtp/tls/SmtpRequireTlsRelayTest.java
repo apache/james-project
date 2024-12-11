@@ -26,15 +26,12 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
-import static org.apache.james.mock.smtp.server.model.Response.SMTPStatusCode.COMMAND_PARAMETER_NOT_IMPLEMENTED_504;
-import static org.apache.james.mock.smtp.server.model.SMTPCommand.MAIL_FROM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Base64;
-import java.util.List;
 
 import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.commons.net.smtp.SimpleSMTPHeader;
@@ -47,10 +44,7 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
-import org.apache.james.mock.smtp.server.model.Condition;
 import org.apache.james.mock.smtp.server.model.Mail;
-import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
-import org.apache.james.mock.smtp.server.model.Response;
 import org.apache.james.mock.smtp.server.model.SMTPExtension;
 import org.apache.james.mock.smtp.server.model.SMTPExtensions;
 import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension;
@@ -139,7 +133,7 @@ class SmtpRequireTlsRelayTest {
                 .addDomain(DEFAULT_DOMAIN)
                 .addUser(FROM, PASSWORD);
 
-        mockSmtp.getConfigurationClient().setSMTPExtensions(SMTPExtensions.of(SMTPExtension.of("REQUIRETLS"), SMTPExtension.of("dsn")));
+        mockSmtp.getConfigurationClient().setSMTPExtensions(SMTPExtensions.of(SMTPExtension.of("STARTTLS"), SMTPExtension.of("dsn")));
         assertThat(mockSmtp.getConfigurationClient().version()).isEqualTo("0.4");
     }
 
@@ -242,16 +236,8 @@ class SmtpRequireTlsRelayTest {
 
     @Test
     void remoteDeliveryShouldFailsWhenServerNotAllowStartTls(DockerMockSmtp mockSmtp) throws Exception {
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-                .login(FROM, PASSWORD);
 
-        MockSMTPBehavior startTlsBehavior = new MockSMTPBehavior(
-                MAIL_FROM,
-                Condition.MATCH_ALL,
-                new Response(COMMAND_PARAMETER_NOT_IMPLEMENTED_504, "The server has not implemented a command parameter"),
-                MockSMTPBehavior.NumberOfAnswersPolicy.anytime());
-
-        mockSmtp.getConfigurationClient().setBehaviors(List.of(startTlsBehavior));
+        mockSmtp.getConfigurationClient().clearSMTPExtensions();
 
         SMTPSClient smtpClient = initSMTPSClient();
         smtpClient.mail("<" + FROM + "> REQUIRETLS");
@@ -264,7 +250,7 @@ class SmtpRequireTlsRelayTest {
                 .awaitMessageCount(awaitAtMostOneMinute, 1)
                 .readFirstMessage();
 
-        Assertions.assertThat(dsnMessage).contains("504 The server has not implemented a command parameter");
+        Assertions.assertThat(dsnMessage).contains("Mail delivery failed, the receiver server do not support startTLS");
     }
 
     @AfterEach
