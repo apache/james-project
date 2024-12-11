@@ -133,7 +133,7 @@ public class MailDelivrerToHost {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost(props.getProperty(inContext(session, "mail.smtp.localhost"), configuration.getHeloNameProvider().getHeloName()));
             connect(outgoingMailServer, transport);
-            if (!transport.getLastServerResponse().contains("STARTTLS")) {
+            if (receiverDoesNotProvideNecessaryStartTls(mail, transport)) {
                 return ExecutionResult.permanentFailure(new SendFailedException("Mail delivery failed, the receiver server do not support startTLS"));
             }
             if (!isTlsRequired(mail)) {
@@ -250,6 +250,11 @@ public class MailDelivrerToHost {
             LOGGER.debug("failed to extract headers from message {}", mail.getName(), e);
             return mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS));
         }
+    }
+
+    private static boolean receiverDoesNotProvideNecessaryStartTls(Mail mail, SMTPTransport transport) {
+        return !transport.getLastServerResponse().contains(STARTTLS) &&
+                mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS));
     }
 
     private SMTPMessage toSmtpMessageWithExtensions(Mail mail, SMTPMessage smtpMessage) {
