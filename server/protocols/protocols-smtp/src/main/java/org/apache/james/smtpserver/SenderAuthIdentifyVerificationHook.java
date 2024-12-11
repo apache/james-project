@@ -151,7 +151,7 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
                     // Ignore invalid from header for relays
                     return HookResult.DECLINED;
                 } else {
-                    LOGGER.warn("Local user {} attempted to use an invalid From header", e);
+                    LOGGER.warn("Local user {} attempted to use an invalid From header", session.getUsername(), e);
                     throw new RuntimeException(e);
                 }
             }
