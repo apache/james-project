@@ -150,6 +150,24 @@ class SmtpTlsMessageHookTest {
             .hasValue(new Attribute(REQUIRETLS_ATTRIBUTE_NAME, AttributeValue.of(true)));
     }
 
+    @Test
+    void tlsRequiredHeaderFieldShouldBeIncludedWhenTheRequireTlsMailFromParameterIsNotSpecified() throws Exception {
+        SMTPSClient client = initSMTPSClient();
+        client.execTLS();
+        authenticate(client);
+        client.sendCommand("EHLO localhost");
+        client.sendCommand("MAIL FROM:<bob@localhost>");
+        client.sendCommand("RCPT TO:<rcpt@localhost>");
+        SimpleSMTPHeader header = new SimpleSMTPHeader("bob@localhost", "rcpt@localhost", "Just testing");
+        header.addHeaderField("TLS-Required", "No");
+        client.sendShortMessageData(header + "Test body testRequireTlsEmail\r\n.\r\n");
+
+        Mail lastMail = testSystem.queue.getLastMail();
+
+        assertThat(lastMail.getAttribute(REQUIRETLS_ATTRIBUTE_NAME))
+                .hasValue(new Attribute(REQUIRETLS_ATTRIBUTE_NAME, AttributeValue.of(false)));
+    }
+
     private void authenticate(SMTPSClient smtpProtocol) throws IOException {
         smtpProtocol.sendCommand("AUTH PLAIN");
         smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + BOB.asString() + "\0" + PASSWORD + "\0").getBytes(UTF_8)));

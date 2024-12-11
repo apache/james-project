@@ -178,12 +178,37 @@ class SmtpRequireTlsRelayTest {
 
     @Test
     @Tag("usePriority=false")
-    void remoteDeliveryShouldNotRequireTlsWhenTlsRequiredHeaderExists(DockerMockSmtp mockSmtp) throws Exception {
+    void remoteDeliveryShouldRequireTlsWhenTlsRequiredHeaderExists(DockerMockSmtp mockSmtp) throws Exception {
 
         SMTPSClient smtpClient = initSMTPSClient();
         SimpleSMTPHeader header = new SimpleSMTPHeader(FROM, RECIPIENT, "Just testing");
         header.addHeaderField("TLS-Required", "No");
         smtpClient.mail("<" + FROM + "> REQUIRETLS");
+        smtpClient.rcpt("<" + RECIPIENT + ">");
+        smtpClient.sendShortMessageData(header + "A short message...");
+
+        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
+                .hasSize(1)
+                .extracting(Mail::getEnvelope)
+                .containsExactly(Mail.Envelope.builder()
+                        .from(new MailAddress(FROM))
+                        .addMailParameter(Mail.Parameter.builder()
+                                .name("REQUIRETLS")
+                                .build())
+                        .addRecipient(Mail.Recipient.builder()
+                                .address(new MailAddress(RECIPIENT))
+                                .build())
+                        .build()));
+    }
+
+    @Test
+    @Tag("usePriority=false")
+    void remoteDeliveryShouldNotRequireTlsWhenTlsRequiredHeaderExistsAndFromCommandDoesNotContainRequireTls(DockerMockSmtp mockSmtp) throws Exception {
+
+        SMTPSClient smtpClient = initSMTPSClient();
+        SimpleSMTPHeader header = new SimpleSMTPHeader(FROM, RECIPIENT, "Just testing");
+        header.addHeaderField("TLS-Required", "No");
+        smtpClient.mail("<" + FROM + ">");
         smtpClient.rcpt("<" + RECIPIENT + ">");
         smtpClient.sendShortMessageData(header + "A short message...");
 
@@ -250,7 +275,7 @@ class SmtpRequireTlsRelayTest {
                 .awaitMessageCount(awaitAtMostOneMinute, 1)
                 .readFirstMessage();
 
-        Assertions.assertThat(dsnMessage).contains("Mail delivery failed, the receiver server do not support startTLS");
+        Assertions.assertThat(dsnMessage).contains("Mail delivery failed; the receiving server does not support STARTTLS");
     }
 
     @AfterEach

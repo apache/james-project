@@ -134,10 +134,7 @@ public class MailDelivrerToHost {
             transport.setLocalHost(props.getProperty(inContext(session, "mail.smtp.localhost"), configuration.getHeloNameProvider().getHeloName()));
             connect(outgoingMailServer, transport);
             if (receiverDoesNotProvideNecessaryStartTls(mail, transport)) {
-                return ExecutionResult.permanentFailure(new SendFailedException("Mail delivery failed, the receiver server do not support startTLS"));
-            }
-            if (!isTlsRequired(mail)) {
-                mail.removeAttribute(REQUIRE_TLS);
+                return ExecutionResult.permanentFailure(new SendFailedException("Mail delivery failed; the receiving server does not support STARTTLS"));
             }
             if (mail.dsnParameters().isPresent()) {
                 sendDSNAwareEmail(mail, transport, addr);
@@ -241,20 +238,14 @@ public class MailDelivrerToHost {
         return supportedSmtpExtensionsList.stream().anyMatch(transport::supportsExtension);
     }
 
-    private static boolean isTlsRequired(Mail mail) {
-        try {
-            return mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS)) &&
-                    Collections.list(mail.getMessage().getAllHeaderLines()).stream()
-                            .noneMatch(header -> header.equals(TLS_REQUIRED_NO));
-        } catch (MessagingException e) {
-            LOGGER.debug("failed to extract headers from message {}", mail.getName(), e);
-            return mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS));
-        }
-    }
-
     private static boolean receiverDoesNotProvideNecessaryStartTls(Mail mail, SMTPTransport transport) {
         return !transport.getLastServerResponse().contains(STARTTLS) &&
-                mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS));
+                mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS)) &&
+                isRequireTlsAttribute(mail);
+    }
+
+    private static boolean isRequireTlsAttribute(Mail mail) {
+        return mail.attributesMap().get(AttributeName.of(REQUIRE_TLS)).getValue().value().equals(Boolean.TRUE);
     }
 
     private SMTPMessage toSmtpMessageWithExtensions(Mail mail, SMTPMessage smtpMessage) {
@@ -264,8 +255,11 @@ public class MailDelivrerToHost {
                     case MAIL_PRIORITY_ATTRIBUTE_NAME ->
                             smtpMessage.setMailExtension(smtpMessage.getMailExtension() + " " +
                                     MT_PRIORITY + "=" + attribute.getValue().value());
-                    case REQUIRE_TLS ->
+                    case REQUIRE_TLS -> {
+                        if (isRequireTlsAttribute(mail)) {
                             smtpMessage.setMailExtension(smtpMessage.getMailExtension() + " " + REQUIRE_TLS);
+                        }
+                    }
                 }
             }
         });
