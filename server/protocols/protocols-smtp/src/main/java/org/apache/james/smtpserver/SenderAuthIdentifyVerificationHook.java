@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -170,6 +171,18 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
     private boolean fromDoesNotMatchAuthUser(SMTPSession session, Address from) {
         if (from instanceof InternetAddress internetAddress) {
             try {
+                if (internetAddress.isGroup()) {
+                    boolean strict = true;
+                    InternetAddress[] addressGroup = internetAddress.getGroup(!strict);
+                    if (session.getUsername() != null && addressGroup.length == 0) {
+                        return true;
+                    }
+                    return Arrays.stream(addressGroup)
+                        .map(address -> fromDoesNotMatchAuthUser(session, address))
+                        .filter(b -> b)
+                        .findAny()
+                        .orElse(false);
+                }
                 return fromDoesNotMatchAuthUser(session, internetAddress);
             } catch (AddressException e) {
                 LOGGER.warn("Local user {} attempted to use an invalid From header", session.getUsername(), e);
@@ -179,7 +192,7 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
         return false;
     }
 
-    private boolean fromDoesNotMatchAuthUser(SMTPSession session, InternetAddress internetAddress) throws AddressException {
+    private boolean fromDoesNotMatchAuthUser(SMTPSession session, InternetAddress internetAddress) {
         MemoizedSupplier<MailAddress> mailAddress = MemoizedSupplier.of(Throwing.supplier(
             () -> new MailAddress(internetAddress.getAddress())).sneakyThrow());
         return session.getUsername() != null &&
