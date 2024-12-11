@@ -172,8 +172,8 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
             try {
                 return fromDoesNotMatchAuthUser(session, internetAddress);
             } catch (AddressException e) {
-                // Never happens as valid InternetAddress are valid MailAddress
-                throw new RuntimeException(e);
+                LOGGER.warn("Local user {} attempted to use an invalid From header", session.getUsername(), e);
+                return session.getUsername() != null; // Accept external invalid form header, reject invalid from from our users.
             }
         }
         return false;
