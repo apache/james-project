@@ -38,6 +38,13 @@
             <artifactId>james-server-mailets-integration-testing</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-api</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
