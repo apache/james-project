@@ -21,6 +21,7 @@ package org.apache.james.smtpserver;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.github.fge.lambdas.Throwing;
 import jakarta.inject.Inject;
 import jakarta.mail.Address;
 import jakarta.mail.MessagingException;
@@ -41,6 +42,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.MemoizedSupplier;
 import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
@@ -168,15 +170,20 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
     private boolean fromDoesNotMatchAuthUser(SMTPSession session, Address from) {
         if (from instanceof InternetAddress internetAddress) {
             try {
-                MailAddress mailAddress = new MailAddress(internetAddress.getAddress());
-                return session.getUsername() != null &&
-                    (!fromMatchSessionUser(mailAddress, session) || !belongsToLocalDomain(mailAddress));
+                return fromDoesNotMatchAuthUser(session, internetAddress);
             } catch (AddressException e) {
                 // Never happens as valid InternetAddress are valid MailAddress
                 throw new RuntimeException(e);
             }
         }
         return false;
+    }
+
+    private boolean fromDoesNotMatchAuthUser(SMTPSession session, InternetAddress internetAddress) throws AddressException {
+        MemoizedSupplier<MailAddress> mailAddress = MemoizedSupplier.of(Throwing.supplier(
+            () -> new MailAddress(internetAddress.getAddress())).sneakyThrow());
+        return session.getUsername() != null &&
+            (!fromMatchSessionUser(mailAddress.get(), session) || !belongsToLocalDomain(mailAddress.get()));
     }
 
     private boolean fromMatchSessionUser(MailAddress from, SMTPSession session) {
