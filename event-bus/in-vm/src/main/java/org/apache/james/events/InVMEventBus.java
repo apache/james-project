@@ -21,6 +21,7 @@ package org.apache.james.events;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +30,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.events.delivery.EventDelivery;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -74,7 +76,25 @@ public class InVMEventBus implements EventBus {
     @Override
     public Mono<Void> dispatch(Event event, Set<RegistrationKey> keys) {
         if (!event.isNoop()) {
-            return Flux.merge(groupDeliveries(event), keyDeliveries(event, keys))
+            return Flux.merge(groupDeliveries(ImmutableList.of(event)), keyDeliveries(event, keys))
+                .then()
+                .onErrorResume(throwable -> Mono.empty());
+        }
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<Void> dispatch(Collection<EventWithRegistrationKey> events) {
+        ImmutableList<EventWithRegistrationKey> notNoopEvents = events.stream()
+            .filter(e -> !e.event().isNoop())
+            .collect(ImmutableList.toImmutableList());
+        if (!notNoopEvents.isEmpty()) {
+            return Flux.merge(
+                    groupDeliveries(notNoopEvents.stream()
+                        .map(EventWithRegistrationKey::event)
+                        .collect(ImmutableList.toImmutableList())),
+                    Flux.fromIterable(events)
+                        .concatMap(e -> keyDeliveries(e.event(), e.keys())))
                 .then()
                 .onErrorResume(throwable -> Mono.empty());
         }
@@ -84,7 +104,7 @@ public class InVMEventBus implements EventBus {
     @Override
     public Mono<Void> reDeliver(Group group, Event event) {
         if (!event.isNoop()) {
-            return groupDelivery(event, retrieveListenerFromGroup(group), group);
+            return groupDelivery(ImmutableList.of(event), retrieveListenerFromGroup(group), group);
         }
         return Mono.empty();
     }
@@ -110,16 +130,16 @@ public class InVMEventBus implements EventBus {
             .then();
     }
 
-    private Mono<Void> groupDeliveries(Event event) {
+    private Mono<Void> groupDeliveries(List<Event> events) {
         return Flux.fromIterable(groups.entrySet())
-            .flatMap(entry -> groupDelivery(event, entry.getValue(), entry.getKey()), EventBus.EXECUTION_RATE)
+            .flatMap(entry -> groupDelivery(events, entry.getValue(), entry.getKey()), EventBus.EXECUTION_RATE)
             .then();
     }
 
-    private Mono<Void> groupDelivery(Event event, EventListener.ReactiveEventListener listener, Group group) {
+    private Mono<Void> groupDelivery(List<Event> events, EventListener.ReactiveEventListener listener, Group group) {
         return eventDelivery.deliver(
             listener,
-            event,
+            events,
             EventDelivery.DeliveryOption.of(
                 EventDelivery.Retryer.BackoffRetryer.of(retryBackoff, listener),
                 EventDelivery.PermanentFailureHandler.StoreToDeadLetters.of(group, eventDeadLetters)));
