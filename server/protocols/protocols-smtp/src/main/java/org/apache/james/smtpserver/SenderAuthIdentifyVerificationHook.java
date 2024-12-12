@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -41,11 +42,13 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.MemoizedSupplier;
 import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.net.InternetDomainName;
 
 /**
@@ -148,7 +151,7 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
                     // Ignore invalid from header for relays
                     return HookResult.DECLINED;
                 } else {
-                    LOGGER.warn("Local user {} attempted to use an invalid From header", e);
+                    LOGGER.warn("Local user {} attempted to use an invalid From header", session.getUsername(), e);
                     throw new RuntimeException(e);
                 }
             }
@@ -168,15 +171,32 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
     private boolean fromDoesNotMatchAuthUser(SMTPSession session, Address from) {
         if (from instanceof InternetAddress internetAddress) {
             try {
-                MailAddress mailAddress = new MailAddress(internetAddress.getAddress());
-                return session.getUsername() != null &&
-                    (!fromMatchSessionUser(mailAddress, session) || !belongsToLocalDomain(mailAddress));
+                if (internetAddress.isGroup()) {
+                    boolean strict = true;
+                    InternetAddress[] addressGroup = internetAddress.getGroup(!strict);
+                    if (session.getUsername() != null && addressGroup.length == 0) {
+                        return true;
+                    }
+                    return Arrays.stream(addressGroup)
+                        .map(address -> fromDoesNotMatchAuthUser(session, address))
+                        .filter(b -> b)
+                        .findAny()
+                        .orElse(false);
+                }
+                return fromDoesNotMatchAuthUser(session, internetAddress);
             } catch (AddressException e) {
-                // Never happens as valid InternetAddress are valid MailAddress
-                throw new RuntimeException(e);
+                LOGGER.warn("Local user {} attempted to use an invalid From header", session.getUsername(), e);
+                return session.getUsername() != null; // Accept external invalid form header, reject invalid from from our users.
             }
         }
         return false;
+    }
+
+    private boolean fromDoesNotMatchAuthUser(SMTPSession session, InternetAddress internetAddress) {
+        MemoizedSupplier<MailAddress> mailAddress = MemoizedSupplier.of(Throwing.supplier(
+            () -> new MailAddress(internetAddress.getAddress())).sneakyThrow());
+        return session.getUsername() != null &&
+            (!fromMatchSessionUser(mailAddress.get(), session) || !belongsToLocalDomain(mailAddress.get()));
     }
 
     private boolean fromMatchSessionUser(MailAddress from, SMTPSession session) {

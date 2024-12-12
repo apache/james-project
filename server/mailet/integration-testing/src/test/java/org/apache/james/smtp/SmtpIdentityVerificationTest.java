@@ -185,6 +185,155 @@ class SmtpIdentityVerificationTest {
     }
 
     @Test
+    void spoofingAttemptsShouldBeRejectedInFromFieldWhenGroup(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        String message = """
+            FROM: MyGroup: victim@spoofed.info;\r
+            subject: test\r
+            \r
+            content\r
+            .\r
+            """;
+
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(USER, PASSWORD)
+                .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
+            .isInstanceOf(SMTPSendingException.class)
+            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+    }
+
+    @Test
+    void spoofingAttemptsShouldBeRejectedInFromFieldWhenGroupWithOtherUsers(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        String message = """
+            FROM: MyGroup: user@james.org, victim@spoofed.info;\r
+            subject: test\r
+            \r
+            content\r
+            .\r
+            """;
+
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(USER, PASSWORD)
+                .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
+            .isInstanceOf(SMTPSendingException.class)
+            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+    }
+
+    @Test
+    void shouldRejectEmptyGroups(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        String message = """
+            FROM: MyGroup: ;\r
+            subject: test\r
+            \r
+            content\r
+            .\r
+            """;
+
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(USER, PASSWORD)
+                .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
+            .isInstanceOf(SMTPSendingException.class)
+            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+    }
+
+    @Test
+    void shouldRejectInvalidWhenLocalUser(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        String message = """
+            FROM: INVALID\r
+            subject: test\r
+            \r
+            content\r
+            .\r
+            """;
+
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(USER, PASSWORD)
+                .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
+            .isInstanceOf(SMTPSendingException.class)
+            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+    }
+
+    @Test
+    void shouldAcceptGroupWhenUnauthenticated(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        String message = """
+            FROM: MyGroup: victim@spoofed.info;\r
+            subject: test\r
+            \r
+            content\r
+            .\r
+            """;
+
+        assertThatCode(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessageWithHeaders("victim@spoofed.info", ImmutableList.of(USER), message))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void shouldAcceptInvalidFromWhenUnauthenticated(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        String message = """
+            FROM: INVALID\r
+            subject: test\r
+            \r
+            content\r
+            .\r
+            """;
+
+        assertThatCode(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessageWithHeaders("victim@spoofed.info", ImmutableList.of(USER), message))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void shouldAcceptGroupWhenOnlyUser(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        String message = """
+            FROM: MyGroup: user@james.org;\r
+            subject: test\r
+            \r
+            content\r
+            .\r
+            """;
+
+        assertThatCode(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(USER, PASSWORD)
+                .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
     void errorsShouldBeIgnoredWhenUnAuthed(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
