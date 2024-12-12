@@ -22,6 +22,9 @@ package org.apache.james.events.delivery;
 import static org.apache.james.events.EventBus.Metrics.timerName;
 import static org.apache.james.util.ReactorUtils.context;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import jakarta.inject.Inject;
 
 import org.apache.james.events.Event;
@@ -35,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -52,9 +56,17 @@ public class InVmEventDelivery implements EventDelivery {
 
     @Override
     public Mono<Void> deliver(EventListener.ReactiveEventListener listener, Event event, DeliveryOption option) {
-        Mono<Void> executionResult = deliverByOption(listener, event, option);
+        return deliver(listener, ImmutableList.of(event), option);
+    }
 
-        return waitForResultIfNeeded(listener.getExecutionMode(), executionResult);
+    @Override
+    public Mono<Void> deliver(EventListener.ReactiveEventListener listener, List<Event> events, DeliveryOption option) {
+        if (isHandling(listener, events)) {
+            Mono<Void> executionResult = deliverByOption(listener, events, option);
+
+            return waitForResultIfNeeded(listener.getExecutionMode(), executionResult);
+        }
+        return Mono.empty();
     }
 
     private Mono<Void> waitForResultIfNeeded(EventListener.ExecutionMode executionMode, Mono<Void> executionResult) {
@@ -66,39 +78,70 @@ public class InVmEventDelivery implements EventDelivery {
             .onErrorResume(throwable -> Mono.empty());
     }
 
-    private Mono<Void> deliverByOption(EventListener.ReactiveEventListener listener, Event event, DeliveryOption deliveryOption) {
-        Mono<Void> deliveryToListener = doDeliverToListener(listener, event)
-            .doOnError(throwable -> structuredLogger(event, listener)
+    private Mono<Void> deliverByOption(EventListener.ReactiveEventListener listener, List<Event> events, DeliveryOption deliveryOption) {
+        Mono<Void> deliveryToListener = doDeliverToListener(listener, events)
+            .doOnError(throwable -> structuredLogger(events, listener)
                 .log(logger -> logger.error("Error while processing listener", throwable)))
             .then();
 
-        return deliveryOption.getRetrier().doRetry(deliveryToListener, event)
-            .onErrorResume(throwable -> deliveryOption.getPermanentFailureHandler().handle(event))
-            .then();
+        return deliveryOption.getRetrier().doRetry(deliveryToListener, events)
+            .then()
+            .onErrorResume(e -> Flux.fromIterable(events)
+                .concatMap(event -> deliveryOption.getPermanentFailureHandler().handle(event))
+                .then());
     }
 
-    private Mono<Void> doDeliverToListener(EventListener.ReactiveEventListener listener, Event event) {
-        if (listener.isHandling(event)) {
-            return Mono.defer(() -> Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
-                    listener.reactiveEvent(event))))
-                .contextWrite(context("deliver", buildMDC(listener, event)));
+    private Mono<Void> doDeliverToListener(EventListener.ReactiveEventListener listener, List<Event> events) {
+        return Mono.defer(() -> Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
+                listener.reactiveEvent(events))))
+            .contextWrite(context("deliver", buildMDC(listener, events)));
+    }
+
+    private static boolean isHandling(EventListener.ReactiveEventListener listener, List<Event> events) {
+        return events.stream().anyMatch(listener::isHandling);
+    }
+
+    private MDCBuilder buildMDC(EventListener listener, List<Event> events) {
+        if (events.size() == 1) {
+            return MDCBuilder.create()
+                .addToContext(EventBus.StructuredLoggingFields.EVENT_ID, events.getFirst().getEventId().toString())
+                .addToContext(EventBus.StructuredLoggingFields.EVENT_CLASS, events.getFirst().getClass().getCanonicalName())
+                .addToContext(EventBus.StructuredLoggingFields.USER, events.getFirst().getUsername().asString())
+                .addToContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass().getCanonicalName());
         }
-        return Mono.empty();
-    }
 
-    private MDCBuilder buildMDC(EventListener listener, Event event) {
         return MDCBuilder.create()
-            .addToContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId().toString())
-            .addToContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass().getCanonicalName())
-            .addToContext(EventBus.StructuredLoggingFields.USER, event.getUsername().asString())
+            .addToContext(EventBus.StructuredLoggingFields.EVENT_ID, events.stream()
+                .map(e -> e.getEventId().getId().toString())
+                .collect(Collectors.joining(",")))
+            .addToContext(EventBus.StructuredLoggingFields.EVENT_CLASS, events.stream()
+                .map(e -> e.getClass().getCanonicalName())
+                .collect(Collectors.joining(",")))
+            .addToContext(EventBus.StructuredLoggingFields.USER, events.stream()
+                .map(e -> e.getUsername().asString())
+                .collect(Collectors.joining(",")))
             .addToContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass().getCanonicalName());
     }
 
-    private StructuredLogger structuredLogger(Event event, EventListener listener) {
+    private StructuredLogger structuredLogger(List<Event> events, EventListener listener) {
+        if (events.size() == 1) {
+            return MDCStructuredLogger.forLogger(LOGGER)
+                .field(EventBus.StructuredLoggingFields.EVENT_ID, events.getFirst().getEventId().toString())
+                .field(EventBus.StructuredLoggingFields.EVENT_CLASS, events.getFirst().getClass().getCanonicalName())
+                .field(EventBus.StructuredLoggingFields.USER, events.getFirst().getUsername().asString())
+                .field(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass().getCanonicalName());
+        }
         return MDCStructuredLogger.forLogger(LOGGER)
-            .field(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId().getId().toString())
-            .field(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass().getCanonicalName())
-            .field(EventBus.StructuredLoggingFields.USER, event.getUsername().asString())
+            .field(EventBus.StructuredLoggingFields.EVENT_ID, events.stream()
+                .map(e -> e.getEventId().getId().toString())
+                .collect(Collectors.joining(",")))
+            .field(EventBus.StructuredLoggingFields.EVENT_CLASS, events.stream()
+                .map(e -> e.getClass().getCanonicalName())
+                .collect(Collectors.joining(",")))
+            .field(EventBus.StructuredLoggingFields.USER, events.stream()
+                .map(e -> e.getUsername().asString())
+                .collect(Collectors.joining(",")))
             .field(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass().getCanonicalName());
+
     }
 }

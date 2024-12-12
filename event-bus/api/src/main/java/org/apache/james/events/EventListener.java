@@ -40,6 +40,7 @@ public interface EventListener {
 
         default Publisher<Void> reactiveEvent(List<Event> event) {
             return Flux.fromIterable(event)
+                .filter(this::isHandling)
                 .concatMap(this::reactiveEvent)
                 .then();
         }
