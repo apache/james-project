@@ -41,7 +41,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class SmtpTlsMessageHookTest {
+class SmtpRequireTlsMessageHookTest {
     private final SMTPServerTestSystem testSystem = new SMTPServerTestSystem();
     private static final String REQUIRETLS = "REQUIRETLS";
     private static final AttributeName REQUIRETLS_ATTRIBUTE_NAME = AttributeName.of(REQUIRETLS);

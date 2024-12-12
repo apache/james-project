@@ -60,9 +60,9 @@ import org.apache.james.smtpserver.dsn.DSNRcptParameterHook;
 import org.apache.james.smtpserver.priority.SmtpMtPriorityEhloHook;
 import org.apache.james.smtpserver.priority.SmtpMtPriorityMessageHook;
 import org.apache.james.smtpserver.priority.SmtpMtPriorityParameterHook;
-import org.apache.james.smtpserver.tls.SmtpTlsEhloHook;
-import org.apache.james.smtpserver.tls.SmtpTlsMessageHook;
-import org.apache.james.smtpserver.tls.SmtpTlsParameterHook;
+import org.apache.james.smtpserver.tls.SmtpRequireTlsEhloHook;
+import org.apache.james.smtpserver.tls.SmtpRequireTlsMessageHook;
+import org.apache.james.smtpserver.tls.SmtpRequireTlsParameterHook;
 import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
@@ -104,9 +104,9 @@ class SmtpRequireTlsRelayTest {
                 .addHook(DSNMailParameterHook.class.getName())
                 .addHook(DSNRcptParameterHook.class.getName())
                 .addHook(DSNMessageHook.class.getName())
-                .addHook(SmtpTlsEhloHook.class.getName())
-                .addHook(SmtpTlsParameterHook.class.getName())
-                .addHook(SmtpTlsMessageHook.class.getName())
+                .addHook(SmtpRequireTlsEhloHook.class.getName())
+                .addHook(SmtpRequireTlsParameterHook.class.getName())
+                .addHook(SmtpRequireTlsMessageHook.class.getName())
                 .withAutorizedAddresses("0.0.0.0/0.0.0.0");
 
         if (usePriority) {

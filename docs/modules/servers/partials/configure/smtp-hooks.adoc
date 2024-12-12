@@ -361,9 +361,9 @@ These hooks are designed to support the SMTP service extension, REQUIRETLS, and 
         <!-- ... -->
     </tls>
  <handlerchain>
-        <handler class="org.apache.james.smtpserver.tls.SmtpTlsEhloHook"/>
-        <handler class="org.apache.james.smtpserver.tls.SmtpTlsParameterHook"/>
-        <handler class="org.apache.james.smtpserver.tls.SmtpTlsMessageHook"/>
+        <handler class="org.apache.james.smtpserver.tls.SmtpRequireTlsEhloHook"/>
+        <handler class="org.apache.james.smtpserver.tls.SmtpRequireTlsParameterHook"/>
+        <handler class="org.apache.james.smtpserver.tls.SmtpRequireTlsMessageHook"/>
         <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
     </handlerchain>
 </smtpserver>

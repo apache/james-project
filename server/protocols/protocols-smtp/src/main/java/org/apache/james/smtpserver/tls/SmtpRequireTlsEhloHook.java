@@ -25,7 +25,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 
-public class SmtpTlsEhloHook implements HeloHook {
+public class SmtpRequireTlsEhloHook implements HeloHook {
     @Override
     public Set<String> implementedEsmtpFeatures(SMTPSession session) {
         if (session.isTLSStarted()) {
