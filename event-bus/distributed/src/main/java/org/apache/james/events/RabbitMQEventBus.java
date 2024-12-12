@@ -32,6 +32,7 @@ import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
@@ -149,6 +150,19 @@ public class RabbitMQEventBus implements EventBus, Startable {
         Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
         if (!event.isNoop()) {
             return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-dispatch", eventDispatcher.dispatch(event, key)));
+        }
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<Void> dispatch(Collection<EventWithRegistrationKey> events) {
+        Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
+
+        ImmutableList<EventWithRegistrationKey> notNoopEvents = events.stream()
+            .filter(e -> !e.event().isNoop())
+            .collect(ImmutableList.toImmutableList());
+        if (!notNoopEvents.isEmpty()) {
+            return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-dispatch", eventDispatcher.dispatch(events)));
         }
         return Mono.empty();
     }

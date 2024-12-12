@@ -32,11 +32,19 @@ public interface EventSerializer {
         return toJson(event).getBytes(StandardCharsets.UTF_8);
     }
 
+    default byte[] toJsonBytes(Collection<Event> event) {
+        return toJson(event).getBytes(StandardCharsets.UTF_8);
+    }
+
     Event asEvent(String serialized);
 
     List<Event> asEvents(String serialized);
 
     default Event fromBytes(byte[] serialized) {
         return asEvent(new String(serialized, StandardCharsets.UTF_8));
+    }
+
+    default List<Event> asEventsFromBytes(byte[] serialized) {
+        return asEvents(new String(serialized, StandardCharsets.UTF_8));
     }
 }

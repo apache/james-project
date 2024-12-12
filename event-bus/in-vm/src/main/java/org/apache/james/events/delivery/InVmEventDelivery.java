@@ -92,6 +92,9 @@ public class InVmEventDelivery implements EventDelivery {
     }
 
     private Mono<Void> doDeliverToListener(EventListener.ReactiveEventListener listener, List<Event> events) {
+        if (events.stream().noneMatch(listener::isHandling)) {
+            return Mono.empty();
+        }
         return Mono.defer(() -> Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
                 listener.reactiveEvent(events))))
             .contextWrite(context("deliver", buildMDC(listener, events)));

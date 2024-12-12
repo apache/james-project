@@ -27,6 +27,7 @@ import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateExclusive;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -173,6 +174,13 @@ class GroupRegistration implements Registration {
             .onErrorResume(throwable -> retryHandler.handleRetry(event, currentRetryCount, throwable));
     }
 
+    public Mono<Void> runListenerReliably(int currentRetryCount, List<Event> events) {
+        return runListener(events)
+            .onErrorResume(throwable -> Flux.fromIterable(events)
+                .concatMap(event -> retryHandler.handleRetry(event, currentRetryCount, throwable))
+                .then());
+    }
+
     private Mono<Event> deserializeEvent(byte[] eventAsBytes) {
         return Mono.fromCallable(() -> eventSerializer.fromBytes(eventAsBytes))
             .subscribeOn(Schedulers.parallel());
@@ -188,6 +196,14 @@ class GroupRegistration implements Registration {
             MDCBuilder.create()
                 .addToContext(EventBus.StructuredLoggingFields.GROUP, group.asString()),
             event);
+    }
+
+    private Mono<Void> runListener(List<Event> events) {
+        return listenerExecutor.execute(
+            listener,
+            MDCBuilder.create()
+                .addToContext(EventBus.StructuredLoggingFields.GROUP, group.asString()),
+            events);
     }
 
     private int getRetryCount(AcknowledgableDelivery acknowledgableDelivery) {
