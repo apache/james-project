@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.github.fge.lambdas.Throwing;
 import jakarta.inject.Inject;
 import jakarta.mail.Address;
 import jakarta.mail.MessagingException;
@@ -49,6 +48,7 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.net.InternetDomainName;
 
 /**
