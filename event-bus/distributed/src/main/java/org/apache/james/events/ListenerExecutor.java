@@ -22,6 +22,8 @@ package org.apache.james.events;
 import static org.apache.james.events.EventBus.Metrics.timerName;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
@@ -50,11 +52,46 @@ class ListenerExecutor {
         return Mono.empty();
     }
 
+    Mono<Void> execute(EventListener.ReactiveEventListener listener, MDCBuilder mdcBuilder, List<Event> events) {
+        if (events.size() == 1) {
+            return execute(listener, mdcBuilder, events.getFirst());
+        }
+        if (events.stream().noneMatch(listener::isHandling)) {
+            return Mono.empty();
+        }
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
+            Mono.from(listener.reactiveEvent(events))
+                .contextWrite(ReactorUtils.context("ListenerExecutor", mdc(listener, mdcBuilder, events)))
+                .timeout(TIMEOUT)));
+    }
+
     private MDCBuilder mdc(EventListener listener, MDCBuilder mdcBuilder, Event event) {
         return mdcBuilder
             .addToContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId().getId().toString())
             .addToContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass().getCanonicalName())
             .addToContext(EventBus.StructuredLoggingFields.USER, event.getUsername().asString())
+            .addToContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass().getCanonicalName());
+    }
+
+    private MDCBuilder mdc(EventListener listener, MDCBuilder mdcBuilder, List<Event> events) {
+        if (events.size() == 1) {
+            return mdcBuilder
+                .addToContext(EventBus.StructuredLoggingFields.EVENT_ID, events.getFirst().getEventId().toString())
+                .addToContext(EventBus.StructuredLoggingFields.EVENT_CLASS, events.getFirst().getClass().getCanonicalName())
+                .addToContext(EventBus.StructuredLoggingFields.USER, events.getFirst().getUsername().asString())
+                .addToContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass().getCanonicalName());
+        }
+
+        return mdcBuilder
+            .addToContext(EventBus.StructuredLoggingFields.EVENT_ID, events.stream()
+                .map(e -> e.getEventId().getId().toString())
+                .collect(Collectors.joining(",")))
+            .addToContext(EventBus.StructuredLoggingFields.EVENT_CLASS, events.stream()
+                .map(e -> e.getClass().getCanonicalName())
+                .collect(Collectors.joining(",")))
+            .addToContext(EventBus.StructuredLoggingFields.USER, events.stream()
+                .map(e -> e.getUsername().asString())
+                .collect(Collectors.joining(",")))
             .addToContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass().getCanonicalName());
     }
 }

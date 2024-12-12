@@ -30,6 +30,7 @@ import static org.apache.james.backends.rabbitmq.Constants.evaluateExclusive;
 import static org.apache.james.events.GroupRegistration.DEFAULT_RETRY_COUNT;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -138,10 +139,10 @@ class GroupRegistrationHandler {
     private Mono<Void> deliver(AcknowledgableDelivery acknowledgableDelivery) {
         byte[] eventAsBytes = acknowledgableDelivery.getBody();
 
-        return deserializeEvent(eventAsBytes)
-            .flatMapIterable(aa -> groupRegistrations.values()
+        return deserializeEvents(eventAsBytes)
+            .flatMapIterable(events -> groupRegistrations.values()
                 .stream()
-                .map(group -> Pair.of(group, aa))
+                .map(group -> Pair.of(group, events))
                 .collect(ImmutableList.toImmutableList()))
             .flatMap(event -> event.getLeft().runListenerReliably(DEFAULT_RETRY_COUNT, event.getRight()))
             .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack).subscribeOn(Schedulers.boundedElastic()))
@@ -154,8 +155,8 @@ class GroupRegistrationHandler {
             });
     }
 
-    private Mono<Event> deserializeEvent(byte[] eventAsBytes) {
-        return Mono.fromCallable(() -> eventSerializer.fromBytes(eventAsBytes));
+    private Mono<List<Event>> deserializeEvents(byte[] eventAsBytes) {
+        return Mono.fromCallable(() -> eventSerializer.asEventsFromBytes(eventAsBytes));
     }
 
     void stop() {
