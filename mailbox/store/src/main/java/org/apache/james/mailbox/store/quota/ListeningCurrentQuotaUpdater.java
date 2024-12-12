@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.store.quota;
 
 import java.time.Instant;
+import java.util.List;
 
 import jakarta.inject.Inject;
 
@@ -36,6 +37,8 @@ import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.events.MailboxEvents.MetaDataHoldingEvent;
+import org.apache.james.mailbox.events.MessageMoveEvent;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
@@ -100,6 +103,37 @@ public class ListeningCurrentQuotaUpdater implements EventListener.ReactiveGroup
             return handleMailboxAddedEvent(mailboxAdded);
         }
         return Mono.empty();
+    }
+
+    @Override
+    public Publisher<Void> reactiveEvent(List<Event> event) {
+        Mono<Boolean> isAMove = event.stream()
+            .filter(MessageMoveEvent.class::isInstance)
+            .map(MessageMoveEvent.class::cast)
+            .findAny()
+            .map(move -> {
+                boolean moveAsSingleMailbox = move.getMessageMoves().addedMailboxIds().size() == move.getMessageMoves().removedMailboxIds().size()
+                    && move.getMessageMoves().addedMailboxIds().size() == 1;
+                if (moveAsSingleMailbox) {
+                    return bothMailboxesBelongToSameRoot(move);
+                }
+                return Mono.just(false);
+            }).orElse(Mono.just(false));
+
+        return isAMove.flatMap(b -> {
+            if (b) {
+                return Mono.empty();
+            }
+            return Mono.from(ReactiveGroupEventListener.super.reactiveEvent(event));
+        });
+    }
+
+    private Mono<Boolean> bothMailboxesBelongToSameRoot(MessageMoveEvent move) {
+        MailboxId mailboxId1 = move.getMessageMoves().addedMailboxIds().iterator().next();
+        MailboxId mailboxId2 = move.getMessageMoves().removedMailboxIds().iterator().next();
+        return Mono.from(quotaRootResolver.getQuotaRootReactive(mailboxId1))
+            .zipWith(Mono.from(quotaRootResolver.getQuotaRootReactive(mailboxId2)))
+            .map(roots -> roots.getT1().equals(roots.getT2()));
     }
 
     private Mono<Void> handleExpungedEvent(Expunged expunged, QuotaRoot quotaRoot) {
