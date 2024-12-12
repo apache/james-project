@@ -65,6 +65,28 @@ class RecipientRewriteTableTest {
     }
 
     @Test
+    void rewriteSenderUponForwardParameter() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("vut")
+            .mailetContext(FakeMailContext.defaultContext())
+            .setProperty("rewriteSenderUponForward", "false")
+            .build());
+
+        assertThat(mailet.isRewriteSenderUponForward()).isFalse();
+    }
+
+    @Test
+    void forwardAutoSubmittedEmailsParameter() throws Exception {
+        mailet.init(FakeMailetConfig.builder()
+            .mailetName("vut")
+            .mailetContext(FakeMailContext.defaultContext())
+            .setProperty("forwardAutoSubmittedEmails", "true")
+            .build());
+
+        assertThat(mailet.isRewriteSenderUponForward()).isTrue();
+    }
+
+    @Test
     void getMailetInfoShouldReturnCorrectInformation() {
         assertThat(mailet.getMailetInfo()).isEqualTo("RecipientRewriteTable Mailet");
     }

@@ -30,6 +30,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.GenericMailet;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -76,12 +77,21 @@ public class RecipientRewriteTable extends GenericMailet {
     @Override
     public void init() throws MessagingException {
         errorProcessor = new ProcessingState(getInitParameter(ERROR_PROCESSOR, Mail.ERROR));
-        rewriteSenderUponForward = getBooleanParameter("rewriteSenderUponForward", true);
-        forwardAutoSubmittedEmails = getBooleanParameter("forwardAutoSubmittedEmails", false);
+        rewriteSenderUponForward = getBooleanParameter(getInitParameter("rewriteSenderUponForward"), true);
+        forwardAutoSubmittedEmails = getBooleanParameter(getInitParameter("forwardAutoSubmittedEmails"), false);
         processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, getMailetContext(), errorProcessor,
             rewriteSenderUponForward, forwardAutoSubmittedEmails);
     }
 
+    @VisibleForTesting
+    public boolean isRewriteSenderUponForward() {
+        return rewriteSenderUponForward;
+    }
+
+    @VisibleForTesting
+    public boolean isForwardAutoSubmittedEmails() {
+        return forwardAutoSubmittedEmails;
+    }
 
     /**
      * The service rewrite the recipient list of mail. The method should:
