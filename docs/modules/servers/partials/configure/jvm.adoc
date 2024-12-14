@@ -100,6 +100,15 @@ james.jmap.reactor.netty.metrics.enabled=true
 ----
 To enable the metrics.
 
+== Set up JMAP EMail/set range threshold
+
+From which point should range operation be used? Defaults to 3.
+
+Ex in `jvm.properties`:
+----
+james.jmap.email.set.range.threshold=3
+----
+
 == Enable S3 metrics
 
 James supports extracting some S3 client-level metrics e.g. number of connections being used, time to acquire an S3 connection, total time to finish a S3 request...
