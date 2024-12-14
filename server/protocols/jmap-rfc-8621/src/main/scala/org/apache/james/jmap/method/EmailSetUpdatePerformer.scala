@@ -27,7 +27,7 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.mail.{EmailSet, EmailSetRequest, MailboxIds, UnparsedMessageId, ValidatedEmailSetUpdate}
-import org.apache.james.jmap.method.EmailSetUpdatePerformer.{EmailUpdateFailure, EmailUpdateResult, EmailUpdateResults, EmailUpdateSuccess}
+import org.apache.james.jmap.method.EmailSetUpdatePerformer.{EmailUpdateFailure, EmailUpdateResult, EmailUpdateResults, EmailUpdateSuccess, RANGE_THRESHOLD}
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode
 import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaException}
 import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, MailboxId, MessageId, MessageRange}
@@ -40,6 +40,7 @@ import scala.jdk.CollectionConverters._
 
 object EmailSetUpdatePerformer {
   private val LOGGER = LoggerFactory.getLogger(classOf[EmailSetUpdatePerformer])
+  private val RANGE_THRESHOLD = Option(System.getProperty("james.jmap.email.set.range.threshold")).map(s => s.toInt).getOrElse(3)
   trait EmailUpdateResult
   case class EmailUpdateSuccess(messageId: MessageId) extends EmailUpdateResult
   case class EmailUpdateFailure(unparsedMessageId: UnparsedMessageId, e: Throwable) extends EmailUpdateResult {
@@ -127,7 +128,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
     val sameUpdate: Boolean = validUpdates.map(_._2).distinctBy(_.update).size == 1
     val singleMailbox: Boolean = metaData.values.flatten.map(_.getComposedMessageId.getMailboxId).toSet.size == 1
 
-    if (sameUpdate && singleMailbox && validUpdates.size > 3) {
+    if (sameUpdate && singleMailbox && validUpdates.size > RANGE_THRESHOLD) {
       val update: ValidatedEmailSetUpdate = validUpdates.map(_._2).headOption.get
       val ranges: List[MessageRange] = asRanges(metaData)
       val mailboxId: MailboxId = metaData.values.flatten.map(_.getComposedMessageId.getMailboxId).headOption.get
