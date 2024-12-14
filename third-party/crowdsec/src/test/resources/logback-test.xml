@@ -37,23 +37,29 @@
             <maxFileSize>100MB</maxFileSize>
         </triggeringPolicy>
 
-        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-            <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
-                <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampFormat>
-                <timestampFormatTimezoneId>Etc/UTC</timestampFormatTimezoneId>
-
-                <!-- Importance for handling multiple lines log -->
-                <appendLineSeparator>true</appendLineSeparator>
-
-                <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
-                    <prettyPrint>false</prettyPrint>
-                </jsonFormatter>
-            </layout>
+        <encoder class="ch.qos.logback.classic.encoder.JsonEncoder">
+            <withFormattedMessage>true</withFormattedMessage>
         </encoder>
+        <immediateFlush>false</immediateFlush>
     </appender>
     <root level="WARN">
         <appender-ref ref="LOG_FILE" />
+<!--        <appender-ref ref="CONSOLE" />-->
     </root>
 
     <logger name="org.apache.james" level="INFO" />
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%-5level] %logger{15} - %msg%n%rEx</pattern>
+        </encoder>
+        <immediateFlush>false</immediateFlush>
+        <!-- Disable below block for debug logs mode-->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+<!--    <logger name="tc" level="INFO" additivity="false">-->
+<!--        <appender-ref ref="CONSOLE"/>-->
+<!--    </logger>-->
 </configuration>

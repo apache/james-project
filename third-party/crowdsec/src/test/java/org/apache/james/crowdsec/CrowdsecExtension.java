@@ -34,8 +34,11 @@ import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
 import org.apache.james.crowdsec.client.CrowdsecHttpClient;
 import org.apache.james.util.docker.RateLimiters;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 import org.testcontainers.utility.MountableFile;
 
@@ -47,7 +50,8 @@ import com.google.inject.Provides;
 public class CrowdsecExtension implements GuiceModuleTestExtension {
     public static final Duration STARTUP_TIMEOUT = Duration.ofMinutes(5);
     public static final int CROWDSEC_PORT = 8080;
-    public static final String CROWDSEC_IMAGE = "crowdsecurity/crowdsec:v1.5.4";
+    public static final String CROWDSEC_IMAGE = "crowdsecurity/crowdsec:v1.6.4";
+    private static final Logger LOGGER = LoggerFactory.getLogger("tc.crowdsec");
 
     private final GenericContainer<?> crowdsecContainer;
 
@@ -56,12 +60,15 @@ public class CrowdsecExtension implements GuiceModuleTestExtension {
             .withCreateContainerCmdModifier(cmd -> cmd.withName("james-crowdsec-test-" + UUID.randomUUID()))
             .withExposedPorts(CROWDSEC_PORT)
             .withStartupTimeout(STARTUP_TIMEOUT)
+
             .withCopyFileToContainer(MountableFile.forClasspathResource("crowdsec/acquis.yaml"), "/etc/crowdsec/")
             .withCopyFileToContainer(MountableFile.forClasspathResource("crowdsec/parsers/syslog-logs.yaml"), "/etc/crowdsec/parsers/s00-raw/")
             .withCopyFileToContainer(MountableFile.forClasspathResource("crowdsec/parsers/james-auth.yaml"), "/etc/crowdsec/parsers/s01-parse/")
             .withCopyFileToContainer(MountableFile.forClasspathResource("crowdsec/scenarios/james-bf-auth.yaml"), "/etc/crowdsec/scenarios/")
             .withCopyFileToContainer(MountableFile.forClasspathResource("crowdsec/scenarios/james-dictionary-attack.yaml"), "/etc/crowdsec/scenarios/")
             .withCopyFileToContainer(MountableFile.forClasspathResource("crowdsec/collections/james.yaml"), "/etc/crowdsec/collections/")
+            .withEnv("DISABLE_PARSERS", "crowdsecurity/whitelists crowdsecurity/geoip-enrich crowdsecurity/dateparse-enrich")
+            .withLogConsumer(new Slf4jLogConsumer(LOGGER))
             .withFileSystemBind("src/test/resources/log", "/var/log", BindMode.READ_WRITE)
             .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     }
