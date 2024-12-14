@@ -96,7 +96,6 @@ public interface ProtocolMDCContextFactory {
     static MDCBuilder forSession(ProtocolSession protocolSession) {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.SESSION_ID, protocolSession.getSessionID())
-            .addToContext(MDCBuilder.CHARSET, protocolSession.getCharset().displayName())
             .addToContextIfPresent(MDCBuilder.USER, Optional.ofNullable(protocolSession.getUsername()).map(Username::asString));
     }
 

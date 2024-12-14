@@ -651,7 +651,7 @@
         <lucene.version>9.11.1</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>7.0.0</guice.version>
-        <logback.version>1.4.14</logback.version>
+        <logback.version>1.5.12</logback.version>
         <tink.version>1.9.0</tink.version>
         <lettuce.core.version>6.3.2.RELEASE</lettuce.core.version>
         <io.micrometer.core.version>1.13.6</io.micrometer.core.version>
@@ -2075,11 +2075,6 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback.contrib</groupId>
-                <artifactId>logback-json-classic</artifactId>
-                <version>0.1.5</version>
             </dependency>
             <dependency>
                 <groupId>com.beetstra.jutf7</groupId>
