@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import java.util.stream.Collectors;
-
 import jakarta.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
