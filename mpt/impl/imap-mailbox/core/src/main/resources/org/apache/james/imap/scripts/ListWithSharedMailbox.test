@@ -75,6 +75,15 @@ S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
 }
 S: a7 OK LIST completed.
 
+C: a7bis LIST "#user." "*"
+SUB {
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
+}
+S: a7bis OK LIST completed.
+
 # When looking up private namespace the shared mailboxes are not included
 C: a8 LIST "#private" "%"
 S: \* LIST \(\\HasNoChildren\) \"\.\" \"#private.INBOX\"
