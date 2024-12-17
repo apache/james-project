@@ -97,7 +97,10 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
       }
 
       SMono(messageIdManager.delete(messageIds.toSet.asJava, mailboxSession))
-        .doOnSuccess(auditTrail(_, mailboxSession))
+        .subscriberContext(context => {
+          auditTrail(messageIds, mailboxSession)
+          context
+        })
         .map(DestroyResult.from)
         .onErrorResume(e => SMono.just(messageIds.map(id => DestroyFailure(EmailSet.asUnparsed(id), e))))
         .map(_ ++ parsingErrors)
@@ -107,13 +110,13 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
     }
   }
 
-  private def auditTrail(deleteResult: DeleteResult, mailboxSession: MailboxSession): Unit =
-    if (!deleteResult.getDestroyed.isEmpty) {
+  private def auditTrail(deleteResult: Seq[MessageId], mailboxSession: MailboxSession): Unit =
+    if (deleteResult.nonEmpty) {
       AuditTrail.entry
         .username(() => mailboxSession.getUser.asString())
         .protocol("JMAP")
         .action("Email/set destroy")
-        .parameters(() => ImmutableMap.of("messageIds", StringUtils.join(deleteResult.getDestroyed),
+        .parameters(() => ImmutableMap.of("messageIds", StringUtils.join(deleteResult),
           "loggedInUser", mailboxSession.getLoggedInUser.toScala
             .map(_.asString())
             .getOrElse("")))
