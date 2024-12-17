@@ -163,8 +163,8 @@
         &lt;trafficShaping&gt;
             &lt;writeTrafficPerSecond&gt;0&lt;/writeTrafficPerSecond&gt;
             &lt;readTrafficPerSecond&gt;0&lt;/readTrafficPerSecond&gt;
-            &lt;checkInterval&gt;1&lt;/checkInterval&gt;
-            &lt;maxDelays&gt;30&lt;/maxDelays&gt;
+            &lt;checkInterval&gt;1000&lt;/checkInterval&gt;
+            &lt;maxDelays&gt;15000&lt;/maxDelays&gt;
         &lt;/trafficShaping&gt;
 &lt;/imapserver&gt;
         </code></pre>

@@ -19,6 +19,9 @@
 
 package org.apache.james.imapserver.netty;
 
+import static io.netty.handler.traffic.AbstractTrafficShapingHandler.DEFAULT_CHECK_INTERVAL;
+import static io.netty.handler.traffic.AbstractTrafficShapingHandler.DEFAULT_MAX_TIME;
+
 import org.apache.commons.configuration2.Configuration;
 
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
@@ -28,8 +31,8 @@ public record TrafficShapingConfiguration(long writeLimit, long readLimit, long 
         return new TrafficShapingConfiguration(
             configuration.getLong("writeTrafficPerSecond", 0),
             configuration.getLong("readTrafficPerSecond", 0),
-            configuration.getLong("checkInterval", 30),
-            configuration.getLong("maxDelays", 30));
+            configuration.getLong("checkInterval", DEFAULT_CHECK_INTERVAL),
+            configuration.getLong("maxDelays", DEFAULT_MAX_TIME));
     }
 
     public ChannelTrafficShapingHandler newHandler() {

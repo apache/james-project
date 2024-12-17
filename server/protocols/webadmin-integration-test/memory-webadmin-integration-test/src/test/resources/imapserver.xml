@@ -40,8 +40,8 @@ under the License.
         <trafficShaping>
             <writeTrafficPerSecond>0</writeTrafficPerSecond>
             <readTrafficPerSecond>0</readTrafficPerSecond>
-            <checkInterval>1</checkInterval>
-            <maxDelays>30</maxDelays>
+            <checkInterval>1000</checkInterval>
+            <maxDelays>15000</maxDelays>
         </trafficShaping>
     </imapserver>
     <imapserver enabled="true">
