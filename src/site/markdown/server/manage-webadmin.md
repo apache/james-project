@@ -4968,7 +4968,7 @@ Will destroy channels belonging to `bob@domain.tld`.
 
 Return code:
 
-- 204: the certificate is reloaded
+- 204: disconnect the user successfully
 
 #### Disconnecting all users
 
@@ -4980,7 +4980,7 @@ Will close all channels.
 
 Return code:
 
-- 204: the certificate is reloaded
+- 204: disconnect all users successfully
 
 #### Disconnecting a group of users
 
@@ -4992,7 +4992,7 @@ Will disconnect `badGuy1@domain.tld` and `badGuy2@domain.tld`.
 
 Return code:
 
-- 204: the certificate is reloaded
+- 204: disconnect the users successfully
 - 400: Invalid request
 
 ### Listing connected users
