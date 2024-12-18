@@ -64,11 +64,11 @@ statics:
   - parsed: mdc_username
     expression: evt.Unmarshaled.message.mdc.username
   - parsed: logger
-    expression: evt.Unmarshaled.message.logger
+    expression: evt.Unmarshaled.message.loggerName
   - parsed: message
-    expression: evt.Unmarshaled.message.message
+    expression: evt.Unmarshaled.message.formattedMessage
   - parsed: context
-    expression: evt.Unmarshaled.message.context
+    expression: ToJsonString(evt.Unmarshaled.message.context)
   - meta: datasource_path
     expression: evt.Line.Src
   - meta: datasource_type
