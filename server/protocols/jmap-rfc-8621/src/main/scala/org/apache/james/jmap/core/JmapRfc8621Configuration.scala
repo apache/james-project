@@ -20,16 +20,20 @@
 package org.apache.james.jmap.core
 
 import java.net.URI
+import java.time.temporal.ChronoUnit
 import java.util.Optional
 
+import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.JmapRfc8621Configuration.{JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT, JMAP_MAX_OBJECT_IN_GET, JMAP_MAX_OBJECT_IN_SET, JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT, MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT, UPLOAD_LIMIT_DEFAULT}
 import org.apache.james.jmap.pushsubscription.PushClientConfiguration
-import org.apache.james.util.Size
+import org.apache.james.util.{DurationParser, Size}
 
+import scala.concurrent.duration.Duration
 import scala.jdk.CollectionConverters._
+import scala.jdk.DurationConverters._
 import scala.jdk.OptionConverters._
 
 object JmapConfigProperties {
@@ -37,6 +41,7 @@ object JmapConfigProperties {
   val MAX_SIZE_ATTACHMENTS_PER_MAIL_PROPERTY: String = "max.size.attachments.per.mail"
   val URL_PREFIX_PROPERTY: String = "url.prefix"
   val WEBSOCKET_URL_PREFIX_PROPERTY: String = "websocket.url.prefix"
+  val WEBSOCKET_PING_INTERVAL_PROPERTY: String = "websocket.ping.interval"
   val WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY: String = "webpush.maxTimeoutSeconds"
   val WEB_PUSH_MAX_CONNECTIONS_PROPERTY: String = "webpush.maxConnections"
   val WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY: String = "webpush.prevent.server.side.request.forgery"
@@ -70,6 +75,12 @@ object JmapRfc8621Configuration {
     JmapRfc8621Configuration(
       urlPrefixString = Option(configuration.getString(URL_PREFIX_PROPERTY)).getOrElse(URL_PREFIX_DEFAULT),
       websocketPrefixString = Option(configuration.getString(WEBSOCKET_URL_PREFIX_PROPERTY)).getOrElse(WEBSOCKET_URL_PREFIX_DEFAULT),
+      websocketPingInterval = Option(configuration.getString(WEBSOCKET_PING_INTERVAL_PROPERTY))
+        .map(DurationParser.parse(_, ChronoUnit.SECONDS))
+        .map(duration => {
+          Preconditions.checkArgument(!duration.isZero && !duration.isNegative, s"`$WEBSOCKET_PING_INTERVAL_PROPERTY` must be positive".asInstanceOf[Object])
+          duration.toScala
+        }),
       dynamicJmapPrefixResolutionEnabled = configuration.getBoolean(DYNAMIC_JMAP_PREFIX_RESOLUTION_ENABLED_PROPERTY, false),
       supportsDelaySends = configuration.getBoolean(DELAY_SENDS_ENABLED, false),
       maxUploadSize = Option(configuration.getString(UPLOAD_LIMIT_PROPERTY, null))
@@ -107,6 +118,7 @@ object JmapRfc8621Configuration {
 
 case class JmapRfc8621Configuration(urlPrefixString: String,
                                     websocketPrefixString: String,
+                                    websocketPingInterval: Option[Duration] = None,
                                     dynamicJmapPrefixResolutionEnabled: Boolean = false,
                                     supportsDelaySends: Boolean = false,
                                     maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_DEFAULT,

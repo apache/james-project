@@ -26,7 +26,7 @@ import java.util.{Optional, stream}
 
 import com.google.common.collect.ImmutableMap
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
-import io.netty.handler.codec.http.websocketx.WebSocketFrame
+import io.netty.handler.codec.http.websocketx.{PingWebSocketFrame, TextWebSocketFrame, WebSocketFrame}
 import io.netty.handler.codec.http.{HttpHeaderNames, HttpMethod}
 import jakarta.inject.{Inject, Named}
 import org.apache.james.core.{ConnectionDescription, ConnectionDescriptionSupplier, Disconnector, Username}
@@ -51,9 +51,10 @@ import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
 import reactor.core.publisher.{Mono, Sinks}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
-import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
+import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse, WebsocketServerSpec}
 import reactor.netty.http.websocket.{WebsocketInbound, WebsocketOutbound}
 
+import scala.concurrent.duration.Duration
 import scala.jdk.CollectionConverters._
 
 object WebSocketRoutes {
@@ -75,6 +76,7 @@ case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration
 }
 
 class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
+                                 val configuration: JmapRfc8621Configuration,
                                  userProvisioner: UserProvisioning,
                                  @Named(JMAPInjectionKeys.JMAP) eventBus: EventBus,
                                  jmapApi: JMAPApi,
@@ -87,6 +89,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
   private val openingConnectionsMetric: Metric = metricFactory.generate("jmap_websocket_opening_connections_count")
   private val requestCountMetric: Metric = metricFactory.generate("jmap_websocket_requests_count")
   private val connectedUsers: java.util.concurrent.ConcurrentHashMap[ClientContext, ClientContext] = new java.util.concurrent.ConcurrentHashMap[ClientContext, ClientContext]
+  private val websocketServerSpec: WebsocketServerSpec = WebsocketServerSpec.builder.handlePing(false).build
 
   override def routes(): stream.Stream[JMAPRoute] = stream.Stream.of(
     JMAPRoute.builder
@@ -103,7 +106,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       .flatMap((mailboxSession: MailboxSession) => userProvisioner.provisionUser(mailboxSession)
         .`then`
         .`then`(SMono(httpServerResponse.addHeader(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, "jmap")
-          .sendWebsocket((in, out) => handleWebSocketConnection(mailboxSession)(in, out)))))
+          .sendWebsocket((in: WebsocketInbound, out: WebsocketOutbound) => handleWebSocketConnection(mailboxSession)(in, out), websocketServerSpec))))
       .onErrorResume(throwable => handleHttpHandshakeError(throwable, httpServerResponse))
       .asJava()
       .`then`()
@@ -115,11 +118,8 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
     val context = ClientContext(sink, new AtomicReference[Registration](), session)
     val responseFlux: SFlux[OutboundMessage] = SFlux[WebSocketFrame](in.aggregateFrames()
       .receiveFrames())
-      .map(frame => {
-        val bytes = new Array[Byte](frame.content().readableBytes)
-        frame.content().readBytes(bytes)
-        new String(bytes, StandardCharsets.UTF_8)
-      })
+      .filter(frame => frame.isInstanceOf[TextWebSocketFrame])
+      .map(frame => frame.asInstanceOf[TextWebSocketFrame].text())
       .doOnNext(_ => connectedUsers.put(context, context))
       .doOnNext(_ => requestCountMetric.increment())
       .flatMap(message => handleClientMessages(context)(message))
@@ -134,12 +134,20 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
         openingConnectionsMetric.decrement()
       })
 
-    out.sendString(
-      SFlux.merge(Seq(responseFlux, sink.asFlux()))
-        .map(pushSerializer.serialize)
-        .map(Json.stringify))
-      .`then`()
+    val responseAndSinkFlux: SFlux[WebSocketFrame] = SFlux.merge(Seq(responseFlux, sink.asFlux()))
+      .map(pushSerializer.serialize)
+      .map(json => new TextWebSocketFrame(Json.stringify(json)))
+
+    val resultFlux: SFlux[WebSocketFrame] = configuration.websocketPingInterval
+      .map(interval => responseAndSinkFlux.mergeWith(pingMessagePublisher(interval)))
+      .getOrElse(responseAndSinkFlux)
+
+    out.sendObject(resultFlux).`then`()
   }
+
+  private def pingMessagePublisher(duration: Duration): SFlux[WebSocketFrame] =
+    SFlux.interval(duration)
+      .map(_ => new PingWebSocketFrame())
 
   private def handleClientMessages(clientContext: ClientContext)(message: String): SMono[OutboundMessage] =
     pushSerializer.deserializeWebSocketInboundMessage(message)

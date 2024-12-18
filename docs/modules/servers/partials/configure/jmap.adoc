@@ -33,6 +33,10 @@ Defaults to an empty list.
 | websocket.url.prefix
 | Optional. URL for JMAP WebSocket route. Default value: ws://localhost
 
+| websocket.ping.interval
+| Optional. Configure the duration of the interval between consecutive ping messages (as specified in RFC6455) sent by the server to the client over a WebSocket connection.
+The supported unit is seconds (e.g: `3s` for a 3-second interval). Default is empty, this feature is disabled.
+
 | email.send.max.size
 | Optional. Configuration max size for message created in RFC-8621.
 Default value: None. Supported units are B (bytes) K (KB) M (MB) G (GB).
