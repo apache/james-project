@@ -24,6 +24,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.util.StreamUtils;
 
 public class StoreRequest extends AbstractImapRequest {
     private final IdRange[] idSet;
@@ -74,10 +75,11 @@ public class StoreRequest extends AbstractImapRequest {
 
     public String toString() {
         final StringBuilder builder = new StringBuilder(100);
-        builder.append("STORE ");
         if (isUseUids()) {
             builder.append("UID ");
         }
+        builder.append("STORE ");
+        StreamUtils.ofNullable(idSet).map(range -> " " + range.asString()).forEach(builder::append);
         if (isSilent()) {
             builder.append("SILENT ");
         }
@@ -105,6 +107,7 @@ public class StoreRequest extends AbstractImapRequest {
         if (flags.contains(Flags.Flag.RECENT)) {
             builder.append(" RECENT");
         }
+        StreamUtils.ofNullable(flags.getUserFlags()).map(flag -> flag + " ").forEach(builder::append);
         return builder.toString();
     }
 }
