@@ -512,7 +512,7 @@ public interface MailboxEvents {
 
         @Override
         public boolean isNoop() {
-            return updatedFlags.isEmpty();
+            return updatedFlags.isEmpty() || updatedFlags.stream().noneMatch(UpdatedFlags::flagsChanged);
         }
 
         @Override

@@ -985,6 +985,19 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void setFlagsShouldNotDispatchNoopEvents() throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .withFlags(new Flags(Flags.Flag.SEEN))
+                .build(message), session);
+
+            Mono.from(retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId))).block();
+            inboxManager.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
+
+            assertThat(listener.getEvents())
+                .isEmpty();
+        }
+
+        @Test
         void deleteMessageShouldFireExpungedEvent() throws Exception {
             ComposedMessageId messageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session).getId();
             inboxManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);

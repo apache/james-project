@@ -425,22 +425,19 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private Mono<Void> dispatchFlagsChange(MailboxSession mailboxSession, MailboxId mailboxId, ImmutableList<UpdatedFlags> updatedFlags, List<Mailbox> knownMailboxes) {
-        if (updatedFlags.stream().anyMatch(UpdatedFlags::flagsChanged)) {
-            return knownMailboxes.stream()
-                .filter(knownMailbox -> knownMailbox.getMailboxId().equals(mailboxId))
-                .findFirst()
-                .map(Mono::just)
-                .orElseGet(() -> mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId))
-                .flatMap(mailbox ->
-                    eventBus.dispatch(EventFactory.flagsUpdated()
-                            .randomEventId()
-                            .mailboxSession(mailboxSession)
-                            .mailbox(mailbox)
-                            .updatedFlags(updatedFlags)
-                            .build(),
-                        new MailboxIdRegistrationKey(mailboxId)));
-        }
-        return Mono.empty();
+        return knownMailboxes.stream()
+            .filter(knownMailbox -> knownMailbox.getMailboxId().equals(mailboxId))
+            .findFirst()
+            .map(Mono::just)
+            .orElseGet(() -> mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId))
+            .flatMap(mailbox ->
+                eventBus.dispatch(EventFactory.flagsUpdated()
+                        .randomEventId()
+                        .mailboxSession(mailboxSession)
+                        .mailbox(mailbox)
+                        .updatedFlags(updatedFlags)
+                        .build(),
+                    new MailboxIdRegistrationKey(mailboxId)));
     }
 
     private Mono<Void> validateQuota(MessageMovesWithMailbox messageMoves, MailboxMessage mailboxMessage) {
