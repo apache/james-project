@@ -74,6 +74,10 @@ public class StoreRightManager implements RightManager {
         this.eventBus = eventBus;
     }
 
+    private boolean isCrossDomainAccessAllowed() {
+        return Boolean.parseBoolean(System.getProperty("james.rights.users.crossdomain", "false"));
+    }
+
     @Override
     public boolean hasRight(MailboxPath mailboxPath, Right right, MailboxSession session) throws MailboxException {
         return myRights(mailboxPath, session).contains(right);
@@ -185,7 +189,7 @@ public class StoreRightManager implements RightManager {
     @Override
     public Mono<Void> applyRightsCommandReactive(MailboxPath mailboxPath, ACLCommand mailboxACLCommand, MailboxSession session) {
         return Mono.just(mailboxSessionMapperFactory.getMailboxMapper(session))
-            .doOnNext(Throwing.consumer(mapper -> assertSharesBelongsToUserDomain(mailboxPath.getUser(), mailboxACLCommand)))
+            .doOnNext(Throwing.consumer(mapper -> assertUserHasAccessToShareDomains(mailboxPath.getUser(), mailboxACLCommand)))
             .flatMap(mapper -> mapper.findMailboxByPath(mailboxPath)
                 .doOnNext(Throwing.consumer(mailbox -> assertHaveAccessTo(mailbox, session)))
                 .flatMap(mailbox -> mapper.updateACL(mailbox, mailboxACLCommand)
@@ -211,8 +215,8 @@ public class StoreRightManager implements RightManager {
         applyRightsCommand(mailbox.generateAssociatedPath(), mailboxACLCommand, session);
     }
 
-    private void assertSharesBelongsToUserDomain(Username user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
-        assertSharesBelongsToUserDomain(user, ImmutableMap.of(mailboxACLCommand.getEntryKey(), mailboxACLCommand.getRights()));
+    private void assertUserHasAccessToShareDomains(Username user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
+        assertUserHasAccessToShareDomains(user, ImmutableMap.of(mailboxACLCommand.getEntryKey(), mailboxACLCommand.getRights()));
     }
 
     public boolean isReadWrite(MailboxSession session, Mailbox mailbox, Flags sharedPermanentFlags) {
@@ -263,7 +267,7 @@ public class StoreRightManager implements RightManager {
 
     @Override
     public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
-        assertSharesBelongsToUserDomain(mailboxPath.getUser(), mailboxACL.getEntries());
+        assertUserHasAccessToShareDomains(mailboxPath.getUser(), mailboxACL.getEntries());
 
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         block(mapper.findMailboxByPath(mailboxPath)
@@ -285,7 +289,13 @@ public class StoreRightManager implements RightManager {
     }
 
     @VisibleForTesting
-    void assertSharesBelongsToUserDomain(Username user, Map<EntryKey, Rfc4314Rights> entries) throws DifferentDomainException {
+    void assertUserHasAccessToShareDomains(Username user, Map<EntryKey, Rfc4314Rights> entries) throws DifferentDomainException {
+        if (isCrossDomainAccessAllowed()) {
+            // In this case, we impose no limitations.
+            return;
+        }
+
+        // If cross-domain sharing is disabled, a user may only access their own domain.
         if (entries.keySet().stream()
             .filter(entry -> !entry.getNameType().equals(NameType.special))
             .map(EntryKey::getName)
@@ -342,7 +352,7 @@ public class StoreRightManager implements RightManager {
      */
     public Mono<Void> setRightsReactiveWithoutAccessControl(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) {
         try {
-            assertSharesBelongsToUserDomain(mailboxPath.getUser(), mailboxACL.getEntries());
+            assertUserHasAccessToShareDomains(mailboxPath.getUser(), mailboxACL.getEntries());
         } catch (DifferentDomainException e) {
             return Mono.error(e);
         }
