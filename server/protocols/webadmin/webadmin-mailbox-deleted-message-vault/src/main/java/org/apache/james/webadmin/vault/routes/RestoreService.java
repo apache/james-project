@@ -25,6 +25,7 @@ import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResul
 import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResult.RESTORE_SUCCEED;
 
 import java.io.InputStream;
+import java.util.Date;
 import java.util.function.Predicate;
 
 import jakarta.inject.Inject;
@@ -88,7 +89,9 @@ public class RestoreService {
             messageContent(deletedMessage),
             inputStream -> Mono.usingWhen(
                 Mono.fromCallable(() -> ByteSourceContent.of(inputStream)),
-                content -> Mono.from(restoreMailboxManager.appendMessageReactive(AppendCommand.builder().build(content), session))
+                content -> Mono.from(restoreMailboxManager.appendMessageReactive(AppendCommand.builder()
+                        .withInternalDate(Date.from(deletedMessage.getDeliveryDate().toInstant()))
+                        .build(content), session))
                     .map(any -> RESTORE_SUCCEED),
                 content -> Mono.fromRunnable(Throwing.runnable(content::close))),
             stream -> Mono.fromRunnable(Throwing.runnable(stream::close)))
