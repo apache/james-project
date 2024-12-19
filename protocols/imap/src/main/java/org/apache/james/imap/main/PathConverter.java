@@ -95,7 +95,9 @@ public interface PathConverter {
         }
 
         private MailboxPath buildAbsolutePath(String absolutePath) {
-            return asMailboxPath(Splitter.on(mailboxSession.getPathDelimiter()).splitToList(absolutePath), mailboxSession);
+            return asMailboxPath(Splitter.on(mailboxSession.getPathDelimiter())
+                .omitEmptyStrings()
+                .splitToList(absolutePath), mailboxSession);
         }
 
         private MailboxPath asMailboxPath(List<String> mailboxPathParts, MailboxSession session) {
