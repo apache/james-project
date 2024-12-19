@@ -72,6 +72,9 @@ public abstract class POP3MessageCommandDelegate {
     }
 
     private MessageMetaData getMetaData(POP3Session session, int number) throws IOException {
+        if (number <= 0) {
+            throw new IOException("MessageMetaData does not exist for number " + number);
+        }
         return session.getAttachment(POP3Session.UID_LIST, ProtocolSession.State.Transaction)
             .filter(uidList -> number <= uidList.size())
             .map(uidList -> uidList.get(number - 1))
