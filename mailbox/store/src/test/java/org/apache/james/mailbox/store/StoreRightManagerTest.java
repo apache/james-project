@@ -24,18 +24,23 @@ import static org.apache.james.mailbox.fixture.MailboxFixture.BOB;
 import static org.apache.james.mailbox.fixture.MailboxFixture.CEDRIC;
 import static org.apache.james.mailbox.fixture.MailboxFixture.INBOX_ALICE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
+import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.DifferentDomainException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -65,6 +70,7 @@ class StoreRightManagerTest {
     MailboxSession aliceSession;
     MailboxACLResolver mailboxAclResolver;
     MailboxMapper mockedMailboxMapper;
+    EventBus eventBus;
 
     @BeforeEach
     void setup() {
@@ -72,7 +78,7 @@ class StoreRightManagerTest {
         MailboxSessionMapperFactory mockedMapperFactory = mock(MailboxSessionMapperFactory.class);
         mockedMailboxMapper = mock(MailboxMapper.class);
         mailboxAclResolver = new UnionMailboxACLResolver();
-        EventBus eventBus = mock(EventBus.class);
+        eventBus = mock(EventBus.class);
         when(mockedMapperFactory.getMailboxMapper(aliceSession))
             .thenReturn(mockedMailboxMapper);
 
@@ -259,22 +265,37 @@ class StoreRightManagerTest {
     }
 
     @Test
-    void assertSharesBelongsToUserDomainShouldThrowWhenOneDomainIsDifferent() throws Exception  {
+    void assertUserHasAccessToShareeDomainsShouldThrowWhenOneDomainIsDifferent() throws Exception  {
         MailboxACL mailboxACL = new MailboxACL(new MailboxACL.Entry("a@domain.org", Right.Write), 
                 new MailboxACL.Entry("b@otherdomain.org", Right.Write), 
                 new MailboxACL.Entry("c@domain.org", Right.Write));
         
-        assertThatThrownBy(() -> storeRightManager.assertSharesBelongsToUserDomain(Username.of("user@domain.org"), mailboxACL.getEntries()))
+        assertThatThrownBy(() -> storeRightManager.assertUserHasAccessToShareeDomains(Username.of("user@domain.org"), mailboxACL.getEntries()))
             .isInstanceOf(DifferentDomainException.class);
     }
 
     @Test
-    void assertSharesBelongsToUserDomainShouldNotThrowWhenDomainsAreIdentical() throws Exception  {
+    void assertUserHasAccessToShareeDomainsShouldNotThrowWhenDomainsAreIdentical() throws Exception  {
         MailboxACL mailboxACL = new MailboxACL(new MailboxACL.Entry("a@domain.org", Right.Write), 
                 new MailboxACL.Entry("b@domain.org", Right.Write), 
                 new MailboxACL.Entry("c@domain.org", Right.Write));
         
-        storeRightManager.assertSharesBelongsToUserDomain(Username.of("user@domain.org"), mailboxACL.getEntries());
+        storeRightManager.assertUserHasAccessToShareeDomains(Username.of("user@domain.org"), mailboxACL.getEntries());
+    }
+
+    @Test
+    void assertUserHasAccessToShareDomainsShouldNotThrowOnDifferentDomainsWhenCrossDomainAccessEnabled() throws Exception  {
+        try {
+            StoreRightManager.IS_CROSS_DOMAIN_ACCESS_ALLOWED = true;
+
+            MailboxACL mailboxACL = new MailboxACL(new MailboxACL.Entry("a@domain.org", Right.Write),
+                    new MailboxACL.Entry("b@otherdomain.org", Right.Write),
+                    new MailboxACL.Entry("c@domain.org", Right.Write));
+
+            storeRightManager.assertUserHasAccessToShareeDomains(Username.of("user@domain.org"), mailboxACL.getEntries());
+        } finally {
+            StoreRightManager.IS_CROSS_DOMAIN_ACCESS_ALLOWED = false;
+        }
     }
 
     @Test
@@ -287,5 +308,31 @@ class StoreRightManagerTest {
        
         assertThatThrownBy(() -> storeRightManager.applyRightsCommand(mailboxPath, aclCommand, aliceSession))
             .isInstanceOf(DifferentDomainException.class);
+    }
+
+    @Test
+    void applyRightsCommandShouldNotThrowOnDifferentDomainsWhenCrossDomainEnabled() throws MailboxException {
+        try {
+            StoreRightManager.IS_CROSS_DOMAIN_ACCESS_ALLOWED = true;
+
+            MailboxPath mailboxPath = MailboxPath.forUser(Username.of("user@domain.org"), "mailbox");
+            Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY, MAILBOX_ID);
+            mailbox.setACL(new MailboxACL(new MailboxACL.Entry(MailboxFixture.ALICE.asString(), Right.Administer)));
+            ACLCommand aclCommand = MailboxACL.command()
+                    .forUser(Username.of("otherUser@otherdomain.org"))
+                    .rights(Right.Read)
+                    .asAddition();
+
+            when(mockedMailboxMapper.findMailboxByPath(mailboxPath)).thenReturn(Mono.just(mailbox));
+            when(mockedMailboxMapper.updateACL(mailbox, aclCommand)).thenReturn(Mono.just(ACLDiff.computeDiff(MailboxACL.EMPTY, new MailboxACL(
+                    new MailboxACL.Entry("user@domain.org", Right.Read)
+            ))));
+            when(eventBus.dispatch(any(Event.class), any(MailboxIdRegistrationKey.class))).thenReturn(Mono.empty());
+
+            assertThatCode(() -> storeRightManager.applyRightsCommand(mailboxPath, aclCommand, aliceSession))
+                    .doesNotThrowAnyException();
+        } finally {
+            StoreRightManager.IS_CROSS_DOMAIN_ACCESS_ALLOWED = false;
+        }
     }
 }

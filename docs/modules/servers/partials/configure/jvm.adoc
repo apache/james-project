@@ -173,3 +173,16 @@ james.deduplicating.blobstore.thread.switch.threshold=32768
 # Count of octet from which streams are buffered to files and not to memory
 james.deduplicating.blobstore.file.threshold=10240
 ----
+
+== Allow users to have rights for shares of different domain
+
+Typically, preventing users to obtain rights for shares of another domain is a useful security layer.
+However, in multi-tenancy deployments, this can be useful (for example, students might be given access to a shared mailbox
+residing under the @university.edu domain with their @student.university.edu address).
+
+Optional. Boolean. Defaults to false.
+
+Ex in `jvm.properties`
+----
+james.rights.crossdomain.allow=false
+----
