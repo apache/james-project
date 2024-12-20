@@ -290,21 +290,26 @@ public class StoreMessageIdManager implements MessageIdManager {
     private Mono<Void> delete(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession, Map<MetadataWithMailboxId, MessageMetaData> metadataWithMailbox) {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
 
+        ImmutableListMultimap<MailboxId, MessageMetaData> actualDeletion = metadataWithMailbox.entrySet().stream()
+            .collect(ImmutableListMultimap.toImmutableListMultimap(
+                e -> e.getKey().getMailboxId(),
+                Map.Entry::getValue));
+
         return messageIdMapper.deleteReactive(
             messageList.stream()
                 .collect(ImmutableListMultimap.toImmutableListMultimap(
                     Message::getMessageId,
                     MailboxMessage::getMailboxId)))
             .then(
-                Flux.fromIterable(metadataWithMailbox.entrySet())
-                    .flatMap(metadataWithMailboxId -> mailboxMapper.findMailboxById(metadataWithMailboxId.getKey().getMailboxId())
+                Flux.fromIterable(actualDeletion.asMap().entrySet())
+                    .flatMap(metadataWithMailboxId -> mailboxMapper.findMailboxById(metadataWithMailboxId.getKey())
                         .flatMap(mailbox -> eventBus.dispatch(EventFactory.expunged()
                                 .randomEventId()
                                 .mailboxSession(mailboxSession)
                                 .mailbox(mailbox)
                                 .addMetaData(metadataWithMailboxId.getValue())
                                 .build(),
-                            new MailboxIdRegistrationKey(metadataWithMailboxId.getKey().getMailboxId()))), DEFAULT_CONCURRENCY)
+                            new MailboxIdRegistrationKey(metadataWithMailboxId.getKey()))), DEFAULT_CONCURRENCY)
                     .then());
     }
 

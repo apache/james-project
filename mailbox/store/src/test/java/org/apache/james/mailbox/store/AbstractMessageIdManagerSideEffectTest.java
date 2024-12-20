@@ -181,12 +181,13 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         AbstractListAssert<?, List<? extends Expunged>, Expunged, ObjectAssert<Expunged>> events =
             assertThat(eventCollector.getEvents())
                 .filteredOn(event -> event instanceof Expunged)
-                .hasSize(2)
-                .extracting(event -> (Expunged) event);
+                .hasSize(1)
+                .extracting(event -> (Expunged) event)
+                .allMatch(event -> event.getExpunged().size() == 2);
         events.extracting(MailboxEvent::getMailboxId).containsOnly(mailbox1.getMailboxId(), mailbox1.getMailboxId());
         events.extracting(Expunged::getExpunged)
-            .containsOnly(ImmutableSortedMap.of(simpleMessageMetaData1.getUid(), simpleMessageMetaData1),
-                ImmutableSortedMap.of(simpleMessageMetaData2.getUid(), simpleMessageMetaData2));
+            .containsOnly(ImmutableSortedMap.of(simpleMessageMetaData1.getUid(), simpleMessageMetaData1,
+                simpleMessageMetaData2.getUid(), simpleMessageMetaData2));
     }
 
     @Test
