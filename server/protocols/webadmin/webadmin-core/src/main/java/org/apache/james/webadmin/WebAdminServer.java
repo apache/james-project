@@ -49,6 +49,7 @@ import org.apache.james.webadmin.metric.MetricPreFilter;
 import org.apache.james.webadmin.routes.CORSRoute;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonExtractException;
+import org.eclipse.jetty.io.EofException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -187,6 +188,7 @@ public class WebAdminServer implements Startable {
             .asString());
 
         service.exception(JsonExtractException.class, (ex, req, res) -> {
+            LOGGER.info("Invalid JSON body supplied in the user request", ex);
             res.status(BAD_REQUEST_400);
             res.body(ErrorResponder.builder()
                 .statusCode(BAD_REQUEST_400)
@@ -195,6 +197,8 @@ public class WebAdminServer implements Startable {
                 .cause(ex)
                 .asString());
         });
+
+        service.exception(EofException.class, (ex, req, res) -> LOGGER.info("Transfer aborted by the client"));
 
         service.exception(IllegalArgumentException.class, (ex, req, res) -> {
             LOGGER.info("Invalid arguments supplied in the user request", ex);
