@@ -251,20 +251,16 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
         }
 
         public boolean shouldRemove(MailQueueItem item, Type type, String value) {
-            switch (type) {
-                case Name:
-                    return item.getMail().getName().equals(value);
-                case Recipient:
-                    return item.getMail().getRecipients().stream()
+            return switch (type) {
+                case Name -> item.getMail().getName().equals(value);
+                case Recipient -> item.getMail().getRecipients().stream()
                         .map(MailAddress::asString)
                         .anyMatch(value::equals);
-                case Sender:
-                    return item.getMail().getMaybeSender()
+                case Sender -> item.getMail().getMaybeSender()
                         .asString()
                         .equals(value);
-                default:
-                    throw new NotImplementedException("Unknown type " + type);
-            }
+                default -> throw new NotImplementedException("Unknown type " + type);
+            };
         }
 
         private void markProcessingAsFinished(MemoryMailQueueItem item) {

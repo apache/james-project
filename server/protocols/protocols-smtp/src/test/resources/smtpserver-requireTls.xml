@@ -1,0 +1,22 @@
+<smtpserver enabled="true">
+    <bind>0.0.0.0:0</bind>
+    <tls socketTLS="false" startTLS="true">
+        <keystore>classpath://keystore</keystore>
+        <secret>james72laBalle</secret>
+        <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+        <algorithm>SunX509</algorithm>
+    </tls>
+    <auth>
+        <announce>forUnauthorizedAddresses</announce>
+        <requireSSL>false</requireSSL>
+    </auth>
+    <verifyIdentity>true</verifyIdentity>
+    <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
+    <handlerchain>
+        <handler class="org.apache.james.smtpserver.tls.SmtpRequireTlsEhloHook"/>
+        <handler class="org.apache.james.smtpserver.tls.SmtpRequireTlsParameterHook"/>
+        <handler class="org.apache.james.smtpserver.tls.SmtpRequireTlsMessageHook"/>
+        <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+    </handlerchain>
+    <gracefulShutdown>false</gracefulShutdown>
+</smtpserver>
