@@ -61,6 +61,9 @@ import com.google.common.collect.ImmutableMap;
 import reactor.core.publisher.Mono;
 
 public class StoreRightManager implements RightManager {
+    @VisibleForTesting
+    static Boolean IS_CROSS_DOMAIN_ACCESS_ALLOWED = Boolean.parseBoolean(System.getProperty("james.rights.crossdomain.allow", "false"));
+
     private final EventBus eventBus;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxACLResolver aclResolver;
@@ -72,10 +75,6 @@ public class StoreRightManager implements RightManager {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.aclResolver = aclResolver;
         this.eventBus = eventBus;
-    }
-
-    private boolean isCrossDomainAccessAllowed() {
-        return Boolean.parseBoolean(System.getProperty("james.rights.users.crossdomain", "false"));
     }
 
     @Override
@@ -189,7 +188,7 @@ public class StoreRightManager implements RightManager {
     @Override
     public Mono<Void> applyRightsCommandReactive(MailboxPath mailboxPath, ACLCommand mailboxACLCommand, MailboxSession session) {
         return Mono.just(mailboxSessionMapperFactory.getMailboxMapper(session))
-            .doOnNext(Throwing.consumer(mapper -> assertUserHasAccessToShareDomains(mailboxPath.getUser(), mailboxACLCommand)))
+            .doOnNext(Throwing.consumer(mapper -> assertUserHasAccessToShareeDomains(mailboxPath.getUser(), mailboxACLCommand)))
             .flatMap(mapper -> mapper.findMailboxByPath(mailboxPath)
                 .doOnNext(Throwing.consumer(mailbox -> assertHaveAccessTo(mailbox, session)))
                 .flatMap(mailbox -> mapper.updateACL(mailbox, mailboxACLCommand)
@@ -215,8 +214,8 @@ public class StoreRightManager implements RightManager {
         applyRightsCommand(mailbox.generateAssociatedPath(), mailboxACLCommand, session);
     }
 
-    private void assertUserHasAccessToShareDomains(Username user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
-        assertUserHasAccessToShareDomains(user, ImmutableMap.of(mailboxACLCommand.getEntryKey(), mailboxACLCommand.getRights()));
+    private void assertUserHasAccessToShareeDomains(Username user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
+        assertUserHasAccessToShareeDomains(user, ImmutableMap.of(mailboxACLCommand.getEntryKey(), mailboxACLCommand.getRights()));
     }
 
     public boolean isReadWrite(MailboxSession session, Mailbox mailbox, Flags sharedPermanentFlags) {
@@ -267,7 +266,7 @@ public class StoreRightManager implements RightManager {
 
     @Override
     public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
-        assertUserHasAccessToShareDomains(mailboxPath.getUser(), mailboxACL.getEntries());
+        assertUserHasAccessToShareeDomains(mailboxPath.getUser(), mailboxACL.getEntries());
 
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         block(mapper.findMailboxByPath(mailboxPath)
@@ -289,8 +288,8 @@ public class StoreRightManager implements RightManager {
     }
 
     @VisibleForTesting
-    void assertUserHasAccessToShareDomains(Username user, Map<EntryKey, Rfc4314Rights> entries) throws DifferentDomainException {
-        if (isCrossDomainAccessAllowed()) {
+    void assertUserHasAccessToShareeDomains(Username user, Map<EntryKey, Rfc4314Rights> entries) throws DifferentDomainException {
+        if (IS_CROSS_DOMAIN_ACCESS_ALLOWED) {
             // In this case, we impose no limitations.
             return;
         }
@@ -352,7 +351,7 @@ public class StoreRightManager implements RightManager {
      */
     public Mono<Void> setRightsReactiveWithoutAccessControl(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) {
         try {
-            assertUserHasAccessToShareDomains(mailboxPath.getUser(), mailboxACL.getEntries());
+            assertUserHasAccessToShareeDomains(mailboxPath.getUser(), mailboxACL.getEntries());
         } catch (DifferentDomainException e) {
             return Mono.error(e);
         }

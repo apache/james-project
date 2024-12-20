@@ -184,5 +184,5 @@ Optional. Boolean. Defaults to false.
 
 Ex in `jvm.properties`
 ----
-james.rights.users.crossdomain=false
+james.rights.crossdomain.allow=false
 ----

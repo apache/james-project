@@ -265,37 +265,36 @@ class StoreRightManagerTest {
     }
 
     @Test
-    void assertUserHasAccessToShareDomainsShouldThrowWhenOneDomainIsDifferent() throws Exception  {
+    void assertUserHasAccessToShareeDomainsShouldThrowWhenOneDomainIsDifferent() throws Exception  {
         MailboxACL mailboxACL = new MailboxACL(new MailboxACL.Entry("a@domain.org", Right.Write), 
                 new MailboxACL.Entry("b@otherdomain.org", Right.Write), 
                 new MailboxACL.Entry("c@domain.org", Right.Write));
         
-        assertThatThrownBy(() -> storeRightManager.assertUserHasAccessToShareDomains(Username.of("user@domain.org"), mailboxACL.getEntries()))
+        assertThatThrownBy(() -> storeRightManager.assertUserHasAccessToShareeDomains(Username.of("user@domain.org"), mailboxACL.getEntries()))
             .isInstanceOf(DifferentDomainException.class);
     }
 
     @Test
-    void assertUserHasAccessToShareDomainsShouldNotThrowWhenDomainsAreIdentical() throws Exception  {
+    void assertUserHasAccessToShareeDomainsShouldNotThrowWhenDomainsAreIdentical() throws Exception  {
         MailboxACL mailboxACL = new MailboxACL(new MailboxACL.Entry("a@domain.org", Right.Write), 
                 new MailboxACL.Entry("b@domain.org", Right.Write), 
                 new MailboxACL.Entry("c@domain.org", Right.Write));
         
-        storeRightManager.assertUserHasAccessToShareDomains(Username.of("user@domain.org"), mailboxACL.getEntries());
+        storeRightManager.assertUserHasAccessToShareeDomains(Username.of("user@domain.org"), mailboxACL.getEntries());
     }
 
     @Test
     void assertUserHasAccessToShareDomainsShouldNotThrowOnDifferentDomainsWhenCrossDomainAccessEnabled() throws Exception  {
         try {
-            System.setProperty("james.rights.users.crossdomain", "true");
+            StoreRightManager.IS_CROSS_DOMAIN_ACCESS_ALLOWED = true;
 
             MailboxACL mailboxACL = new MailboxACL(new MailboxACL.Entry("a@domain.org", Right.Write),
                     new MailboxACL.Entry("b@otherdomain.org", Right.Write),
                     new MailboxACL.Entry("c@domain.org", Right.Write));
 
-            storeRightManager.assertUserHasAccessToShareDomains(Username.of("user@domain.org"), mailboxACL.getEntries());
-        }
-        finally {
-            System.clearProperty("james.rights.users.crossdomain");
+            storeRightManager.assertUserHasAccessToShareeDomains(Username.of("user@domain.org"), mailboxACL.getEntries());
+        } finally {
+            StoreRightManager.IS_CROSS_DOMAIN_ACCESS_ALLOWED = false;
         }
     }
 
@@ -314,7 +313,7 @@ class StoreRightManagerTest {
     @Test
     void applyRightsCommandShouldNotThrowOnDifferentDomainsWhenCrossDomainEnabled() throws MailboxException {
         try {
-            System.setProperty("james.rights.users.crossdomain", "true");
+            StoreRightManager.IS_CROSS_DOMAIN_ACCESS_ALLOWED = true;
 
             MailboxPath mailboxPath = MailboxPath.forUser(Username.of("user@domain.org"), "mailbox");
             Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY, MAILBOX_ID);
@@ -333,7 +332,7 @@ class StoreRightManagerTest {
             assertThatCode(() -> storeRightManager.applyRightsCommand(mailboxPath, aclCommand, aliceSession))
                     .doesNotThrowAnyException();
         } finally {
-            System.clearProperty("james.rights.users.crossdomain");
+            StoreRightManager.IS_CROSS_DOMAIN_ACCESS_ALLOWED = false;
         }
     }
 }
