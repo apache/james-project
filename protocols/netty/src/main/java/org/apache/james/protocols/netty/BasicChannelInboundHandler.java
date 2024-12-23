@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 
 import org.apache.james.protocols.api.CommandDetectionSession;
@@ -286,6 +287,8 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                     LOGGER.info("SSH handshake rejected {}", cause.getMessage());
                 } else if (isNotSslRecordException(cause)) {
                     LOGGER.info("Not an SSL record {}", cause.getMessage());
+                } else if (isSslException(cause)) {
+                    LOGGER.info("Encountered SSL exception: {}", cause.getMessage());
                 } else if (!(cause instanceof ClosedChannelException)) {
                     LOGGER.error("Unable to process request", cause);
                 }
@@ -302,6 +305,11 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     private boolean isNotSslRecordException(Throwable cause) {
         return cause instanceof DecoderException &&
             cause.getCause() instanceof NotSslRecordException;
+    }
+
+    private boolean isSslException(Throwable cause) {
+        return cause instanceof DecoderException &&
+            cause.getCause() instanceof SSLException;
     }
 
     @Override
