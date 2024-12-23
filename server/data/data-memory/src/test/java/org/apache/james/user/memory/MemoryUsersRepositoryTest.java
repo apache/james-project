@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -68,6 +69,13 @@ class MemoryUsersRepositoryTest {
         public UsersRepository testee(Optional<Username> administrator) throws Exception {
             MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(testSystem.getDomainList());
             memoryUsersRepository.configure(configuration(administrator, true));
+            return memoryUsersRepository;
+        }
+
+        @Override
+        public UsersRepository testee(Set<Username> administrators) throws Exception {
+            MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(testSystem.getDomainList());
+            memoryUsersRepository.configure(configuration(administrators, true));
             return memoryUsersRepository;
         }
 
@@ -137,6 +145,13 @@ class MemoryUsersRepositoryTest {
             return memoryUsersRepository;
         }
 
+        @Override
+        public UsersRepository testee(Set<Username> administrators) throws Exception {
+            MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(testSystem.getDomainList());
+            memoryUsersRepository.configure(configuration(administrators, false));
+            return memoryUsersRepository;
+        }
+
         @Test
         void assertValidShouldThrowWhenDomainPartAndNoVirtualHosting(TestSystem testSystem) {
             MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting(testSystem.getDomainList());
@@ -158,6 +173,14 @@ class MemoryUsersRepositoryTest {
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         administrator.ifPresent(username -> configuration.addProperty("administratorId", username.asString()));
 
+        configuration.addProperty("enableVirtualHosting", enableVirtualHosting);
+        configuration.addProperty("algorithm", "none");
+        return configuration;
+    }
+
+    private HierarchicalConfiguration<ImmutableNode> configuration(Set<Username> administrators, boolean enableVirtualHosting) {
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
+        administrators.forEach(admin -> configuration.addProperty("administratorIds.administratorId", admin.asString()));
         configuration.addProperty("enableVirtualHosting", enableVirtualHosting);
         configuration.addProperty("algorithm", "none");
         return configuration;

@@ -24,5 +24,9 @@
     <algorithm>PBKDF2-SHA512</algorithm>
     <enableVirtualHosting>true</enableVirtualHosting>    
     <enableForwarding>true</enableForwarding>
+    <administratorIds>
+        <administratorId>admin1@domain.tld</administratorId>
+        <administratorId>admin2@domain.tld</administratorId>
+    </administratorIds>
 </usersrepository>
 

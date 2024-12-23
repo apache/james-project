@@ -20,6 +20,7 @@
 package org.apache.james.user.cassandra;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -60,6 +61,11 @@ class CassandraUsersRepositoryTest {
         public UsersRepository testee(Optional<Username> administrator) throws Exception {
             return getUsersRepository(testSystem.getDomainList(), extension.isSupportVirtualHosting(), administrator);
         }
+
+        @Override
+        public UsersRepository testee(Set<Username> administrators) throws Exception {
+            return getUsersRepository(testSystem.getDomainList(), extension.isSupportVirtualHosting(), administrators);
+        }
     }
 
     @Nested
@@ -85,6 +91,11 @@ class CassandraUsersRepositoryTest {
         public UsersRepository testee(Optional<Username> administrator) throws Exception {
             return getUsersRepository(testSystem.getDomainList(), extension.isSupportVirtualHosting(), administrator);
         }
+
+        @Override
+        public UsersRepository testee(Set<Username> administrators) throws Exception {
+            return getUsersRepository(testSystem.getDomainList(), extension.isSupportVirtualHosting(), administrators);
+        }
     }
 
     private static UsersRepositoryImpl<CassandraUsersDAO> getUsersRepository(DomainList domainList, boolean enableVirtualHosting, Optional<Username> administrator) throws Exception {
@@ -93,6 +104,16 @@ class CassandraUsersRepositoryTest {
         configuration.addProperty("enableVirtualHosting", String.valueOf(enableVirtualHosting));
         administrator.ifPresent(username -> configuration.addProperty("administratorId", username.asString()));
 
+        UsersRepositoryImpl<CassandraUsersDAO> usersRepository = new UsersRepositoryImpl<>(domainList, usersDAO);
+        usersRepository.configure(configuration);
+        return usersRepository;
+    }
+
+    private static UsersRepositoryImpl<CassandraUsersDAO> getUsersRepository(DomainList domainList, boolean enableVirtualHosting, Set<Username> administrators) throws Exception {
+        CassandraUsersDAO usersDAO = new CassandraUsersDAO(cassandraCluster.getCassandraCluster().getConf());
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
+        configuration.addProperty("enableVirtualHosting", String.valueOf(enableVirtualHosting));
+        administrators.forEach(admin -> configuration.addProperty("administratorIds.administratorId", admin.asString()));
         UsersRepositoryImpl<CassandraUsersDAO> usersRepository = new UsersRepositoryImpl<>(domainList, usersDAO);
         usersRepository.configure(configuration);
         return usersRepository;

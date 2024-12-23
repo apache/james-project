@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.james.core.Domain;
@@ -149,6 +150,7 @@ public interface UsersRepositoryContract {
 
     UsersRepository testee(Optional<Username> administrator) throws Exception;
 
+    UsersRepository testee(Set<Username> administrators) throws Exception;
 
     interface ReadOnlyContract extends UsersRepositoryContract {
         @Test
@@ -529,10 +531,18 @@ public interface UsersRepositoryContract {
         }
 
         @Test
-        default void isAdministratorShouldReturnFalseWhenConfiguredAndUserIsNotAdmin(TestSystem testSystem) throws Exception {
-            UsersRepository testee = testee(Optional.of(testSystem.admin));
+        default void isAdministratorShouldReturnTrueWhenConfiguredMultipleAdminsAndUserIsAdmin(TestSystem testSystem) throws Exception {
+            UsersRepository testee = testee(Set.of(testSystem.admin, testSystem.user1));
 
-            assertThat(testee.isAdministrator(testSystem.user1)).isFalse();
+            assertThat(testee.isAdministrator(testSystem.admin)).isTrue();
+            assertThat(testee.isAdministrator(testSystem.user1)).isTrue();
+        }
+
+        @Test
+        default void isAdministratorShouldReturnFalseWhenConfiguredAndUserIsNotAdmin(TestSystem testSystem) throws Exception {
+            UsersRepository testee = testee(Set.of(testSystem.admin, testSystem.user1));
+
+            assertThat(testee.isAdministrator(testSystem.user2)).isFalse();
         }
     }
 
