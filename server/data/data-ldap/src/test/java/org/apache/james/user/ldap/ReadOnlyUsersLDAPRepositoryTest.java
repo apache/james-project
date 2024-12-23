@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConversionException;
@@ -259,9 +260,29 @@ class ReadOnlyUsersLDAPRepositoryTest {
             return startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer, administrator), testSystem.getDomainList());
         }
 
+        @Override
+        public UsersRepository testee(Set<Username> administrators) throws Exception {
+            return startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer, administrators), testSystem.getDomainList());
+        }
+
         @Test
         void isAdministratorShouldReturnTrueWhenConfiguredAndUserIsAdmin(TestSystem testSystem) throws Exception {
             assertThat(testee().isAdministrator(testSystem.getAdmin())).isTrue();
+        }
+
+        @Test
+        void isAdministratorShouldReturnTrueWhenConfiguredMultipleAdminsAndUserIsAdmin(TestSystem testSystem) throws Exception {
+            UsersRepository testee = testee(Set.of(testSystem.getAdmin(), testSystem.getUser1()));
+
+            assertThat(testee.isAdministrator(testSystem.getAdmin())).isTrue();
+            assertThat(testee.isAdministrator(testSystem.getUser1())).isTrue();
+        }
+
+        @Test
+        void isAdministratorShouldReturnFalseWhenConfiguredAndUserIsNotAdmin(TestSystem testSystem) throws Exception {
+            UsersRepository testee = testee(Set.of(testSystem.getAdmin(), testSystem.getUser1()));
+
+            assertThat(testee.isAdministrator(testSystem.getUser2())).isFalse();
         }
 
         @Test
@@ -365,6 +386,11 @@ class ReadOnlyUsersLDAPRepositoryTest {
             return startUsersRepository(ldapRepositoryConfiguration(ldapContainer, administrator), testSystem.getDomainList());
         }
 
+        @Override
+        public UsersRepository testee(Set<Username> administrators) throws Exception {
+            return startUsersRepository(ldapRepositoryConfiguration(ldapContainer, administrators), testSystem.getDomainList());
+        }
+
         @Test
         void knownUserShouldBeAbleToLogInWhenPasswordIsCorrect() throws Exception {
             assertThat(usersRepository.test(JAMES_USER, PASSWORD)).isEqualTo(Optional.of(JAMES_USER));
@@ -413,6 +439,21 @@ class ReadOnlyUsersLDAPRepositoryTest {
         @Test
         void isAdministratorShouldReturnTrueWhenConfiguredAndUserIsAdmin(TestSystem testSystem) throws Exception {
             assertThat(testee().isAdministrator(testSystem.getAdmin())).isTrue();
+        }
+
+        @Test
+        void isAdministratorShouldReturnTrueWhenConfiguredMultipleAdminsAndUserIsAdmin(TestSystem testSystem) throws Exception {
+            UsersRepository testee = testee(Set.of(testSystem.getAdmin(), testSystem.getUser1()));
+
+            assertThat(testee.isAdministrator(testSystem.getAdmin())).isTrue();
+            assertThat(testee.isAdministrator(testSystem.getUser1())).isTrue();
+        }
+
+        @Test
+        void isAdministratorShouldReturnFalseWhenConfiguredAndUserIsNotAdmin(TestSystem testSystem) throws Exception {
+            UsersRepository testee = testee(Set.of(testSystem.getAdmin(), testSystem.getUser1()));
+
+            assertThat(testee.isAdministrator(testSystem.getUser2())).isFalse();
         }
 
         @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case," +
@@ -524,6 +565,13 @@ class ReadOnlyUsersLDAPRepositoryTest {
         return configuration;
     }
 
+    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration(LdapGenericContainer ldapContainer, Set<Username> administrators) {
+        PropertyListConfiguration configuration = baseConfiguration(ldapContainer);
+        configuration.addProperty("[@userIdAttribute]", "uid");
+        administrators.forEach(admin -> configuration.addProperty("administratorIds.administratorId", admin.asString()));
+        return configuration;
+    }
+
     static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(LdapGenericContainer ldapContainer) {
         return ldapRepositoryConfigurationWithVirtualHosting(ldapContainer, Optional.of(ADMIN));
     }
@@ -533,6 +581,14 @@ class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty("[@userIdAttribute]", "mail");
         configuration.addProperty("supportsVirtualHosting", true);
         administrator.ifPresent(username -> configuration.addProperty("[@administratorId]", username.asString()));
+        return configuration;
+    }
+
+    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(LdapGenericContainer ldapContainer, Set<Username> administrators) {
+        PropertyListConfiguration configuration = baseConfiguration(ldapContainer);
+        configuration.addProperty("[@userIdAttribute]", "mail");
+        configuration.addProperty("supportsVirtualHosting", true);
+        administrators.forEach(admin -> configuration.addProperty("administratorIds.administratorId", admin.asString()));
         return configuration;
     }
 

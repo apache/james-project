@@ -33,6 +33,7 @@ import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 
+import com.github.fge.lambdas.Throwing;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 
@@ -211,14 +212,28 @@ public class ReadOnlyUsersLDAPRepository extends UsersRepositoryImpl<ReadOnlyLDA
         return ldapConfiguration.supportsVirtualHosting();
     }
 
+    /**
+     * Determines if the given username has administrator privileges.
+     * <p>
+     * If the {@code administratorId} is set in the LDAP configuration, the method will return
+     * {@code true} only if the given username matches the configured administrator ID.
+     * <p>
+     * If the {@code administratorId} is not set, the method falls back to the default
+     * administrator determination provided by the parent implementation which could
+     * support a list of administrators.
+     * </p>
+     *
+     * @param username The {@link Username} to check for administrator privileges.
+     * @return {@code true} if the username has administrator privileges, {@code false} otherwise.
+     * @throws UsersRepositoryException If an error occurs while validating the username.
+     */
     @Override
     public boolean isAdministrator(Username username) throws UsersRepositoryException {
         assertValid(username);
 
-        if (ldapConfiguration.getAdministratorId().isPresent()) {
-            return ldapConfiguration.getAdministratorId().get().equals(username);
-        }
-        return false;
+        return ldapConfiguration.getAdministratorId()
+            .map(ldapAdministratorAttribute -> ldapAdministratorAttribute.equals(username))
+            .orElseGet(Throwing.supplier(() -> super.isAdministrator(username)));
     }
 
     @Override

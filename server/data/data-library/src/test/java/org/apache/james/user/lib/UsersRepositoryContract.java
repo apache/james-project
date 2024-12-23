@@ -141,6 +141,14 @@ public interface UsersRepositoryContract {
             return admin;
         }
 
+        public Username getUser1() {
+            return user1;
+        }
+
+        public Username getUser2() {
+            return user2;
+        }
+
         public Username getUserWithUnknownDomain() {
             return userWithUnknownDomain;
         }
