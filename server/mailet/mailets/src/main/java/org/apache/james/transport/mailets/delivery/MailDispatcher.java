@@ -30,6 +30,7 @@ import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.AuditTrail;
 import org.apache.mailet.Mail;
@@ -198,11 +199,15 @@ public class MailDispatcher {
         AtomicInteger remainRetries = new AtomicInteger(retries.orElse(0));
 
         Mono<Void> operation = Mono.from(mailStore.storeMail(recipient, mail))
-            .doOnError(error -> LOGGER.warn("Error While storing mail. This error will be retried for {} more times.", remainRetries.getAndDecrement(), error));
+            .doOnError(OverQuotaException.class, e -> LOGGER.info("Could not store mail due to quota error", e))
+            .doOnError(e -> !(e instanceof OverQuotaException), error -> LOGGER.warn("Error While storing mail. This error will be retried for {} more times.", remainRetries.getAndDecrement(), error));
 
         return retries.map(count ->
             operation
-                .retryWhen(Retry.backoff(count, FIRST_BACKOFF).maxBackoff(MAX_BACKOFF).scheduler(Schedulers.parallel()))
+                .retryWhen(Retry.backoff(count, FIRST_BACKOFF)
+                    .maxBackoff(MAX_BACKOFF)
+                    .filter(e -> !(e instanceof OverQuotaException))
+                    .scheduler(Schedulers.parallel()))
                 .then())
             .orElse(operation);
     }
