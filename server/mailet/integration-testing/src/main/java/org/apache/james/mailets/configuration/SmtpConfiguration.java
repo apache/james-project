@@ -70,15 +70,17 @@ public class SmtpConfiguration implements SerializableAsXml {
         private static final String DEFAULT_DISABLED = "0";
 
         private Optional<Boolean> authRequired;
+        private Optional<Boolean> startTls;
         private Optional<String> maxMessageSize;
         private Optional<SMTPConfiguration.SenderVerificationMode> verifyIndentity;
         private Optional<Boolean> bracketEnforcement;
         private Optional<String> authorizedAddresses;
-        private ImmutableList.Builder<HookConfigurationEntry> additionalHooks;
+        private final ImmutableList.Builder<HookConfigurationEntry> additionalHooks;
 
         public Builder() {
             authorizedAddresses = Optional.empty();
             authRequired = Optional.empty();
+            startTls = Optional.empty();
             verifyIndentity = Optional.empty();
             maxMessageSize = Optional.empty();
             bracketEnforcement = Optional.empty();
@@ -98,6 +100,11 @@ public class SmtpConfiguration implements SerializableAsXml {
 
         public Builder requireAuthentication() {
             this.authRequired = Optional.of(AUTH_REQUIRED);
+            return this;
+        }
+
+        public Builder requireStartTls() {
+            this.startTls = Optional.of(true);
             return this;
         }
 
@@ -138,11 +145,12 @@ public class SmtpConfiguration implements SerializableAsXml {
 
         public SmtpConfiguration build() {
             return new SmtpConfiguration(authorizedAddresses,
-                authRequired.orElse(!AUTH_REQUIRED),
-                bracketEnforcement.orElse(true),
-                verifyIndentity.orElse(SMTPConfiguration.SenderVerificationMode.DISABLED),
-                maxMessageSize.orElse(DEFAULT_DISABLED),
-                additionalHooks.build());
+                    authRequired.orElse(!AUTH_REQUIRED),
+                    startTls.orElse(false),
+                    bracketEnforcement.orElse(true),
+                    verifyIndentity.orElse(SMTPConfiguration.SenderVerificationMode.DISABLED),
+                    maxMessageSize.orElse(DEFAULT_DISABLED),
+                    additionalHooks.build());
         }
     }
 
@@ -152,6 +160,7 @@ public class SmtpConfiguration implements SerializableAsXml {
 
     private final Optional<String> authorizedAddresses;
     private final boolean authRequired;
+    private final boolean startTls;
     private final boolean bracketEnforcement;
     private final SMTPConfiguration.SenderVerificationMode verifyIndentity;
     private final String maxMessageSize;
@@ -159,6 +168,7 @@ public class SmtpConfiguration implements SerializableAsXml {
 
     private SmtpConfiguration(Optional<String> authorizedAddresses,
                               boolean authRequired,
+                              boolean startTls,
                               boolean bracketEnforcement,
                               SMTPConfiguration.SenderVerificationMode verifyIndentity,
                               String maxMessageSize,
@@ -168,6 +178,7 @@ public class SmtpConfiguration implements SerializableAsXml {
         this.bracketEnforcement = bracketEnforcement;
         this.verifyIndentity = verifyIndentity;
         this.maxMessageSize = maxMessageSize;
+        this.startTls = startTls;
         this.additionalHooks = additionalHooks;
     }
 
@@ -180,10 +191,11 @@ public class SmtpConfiguration implements SerializableAsXml {
         scopes.put("verifyIdentity", verifyIndentity.toString());
         scopes.put("maxmessagesize", maxMessageSize);
         scopes.put("bracketEnforcement", bracketEnforcement);
+        scopes.put("startTls", startTls);
 
         List<Map<String, Object>> additionalHooksWithConfig = additionalHooks.stream()
-            .map(HookConfigurationEntry::asMustacheScopes)
-            .collect(ImmutableList.toImmutableList());
+                .map(HookConfigurationEntry::asMustacheScopes)
+                .collect(ImmutableList.toImmutableList());
 
         scopes.put("hooks", additionalHooksWithConfig);
 
@@ -193,14 +205,14 @@ public class SmtpConfiguration implements SerializableAsXml {
         Mustache mustache = mf.compile(getPatternReader(), "example");
         mustache.execute(writer, scopes);
         writer.flush();
-        return new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
+        return byteArrayOutputStream.toString(StandardCharsets.UTF_8);
     }
 
     private StringReader getPatternReader() throws IOException {
         InputStream patternStream = ClassLoader.getSystemResourceAsStream("smtpserver.xml");
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         IOUtils.copy(patternStream, byteArrayOutputStream);
-        String pattern = new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
+        String pattern = byteArrayOutputStream.toString(StandardCharsets.UTF_8);
         return new StringReader(pattern);
     }
 }

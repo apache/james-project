@@ -335,6 +335,7 @@ The Distributed server has optional support for SMTP Extension for Message Trans
 
 The SMTP server does not allow positive priorities from unauthorized sources and sets the priority to the default value (0).
 
+[source,xml]
 ....
 <smtpserver enabled="true">
     <...> <!-- The rest of your SMTP configuration, unchanged -->
@@ -342,6 +343,27 @@ The SMTP server does not allow positive priorities from unauthorized sources and
         <handler class="org.apache.james.smtpserver.priority.SmtpMtPriorityEhloHook"/>
         <handler class="org.apache.james.smtpserver.priority.SmtpMtPriorityParameterHook"/>
         <handler class="org.apache.james.smtpserver.priority.SmtpMtPriorityMessageHook"/>
+        <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+    </handlerchain>
+</smtpserver>
+....
+
+== SMTP Require TLS Option hooks
+
+These hooks are designed to support the SMTP service extension, REQUIRETLS, and a TLS-Required message header field.
+(link:https://www.rfc-editor.org/rfc/rfc8689.html[RFC-8689])
+
+[source,xml]
+....
+<smtpserver enabled="true">
+    <...> <!-- The rest of your SMTP configuration, unchanged -->
+    <tls socketTLS="false" startTLS="true">``
+        <!-- ... -->
+    </tls>
+ <handlerchain>
+        <handler class="org.apache.james.smtpserver.tls.SmtpRequireTlsEhloHook"/>
+        <handler class="org.apache.james.smtpserver.tls.SmtpRequireTlsParameterHook"/>
+        <handler class="org.apache.james.smtpserver.tls.SmtpRequireTlsMessageHook"/>
         <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
     </handlerchain>
 </smtpserver>
