@@ -29,8 +29,12 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.AuditTrail;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
@@ -64,6 +68,7 @@ public class MailDispatcher {
         static final boolean DEFAULT_CONSUME = true;
         static final String DEFAULT_ERROR_PROCESSOR = Mail.ERROR;
         private MailStore mailStore;
+        private UsersRepository usersRepository;
         private Boolean consume;
         private MailetContext mailetContext;
         private String onMailetException;
@@ -84,6 +89,11 @@ public class MailDispatcher {
             return this;
         }
 
+        public Builder usersRepository(UsersRepository usersRepository) {
+            this.usersRepository = usersRepository;
+            return this;
+        }
+
         public Builder onMailetException(String onMailetException) {
             this.onMailetException = onMailetException;
             return this;
@@ -99,9 +109,11 @@ public class MailDispatcher {
         public MailDispatcher build() {
             Preconditions.checkNotNull(mailStore);
             Preconditions.checkNotNull(mailetContext);
+            Preconditions.checkNotNull(usersRepository);
+
             return new MailDispatcher(mailStore, mailetContext,
                 Optional.ofNullable(consume).orElse(DEFAULT_CONSUME),
-                retries, Optional.ofNullable(onMailetException).orElse(DEFAULT_ERROR_PROCESSOR));
+                retries, Optional.ofNullable(onMailetException).orElse(DEFAULT_ERROR_PROCESSOR), usersRepository);
         }
     }
 
@@ -112,8 +124,9 @@ public class MailDispatcher {
     private final boolean propagate;
     private final Optional<Integer> retries;
     private final String errorProcessor;
+    private final UsersRepository usersRepository;
 
-    private MailDispatcher(MailStore mailStore, MailetContext mailetContext, boolean consume, Optional<Integer> retries, String onMailetException) {
+    private MailDispatcher(MailStore mailStore, MailetContext mailetContext, boolean consume, Optional<Integer> retries, String onMailetException, UsersRepository usersRepository) {
         this.mailStore = mailStore;
         this.consume = consume;
         this.mailetContext = mailetContext;
@@ -121,6 +134,7 @@ public class MailDispatcher {
         this.errorProcessor = onMailetException;
         this.ignoreError = onMailetException.equalsIgnoreCase("ignore");
         this.propagate = onMailetException.equalsIgnoreCase("propagate");
+        this.usersRepository = usersRepository;
     }
 
     public void dispatch(Mail mail) throws MessagingException {
@@ -195,16 +209,30 @@ public class MailDispatcher {
     }
 
     private Mono<Void> storeMailWithRetry(Mail mail, MailAddress recipient) {
+        Username username = computeUsername(recipient);
         AtomicInteger remainRetries = new AtomicInteger(retries.orElse(0));
 
         Mono<Void> operation = Mono.from(mailStore.storeMail(recipient, mail))
-            .doOnError(error -> LOGGER.warn("Error While storing mail. This error will be retried for {} more times.", remainRetries.getAndDecrement(), error));
+            .doOnError(OverQuotaException.class, e -> LOGGER.info("Could not store mail due to quota error for user {}", username.asString()))
+            .doOnError(e -> !(e instanceof OverQuotaException), error -> LOGGER.warn("Error While storing mail. This error will be retried for {} more times.", remainRetries.getAndDecrement(), error));
 
         return retries.map(count ->
             operation
-                .retryWhen(Retry.backoff(count, FIRST_BACKOFF).maxBackoff(MAX_BACKOFF).scheduler(Schedulers.parallel()))
+                .retryWhen(Retry.backoff(count, FIRST_BACKOFF)
+                    .maxBackoff(MAX_BACKOFF)
+                    .filter(e -> !(e instanceof OverQuotaException))
+                    .scheduler(Schedulers.parallel()))
                 .then())
             .orElse(operation);
+    }
+
+    private Username computeUsername(MailAddress recipient) {
+        try {
+            return usersRepository.getUsername(recipient);
+        } catch (UsersRepositoryException e) {
+            LOGGER.warn("Unable to retrieve username for {}", recipient.asPrettyString(), e);
+            return Username.of(recipient.asString());
+        }
     }
 
     private Map<String, List<String>> saveHeaders(Mail mail, MailAddress recipient) throws MessagingException {

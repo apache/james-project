@@ -124,8 +124,7 @@ public class MailboxAppenderImpl implements MailboxAppender {
             },
             session -> appendMessageToMailbox(mail, session, mailboxPath, flags),
             this::closeProcessing)
-            .onErrorMap(OverQuotaException.class, e -> new MessagingException("Could not append due to quota error", e))
-            .onErrorMap(MailboxException.class, e -> new MessagingException("Unable to access mailbox.", e));
+            .onErrorMap(e -> e instanceof MailboxException && !(e instanceof OverQuotaException), e -> new MessagingException("Unable to access mailbox.", (MailboxException) e));
     }
 
     protected Mono<AppendResult> appendMessageToMailbox(MimeMessage mail, MailboxSession session, MailboxPath path, Optional<Flags> flags) {
