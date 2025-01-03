@@ -98,16 +98,13 @@ class DelegateSetCreatePerformer @Inject()(delegationStore: DelegationStore,
     SMono.fromPublisher(usersRepository.containsReactive(request.username))
       .filter(bool => bool)
       .flatMap(_ => SMono.fromPublisher(delegationStore.addAuthorizedUser(mailboxSession.getUser, request.username))
-        .subscriberContext(context => {
-          ReactorUtils.logWithContext(() => AuditTrail.entry
-            .username(() => mailboxSession.getUser.asString())
-            .protocol("JMAP")
-            .action("DelegateSet/create")
-            .parameters(() => ImmutableMap.of("delegator", mailboxSession.getUser.asString(),
-              "delegatee", request.username.asString()))
-            .log("Delegation added."), context)
-          context
-        })
+        .doOnSuccess(_ => ReactorUtils.logAsMono(() => AuditTrail.entry
+          .username(() => mailboxSession.getUser.asString())
+          .protocol("JMAP")
+          .action("DelegateSet/create")
+          .parameters(() => ImmutableMap.of("delegator", mailboxSession.getUser.asString(),
+            "delegatee", request.username.asString()))
+          .log("Delegation added.")))
         .`then`(SMono.just[CreationResult](CreationSuccess(delegateCreationId, evaluateCreationResponse(request, mailboxSession))))
         .onErrorResume(e => SMono.just[CreationResult](CreationFailure(delegateCreationId, e))))
       .switchIfEmpty(SMono.just[CreationResult](CreationFailure(delegateCreationId, new UserDoesNotExistException(request.username))))

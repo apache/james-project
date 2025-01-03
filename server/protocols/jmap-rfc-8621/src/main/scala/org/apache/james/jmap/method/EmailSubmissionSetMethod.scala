@@ -298,44 +298,38 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   private def enqueue(mail: Mail, delay: Duration, mailboxSession: MailboxSession): SMono[Unit] =
     (delay match {
       case d if d.isNegative || d.isZero => SMono(queue.enqueueReactive(mail))
-        .subscriberContext(context => {
-          ReactorUtils.logWithContext(() => AuditTrail.entry
-            .username(() => mailboxSession.getUser.asString())
-            .protocol("JMAP")
-            .action("EmailSubmission")
-            .parameters(() => ImmutableMap.of("mailId", mail.getName,
-              "mimeMessageId", Option(mail.getMessage)
-                .flatMap(message => Option(message.getMessageID))
-                .getOrElse(""),
-              "sender", mail.getMaybeSender.asString,
-              "recipients", StringUtils.join(mail.getRecipients),
-              "size", mail.getMessageSize.toString,
-              "loggedInUser", mailboxSession.getLoggedInUser.toScala
-                .map(_.asString())
-                .getOrElse("")))
-            .log("JMAP mail spooled."), context)
-          context
-        })
+        .doOnSuccess(_ => ReactorUtils.logAsMono(() => AuditTrail.entry
+          .username(() => mailboxSession.getUser.asString())
+          .protocol("JMAP")
+          .action("EmailSubmission")
+          .parameters(() => ImmutableMap.of("mailId", mail.getName,
+            "mimeMessageId", Option(mail.getMessage)
+              .flatMap(message => Option(message.getMessageID))
+              .getOrElse(""),
+            "sender", mail.getMaybeSender.asString,
+            "recipients", StringUtils.join(mail.getRecipients),
+            "size", mail.getMessageSize.toString,
+            "loggedInUser", mailboxSession.getLoggedInUser.toScala
+              .map(_.asString())
+              .getOrElse("")))
+          .log("JMAP mail spooled.")))
       case _ => SMono(queue.enqueueReactive(mail, delay))
-        .subscriberContext(context => {
-          ReactorUtils.logWithContext(() => AuditTrail.entry
-            .username(() => mailboxSession.getUser.asString())
-            .protocol("JMAP")
-            .action("EmailSubmission")
-            .parameters(() => ImmutableMap.of("mailId", mail.getName,
-              "mimeMessageId", Option(mail.getMessage)
-                .flatMap(message => Option(message.getMessageID))
-                .getOrElse(""),
-              "size", mail.getMessageSize.toString,
-              "sender", mail.getMaybeSender.asString,
-              "recipients", StringUtils.join(mail.getRecipients),
-              "holdFor", delay.toString,
-              "loggedInUser", mailboxSession.getLoggedInUser.toScala
-                .map(_.asString())
-                .getOrElse("")))
-            .log("JMAP mail spooled."), context)
-          context
-        })
+        .doOnSuccess(_ => ReactorUtils.logAsMono(() => AuditTrail.entry
+          .username(() => mailboxSession.getUser.asString())
+          .protocol("JMAP")
+          .action("EmailSubmission")
+          .parameters(() => ImmutableMap.of("mailId", mail.getName,
+            "mimeMessageId", Option(mail.getMessage)
+              .flatMap(message => Option(message.getMessageID))
+              .getOrElse(""),
+            "size", mail.getMessageSize.toString,
+            "sender", mail.getMaybeSender.asString,
+            "recipients", StringUtils.join(mail.getRecipients),
+            "holdFor", delay.toString,
+            "loggedInUser", mailboxSession.getLoggedInUser.toScala
+              .map(_.asString())
+              .getOrElse("")))
+          .log("JMAP mail spooled.")))
     }).`then`(SMono.fromCallable(() => LifecycleUtil.dispose(mail)).subscribeOn(Schedulers.boundedElastic()))
 
   private def retrieveDelay(mailParameters: Option[Map[ParameterName, Option[ParameterValue]]]): Try[Duration] =
