@@ -63,15 +63,16 @@ public interface PathConverter {
     class Default implements PathConverter {
         private static final int NAMESPACE = 0;
         private static final int USER = 1;
-        public static final Escaper USERNAME_ESCAPER = Escapers.builder()
-            .addEscape('.', "__")
-            .addEscape('_', "_-")
-            .build();
 
         private final MailboxSession mailboxSession;
+        private final Escaper usernameEscaper;
 
         private Default(MailboxSession mailboxSession) {
             this.mailboxSession = mailboxSession;
+            this.usernameEscaper = Escapers.builder()
+                    .addEscape(mailboxSession.getPathDelimiter(), "__")
+                    .addEscape('_', "_-")
+                    .build();
         }
 
         public MailboxPath buildFullPath(String mailboxName) {
@@ -151,7 +152,7 @@ public interface PathConverter {
                         sb.append(session.getPathDelimiter());
                     }
 
-                    sb.append(USERNAME_ESCAPER.escape(mailboxPath.getUser().getLocalPart()));
+                    sb.append(usernameEscaper.escape(mailboxPath.getUser().getLocalPart()));
                 }
             }
             if (mailboxPath.getName() != null && !mailboxPath.getName().isEmpty()) {
