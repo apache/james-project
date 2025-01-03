@@ -31,11 +31,16 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class MailboxSessionUtil {
     public static MailboxSession create(Username username) {
-        return create(username, MailboxSession.SessionId.of(ThreadLocalRandom.current().nextLong()));
+        return create(username, MailboxConstants.FOLDER_DELIMITER);
+    }
+
+    public static MailboxSession create(Username username, char folderDelimiter) {
+        return create(username, MailboxSession.SessionId.of(ThreadLocalRandom.current().nextLong()), folderDelimiter);
     }
 
     @VisibleForTesting
-    public static MailboxSession create(Username username, MailboxSession.SessionId sessionId) {
+    public static MailboxSession create(Username username, MailboxSession.SessionId sessionId,
+                                        char folderDelimiter) {
         ArrayList<Locale> locales = new ArrayList<>();
 
         return new MailboxSession(
@@ -43,7 +48,7 @@ public class MailboxSessionUtil {
             username,
             Optional.of(username),
             locales,
-            MailboxConstants.DEFAULT_DELIMITER,
+            folderDelimiter,
             MailboxSession.SessionType.User);
     }
 }

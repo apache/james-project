@@ -112,7 +112,7 @@ public interface PathConverter {
                     return new MailboxPath(MailboxConstants.USER_NAMESPACE, null, sanitizeMailboxName(mailboxName));
                 }
                 String username = mailboxPathParts.get(USER);
-                String unescapedUsername = username.replace("__", ".")
+                String unescapedUsername = username.replace("__", String.valueOf(MailboxConstants.FOLDER_DELIMITER))
                     .replace("_-", "_");
                 Username user = Username.from(unescapedUsername, session.getUser().getDomainPart().map(Domain::asString));
                 String mailboxName = Joiner.on(session.getPathDelimiter()).join(Iterables.skip(mailboxPathParts, 2));

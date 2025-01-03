@@ -19,36 +19,41 @@
 
 package org.apache.james.imap.main;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 
-public class DefaultPathConverterTest implements PathConverterBasicContract {
-
-    private PathConverter pathConverter;
-
-    @BeforeEach
-    void setup() {
-        pathConverter = PathConverter.Factory.DEFAULT.forSession(mailboxSession);
-    }
-
-    @Override
-    public PathConverter pathConverter() {
-        return pathConverter;
+public class DefaultPathConverterTest {
+    @Nested
+    public class DotDelimiter extends TestBase {
+        @Override
+        public char pathDelimiter() {
+            return '.';
+        }
     }
 
     @Nested
-    class WithEmailTest implements PathConverterBasicContract.WithEmail {
-
-        private PathConverter pathConverter;
-
-        @BeforeEach
-        void setup() {
-            pathConverter = PathConverter.Factory.DEFAULT.forSession(mailboxSession);
+    public class SlashDelimiter extends TestBase {
+        @Override
+        public char pathDelimiter() {
+            return '/';
         }
+    }
+
+    public abstract static class TestBase extends PathConverterBasicContract {
+        private final PathConverter pathConverter = PathConverter.Factory.DEFAULT.forSession(mailboxSession);
 
         @Override
         public PathConverter pathConverter() {
             return pathConverter;
+        }
+
+        @Nested
+        public class WithEmail extends PathConverterBasicContract.WithEmail {
+            private final PathConverter pathConverter = PathConverter.Factory.DEFAULT.forSession(mailboxWithEmailSession);
+
+            @Override
+            public PathConverter pathConverter() {
+                return pathConverter;
+            }
         }
     }
 }
