@@ -25,7 +25,7 @@ public class DefaultPathConverterTest {
     @Nested
     public class DotDelimiter extends TestBase {
         @Override
-        public char pathDelimiter() {
+        public char folderDelimiter() {
             return '.';
         }
     }
@@ -33,7 +33,7 @@ public class DefaultPathConverterTest {
     @Nested
     public class SlashDelimiter extends TestBase {
         @Override
-        public char pathDelimiter() {
+        public char folderDelimiter() {
             return '/';
         }
     }
