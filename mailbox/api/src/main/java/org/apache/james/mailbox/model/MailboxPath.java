@@ -35,6 +35,7 @@ import org.apache.james.mailbox.exception.HasEmptyMailboxNameInHierarchyExceptio
 import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -51,7 +52,8 @@ public class MailboxPath {
     private static final Joiner PARTS_JOINER = Joiner.on(':');
     private static final LookupTranslator USERNAME_ESCAPER = new LookupTranslator(Map.of(":", "/;", "/", "//"));
     private static final LookupTranslator USERNAME_UNESCAPER = new LookupTranslator(Map.of("/;", ":", "//", "/"));
-    private static final boolean RELAX_MAILBOX_NAME_VALIDATION = Boolean.parseBoolean(System.getProperty("james.relaxed.mailbox.name.validation", "false"));
+    @VisibleForTesting
+    static boolean RELAX_MAILBOX_NAME_VALIDATION = Boolean.parseBoolean(System.getProperty("james.relaxed.mailbox.name.validation", "false"));
 
     /**
      * Return a {@link MailboxPath} which represent the INBOX of the given
@@ -95,15 +97,18 @@ public class MailboxPath {
         return Username.of(USERNAME_UNESCAPER.translate(parts.get(1)));
     }
 
-    private static String evaluateInvalidChars() {
+    @VisibleForTesting
+    static String evaluateInvalidChars() {
         if (RELAX_MAILBOX_NAME_VALIDATION) {
             return "\r\n";
         }
         return "%*\r\n";
     }
 
-    private static final String INVALID_CHARS = evaluateInvalidChars();
-    private static final CharMatcher INVALID_CHARS_MATCHER = CharMatcher.anyOf(INVALID_CHARS);
+    @VisibleForTesting
+    static String INVALID_CHARS = evaluateInvalidChars();
+    @VisibleForTesting
+    static CharMatcher INVALID_CHARS_MATCHER = CharMatcher.anyOf(INVALID_CHARS);
     // This is the size that all mailbox backend should support
     public  static final int MAX_MAILBOX_NAME_LENGTH = 200;
 
