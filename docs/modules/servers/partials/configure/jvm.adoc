@@ -5,6 +5,21 @@ when a property affects very early JVM start behaviour.
 
 For testing purposes, you may specify a different file path via the command line option `-Dextra.props=/some/other/jvm.properties`.
 
+== Adjusting the Mailbox folder delimiter
+
+The delimiter used to separate parent/child folders.
+
+WARNING: This value should only be changed when setting up a new deployment. Changing the parameter for an existing deployments will likely lead to failure of some system components, as occurrences of old the delimiter will still be present in the database/data store.
+
+Optional. String. Defaults to 'dot'
+
+Ex in `jvm.properties`
+----
+james.mailbox.folder.delimiter=dot
+----
+
+Allowed values are: dot (will use '.' as delimiter), slash (will use '/' as delimiter).
+
 == Control the threshold memory
 This governs the threshold MimeMessageInputStreamSource relies on for storing MimeMessage content on disk.
 

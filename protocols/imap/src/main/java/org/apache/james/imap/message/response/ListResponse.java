@@ -106,7 +106,7 @@ public final class ListResponse extends AbstractListingResponse implements ImapR
             return name(subscribedPath.getName())
                 .children(MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN)
                 .selectability(MailboxMetaData.Selectability.NONE)
-                .hierarchyDelimiter(MailboxConstants.DEFAULT_DELIMITER)
+                .hierarchyDelimiter(MailboxConstants.FOLDER_DELIMITER)
                 .returnSubscribed(RETURN_SUBSCRIBED)
                 .returnNonExistent(RETURN_NON_EXISTENT)
                 .mailboxType(MailboxType.OTHER);

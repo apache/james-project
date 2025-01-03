@@ -27,259 +27,285 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-public interface PathConverterBasicContract {
+public abstract class PathConverterBasicContract {
+    public static final Username USERNAME = Username.of("username");
+    public static final Username USERNAME_WITH_DELIMITER = Username.of("username.with.delimiter");
+    public static final Username USERNAME_WITH_UNDERSCORE = Username.of("username_with_underscore");
+    public static final Username USERNAME2 = Username.of("username2");
 
-    Username USERNAME = Username.of("username");
-    Username USERNAME_WITH_DOT = Username.of("username.with.dot");
-    Username USERNAME_WITH_UNDERSCORE = Username.of("username_with_underscore");
-    Username USERNAME2 = Username.of("username2");
+    public static final Username USERNAME_WITH_MAIL = Username.of("username@apache.org");
+    public static final Username USERNAME2_WITH_MAIL = Username.of("username2@apache.org");
+    public static final boolean RELATIVE = true;
 
-    Username USERNAME_WITH_MAIL = Username.of("username@apache.org");
-    Username USERNAME2_WITH_MAIL = Username.of("username2@apache.org");
-    char PATH_DELIMITER = '.';
-    boolean RELATIVE = true;
+    public final MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME, pathDelimiter());
 
-    MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME);
+    abstract PathConverter pathConverter();
 
-    PathConverter pathConverter();
+    abstract char pathDelimiter();
+
+    static char initialPathDelimiter;
+
+    @BeforeEach
+    public void setUp() {
+        initialPathDelimiter = MailboxConstants.FOLDER_DELIMITER;
+        MailboxConstants.FOLDER_DELIMITER = pathDelimiter();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        MailboxConstants.FOLDER_DELIMITER = initialPathDelimiter;
+    }
+
+    static String adjustToTestDelimiter(String valueWithDots) {
+        // Because the test setup will configure the desired delimiter to be used,
+        // we do not need to pass it in manually here.
+        return valueWithDots.replace('.', MailboxConstants.FOLDER_DELIMITER);
+    }
+
+    static Username adjustToTestDelimiter(Username username) {
+        return Username.of(adjustToTestDelimiter(username.asString()));
+    }
 
     @Test
-    default void buildFullPathShouldAcceptNull() {
+    public void buildFullPathShouldAcceptNull() {
         assertThat(pathConverter().buildFullPath(null))
             .isEqualTo(new MailboxPath("", USERNAME, ""));
     }
 
     @Test
-    default void buildPathShouldAcceptEmpty() {
+    public void buildPathShouldAcceptEmpty() {
         assertThat(pathConverter().buildFullPath(""))
             .isEqualTo(new MailboxPath("", USERNAME, ""));
     }
 
     @Test
-    default void buildPathShouldAcceptRelativeMailboxName() {
+    public void buildPathShouldAcceptRelativeMailboxName() {
         String mailboxName = "mailboxName";
         assertThat(pathConverter().buildFullPath(mailboxName))
             .isEqualTo(MailboxPath.forUser(USERNAME, mailboxName));
     }
 
     @Test
-    default void buildFullPathShouldAcceptUserNamespace() {
+    public void buildFullPathShouldAcceptUserNamespace() {
         assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE))
             .isEqualTo(MailboxPath.forUser(USERNAME, ""));
     }
 
     @Test
-    default void buildFullPathShouldAcceptUserNamespaceAndDelimiter() {
-        assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + PATH_DELIMITER))
+    public void buildFullPathShouldAcceptUserNamespaceAndDelimiter() {
+        assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + pathDelimiter()))
             .isEqualTo(MailboxPath.forUser(USERNAME, ""));
     }
 
     @Test
-    default void buildFullPathShouldAcceptFullAbsoluteUserPath() {
+    public void buildFullPathShouldAcceptFullAbsoluteUserPath() {
         String mailboxName = "mailboxName";
-        assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + PATH_DELIMITER + mailboxName))
-            .isEqualTo(MailboxPath.forUser(USERNAME, mailboxName));
+        assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + pathDelimiter() + mailboxName))
+                .isEqualTo(MailboxPath.forUser(USERNAME, mailboxName));
     }
 
     @Test
-    default void buildFullPathShouldAcceptRelativePathWithSubFolder() {
-        String mailboxName = "mailboxName" + PATH_DELIMITER + "subFolder";
+    public void buildFullPathShouldAcceptRelativePathWithSubFolder() {
+        String mailboxName = adjustToTestDelimiter("mailboxName.subFolder");
         assertThat(pathConverter().buildFullPath(mailboxName))
-            .isEqualTo(MailboxPath.forUser(USERNAME, mailboxName));
+                .isEqualTo(MailboxPath.forUser(USERNAME, mailboxName));
     }
 
     @Test
-    default void buildFullPathShouldAcceptAbsoluteUserPathWithSubFolder() {
-        String mailboxName = "mailboxName.subFolder";
-        assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + PATH_DELIMITER + mailboxName))
-            .isEqualTo(MailboxPath.forUser(USERNAME, mailboxName));
+    public void buildFullPathShouldAcceptAbsoluteUserPathWithSubFolder() {
+        String mailboxName = adjustToTestDelimiter("mailboxName.subFolder");
+        assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + pathDelimiter() + mailboxName))
+                .isEqualTo(MailboxPath.forUser(USERNAME, mailboxName));
     }
 
     @Test
-    default void buildFullPathShouldAcceptAbsoluteOtherUserPath() {
-        assertThat(pathConverter().buildFullPath("#user.username2.abc"))
+    public void buildFullPathShouldAcceptAbsoluteOtherUserPath() {
+        assertThat(pathConverter().buildFullPath(adjustToTestDelimiter("#user.username2.abc")))
             .isEqualTo(MailboxPath.forUser(USERNAME2, "abc"));
     }
 
     @Test
-    default void buildFullPathShouldAcceptAbsoluteOtherUserPathWithDot() {
-        assertThat(pathConverter().buildFullPath("#user.username__with__dot.abc"))
-            .isEqualTo(MailboxPath.forUser(USERNAME_WITH_DOT, "abc"));
+    public void buildFullPathShouldAcceptAbsoluteOtherUserPathWithDelimiter() {
+        assertThat(pathConverter().buildFullPath(adjustToTestDelimiter("#user.username__with__delimiter.abc")))
+            .isEqualTo(MailboxPath.forUser(adjustToTestDelimiter(USERNAME_WITH_DELIMITER), "abc"));
     }
 
     @Test
-    default void buildFullPathShouldAcceptAbsoluteOtherUserPathWithUnderscore() {
-        assertThat(pathConverter().buildFullPath("#user.username_-with_-underscore.abc"))
+    public void buildFullPathShouldAcceptAbsoluteOtherUserPathWithUnderscore() {
+        assertThat(pathConverter().buildFullPath(adjustToTestDelimiter("#user.username_-with_-underscore.abc")))
             .isEqualTo(MailboxPath.forUser(USERNAME_WITH_UNDERSCORE, "abc"));
     }
 
     @Test
-    default void buildFullPathShouldAcceptAbsoluteOtherUserPathWithSubfolder() {
-        assertThat(pathConverter().buildFullPath("#user.username2.abc.def"))
-            .isEqualTo(MailboxPath.forUser(USERNAME2, "abc.def"));
+    public void buildFullPathShouldAcceptAbsoluteOtherUserPathWithSubfolder() {
+        assertThat(pathConverter().buildFullPath(adjustToTestDelimiter("#user.username2.abc.def")))
+            .isEqualTo(MailboxPath.forUser(USERNAME2, adjustToTestDelimiter("abc.def")));
     }
 
     @Test
-    default void buildFullPathShouldDenyMailboxPathNotBelongingToTheUser() {
+    public void buildFullPathShouldDenyMailboxPathNotBelongingToTheUser() {
         assertThatThrownBy(() -> pathConverter().buildFullPath("#any"))
             .isInstanceOf(DeniedAccessOnSharedMailboxException.class);
     }
 
     @Test
-    default void mailboxNameShouldReturnNameOnlyWhenRelativeAndUserMailbox() {
+    public void mailboxNameShouldReturnNameOnlyWhenRelativeAndUserMailbox() {
         assertThat(pathConverter().mailboxName(RELATIVE, MailboxPath.forUser(USERNAME, "abc"), mailboxSession))
             .contains("abc");
     }
 
     @Test
-    default void mailboxNameShouldReturnFQDNWhenRelativeAndOtherUserMailbox() {
+    public void mailboxNameShouldReturnFQDNWhenRelativeAndOtherUserMailbox() {
         assertThat(pathConverter().mailboxName(RELATIVE, MailboxPath.forUser(USERNAME2, "abc"), mailboxSession))
-            .contains("#user.username2.abc");
+            .contains(adjustToTestDelimiter("#user.username2.abc"));
     }
 
     @Test
-    default void mailboxNameShouldEscapeDotInUsername() {
-        assertThat(pathConverter().mailboxName(RELATIVE, MailboxPath.forUser(USERNAME_WITH_DOT, "abc"), mailboxSession))
-            .contains("#user.username__with__dot.abc");
+    public void mailboxNameShouldEscapeDelimiterInUsername() {
+        assertThat(pathConverter().mailboxName(RELATIVE, MailboxPath.forUser(adjustToTestDelimiter(USERNAME_WITH_DELIMITER), "abc"), mailboxSession))
+            .contains(adjustToTestDelimiter("#user.username__with__delimiter.abc"));
     }
 
     @Test
-    default void mailboxNameShouldEscapeUnderscoreInUsername() {
+    public void mailboxNameShouldEscapeUnderscoreInUsername() {
         assertThat(pathConverter().mailboxName(RELATIVE, MailboxPath.forUser(USERNAME_WITH_UNDERSCORE, "abc"), mailboxSession))
-            .contains("#user.username_-with_-underscore.abc");
+            .contains(adjustToTestDelimiter("#user.username_-with_-underscore.abc"));
     }
 
     @Test
-    default void mailboxNameShouldReturnFQDNWhenRelativeAndSharedMailbox() {
+    public void mailboxNameShouldReturnFQDNWhenRelativeAndSharedMailbox() {
         assertThat(pathConverter().mailboxName(RELATIVE, new MailboxPath("#Shared", Username.of("marketing"), "abc"), mailboxSession))
-            .contains("#Shared.marketing.abc");
+            .contains(adjustToTestDelimiter("#Shared.marketing.abc"));
     }
 
     @Test
-    default void mailboxNameShouldReturnFQDNWhenNotRelativeAndUserMailbox() {
+    public void mailboxNameShouldReturnFQDNWhenNotRelativeAndUserMailbox() {
+        String mailboxName = adjustToTestDelimiter("#private.abc");
         assertThat(pathConverter().mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME, "abc"), mailboxSession))
-            .contains("#private.abc");
+            .contains(mailboxName);
     }
 
     @Test
-    default void mailboxNameShouldReturnFQDNWhenNotRelativeAndOtherUserMailbox() {
+    public void mailboxNameShouldReturnFQDNWhenNotRelativeAndOtherUserMailbox() {
         assertThat(pathConverter().mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME2, "abc"), mailboxSession))
-            .contains("#user.username2.abc");
+            .contains(adjustToTestDelimiter("#user.username2.abc"));
     }
 
     @Test
-    default void mailboxNameShouldReturnFQDNWhenNotRelativeAndSharedMailbox() {
+    public void mailboxNameShouldReturnFQDNWhenNotRelativeAndSharedMailbox() {
         assertThat(pathConverter().mailboxName(!RELATIVE, new MailboxPath("#Shared", Username.of("marketing"), "abc"), mailboxSession))
-            .contains("#Shared.marketing.abc");
+            .contains(adjustToTestDelimiter("#Shared.marketing.abc"));
     }
     
     @Nested
-    interface WithEmail {
-        MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME_WITH_MAIL);
+    public abstract class WithEmail {
+        public final MailboxSession mailboxWithEmailSession = MailboxSessionUtil.create(USERNAME_WITH_MAIL, pathDelimiter());
 
-        PathConverter pathConverter();
+        public abstract PathConverter pathConverter();
 
         @Test
-        default void buildFullPathShouldAcceptNull() {
+        public void buildFullPathShouldAcceptNull() {
             assertThat(pathConverter().buildFullPath(null))
                 .isEqualTo(new MailboxPath("", USERNAME_WITH_MAIL, ""));
         }
 
         @Test
-        default void buildPathShouldAcceptEmpty() {
+        public void buildPathShouldAcceptEmpty() {
             assertThat(pathConverter().buildFullPath(""))
                 .isEqualTo(new MailboxPath("", USERNAME_WITH_MAIL, ""));
         }
 
         @Test
-        default void buildPathShouldAcceptRelativeMailboxName() {
+        public void buildPathShouldAcceptRelativeMailboxName() {
             String mailboxName = "mailboxName";
             assertThat(pathConverter().buildFullPath(mailboxName))
                 .isEqualTo(MailboxPath.forUser(USERNAME_WITH_MAIL, mailboxName));
         }
 
         @Test
-        default void buildFullPathShouldAcceptUserNamespace() {
+        public void buildFullPathShouldAcceptUserNamespace() {
             assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE))
                 .isEqualTo(MailboxPath.forUser(USERNAME_WITH_MAIL, ""));
         }
 
         @Test
-        default void buildFullPathShouldAcceptUserNamespaceAndDelimiter() {
-            assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + PATH_DELIMITER))
+        public void buildFullPathShouldAcceptUserNamespaceAndDelimiter() {
+            assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + pathDelimiter()))
                 .isEqualTo(MailboxPath.forUser(USERNAME_WITH_MAIL, ""));
         }
 
         @Test
-        default void buildFullPathShouldAcceptFullAbsoluteUserPath() {
+        public void buildFullPathShouldAcceptFullAbsoluteUserPath() {
             String mailboxName = "mailboxName";
-            assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + PATH_DELIMITER + mailboxName))
+            assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + pathDelimiter() + mailboxName))
                 .isEqualTo(MailboxPath.forUser(USERNAME_WITH_MAIL, mailboxName));
         }
 
         @Test
-        default void buildFullPathShouldAcceptRelativePathWithSubFolder() {
-            String mailboxName = "mailboxName" + PATH_DELIMITER + "subFolder";
+        public void buildFullPathShouldAcceptRelativePathWithSubFolder() {
+            String mailboxName = "mailboxName" + pathDelimiter() + "subFolder";
             assertThat(pathConverter().buildFullPath(mailboxName))
                 .isEqualTo(MailboxPath.forUser(USERNAME_WITH_MAIL, mailboxName));
         }
 
         @Test
-        default void buildFullPathShouldAcceptAbsoluteUserPathWithSubFolder() {
-            String mailboxName = "mailboxName.subFolder";
-            assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + PATH_DELIMITER + mailboxName))
+        public void buildFullPathShouldAcceptAbsoluteUserPathWithSubFolder() {
+            String mailboxName = adjustToTestDelimiter("mailboxName.subFolder");
+            assertThat(pathConverter().buildFullPath(MailboxConstants.USER_NAMESPACE + pathDelimiter() + mailboxName))
                 .isEqualTo(MailboxPath.forUser(USERNAME_WITH_MAIL, mailboxName));
         }
 
         @Test
-        default void buildFullPathShouldAcceptAbsoluteOtherUserPath() {
-            assertThat(pathConverter().buildFullPath("#user.username2.abc"))
+        public void buildFullPathShouldAcceptAbsoluteOtherUserPath() {
+            assertThat(pathConverter().buildFullPath(adjustToTestDelimiter("#user.username2.abc")))
                 .isEqualTo(MailboxPath.forUser(USERNAME2_WITH_MAIL, "abc"));
         }
 
         @Test
-        default void buildFullPathShouldAcceptAbsoluteOtherUserPathWithSubfolder() {
-            assertThat(pathConverter().buildFullPath("#user.username2.abc.def"))
-                .isEqualTo(MailboxPath.forUser(USERNAME2_WITH_MAIL, "abc.def"));
+        public void buildFullPathShouldAcceptAbsoluteOtherUserPathWithSubfolder() {
+            assertThat(pathConverter().buildFullPath(adjustToTestDelimiter("#user.username2.abc.def")))
+                .isEqualTo(MailboxPath.forUser(USERNAME2_WITH_MAIL, adjustToTestDelimiter("abc.def")));
         }
 
         @Test
-        default void mailboxNameShouldReturnNameOnlyWhenRelativeAndUserMailbox() {
-            assertThat(pathConverter().mailboxName(RELATIVE, MailboxPath.forUser(USERNAME_WITH_MAIL, "abc"), mailboxSession))
+        public void mailboxNameShouldReturnNameOnlyWhenRelativeAndUserMailbox() {
+            assertThat(pathConverter().mailboxName(RELATIVE, MailboxPath.forUser(USERNAME_WITH_MAIL, "abc"), mailboxWithEmailSession))
                 .contains("abc");
         }
 
         @Test
-        default void mailboxNameShouldReturnFQDNWhenRelativeAndOtherUserMailbox() {
-            assertThat(pathConverter().mailboxName(RELATIVE, MailboxPath.forUser(USERNAME2_WITH_MAIL, "abc"), mailboxSession))
-                .contains("#user.username2.abc");
+        public void mailboxNameShouldReturnFQDNWhenRelativeAndOtherUserMailbox() {
+            assertThat(pathConverter().mailboxName(RELATIVE, MailboxPath.forUser(USERNAME2_WITH_MAIL, "abc"), mailboxWithEmailSession))
+                .contains(adjustToTestDelimiter("#user.username2.abc"));
         }
 
         @Test
-        default void mailboxNameShouldReturnFQDNWhenRelativeAndSharedMailbox() {
-            assertThat(pathConverter().mailboxName(RELATIVE, new MailboxPath("#Shared", Username.of("marketing@apache.org"), "abc"), mailboxSession))
-                .contains("#Shared.marketing.abc");
+        public void mailboxNameShouldReturnFQDNWhenRelativeAndSharedMailbox() {
+            assertThat(pathConverter().mailboxName(RELATIVE, new MailboxPath("#Shared", Username.of("marketing@apache.org"), "abc"), mailboxWithEmailSession))
+                .contains(adjustToTestDelimiter("#Shared.marketing.abc"));
         }
 
         @Test
-        default void mailboxNameShouldReturnFQDNWhenNotRelativeAndUserMailbox() {
-            assertThat(pathConverter().mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME_WITH_MAIL, "abc"), mailboxSession))
-                .contains("#private.abc");
+        public void mailboxNameShouldReturnFQDNWhenNotRelativeAndUserMailbox() {
+            assertThat(pathConverter().mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME_WITH_MAIL, "abc"), mailboxWithEmailSession))
+                .contains(adjustToTestDelimiter("#private.abc"));
         }
 
         @Test
-        default void mailboxNameShouldReturnFQDNWhenNotRelativeAndOtherUserMailbox() {
-            assertThat(pathConverter().mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME2_WITH_MAIL, "abc"), mailboxSession))
-                .contains("#user.username2.abc");
+        public void mailboxNameShouldReturnFQDNWhenNotRelativeAndOtherUserMailbox() {
+            assertThat(pathConverter().mailboxName(!RELATIVE, MailboxPath.forUser(USERNAME2_WITH_MAIL, "abc"), mailboxWithEmailSession))
+                .contains(adjustToTestDelimiter("#user.username2.abc"));
         }
 
         @Test
-        default void mailboxNameShouldReturnFQDNWhenNotRelativeAndSharedMailbox() {
-            assertThat(pathConverter().mailboxName(!RELATIVE, new MailboxPath("#Shared", Username.of("marketing@apache.org"), "abc"), mailboxSession))
-                .contains("#Shared.marketing.abc");
+        public void mailboxNameShouldReturnFQDNWhenNotRelativeAndSharedMailbox() {
+            assertThat(pathConverter().mailboxName(!RELATIVE, new MailboxPath("#Shared", Username.of("marketing@apache.org"), "abc"), mailboxWithEmailSession))
+                .contains(adjustToTestDelimiter("#Shared.marketing.abc"));
         }
     }
 }
