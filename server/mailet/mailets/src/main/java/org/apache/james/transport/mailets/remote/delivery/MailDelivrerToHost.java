@@ -249,15 +249,19 @@ public class MailDelivrerToHost {
     private SMTPMessage toSmtpMessageWithExtensions(Mail mail, SMTPMessage smtpMessage) {
         mail.attributesMap().forEach((attributeName, attribute) -> {
             if (supportedMailAttributesList.contains(attributeName.asString())) {
+                String existingMessageExtensions = Optional.ofNullable(smtpMessage.getMailExtension())
+                    .map(extension -> " " + extension)
+                    .orElse("");
                 switch (attributeName.asString()) {
                     case MAIL_PRIORITY_ATTRIBUTE_NAME ->
-                            smtpMessage.setMailExtension(smtpMessage.getMailExtension() + " " +
-                                    MT_PRIORITY + "=" + attribute.getValue().value());
+                        smtpMessage.setMailExtension(MT_PRIORITY + "=" + attribute.getValue().value() +
+                            existingMessageExtensions);
                     case REQUIRE_TLS -> {
                         if (isRequireTlsAttribute(mail)) {
-                            smtpMessage.setMailExtension(smtpMessage.getMailExtension() + " " + REQUIRE_TLS);
+                            smtpMessage.setMailExtension(REQUIRE_TLS + existingMessageExtensions);
                         }
                     }
+                    default -> throw new NotImplementedException("Unknown mail attribute cannot be handled: {}", attributeName.asString());
                 }
             }
         });
