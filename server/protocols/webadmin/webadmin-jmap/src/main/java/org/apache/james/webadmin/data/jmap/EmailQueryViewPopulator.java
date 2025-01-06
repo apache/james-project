@@ -139,6 +139,7 @@ public class EmailQueryViewPopulator {
     private Flux<MessageResult> listUserMailboxMessages(Progress progress, MailboxSession session) {
         return listUsersMailboxes(session)
             .flatMap(mailboxMetadata -> retrieveMailbox(session, mailboxMetadata), MAILBOX_CONCURRENCY)
+            .concatMap(mailbox -> emailQueryView.delete(mailbox.getId()).thenReturn(mailbox))
             .flatMap(Throwing.function(messageManager -> listAllMessages(messageManager, session)), MAILBOX_CONCURRENCY)
             .onErrorResume(MailboxException.class, e -> {
                 LOGGER.error("JMAP emailQuery view re-computation aborted for {} as we failed listing user mailboxes", session.getUser(), e);
