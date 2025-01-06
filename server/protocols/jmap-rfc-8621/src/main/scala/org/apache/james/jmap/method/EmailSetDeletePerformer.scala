@@ -28,8 +28,9 @@ import org.apache.james.jmap.mail.{DestroyIds, EmailSet, EmailSetRequest, Unpars
 import org.apache.james.jmap.method.EmailSetDeletePerformer.{DestroyFailure, DestroyResult, DestroyResults}
 import org.apache.james.mailbox.model.{DeleteResult, MessageId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
-import org.apache.james.util.AuditTrail
+import org.apache.james.util.{AuditTrail, ReactorUtils}
 import org.slf4j.LoggerFactory
+import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
@@ -109,7 +110,7 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
 
   private def auditTrail(deleteResult: DeleteResult, mailboxSession: MailboxSession): Unit =
     if (!deleteResult.getDestroyed.isEmpty) {
-      AuditTrail.entry
+      ReactorUtils.logAsMono(() => AuditTrail.entry
         .username(() => mailboxSession.getUser.asString())
         .protocol("JMAP")
         .action("Email/set destroy")
@@ -117,6 +118,6 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
           "loggedInUser", mailboxSession.getLoggedInUser.toScala
             .map(_.asString())
             .getOrElse("")))
-        .log("Mails deleted.")
+        .log("Mails deleted."))
     }
 }

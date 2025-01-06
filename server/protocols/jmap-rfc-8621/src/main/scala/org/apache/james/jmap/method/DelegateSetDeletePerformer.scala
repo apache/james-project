@@ -80,12 +80,12 @@ class DelegateSetDeletePerformer @Inject()(delegationStore: DelegationStore) {
           .filter(authorizedUser => DelegationId.from(baseUser, authorizedUser).equals(id))
           .next()
           .flatMap(authorizedUser => SMono(delegationStore.removeAuthorizedUser(baseUser, authorizedUser))
-            .doOnSuccess(_ => AuditTrail.entry
+            .doOnSuccess(_ => ReactorUtils.logAsMono(() => AuditTrail.entry
               .username(() => baseUser.asString())
               .protocol("JMAP")
               .action("DelegateSet/destroy")
               .parameters(() => ImmutableMap.of("delegator", baseUser.asString(),
                 "delegatee", authorizedUser.asString()))
-              .log("Delegation removed.")))
+              .log("Delegation removed."))))
           .`then`(SMono.just[DelegateDeletionResult](DelegateDeletionSuccess(id))))
 }

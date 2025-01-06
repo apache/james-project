@@ -51,7 +51,7 @@ import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.server.core.{MailImpl, MimeMessageSource, MimeMessageWrapper}
-import org.apache.james.util.AuditTrail
+import org.apache.james.util.{AuditTrail, ReactorUtils}
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue, Mail}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
@@ -298,7 +298,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   private def enqueue(mail: Mail, delay: Duration, mailboxSession: MailboxSession): SMono[Unit] =
     (delay match {
       case d if d.isNegative || d.isZero => SMono(queue.enqueueReactive(mail))
-        .doOnSuccess(_ => AuditTrail.entry
+        .doOnSuccess(_ => ReactorUtils.logAsMono(() => AuditTrail.entry
           .username(() => mailboxSession.getUser.asString())
           .protocol("JMAP")
           .action("EmailSubmission")
@@ -312,9 +312,9 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
             "loggedInUser", mailboxSession.getLoggedInUser.toScala
               .map(_.asString())
               .getOrElse("")))
-          .log("JMAP mail spooled."))
+          .log("JMAP mail spooled.")))
       case _ => SMono(queue.enqueueReactive(mail, delay))
-        .doOnSuccess(_ => AuditTrail.entry
+        .doOnSuccess(_ => ReactorUtils.logAsMono(() => AuditTrail.entry
           .username(() => mailboxSession.getUser.asString())
           .protocol("JMAP")
           .action("EmailSubmission")
@@ -329,7 +329,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
             "loggedInUser", mailboxSession.getLoggedInUser.toScala
               .map(_.asString())
               .getOrElse("")))
-          .log("JMAP mail spooled."))
+          .log("JMAP mail spooled.")))
     }).`then`(SMono.fromCallable(() => LifecycleUtil.dispose(mail)).subscribeOn(Schedulers.boundedElastic()))
 
   private def retrieveDelay(mailParameters: Option[Map[ParameterName, Option[ParameterValue]]]): Try[Duration] =
