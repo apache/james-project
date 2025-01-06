@@ -195,7 +195,7 @@ public class LuceneIndexableDocument {
         doc.add(new TextField(BCC_FIELD, uppercase(EMailers.from(headerCollection.getBccAddressSet()).serialize()), Field.Store.YES));
 
         // index body
-        Optional<String> bodyText = mimePartExtracted.locateFirstTextBody();
+        Optional<String> bodyText = mimePartExtracted.locateFirstTextBody().map(SearchUtil::removeGreaterThanCharactersAtBeginningOfLine);
         Optional<String> bodyHtml = mimePartExtracted.locateFirstHtmlBody();
 
         bodyText.or(() -> bodyHtml)

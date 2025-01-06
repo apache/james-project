@@ -532,4 +532,43 @@ public interface SearchHighLighterContract {
             softly.assertThat(searchSnippets.getFirst().highlightedBody().get()).contains("<mark>barcamp</mark>");
         });
     }
+
+    @Test
+    default void highlightSearchShouldShortenGreaterThanCharacters() throws Exception {
+        MailboxSession session = session(USERNAME1);
+
+        // Given m1,m2 with m1 has body containing the searched word (contentA)
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("Hallo, Thx Matthieu for your help")
+                    .setBody("Start \n>>>>>>>>>> append contentA to > inbox \n>>>>>> End",
+                        StandardCharsets.UTF_8)),
+            session).getId();
+
+        ComposedMessageId m2 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("Hallo, Thx Alex for your help")
+                    .setBody("append contentB to inbox", StandardCharsets.UTF_8)),
+            session).getId();
+
+        verifyMessageWasIndexed(2);
+
+        // When searching for the word (contentA) in the body
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(
+                SearchQuery.bodyContains("contentA")))
+            .inMailboxes(List.of(m1.getMailboxId(), m2.getMailboxId()))
+            .build();
+
+        // Then highlightSearch should return the SearchSnippet with the highlightedBody containing the word (contentA)
+        List<SearchSnippet> searchSnippets = Flux.from(testee().highlightSearch(List.of(m1.getMessageId(), m2.getMessageId()), multiMailboxSearch, session))
+            .collectList()
+            .block();
+        assertThat(searchSnippets).hasSize(1);
+        assertSoftly(softly -> {
+            softly.assertThat(searchSnippets.getFirst().messageId()).isEqualTo(m1.getMessageId());
+            softly.assertThat(searchSnippets.getFirst().highlightedBody().get()).isEqualTo("Start \n append <mark>contentA</mark> to &gt; inbox \n End");
+        });
+    }
 }
