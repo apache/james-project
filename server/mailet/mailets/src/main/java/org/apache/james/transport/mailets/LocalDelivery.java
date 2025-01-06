@@ -83,6 +83,7 @@ public class LocalDelivery extends GenericMailet {
             .onMailetException(getInitParameter("onMailetException", Mail.ERROR))
             .retries(MailetUtil.getInitParameterAsInteger(getInitParameter("retries"), Optional.of(MailDispatcher.RETRIES)))
             .mailetContext(getMailetContext())
+            .usersRepository(usersRepository)
             .build();
     }
 

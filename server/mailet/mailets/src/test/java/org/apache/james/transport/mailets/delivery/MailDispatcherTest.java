@@ -38,6 +38,8 @@ import jakarta.mail.MessagingException;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders.Header;
@@ -64,12 +66,14 @@ class MailDispatcherTest {
 
     private FakeMailContext fakeMailContext;
     private MailStore mailStore;
+    private UsersRepository usersRepository;
 
     @BeforeEach
     public void setUp() throws Exception {
         fakeMailContext = FakeMailContext.defaultContext();
         mailStore = mock(MailStore.class);
         when(mailStore.storeMail(any(), any())).thenReturn(Mono.empty());
+        usersRepository = MemoryUsersRepository.withVirtualHosting(null);
     }
 
     @Test
@@ -78,6 +82,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
             .consume(true)
+            .usersRepository(usersRepository)
             .build();
 
         FakeMail mail = FakeMail.builder()
@@ -101,6 +106,7 @@ class MailDispatcherTest {
             .retries(3)
             .mailStore(mailStore)
             .consume(true)
+            .usersRepository(usersRepository)
             .build();
 
         AtomicInteger counter = new AtomicInteger(0);
@@ -132,6 +138,7 @@ class MailDispatcherTest {
             .retries(0)
             .mailStore(mailStore)
             .consume(true)
+            .usersRepository(usersRepository)
             .build();
 
         AtomicInteger counter = new AtomicInteger(0);
@@ -162,6 +169,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
             .consume(true)
+            .usersRepository(usersRepository)
             .build();
 
         FakeMail mail = FakeMail.builder()
@@ -181,6 +189,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
             .consume(false)
+            .usersRepository(usersRepository)
             .build();
 
         String state = "state";
@@ -201,6 +210,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
             .consume(true)
+            .usersRepository(usersRepository)
             .build();
         doReturn(Mono.error(new MessagingException()))
             .when(mailStore)
@@ -237,6 +247,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
             .consume(false)
+            .usersRepository(usersRepository)
             .build();
 
         FakeMail mail = FakeMail.builder()
@@ -262,6 +273,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(accumulatorTestHeaderMailStore)
             .consume(false)
+            .usersRepository(usersRepository)
             .build();
 
         FakeMail mail = FakeMail.builder()
@@ -285,6 +297,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(accumulatorTestHeaderMailStore)
             .consume(false)
+            .usersRepository(usersRepository)
             .build();
 
         FakeMail mail = FakeMail.builder()
@@ -308,6 +321,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(accumulatorTestHeaderMailStore)
             .consume(false)
+            .usersRepository(usersRepository)
             .build();
 
         FakeMail mail = FakeMail.builder()
@@ -333,6 +347,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(accumulatorTestHeaderMailStore)
             .consume(false)
+            .usersRepository(usersRepository)
             .build();
 
         FakeMail mail = FakeMail.builder()
@@ -359,6 +374,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(accumulatorTestHeaderMailStore)
             .consume(false)
+            .usersRepository(usersRepository)
             .build();
 
         FakeMail mail = FakeMail.builder()
@@ -382,6 +398,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(accumulatorTestHeaderMailStore)
             .consume(false)
+            .usersRepository(usersRepository)
             .build();
 
         String headerValue = "arbitraryValue";
@@ -406,6 +423,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
             .onMailetException("ignore")
+            .usersRepository(usersRepository)
             .build();
 
         doReturn(Mono.error(new MessagingException()))
@@ -434,6 +452,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
             .onMailetException("errorProcessor1")
+            .usersRepository(usersRepository)
             .build();
 
         doReturn(Mono.error(new MessagingException()))
@@ -463,6 +482,7 @@ class MailDispatcherTest {
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
             .onMailetException("propagate")
+            .usersRepository(usersRepository)
             .build();
 
         doReturn(Mono.error(new MessagingException()))
