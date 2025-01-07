@@ -267,7 +267,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
 
         allSubscribedSearch.stream()
             .filter(subscribed -> !listRecursiveMatchPath.contains(subscribed))
-            .filter(mailboxQuery::isPathMatch)
+            .filter(searchedResultMap::containsKey)
             .flatMap(subscribed -> buildListResponse(listRequest, searchedResultMap, session, relative, subscribed).stream())
             .filter(pair -> !listRequest.getSelectOptions().contains(SPECIAL_USE) || mailboxTyper.getMailboxType(session, pair.getKey()).getRfc6154attributeName() != null)
             .forEach(pair -> responseBuilders.add(Triple.of(pair.getLeft(), pair.getRight(), Optional.ofNullable(searchedResultMap.get(pair.getLeft())))));
