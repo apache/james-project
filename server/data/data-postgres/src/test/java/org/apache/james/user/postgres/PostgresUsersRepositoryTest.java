@@ -22,6 +22,7 @@ package org.apache.james.user.postgres;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
@@ -71,6 +72,11 @@ class PostgresUsersRepositoryTest {
             return getUsersRepository(testSystem.getDomainList(), extension.isSupportVirtualHosting(), administrator);
         }
 
+        @Override
+        public UsersRepository testee(Set<Username> administrators) throws Exception {
+            return getUsersRepository(testSystem.getDomainList(), extension.isSupportVirtualHosting(), administrators);
+        }
+
         @Test
         void listUsersReactiveThenExecuteOtherPostgresQueriesShouldNotHang() throws Exception {
             Domain domain = Domain.of("example.com");
@@ -115,14 +121,26 @@ class PostgresUsersRepositoryTest {
         public UsersRepository testee(Optional<Username> administrator) throws Exception {
             return getUsersRepository(testSystem.getDomainList(), extension.isSupportVirtualHosting(), administrator);
         }
+
+        @Override
+        public UsersRepository testee(Set<Username> administrators) throws Exception {
+            return getUsersRepository(testSystem.getDomainList(), extension.isSupportVirtualHosting(), administrators);
+        }
     }
 
     private static UsersRepositoryImpl<PostgresUsersDAO> getUsersRepository(DomainList domainList, boolean enableVirtualHosting, Optional<Username> administrator) throws Exception {
+        Set<Username> administrators = administrator.map(Set::of)
+            .orElse(Set.of());
+
+        return getUsersRepository(domainList, enableVirtualHosting, administrators);
+    }
+
+    private static UsersRepositoryImpl<PostgresUsersDAO> getUsersRepository(DomainList domainList, boolean enableVirtualHosting, Set<Username> administrators) throws Exception {
         PostgresUsersDAO usersDAO = new PostgresUsersDAO(postgresExtension.getDefaultPostgresExecutor(),
             PostgresUsersRepositoryConfiguration.DEFAULT);
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("enableVirtualHosting", String.valueOf(enableVirtualHosting));
-        administrator.ifPresent(username -> configuration.addProperty("administratorId", username.asString()));
+        administrators.forEach(admin -> configuration.addProperty("administratorIds.administratorId", admin.asString()));
 
         UsersRepositoryImpl<PostgresUsersDAO> usersRepository = new PostgresUsersRepository(domainList, usersDAO);
         usersRepository.configure(configuration);
