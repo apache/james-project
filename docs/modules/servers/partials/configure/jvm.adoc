@@ -18,7 +18,7 @@ Ex in `jvm.properties`
 james.mailbox.folder.delimiter=dot
 ----
 
-Allowed values are: dot (will use '.' as delimiter), slash (will use '/' as delimiter).
+Allowed values are: dot (will use '.' as delimiter), slash (will use '/' as delimiter), pipe ('|'), comma (','), colon (':'), semicolon (';').
 
 == Control the threshold memory
 This governs the threshold MimeMessageInputStreamSource relies on for storing MimeMessage content on disk.

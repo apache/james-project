@@ -38,9 +38,19 @@ public class MailboxConstants {
     public static char FOLDER_DELIMITER = Optional.ofNullable(System.getProperty("james.mailbox.folder.delimiter"))
             .map(MailboxFolderDelimiter::parse).orElse(MailboxFolderDelimiter.DOT).value;
 
-    enum MailboxFolderDelimiter {
+    public enum MailboxFolderDelimiter {
+        // NOTE: When changing this list, make sure to adjust the MailboxFolderDelimiterAwareTests as well.
+        // Values currently left-out explicitly:
+        // hash sign '#' (Clashes with namespace prefix character)
+        // backslash '\\' (Anticipated some problems with the PrefixedRegex matching.
+        //                 Also, because it is the escaping character, it can generally be a bit more annoying
+        //                 to deal with in strings)
         DOT('.'),
-        SLASH('/');
+        SLASH('/'),
+        PIPE('|'),
+        COMMA(','),
+        COLON(':'),
+        SEMICOLON(';');
 
         public final char value;
 
