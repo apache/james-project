@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxFolderDelimiterAwareTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ class PrefixedRegexTest {
     public class DotDelimiter extends TestBase {
         @Override
         public char folderDelimiter() {
-            return '.';
+            return MailboxConstants.MailboxFolderDelimiter.DOT.value;
         }
     }
 
@@ -46,7 +47,39 @@ class PrefixedRegexTest {
     public class SlashDelimiter extends TestBase {
         @Override
         public char folderDelimiter() {
-            return '/';
+            return MailboxConstants.MailboxFolderDelimiter.SLASH.value;
+        }
+    }
+
+    @Nested
+    public class PipeDelimiter extends TestBase {
+        @Override
+        public char folderDelimiter() {
+            return MailboxConstants.MailboxFolderDelimiter.PIPE.value;
+        }
+    }
+
+    @Nested
+    public class CommaDelimiter extends TestBase {
+        @Override
+        public char folderDelimiter() {
+            return MailboxConstants.MailboxFolderDelimiter.COMMA.value;
+        }
+    }
+
+    @Nested
+    public class ColonDelimiter extends TestBase {
+        @Override
+        public char folderDelimiter() {
+            return MailboxConstants.MailboxFolderDelimiter.COLON.value;
+        }
+    }
+
+    @Nested
+    public class SemicolonDelimiter extends TestBase {
+        @Override
+        public char folderDelimiter() {
+            return MailboxConstants.MailboxFolderDelimiter.SEMICOLON.value;
         }
     }
 

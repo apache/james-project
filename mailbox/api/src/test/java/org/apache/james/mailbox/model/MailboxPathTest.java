@@ -48,7 +48,7 @@ class MailboxPathTest {
     public class DotDelimiter extends TestBase {
         @Override
         public char folderDelimiter() {
-            return '.';
+            return MailboxConstants.MailboxFolderDelimiter.DOT.value;
         }
     }
 
@@ -56,7 +56,39 @@ class MailboxPathTest {
     public class SlashDelimiter extends TestBase {
         @Override
         public char folderDelimiter() {
-            return '/';
+            return MailboxConstants.MailboxFolderDelimiter.SLASH.value;
+        }
+    }
+
+    @Nested
+    public class PipeDelimiter extends TestBase {
+        @Override
+        public char folderDelimiter() {
+            return MailboxConstants.MailboxFolderDelimiter.PIPE.value;
+        }
+    }
+
+    @Nested
+    public class CommaDelimiter extends TestBase {
+        @Override
+        public char folderDelimiter() {
+            return MailboxConstants.MailboxFolderDelimiter.COMMA.value;
+        }
+    }
+
+    @Nested
+    public class ColonDelimiter extends TestBase {
+        @Override
+        public char folderDelimiter() {
+            return MailboxConstants.MailboxFolderDelimiter.COLON.value;
+        }
+    }
+
+    @Nested
+    public class SemicolonDelimiter extends TestBase {
+        @Override
+        public char folderDelimiter() {
+            return MailboxConstants.MailboxFolderDelimiter.SEMICOLON.value;
         }
     }
 
