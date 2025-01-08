@@ -124,13 +124,16 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
                   .`then`())
             }
           }))
-      .doOnSuccess(_ => ReactorUtils.logAsMono(() => AuditTrail.entry
-        .username(() => mailboxSession.getUser.asString())
-        .protocol("JMAP")
-        .action("Mailbox/set delete")
-        .parameters(() => ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser.toScala.map(_.asString()).getOrElse(""),
-          "mailboxId", id.serialize()))
-        .log("JMAP mailbox delete succeeded.")))
+      .doOnSuccess(_ => auditTrail(mailboxSession, id))
+
+  private def auditTrail(mailboxSession: MailboxSession, id: MailboxId): Unit =
+    ReactorUtils.logAsMono(() => AuditTrail.entry
+      .username(() => mailboxSession.getUser.asString())
+      .protocol("JMAP")
+      .action("Mailbox/set delete")
+      .parameters(() => ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser.toScala.map(_.asString()).getOrElse(""),
+        "mailboxId", id.serialize()))
+      .log("JMAP mailbox delete succeeded."))
 
   private def isASystemMailbox(mailbox: MessageManager): Boolean = Role.from(mailbox.getMailboxPath.getName).isPresent
 }
