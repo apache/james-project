@@ -60,7 +60,9 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.MailboxNameExpression;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.PrefixedRegex;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
@@ -265,14 +267,29 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         listRecursiveMatch.forEach(pair -> responseBuilders.add(Triple.of(pair.getLeft(), pair.getRight(), Optional.ofNullable(searchedResultMap.get(pair.getLeft())))));
         Set<MailboxPath> listRecursiveMatchPath = listRecursiveMatch.stream().map(Pair::getKey).collect(Collectors.toUnmodifiableSet());
 
+        Predicate<MailboxPath> subscribedPredicate = subscribedPredicate(mailboxSession, relative, listRequest);
+
         allSubscribedSearch.stream()
             .filter(subscribed -> !listRecursiveMatchPath.contains(subscribed))
             .filter(mailboxQuery::isPathMatch)
+            .filter(subscribedPredicate)
             .flatMap(subscribed -> buildListResponse(listRequest, searchedResultMap, session, relative, subscribed).stream())
             .filter(pair -> !listRequest.getSelectOptions().contains(SPECIAL_USE) || mailboxTyper.getMailboxType(session, pair.getKey()).getRfc6154attributeName() != null)
             .forEach(pair -> responseBuilders.add(Triple.of(pair.getLeft(), pair.getRight(), Optional.ofNullable(searchedResultMap.get(pair.getLeft())))));
 
         return responseBuilders.build();
+    }
+
+    private Predicate<MailboxPath> subscribedPredicate(MailboxSession mailboxSession, boolean isRelative, ListRequest request) {
+        MailboxNameExpression subscribeExpression = new PrefixedRegex(
+            request.getBaseReferenceName(),
+            ModifiedUtf7.decodeModifiedUTF7(request.getMailboxPattern()),
+            mailboxSession.getPathDelimiter());
+
+        PathConverter pathConverter = pathConverterFactory.forSession(mailboxSession);
+
+        return subscribedMailboxPath -> pathConverter.mailboxName(isRelative, subscribedMailboxPath, mailboxSession)
+            .map(subscribeExpression::isExpressionMatch).orElse(false);
     }
 
     private Optional<Pair<MailboxPath, ListResponse>> buildListResponse(ListRequest listRequest, Map<MailboxPath, MailboxMetaData> searchedResultMap, ImapSession session, boolean relative, MailboxPath subscribed) {

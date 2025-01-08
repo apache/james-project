@@ -201,6 +201,22 @@ S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.Sent\"
 }
 S: b15 OK LIST completed.
 
+C: b16 LIST (SUBSCRIBED) "" "#user.*"
+SUB {
+S: \* LIST \(\\HasChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.Sent\"
+}
+S: b16 OK LIST completed.
+
+C: b17 LIST (SUBSCRIBED) "#user." "*"
+SUB {
+S: \* LIST \(\\HasChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.sharedMailbox.child\"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \".\" \"#user.boby.Sent\"
+}
+S: b17 OK LIST completed.
+
 C: c01 SELECT #user.diana.sharedMailbox
 S: \* OK \[MAILBOXID \(.*\)\] Ok
 S: \* FLAGS \(.*\)
