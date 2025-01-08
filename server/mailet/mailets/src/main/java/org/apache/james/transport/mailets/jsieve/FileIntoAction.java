@@ -20,6 +20,7 @@ package org.apache.james.transport.mailets.jsieve;
 
 import jakarta.mail.MessagingException;
 
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.mailet.Mail;
@@ -33,8 +34,6 @@ import org.slf4j.LoggerFactory;
  */
 public class FileIntoAction implements MailAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileIntoAction.class);
-
-    private static final char HIERARCHY_DELIMITER = '.';
 
     @Override
     public void execute(Action action, Mail mail, ActionContext context) throws MessagingException {
@@ -68,7 +67,7 @@ public class FileIntoAction implements MailAction {
      */
     public void execute(ActionFileInto anAction, Mail aMail, final ActionContext context) throws MessagingException {
         String destinationMailbox = getDestinationMailbox(anAction);
-        String mailbox = destinationMailbox.replace(HIERARCHY_DELIMITER, '/');
+        String mailbox = destinationMailbox.replace(MailboxConstants.FOLDER_DELIMITER, '/');
         String url = "mailbox://" + context.getRecipient().asString() + mailbox;
 
         context.post(url, aMail);
@@ -76,8 +75,8 @@ public class FileIntoAction implements MailAction {
     }
 
     private String getDestinationMailbox(ActionFileInto anAction) {
-        if (!(anAction.getDestination().length() > 0 && anAction.getDestination().charAt(0) == HIERARCHY_DELIMITER)) {
-            return HIERARCHY_DELIMITER + anAction.getDestination();
+        if (anAction.getDestination().isEmpty() || anAction.getDestination().charAt(0) != MailboxConstants.FOLDER_DELIMITER) {
+            return MailboxConstants.FOLDER_DELIMITER + anAction.getDestination();
         }
         return anAction.getDestination();
     }
