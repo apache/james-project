@@ -1,21 +1,22 @@
-<gradleEnterprise>
+<develocity>
   <server>
     <url>https://develocity.apache.org</url>
     <allowUntrusted>false</allowUntrusted>
     <!--
-    credentials provided by jenkins exposing GRADLE_ENTERPRISE_ACCESS_KEY
+    credentials provided by jenkins exposing DEVELOCITY_ACCESS_KEY
     apache members can create their own on the server
     -->
   </server>
-  <!-- options are documented at https://docs.gradle.com/enterprise/maven-extension/#configuring_background_uploading -->
+  <!-- options are documented at https://docs.gradle.com/develocity/maven-extension/current/ -->
   <!-- chosen values align with https://cwiki.apache.org/confluence/display/INFRA/Project+Onboarding+Instructions+for+Develocity -->
   <buildScan>
     <backgroundBuildScanUpload>#{isFalse(env['CI'])}</backgroundBuildScanUpload>
-    <publishIfAuthenticated>true</publishIfAuthenticated>
     <!-- Always publish build scans for CI, only if requested locally differs from onboarding instructions -->
-    <publish>#{env['CI'] == null ? 'ON_DEMAND' : 'ALWAYS'}</publish>
+    <publishing>
+      <onlyIf><![CDATA[env['CI'] != null]]></onlyIf>
+    </publishing>
     <capture>
-      <goalInputFiles>true</goalInputFiles>
+      <fileFingerprints>true</fileFingerprints>
       <buildLogging>true</buildLogging>
       <testLogging>true</testLogging>
     </capture>
@@ -56,4 +57,4 @@
       -->
     </remote>
   </buildCache>
-</gradleEnterprise>
+</develocity>
