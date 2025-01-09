@@ -1,4 +1,5 @@
 <develocity>
+  <projectId>james</projectId>
   <server>
     <url>https://develocity.apache.org</url>
     <allowUntrusted>false</allowUntrusted>
