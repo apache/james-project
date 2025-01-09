@@ -1,6 +1,6 @@
 <gradleEnterprise>
   <server>
-    <url>https://ge.apache.org</url>
+    <url>https://develocity.apache.org</url>
     <allowUntrusted>false</allowUntrusted>
     <!--
     credentials provided by jenkins exposing GRADLE_ENTERPRISE_ACCESS_KEY
