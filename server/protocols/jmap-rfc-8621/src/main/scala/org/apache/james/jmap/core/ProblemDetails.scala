@@ -20,7 +20,7 @@ package org.apache.james.jmap.core
 
 import com.fasterxml.jackson.core.JsonParseException
 import io.netty.handler.codec.http.HttpResponseStatus
-import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
+import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, INTERNAL_SERVER_ERROR, REQUEST_TIMEOUT, UNAUTHORIZED}
 import org.apache.james.jmap.core.RequestLevelErrorType.{DEFAULT_ERROR_TYPE, ErrorTypeIdentifier}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.routes.{RequestSizeExceeded, StreamConstraintsExceptionWithInput, TooManyCallsInRequest, UnsupportedCapabilitiesException}
@@ -44,7 +44,7 @@ object ProblemDetails {
   def forThrowable(throwable: Throwable): ProblemDetails = throwable match {
     case exception: AbortedException =>
       LOGGER.info("The connection was aborted: {}", exception.getMessage)
-      ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = exception.getMessage)
+      ProblemDetails(status = REQUEST_TIMEOUT, detail = exception.getMessage)
     case exception: IllegalArgumentException =>
       LOGGER.info("The request was successfully parsed as JSON but did not match the type signature of the Request object: {}", exception.getMessage)
       notRequestProblem(
