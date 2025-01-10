@@ -124,7 +124,7 @@ With `jdbc-driver.jar` being the JAR file of your driver, placed in the current 
 In `james-database.properties`, one can specify any JDBC driver on the class path.
 
 With docker, such drivers can be added to the classpath by placing the driver JAR in a volume
-and mounting it within `/root/libs` directory.
+and mounting it at `/root/libs/james-jdbc-driver.jar`.
 
 We do ship a [docker-compose](https://github.com/apache/james-project/blob/master/server/apps/jpa-smtp-app/docker-compose.yml)
 file demonstrating James JPA app usage with MariaDB. In order to run it:
