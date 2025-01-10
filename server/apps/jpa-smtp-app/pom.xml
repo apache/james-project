@@ -291,7 +291,7 @@
                             <volume>/root/glowroot/data</volume>
                             <volume>/root/extensions-jars</volume>
                         </volumes>
-                        <extraClasspath>/root/libs/mariadb-java-client-2.7.2.jar</extraClasspath>
+                        <extraClasspath>/root/libs/james-jdbc-driver.jar</extraClasspath>
                     </container>
                     <extraDirectories>
                         <paths>

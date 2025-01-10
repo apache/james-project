@@ -15,7 +15,7 @@ services:
     container_name: james
     hostname: james.local
     volumes:
-      - $PWD/mariadb-java-client-2.7.2.jar:/root/libs/mariadb-java-client-2.7.2.jar
+      - $PWD/mariadb-java-client-2.7.2.jar:/root/libs/james-jdbc-driver.jar
       - $PWD/sample-configuration/james-database-mariadb.properties:/root/conf/james-database.properties
       - $PWD/keystore:/root/conf/keystore
 
