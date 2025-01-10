@@ -312,6 +312,7 @@
                             <!-- Data for derby database -->
                             <volume>/var/store</volume>
                         </volumes>
+                        <extraClasspath>/root/libs/mariadb-java-client-2.7.2.jar</extraClasspath>
                     </container>
                     <extraDirectories>
                         <paths>
