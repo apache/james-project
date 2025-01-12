@@ -23,6 +23,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
+import org.apache.james.blob.objectstorage.aws.S3RequestOption;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.jpa.JPAMailRepositoryUrlStore;
 import org.apache.james.modules.RunArgumentsModule;
@@ -71,6 +72,7 @@ public class Main implements JamesServerMain {
         new S3BlobStoreModule(),
         new S3BucketModule(),
         binder -> {
+            binder.bind(S3RequestOption.class).toInstance(S3RequestOption.DEFAULT);
             binder.bind(BlobStoreDAO.class).to(S3BlobStoreDAO.class)
                 .in(Scopes.SINGLETON);
             binder.bind(BlobStore.class)
