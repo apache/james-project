@@ -79,12 +79,20 @@ public class SPFTest {
                                 // fail
                                 l.add("v=spf1 -all");
                                 return CompletableFuture.completedFuture(l);
+                            case "spf26.james.apache.org":
+                                // fail
+                                l.add("v=spf1 include:spf27.james.apache.org ~all");
+                                return CompletableFuture.completedFuture(l);
+                            case "spf27.james.apache.org":
+                                // fail
+                                l.add("v=spf1 include:spf26.james.apache.org ~all");
+                                return CompletableFuture.completedFuture(l);
                             case "spf3.james.apache.org":
                                 // softfail
                                 l.add("v=spf1 ~all");
                                 return CompletableFuture.completedFuture(l);
                             case "spf4.james.apache.org":
-                                // permerror
+                                // kpermerror
                                 l.add("v=spf1 badcontent!");
                                 return CompletableFuture.completedFuture(l);
                             case "spf5.james.apache.org":
@@ -133,6 +141,15 @@ public class SPFTest {
 
         mailet.service(mail);
         assertThat(AttributeUtils.getValueAndCastFromMail(mail, RESULT_ATTRIBUTE, String.class)).contains("fail");
+    }
+
+    @Test
+    public void testInfiniteLoop() throws MessagingException {
+        FakeMail mail = fakeMail().sender("hello@spf26.james.apache.org").build();
+        Mailet mailet = testMailet();
+
+        mailet.service(mail);
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, RESULT_ATTRIBUTE, String.class)).contains("permerror");
     }
 
     @Test
