@@ -19,6 +19,7 @@
 
 package org.apache.james.modules.mailbox;
 
+import org.apache.james.adapter.mailbox.UsersRepositoryUsernameSupplier;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
 import org.apache.james.events.EventListener;
@@ -26,10 +27,12 @@ import org.apache.james.mailbox.postgres.quota.PostgresCurrentQuotaManager;
 import org.apache.james.mailbox.postgres.quota.PostgresPerUserMaxQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaChangeNotifier;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootDeserializer;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.DefaultQuotaChangeNotifier;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.QuotaUpdater;
@@ -64,5 +67,10 @@ public class PostgresQuotaModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
             .addBinding()
             .to(ListeningCurrentQuotaUpdater.class);
+
+        bind(UsersRepositoryUsernameSupplier.class).in(Scopes.SINGLETON);
+        bind(DefaultQuotaChangeNotifier.class).in(Scopes.SINGLETON);
+        bind(QuotaChangeNotifier.class).to(DefaultQuotaChangeNotifier.class);
+        bind(DefaultQuotaChangeNotifier.UsernameSupplier.class).to(UsersRepositoryUsernameSupplier.class);
     }
 }

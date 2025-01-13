@@ -45,6 +45,7 @@ import org.apache.james.mailbox.postgres.quota.PostgresCurrentQuotaManager;
 import org.apache.james.mailbox.postgres.quota.PostgresPerUserMaxQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaChangeNotifier;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProviderImpl;
@@ -106,7 +107,7 @@ public class PostgresTestSystemFixture {
     }
 
     static MaxQuotaManager createMaxQuotaManager(PostgresExtension postgresExtension) {
-        return new PostgresPerUserMaxQuotaManager(new PostgresQuotaLimitDAO(postgresExtension.getDefaultPostgresExecutor()));
+        return new PostgresPerUserMaxQuotaManager(new PostgresQuotaLimitDAO(postgresExtension.getDefaultPostgresExecutor()), QuotaChangeNotifier.NOOP);
     }
 
     public static CurrentQuotaManager createCurrentQuotaManager(PostgresExtension postgresExtension) {
