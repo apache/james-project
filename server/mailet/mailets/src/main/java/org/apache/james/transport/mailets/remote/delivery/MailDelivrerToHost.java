@@ -29,10 +29,12 @@ import static org.eclipse.angus.mail.smtp.SMTPMessage.RETURN_HDRS;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.SendFailedException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
@@ -46,7 +48,6 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.james.core.MailAddress;
-import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.HostAddress;
@@ -65,6 +66,12 @@ import com.google.common.collect.ImmutableListMultimap;
 public class MailDelivrerToHost {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailDelivrerToHost.class);
     public static final String BIT_MIME_8 = "8BITMIME";
+    public static final String REQUIRE_TLS = "REQUIRETLS";
+    public static final String STARTTLS = "STARTTLS";
+    public static final String MT_PRIORITY = "MT-PRIORITY";
+    public static final String MAIL_PRIORITY_ATTRIBUTE_NAME = "MAIL_PRIORITY";
+    private static final List<String> supportedSmtpExtensionsList = List.of(MT_PRIORITY, STARTTLS);
+    private static final List<String> supportedMailAttributesList = List.of(MAIL_PRIORITY_ATTRIBUTE_NAME, REQUIRE_TLS);
 
     private final RemoteDeliveryConfiguration configuration;
     private final Converter7Bit converter7Bit;
@@ -110,8 +117,8 @@ public class MailDelivrerToHost {
         Session session = selectSession(outgoingMailServer);
         Properties props = getPropertiesForMail(mail, session);
         LOGGER.debug("Attempting delivery of {} with messageId {} to host {} at {} from {}",
-            mail.getName(), getMessageId(mail), outgoingMailServer.getHostName(),
-            outgoingMailServer.getHost(), props.get(inContext(session, "mail.smtp.from")));
+                mail.getName(), getMessageId(mail), outgoingMailServer.getHostName(),
+                outgoingMailServer.getHost(), props.get(inContext(session, "mail.smtp.from")));
 
         // Many of these properties are only in later JavaMail versions
         // "mail.smtp.ehlo"           //default true
@@ -124,16 +131,20 @@ public class MailDelivrerToHost {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost(props.getProperty(inContext(session, "mail.smtp.localhost"), configuration.getHeloNameProvider().getHeloName()));
             connect(outgoingMailServer, transport);
+            if (receiverDoesNotProvideNecessaryStartTls(mail, transport)) {
+                return ExecutionResult.permanentFailure(new SendFailedException("Mail delivery failed; the receiving server does not support STARTTLS"));
+            }
             if (mail.dsnParameters().isPresent()) {
                 sendDSNAwareEmail(mail, transport, addr);
-            } else if (transport.supportsExtension("MT-PRIORITY")) {
-                sendEmailWithPriority(mail, transport, addr);
+            } else if (extensionsSupported(transport)) {
+                SMTPMessage smtpMessage = new SMTPMessage(adaptToTransport(mail.getMessage(), transport));
+                transport.sendMessage(toSmtpMessageWithExtensions(mail, smtpMessage), addr.toArray(InternetAddress[]::new));
             } else {
                 transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr.toArray(InternetAddress[]::new));
             }
             LOGGER.info("Mail ({}) with messageId {} sent successfully to {} at {} from {} for {}",
-                mail.getName(), getMessageId(mail), outgoingMailServer.getHostName(),
-                outgoingMailServer.getHost(), props.get(inContext(session, "mail.smtp.from")), mail.getRecipients());
+                    mail.getName(), getMessageId(mail), outgoingMailServer.getHostName(),
+                    outgoingMailServer.getHost(), props.get(inContext(session, "mail.smtp.from")), mail.getRecipients());
         } finally {
             closeTransport(mail, outgoingMailServer, transport);
             releaseSession(outgoingMailServer, session);
@@ -184,83 +195,101 @@ public class MailDelivrerToHost {
 
     private void sendDSNAwareEmail(Mail mail, SMTPTransport transport, Collection<InternetAddress> addresses) {
         addresses.stream()
-            .map(address -> Pair.of(
-                mail.dsnParameters()
-                    .flatMap(Throwing.<DsnParameters, Optional<DsnParameters.RecipientDsnParameters>>function(
-                            dsn -> Optional.ofNullable(dsn.getRcptParameters().get(new MailAddress(address.toString()))))
-                        .orReturn(Optional.empty()))
-                    .flatMap(DsnParameters.RecipientDsnParameters::getNotifyParameter)
-                    .map(this::toJavaxNotify),
-                address))
-            .collect(ImmutableListMultimap.toImmutableListMultimap(
-                Pair::getKey,
-                Pair::getValue))
-            .asMap()
-            .forEach(Throwing.<Optional<Integer>, Collection<InternetAddress>>biConsumer((maybeNotify, recipients) -> {
-                SMTPMessage smtpMessage = asSmtpMessage(mail, transport);
-                maybeNotify.ifPresent(smtpMessage::setNotifyOptions);
-                transport.sendMessage(smtpMessage, recipients.toArray(InternetAddress[]::new));
-            }).sneakyThrow());
+                .map(address -> Pair.of(
+                        mail.dsnParameters()
+                                .flatMap(Throwing.<DsnParameters, Optional<DsnParameters.RecipientDsnParameters>>function(
+                                                dsn -> Optional.ofNullable(dsn.getRcptParameters().get(new MailAddress(address.toString()))))
+                                        .orReturn(Optional.empty()))
+                                .flatMap(DsnParameters.RecipientDsnParameters::getNotifyParameter)
+                                .map(this::toJavaxNotify),
+                        address))
+                .collect(ImmutableListMultimap.toImmutableListMultimap(
+                        Pair::getKey,
+                        Pair::getValue))
+                .asMap()
+                .forEach(Throwing.<Optional<Integer>, Collection<InternetAddress>>biConsumer((maybeNotify, recipients) -> {
+                    SMTPMessage smtpMessage = asSmtpMessage(mail, transport);
+                    maybeNotify.ifPresent(smtpMessage::setNotifyOptions);
+                    transport.sendMessage(smtpMessage, recipients.toArray(InternetAddress[]::new));
+                }).sneakyThrow());
     }
 
     private SMTPMessage asSmtpMessage(Mail mail, SMTPTransport transport) throws MessagingException {
         SMTPMessage smtpMessage = new SMTPMessage(adaptToTransport(mail.getMessage(), transport));
         mail.dsnParameters().flatMap(DsnParameters::getRetParameter)
-            .map(this::toJavaxRet)
-            .ifPresent(smtpMessage::setReturnOption);
+                .map(this::toJavaxRet)
+                .ifPresent(smtpMessage::setReturnOption);
         mail.dsnParameters().flatMap(DsnParameters::getEnvIdParameter)
-            .ifPresent(envId -> {
-                if (transport.supportsExtension("DSN")) {
-                    smtpMessage.setMailExtension("ENVID=" + envId.asString());
-                }
-            });
-        if (transport.supportsExtension("MT-PRIORITY")) {
-            return toSmtpMessageWithPriorityExtension(mail, smtpMessage);
+                .ifPresent(envId -> {
+                    if (transport.supportsExtension("DSN")) {
+                        smtpMessage.setMailExtension("ENVID=" + envId.asString());
+                    }
+                });
+
+        if (extensionsSupported(transport)) {
+            return toSmtpMessageWithExtensions(mail, smtpMessage);
         }
         return smtpMessage;
     }
 
-    private void sendEmailWithPriority(Mail mail, SMTPTransport transport, Collection<InternetAddress> addresses) throws MessagingException {
-        SMTPMessage smtpMessage = new SMTPMessage(adaptToTransport(mail.getMessage(), transport));
-        transport.sendMessage(toSmtpMessageWithPriorityExtension(mail, smtpMessage), addresses.toArray(InternetAddress[]::new));
+    private static boolean extensionsSupported(SMTPTransport transport) {
+        return supportedSmtpExtensionsList.stream().anyMatch(transport::supportsExtension);
     }
 
-    private SMTPMessage toSmtpMessageWithPriorityExtension(Mail mail, SMTPMessage smtpMessage) {
-        Optional<Attribute> priorityAttribute = Optional.ofNullable(mail.attributesMap().get(AttributeName.of("MAIL_PRIORITY")));
-        priorityAttribute.ifPresent(attribute -> smtpMessage.setMailExtension(smtpMessage.getMailExtension() + " MT-PRIORITY=" + attribute.getValue().value()));
+    private static boolean receiverDoesNotProvideNecessaryStartTls(Mail mail, SMTPTransport transport) {
+        return !transport.getLastServerResponse().contains(STARTTLS) &&
+                mail.attributesMap().containsKey(AttributeName.of(REQUIRE_TLS)) &&
+                isRequireTlsAttribute(mail);
+    }
+
+    private static boolean isRequireTlsAttribute(Mail mail) {
+        return mail.attributesMap().get(AttributeName.of(REQUIRE_TLS)).getValue().value().equals(Boolean.TRUE);
+    }
+
+    private SMTPMessage toSmtpMessageWithExtensions(Mail mail, SMTPMessage smtpMessage) {
+        mail.attributesMap().forEach((attributeName, attribute) -> {
+            if (supportedMailAttributesList.contains(attributeName.asString())) {
+                String existingMessageExtensions = Optional.ofNullable(smtpMessage.getMailExtension())
+                    .map(extension -> " " + extension)
+                    .orElse("");
+                switch (attributeName.asString()) {
+                    case MAIL_PRIORITY_ATTRIBUTE_NAME ->
+                        smtpMessage.setMailExtension(MT_PRIORITY + "=" + attribute.getValue().value() +
+                            existingMessageExtensions);
+                    case REQUIRE_TLS -> {
+                        if (isRequireTlsAttribute(mail)) {
+                            smtpMessage.setMailExtension(REQUIRE_TLS + existingMessageExtensions);
+                        }
+                    }
+                    default -> throw new NotImplementedException("Unknown mail attribute cannot be handled: {}", attributeName.asString());
+                }
+            }
+        });
         return smtpMessage;
     }
 
     private int toJavaxRet(DsnParameters.Ret ret) {
-        switch (ret) {
-            case FULL:
-                return RETURN_FULL;
-            case HDRS:
-                return RETURN_HDRS;
-            default:
-                throw new NotImplementedException(ret + " cannot be converted to jakarta.mail parameters");
-        }
+        return switch (ret) {
+            case FULL -> RETURN_FULL;
+            case HDRS -> RETURN_HDRS;
+            default -> throw new NotImplementedException(ret + " cannot be converted to jakarta.mail parameters");
+        };
     }
 
     private int toJavaxNotify(EnumSet<DsnParameters.Notify> notifies) {
         return notifies.stream()
-            .mapToInt(this::toJavaxNotify)
-            .sum();
+                .mapToInt(this::toJavaxNotify)
+                .sum();
     }
 
     private int toJavaxNotify(DsnParameters.Notify notify) {
-        switch (notify) {
-            case NEVER:
-                return NOTIFY_NEVER;
-            case SUCCESS:
-                return NOTIFY_SUCCESS;
-            case FAILURE:
-                return NOTIFY_FAILURE;
-            case DELAY:
-                return NOTIFY_DELAY;
-            default:
-                throw new NotImplementedException(notify + " cannot be converted to jakarta.mail parameters");
-        }
+        return switch (notify) {
+            case NEVER -> NOTIFY_NEVER;
+            case SUCCESS -> NOTIFY_SUCCESS;
+            case FAILURE -> NOTIFY_FAILURE;
+            case DELAY -> NOTIFY_DELAY;
+            default -> throw new NotImplementedException(notify + " cannot be converted to jakarta.mail parameters");
+        };
     }
 
     private Properties getPropertiesForMail(Mail mail, Session session) {
@@ -281,7 +310,7 @@ public class MailDelivrerToHost {
 
     private String getHostName(HostAddress outgoingMailServer) {
         String host = outgoingMailServer.getHostName();
-        if (host.length() > 0 && host.charAt(host.length() - 1) == '.') {
+        if (!host.isEmpty() && host.charAt(host.length() - 1) == '.') {
             return host.substring(0, host.length() - 1);
         } else {
             return host;
@@ -304,7 +333,7 @@ public class MailDelivrerToHost {
         // If the transport is not the one developed by Sun we are not sure of how it handles the 8 bit mime stuff, so I
         // convert the message to 7bit.
         return !transport.getClass().getName().endsWith(".SMTPTransport")
-            || !transport.supportsExtension(BIT_MIME_8);
+                || !transport.supportsExtension(BIT_MIME_8);
         // if the message is already 8bit or binary and the server doesn't support the 8bit extension it has to be converted
         // to 7bit. Javamail api doesn't perform that conversion, but it is required to be a rfc-compliant smtp server.
     }
@@ -319,8 +348,8 @@ public class MailDelivrerToHost {
                 transport.close();
             } catch (MessagingException e) {
                 LOGGER.error("Warning: could not close the SMTP transport after sending mail ({}) to {} at {} for {}; " +
-                        "probably the server has already closed the connection. Message is considered to be delivered. Exception: {}",
-                    mail.getName(), outgoingMailServer.getHostName(), outgoingMailServer.getHost(), mail.getRecipients(), e.getMessage());
+                                "probably the server has already closed the connection. Message is considered to be delivered. Exception: {}",
+                        mail.getName(), outgoingMailServer.getHostName(), outgoingMailServer.getHost(), mail.getRecipients(), e.getMessage());
             }
             transport = null;
         }

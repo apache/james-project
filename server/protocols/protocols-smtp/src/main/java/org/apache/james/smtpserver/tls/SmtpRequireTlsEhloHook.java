@@ -17,15 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.docker;
+package org.apache.james.smtpserver.tls;
 
-public interface Images {
-    String FAKE_SMTP = "quanth99/rest-smtp-sink:1.0"; // Original Dockerfile: https://github.com/ambled/rest-smtp-sink/blob/master/Dockerfile
-    String RABBITMQ = "rabbitmq:3.13.3-management";
-    String ELASTICSEARCH_2 = "elasticsearch:2.4.6";
-    String ELASTICSEARCH_6 = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2";
-    String OPENSEARCH = "opensearchproject/opensearch:2.14.0";
-    String TIKA = "apache/tika:3.0.0.0";
-    String MOCK_SMTP_SERVER = "linagora/mock-smtp-server:0.7";
-    String OPEN_LDAP = "osixia/openldap:1.5.0";
+import java.util.Set;
+
+import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.hook.HeloHook;
+import org.apache.james.protocols.smtp.hook.HookResult;
+
+public class SmtpRequireTlsEhloHook implements HeloHook {
+    @Override
+    public Set<String> implementedEsmtpFeatures(SMTPSession session) {
+        if (session.isTLSStarted()) {
+            return Set.of("REQUIRETLS");
+        }
+        return Set.of();
+    }
+
+    @Override
+    public HookResult doHelo(SMTPSession session, String helo) {
+        return HookResult.DECLINED;
+    }
 }

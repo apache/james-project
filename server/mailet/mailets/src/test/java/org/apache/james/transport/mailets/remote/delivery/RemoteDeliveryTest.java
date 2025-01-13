@@ -50,6 +50,7 @@ import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -83,12 +84,11 @@ class RemoteDeliveryTest {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof MailProjection) {
-                MailProjection mailProjection = (MailProjection) o;
+            if (o instanceof MailProjection mailProjection) {
 
                 return Objects.equals(this.name, mailProjection.name)
-                    && Objects.equals(this.attributes, mailProjection.attributes)
-                    && Objects.equals(this.recipients, mailProjection.recipients);
+                        && Objects.equals(this.attributes, mailProjection.attributes)
+                        && Objects.equals(this.recipients, mailProjection.recipients);
             }
             return false;
         }
@@ -100,6 +100,7 @@ class RemoteDeliveryTest {
     }
 
     public static final String MAIL_NAME = "mail_name";
+    public static final String REQUIRETLS = "REQUIRETLS";
 
     private RemoteDelivery remoteDelivery;
     private MemoryMailQueueFactory.MemoryCacheableMailQueue mailQueue;
@@ -109,117 +110,117 @@ class RemoteDeliveryTest {
         MemoryMailQueueFactory queueFactory = spy(new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory()));
         mailQueue = spy(queueFactory.createQueue(RemoteDeliveryConfiguration.DEFAULT_OUTGOING_QUEUE_NAME));
         when(queueFactory.createQueue(RemoteDeliveryConfiguration.DEFAULT_OUTGOING_QUEUE_NAME))
-            .thenReturn(mailQueue);
+                .thenReturn(mailQueue);
         DNSService dnsService = mock(DNSService.class);
         MemoryDomainList domainList = new MemoryDomainList(dnsService);
         domainList.configure(DomainListConfiguration.builder().defaultDomain(JAMES_APACHE_ORG_DOMAIN));
         remoteDelivery = new RemoteDelivery(dnsService, domainList,
-            queueFactory, new RecordingMetricFactory(), RemoteDelivery.ThreadState.DO_NOT_START_THREADS);
+                queueFactory, new RecordingMetricFactory(), RemoteDelivery.ThreadState.DO_NOT_START_THREADS);
     }
 
     @Test
     void remoteDeliveryShouldAddEmailToSpool() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .build());
+                .build());
 
         Mail mail = FakeMail.builder()
-            .name(MAIL_NAME)
-            .recipients(MailAddressFixture.ANY_AT_JAMES)
-            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
-            .build();
+                .name(MAIL_NAME)
+                .recipients(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+                .build();
         remoteDelivery.service(mail);
 
 
         assertThat(mailQueue.browse())
-            .toIterable()
-            .extracting(MailProjection::from)
-            .containsOnly(MailProjection.from(
-                FakeMail.builder()
-                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + JAMES_APACHE_ORG)
-                    .recipient(MailAddressFixture.ANY_AT_JAMES)
-                    .build()));
+                .toIterable()
+                .extracting(MailProjection::from)
+                .containsOnly(MailProjection.from(
+                        FakeMail.builder()
+                                .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + JAMES_APACHE_ORG)
+                                .recipient(MailAddressFixture.ANY_AT_JAMES)
+                                .build()));
     }
 
     @Test
     void remoteDeliveryShouldPropagateFailures() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .build());
+                .build());
 
         doThrow(new MailQueue.MailQueueException("Injected failure"))
-            .when(mailQueue)
-            .enQueue(any(), any());
+                .when(mailQueue)
+                .enQueue(any(), any());
 
         Mail mail = FakeMail.builder()
-            .name(MAIL_NAME)
-            .recipients(MailAddressFixture.ANY_AT_JAMES)
-            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
-            .build();
+                .name(MAIL_NAME)
+                .recipients(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+                .build();
 
         assertThatThrownBy(() -> remoteDelivery.service(mail))
-            .isInstanceOf(MailQueue.MailQueueException.class);
+                .isInstanceOf(MailQueue.MailQueueException.class);
     }
 
     @Test
     void remoteDeliveryShouldSplitMailsByServerWhenNoGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .build());
+                .build());
 
         Mail mail = FakeMail.builder()
-            .name(MAIL_NAME)
-            .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, MailAddressFixture.OTHER_AT_JAMES)
-            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
-            .build();
+                .name(MAIL_NAME)
+                .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, MailAddressFixture.OTHER_AT_JAMES)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+                .build();
         remoteDelivery.service(mail);
 
 
         assertThat(mailQueue.browse())
-            .toIterable()
-            .extracting(MailProjection::from)
-            .containsOnly(
-                MailProjection.from(FakeMail.builder()
-                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + JAMES_APACHE_ORG)
-                    .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)
-                    .build()),
-                MailProjection.from(FakeMail.builder()
-                    .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES2_APACHE_ORG)
-                    .recipients(MailAddressFixture.ANY_AT_JAMES2)
-                    .build()));
+                .toIterable()
+                .extracting(MailProjection::from)
+                .containsOnly(
+                        MailProjection.from(FakeMail.builder()
+                                .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + JAMES_APACHE_ORG)
+                                .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)
+                                .build()),
+                        MailProjection.from(FakeMail.builder()
+                                .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES2_APACHE_ORG)
+                                .recipients(MailAddressFixture.ANY_AT_JAMES2)
+                                .build()));
     }
 
     @Test
     void remoteDeliveryShouldNotSplitMailsByServerWhenGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.GATEWAY, MailAddressFixture.JAMES_LOCAL)
-            .build());
+                .setProperty(RemoteDeliveryConfiguration.GATEWAY, MailAddressFixture.JAMES_LOCAL)
+                .build());
 
         Mail mail = FakeMail.builder()
-            .name(MAIL_NAME)
-            .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, MailAddressFixture.OTHER_AT_JAMES)
-            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
-            .build();
+                .name(MAIL_NAME)
+                .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, MailAddressFixture.OTHER_AT_JAMES)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+                .build();
         remoteDelivery.service(mail);
 
 
         assertThat(mailQueue.browse())
-            .toIterable()
-            .extracting(MailProjection::from)
-            .containsOnly(
-                MailProjection.from(FakeMail.builder()
-                    .name(MAIL_NAME)
-                    .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, MailAddressFixture.OTHER_AT_JAMES)
-                    .build()));
+                .toIterable()
+                .extracting(MailProjection::from)
+                .containsOnly(
+                        MailProjection.from(FakeMail.builder()
+                                .name(MAIL_NAME)
+                                .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, MailAddressFixture.OTHER_AT_JAMES)
+                                .build()));
     }
 
     @Test
     void remoteDeliveryShouldGhostMails() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .build());
+                .build());
 
         Mail mail = FakeMail.builder()
-            .name(MAIL_NAME)
-            .recipients(MailAddressFixture.ANY_AT_JAMES)
-            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
-            .build();
+                .name(MAIL_NAME)
+                .recipients(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+                .build();
         remoteDelivery.service(mail);
 
         assertThat(mail.getState()).isEqualTo(Mail.GHOST);
@@ -228,74 +229,99 @@ class RemoteDeliveryTest {
     @Test
     void remoteDeliveryShouldDeletePriorityWhenUsePriorityIsFalse() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "false")
-            .build());
+                .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "false")
+                .build());
 
         Mail mail = FakeMail.builder()
-            .name(MAIL_NAME)
-            .recipients(MailAddressFixture.ANY_AT_JAMES)
-            .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
-            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
-            .build();
+                .name(MAIL_NAME)
+                .recipients(MailAddressFixture.ANY_AT_JAMES)
+                .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+                .build();
         remoteDelivery.service(mail);
 
 
         assertThat(mailQueue.browse())
-            .toIterable()
-            .extracting(MailProjection::from)
-            .containsOnly(MailProjection.from(FakeMail.builder()
-                .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
-                .recipient(MailAddressFixture.ANY_AT_JAMES)
-                .build()));
+                .toIterable()
+                .extracting(MailProjection::from)
+                .containsOnly(MailProjection.from(FakeMail.builder()
+                        .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
+                        .recipient(MailAddressFixture.ANY_AT_JAMES)
+                        .build()));
     }
 
     @Test
     void remoteDeliveryShouldPreservePriority() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "true")
-            .build());
+                .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "true")
+                .build());
 
         Mail mail = FakeMail.builder()
-            .name(MAIL_NAME)
-            .recipients(MailAddressFixture.ANY_AT_JAMES)
-            .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
-            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
-            .build();
+                .name(MAIL_NAME)
+                .recipients(MailAddressFixture.ANY_AT_JAMES)
+                .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+                .build();
         remoteDelivery.service(mail);
 
 
         assertThat(mailQueue.browse())
-            .toIterable()
-            .extracting(MailProjection::from)
-            .containsOnly(MailProjection.from(FakeMail.builder()
-                .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
-                .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
-                .recipient(MailAddressFixture.ANY_AT_JAMES)
-                .build()));
+                .toIterable()
+                .extracting(MailProjection::from)
+                .containsOnly(MailProjection.from(FakeMail.builder()
+                        .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
+                        .attribute(MailPrioritySupport.NORMAL_PRIORITY_ATTRIBUTE)
+                        .recipient(MailAddressFixture.ANY_AT_JAMES)
+                        .build()));
+    }
+
+    @Test
+    void remoteDeliveryShouldPreserveRequireTls() throws Exception {
+        remoteDelivery.init(FakeMailetConfig.builder()
+                .setProperty(RemoteDeliveryConfiguration.START_TLS, "true")
+                .build());
+
+        Mail mail = FakeMail.builder()
+                .name(MAIL_NAME)
+                .recipients(MailAddressFixture.ANY_AT_JAMES)
+                .attribute(new Attribute(AttributeName.of(REQUIRETLS), AttributeValue.of(true)))
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+                .build();
+        remoteDelivery.service(mail);
+
+
+        assertThat(mailQueue.browse())
+                .toIterable()
+                .extracting(MailProjection::from)
+                .containsOnly(MailProjection.from(FakeMail.builder()
+                        .name(MAIL_NAME + RemoteDelivery.NAME_JUNCTION + MailAddressFixture.JAMES_APACHE_ORG)
+                        .attribute(new Attribute(AttributeName.of(REQUIRETLS), AttributeValue.of(true)))
+                        .recipient(MailAddressFixture.ANY_AT_JAMES)
+                        .build()));
     }
 
     @Test
     void remoteDeliveryShouldNotForwardMailsWithNoRecipients() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .build());
+                .build());
 
         Mail mail = FakeMail.builder().name(MAIL_NAME).build();
         remoteDelivery.service(mail);
 
         assertThat(mailQueue.browse()).toIterable()
-            .isEmpty();
+                .isEmpty();
     }
 
     @Test
     void remoteDeliveryShouldNotForwardMailsWithNoRecipientsWithGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
-            .setProperty(RemoteDeliveryConfiguration.GATEWAY, MailAddressFixture.JAMES_LOCAL)
-            .build());
+                .setProperty(RemoteDeliveryConfiguration.GATEWAY, MailAddressFixture.JAMES_LOCAL)
+                .build());
 
         Mail mail = FakeMail.builder().name(MAIL_NAME).build();
         remoteDelivery.service(mail);
 
         assertThat(mailQueue.browse()).toIterable()
-            .isEmpty();
+                .isEmpty();
     }
 }
