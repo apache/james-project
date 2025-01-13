@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.FOUND;
+
 import java.util.stream.Stream;
 
 public interface JMAPRoutes {
@@ -32,5 +34,9 @@ public interface JMAPRoutes {
             .header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept")
             .header("Access-Control-Max-Age", "86400"));
+    }
+
+    static JMAPRoute.Action redirectTo(String location) {
+        return (req, res) -> res.status(FOUND).header("Location", location).send();
     }
 }
