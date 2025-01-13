@@ -46,8 +46,8 @@ limitations under the License.
         </fileSet>
         <!-- include stuff from jar plugin -->
         <fileSet>
-            <directory>target/james-server-jpa-app.lib</directory>
-            <outputDirectory>/james-server-jpa-app.lib</outputDirectory>
+            <directory>target/james-server-postgres-app.lib</directory>
+            <outputDirectory>/james-server-postgres-app.lib</outputDirectory>
             <directoryMode>0755</directoryMode>
             <fileMode>0600</fileMode>
             <includes>
