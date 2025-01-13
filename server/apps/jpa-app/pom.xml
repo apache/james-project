@@ -312,6 +312,7 @@
                             <!-- Data for derby database -->
                             <volume>/var/store</volume>
                         </volumes>
+                        <extraClasspath>/root/libs/james-jdbc-driver.jar</extraClasspath>
                     </container>
                     <extraDirectories>
                         <paths>

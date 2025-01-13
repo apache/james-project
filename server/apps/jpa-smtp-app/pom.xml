@@ -291,6 +291,7 @@
                             <volume>/root/glowroot/data</volume>
                             <volume>/root/extensions-jars</volume>
                         </volumes>
+                        <extraClasspath>/root/libs/james-jdbc-driver.jar</extraClasspath>
                     </container>
                     <extraDirectories>
                         <paths>
