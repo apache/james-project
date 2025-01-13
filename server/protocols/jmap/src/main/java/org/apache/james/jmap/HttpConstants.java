@@ -22,5 +22,4 @@ package org.apache.james.jmap;
 public interface HttpConstants {
     String JSON_CONTENT_TYPE = "application/json";
     String JSON_CONTENT_TYPE_UTF8 = "application/json; charset=UTF-8";
-    String TEXT_PLAIN_CONTENT_TYPE = "text/plain";
 }
