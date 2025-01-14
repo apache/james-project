@@ -175,12 +175,15 @@ public class EventDispatcher {
         ImmutableList<Event> underlyingEvents = events.stream()
             .map(EventBus.EventWithRegistrationKey::event)
             .collect(ImmutableList.toImmutableList());
+
+        ImmutableSet<RegistrationKey> keys = events.stream()
+            .flatMap(event -> event.keys().stream())
+            .collect(ImmutableSet.toImmutableSet());
+
         return Mono.fromCallable(() -> eventSerializer.toJsonBytes(underlyingEvents))
             .flatMap(serializedEvent -> Mono.zipDelayError(
                 remoteGroupsDispatch(serializedEvent, underlyingEvents),
-                Flux.fromIterable(events)
-                    .concatMap(e -> remoteKeysDispatch(serializedEvent, e.keys()))
-                    .then()))
+                remoteKeysDispatch(serializedEvent, keys)))
             .then();
     }
 

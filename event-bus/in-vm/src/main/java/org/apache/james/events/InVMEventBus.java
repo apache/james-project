@@ -88,13 +88,21 @@ public class InVMEventBus implements EventBus {
         ImmutableList<EventWithRegistrationKey> notNoopEvents = events.stream()
             .filter(e -> !e.event().isNoop())
             .collect(ImmutableList.toImmutableList());
+
+        ImmutableList<Event> underlyingEvents = events.stream()
+            .map(EventBus.EventWithRegistrationKey::event)
+            .collect(ImmutableList.toImmutableList());
+
+        ImmutableSet<RegistrationKey> keys = events.stream()
+            .flatMap(event -> event.keys().stream())
+            .collect(ImmutableSet.toImmutableSet());
+
         if (!notNoopEvents.isEmpty()) {
             return Flux.merge(
                     groupDeliveries(notNoopEvents.stream()
                         .map(EventWithRegistrationKey::event)
                         .collect(ImmutableList.toImmutableList())),
-                    Flux.fromIterable(events)
-                        .concatMap(e -> keyDeliveries(e.event(), e.keys())))
+                    keyDeliveries(underlyingEvents, keys))
                 .then()
                 .onErrorResume(throwable -> Mono.empty());
         }
@@ -127,6 +135,12 @@ public class InVMEventBus implements EventBus {
     private Mono<Void> keyDeliveries(Event event, Set<RegistrationKey> keys) {
         return Flux.fromIterable(registeredListenersByKeys(keys))
             .flatMap(listener -> eventDelivery.deliver(listener, event, EventDelivery.DeliveryOption.none()), EventBus.EXECUTION_RATE)
+            .then();
+    }
+
+    private Mono<Void> keyDeliveries(List<Event> events, Set<RegistrationKey> keys) {
+        return Flux.fromIterable(registeredListenersByKeys(keys))
+            .flatMap(listener -> eventDelivery.deliver(listener, events, EventDelivery.DeliveryOption.none()), EventBus.EXECUTION_RATE)
             .then();
     }
 
