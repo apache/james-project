@@ -20,6 +20,7 @@
 package org.apache.james.events;
 
 import static org.apache.james.events.EventBusTestFixture.EVENT;
+import static org.apache.james.events.EventBusTestFixture.EVENT_2;
 import static org.apache.james.events.EventBusTestFixture.EVENT_ID;
 import static org.apache.james.events.EventBusTestFixture.EVENT_UNSUPPORTED_BY_LISTENER;
 import static org.apache.james.events.EventBusTestFixture.FIVE_HUNDRED_MS;
@@ -33,6 +34,7 @@ import static org.awaitility.Durations.TEN_MINUTES;
 import static org.awaitility.Durations.TEN_SECONDS;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
@@ -43,6 +45,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -358,7 +362,7 @@ public interface KeyContract extends EventBusContract {
             Mono.from(eventBus().register(listener, KEY_1)).block();
 
             eventBus().dispatch(EVENT, KEY_1).block();
-            eventBus().dispatch(EventBusTestFixture.EVENT_2, KEY_1).block();
+            eventBus().dispatch(EVENT_2, KEY_1).block();
 
             getSpeedProfile().shortWaitCondition()
                 .untilAsserted(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));
@@ -378,6 +382,30 @@ public interface KeyContract extends EventBusContract {
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
             verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+        }
+
+        @Test
+        default void dispatchShouldNotifyListenerWhenMultiEvents() {
+            EventListener.ReactiveEventListener listener = mock(EventListener.ReactiveEventListener.class);
+            when(listener.isHandling(any(EventBusTestFixture.TestEvent.class))).thenReturn(true);
+            when(listener.getExecutionMode()).thenReturn(ExecutionMode.ASYNCHRONOUS);
+
+            List<Event> storedEvent = new ArrayList<>();
+            when(listener.reactiveEvent(anyList()))
+                .thenAnswer(invocation -> {
+                    List<Event> events = invocation.getArgument(0);
+                    storedEvent.addAll(events);
+                    return Mono.empty();
+                });
+
+            Mono.from(eventBus().register(listener, KEY_1)).block();
+
+            List<EventBus.EventWithRegistrationKey> eventWithRegistrationKeys = List.of(new EventBus.EventWithRegistrationKey(EVENT, ImmutableSet.of(KEY_1)),
+                new EventBus.EventWithRegistrationKey(EVENT_2, ImmutableSet.of(KEY_1)));
+            eventBus().dispatch(eventWithRegistrationKeys).block();
+
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis())).reactiveEvent(anyList());
+            assertThat(storedEvent).containsExactly(EVENT, EVENT_2);
         }
     }
 
