@@ -19,7 +19,9 @@
 
 package org.apache.james.jmap.method
 
+import com.google.common.collect.ImmutableMap
 import jakarta.inject.Inject
+import org.apache.commons.lang3.StringUtils
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.mail.{MailboxGet, MailboxSetError, MailboxSetRequest, RemoveEmailsOnDestroy, UnparsedMailboxId}
@@ -27,9 +29,12 @@ import org.apache.james.jmap.method.MailboxSetDeletePerformer.{MailboxDeletionFa
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
+import org.apache.james.util.{AuditTrail, ReactorUtils}
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.SynchronousSink
 import reactor.core.scala.publisher.{SFlux, SMono}
+
+import scala.jdk.OptionConverters._
 
 object MailboxSetDeletePerformer {
   private val LOGGER = LoggerFactory.getLogger(classOf[MailboxSetDeletePerformer])
@@ -84,6 +89,7 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
         maxConcurrency = 5)
       .collectSeq()
       .map(MailboxDeletionResults)
+      .doOnSuccess(auditTrail(mailboxSession, _))
 
   private def delete(mailboxSession: MailboxSession, id: UnparsedMailboxId, onDestroy: RemoveEmailsOnDestroy): SMono[MailboxDeletionResult] =
     MailboxGet.parse(mailboxIdFactory)(id)
@@ -120,6 +126,18 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
                   .`then`())
             }
           }))
+
+  private def auditTrail(mailboxSession: MailboxSession, mailboxDeletionResults: MailboxDeletionResults): Unit = {
+    if (mailboxDeletionResults.destroyed.nonEmpty) {
+      ReactorUtils.logAsMono(() => AuditTrail.entry
+        .username(() => mailboxSession.getUser.asString())
+        .protocol("JMAP")
+        .action("Mailbox/set destroy")
+        .parameters(() => ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser.toScala.map(_.asString()).getOrElse(""),
+          "mailboxIds", StringUtils.join(mailboxDeletionResults.destroyed)))
+        .log("JMAP mailbox delete succeeded."))
+    }
+  }
 
   private def isASystemMailbox(mailbox: MessageManager): Boolean = Role.from(mailbox.getMailboxPath.getName).isPresent
 }

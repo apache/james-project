@@ -21,6 +21,7 @@ package org.apache.james.imap.processor;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -34,10 +35,13 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 
@@ -68,6 +72,7 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .then()
+            .doOnSuccess(any -> auditTrail(session, selected))
             .onErrorResume(MailboxNotFoundException.class, e -> {
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
                 return ReactorUtils.logAsMono(() -> LOGGER.debug("Delete failed for mailbox {} as it doesn't exist", mailboxPath, e));
@@ -100,5 +105,16 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "DELETE")
             .addToContext("mailbox", request.getMailboxName());
+    }
+
+    private void auditTrail(ImapSession session, SelectedMailbox selected) {
+        AuditTrail.entry()
+            .username(() -> session.getUserName().asString())
+            .sessionId(() -> session.sessionId().asString())
+            .protocol("IMAP")
+            .action("DELETE")
+            .parameters(() -> ImmutableMap.of("loggedInUser", session.getMailboxSession().getLoggedInUser().map(Username::asString).orElse(""),
+                "mailboxId", selected.getMailboxId().serialize()))
+            .log(String.format("IMAP DELETE succeeded."));
     }
 }
