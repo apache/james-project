@@ -31,7 +31,7 @@ import eu.timepit.refined.refineV
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus._
-import io.netty.handler.codec.http.{HttpHeaderValidationUtil, HttpMethod, QueryStringDecoder}
+import io.netty.handler.codec.http.{HttpHeaderNames, HttpHeaderValidationUtil, HttpMethod, QueryStringDecoder}
 import jakarta.inject.{Inject, Named}
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
@@ -315,6 +315,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
     val resourceSupplier: Callable[InputStream] = () => blob.content
     val sourceSupplier: java.util.function.Function[InputStream, Mono[Void]] = stream => SMono(addContentDispositionHeader(optionalName)
       .compose(addContentLengthHeader(blob.size))
+      .compose(addCacheControlHeader())
       .apply(response)
       .header(CONTENT_TYPE, sanitizeHeaderValue(blobContentType.asString))
       .status(OK)
@@ -345,6 +346,9 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
     resp => sizeTry
       .map(size => resp.header("Content-Length", size.value.toString))
       .getOrElse(resp)
+
+  private def addCacheControlHeader(): HttpServerResponse => HttpServerResponse =
+    resp => resp.header(HttpHeaderNames.CACHE_CONTROL, "private, immutable, max-age=31536000")
 
   private def addContentDispositionHeaderRegardingEncoding(name: String, resp: HttpServerResponse): HttpServerResponse =
     if (CharMatcher.ascii.matchesAllOf(name)) {
