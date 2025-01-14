@@ -19,17 +19,9 @@
 
 package org.apache.james.jmap;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.FOUND;
-import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
-import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 
 import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-
-import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerResponse;
 
 public interface JMAPRoutes {
     Stream<JMAPRoute> routes();
@@ -46,20 +38,5 @@ public interface JMAPRoutes {
 
     static JMAPRoute.Action redirectTo(String location) {
         return (req, res) -> res.status(FOUND).header("Location", location).send();
-    }
-
-    default Mono<Void> handleInternalError(HttpServerResponse response, Logger logger, Throwable e) {
-        logger.error("Internal server error", e);
-        return response.status(INTERNAL_SERVER_ERROR).send();
-    }
-
-    default Mono<Void> handleBadRequest(HttpServerResponse response, Logger logger, Throwable e) {
-        logger.warn("Invalid request received.", e);
-        return response.status(BAD_REQUEST).send();
-    }
-
-    default Mono<Void> handleAuthenticationFailure(HttpServerResponse response, Logger logger, Throwable e) {
-        logger.warn("Unauthorized", e);
-        return response.status(UNAUTHORIZED).send();
     }
 }
