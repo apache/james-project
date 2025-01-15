@@ -73,8 +73,12 @@ public class MailRepositoryStoreService {
     }
 
     public Optional<List<MailKeyDTO>> listMails(MailRepositoryPath path, Offset offset, Limit limit) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        return listMails(path, offset, limit, ImmutableList.of());
+    }
+
+    public Optional<List<MailKeyDTO>> listMails(MailRepositoryPath path, Offset offset, Limit limit, List<MailRepository.Condition> conditions) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         Optional<Stream<MailKeyDTO>> maybeMails = Optional.of(getRepositories(path)
-            .flatMap(Throwing.function((MailRepository repository) -> Iterators.toStream(repository.list())).sneakyThrow())
+            .flatMap(Throwing.function((MailRepository repository) -> Iterators.toStream(repository.list(conditions))).sneakyThrow())
             .map(MailKeyDTO::new)
             .skip(offset.getOffset()));
 

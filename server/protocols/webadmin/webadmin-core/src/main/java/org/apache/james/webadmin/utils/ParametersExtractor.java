@@ -37,6 +37,12 @@ public class ParametersExtractor {
 
     public static final String LIMIT_PARAMETER_NAME = "limit";
     public static final String OFFSET_PARAMETER_NAME = "offset";
+    public static final String UPDATED_BEFORE_PARAMETER_NAME = "updatedBefore";
+    public static final String UPDATED_AFTER_PARAMETER_NAME = "updatedAfter";
+    public static final String SENDER_PARAMETER_NAME = "sender";
+    public static final String RECIPIENT_PARAMETER_NAME = "recipient";
+    public static final String REMOTE_ADDRESS_PARAMETER_NAME = "remoteAddress";
+    public static final String REMOTE_HOST_PARAMETER_NAME = "remoteHost";
 
     public static Limit extractLimit(Request request) {
         return Limit.from(extractPositiveInteger(request, LIMIT_PARAMETER_NAME)
@@ -45,6 +51,34 @@ public class ParametersExtractor {
 
     public static Offset extractOffset(Request request) {
         return Offset.from(extractPositiveInteger(request, OFFSET_PARAMETER_NAME));
+    }
+
+    public static Optional<Duration> extractUpdatedBeforeParam(Request request) {
+        return extractDuration(request, UPDATED_BEFORE_PARAMETER_NAME);
+    }
+
+    public static Optional<Duration> extractUpdatedAfterParam(Request request) {
+        return extractDuration(request, UPDATED_AFTER_PARAMETER_NAME);
+    }
+
+    public static Optional<String> extractSenderParam(Request request) {
+        return Optional.ofNullable(request.queryParams(SENDER_PARAMETER_NAME))
+            .filter(s -> !s.isEmpty());
+    }
+
+    public static Optional<String> extractRecipientParam(Request request) {
+        return Optional.ofNullable(request.queryParams(RECIPIENT_PARAMETER_NAME))
+            .filter(s -> !s.isEmpty());
+    }
+
+    public static Optional<String> extractRemoteAddressParam(Request request) {
+        return Optional.ofNullable(request.queryParams(REMOTE_ADDRESS_PARAMETER_NAME))
+            .filter(s -> !s.isEmpty());
+    }
+
+    public static Optional<String> extractRemoteHostParam(Request request) {
+        return Optional.ofNullable(request.queryParams(REMOTE_HOST_PARAMETER_NAME))
+            .filter(s -> !s.isEmpty());
     }
 
     public static Optional<Double> extractPositiveDouble(Request request, String parameterName) {
