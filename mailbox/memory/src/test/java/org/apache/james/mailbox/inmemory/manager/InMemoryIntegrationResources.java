@@ -63,7 +63,7 @@ import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
@@ -119,10 +119,10 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         }
 
         interface RequireMessageParser {
-            RequireSearchIndex messageParser(MessageParser messageParser);
+            RequireSearchIndex messageParser(MessageParserImpl messageParser);
 
             default RequireSearchIndex defaultMessageParser() {
-                return messageParser(new MessageParser());
+                return messageParser(new MessageParserImpl());
             }
         }
 
@@ -208,7 +208,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private Optional<Integer> limitAnnotationCount;
         private Optional<Function<BaseQuotaComponentsStage, QuotaManager>> quotaManager;
         private Optional<Integer> limitAnnotationSize;
-        private Optional<MessageParser> messageParser;
+        private Optional<MessageParserImpl> messageParser;
         private Optional<UpdatableTickingClock> updatableTickingClock;
         private Optional<Function<MailboxManagerSearchIndexStage, MessageSearchIndex>> searchIndexFactory;
         private ImmutableSet.Builder<Function<MailboxManagerPreInstanciationStage, PreDeletionHook>> preDeletionHooksFactories;
@@ -229,7 +229,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         }
 
         @Override
-        public Builder messageParser(MessageParser messageParser) {
+        public Builder messageParser(MessageParserImpl messageParser) {
             this.messageParser = Optional.of(messageParser);
             return this;
         }

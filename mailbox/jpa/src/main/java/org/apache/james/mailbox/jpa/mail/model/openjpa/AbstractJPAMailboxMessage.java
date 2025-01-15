@@ -61,6 +61,7 @@ import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.FlagsFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -558,7 +559,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     public List<MessageAttachmentMetadata> getAttachments() {
         try {
             AtomicInteger counter = new AtomicInteger(0);
-            MessageParserImpl.ParsingResult parsingResult = new MessageParserImpl().retrieveAttachments(getFullContent());
+            MessageParser.ParsingResult parsingResult = new MessageParserImpl().retrieveAttachments(getFullContent());
             ImmutableList<MessageAttachmentMetadata> result = parsingResult
                 .getAttachments()
                 .stream()
