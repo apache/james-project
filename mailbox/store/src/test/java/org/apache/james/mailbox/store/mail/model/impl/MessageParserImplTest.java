@@ -40,38 +40,38 @@ import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class MessageParserTest {
-    MessageParser testee;
+class MessageParserImplTest {
+    MessageParserImpl testee;
 
     @BeforeEach
     void setup() {
-        testee = new MessageParser();
+        testee = new MessageParserImpl();
     }
 
     @Test
     void getAttachmentsShouldBeEmptyWhenNoAttachment() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/noAttachment.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/noAttachment.eml"));
 
         assertThat(attachments.getAttachments()).isEmpty();
     }
 
     @Test
     void getAttachmentsShouldIgnoreInlineWhenMixedMultipart() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/inlined-mixed.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/inlined-mixed.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(2);
     }
 
     @Test
     void getAttachmentsShouldRetrieveAttachmentsWhenOneAttachment() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
     }
 
     @Test
     void getAttachmentsShouldRetrieveAttachmentNameWhenOne() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
         Optional<String> expectedName = Optional.of("exploits_of_a_mom.png");
@@ -80,14 +80,14 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldRetrieveAttachmentNameWhenOneContainingNonASCIICharacters() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/messageWithNonASCIIFilenameAttachment.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/messageWithNonASCIIFilenameAttachment.eml"));
         assertThat(attachments.getAttachments()).hasSize(1);
         assertThat(attachments.getAttachments().get(0).getName()).contains("ديناصور.odt");
     }
 
     @Test
     void getAttachmentsShouldRetrieveEmptyNameWhenNone() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutName.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutName.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
         assertThat(attachments.getAttachments().get(0).getName()).isEqualTo(Optional.empty());
@@ -95,7 +95,7 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldNotFailWhenContentTypeIsNotHere() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutContentType.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithoutContentType.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
         assertThat(attachments.getAttachments().get(0).getContentType())
@@ -104,7 +104,7 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldNotFailWhenContentTypeIsEmpty() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithEmptyContentType.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithEmptyContentType.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
         assertThat(attachments.getAttachments().get(0).getContentType())
@@ -113,7 +113,7 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldRetrieveTheAttachmentContentTypeWhenOneAttachment() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
         assertThat(attachments.getAttachments().get(0).getContentType())
@@ -122,21 +122,21 @@ class MessageParserTest {
 
     @Test
     void retrieveAttachmentsShouldNotFailOnMessagesWithManyHeaders() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/mailWithManyHeaders.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/mailWithManyHeaders.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
     }
 
     @Test
     void retrieveAttachmentsShouldNotFailOnMessagesWithLongHeaders() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/mailWithLongHeaders.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/mailWithLongHeaders.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
     }
 
     @Test
     void getAttachmentsShouldRetrieveTheAttachmentContentTypeWhenOneAttachmentWithSimpleContentType() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithSimpleContentType.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentWithSimpleContentType.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
         assertThat(attachments.getAttachments().get(0).getContentType())
@@ -145,7 +145,7 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldReturnTheExpectedAttachment() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml"));
 
         ParsedAttachment attachment = attachments.getAttachments().get(0);
         assertThat(attachment.getContent().openStream())
@@ -154,14 +154,14 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldRetrieveAttachmentsWhenTwo() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(2);
     }
 
     @Test
     void retrieveAttachmentShouldUseFilenameAsNameWhenNoName() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/filenameOnly.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/filenameOnly.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1)
             .extracting(ParsedAttachment::getName)
@@ -172,7 +172,7 @@ class MessageParserTest {
 
     @Test
     void retrieveAttachmentShouldUseNameWhenBothNameAndFilename() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/filenameAndName.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/filenameAndName.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1)
             .extracting(ParsedAttachment::getName)
@@ -183,21 +183,21 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldRetrieveEmbeddedAttachmentsWhenSome() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithInline.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithInline.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
     }
 
     @Test
     void getAttachmentsShouldRetrieveInlineAttachmentsWhenSome() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithAttachment.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithAttachment.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
     }
 
     @Test
     void getAttachmentsShouldRetrieveTheAttachmentCIDWhenOne() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachment.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachment.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
         assertThat(attachments.getAttachments().get(0).getCid()).isEqualTo(Optional.of(Cid.from("part1.37A15C92.A7C3488D@linagora.com")));
@@ -205,7 +205,7 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldSetInlineWhenOneInlinedAttachment() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachment.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachment.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
         assertThat(attachments.getAttachments().get(0).isInline()).isTrue();
@@ -213,63 +213,63 @@ class MessageParserTest {
 
     @Test
     void getAttachementsShouldRetrieveHtmlAttachementsWhenSome() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneHtmlAttachmentAndSomeTextInlined.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneHtmlAttachmentAndSomeTextInlined.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
     }
 
     @Test
     void getAttachementsShouldRetrieveAttachmentsWhenSomeAreInTheMultipartAlternative() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/invitationEmailFromOP.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/invitationEmailFromOP.eml"));
         
         assertThat(attachments.getAttachments()).hasSize(6);
     }
 
     @Test
     void getAttachmentsShouldNotConsiderUnknownContentDispositionAsAttachments() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/unknownDisposition.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/unknownDisposition.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(0);
     }
 
     @Test
     void getAttachmentsShouldConsiderNoContentDispositionAsAttachmentsWhenCID() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/noContentDispositionWithCID.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/noContentDispositionWithCID.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
     }
 
     @Test
     void getAttachmentsShouldRetrieveAttachmentsWhenNoCidForInlined() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachmentWithNoCid.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachmentWithNoCid.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
     }
 
     @Test
     void getAttachmentsShouldRetrieveAttachmentsWhenEmptyCidForInlined() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachmentWithEmptyCid.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachmentWithEmptyCid.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
     }
 
     @Test
     void getAttachmentsShouldRetrieveAttachmentsWhenBlankCidForInlined() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachmentWithBlankCid.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachmentWithBlankCid.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
     }
 
     @Test
     void getAttachmentsShouldRetrieveAttachmentsWhenOneFailOnWrongContentDisposition() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/multiAttachmentsWithOneWrongContentDisposition.eml"));
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(ClassLoader.getSystemResourceAsStream("eml/multiAttachmentsWithOneWrongContentDisposition.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(2);
     }
 
     @Test
     void getAttachmentsShouldRetrieveOneAttachmentWhenMessageWithAttachmentContentDisposition() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(
             ClassLoader.getSystemResourceAsStream("eml/emailWithOnlyAttachment.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1);
@@ -277,7 +277,7 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldRetrieveCharset() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(
             ClassLoader.getSystemResourceAsStream("eml/charset.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(1)
@@ -288,7 +288,7 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldRetrieveAllPartsCharset() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(
             ClassLoader.getSystemResourceAsStream("eml/charset2.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(2)
@@ -299,7 +299,7 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldNotConsiderTextCalendarAsAttachmentsByDefault() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(
             ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
 
         assertThat(attachments.getAttachments())
@@ -308,7 +308,7 @@ class MessageParserTest {
 
     @Test
     void getAttachmentsShouldConsiderTextCalendarAsAttachments() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(
             ClassLoader.getSystemResourceAsStream("eml/calendar2.eml"));
 
         assertThat(attachments.getAttachments())
@@ -319,7 +319,7 @@ class MessageParserTest {
 
     @Test
     void gpgSignatureShouldBeConsideredAsAnAttachment() throws Exception {
-        MessageParser.ParsingResult attachments = testee.retrieveAttachments(
+        MessageParserImpl.ParsingResult attachments = testee.retrieveAttachments(
             ClassLoader.getSystemResourceAsStream("eml/signedMessage.eml"));
 
         assertThat(attachments.getAttachments()).hasSize(2)

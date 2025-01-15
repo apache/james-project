@@ -81,7 +81,7 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
@@ -124,7 +124,7 @@ public class StoreMailboxManager implements MailboxManager {
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxAnnotationManager annotationManager;
     private final MailboxPathLocker locker;
-    private final MessageParser messageParser;
+    private final MessageParserImpl messageParser;
     private final Factory messageIdFactory;
     private final SessionProvider sessionProvider;
     private final QuotaManager quotaManager;
@@ -138,7 +138,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
-                               MailboxPathLocker locker, MessageParser messageParser,
+                               MailboxPathLocker locker, MessageParserImpl messageParser,
                                Factory messageIdFactory, MailboxAnnotationManager annotationManager,
                                EventBus eventBus, StoreRightManager storeRightManager,
                                QuotaComponents quotaComponents, MessageSearchIndex searchIndex, MailboxManagerConfiguration configuration,
@@ -223,7 +223,7 @@ public class StoreMailboxManager implements MailboxManager {
         return storeRightManager;
     }
 
-    protected MessageParser getMessageParser() {
+    protected MessageParserImpl getMessageParser() {
         return messageParser;
     }
 

@@ -42,7 +42,7 @@ import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.utils.MimeMessageHeadersUtil;
 import org.apache.james.mime4j.dom.Message;
@@ -78,13 +78,13 @@ public interface MessageStorer {
         private final MessageId.Factory messageIdFactory;
         private final MessageFactory messageFactory;
         private final AttachmentMapperFactory attachmentMapperFactory;
-        private final MessageParser messageParser;
+        private final MessageParserImpl messageParser;
         private final ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm;
         private final Clock clock;
 
         public WithAttachment(MailboxSessionMapperFactory mapperFactory, MessageId.Factory messageIdFactory,
                               MessageFactory messageFactory, AttachmentMapperFactory attachmentMapperFactory,
-                              MessageParser messageParser, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm, Clock clock) {
+                              MessageParserImpl messageParser, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm, Clock clock) {
             this.mapperFactory = mapperFactory;
             this.messageIdFactory = messageIdFactory;
             this.messageFactory = messageFactory;
@@ -126,22 +126,22 @@ public interface MessageStorer {
                 parsingResults -> Mono.fromRunnable(parsingResults::dispose).subscribeOn(Schedulers.boundedElastic()));
         }
 
-        private MessageParser.ParsingResult extractAttachments(Content contentIn, Optional<Message> maybeMessage) {
+        private MessageParserImpl.ParsingResult extractAttachments(Content contentIn, Optional<Message> maybeMessage) {
             return maybeMessage.map(message -> {
                 try {
-                    return new MessageParser.ParsingResult(messageParser.retrieveAttachments(message), () -> {
+                    return new MessageParserImpl.ParsingResult(messageParser.retrieveAttachments(message), () -> {
 
                     });
                 } catch (Exception e) {
                     LOGGER.warn("Error while parsing mail's attachments: {}", e.getMessage(), e);
-                    return MessageParser.ParsingResult.EMPTY;
+                    return MessageParserImpl.ParsingResult.EMPTY;
                 }
             }).orElseGet(() -> {
                 try (InputStream inputStream = contentIn.getInputStream()) {
                     return messageParser.retrieveAttachments(inputStream);
                 } catch (Exception e) {
                     LOGGER.warn("Error while parsing mail's attachments: {}", e.getMessage(), e);
-                    return MessageParser.ParsingResult.EMPTY;
+                    return MessageParserImpl.ParsingResult.EMPTY;
                 }
             });
         }
