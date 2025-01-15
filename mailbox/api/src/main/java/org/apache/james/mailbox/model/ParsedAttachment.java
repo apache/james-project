@@ -86,7 +86,7 @@ public class ParsedAttachment {
     private final Optional<Cid> cid;
     private final boolean isInline;
 
-    private ParsedAttachment(ContentType contentType, ByteSource content, Optional<String> name, Optional<Cid> cid, boolean isInline) {
+    public ParsedAttachment(ContentType contentType, ByteSource content, Optional<String> name, Optional<Cid> cid, boolean isInline) {
         this.contentType = contentType;
         this.content = content;
         this.name = name;
