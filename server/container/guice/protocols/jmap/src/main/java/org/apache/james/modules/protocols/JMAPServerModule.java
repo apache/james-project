@@ -22,7 +22,6 @@ package org.apache.james.modules.protocols;
 import java.security.Security;
 
 import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.jmap.MessageIdProbe;
@@ -39,10 +38,8 @@ public class JMAPServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new JMAPModule());
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(JmapGuiceProbe.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MessageIdProbe.class);
-
     }
 
     @ProvidesIntoSet

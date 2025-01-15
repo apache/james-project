@@ -48,6 +48,11 @@ import org.apache.james.jmap.core.VacationResponseCapabilityFactory$;
 import org.apache.james.jmap.core.WebSocketCapabilityFactory$;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.jmap.rfc8621.RFC8621MethodsModule;
+import org.apache.james.jmap.routes.AttachmentBlobResolver;
+import org.apache.james.jmap.routes.BlobResolver;
+import org.apache.james.jmap.routes.MessageBlobResolver;
+import org.apache.james.jmap.routes.MessagePartBlobResolver;
+import org.apache.james.jmap.routes.UploadResolver;
 import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
 import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jwt.JwtConfiguration;
@@ -64,7 +69,10 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.util.Port;
 import org.apache.james.util.Size;
+import org.apache.james.util.date.DefaultZonedDateTimeProvider;
+import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.util.html.HtmlTextExtractor;
+import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
@@ -75,6 +83,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
@@ -82,6 +91,19 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class JMAPModule extends AbstractModule {
+    public static Module BLOBS_RESOLVERS = binder -> {
+        Multibinder<BlobResolver> blobResolverMultibinder = Multibinder.newSetBinder(binder, BlobResolver.class);
+        blobResolverMultibinder.addBinding().to(MessageBlobResolver.class);
+        blobResolverMultibinder.addBinding().to(UploadResolver.class);
+        blobResolverMultibinder.addBinding().to(MessagePartBlobResolver.class);
+        blobResolverMultibinder.addBinding().to(AttachmentBlobResolver.class);
+    };
+    public static Module INSTANCE = binder -> {
+        binder.install(new JMAPModule());
+        binder.install(new RFC8621MethodsModule());
+        binder.install(BLOBS_RESOLVERS);
+    };
+
     private static final int DEFAULT_JMAP_PORT = 80;
     private static final Logger LOGGER = LoggerFactory.getLogger(JMAPModule.class);
     public static final MailetContainerModule.DefaultProcessorsConfigurationSupplier DEFAULT_JMAP_PROCESSORS_CONFIGURATION_SUPPLIER =
@@ -115,11 +137,12 @@ public class JMAPModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new JMAPWithoutDraftCommonModule());
-        install(new RFC8621MethodsModule());
-        install(binder -> binder
-            .bind(MailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
-            .toInstance(DEFAULT_JMAP_PROCESSORS_CONFIGURATION_SUPPLIER));
+        bind(MessageContentExtractor.class).in(Scopes.SINGLETON);
+        bind(DefaultZonedDateTimeProvider.class).in(Scopes.SINGLETON);
+        bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
+
+        bind(MailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
+            .toInstance(DEFAULT_JMAP_PROCESSORS_CONFIGURATION_SUPPLIER);
 
         bind(JMAPServer.class).in(Scopes.SINGLETON);
         bind(JsoupHtmlTextExtractor.class).in(Scopes.SINGLETON);
