@@ -77,6 +77,8 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.SearchThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
@@ -132,6 +134,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(AttachmentContentLoader.class).to(AttachmentManager.class);
 
         bind(DeletedMessageMetadataVault.class).to(MemoryDeletedMessageMetadataVault.class);
+        bind(MessageParser.class).toInstance(new MessageParserImpl());
         bind(MailboxCounterCorrector.class).toInstance(MailboxCounterCorrector.DEFAULT);
 
         bind(InMemoryMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);

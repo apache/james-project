@@ -38,7 +38,7 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
@@ -55,7 +55,7 @@ public class OpenJPAMailboxManager extends StoreMailboxManager {
     @Inject
     public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
                                  SessionProvider sessionProvider,
-                                 MessageParserImpl messageParser,
+                                 MessageParser messageParser,
                                  MessageId.Factory messageIdFactory,
                                  EventBus eventBus,
                                  StoreMailboxAnnotationManager annotationManager,

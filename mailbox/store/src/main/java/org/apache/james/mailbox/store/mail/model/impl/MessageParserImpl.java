@@ -53,28 +53,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 
-public class MessageParserImpl {
-    public static class ParsingResult {
-        public static final ParsingResult EMPTY = new ParsingResult(ImmutableList.of(), () -> {
-
-        });
-
-        private final List<ParsedAttachment> attachments;
-        private final Runnable dispose;
-
-        public ParsingResult(List<ParsedAttachment> attachments, Runnable dispose) {
-            this.attachments = attachments;
-            this.dispose = dispose;
-        }
-
-        public List<ParsedAttachment> getAttachments() {
-            return attachments;
-        }
-
-        public void dispose() {
-            dispose.run();
-        }
-    }
+public class MessageParserImpl implements MessageParser {
 
     private static final String TEXT_MEDIA_TYPE = "text";
     private static final String CONTENT_TYPE = "Content-Type";

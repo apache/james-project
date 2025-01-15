@@ -65,6 +65,8 @@ import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.modules.data.JPAEntityManagerModule;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
@@ -122,6 +124,7 @@ public class JPAMailboxModule extends AbstractModule {
         bind(AttachmentIdFactory.class).to(StringBackedAttachmentIdFactory.class);
         bind(AttachmentContentLoader.class).to(JPAAttachmentContentLoader.class);
         bind(MailboxCounterCorrector.class).toInstance(MailboxCounterCorrector.DEFAULT);
+        bind(MessageParser.class).toInstance(new MessageParserImpl());
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
         
