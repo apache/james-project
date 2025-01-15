@@ -31,7 +31,7 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.AbstractMailboxManagerAttachmentTest;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.junit.jupiter.api.BeforeEach;
 
 class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
@@ -40,7 +40,7 @@ class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachm
 
     @BeforeEach
     void setup() throws Exception {
-        MessageParser failingMessageParser = mock(MessageParser.class);
+        MessageParserImpl failingMessageParser = mock(MessageParserImpl.class);
         when(failingMessageParser.retrieveAttachments(any(InputStream.class)))
             .thenThrow(new RuntimeException("Message parser set to fail"));
 

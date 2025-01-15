@@ -37,7 +37,7 @@ import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 public class InMemoryMessageManager extends StoreMessageManager {
@@ -48,7 +48,7 @@ public class InMemoryMessageManager extends StoreMessageManager {
                                   Mailbox mailbox,
                                   QuotaManager quotaManager,
                                   QuotaRootResolver quotaRootResolver,
-                                  MessageParser messageParser,
+                                  MessageParserImpl messageParser,
                                   MessageId.Factory messageIdFactory,
                                   BatchSizes batchSizes,
                                   StoreRightManager storeRightManager,

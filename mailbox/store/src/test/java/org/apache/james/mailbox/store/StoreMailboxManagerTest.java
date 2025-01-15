@@ -55,7 +55,7 @@ import org.apache.james.mailbox.model.search.PrefixedRegex;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
@@ -111,7 +111,7 @@ class StoreMailboxManagerTest {
         MessageSearchIndex index = new SimpleMessageSearchIndex(mockedMapperFactory, mockedMapperFactory, new DefaultTextExtractor(), attachmentContentLoader);
 
         storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, sessionProvider,
-                new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
+                new JVMMailboxPathLocker(), new MessageParserImpl(), messageIdFactory,
                 annotationManager, eventBus, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT,
                 PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm, new UpdatableTickingClock(Instant.now()));
     }

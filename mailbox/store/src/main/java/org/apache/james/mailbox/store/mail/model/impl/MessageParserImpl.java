@@ -53,7 +53,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 
-public class MessageParser {
+public class MessageParserImpl {
     public static class ParsingResult {
         public static final ParsingResult EMPTY = new ParsingResult(ImmutableList.of(), () -> {
 
@@ -91,11 +91,11 @@ public class MessageParser {
         .addAll(ATTACHMENT_CONTENT_TYPES)
         .add(TEXT_CALENDAR)
         .build();
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageParser.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageParserImpl.class);
 
     private final Cid.CidParser cidParser;
 
-    public MessageParser() {
+    public MessageParserImpl() {
         cidParser = Cid.parser()
             .relaxed()
             .unwrap();
