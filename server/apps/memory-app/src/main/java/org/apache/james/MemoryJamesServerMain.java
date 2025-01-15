@@ -22,6 +22,7 @@ package org.apache.james;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.jmap.JMAPListenerModule;
+import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
 import org.apache.james.jmap.memory.identity.MemoryCustomIdentityDAO;
 import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionModule;
@@ -121,6 +122,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new JmapTasksModule(),
         new MemoryDataJmapModule(),
         new MemoryPushSubscriptionModule(),
+        JMAPModule.INSTANCE,
         new JMAPServerModule());
 
     public static final Module IN_MEMORY_SERVER_MODULE = Modules.combine(

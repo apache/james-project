@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
+import org.apache.james.jmap.JMAPModule;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.NoACLMapper;
@@ -127,6 +128,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
     public static final Module PROTOCOLS = Modules.combine(
         new LMTPServerModule(),
         new JMAPServerModule(),
+        JMAPModule.INSTANCE,
         new JMAPEventBusModule(),
         new ManageSieveServerModule(),
         new POP3ServerModule(),

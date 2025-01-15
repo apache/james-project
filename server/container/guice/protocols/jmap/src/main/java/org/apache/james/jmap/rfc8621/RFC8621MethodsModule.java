@@ -90,15 +90,10 @@ import org.apache.james.jmap.method.ZoneIdProvider;
 import org.apache.james.jmap.pushsubscription.DefaultWebPushClient;
 import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
 import org.apache.james.jmap.pushsubscription.WebPushClient;
-import org.apache.james.jmap.routes.AttachmentBlobResolver;
-import org.apache.james.jmap.routes.BlobResolver;
 import org.apache.james.jmap.routes.DownloadRoutes;
 import org.apache.james.jmap.routes.EventSourceRoutes;
 import org.apache.james.jmap.routes.JMAPApiRoutes;
-import org.apache.james.jmap.routes.MessageBlobResolver;
-import org.apache.james.jmap.routes.MessagePartBlobResolver;
 import org.apache.james.jmap.routes.SessionRoutes;
-import org.apache.james.jmap.routes.UploadResolver;
 import org.apache.james.jmap.routes.UploadRoutes;
 import org.apache.james.jmap.routes.WebSocketRoutes;
 import org.apache.james.metrics.api.MetricFactory;
@@ -198,12 +193,6 @@ public class RFC8621MethodsModule extends AbstractModule {
         typeNameMultibinder.addBinding().toInstance(EmailSubmissionTypeName$.MODULE$);
         typeNameMultibinder.addBinding().toInstance(EmailDeliveryTypeName$.MODULE$);
         typeNameMultibinder.addBinding().toInstance(VacationResponseTypeName$.MODULE$);
-
-        Multibinder<BlobResolver> blobResolverMultibinder = Multibinder.newSetBinder(binder(), BlobResolver.class);
-        blobResolverMultibinder.addBinding().to(MessageBlobResolver.class);
-        blobResolverMultibinder.addBinding().to(UploadResolver.class);
-        blobResolverMultibinder.addBinding().to(MessagePartBlobResolver.class);
-        blobResolverMultibinder.addBinding().to(AttachmentBlobResolver.class);
 
         Multibinder<Disconnector> disconnectorMultibinder = Multibinder.newSetBinder(binder(), Disconnector.class);
         disconnectorMultibinder.addBinding().to(WebSocketRoutes.class);
