@@ -42,6 +42,7 @@ import org.opensearch.client.opensearch._types.Time;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.search.Highlight;
 import org.opensearch.client.opensearch.core.search.HighlightField;
+import org.opensearch.client.opensearch.core.search.HighlighterEncoder;
 import org.opensearch.client.opensearch.core.search.Hit;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -84,6 +85,7 @@ public class OpenSearchSearcher {
             .build();
 
         this.highlightQuery = new Highlight.Builder()
+            .encoder(HighlighterEncoder.Html)
             .fields(JsonMessageConstants.SUBJECT, highlightField)
             .fields(JsonMessageConstants.TEXT_BODY, highlightField)
             .fields(JsonMessageConstants.HTML_BODY, highlightField)
