@@ -19,6 +19,8 @@
 
 package org.apache.james.protocols.webadmin;
 
+import static org.apache.james.DisconnectorNotifier.AllUsersRequest.ALL_USERS_REQUEST;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,7 @@ import java.util.Set;
 import jakarta.inject.Inject;
 
 import org.apache.james.DisconnectorNotifier;
+import org.apache.james.DisconnectorNotifier.MultipleUserRequest;
 import org.apache.james.core.ConnectionDescription;
 import org.apache.james.core.ConnectionDescriptionSupplier;
 import org.apache.james.core.Username;
@@ -92,13 +95,13 @@ public class ProtocolServerRoutes implements Routes {
     }
 
     private final Set<CertificateReloadable.Factory> servers;
-    private final DisconnectorNotifier disconnector;
+    private final DisconnectorNotifier disconnectorNotifier;
     private final ConnectionDescriptionSupplier connectionDescriptionSupplier;
 
     @Inject
-    public ProtocolServerRoutes(Set<CertificateReloadable.Factory> servers, DisconnectorNotifier disconnector, ConnectionDescriptionSupplier connectionDescriptionSupplier) {
+    public ProtocolServerRoutes(Set<CertificateReloadable.Factory> servers, DisconnectorNotifier disconnectorNotifier, ConnectionDescriptionSupplier connectionDescriptionSupplier) {
         this.servers = servers;
-        this.disconnector = disconnector;
+        this.disconnectorNotifier = disconnectorNotifier;
         this.connectionDescriptionSupplier = connectionDescriptionSupplier;
     }
 
@@ -131,7 +134,7 @@ public class ProtocolServerRoutes implements Routes {
 
         service.delete(SERVERS + "/channels/:user", (request, response) -> {
             Username username = Username.of(request.params("user"));
-            disconnector.disconnect(username::equals);
+            disconnectorNotifier.disconnect(MultipleUserRequest.of(username));
 
             return Responses.returnNoContent(response);
         });
@@ -140,13 +143,13 @@ public class ProtocolServerRoutes implements Routes {
             String body = request.body();
 
             if (Strings.isNullOrEmpty(body)) {
-                disconnector.disconnect(any -> true);
+                disconnectorNotifier.disconnect(ALL_USERS_REQUEST);
             } else {
                 ImmutableSet<Username> userSet = OBJECT_MAPPER.readValue(body, LIST_OF_STRING)
                     .stream()
                     .map(Username::of)
                     .collect(ImmutableSet.toImmutableSet());
-                disconnector.disconnect(userSet::contains);
+                disconnectorNotifier.disconnect(MultipleUserRequest.of(userSet));
             }
 
             return Responses.returnNoContent(response);

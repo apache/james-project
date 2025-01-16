@@ -19,14 +19,38 @@
 
 package org.apache.james;
 
-import java.util.function.Predicate;
+import java.util.Set;
 
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Disconnector;
 import org.apache.james.core.Username;
 
-public interface DisconnectorNotifier extends Disconnector {
+public interface DisconnectorNotifier {
+
+    interface Request {
+    }
+
+    record MultipleUserRequest(Set<Username> usernameList) implements Request {
+        public static MultipleUserRequest of(Username username) {
+            return new MultipleUserRequest(Set.of(username));
+        }
+
+        public static MultipleUserRequest of(Set<Username> usernameList) {
+            return new MultipleUserRequest(usernameList);
+        }
+
+        public boolean contains(Username username) {
+            return usernameList.contains(username);
+        }
+    }
+
+    record AllUsersRequest() implements Request {
+        public static AllUsersRequest ALL_USERS_REQUEST = new AllUsersRequest();
+    }
+
+    void disconnect(Request request);
+
     class InVMDisconnectorNotifier implements DisconnectorNotifier {
         private final Disconnector disconnector;
 
@@ -36,8 +60,17 @@ public interface DisconnectorNotifier extends Disconnector {
         }
 
         @Override
-        public void disconnect(Predicate<Username> username) {
-            disconnector.disconnect(username);
+        public void disconnect(Request request) {
+            switch (request) {
+                case MultipleUserRequest multipleUserRequest:
+                    disconnector.disconnect(multipleUserRequest::contains);
+                    break;
+                case AllUsersRequest allUsersRequest:
+                    disconnector.disconnect(username -> true);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected value: " + request);
+            }
         }
     }
 }
