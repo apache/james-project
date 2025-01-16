@@ -54,15 +54,33 @@ import reactor.core.publisher.Mono;
 public class CassandraAttachmentMapper implements AttachmentMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraAttachmentMapper.class);
 
+    public interface AttachmentIdAssignationStrategy {
+        AttachmentId assign(ParsedAttachment parsedAttachment, MessageId messageId);
+
+        class Default implements AttachmentIdAssignationStrategy {
+            private final AttachmentIdFactory attachmentIdFactory;
+
+            @Inject
+            public Default(AttachmentIdFactory attachmentIdFactory) {
+                this.attachmentIdFactory = attachmentIdFactory;
+            }
+
+            @Override
+            public AttachmentId assign(ParsedAttachment parsedAttachment, MessageId messageId) {
+                return attachmentIdFactory.random();
+            }
+        }
+    }
+
     private final CassandraAttachmentDAOV2 attachmentDAOV2;
     private final BlobStore blobStore;
-    private final AttachmentIdFactory attachmentIdFactory;
+    private final AttachmentIdAssignationStrategy attachmentIdAssignationStrategy;
 
     @Inject
-    public CassandraAttachmentMapper(CassandraAttachmentDAOV2 attachmentDAOV2, BlobStore blobStore, AttachmentIdFactory attachmentIdFactory) {
+    public CassandraAttachmentMapper(CassandraAttachmentDAOV2 attachmentDAOV2, BlobStore blobStore, AttachmentIdAssignationStrategy attachmentIdAssignationStrategy) {
         this.attachmentDAOV2 = attachmentDAOV2;
         this.blobStore = blobStore;
-        this.attachmentIdFactory = attachmentIdFactory;
+        this.attachmentIdAssignationStrategy = attachmentIdAssignationStrategy;
     }
 
     @Override
@@ -130,7 +148,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private Mono<MessageAttachmentMetadata> storeAttachmentAsync(ParsedAttachment parsedAttachment, MessageId ownerMessageId) {
         try {
-            AttachmentId attachmentId = attachmentIdFactory.random();
+            AttachmentId attachmentId = attachmentIdAssignationStrategy.assign(parsedAttachment, ownerMessageId);
             ByteSource content = parsedAttachment.getContent();
             long size = content.size();
             return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), content, LOW_COST))
