@@ -40,6 +40,7 @@ import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDaoV
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.james.util.AuditTrail;
+import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.reactivestreams.Publisher;
 
@@ -95,6 +96,22 @@ public class CassandraMailRepository implements MailRepository {
         return keysDAO.list(url)
             .toIterable()
             .iterator();
+    }
+
+    @Override
+    public Iterator<MailKey> list(Condition condition) {
+        return Iterators.toStream(list())
+            .filter(key -> {
+                Mail mail = retrieveMetadata(key);
+                return condition.test(mail);
+            }).iterator();
+    }
+
+    private Mail retrieveMetadata(MailKey key) {
+        return mailDAO.read(url, key)
+            .handle(publishIfPresent())
+            .map(mailDTO -> mailDTO.getMailBuilder().build())
+            .block();
     }
 
     @Override
