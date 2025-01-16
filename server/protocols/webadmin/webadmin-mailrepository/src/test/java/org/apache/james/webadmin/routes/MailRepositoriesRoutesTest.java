@@ -533,7 +533,7 @@ class MailRepositoriesRoutesTest {
             .param("updatedBefore", "2d")
         .when()
             .get(MY_REPO_MAILS)
-            .then()
+        .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(2))
             .body("", containsInAnyOrder("name1", "name2"));
@@ -558,9 +558,9 @@ class MailRepositoriesRoutesTest {
 
         given()
             .param("updatedAfter", "2d")
-            .when()
+        .when()
             .get(MY_REPO_MAILS)
-            .then()
+        .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
             .body("", containsInAnyOrder("name3"));
@@ -585,9 +585,9 @@ class MailRepositoriesRoutesTest {
 
         given()
             .param("sender", "sender@domain.com")
-            .when()
+        .when()
             .get(MY_REPO_MAILS)
-            .then()
+        .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(2))
             .body("", containsInAnyOrder("name1", "name2"));
@@ -612,9 +612,9 @@ class MailRepositoriesRoutesTest {
 
         given()
             .param("sender", "*@domain.com")
-            .when()
+        .when()
             .get(MY_REPO_MAILS)
-            .then()
+        .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(2))
             .body("", containsInAnyOrder("name1", "name2"));
@@ -639,9 +639,9 @@ class MailRepositoriesRoutesTest {
 
         given()
             .param("recipient", "recipient@domain.com")
-            .when()
+        .when()
             .get(MY_REPO_MAILS)
-            .then()
+        .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(2))
             .body("", containsInAnyOrder("name1", "name2"));
@@ -666,9 +666,9 @@ class MailRepositoriesRoutesTest {
 
         given()
             .param("recipient", "*@domain.com")
-            .when()
+        .when()
             .get(MY_REPO_MAILS)
-            .then()
+        .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(2))
             .body("", containsInAnyOrder("name1", "name2"));
@@ -693,9 +693,9 @@ class MailRepositoriesRoutesTest {
 
         given()
             .param("remoteHost", "host2")
-            .when()
+        .when()
             .get(MY_REPO_MAILS)
-            .then()
+        .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(2))
             .body("", containsInAnyOrder("name2", "name3"));
@@ -720,9 +720,9 @@ class MailRepositoriesRoutesTest {
 
         given()
             .param("remoteAddress", "1.1.1.1")
-            .when()
+        .when()
             .get(MY_REPO_MAILS)
-            .then()
+        .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(2))
             .body("", containsInAnyOrder("name1", "name2"));
@@ -752,9 +752,42 @@ class MailRepositoriesRoutesTest {
         given()
             .param("updatedBefore", "2d")
             .param("updatedAfter", "4d")
-            .when()
+        .when()
             .get(MY_REPO_MAILS)
-            .then()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("", containsInAnyOrder("name2", "name3"));
+    }
+
+    @Test
+    void listingKeysShouldReturnContainedKeysThatMeetUpdatedBeforeAndOffsetAndLimitCondition() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name4")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+
+        given()
+            .param("updatedBefore", "2d")
+            .param("offset", "1")
+            .param("limit", "2")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(2))
             .body("", containsInAnyOrder("name2", "name3"));
@@ -769,9 +802,9 @@ class MailRepositoriesRoutesTest {
 
         given()
             .param("updatedBefore", "invalid")
-            .when()
+        .when()
             .get(MY_REPO_MAILS)
-            .then()
+        .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
@@ -787,9 +820,9 @@ class MailRepositoriesRoutesTest {
 
         given()
             .param("updatedAfter", "invalid")
-            .when()
+        .when()
             .get(MY_REPO_MAILS)
-            .then()
+        .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
