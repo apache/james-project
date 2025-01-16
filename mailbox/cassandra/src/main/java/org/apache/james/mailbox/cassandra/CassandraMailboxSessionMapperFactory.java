@@ -132,7 +132,8 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
             deletedMessageDAO);
         this.cassandraMailboxMapper = new CassandraMailboxMapper(mailboxDAO, mailboxPathV3DAO, userMailboxRightsDAO, aclMapper, cassandraConfiguration);
         this.cassandraSubscriptionMapper = new CassandraSubscriptionMapper(session);
-        this.cassandraAttachmentMapper = new CassandraAttachmentMapper(attachmentDAOV2, blobStore, new StringBackedAttachmentIdFactory());
+        this.cassandraAttachmentMapper = new CassandraAttachmentMapper(attachmentDAOV2, blobStore,
+            new CassandraAttachmentMapper.AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
         this.cassandraMessageMapper = new CassandraMessageMapper(
             uidProvider,
             modSeqProvider,
