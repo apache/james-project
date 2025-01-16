@@ -78,7 +78,8 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
       .`then`()
       .contextWrite(ReactorUtils.context("MDCBuilder.IP", MDCBuilder.create()
         .addToContext(MDCBuilder.IP, Option(httpServerRequest.hostAddress()).map(_.toString()).getOrElse(""))
-        .addToContext("x-forwarded-for", Option(httpServerRequest.requestHeaders().get("X-Forwarded-For")).getOrElse(""))))
+        .addToContext("x-forwarded-for", Option(httpServerRequest.requestHeaders().get("X-Forwarded-For")).getOrElse(""))
+        .addToContext("User-Agent", Option(httpServerRequest.requestHeaders().get("User-Agent")).getOrElse(""))))
 
   private def requestAsJsonStream(httpServerRequest: HttpServerRequest): SMono[RequestObject] =
     SMono.fromPublisher(httpServerRequest
