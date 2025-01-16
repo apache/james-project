@@ -97,7 +97,8 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
       }
 
       SMono(messageIdManager.delete(messageIds.toSet.asJava, mailboxSession))
-        .doOnSuccess(auditTrail(_, mailboxSession))
+        .flatMap(deleteResult => auditTrail(deleteResult, mailboxSession)
+        .`then`(SMono.just(deleteResult)))
         .map(DestroyResult.from)
         .onErrorResume(e => SMono.just(messageIds.map(id => DestroyFailure(EmailSet.asUnparsed(id), e))))
         .map(_ ++ parsingErrors)
@@ -107,9 +108,9 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
     }
   }
 
-  private def auditTrail(deleteResult: DeleteResult, mailboxSession: MailboxSession): Unit =
+  private def auditTrail(deleteResult: DeleteResult, mailboxSession: MailboxSession): SMono[Void] =
     if (!deleteResult.getDestroyed.isEmpty) {
-      ReactorUtils.logAsMono(() => AuditTrail.entry
+      SMono(ReactorUtils.logAsMono(() => AuditTrail.entry
         .username(() => mailboxSession.getUser.asString())
         .protocol("JMAP")
         .action("Email/set destroy")
@@ -117,7 +118,8 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
           "loggedInUser", mailboxSession.getLoggedInUser.toScala
             .map(_.asString())
             .getOrElse("")))
-        .log("Mails deleted."))
-        .subscribe()
+        .log("Mails deleted.")))
+    } else {
+      SMono.empty
     }
 }

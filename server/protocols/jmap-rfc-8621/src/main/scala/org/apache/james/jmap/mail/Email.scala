@@ -662,8 +662,8 @@ private class EmailFullViewReader @Inject()(messageIdManager: MessageIdManager,
   private val reader: GenericEmailViewReader[EmailFullView] = new GenericEmailViewReader[EmailFullView](messageIdManager, FULL_CONTENT, htmlTextExtractor, fullViewFactory)
 
 
-  override def read[T >: EmailFullView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] = {
-    ReactorUtils.logAsMono(() => AuditTrail.entry
+  override def read[T >: EmailFullView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] =
+    SMono(ReactorUtils.logAsMono(() => AuditTrail.entry
       .username(() => mailboxSession.getUser.asString())
       .protocol("JMAP")
       .action("Email full view read")
@@ -671,11 +671,8 @@ private class EmailFullViewReader @Inject()(messageIdManager: MessageIdManager,
         "loggedInUser", mailboxSession.getLoggedInUser.toScala
           .map(_.asString())
           .getOrElse("")))
-      .log("JMAP Email full view read."))
-      .subscribe()
-
-    reader.read(ids, request, mailboxSession)
-  }
+      .log("JMAP Email full view read.")))
+      .thenMany(reader.read(ids, request, mailboxSession))
 }
 
 object EmailFastViewReader {
