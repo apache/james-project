@@ -312,7 +312,8 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
             "loggedInUser", mailboxSession.getLoggedInUser.toScala
               .map(_.asString())
               .getOrElse("")))
-          .log("JMAP mail spooled.")))
+          .log("JMAP mail spooled."))
+          .subscribe())
       case _ => SMono(queue.enqueueReactive(mail, delay))
         .doOnSuccess(_ => ReactorUtils.logAsMono(() => AuditTrail.entry
           .username(() => mailboxSession.getUser.asString())
@@ -329,7 +330,8 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
             "loggedInUser", mailboxSession.getLoggedInUser.toScala
               .map(_.asString())
               .getOrElse("")))
-          .log("JMAP mail spooled.")))
+          .log("JMAP mail spooled."))
+          .subscribe())
     }).`then`(SMono.fromCallable(() => LifecycleUtil.dispose(mail)).subscribeOn(Schedulers.boundedElastic()))
 
   private def retrieveDelay(mailParameters: Option[Map[ParameterName, Option[ParameterValue]]]): Try[Duration] =

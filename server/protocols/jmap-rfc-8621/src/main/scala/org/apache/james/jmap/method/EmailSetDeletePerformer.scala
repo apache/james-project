@@ -30,7 +30,6 @@ import org.apache.james.mailbox.model.{DeleteResult, MessageId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
 import org.apache.james.util.{AuditTrail, ReactorUtils}
 import org.slf4j.LoggerFactory
-import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
@@ -119,5 +118,6 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
             .map(_.asString())
             .getOrElse("")))
         .log("Mails deleted."))
+        .subscribe()
     }
 }

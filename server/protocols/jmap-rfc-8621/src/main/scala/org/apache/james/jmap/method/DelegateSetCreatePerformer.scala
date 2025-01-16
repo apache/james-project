@@ -104,7 +104,8 @@ class DelegateSetCreatePerformer @Inject()(delegationStore: DelegationStore,
           .action("DelegateSet/create")
           .parameters(() => ImmutableMap.of("delegator", mailboxSession.getUser.asString(),
             "delegatee", request.username.asString()))
-          .log("Delegation added.")))
+          .log("Delegation added."))
+          .subscribe())
         .`then`(SMono.just[CreationResult](CreationSuccess(delegateCreationId, evaluateCreationResponse(request, mailboxSession))))
         .onErrorResume(e => SMono.just[CreationResult](CreationFailure(delegateCreationId, e))))
       .switchIfEmpty(SMono.just[CreationResult](CreationFailure(delegateCreationId, new UserDoesNotExistException(request.username))))

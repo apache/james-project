@@ -86,6 +86,7 @@ class DelegatedAccountDeletePerformer @Inject()(delegationStore: DelegationStore
               .action("DelegatedAccountSet/destroy")
               .parameters(() => ImmutableMap.of("delegator", delegatedUser.asString(),
                 "delegatee", baseUser.asString()))
-              .log("Delegation removed."))))
+              .log("Delegation removed."))
+              .subscribe()))
           .`then`(SMono.just[DelegatedAccountDeletionResult](DelegatedAccountDeletionSuccess(id))))
 }

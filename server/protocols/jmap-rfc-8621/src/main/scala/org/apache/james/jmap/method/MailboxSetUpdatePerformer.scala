@@ -260,7 +260,8 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
             "delegatee", partialUpdate.entryKey.getName,
             "mailboxId", mailboxId.serialize(),
             "rights", partialUpdate.rights.asJava.serialize()))
-          .log("JMAP mailbox shared."))),
+          .log("JMAP mailbox shared."))
+          .subscribe()),
         maxConcurrency = 5)
       .`then`()
 
