@@ -30,7 +30,7 @@ import com.google.common.base.Preconditions;
 
 public interface DisconnectorNotifier {
 
-    interface Request {
+    sealed interface Request permits MultipleUserRequest, AllUsersRequest {
     }
 
     record MultipleUserRequest(Set<Username> usernameList) implements Request {
