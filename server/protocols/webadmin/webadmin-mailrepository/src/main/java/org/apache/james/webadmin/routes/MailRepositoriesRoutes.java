@@ -24,7 +24,6 @@ import java.io.OutputStream;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -153,18 +152,19 @@ public class MailRepositoriesRoutes implements Routes {
         service.get(MAIL_REPOSITORIES + "/:encodedPath/mails", (request, response) -> {
             Offset offset = ParametersExtractor.extractOffset(request);
             Limit limit = ParametersExtractor.extractLimit(request);
-            List<MailRepository.Condition> conditions
-                = (List<MailRepository.Condition>) Stream.of(ParametersExtractor.extractUpdatedBeforeParam(request).map(this::parseDurationToInstant).map(MailRepository.UpdatedBeforeCondition::new),
+            MailRepository.Condition condition
+                = Stream.of(ParametersExtractor.extractUpdatedBeforeParam(request).map(this::parseDurationToInstant).map(MailRepository.UpdatedBeforeCondition::new),
                     ParametersExtractor.extractUpdatedAfterParam(request).map(this::parseDurationToInstant).map(MailRepository.UpdatedAfterCondition::new),
                     ParametersExtractor.extractSenderParam(request).map(MailRepository.SenderCondition::new),
                     ParametersExtractor.extractRecipientParam(request).map(MailRepository.RecipientCondition::new),
                     ParametersExtractor.extractRemoteAddressParam(request).map(MailRepository.RemoteAddressCondition::new),
                     ParametersExtractor.extractRemoteHostParam(request).map(MailRepository.RemoteHostCondition::new))
                 .flatMap(Optional::stream)
-                .toList();
+                .map(MailRepository.Condition.class::cast)
+                .reduce(MailRepository.Condition.ALL, MailRepository.Condition::and);
             MailRepositoryPath path = getRepositoryPath(request);
             try {
-                return repositoryStoreService.listMails(path, offset, limit, conditions)
+                return repositoryStoreService.listMails(path, offset, limit, condition)
                     .orElseThrow(() -> repositoryNotFound(request.params("encodedPath"), path));
 
             } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {

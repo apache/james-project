@@ -22,18 +22,13 @@ package org.apache.james.mailrepository.api;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import jakarta.mail.MessagingException;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.reactivestreams.Publisher;
-
-import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Mono;
 
@@ -42,6 +37,11 @@ import reactor.core.publisher.Mono;
  */
 public interface MailRepository {
     interface Condition extends Predicate<Mail> {
+        Condition ALL = any -> true;
+
+        default Condition and(Condition other) {
+            return mail -> test(mail) && other.test(mail);
+        }
     }
 
     class UpdatedBeforeCondition implements Condition {
@@ -163,12 +163,15 @@ public interface MailRepository {
      */
     Iterator<MailKey> list() throws MessagingException;
 
-    default Iterator<MailKey> list(List<Condition> conditions) throws MessagingException {
+    default Iterator<MailKey> list(Condition condition) throws MessagingException {
+        if (Condition.ALL.equals(condition)) {
+            return list();
+        }
         return Iterators.toStream(list())
             .filter(key -> {
                 try {
                     Mail mail = retrieve(key);
-                    return conditions.stream().allMatch(condition -> condition.test(mail));
+                    return condition.test(mail);
                 } catch (MessagingException e) {
                     throw new RuntimeException(e);
                 }

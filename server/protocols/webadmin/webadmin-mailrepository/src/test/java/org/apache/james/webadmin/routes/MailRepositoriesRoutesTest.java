@@ -84,7 +84,6 @@ import org.apache.james.webadmin.service.ReprocessingService;
 import org.apache.james.webadmin.service.WebAdminClearMailRepositoryTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
-import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.LoopPrevention;
 import org.apache.mailet.Mail;
@@ -563,7 +562,7 @@ class MailRepositoriesRoutesTest {
             .get(MY_REPO_MAILS)
             .then()
             .statusCode(HttpStatus.OK_200)
-            .body("", hasSize(2))
+            .body("", hasSize(1))
             .body("", containsInAnyOrder("name3"));
     }
 
