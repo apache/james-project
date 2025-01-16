@@ -26,6 +26,8 @@ import jakarta.inject.Inject;
 import org.apache.james.core.Disconnector;
 import org.apache.james.core.Username;
 
+import com.google.common.base.Preconditions;
+
 public interface DisconnectorNotifier {
 
     interface Request {
@@ -38,6 +40,10 @@ public interface DisconnectorNotifier {
 
         public static MultipleUserRequest of(Set<Username> usernameList) {
             return new MultipleUserRequest(usernameList);
+        }
+
+        public MultipleUserRequest {
+            Preconditions.checkArgument(usernameList != null && !usernameList.isEmpty(), "usernameList should not be empty");
         }
 
         public boolean contains(Username username) {
