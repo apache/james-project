@@ -82,6 +82,14 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     @Override
+    public Mono<AttachmentMetadata> getAttachmentReactive(AttachmentId attachmentId, MailboxSession mailboxSession) {
+        return attachmentMapperFactory.getAttachmentMapper(mailboxSession)
+            .getAttachmentReactive(attachmentId)
+            .filterWhen(attachment -> existsReactive(attachmentId, mailboxSession))
+            .switchIfEmpty(Mono.error(() -> new AttachmentNotFoundException(attachmentId.getId())));
+    }
+
+    @Override
     public List<AttachmentMetadata> getAttachments(List<AttachmentId> attachmentIds, MailboxSession mailboxSession) throws MailboxException {
         List<AttachmentMetadata> attachments = attachmentMapperFactory.getAttachmentMapper(mailboxSession)
             .getAttachments(attachmentIds);

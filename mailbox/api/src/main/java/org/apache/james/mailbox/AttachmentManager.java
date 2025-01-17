@@ -36,6 +36,8 @@ public interface AttachmentManager extends AttachmentContentLoader {
 
     AttachmentMetadata getAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException, AttachmentNotFoundException;
 
+    Mono<AttachmentMetadata> getAttachmentReactive(AttachmentId attachmentId, MailboxSession mailboxSession);
+
     List<AttachmentMetadata> getAttachments(List<AttachmentId> attachmentIds, MailboxSession mailboxSession) throws MailboxException;
 
     InputStream loadAttachmentContent(AttachmentId attachmentId, MailboxSession mailboxSession) throws AttachmentNotFoundException, IOException;

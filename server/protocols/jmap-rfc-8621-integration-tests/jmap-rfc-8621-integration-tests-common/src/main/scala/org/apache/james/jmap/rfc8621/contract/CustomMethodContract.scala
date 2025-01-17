@@ -221,11 +221,11 @@ case object CustomBlob extends Blob {
 }
 
 class CustomBlobResolver extends BlobResolver {
-  override def resolve(blobId: org.apache.james.jmap.mail.BlobId, mailboxSession: MailboxSession): BlobResolutionResult =
+  override def resolve(blobId: org.apache.james.jmap.mail.BlobId, mailboxSession: MailboxSession): SMono[BlobResolutionResult] =
     if (blobId.equals(CustomBlob.blobId)) {
-      Applicable(SMono.just(CustomBlob))
+      SMono.just(Applicable(SMono.just(CustomBlob)))
     } else {
-      NonApplicable
+      SMono.just(NonApplicable)
     }
 }
 

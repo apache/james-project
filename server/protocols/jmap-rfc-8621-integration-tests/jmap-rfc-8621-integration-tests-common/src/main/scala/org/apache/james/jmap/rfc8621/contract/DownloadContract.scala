@@ -32,7 +32,7 @@ import org.apache.james.jmap.rfc8621.contract.DownloadContract.accountId
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE_ACCOUNT_ID, ANDRE, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
-import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, MessageId}
+import org.apache.james.mailbox.model.{AttachmentId, MailboxACL, MailboxPath, MessageId}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.util.ClassLoaderUtils
@@ -90,6 +90,32 @@ trait DownloadContract {
       StandardCharsets.UTF_8)
     assertThat(new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8)))
       .hasContent(expectedResponse)
+  }
+
+  @Test
+  def downloadMailboxAttachment(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val attachmentId: AttachmentId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessageRetrieveAppendResult(BOB.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
+      .getMessageAttachments
+      .get(1).getAttachmentId
+
+    val response = `given`
+        .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER).log().all()
+    .when
+      .get(s"/download/$accountId/${attachmentId.getId()}")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("application/vnd.ms-publisher; name=\"text2\"")
+      .extract
+      .body
+      .asString
+
+    assertThat(response)
+      .isEqualTo("ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDHs8bT4T/8QymbsiAjlD1MwNIXJr/WET6+9MmuTSIYWWU94csDn9WVMzRhaAbpfnSqIx8TdUtrN/ZzX2JetPSar/bU9nXAWeiC/jPFQ1qKH4GeDrYXRLKu4T8782OrGH8Jyror97TlNXhPrjdRLEB4bQqmmZhb3HwcD8a9XzfZqlm7GRWLo1WQMGt/NpQLC7jMf4fA6/+kjzsTspxwdgL74GJqPfOXOiwgLHX8CZ6/5RyTqhT6pD3MktSNWaz/zIHPNEqf5BY9CBM1TFR5w+6MDHo0gmiIsXFEJTPnfhBvHDhSjB1RI0KxUClyYrJ4fBlUVeKfnawoVcu7YvCqF4F5 quynhnn@linagora\n")
   }
 
   @Test
