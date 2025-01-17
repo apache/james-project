@@ -90,6 +90,7 @@ import org.apache.james.jmap.method.ZoneIdProvider;
 import org.apache.james.jmap.pushsubscription.DefaultWebPushClient;
 import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
 import org.apache.james.jmap.pushsubscription.WebPushClient;
+import org.apache.james.jmap.routes.AttachmentBlobResolver;
 import org.apache.james.jmap.routes.BlobResolver;
 import org.apache.james.jmap.routes.DownloadRoutes;
 import org.apache.james.jmap.routes.EventSourceRoutes;
@@ -202,6 +203,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         blobResolverMultibinder.addBinding().to(MessageBlobResolver.class);
         blobResolverMultibinder.addBinding().to(UploadResolver.class);
         blobResolverMultibinder.addBinding().to(MessagePartBlobResolver.class);
+        blobResolverMultibinder.addBinding().to(AttachmentBlobResolver.class);
 
         Multibinder<Disconnector> disconnectorMultibinder = Multibinder.newSetBinder(binder(), Disconnector.class);
         disconnectorMultibinder.addBinding().to(WebSocketRoutes.class);
