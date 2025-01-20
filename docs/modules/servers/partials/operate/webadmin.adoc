@@ -3612,15 +3612,32 @@ The answer will contains all mailKey contained in that repository.
 Note that this can be used to read mail details.
 
 You can pass additional URL parameters to this call in order to limit
-the output: - A limit: no more elements than the specified limit will be
+the output:
+
+- limit: no more elements than the specified limit will be
 returned. This needs to be strictly positive. If no value is specified,
-no limit will be applied. - An offset: allow to skip elements. This
-needs to be positive. Default value is zero.
+no limit will be applied.
+- offset: allow to skip elements. This needs to be positive. Default value is zero.
 
 Example:
 
 ....
 curl -XGET 'http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails?limit=100&offset=500'
+....
+
+You can also pass the following additional URL parameters to filter results:
+
+- updatedBefore: filter mails by mail last updated. For example, if the value is `2d` and the current time is `21-12-2024 13:00:00`, the condition would be: last updated < 19-12-2024 13:00:00 (currentTime - `2d`). Some other value samples: `2d`, `2 days`, `2h`, `2 hours`.
+- updatedAfter: filter mails by mail last updated. For example, if the value is `2d` and the current time is `21-12-2024 13:00:00`, the condition would be: last updated > 19-12-2024 13:00:00 (currentTime - `2d`). Some other value samples: `2d`, `2 days`, `2h`, `2 hours`.
+- sender: filter mails by mail sender. If the input value is in the special format `*@domain.com`, mails are filters by domain.
+- recipient: filter by recipient. If the input value is in the special format `*@domain.com`, mails are filters by domain.
+- remoteAddress: filter mails by remoteAddress.
+- remoteHost: filter mails by remoteHost.
+
+Example:
+
+....
+curl -XGET /mailRepositories/var%2Fmail%2Ferror%2F/mails?updatedBefore=2d&remoteAddress=128.45.67.89
 ....
 
 Response codes:

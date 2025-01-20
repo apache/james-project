@@ -22,9 +22,12 @@ package org.apache.james.webadmin.routes;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -35,6 +38,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -148,9 +152,19 @@ public class MailRepositoriesRoutes implements Routes {
         service.get(MAIL_REPOSITORIES + "/:encodedPath/mails", (request, response) -> {
             Offset offset = ParametersExtractor.extractOffset(request);
             Limit limit = ParametersExtractor.extractLimit(request);
+            MailRepository.Condition condition
+                = Stream.of(ParametersExtractor.extractUpdatedBeforeParam(request).map(this::parseDurationToInstant).map(MailRepository.UpdatedBeforeCondition::new),
+                    ParametersExtractor.extractUpdatedAfterParam(request).map(this::parseDurationToInstant).map(MailRepository.UpdatedAfterCondition::new),
+                    ParametersExtractor.extractSenderParam(request).map(MailRepository.SenderCondition::new),
+                    ParametersExtractor.extractRecipientParam(request).map(MailRepository.RecipientCondition::new),
+                    ParametersExtractor.extractRemoteAddressParam(request).map(MailRepository.RemoteAddressCondition::new),
+                    ParametersExtractor.extractRemoteHostParam(request).map(MailRepository.RemoteHostCondition::new))
+                .flatMap(Optional::stream)
+                .map(MailRepository.Condition.class::cast)
+                .reduce(MailRepository.Condition.ALL, MailRepository.Condition::and);
             MailRepositoryPath path = getRepositoryPath(request);
             try {
-                return repositoryStoreService.listMails(path, offset, limit)
+                return repositoryStoreService.listMails(path, offset, limit, condition)
                     .orElseThrow(() -> repositoryNotFound(request.params("encodedPath"), path));
 
             } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
@@ -392,5 +406,9 @@ public class MailRepositoriesRoutes implements Routes {
 
     private Optional<Integer> parseMaxRetries(Request request) {
         return ParametersExtractor.extractPositiveInteger(request, "maxRetries");
+    }
+
+    private Instant parseDurationToInstant(Duration duration) {
+        return Instant.now().minus(duration);
     }
 }

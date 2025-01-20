@@ -41,6 +41,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -509,6 +510,323 @@ class MailRepositoriesRoutesTest {
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
             .body("message", is("limit can not be equal to zero"));
+    }
+
+    @Test
+    void listingKeysShouldReturnContainedKeysThatMeetUpdatedBeforeCondition() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .lastUpdated(getDateBeforeCurrentTime(2))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .lastUpdated(getDateBeforeCurrentTime(1))
+            .build());
+
+        given()
+            .param("updatedBefore", "2d")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("", containsInAnyOrder("name1", "name2"));
+    }
+
+    @Test
+    void listingKeysShouldReturnContainedKeysThatMeetUpdatedAfterCondition() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .lastUpdated(getDateBeforeCurrentTime(2))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .lastUpdated(getDateBeforeCurrentTime(1))
+            .build());
+
+        given()
+            .param("updatedAfter", "2d")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(1))
+            .body("", containsInAnyOrder("name3"));
+    }
+
+    @Test
+    void listingKeysShouldReturnContainedKeysThatMeetExactSenderCondition() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .sender("sender@domain.com")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .sender("sender@domain.com")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .sender("sender2@domain.com")
+            .build());
+
+        given()
+            .param("sender", "sender@domain.com")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("", containsInAnyOrder("name1", "name2"));
+    }
+
+    @Test
+    void listingKeysShouldReturnContainedKeysThatMeetPrefixSenderCondition() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .sender("sender@domain.com")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .sender("sender2@domain.com")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .sender("sender@domain2.com")
+            .build());
+
+        given()
+            .param("sender", "*@domain.com")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("", containsInAnyOrder("name1", "name2"));
+    }
+
+    @Test
+    void listingKeysShouldReturnContainedKeysThatMeetExactRecipientCondition() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .recipient("recipient@domain.com")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .recipient("recipient@domain.com")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .recipient("recipient2@domain.com")
+            .build());
+
+        given()
+            .param("recipient", "recipient@domain.com")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("", containsInAnyOrder("name1", "name2"));
+    }
+
+    @Test
+    void listingKeysShouldReturnContainedKeysThatMeetPrefixRecipientCondition() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .recipient("recipient@domain.com")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .recipient("recipient2@domain.com")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .recipient("recipient@domain2.com")
+            .build());
+
+        given()
+            .param("recipient", "*@domain.com")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("", containsInAnyOrder("name1", "name2"));
+    }
+
+    @Test
+    void listingKeysShouldReturnContainedKeysThatMeetRemoteHostCondition() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .remoteHost("host1")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .remoteHost("host2")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .remoteHost("host2")
+            .build());
+
+        given()
+            .param("remoteHost", "host2")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("", containsInAnyOrder("name2", "name3"));
+    }
+
+    @Test
+    void listingKeysShouldReturnContainedKeysThatMeetRemoteAddressCondition() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .remoteAddr("1.1.1.1")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .remoteAddr("1.1.1.1")
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .remoteAddr("1.1.1.2")
+            .build());
+
+        given()
+            .param("remoteAddress", "1.1.1.1")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("", containsInAnyOrder("name1", "name2"));
+    }
+
+    @Test
+    void listingKeysShouldReturnContainedKeysThatMeetUpdatedBeforeAndUpdateAfterCondition() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .lastUpdated(getDateBeforeCurrentTime(1))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name4")
+            .lastUpdated(getDateBeforeCurrentTime(5))
+            .build());
+
+        given()
+            .param("updatedBefore", "2d")
+            .param("updatedAfter", "4d")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("", containsInAnyOrder("name2", "name3"));
+    }
+
+    @Test
+    void listingKeysShouldReturnContainedKeysThatMeetUpdatedBeforeAndOffsetAndLimitCondition() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name2")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name3")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name("name4")
+            .lastUpdated(getDateBeforeCurrentTime(3))
+            .build());
+
+        given()
+            .param("updatedBefore", "2d")
+            .param("offset", "1")
+            .param("limit", "2")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("", containsInAnyOrder("name2", "name3"));
+    }
+
+    @Test
+    void listingKeysShouldReturn400WhenUpdatedBeforeParaIsInvalid() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .build());
+
+        given()
+            .param("updatedBefore", "invalid")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("Invalid arguments supplied in the user request"));
+    }
+
+    @Test
+    void listingKeysShouldReturn400WhenUpdatedAfterParaIsInvalid() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        mailRepository.store(FakeMail.builder()
+            .name("name1")
+            .build());
+
+        given()
+            .param("updatedAfter", "invalid")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("Invalid arguments supplied in the user request"));
     }
 
     @Test
@@ -2054,5 +2372,11 @@ class MailRepositoriesRoutesTest {
         mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, new SimpleMailRepositoryLoader(), configuration);
 
         mailRepositoryStore.init();
+    }
+
+    private Date getDateBeforeCurrentTime(int dayInterval) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_MONTH, -dayInterval);
+        return calendar.getTime();
     }
 }

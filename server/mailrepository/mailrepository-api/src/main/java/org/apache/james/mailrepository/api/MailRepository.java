@@ -19,11 +19,14 @@
 
 package org.apache.james.mailrepository.api;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 import jakarta.mail.MessagingException;
 
+import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.reactivestreams.Publisher;
 
@@ -33,6 +36,107 @@ import reactor.core.publisher.Mono;
  * Interface for a Repository to store Mails.
  */
 public interface MailRepository {
+    interface Condition extends Predicate<Mail> {
+        Condition ALL = any -> true;
+
+        default Condition and(Condition other) {
+            return mail -> test(mail) && other.test(mail);
+        }
+    }
+
+    class UpdatedBeforeCondition implements Condition {
+        private final Instant updatedBefore;
+
+        public UpdatedBeforeCondition(Instant updatedBefore) {
+            this.updatedBefore = updatedBefore;
+        }
+
+        @Override
+        public boolean test(Mail mail) {
+            return mail.getLastUpdated().toInstant().isBefore(updatedBefore);
+        }
+    }
+
+    class UpdatedAfterCondition implements Condition {
+        private final Instant updatedAfter;
+
+        public UpdatedAfterCondition(Instant updatedAfter) {
+            this.updatedAfter = updatedAfter;
+        }
+
+        @Override
+        public boolean test(Mail mail) {
+            return mail.getLastUpdated().toInstant().isAfter(updatedAfter);
+        }
+    }
+
+    class SenderCondition implements Condition {
+        private final String sender;
+
+        public SenderCondition(String sender) {
+            this.sender = sender;
+        }
+
+        @Override
+        public boolean test(Mail mail) {
+            if (sender.startsWith("*@")) {
+                String domain = sender.substring(2).toLowerCase();
+                return mail.getMaybeSender()
+                    .asOptional()
+                    .map(mailAddress -> mailAddress.asString().toLowerCase().endsWith("@" + domain))
+                    .orElse(false);
+            }
+            return mail.getMaybeSender()
+                .asOptional()
+                .map(mailAddress -> mailAddress.asString().equalsIgnoreCase(sender))
+                .orElse(false);
+        }
+    }
+
+    class RecipientCondition implements Condition {
+        private final String recipient;
+
+        public RecipientCondition(String recipient) {
+            this.recipient = recipient;
+        }
+
+        @Override
+        public boolean test(Mail mail) {
+            if (recipient.startsWith("*@")) {
+                String domain = recipient.substring(2).toLowerCase();
+                return mail.getRecipients().stream()
+                    .anyMatch(address -> address.asString().toLowerCase().endsWith("@" + domain));
+            }
+            return mail.getRecipients().stream()
+                .anyMatch(address -> address.asString().equalsIgnoreCase(recipient));
+        }
+    }
+
+    class RemoteAddressCondition implements Condition {
+        private final String remoteAddress;
+
+        public RemoteAddressCondition(String remoteAddress) {
+            this.remoteAddress = remoteAddress;
+        }
+
+        @Override
+        public boolean test(Mail mail) {
+            return mail.getRemoteAddr().equalsIgnoreCase(remoteAddress);
+        }
+    }
+
+    class RemoteHostCondition implements Condition {
+        private final String remoteHost;
+
+        public RemoteHostCondition(String remoteHost) {
+            this.remoteHost = remoteHost;
+        }
+
+        @Override
+        public boolean test(Mail mail) {
+            return mail.getRemoteHost().equalsIgnoreCase(remoteHost);
+        }
+    }
 
     /**
      * @return Number of mails stored in that repository
@@ -58,6 +162,21 @@ public interface MailRepository {
      * 
      */
     Iterator<MailKey> list() throws MessagingException;
+
+    default Iterator<MailKey> list(Condition condition) throws MessagingException {
+        if (Condition.ALL.equals(condition)) {
+            return list();
+        }
+        return Iterators.toStream(list())
+            .filter(key -> {
+                try {
+                    Mail mail = retrieve(key);
+                    return condition.test(mail);
+                } catch (MessagingException e) {
+                    throw new RuntimeException(e);
+                }
+            }).iterator();
+    }
 
     /**
      * Retrieves a message given a key. At the moment, keys can be obtained from
