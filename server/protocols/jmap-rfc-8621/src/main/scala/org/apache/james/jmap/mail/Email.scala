@@ -32,11 +32,11 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import jakarta.inject.Inject
 import org.apache.commons.lang3.StringUtils
+import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
-import org.apache.james.jmap.api.model.{EmailAddress, Preview}
 import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperties, MessageFastViewProjection}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
-import org.apache.james.jmap.core.{JmapRfc8621Configuration, Properties, UTCDate}
+import org.apache.james.jmap.core.{Properties, UTCDate}
 import org.apache.james.jmap.mail.BracketHeader.sanitize
 import org.apache.james.jmap.mail.EmailFullViewFactory.extractBodyValues
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
@@ -55,8 +55,8 @@ import org.apache.james.mime4j.field.{AddressListFieldLenientImpl, LenientFieldP
 import org.apache.james.mime4j.message.DefaultMessageBuilder
 import org.apache.james.mime4j.stream.{Field, MimeConfig, RawFieldParser}
 import org.apache.james.mime4j.util.MimeUtil
-import org.apache.james.util.AuditTrail
 import org.apache.james.util.html.HtmlTextExtractor
+import org.apache.james.util.{AuditTrail, ReactorUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
@@ -662,8 +662,8 @@ private class EmailFullViewReader @Inject()(messageIdManager: MessageIdManager,
   private val reader: GenericEmailViewReader[EmailFullView] = new GenericEmailViewReader[EmailFullView](messageIdManager, FULL_CONTENT, htmlTextExtractor, fullViewFactory)
 
 
-  override def read[T >: EmailFullView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] = {
-    AuditTrail.entry
+  override def read[T >: EmailFullView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] =
+    SMono(ReactorUtils.logAsMono(() => AuditTrail.entry
       .username(() => mailboxSession.getUser.asString())
       .protocol("JMAP")
       .action("Email full view read")
@@ -671,10 +671,8 @@ private class EmailFullViewReader @Inject()(messageIdManager: MessageIdManager,
         "loggedInUser", mailboxSession.getLoggedInUser.toScala
           .map(_.asString())
           .getOrElse("")))
-      .log("JMAP Email full view read.")
-
-    reader.read(ids, request, mailboxSession)
-  }
+      .log("JMAP Email full view read.")))
+      .thenMany(reader.read(ids, request, mailboxSession))
 }
 
 object EmailFastViewReader {

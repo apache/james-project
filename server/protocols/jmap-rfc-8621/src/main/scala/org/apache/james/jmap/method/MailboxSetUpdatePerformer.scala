@@ -251,7 +251,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
 
     val partialUpdatesOperation: SMono[Unit] = SFlux.fromIterable(validatedPatch.rightsPartialUpdates)
       .flatMap(partialUpdate => SMono.fromCallable(() => mailboxManager.applyRightsCommand(mailboxId, partialUpdate.asACLCommand(), mailboxSession))
-        .doOnSuccess(_ => ReactorUtils.logAsMono(() => AuditTrail.entry
+        .`then`(SMono(ReactorUtils.logAsMono(() => AuditTrail.entry
           .username(() => mailboxSession.getUser.asString())
           .protocol("JMAP")
           .action("Mailbox/set update")
@@ -260,7 +260,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
             "delegatee", partialUpdate.entryKey.getName,
             "mailboxId", mailboxId.serialize(),
             "rights", partialUpdate.rights.asJava.serialize()))
-          .log("JMAP mailbox shared."))),
+          .log("JMAP mailbox shared.")))),
         maxConcurrency = 5)
       .`then`()
 
