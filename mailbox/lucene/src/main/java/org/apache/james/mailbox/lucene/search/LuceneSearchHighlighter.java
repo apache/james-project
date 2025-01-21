@@ -57,6 +57,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.highlight.Formatter;
 import org.apache.lucene.search.highlight.Highlighter;
 import org.apache.lucene.search.highlight.QueryScorer;
+import org.apache.lucene.search.highlight.SimpleHTMLEncoder;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.search.highlight.SimpleSpanFragmenter;
 
@@ -126,6 +127,7 @@ public class LuceneSearchHighlighter implements SearchHighlighter {
         Query query = buildQueryFromSearchQuery(searchQuery);
         QueryScorer scorer = new QueryScorer(query);
         Highlighter highlighter = new Highlighter(formatter, scorer);
+        highlighter.setEncoder(new SimpleHTMLEncoder());
         highlighter.setTextFragmenter(new SimpleSpanFragmenter(scorer, configuration.fragmentSize()));
         return highlighter;
     }
