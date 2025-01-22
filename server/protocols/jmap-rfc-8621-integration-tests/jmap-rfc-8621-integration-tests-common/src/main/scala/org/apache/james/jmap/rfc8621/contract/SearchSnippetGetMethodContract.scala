@@ -529,12 +529,12 @@ trait SearchSnippetGetMethodContract {
              |    "list": [
              |      {
              |        "emailId": "${messageId1.serialize}",
-             |        "subject": "Weekly report - <mark>vttran</mark> 27/02-03/03/2023",
+             |        "subject": "Weekly report - <mark>vttran</mark> 27&#x2F;02-03&#x2F;03&#x2F;2023",
              |        "preview": null
              |      },
              |      {
              |        "emailId": "${messageId2.serialize}",
-             |        "subject": "Weekly report - <mark>vttran</mark> 19/08-23/08/2024",
+             |        "subject": "Weekly report - <mark>vttran</mark> 19&#x2F;08-23&#x2F;08&#x2F;2024",
              |        "preview": null
              |      }
              |    ],
@@ -610,7 +610,7 @@ trait SearchSnippetGetMethodContract {
              |    "list": [
              |      {
              |        "emailId": "${messageId1.serialize}",
-             |        "subject": "Weekly report - <mark>vttran</mark> 27/02-03/03/2023",
+             |        "subject": "Weekly report - <mark>vttran</mark> 27&#x2F;02-03&#x2F;03&#x2F;2023",
              |        "preview": null
              |      },
              |      {
