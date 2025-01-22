@@ -135,7 +135,7 @@ public class IndexableMessage {
                 .asMimePart(textExtractor)
                 .map(parsingResult -> {
 
-                    Optional<String> bodyText = parsingResult.locateFirstTextBody();
+                    Optional<String> bodyText = parsingResult.locateFirstTextBody().map(SearchUtil::removeGreaterThanCharactersAtBeginningOfLine);
                     Optional<String> bodyHtml = parsingResult.locateFirstHtmlBody();
 
                     boolean hasAttachment = MessageAttachmentMetadata.hasNonInlinedAttachment(message.getAttachments());

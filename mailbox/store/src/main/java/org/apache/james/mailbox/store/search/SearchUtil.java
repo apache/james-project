@@ -473,5 +473,22 @@ public class SearchUtil {
         };
     }
 
+    public static String removeGreaterThanCharactersAtBeginningOfLine(String text) {
+        StringBuilder result = new StringBuilder();
+        boolean isNewLine = false;
 
+        for (int i = 0; i < text.length(); i++) {
+            char current = text.charAt(i);
+
+            if (current == '\n') {
+                isNewLine = true;
+                result.append(current);
+            } else if (!isNewLine || current != '>') {
+                result.append(current);
+                isNewLine = false;
+            }
+        }
+
+        return result.toString();
+    }
 }
