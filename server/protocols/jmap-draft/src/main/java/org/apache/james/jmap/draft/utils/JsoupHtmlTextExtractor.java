@@ -40,6 +40,21 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Strings;
 
 public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
+    private static class Context {
+        private final long limit;
+        private long outputSize = 0;
+
+        private Context() {
+            this.limit = 20_000_000L;
+        }
+
+        void add(String s) {
+            outputSize += s.length();
+            if (outputSize > limit) {
+                throw new IllegalStateException("text/plain rendering exceeds message limit");
+            }
+        }
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JsoupHtmlTextExtractor.class);
     public static final String BR_TAG = "br";
@@ -58,8 +73,10 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
 
             Element body = Optional.ofNullable(document.body()).orElse(document);
 
+            Context context = new Context();
             return flatten(body)
                 .map(this::convertNodeToText)
+                .peek(context::add)
                 .collect(Collectors.joining());
         } catch (Exception e) {
             LOGGER.warn("Failed extracting text from html", e);
