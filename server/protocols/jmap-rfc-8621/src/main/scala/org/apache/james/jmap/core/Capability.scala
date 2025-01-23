@@ -204,7 +204,9 @@ object MaxSizeAttachmentsPerEmail {
 case class MaxMailboxesPerEmail(value: Option[UnsignedInt])
 case class MaxMailboxDepth(value: Option[UnsignedInt])
 case class MaxSizeMailboxName(value: UnsignedInt)
-case class MaxSizeAttachmentsPerEmail(value: UnsignedInt)
+case class MaxSizeAttachmentsPerEmail(value: UnsignedInt) {
+  def asLong()= value.value
+}
 case class MayCreateTopLevelMailbox(value: Boolean) extends AnyVal
 
 final case class MailCapabilityProperties(maxMailboxesPerEmail: MaxMailboxesPerEmail,
