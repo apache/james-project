@@ -406,10 +406,6 @@
                                 <into>/usr/bin</into>
                             </path>
                             <path>
-                                <from>target/glowroot</from>
-                                <into>/root</into>
-                            </path>
-                            <path>
                                 <from>src/main/extensions-jars</from>
                                 <into>/root/extensions-jars</into>
                             </path>
