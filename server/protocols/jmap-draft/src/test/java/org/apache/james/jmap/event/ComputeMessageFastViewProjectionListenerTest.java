@@ -43,9 +43,9 @@ import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedPropertie
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.draft.methods.BlobManagerImpl;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
-import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.jmap.memory.upload.InMemoryUploadRepository;
+import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
