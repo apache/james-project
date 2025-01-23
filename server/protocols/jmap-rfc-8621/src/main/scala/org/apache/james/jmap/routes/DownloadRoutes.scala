@@ -148,10 +148,9 @@ class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): SMono[BlobResolutionResult] = {
     Try(messageIdFactory.fromString(blobId.value.value)) match {
       case Failure(_) => SMono.just(NonApplicable)
-      case Success(messageId) => SMono.just(Applicable(SMono.fromPublisher(
-        messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
-        .map[Blob](MessageBlob(blobId, _))
-        .switchIfEmpty(SMono.error(BlobNotFoundException(blobId)))))
+      case Success(messageId) => SMono.fromPublisher(messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
+        .map(message => Applicable(SMono.just(MessageBlob(blobId, message))))
+        .switchIfEmpty(SMono.just(NonApplicable))
     }
   }
 }
@@ -164,23 +163,23 @@ class UploadResolver @Inject()(val uploadService: UploadService) extends BlobRes
       SMono.just(NonApplicable)
     } else {
       val uploadIdAsString = blobId.value.value.substring(prefix.length)
-      SMono.just(Try(UploadId.from(uploadIdAsString)) match {
-        case Failure(_) => NonApplicable
-        case Success(uploadId) => Applicable(
-          SMono(uploadService.retrieve(uploadId, mailboxSession.getUser))
-            .map(upload => UploadedBlob(blobId, upload))
+      Try(UploadId.from(uploadIdAsString)) match {
+        case Failure(_) => SMono.just(NonApplicable)
+        case Success(uploadId) => SMono.fromPublisher(uploadService.retrieve(uploadId, mailboxSession.getUser))
+            .map(upload => Applicable(SMono.just(UploadedBlob(blobId, upload))))
             .onErrorResume {
-              case _: UploadNotFoundException => SMono.error(BlobNotFoundException(blobId))
-            })
-      })
+              case _: UploadNotFoundException => SMono.just(NonApplicable)
+              case e => SMono.error[BlobResolutionResult](e)
+            }
+      }
     }
   }
 }
 
 class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager, val attachmentIdFactory: AttachmentIdFactory) extends BlobResolver {
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): SMono[BlobResolutionResult] =
-    attachmentIdFactory.from(blobId.value.value) match {
-      case attachmentId: StringBackedAttachmentId =>
+    Try(attachmentIdFactory.from(blobId.value.value)) match {
+      case Success(attachmentId) =>
         SMono(attachmentManager.getAttachmentReactive(attachmentId, mailboxSession))
           .map(attachmentMetadata => Applicable(SMono(attachmentManager.loadReactive(attachmentMetadata, mailboxSession))
             .map(content => AttachmentBlob(attachmentMetadata, content))))
@@ -214,7 +213,7 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
     asMessageAndPartIds(blobId) match {
       case Failure(_) => SMono.just(NonApplicable)
       case Success((messageId, blobIds)) =>
-        SMono.just(Applicable(SMono.fromPublisher(
+        SMono.fromPublisher(
           messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
           .handle[MinimalEmailBodyPart] {
             case (message, sink) => MinimalEmailBodyPart.ofMessage(None, zoneIdSupplier.get(), BlobId.of(messageId).get, message)
@@ -229,8 +228,8 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
               }
                 .fold(sink.error(BlobNotFoundException(blobId)))(part => sink.next(part))
           }
-          .map[Blob](EmailBodyPartBlob(blobId, _))
-          .switchIfEmpty(SMono.error(BlobNotFoundException(blobId)))))
+          .map(blob => Applicable(SMono.just(EmailBodyPartBlob(blobId, blob))))
+          .switchIfEmpty(SMono.just(NonApplicable))
     }
   }
 }
