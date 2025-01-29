@@ -326,6 +326,10 @@ Date: 27/06/2023
 
 `imapserver.xml` needs to be modified to relocate `imapPackages` from imapServers tag into `imapServer` tags.
 
+## 3.8.2 version
+
+No specific operation to conduct from a 3.8.1 version.
+
 ## 3.8.1 version
 
 No specific operation to conduct from a 3.8.0 version.
