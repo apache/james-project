@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [unreleased]
 
-### Big changes
+### Important changes
 
  - Upgrade javax -> jakarta. See releated upgrade instructions.
  - Upgrade Java 11 -> 21. See related upgrade instructions.
@@ -13,7 +13,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Removals
 
  - JAMES-3946 WhiteList manager removals (#2299)
+
+This had been repleaced by the Guice DropList extension.
+
  - JAMES-4025 Drop Jmap draft
+
+Please use RFC-8621 implementation rather than this outdated draft.
+
+ - JAMES-4065 drop habeas warrant mark mailet
 
 ### Security
 
@@ -27,6 +34,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - JAMES-4032 DKIM SMTP hook (#2264)
 - JAMES-4034 SMTP submission: validate FROM header (#2246)
 - JAMES-4041 Fix OOM upon IMAP COPY (#2265)
+- [UPGRADE] Logback 1.5.12 -> 1.5.15 (#2581)
+- Bump commons-io to 2.17.0
+- [S3 Metrics] Allow to customize S3 metrics prefix
 
 ### New Features
 
@@ -50,9 +60,29 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - JAMES-3946 DropLists
 - [ENHANCEMENT] Reprocess for a specific recipient (#2226)
 - [ENHANCEMENT] Workqueue for the deleted message vault (#2131)
+- JAMES-4092 Update webadmin to filter content from mail repository (#2600)
+- JAMES-4090 Webadmin interface to close IMAP session for selected users
+- JAMES-4077 Implementation of JMAP SearchSnippets (highlights)
+- JAMES-3823 SMTP Require TLS Option (#2460)
+- James-4099 Make mailbox path delimiter configurable
+- JAMES-4098 ReadOnlyUsersLDAPRepository::isAdministrator should take into account the multiple administrators if configured
+- James-4097 Allow disabling same-domain requirement when assigning rights (#2573)
+- JAMES-3945 Sub-addressing support
+- [ENHANCEMENT] Add a PartHasContentType matcher
+- [ENHANCEMENT] Provide a core RecipientCountExceeds matcher (#2534)
+- [FIX] Ability to split emails with large recipient counts (#2526)
+- JAMES-4085 SSE-C Implement for S3 Object Storage
+- JAMES-4091 Endpoint to list connected Users
+- JAMES-2182 IMAP support for shared mailboxes
+- JAMES-4081 Implement MailToAllUsers mailet (#2469)
+- JAMES-4071 Task fix inconsistencies mailbox flags: messagedeleted, mailboxRecents
+- JAMES-4069 Healthcheck for IMAP (#2401)
+- JAMES-4068 Have several health checks in one rest calls (#2399)
+- JAMES-3824 SMTP Extension for Message Transfer Priorities
 
 ### Improvements
 
+ - JAMES-4103 Allow customizing MessageParser
  - JAMES-3967 RelayLimit: add error log
  - JAMES-3967 Store mails when relay is exceeded
  - [FIX] LdapRepositoryConfiguration should interoperate with UsersRepositoryImpl (#1855)
@@ -156,7 +186,62 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - JAMES-4027 Make all queues on Rabbitmq quorum queue when quorum option is enabled
  - JAMES-4029 Fix infinite loop with Bounce + forward
  - JAMES-4026 Fix inconsistency issue between imap and JMAP RFC-8621
- - [FIX] Filter too big values for Cassandra TTLs (#2156
+ - [FIX] Filter too big values for Cassandra TTLs (#2156)
+ - [ENHANCEMENT] Add User-Agent in JMAP logging context (#2604)
+ - JAMES-4101 Wrap SMTp startTLS into a NETTY transaction
+ - [FIX] Silent verbose SSL logs in SMTP (#2578)
+ - [FIX] Silent Eof exception for webadmin (#2577)
+ - [devscout] upgrade logback and crowdsec
+ - [FIX] Preserve internal date on restored messages (#2574)
+ - [FIX] Reject non strictly positive POP3 indexes (#2575)
+ - [FIX] Cleanup EmailQueryView when populating it.
+ - [FIX] POP3 UserCmdHandler should return error response when invalid username input
+ - [FIX] FileNameIs matcher: Parsing for long content disposition filename (#2555)
+ - [FIX] IMAP login parsing: handle IllegalArgumentException
+ - [FIX] RspamD for large moves
+ - [FIX] Prevent WebSocket data race (#2550)
+ - JAMES-4096 Rename INBOX (#2549)
+ - JAMES-3605 Implement DeletedMessageVaultWorkQueueReconnectionHandler
+ - [FIX] DistributedDeletedMessageVaultDeletionCallback: add an applicative timeout before RabbitMQ consumer timeout
+ - [FIX] Improve S3 MinIO support with MinIOGenerationAwareBlobId MinIO compatibility
+ - JAMES-4095 Forbid deleting INBOX in IMAP (#2541)
+ - [FIX] Support RFC-3848 service types in Received headers (#2536)
+ - JAMES-4094 Trigger quota-ratio index update when modifying quota limits (#2538)
+ - [FIX] IDLE - prevent data race upon answers on channel writes (#2525)
+ - JAMES-3893 Identity routes should not return 500 code when invalid username (#2519)
+ - [FIX] Filter out invalid user in LDAP
+ - [FIX] Always schedule execution of new IMAP requests to the event loop
+ - [FIX] No longer use recursivity in ReactiveThrottler::onRequestDone
+ - [FIX] JAMES-4088 Ensure IMAP SELECT EXIST response is up to date (#2507)
+ - JAMES-2456 Update Tika to version 3.0.0.0
+ - JAMES-4087 Allow combining composite matchers
+ - [ENHANCEMENT] Ensure the MDC context is carried over upon IMAP parsing errors
+ - JAMES-4077 Back memory-app with Lucene
+ - JAMES-3754 Update IMAP4 ID - return NIL, replace to empty list
+ - [ENHANCEMENT] mailUserAgent in IMAP MDC
+ - JAMES-3954 PartialRange might be reversed
+ - [FIX] Prevent queue poisoning for spool
+ - [FIX] Store add a missing flush
+ - [FIX] Avoid NPE on partially written users in Cassandra users repository (#2458)
+ - JAMES-4079 Fix RecipientRewriteTable adds duplicate mapping (#2449)
+ - James 1409 - Change JPARecipientRewriteTable to store separate record per target address (#2444)
+ - JAMES-3552 Better enforcements of JMAP session limits
+ - AmqpForwardAttribute: support HA by allowing specifying several hosts (#2430)
+ - [FIX] Handle XOAUTH2 for SMTP without initial response (#2428)
+ - [FIX] WebSocket should return `Sec-WebSocket-Protocol: jmap` response header
+ - AmqpForwardAttribute mailet: ignore errors when creating an exchange that already exists with a different configuration. (#2414)
+ - James: unset JAVA_TOOL_OPTIONS env variable when running james-cli
+ - JAMES-4050 Allow `%` and `*` characters in mailbox names
+ - JAMES-4060: Fix UID FETCH command failing on empty mailbox (#2386)
+ - Explicit commit after running reindex (#2381)
+ - Improving James shutdown speed (#2380)
+ - JAMES-4063 Update SMIMECheckSignature to use Filesystem to load crypto materials and handle multiple certificates
+ - JAMES-4058 TextCalendarBodyToAttachment screw up text/calendar parts (#2384)
+ - JAMES-4046 Upgrade Lucene to version 9.11.1 (#2373)
+ - JAMES-4054 Add X-SMIME-Status in SMIMECheckSignature process (#2366)
+ - JAMES-4052 Add optional user property to OpenSearch index (#2363)
+ - JAMES-4052 Add quota details in quota indexed for enhanced dashboarding (#2361)
+ - [IMPROVEMENT] JMAP use search index relevance as default sort
 
 ### Performance
 
@@ -179,10 +264,44 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - [FIX] Leak upon unmanaged SMTP error (#2221)
  - JAMES-4023 Avoid blocking the SMTP Netty event loop
  - [PERF] Avoid calling Session::getAttachment on each SMTP line
+ - [PERF] JMAP: Allow browsers to cache download blobs
+ - [FIX] Email/set destroy should fire one event per impacted mailbox (#2576)
+ - [FIX] Prevent dispatching empty flags update (#2572)
+ - JAMES-3491 - JMAP WebSockets - support ping interval (#2561)
+ - JAMES-4093 Traffic shaping to enable QOS on IMAP service
+ - [PERF] Allow lowering EMail/set range threshold
+ - [PERF] Avoid triggering quota updates on message move
+ - [PERF] Leverage grouped events in order to reduce RabbitMQ chatter and aggregate JMAP changes
+ - Mertics for Websocket usage
+
+
+### Build
+
+ - Publish build scans to develocity.apache.org
 
 ## [Unreleased 3.8.x]
 
 No changes yet.
+
+## [3.8.2] UNRELEASED
+
+### Bug fixes
+
+- [FIX] Prevent HtmlTextExtractor to generate asymmetric outputs
+- [IMPROVEMENT] Better manage IMAP literals (3.8.x) (#2281)
+- JAMES-4036 JMS mailQueue should silent interuptedExceptions upon shutdown
+- JAMES-4041 Fix OOM upon IMAP COPY
+- JAMES-4037 Resolve MailboxTyper for Spring (#2255)
+- JAMES-4037 Fix NPE in IMAP LIST with APPENDLIMIT (#2258)
+- JAMES-3955 Increase consumer timeout for TaskManagerWorkQueue
+- JAMES-3955 WARNING logs upon closing channels
+- JAMES-3955 Applicative timeouts before Rabbit timeouts
+- JAMES-3955 Check for queues without consumer and resume consumption as needed
+- JAMES-4023 Avoid blocking the SMTP Netty event loop (#2230)
+- [FIX] -openjpa.Multithreaded => -Dopenjpa.Multithreaded
+- JAMES-4006 Bouncer should pass DSN to bounce processor
+- JAMES-3991 Vacation handling should be case insensitive
+- [maven-release-plugin] prepare for next development iteration
 
 ## [3.8.1] - 2024-02-23
 
@@ -495,6 +614,19 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
 ## [Unreleased 3.7.x]
 
 No changes yet.
+
+## [3.7.6] - UNRELEASED
+
+### Bug fixes
+
+ - [BUILD] Fully drop glowroot
+ - [FIX] Prevent HtmlTextExtractor to generate asymmetric outputs
+ - [IMPROVEMENT] Better manage IMAP literals (3.7.x) (#2282)
+ - [FIX] Solve weave/rest-smtp-sink: Docker image manifest v2 schema 1 deprecation issue (#2152)
+ - JAMES-3955 Increase consumer timeout for TaskManagerWorkQueue
+ - JAMES-3955 WARNING logs upon closing channels
+ - JAMES-3955 Applicative timeouts before Rabbit timeouts
+ - JAMES-3955 Check for queues without consumer and resume consumption as needed
 
 ## [3.7.5] - 2024-02-23
 
