@@ -244,7 +244,7 @@
             <email>eric@apache.org</email>
             <roles>
                 <role>Developer</role>
-                <role>PMC Chair</role>
+                <role>PMC Member</role>
             </roles>
             <timezone />
         </developer>
@@ -284,6 +284,7 @@
             <organization>Linagora</organization>
             <organizationUrl>https://linagora.com</organizationUrl>
             <roles>
+                <role>PMC Chair</role>
                 <role>PMC Member</role>
                 <role>Developer</role>
             </roles>
@@ -316,6 +317,16 @@
             <id>jhelou</id>
             <name>Jean Helou</name>
             <email>jhelou@apache.org</email>
+            <roles>
+                <role>PMC Member</role>
+                <role>Developer</role>
+            </roles>
+            <timezone />
+        </developer>
+        <developer>
+            <id>rcordier</id>
+            <name>Rene Cordier</name>
+            <email>rcordier@apache.org</email>
             <roles>
                 <role>Developer</role>
             </roles>
