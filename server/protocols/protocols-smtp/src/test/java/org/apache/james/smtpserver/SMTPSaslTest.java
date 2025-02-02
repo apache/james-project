@@ -118,6 +118,9 @@ class SMTPSaslTest {
         client.sendCommand("AUTH OAUTHBEARER " + VALID_TOKEN);
 
         assertThat(client.getReplyString()).contains("235 Authentication successful.");
+
+        client.sendCommand("NOOP");
+        assertThat(client.getReplyString()).contains("250 2.0.0 OK");
     }
 
     @Test
@@ -129,6 +132,9 @@ class SMTPSaslTest {
         client.sendCommand(VALID_TOKEN);
 
         assertThat(client.getReplyString()).contains("235 Authentication successful.");
+
+        client.sendCommand("NOOP");
+        assertThat(client.getReplyString()).contains("250 2.0.0 OK");
     }
 
     @Test
@@ -140,6 +146,9 @@ class SMTPSaslTest {
         client.sendCommand(VALID_TOKEN);
 
         assertThat(client.getReplyString()).contains("235 Authentication successful.");
+
+        client.sendCommand("NOOP");
+        assertThat(client.getReplyString()).contains("250 2.0.0 OK");
     }
 
     @Test

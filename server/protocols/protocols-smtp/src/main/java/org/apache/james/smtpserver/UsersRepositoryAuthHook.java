@@ -106,6 +106,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
             users.assertValid(username);
             session.setUsername(username);
             session.setRelayingAllowed(true);
+            //session.popLineHandler();
             return HookResult.builder()
                 .hookReturnCode(HookReturnCode.ok())
                 .smtpDescription("Authentication successful.")

@@ -190,7 +190,7 @@ public class AuthCmdHandler
                     return doPlainAuth(session, l);
                 }
             });
-            return AUTH_READY_USERNAME_LOGIN;
+            return AUTH_READY_PLAIN;
         });
     }
 
