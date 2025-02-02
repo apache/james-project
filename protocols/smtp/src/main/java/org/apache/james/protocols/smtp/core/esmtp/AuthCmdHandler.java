@@ -216,7 +216,9 @@ public class AuthCmdHandler
                 session.pushLineHandler(new AbstractSMTPLineHandler() {
                     @Override
                     protected Response onCommand(SMTPSession session, String l) {
-                        return doOauth2Authentication(session, l);
+                        Response response = doOauth2Authentication(session, l);
+                        session.popLineHandler();
+                        return response;
                     }
                 });
                 return new SMTPResponse(SMTPRetCode.AUTH_READY, "");
