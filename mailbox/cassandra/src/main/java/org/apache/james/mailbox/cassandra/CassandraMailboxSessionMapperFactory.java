@@ -26,7 +26,6 @@ import jakarta.inject.Inject;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraAnnotationMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
@@ -105,7 +104,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                                 CassandraUserMailboxRightsDAO userMailboxRightsDAO,
                                                 RecomputeMailboxCountersService recomputeMailboxCountersService,
                                                 CassandraConfiguration cassandraConfiguration,
-                                                BatchSizes batchSizes,
+                                                BatchSizes batchSizes, CassandraAttachmentMapper.AttachmentIdAssignationStrategy attachmentIdAssignationStrategy,
                                                 Clock clock) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
@@ -132,8 +131,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
             deletedMessageDAO);
         this.cassandraMailboxMapper = new CassandraMailboxMapper(mailboxDAO, mailboxPathV3DAO, userMailboxRightsDAO, aclMapper, cassandraConfiguration);
         this.cassandraSubscriptionMapper = new CassandraSubscriptionMapper(session);
-        this.cassandraAttachmentMapper = new CassandraAttachmentMapper(attachmentDAOV2, blobStore,
-            new CassandraAttachmentMapper.AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
+        this.cassandraAttachmentMapper = new CassandraAttachmentMapper(attachmentDAOV2, blobStore, attachmentIdAssignationStrategy);
         this.cassandraMessageMapper = new CassandraMessageMapper(
             uidProvider,
             modSeqProvider,

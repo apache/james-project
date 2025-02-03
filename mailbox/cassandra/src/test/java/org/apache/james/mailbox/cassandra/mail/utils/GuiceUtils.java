@@ -85,6 +85,8 @@ public class GuiceUtils {
         return Modules.combine(
             binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
             binder -> binder.bind(BatchSizes.class).toInstance(BatchSizes.defaultValues()),
+            binder -> binder.bind(CassandraAttachmentMapper.AttachmentIdAssignationStrategy.class)
+                .toInstance(new CassandraAttachmentMapper.AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory())),
             binder -> binder.bind(UidProvider.class).to(CassandraUidProvider.class),
             binder -> binder.bind(CassandraAttachmentMapper.AttachmentIdAssignationStrategy.class).to(CassandraAttachmentMapper.AttachmentIdAssignationStrategy.Default.class),
             binder -> binder.bind(ModSeqProvider.class).to(CassandraModSeqProvider.class),

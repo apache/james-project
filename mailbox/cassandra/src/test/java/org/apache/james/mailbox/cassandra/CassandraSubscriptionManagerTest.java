@@ -38,6 +38,7 @@ import org.apache.james.mailbox.SubscriptionManagerContract;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
+import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -109,6 +110,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         CassandraUidProvider uidProvider = null;
         CassandraModSeqProvider modSeqProvider = null;
         RecomputeMailboxCountersService recomputeMailboxCountersService = null;
+        CassandraAttachmentMapper.AttachmentIdAssignationStrategy attachmentIdAssignationStrategy = null;
 
         mailboxSessionMapperFactory =  new CassandraMailboxSessionMapperFactory(
             uidProvider,
@@ -133,6 +135,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
             recomputeMailboxCountersService,
             CassandraConfiguration.DEFAULT_CONFIGURATION,
             BatchSizes.defaultValues(),
+            attachmentIdAssignationStrategy,
             Clock.systemUTC());
 
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
