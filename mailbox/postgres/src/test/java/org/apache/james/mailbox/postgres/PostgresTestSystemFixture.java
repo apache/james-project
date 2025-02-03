@@ -55,7 +55,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -84,7 +84,7 @@ public class PostgresTestSystemFixture {
         AttachmentContentLoader attachmentContentLoader = null;
         MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), attachmentContentLoader);
         PostgresMailboxManager postgresMailboxManager = new PostgresMailboxManager(mapperFactory, sessionProvider,
-            new MessageParser(), new PostgresMessageId.Factory(),
+            new MessageParserImpl(), new PostgresMessageId.Factory(),
             eventBus, annotationManager, storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(), PreDeletionHooks.NO_PRE_DELETION_HOOK,
             new UpdatableTickingClock(Instant.now()));
 

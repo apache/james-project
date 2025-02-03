@@ -26,6 +26,7 @@ import java.util.function.Function;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
 import org.apache.james.jmap.JMAPListenerModule;
+import org.apache.james.jmap.JMAPModule;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -150,7 +151,8 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new PostgresJmapModule(),
         new PostgresDataJmapModule(),
         new JmapEventBusModule(),
-        new JMAPServerModule());
+        new JMAPServerModule(),
+        JMAPModule.INSTANCE);
 
     public static final Module PLUGINS = new QuotaMailingModule();
 
