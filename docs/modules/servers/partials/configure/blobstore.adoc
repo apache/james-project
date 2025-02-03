@@ -179,7 +179,6 @@ Configuration for exporting blob content:
 
 | localFile: Local File Exporting Mechanism (explained below). Default: localFile
 
-| linshare: LinShare Exporting Mechanism (explained below)
 |===
 
 === Local File Blob Export Configuration
@@ -191,17 +190,3 @@ Note: that absolute file path is the file location on James server. Therefore, i
 *blob.export.localFile.directory*: The directory URL to store exported blob data in files, and the URL following
 http://james.apache.org/server/3/apidocs/org/apache/james/filesystem/api/FileSystem.html[James File System scheme].
 Default: file://var/blobExporting
-
-=== LinShare Blob Export Configuration
-
-Instead of exporting blobs in local file system, using https://www.linshare.org[LinShare]
-helps you upload your blobs and people you have been shared to can access those blobs by accessing to
-LinShare server and download them.
-
-This way helps you to share via whole network as long as they can access to LinShare server.
-
-To get an example or details explained, visit {sample-configuration-prefix-url}/blob.properties[blob.properties]
-
-*blob.export.linshare.url*: The URL to connect to LinShare
-
-*blob.export.linshare.token*: The authentication token to connect to LinShare

@@ -29,8 +29,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public enum  BlobExportImplChoice {
-    LOCAL_FILE("localFile"),
-    LINSHARE("linshare");
+    LOCAL_FILE("localFile");
 
     private static Optional<BlobExportImplChoice> from(String implNameString) {
         Preconditions.checkNotNull(implNameString);
