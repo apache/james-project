@@ -80,6 +80,8 @@ import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.modules.data.PostgresCommonModule;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
@@ -143,6 +145,7 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(AttachmentContentLoader.class).to(AttachmentManager.class);
         bind(AttachmentMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
         bind(MailboxCounterCorrector.class).toInstance(MailboxCounterCorrector.DEFAULT);
+        bind(MessageParser.class).toInstance(new MessageParserImpl());
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
         bind(MessageIdReIndexer.class).to(MessageIdReIndexerImpl.class);

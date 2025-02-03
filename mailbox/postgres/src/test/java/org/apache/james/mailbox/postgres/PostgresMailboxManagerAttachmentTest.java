@@ -58,6 +58,7 @@ import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -86,7 +87,7 @@ public class PostgresMailboxManagerAttachmentTest extends AbstractMailboxManager
             PostgresConfiguration.builder().username("a").password("a").build());
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        MessageParser messageParser = new MessageParser();
+        MessageParserImpl messageParser = new MessageParserImpl();
 
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
         StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, eventBus);
