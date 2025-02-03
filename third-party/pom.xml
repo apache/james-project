@@ -36,7 +36,6 @@
         <module>clamav</module>
         <module>crowdsec</module>
         <module>elasticsearch</module>
-        <module>linshare</module>
         <module>rspamd</module>
         <module>spamassassin</module>
     </modules>

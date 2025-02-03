@@ -43,7 +43,6 @@
       <dl>
           <dt><strong>blob.export.implementation</strong></dt>
           <dd>localFile: Local File Exporting Mechanism (explained below). Default: localFile</dd>
-          <dd>linshare: LinShare Exporting Mechanism (explained below)</dd>
       </dl>
 
       <subsection name="Local File Blob Export Configuration">
@@ -58,24 +57,6 @@
                   <a href="http://james.apache.org/server/3/apidocs/org/apache/james/filesystem/api/FileSystem.html">James File System scheme</a>.
                   Default: file://var/blobExporting
               </dd>
-          </dl>
-      </subsection>
-      <subsection name="LinShare Blob Export Configuration">
-          <p>
-              Instead of exporting blobs in local file system, using <a href="https://www.linshare.org">LinShare</a> helps you upload your blobs and people
-              you have been shared to can access those blobs by accessing to LinShare server and download them.
-
-              This way helps you to share via whole network as long as they can access to LinShare server.
-          </p>
-          <p>
-              To get an example or details explained, visit <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/blob.properties">blob.properties</a>
-          </p>
-          <dl>
-              <dt><strong>blob.export.linshare.url</strong></dt>
-              <dd>the URL to connect to LinShare</dd>
-
-              <dt><strong>blob.export.linshare.token</strong></dt>
-              <dd>the authentication token to connect to LinShare</dd>
           </dl>
       </subsection>
   </section>
