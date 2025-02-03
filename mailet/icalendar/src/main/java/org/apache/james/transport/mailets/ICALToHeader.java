@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.Map;
+import java.util.Optional;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -125,20 +126,25 @@ public class ICALToHeader extends GenericMailet {
 
     private void writeToHeaders(Calendar calendar, Mail mail) throws MessagingException {
         MimeMessage mimeMessage = mail.getMessage();
-        VEvent vevent = (VEvent) calendar.getComponent("VEVENT");
-        addIfPresent(mimeMessage, X_MEETING_METHOD_HEADER, calendar.getMethod());
+        VEvent vevent = (VEvent) calendar.getComponent("VEVENT")
+            .orElseThrow(() -> new MessagingException("Failed to get VEVENT component"));
+        addIfPresent(mimeMessage, X_MEETING_METHOD_HEADER, optionalOf(calendar.getMethod()));
         addIfPresent(mimeMessage, X_MEETING_UID_HEADER, vevent.getUid());
-        addIfPresent(mimeMessage, X_MEETING_RECURRENCE_ID_HEADER, vevent.getRecurrenceId());
-        addIfPresent(mimeMessage, X_MEETING_SEQUENCE_HEADER, vevent.getSequence());
+        addIfPresent(mimeMessage, X_MEETING_RECURRENCE_ID_HEADER, optionalOf(vevent.getRecurrenceId()));
+        addIfPresent(mimeMessage, X_MEETING_SEQUENCE_HEADER, optionalOf(vevent.getSequence()));
         addIfPresent(mimeMessage, X_MEETING_DTSTAMP_HEADER, vevent.getDateStamp());
     }
 
-    private void addIfPresent(MimeMessage mimeMessage, String headerName, Property property) {
-        if (property != null) {
+    public static Optional<? extends Property> optionalOf(Property property) {
+        return Optional.ofNullable(property);
+    }
+
+    private void addIfPresent(MimeMessage mimeMessage, String headerName, Optional<? extends Property> property) {
+        if (property.isPresent()) {
             try {
-                mimeMessage.addHeader(headerName, property.getValue());
+                mimeMessage.addHeader(headerName, property.get().getValue());
             } catch (MessagingException e) {
-                LOGGER.error("Could not add header {} with value {}", headerName, property.getValue(), e);
+                LOGGER.error("Could not add header {} with value {}", headerName, property.get().getValue(), e);
             }
         }
     }
