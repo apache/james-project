@@ -31,6 +31,8 @@ import com.google.common.base.Preconditions;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.property.DtStamp;
+import net.fortuna.ical4j.model.property.Uid;
 
 public class ICALAttributeDTO {
 
@@ -39,22 +41,23 @@ public class ICALAttributeDTO {
     public static class Builder {
         public RequiresSender from(Calendar calendar, byte[] originalEvent) {
             String ical = new String(originalEvent, StandardCharsets.UTF_8);
-            VEvent vevent = (VEvent) calendar.getComponent("VEVENT");
-            Optional<String> uid = optionalOf(vevent.getUid());
+            VEvent vevent = (VEvent) calendar.getComponent("VEVENT")
+                .orElseThrow(() -> new RuntimeException("Failed to get VEVENT component"));
+            Optional<Uid> uid = vevent.getUid();
             Optional<String> method = optionalOf(calendar.getMethod());
             Optional<String> recurrenceId = optionalOf(vevent.getRecurrenceId());
             Optional<String> sequence = optionalOf(vevent.getSequence());
-            Optional<String> dtstamp = optionalOf(vevent.getDateStamp());
+            Optional<DtStamp> dtstamp = vevent.getDateStamp();
 
             Preconditions.checkNotNull(ical);
 
             return sender -> recipient -> replyTo ->
                     new ICALAttributeDTO(
                             ical,
-                            uid, sender.asString(),
+                            uid.map(Uid::getValue), sender.asString(),
                             recipient.asString(),
                             replyTo.asString(),
-                            dtstamp, method, sequence,
+                            dtstamp.map(DtStamp::getValue), method, sequence,
                             recurrenceId);
         }
 

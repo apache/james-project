@@ -675,6 +675,7 @@
         <scala.version>${scala.base}.14</scala.version>
         <doclint>none</doclint>
         <mockito.version>5.10.0</mockito.version>
+        <ical4j.version>4.1.0</ical4j.version>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
         <javacrumbs.json-unit.version>3.2.7</javacrumbs.json-unit.version>
     </properties>
@@ -2810,6 +2811,11 @@
                 <groupId>org.junit.vintage</groupId>
                 <artifactId>junit-vintage-engine</artifactId>
                 <version>${junit.vintage.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mnode.ical4j</groupId>
+                <artifactId>ical4j</artifactId>
+                <version>${ical4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mock-server</groupId>
