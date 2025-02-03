@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- NOTE: To activate debug mode, follow Steps 1 & 2 -->
 <configuration>
         <appender name="FILE" class="ch.qos.logback.core.FileAppender">
                 <file>target/test-run.log</file>
@@ -18,12 +19,13 @@
                         <pattern>%d{HH:mm:ss.SSS} [%-5level] %logger{15} - %msg%n%rEx</pattern>
                 </encoder>
                 <immediateFlush>false</immediateFlush>
-                <!-- Disable below block for debug logs mode-->
+                <!-- Step 1: Disable below block for debug logs mode-->
                 <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
                         <level>ERROR</level>
                 </filter>
         </appender>
 
+        <!-- Step 2: Set log level to DEBUG-->
         <root level="WARN">
                 <appender-ref ref="CONSOLE" />
                 <appender-ref ref="FILE" />

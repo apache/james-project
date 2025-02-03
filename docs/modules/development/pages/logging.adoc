@@ -41,3 +41,19 @@ The most useful loggers should to be documented below.
 Please maintain this list of loggers.
 
 org.apache.james.CONFIGURATION:: It is used to log events related to configuration loading and updating.
+
+== Logging when debugging tests
+
+When investigating failing tests, increasing the log level can provide valuable insights.
+
+=== Log Configuration
+
+All modules in James inherit their default test log configurations from the `testing-base` module.
+The log settings are defined in link:https://github.com/apache/james-project/blob/master/testing/base/src/main/resources/logback-test.xml[resources/logback-test.xml].
+
+=== Activating Debug Logs
+
+To enable debug logs, refer to the instructions in the header of `link:https://github.com/apache/james-project/blob/master/testing/base/src/main/resources/logback-test.xml[resources/logback-test.xml]`.
+Carefully follow the steps mentioned to adjust the log level appropriately.
+
+
