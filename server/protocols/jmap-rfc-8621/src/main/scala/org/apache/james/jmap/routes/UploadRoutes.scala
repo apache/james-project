@@ -71,7 +71,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
                              val sessionTranslator: SessionTranslator) extends JMAPRoutes {
 
   private val accountIdParam: String = "accountId"
-  private val uploadURI = s"/upload/{$accountIdParam}"
+  private val uploadURI = s"/jmap/upload/{$accountIdParam}"
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
     JMAPRoute.builder

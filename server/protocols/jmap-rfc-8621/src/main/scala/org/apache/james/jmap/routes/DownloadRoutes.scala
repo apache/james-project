@@ -251,7 +251,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
   private val blobIdParam: String = "blobId"
   private val nameParam: String = "name"
   private val contentTypeParam: String = "type"
-  private val downloadUri = s"/download/{$accountIdParam}/{$blobIdParam}"
+  private val downloadUri = s"/jmap/download/{$accountIdParam}/{$blobIdParam}"
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
     JMAPRoute.builder
