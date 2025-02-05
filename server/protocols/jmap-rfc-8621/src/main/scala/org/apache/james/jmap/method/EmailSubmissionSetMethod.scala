@@ -98,6 +98,10 @@ object EmailSubmissionSetMethod {
         SetError(EmailSubmissionSetMethod.forbiddenFrom,
           SetErrorDescription(s"Attempt to send a mail whose envelope From not allowed for connected user: ${e.from}"),
           Some(Properties("envelope.mailFrom")))
+      case e: ForbiddenHeaderFromException =>
+        LOGGER.warn(s"Attempt to send a mail whose MimeMessage From is missing")
+        SetError(EmailSubmissionSetMethod.forbiddenFrom,
+          SetErrorDescription(s"Attempt to send a mail whose MimeMessage From is missing"), None)
       case _: MessageNotFoundException =>
         LOGGER.info(" EmailSubmission/set failed as the underlying email could not be found")
         SetError(SetError.invalidArgumentValue,
@@ -157,6 +161,7 @@ case class EmailSubmissionCreationParseException(setError: SetError) extends Exc
 case class NoRecipientException() extends Exception
 case class ForbiddenFromException(from: String) extends Exception
 case class ForbiddenMailFromException(from: List[String]) extends Exception
+case class ForbiddenHeaderFromException() extends Exception
 
 case class MessageMimeMessageSource(id: String, message: MessageResult) extends MimeMessageSource {
   override def getSourceId: String = id
@@ -366,7 +371,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         .`then`()
         .`then`(SMono.just(mimeMessage))
 
-      case _ => SMono.error(new IllegalArgumentException("MimeMessage From declaration is missing"))
+      case _ => SMono.error(ForbiddenHeaderFromException())
     }
 
 

@@ -1926,8 +1926,8 @@ trait EmailSubmissionSetMethodContract {
       .inPath("methodResponses[0][1].notCreated")
       .isEqualTo("""{
                    |  "k1490": {
-                   |    "type": "invalidArguments",
-                   |    "description": "MimeMessage From declaration is missing"
+                   |    "type": "forbiddenFrom",
+                   |    "description": "Attempt to send a mail whose MimeMessage From is missing"
                    |  }
                    |}""".stripMargin)
   }
