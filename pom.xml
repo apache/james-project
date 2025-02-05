@@ -333,6 +333,15 @@
             </roles>
             <timezone />
         </developer>
+        <developer>
+            <id>hqtran</id>
+            <name>Quan TRAN</name>
+            <email>hqtran@apache.org</email>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone />
+        </developer>
     </developers>
 
     <contributors>
