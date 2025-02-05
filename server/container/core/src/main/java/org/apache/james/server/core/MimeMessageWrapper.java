@@ -163,6 +163,7 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                     original.writeTo(out);
                     out.close();
                     source = src;
+                    saved = true;
                 }
 
             } catch (IOException ex) {
@@ -516,8 +517,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         if (headers == null) {
             loadHeaders();
         }
-        modified = true;
-        saved = false;
         headersModified = true;
     }
 

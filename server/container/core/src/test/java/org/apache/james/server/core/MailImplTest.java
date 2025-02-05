@@ -25,6 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -34,9 +35,12 @@ import java.util.stream.IntStream;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.ContractMailTest;
@@ -176,6 +180,70 @@ public class MailImplTest extends ContractMailTest {
         assertThat(duplicate.getName()).isNotEqualTo(name);
         assertThat(duplicate.getMessage().getInputStream()).hasSameContentAs(mail.getMessage().getInputStream());
         assertThat(mail.getPerRecipientSpecificHeaders()).isEqualTo(duplicate.getPerRecipientSpecificHeaders());
+    }
+
+    @Test
+    void duplicateInvalid() throws Exception {
+        String name = MailUtil.newId();
+        MailImpl mail = MailImpl.builder()
+            .name(name)
+            .sender("sender@localhost")
+            .mimeMessage(new MimeMessageWrapper(MimeMessageUtil.mimeMessageFromStream(ClassLoaderUtils.getSystemResourceAsSharedStream("invalid.eml"))))
+            .build();
+
+        mail.getMessage().addHeader("abc", "def");
+
+        MailImpl duplicate = MailImpl.duplicate(mail);
+
+        ByteArrayOutputStream bos1 = new ByteArrayOutputStream();
+        duplicate.getMessage().writeTo(bos1);
+
+        ByteArrayOutputStream bos2 = new ByteArrayOutputStream();
+        duplicate.getMessage().writeTo(bos2);
+        assertThat(new ByteArrayInputStream(bos1.toByteArray()))
+            .hasSameContentAs(new ByteArrayInputStream(bos2.toByteArray()));
+    }
+
+    @Test
+    void addHeaderInvalid() throws Exception {
+        String name = MailUtil.newId();
+        MailImpl mail = MailImpl.builder()
+            .name(name)
+            .sender("sender@localhost")
+            .mimeMessage(new MimeMessageWrapper(MimeMessageUtil.mimeMessageFromStream(ClassLoaderUtils.getSystemResourceAsSharedStream("invalid.eml"))))
+            .build();
+
+        mail.getMessage().addHeader("abc", "def");
+
+        MailImpl duplicate = MailImpl.duplicate(mail);
+
+        ByteArrayOutputStream bos1 = new ByteArrayOutputStream();
+        duplicate.getMessage().writeTo(bos1);
+        assertThat(new String(bos1.toByteArray(), StandardCharsets.US_ASCII))
+            .contains("abc: def");
+    }
+
+
+    @Test
+    void addHeader() throws Exception {
+        String name = MailUtil.newId();
+        MailImpl mail = MailImpl.builder()
+            .name(name)
+            .sender("sender@localhost")
+            .mimeMessage(new MimeMessageWrapper(MimeMessageUtil.mimeMessageFromStream(ClassLoaderUtils.getSystemResourceAsSharedStream("JAMES-1593.eml"))))
+            .build();
+
+        mail.getMessage().addHeader("abc", "def");
+
+        MailImpl duplicate = MailImpl.duplicate(mail);
+
+        ByteArrayOutputStream bos1 = new ByteArrayOutputStream();
+        duplicate.getMessage().writeTo(bos1);
+        assertThat(new String(bos1.toByteArray(), StandardCharsets.US_ASCII))
+            .contains("abc: def");
+        MimeMessageWrapper wrapper = (MimeMessageWrapper) mail.getMessage();
+        assertThat(IOUtils.toString(new MimeMessageInputStream(wrapper), StandardCharsets.US_ASCII))
+            .contains("abc: def");
     }
 
     @Test
