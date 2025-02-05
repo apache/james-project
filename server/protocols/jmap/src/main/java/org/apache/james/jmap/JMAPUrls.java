@@ -23,5 +23,8 @@ public interface JMAPUrls {
     String JMAP = "/jmap";
     String JMAP_WS = "/jmap/ws";
     String AUTHENTICATION = "/authentication";
-    String EVENT_SOURCE = "/eventSource";
+    String DOWNLOAD = "/jmap/download";
+    String UPLOAD = "/jmap/upload";
+    String EVENT_SOURCE = "/jmap/eventSource";
+    String NOT_IMPLEMENTED = "/notImplemented";
 }
