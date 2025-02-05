@@ -61,6 +61,24 @@
             <a href="https://apache.org/security/committers.html#vulnerability-handling">vulnerability handling</a>.
         </subsection>
 
+        <subsection name="CVE-2024-37358: Denial of service through the use of IMAP literals">
+            <p> Apache James prior to versions  3.8.2 or 3.7.6 allows an attacker
+                to trigger a denial of service by exploiting IMAP literals.</p>
+
+            <p><b>Severity</b>: Moderate</p>
+
+            <p><b>Mitigation</b>: Update to Apache James 3.8.2 or 3.7.6 onward.</p>
+        </subsection>
+
+        <subsection name="CVE-2024-45626: Denial of service through JMAP HTML to text conversion">
+            <p> Apache James prior to versions  3.8.2 or 3.7.6 allows logged in attacker
+                to trigger a denial of service by exploiting html to text conversion.</p>
+
+            <p><b>Severity</b>: Moderate</p>
+
+            <p><b>Mitigation</b>: Update to Apache James 3.8.2 or 3.7.6 onward.</p>
+        </subsection>
+
         <subsection name="CVE-2024-21742: Mime4J DOM header injection">
             <p> Apache JAMES MIME4J prior to version 0.8.10 allow attackers able to specify the value of a header field to craft other header fields.</p>
 

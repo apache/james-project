@@ -285,10 +285,16 @@ No changes yet.
 
 ## [3.8.2] UNRELEASED
 
-### Bug fixes
+### Security
+
+- **CVE-2024-37358**: Denial of service through the use of IMAP literals
+- **CVE-2024-45626**: Denial of service through JMAP HTML to text conversion
 
 - [FIX] Prevent HtmlTextExtractor to generate asymmetric outputs
 - [IMPROVEMENT] Better manage IMAP literals (3.8.x) (#2281)
+
+### Bug fixes
+
 - JAMES-4036 JMS mailQueue should silent interuptedExceptions upon shutdown
 - JAMES-4041 Fix OOM upon IMAP COPY
 - JAMES-4037 Resolve MailboxTyper for Spring (#2255)
@@ -617,11 +623,17 @@ No changes yet.
 
 ## [3.7.6] - UNRELEASED
 
+### Security
+
+- **CVE-2024-37358**: Denial of service through the use of IMAP literals
+- **CVE-2024-45626**: Denial of service through JMAP HTML to text conversion
+
+- [FIX] Prevent HtmlTextExtractor to generate asymmetric outputs
+- [IMPROVEMENT] Better manage IMAP literals (3.8.x) (#2281)
+
 ### Bug fixes
 
  - [BUILD] Fully drop glowroot
- - [FIX] Prevent HtmlTextExtractor to generate asymmetric outputs
- - [IMPROVEMENT] Better manage IMAP literals (3.7.x) (#2282)
  - [FIX] Solve weave/rest-smtp-sink: Docker image manifest v2 schema 1 deprecation issue (#2152)
  - JAMES-3955 Increase consumer timeout for TaskManagerWorkQueue
  - JAMES-3955 WARNING logs upon closing channels

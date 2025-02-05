@@ -109,6 +109,25 @@ outdated dependencies.
 
 We follow the standard procedures within the ASF regarding link:https://apache.org/security/committers.html#vulnerability-handling[vulnerability handling]
 
+=== CVE-2024-37358: Denial of service through the use of IMAP literals
+
+Apache James prior to versions  3.8.2 or 3.7.6 allows an attacker
+to trigger a denial of service by exploiting IMAP literals.
+
+*Severity*: Moderate
+
+*Mitigation*: Update to Apache James 3.8.2 or 3.7.6 onward.
+
+=== CVE-2024-45626: Denial of service through JMAP HTML to text conversion
+
+Apache James prior to versions  3.8.2 or 3.7.6 allows logged in attacker
+to trigger a denial of service by exploiting html to text conversion.
+
+*Severity*: Moderate
+
+*Mitigation*: Update to Apache James 3.8.2 or 3.7.6 onward.
+
+
 === CVE-2024-21742: Mime4J DOM header injection
 
 Apache JAMES MIME4J prior to version 0.8.10 allow attackers able to specify the value of a header field to craft other header fields.
