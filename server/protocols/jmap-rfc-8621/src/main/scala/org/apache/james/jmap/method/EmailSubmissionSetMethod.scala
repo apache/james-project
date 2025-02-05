@@ -354,15 +354,21 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
   def validateMimeMessages(mimeMessage: MimeMessage) : SMono[MimeMessage] = validateMailAddressHeaderMimeMessage(mimeMessage)
   private def validateMailAddressHeaderMimeMessage(mimeMessage: MimeMessage): SMono[MimeMessage] =
-    SFlux.fromIterable(Map("to" -> Option(mimeMessage.getRecipients(RecipientType.TO)).toList.flatten,
-        "cc" -> Option(mimeMessage.getRecipients(RecipientType.CC)).toList.flatten,
-        "bcc" -> Option(mimeMessage.getRecipients(RecipientType.BCC)).toList.flatten,
-        "from" -> Option(mimeMessage.getFrom).toList.flatten,
-        "sender" -> Option(mimeMessage.getSender).toList,
-        "replyTo" -> Option(mimeMessage.getReplyTo).toList.flatten))
-      .doOnNext { case (headerName, addresses) => (headerName, addresses.foreach(address => validateMailAddress(headerName, address))) }
-      .`then`()
-      .`then`(SMono.just(mimeMessage))
+    Option(mimeMessage.getFrom) match {
+      case Some(from) if from.nonEmpty => SFlux.fromIterable(Map(
+          "to" -> Option(mimeMessage.getRecipients(RecipientType.TO)).toList.flatten,
+          "cc" -> Option(mimeMessage.getRecipients(RecipientType.CC)).toList.flatten,
+          "bcc" -> Option(mimeMessage.getRecipients(RecipientType.BCC)).toList.flatten,
+          "from" -> from.toList,
+          "sender" -> Option(mimeMessage.getSender).toList,
+          "replyTo" -> Option(mimeMessage.getReplyTo).toList.flatten))
+        .doOnNext { case (headerName, addresses) => (headerName, addresses.foreach(address => validateMailAddress(headerName, address))) }
+        .`then`()
+        .`then`(SMono.just(mimeMessage))
+
+      case _ => SMono.error(new IllegalArgumentException("MimeMessage From declaration is missing"))
+    }
+
 
   private def validateMailAddress(headName: String, address: Address): MailAddress =
     Try(new MailAddress(asString(address))) match {
