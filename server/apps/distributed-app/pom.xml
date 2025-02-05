@@ -328,7 +328,7 @@
         <dependency>
             <groupId>ch.qos.logback.contrib</groupId>
             <artifactId>logback-json-classic</artifactId>
-            <version>1.0.0</version>
+            <version>0.1.5</version>
         </dependency>
         <dependency>
             <groupId>com.github.steveash.guavate</groupId>
@@ -452,7 +452,7 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <from>
-                        <image>eclipse-temurin:11-jre-jammy</image>
+                        <image>eclipse-temurin:21-jre-jammy</image>
                     </from>
                     <to>
                         <image>ghcr.io/appscode/inbox-server</image>
