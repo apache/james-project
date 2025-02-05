@@ -283,7 +283,7 @@ Please use RFC-8621 implementation rather than this outdated draft.
 
 No changes yet.
 
-## [3.8.2] UNRELEASED
+## [3.8.2] - 2025-02-05
 
 ### Bug fixes
 
@@ -615,7 +615,7 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
 
 No changes yet.
 
-## [3.7.6] - UNRELEASED
+## [3.7.6] - 2025-02-05
 
 ### Bug fixes
 
