@@ -80,10 +80,9 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory], configuration
 
 class JmapUrlEndpointResolver(val urlPrefixes: UrlPrefixes) {
   val apiUrl: URL = URL(urlPrefixes.httpUrlPrefix.toString + "/jmap")
+  val downloadUrl: URL = new URL(urlPrefixes.httpUrlPrefix.toString + "/jmap/download/{accountId}/{blobId}?type={type}&name={name}")
 
-  val downloadUrl: URL = URL(urlPrefixes.httpUrlPrefix.toString + "/download/{accountId}/{blobId}?type={type}&name={name}")
+  val uploadUrl: URL = new URL(urlPrefixes.httpUrlPrefix.toString + "/jmap/upload/{accountId}")
 
-  val uploadUrl: URL = URL(urlPrefixes.httpUrlPrefix.toString + "/upload/{accountId}")
-
-  val eventSourceUrl: URL = URL(urlPrefixes.httpUrlPrefix.toString + "/eventSource?types={types}&closeAfter={closeafter}&ping={ping}")
+  val eventSourceUrl: URL = new URL(urlPrefixes.httpUrlPrefix.toString + "/jmap/eventSource?types={types}&closeAfter={closeafter}&ping={ping}")
 }

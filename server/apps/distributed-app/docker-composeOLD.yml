@@ -12,7 +12,7 @@ services:
         condition: service_started
       s3:
         condition: service_started
-    image: ghcr.io/appscode/inbox-server:latest
+    image: shn27/inbox-server:test-upload
     container_name: james
     hostname: james.local
    # volumes:
@@ -70,7 +70,7 @@ services:
       - james
 
   s3:
-    image: registry.scality.com/cloudserver/cloudserver:8.7.25
+    image: zenko/cloudserver
     container_name: s3.docker.test
     environment:
       - SCALITY_ACCESS_KEY_ID=accessKey1
