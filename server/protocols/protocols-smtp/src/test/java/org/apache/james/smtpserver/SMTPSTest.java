@@ -99,7 +99,7 @@ class SMTPSTest {
         smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost>");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
         Mail lastMail = testSystem.queue.getLastMail();
         ImmutableList.copyOf(lastMail.getMessage().getHeader("Received")).forEach(System.out::println);

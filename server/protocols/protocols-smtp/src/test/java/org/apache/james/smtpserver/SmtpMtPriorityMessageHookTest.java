@@ -80,7 +80,7 @@ class SmtpMtPriorityMessageHookTest {
         smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> MT-PRIORITY=" + inputPriorityValue);
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithMtPriority\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithMtPriority\r\n.\r\n");
 
         Mail lastMail = testSystem.queue.getLastMail();
 
@@ -133,7 +133,7 @@ class SmtpMtPriorityMessageHookTest {
         smtpProtocol.sendCommand("EHLO whatever.tld");
         smtpProtocol.sendCommand("MAIL FROM: <bob@whatever.tld> MT-PRIORITY=" + priorityValue);
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithMtPriority\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@whatever.tld\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithMtPriority\r\n.\r\n");
 
         Mail lastMail = testSystem.queue.getLastMail();
 

@@ -1273,7 +1273,7 @@ public class SMTPServerTest {
             .isEqualTo(503);
 
         smtpProtocol.addRecipient("mail@sample.com");
-        smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
+        smtpProtocol.sendShortMessageData("From: " + sender + "\r\n\r\nSubject: test\r\n\r\nTest body testAuth\r\n");
 
         smtpProtocol.quit();
 
@@ -1314,7 +1314,7 @@ public class SMTPServerTest {
 
         smtpProtocol.setSender(sender);
         smtpProtocol.addRecipient("mail@sample.com");
-        smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
+        smtpProtocol.sendShortMessageData("From: " + sender + "\r\n\r\nSubject: test\r\n\r\nTest body testAuth\r\n");
 
         smtpProtocol.quit();
 
@@ -1399,7 +1399,7 @@ public class SMTPServerTest {
 
         smtpProtocol.setSender(sender);
         smtpProtocol.addRecipient("mail@sample.com");
-        smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
+        smtpProtocol.sendShortMessageData("From: " + sender + "\r\n\r\nSubject: test\r\n\r\nTest body testAuth\r\n");
 
         smtpProtocol.quit();
 
@@ -1471,7 +1471,7 @@ public class SMTPServerTest {
 
         smtpProtocol.setSender(sender);
         smtpProtocol.addRecipient("mail@sample.com");
-        smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
+        smtpProtocol.sendShortMessageData("From: " + sender + "\r\n\r\nSubject: test\r\n\r\nTest body testAuth\r\n");
 
         smtpProtocol.quit();
 
@@ -1779,7 +1779,7 @@ public class SMTPServerTest {
             .as("authenticated.. not reject")
             .isEqualTo(250);
 
-        smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testDNSRBLNotRejectAuthUser\r\n");
+        smtpProtocol.sendShortMessageData("From: " + sender + "\r\n\r\nSubject: test\r\n\r\nTest body testDNSRBLNotRejectAuthUser\r\n");
 
         smtpProtocol.quit();
 

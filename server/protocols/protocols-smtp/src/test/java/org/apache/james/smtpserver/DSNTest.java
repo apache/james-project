@@ -97,7 +97,7 @@ class DSNTest {
         smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS ENVID=QQ314159");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt@localhost");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
         Mail lastMail = testSystem.queue.getLastMail();
         assertThat(lastMail.dsnParameters())
@@ -126,7 +126,7 @@ class DSNTest {
         smtpProtocol.sendCommand("RCPT TO:<rcpt1@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt1@localhost");
         smtpProtocol.sendCommand("RCPT TO:<rcpt2@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt2@localhost");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
         Mail lastMail = testSystem.queue.getLastMail();
         assertThat(lastMail.dsnParameters())
@@ -156,7 +156,7 @@ class DSNTest {
         smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS ENVID=QQ314159");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> ORCPT=rfc822;orcpt@localhost");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
         Mail lastMail = testSystem.queue.getLastMail();
         assertThat(lastMail.dsnParameters())
@@ -182,7 +182,7 @@ class DSNTest {
         smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS ENVID=QQ314159");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
         Mail lastMail = testSystem.queue.getLastMail();
         assertThat(lastMail.dsnParameters())
@@ -208,7 +208,7 @@ class DSNTest {
         smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> ENVID=QQ314159");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt@localhost");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
         Mail lastMail = testSystem.queue.getLastMail();
         assertThat(lastMail.dsnParameters())
@@ -234,7 +234,7 @@ class DSNTest {
         smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt@localhost");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
         Mail lastMail = testSystem.queue.getLastMail();
         assertThat(lastMail.dsnParameters())
