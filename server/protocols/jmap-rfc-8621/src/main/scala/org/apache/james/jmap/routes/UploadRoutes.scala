@@ -103,7 +103,9 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
         .asJava()
         .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
         .`then`()
-      case _ => response.status(BAD_REQUEST).send
+      case _ =>
+        LOGGER.info("Upload was missing compulsory Content-Type header")
+        respondDetails(response, ProblemDetails(status = BAD_REQUEST, detail = "Upload is missing compulsory Content-Type header")).asJava()
     }
   }
 
