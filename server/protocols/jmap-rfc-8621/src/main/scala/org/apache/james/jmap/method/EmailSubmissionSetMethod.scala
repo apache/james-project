@@ -98,6 +98,10 @@ object EmailSubmissionSetMethod {
         SetError(EmailSubmissionSetMethod.forbiddenFrom,
           SetErrorDescription(s"Attempt to send a mail whose envelope From not allowed for connected user: ${e.from}"),
           Some(Properties("envelope.mailFrom")))
+      case e: ForbiddenHeaderFromException =>
+        LOGGER.warn(s"Attempt to send a mail whose MimeMessage From is missing")
+        SetError(EmailSubmissionSetMethod.forbiddenFrom,
+          SetErrorDescription(s"Attempt to send a mail whose MimeMessage From is missing"), None)
       case _: MessageNotFoundException =>
         LOGGER.info(" EmailSubmission/set failed as the underlying email could not be found")
         SetError(SetError.invalidArgumentValue,
@@ -157,6 +161,7 @@ case class EmailSubmissionCreationParseException(setError: SetError) extends Exc
 case class NoRecipientException() extends Exception
 case class ForbiddenFromException(from: String) extends Exception
 case class ForbiddenMailFromException(from: List[String]) extends Exception
+case class ForbiddenHeaderFromException() extends Exception
 
 case class MessageMimeMessageSource(id: String, message: MessageResult) extends MimeMessageSource {
   override def getSourceId: String = id
@@ -354,15 +359,21 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
   def validateMimeMessages(mimeMessage: MimeMessage) : SMono[MimeMessage] = validateMailAddressHeaderMimeMessage(mimeMessage)
   private def validateMailAddressHeaderMimeMessage(mimeMessage: MimeMessage): SMono[MimeMessage] =
-    SFlux.fromIterable(Map("to" -> Option(mimeMessage.getRecipients(RecipientType.TO)).toList.flatten,
-        "cc" -> Option(mimeMessage.getRecipients(RecipientType.CC)).toList.flatten,
-        "bcc" -> Option(mimeMessage.getRecipients(RecipientType.BCC)).toList.flatten,
-        "from" -> Option(mimeMessage.getFrom).toList.flatten,
-        "sender" -> Option(mimeMessage.getSender).toList,
-        "replyTo" -> Option(mimeMessage.getReplyTo).toList.flatten))
-      .doOnNext { case (headerName, addresses) => (headerName, addresses.foreach(address => validateMailAddress(headerName, address))) }
-      .`then`()
-      .`then`(SMono.just(mimeMessage))
+    Option(mimeMessage.getFrom) match {
+      case Some(from) if from.nonEmpty => SFlux.fromIterable(Map(
+          "to" -> Option(mimeMessage.getRecipients(RecipientType.TO)).toList.flatten,
+          "cc" -> Option(mimeMessage.getRecipients(RecipientType.CC)).toList.flatten,
+          "bcc" -> Option(mimeMessage.getRecipients(RecipientType.BCC)).toList.flatten,
+          "from" -> from.toList,
+          "sender" -> Option(mimeMessage.getSender).toList,
+          "replyTo" -> Option(mimeMessage.getReplyTo).toList.flatten))
+        .doOnNext { case (headerName, addresses) => (headerName, addresses.foreach(address => validateMailAddress(headerName, address))) }
+        .`then`()
+        .`then`(SMono.just(mimeMessage))
+
+      case _ => SMono.error(ForbiddenHeaderFromException())
+    }
+
 
   private def validateMailAddress(headName: String, address: Address): MailAddress =
     Try(new MailAddress(asString(address))) match {
