@@ -238,6 +238,7 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
 
     }
 
+    private static final boolean FETCH_FULL_MESSAGE_CONTENT = Boolean.valueOf(System.getProperty("opensearch.index.listener.fetch.full.content", "true"));
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenSearchListeningMessageSearchIndex.class);
     private static final String ID_SEPARATOR = ":";
     private static final Group GROUP = new OpenSearchListeningMessageSearchIndexGroup();
@@ -342,6 +343,9 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     }
 
     private FetchType chooseFetchType() {
+        if (FETCH_FULL_MESSAGE_CONTENT) {
+            return FetchType.FULL;
+        }
         if (indexBody == IndexBody.YES) {
             return FetchType.FULL;
         }

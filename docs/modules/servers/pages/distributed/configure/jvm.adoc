@@ -3,3 +3,16 @@
 
 :sample-configuration-prefix-url: https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration
 include::partial$configure/jvm.adoc[]
+
+== Disable OpenSearchListeningMessageSearchIndex fetch full message content
+
+Whether to fetch full message content when indexing messages in OpenSearch. This is useful when you want to avoid fetch full message content while indexing only headers for example.
+
+Be careful whether the custom `OpenSearchListeningMessageSearchIndex.Indexer` (s) need full message content or not.
+
+Ex in `jvm.properties`:
+----
+opensearch.index.listener.fetch.full.content=false
+----
+
+Optional. Boolean. Defaults to true.
