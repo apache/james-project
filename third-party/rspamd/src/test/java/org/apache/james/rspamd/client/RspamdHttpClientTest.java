@@ -158,7 +158,7 @@ class RspamdHttpClientTest {
             softly.assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.NO_ACTION);
             softly.assertThat(analysisResult.getRequiredScore()).isEqualTo(13.5F);
             softly.assertThat(analysisResult.getDesiredRewriteSubject()).isEqualTo(Optional.empty());
-            softly.assertThat(analysisResult.hasVirus()).isEqualTo(false);
+            softly.assertThat(analysisResult.getVirusNote()).isEmpty();
         });
 
         RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.rspamdPort()));
@@ -217,7 +217,7 @@ class RspamdHttpClientTest {
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
         AnalysisResult analysisResult = client.checkV2(virusMessage).block();
-        assertThat(analysisResult.hasVirus()).isTrue();
+        assertThat(analysisResult.getVirusNote()).isPresent();
     }
 
     @Test
@@ -226,7 +226,7 @@ class RspamdHttpClientTest {
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
         AnalysisResult analysisResult = client.checkV2(nonVirusMessage).block();
-        assertThat(analysisResult.hasVirus()).isFalse();
+        assertThat(analysisResult.getVirusNote()).isEmpty();
     }
 
     @Test

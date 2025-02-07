@@ -44,9 +44,9 @@ public class AnalysisResultDeserializer extends StdDeserializer<AnalysisResult> 
         float score = node.get("score").floatValue();
         float requiredScore = node.get("required_score").floatValue();
         Optional<String> desiredRewriteSubject = deserializeRewriteSubject(node);
-        boolean hasVirus = deserializeClamVirus(node);
+        Optional<String> virusNote = deserializeClamVirus(node);
 
-        return new AnalysisResult(action,score, requiredScore, desiredRewriteSubject, hasVirus);
+        return new AnalysisResult(action,score, requiredScore, desiredRewriteSubject, virusNote);
     }
 
     private AnalysisResult.Action deserializeAction(String actionAsString) {
@@ -59,16 +59,12 @@ public class AnalysisResultDeserializer extends StdDeserializer<AnalysisResult> 
     }
 
     private Optional<String> deserializeRewriteSubject(JsonNode node) {
-        JsonNode rewriteSubjectJsonNode = node.get("subject");
-        if (rewriteSubjectJsonNode == null) {
-            return Optional.empty();
-        }
-        return Optional.of(rewriteSubjectJsonNode.asText());
+        return Optional.ofNullable(node.get("subject")).map(JsonNode::asText);
     }
 
-    private boolean deserializeClamVirus(JsonNode node) {
+    private Optional<String> deserializeClamVirus(JsonNode node) {
         JsonNode clamVirusJsonNode = node.get("symbols").get("CLAM_VIRUS");
-        return clamVirusJsonNode != null;
+        return Optional.ofNullable(clamVirusJsonNode).map(JsonNode::toString);
     }
 
 }
