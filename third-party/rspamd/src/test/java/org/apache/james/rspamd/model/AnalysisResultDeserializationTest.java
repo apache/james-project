@@ -227,7 +227,7 @@ public class AnalysisResultDeserializationTest {
             .action(AnalysisResult.Action.NO_ACTION)
             .score(3.5F)
             .requiredScore(14.0F)
-            .hasVirus(true)
+            .virusNote("{\"name\":\"CLAM_VIRUS\",\"score\":0.0,\"metric_score\":0.0,\"options\":[\"Eicar-Signature\"]}")
             .build());
     }
 }

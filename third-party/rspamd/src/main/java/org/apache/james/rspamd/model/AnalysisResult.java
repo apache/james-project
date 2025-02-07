@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
@@ -38,10 +39,11 @@ public class AnalysisResult {
         private float score;
         private float requiredScore;
         private Optional<String> desiredRewriteSubject;
-        private boolean hasVirus;
+        private Optional<String> virusNote;
 
         public Builder() {
             desiredRewriteSubject = Optional.empty();
+            virusNote = Optional.empty();
         }
 
         public Builder action(Action action) {
@@ -64,15 +66,24 @@ public class AnalysisResult {
             return this;
         }
 
+        @VisibleForTesting
         public Builder hasVirus(boolean hasVirus) {
-            this.hasVirus = hasVirus;
+            if (hasVirus) {
+                this.virusNote = Optional.of("A notice describing the virus");
+            }
+            return this;
+        }
+
+        @VisibleForTesting
+        public Builder virusNote(String value) {
+            this.virusNote = Optional.of(value);
             return this;
         }
 
         public AnalysisResult build() {
             Preconditions.checkNotNull(action);
 
-            return new AnalysisResult(action, score, requiredScore, desiredRewriteSubject, hasVirus);
+            return new AnalysisResult(action, score, requiredScore, desiredRewriteSubject, virusNote);
         }
     }
 
@@ -99,14 +110,14 @@ public class AnalysisResult {
     private final float score;
     private final float requiredScore;
     private final Optional<String> desiredRewriteSubject;
-    private final boolean hasVirus;
+    private final Optional<String> virusNote;
 
-    public AnalysisResult(Action action, float score, float requiredScore, Optional<String> desiredRewriteSubject, boolean hasVirus) {
+    public AnalysisResult(Action action, float score, float requiredScore, Optional<String> desiredRewriteSubject, Optional<String> virusNote) {
         this.action = action;
         this.score = score;
         this.requiredScore = requiredScore;
         this.desiredRewriteSubject = desiredRewriteSubject;
-        this.hasVirus = hasVirus;
+        this.virusNote = virusNote;
     }
 
     public Action getAction() {
@@ -125,8 +136,8 @@ public class AnalysisResult {
         return desiredRewriteSubject;
     }
 
-    public boolean hasVirus() {
-        return hasVirus;
+    public Optional<String> getVirusNote() {
+        return virusNote;
     }
 
     @Override
@@ -138,14 +149,14 @@ public class AnalysisResult {
                 && Objects.equals(this.requiredScore, that.requiredScore)
                 && Objects.equals(this.action, that.action)
                 && Objects.equals(this.desiredRewriteSubject, that.desiredRewriteSubject)
-                && Objects.equals(this.hasVirus, that.hasVirus);
+                && Objects.equals(this.virusNote, that.virusNote);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(action, score, requiredScore, desiredRewriteSubject, hasVirus);
+        return Objects.hash(action, score, requiredScore, desiredRewriteSubject, virusNote);
     }
 
     @Override
@@ -155,7 +166,7 @@ public class AnalysisResult {
             .add("score", score)
             .add("requiredScore", requiredScore)
             .add("desiredRewriteSubject", desiredRewriteSubject)
-            .add("hasVirus", hasVirus)
+            .add("virusNote", virusNote)
             .toString();
     }
 }

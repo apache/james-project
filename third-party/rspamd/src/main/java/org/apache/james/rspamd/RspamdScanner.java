@@ -111,23 +111,24 @@ public class RspamdScanner extends GenericMailet {
                 "sender", mail.getMaybeSender().asString(),
                 "recipient", rcptAndResult.getKey().asString(),
                 "rspamDAction", rcptAndResult.getValue().getAction().name(),
+                "virus", rcptAndResult.getValue().getVirusNote().orElse(""),
                 "rspamDRequiredScore", Float.toString(rcptAndResult.getValue().getRequiredScore()),
                 "rspamRewrittenSubject", rcptAndResult.getValue().getDesiredRewriteSubject().orElse(""),
                 "rspamDScore", Float.toString(rcptAndResult.getValue().getScore()))))
             .log("Mail scanned with RSpamD.");
 
         if (AnalysisResult.Action.REJECT == rcptAndResult.getValue().getAction()) {
-            rejectSpamProcessor.ifPresent(processor -> processorPerUser(mail, rcptAndResult.getKey(), processor));
+            rejectSpamProcessor.ifPresent(processor -> processorPerUser(mail, rcptAndResult.getKey(), processor, "Rejected due to high spam score"));
         }
 
         appendRspamdResultHeader(mail, rcptAndResult.getKey(), rcptAndResult.getRight());
 
-        if (rcptAndResult.getRight().hasVirus()) {
-            virusProcessor.ifPresent(processor -> processorPerUser(mail, rcptAndResult.getKey(), processor));
+        if (rcptAndResult.getRight().getVirusNote().isPresent()) {
+            virusProcessor.ifPresent(processor -> processorPerUser(mail, rcptAndResult.getKey(), processor, rcptAndResult.getRight().getVirusNote().get()));
         }
     }
 
-    private void processorPerUser(Mail mail, MailAddress rcpt, String processor) {
+    private void processorPerUser(Mail mail, MailAddress rcpt, String processor, String error) {
         Mail copy = null;
         try {
             copy = mail.duplicate();
@@ -165,12 +166,12 @@ public class RspamdScanner extends GenericMailet {
                 .ifPresent(Throwing.consumer(desiredRewriteSubject -> mail.getMessage().setSubject(desiredRewriteSubject)));
         }
 
-        if (rspamdResult.hasVirus()) {
-            virusProcessor.ifPresent(state -> {
+        rspamdResult.getVirusNote()
+            .ifPresent(virusNote -> {
                 LOGGER.info("Detected a mail containing virus. Sending mail {} to {}", mail, virusProcessor);
-                mail.setState(state);
+                mail.setErrorMessage(virusNote);
+                virusProcessor.ifPresent(mail::setState);
             });
-        }
     }
 
     private void appendRspamdResultHeader(Mail mail, MailAddress recipient, AnalysisResult rspamdResult) {
