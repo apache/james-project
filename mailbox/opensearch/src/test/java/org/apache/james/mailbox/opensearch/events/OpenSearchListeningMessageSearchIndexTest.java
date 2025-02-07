@@ -220,7 +220,8 @@ class OpenSearchListeningMessageSearchIndexTest {
         testee = new OpenSearchListeningMessageSearchIndex(mapperFactory,
             ImmutableSet.of(), openSearchIndexer, openSearchSearcher,
             messageToOpenSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory(), messageIdFactory,
-            OpenSearchMailboxConfiguration.builder().build(), new RecordingMetricFactory());
+            OpenSearchMailboxConfiguration.builder().build(), new RecordingMetricFactory(),
+            ImmutableSet.of());
         session = sessionProvider.createSystemSession(USERNAME);
 
         mailbox = mapperFactory.getMailboxMapper(session).create(MailboxPath.forUser(USERNAME, DefaultMailboxes.INBOX), UidValidity.generate()).block();
@@ -287,7 +288,8 @@ class OpenSearchListeningMessageSearchIndexTest {
         testee = new OpenSearchListeningMessageSearchIndex(mapperFactory,
             ImmutableSet.of(), openSearchIndexer, openSearchSearcher,
             messageToOpenSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory(), new InMemoryMessageId.Factory(),
-            OpenSearchMailboxConfiguration.builder().build(), new RecordingMetricFactory());
+            OpenSearchMailboxConfiguration.builder().build(), new RecordingMetricFactory(),
+            ImmutableSet.of());
 
         testee.add(session, mailbox, MESSAGE_WITH_ATTACHMENT).block();
         awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);

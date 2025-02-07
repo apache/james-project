@@ -104,6 +104,8 @@ public class OpenSearchMailboxModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), StartUpCheck.class)
             .addBinding()
             .to(OpenSearchStartUpCheck.class);
+
+        Multibinder.newSetBinder(binder(), OpenSearchListeningMessageSearchIndex.Indexer.class);
     }
 
     @Provides

@@ -142,7 +142,8 @@ public class OpenSearchSearchHighlighterTest implements SearchHighLighterContrac
                 openSearchSearcher,
                 new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory,
-                openSearchMailboxConfiguration, new RecordingMetricFactory()))
+                openSearchMailboxConfiguration, new RecordingMetricFactory(),
+                ImmutableSet.of()))
             .noPreDeletionHooks()
             .storeQuotaManager()
             .build();
