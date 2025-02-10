@@ -2072,6 +2072,7 @@ class UserMailboxesRoutesTest {
 
                 verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxIdCaptor.capture());
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
+                verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture(), any());
                 verify(searchIndex).postReindexing();
                 verifyNoMoreInteractions(searchIndex);
 
