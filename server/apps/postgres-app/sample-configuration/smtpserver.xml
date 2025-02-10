@@ -51,7 +51,7 @@
             <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
-        <verifyIdentity>true</verifyIdentity>
+        <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
         <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
@@ -98,7 +98,7 @@
             -->
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
-        <verifyIdentity>true</verifyIdentity>
+        <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
         <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
@@ -145,7 +145,7 @@
             -->
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
-        <verifyIdentity>true</verifyIdentity>
+        <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
         <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
