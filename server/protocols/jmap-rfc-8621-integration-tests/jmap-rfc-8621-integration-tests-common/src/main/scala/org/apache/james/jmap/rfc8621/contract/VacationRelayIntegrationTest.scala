@@ -89,7 +89,7 @@ trait VacationRelayIntegrationTest {
     smtpClient.helo(DOMAIN)
     smtpClient.setSender(externalMail)
     smtpClient.rcpt("<" + USER_WITH_DOMAIN + ">")
-    smtpClient.sendShortMessageData("Reply-To: <" + externalMail + ">\r\n\r\ncontent")
+    smtpClient.sendShortMessageData("From: " + externalMail + "\r\n\r\nReply-To: <" + externalMail + ">\r\n\r\ncontent")
     calmlyAwait.atMost(1, TimeUnit.MINUTES).untilAsserted(() => {
       val mails = getFakeSmtp.getMockSmtp.getConfigurationClient.listMails
       assertThat(mails).hasSize(1)

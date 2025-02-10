@@ -36,9 +36,12 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
+import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.AbstractSenderAuthIdentifyVerificationHook;
+import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
+import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -141,7 +144,18 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
             (nSession.verifyIdentity() == SMTPConfiguration.SenderVerificationMode.RELAXED && session.getUsername() != null);
         if (shouldCheck) {
             try {
-                return StreamUtils.ofNullable(mail.getMessage().getFrom())
+                Address[] fromAddresses = mail.getMessage().getFrom();
+
+                if (fromAddresses == null || fromAddresses.length == 0) {
+                    return HookResult.builder()
+                        .hookReturnCode(HookReturnCode.deny())
+                        .smtpReturnCode(SMTPRetCode.BAD_SEQUENCE)
+                        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG)
+                            + " Missing From header")
+                        .build();
+                }
+
+                return StreamUtils.ofNullable(fromAddresses)
                     .distinct()
                     .flatMap(address -> doCheckMessage(session, address))
                     .findFirst()

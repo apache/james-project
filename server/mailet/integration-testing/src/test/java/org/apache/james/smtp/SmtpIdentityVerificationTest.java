@@ -334,23 +334,24 @@ class SmtpIdentityVerificationTest {
     }
 
     @Test
-    void errorsShouldBeIgnoredWhenUnAuthed(@TempDir File temporaryFolder) throws Exception {
+    void messageWithMissingMimeMessageFromFieldShouldBeRejected(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .verifyIdentity());
 
         String message = """
-            FROM: \r
             subject: test\r
             \r
             content\r
             .\r
             """;
 
-        assertThatCode(() ->
+        assertThatThrownBy(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-                .sendMessageWithHeaders("user@domain.tld", ImmutableList.of(USER), message))
-            .doesNotThrowAnyException();
+                .authenticate(USER, PASSWORD)
+                .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
+            .isInstanceOf(SMTPSendingException.class)
+            .hasMessageContaining("503 5.5.4 Missing From header");
     }
 
     @Test
@@ -406,7 +407,7 @@ class SmtpIdentityVerificationTest {
         assertThatThrownBy(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(USER, PASSWORD)
-                .sendMessageNoSender(USER))
+                .sendMessageNoSender(USER, USER))
             .isEqualTo(new SMTPSendingException(SmtpSendingStep.Sender, "503 5.7.1 Incorrect Authentication for Specified Email Address\n"));
     }
 
@@ -418,7 +419,7 @@ class SmtpIdentityVerificationTest {
 
         assertThatCode(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-                .sendMessageNoSender(USER))
+                .sendMessageNoSender(USER, USER))
             .doesNotThrowAnyException();
     }
 

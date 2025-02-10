@@ -138,11 +138,12 @@ public class SMTPMessageSender extends ExternalResource implements Closeable, Af
         return this;
     }
 
-    public SMTPMessageSender sendMessageNoSender(String recipient) throws IOException {
+    public SMTPMessageSender sendMessageNoSender(String from, String recipient) throws IOException {
         doHelo();
         doSetSender("");
         doAddRcpt(recipient);
-        doData("subject: test\r\n" +
+        doData("FROM: " + from + "\r\n" +
+            "subject: test\r\n" +
             "\r\n" +
             "content\r\n" +
             ".\r\n");

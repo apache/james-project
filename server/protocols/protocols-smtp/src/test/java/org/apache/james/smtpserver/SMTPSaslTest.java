@@ -196,7 +196,7 @@ class SMTPSaslTest {
 
         client.setSender(USER.asString());
         client.addRecipient("mail@domain.org");
-        client.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
+        client.sendShortMessageData("From: " + USER.asString() + "\r\n\r\nSubject: test\r\n\r\nTest body testAuth\r\n");
         client.quit();
 
         assertThat(testSystem.queue.getLastMail())
@@ -462,7 +462,7 @@ class SMTPSaslTest {
 
         client.setSender(USER2.asString());
         client.addRecipient("mail@domain.org");
-        client.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
+        client.sendShortMessageData("From: " + USER2.asString() + "\r\n\r\nSubject: test\r\n\r\nTest body testAuth\r\n");
         client.quit();
 
         assertThat(testSystem.queue.getLastMail())

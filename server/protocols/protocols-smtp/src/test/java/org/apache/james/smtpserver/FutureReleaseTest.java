@@ -107,7 +107,7 @@ class FutureReleaseTest {
         smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> HOLDFOR=83200");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithFutureRelease\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithFutureRelease\r\n.\r\n");
 
         ManageableMailQueue.MailQueueIterator browse = testSystem.queue.browse();
         assertThat(browse.hasNext()).isTrue();
@@ -125,7 +125,7 @@ class FutureReleaseTest {
         smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> HOLDUNTIL=2023-04-14T10:30:00Z");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithFutureRelease\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithFutureRelease\r\n.\r\n");
 
         ManageableMailQueue.MailQueueIterator browse = testSystem.queue.browse();
         assertThat(browse.hasNext()).isTrue();
@@ -263,7 +263,7 @@ class FutureReleaseTest {
         smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.sendCommand("MAIL FROM: <bob@localhost>");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
-        smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithFutureRelease\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithFutureRelease\r\n.\r\n");
 
         assertThat(testSystem.queue.getSize()).isEqualTo(1L);
     }

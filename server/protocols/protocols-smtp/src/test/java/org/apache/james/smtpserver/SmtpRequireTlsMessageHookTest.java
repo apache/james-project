@@ -109,7 +109,7 @@ class SmtpRequireTlsMessageHookTest {
         client.sendCommand("EHLO localhost");
         client.sendCommand("MAIL FROM:<bob@localhost> REQUIRETLS");
         client.sendCommand("RCPT TO:<rcpt@localhost>");
-        client.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithMtPriority\r\n.\r\n");
+        client.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithMtPriority\r\n.\r\n");
 
         Mail lastMail = testSystem.queue.getLastMail();
 
@@ -125,7 +125,7 @@ class SmtpRequireTlsMessageHookTest {
         client.sendCommand("EHLO localhost");
         client.sendCommand("MAIL FROM:<bob@localhost> REQUIRETLS");
         client.sendCommand("RCPT TO:<rcpt@localhost>");
-        client.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithMtPriority\r\n.\r\n");
+        client.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithMtPriority\r\n.\r\n");
 
         Mail lastMail = testSystem.queue.getLastMail();
 
