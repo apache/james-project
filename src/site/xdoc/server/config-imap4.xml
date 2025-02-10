@@ -86,12 +86,17 @@
         <dt><strong>maxQueueSize</strong></dt>
         <dd>Upper bound to the IMAP throttler queue. Upon burst, requests that cannot be queued are rejected and not executed.
             Integer, defaults to 4096, must be positive, 0 means no queue.</dd>
-        <dt><strong>handler.proxyRequired</strong></dt>
+        <dt><strong>proxyRequired</strong></dt>
         <dd>
           Enables proxy support for this service for incoming connections. HAProxy's protocol
           (https://www.haproxy.org/download/2.7/doc/proxy-protocol.txt) is used and might be compatible
           with other proxies (e.g. traefik). If enabled, it is *required* to initiate the connection
           using HAProxy's proxy protocol.
+        </dd>
+        <dt><strong>proxyFirst</strong></dt>
+        <dd>Wether proxy frames should be handled before SSL handshakes. This allows setting either the loadbalancer in TCP mode
+            (so transparent for SSL then Proxy frames needs to be handled first) or set up SSL termination between proxy and server
+            (more suited for some cloud vendors). Defaults to true (TCP transparent).
         </dd>
         <dt><strong>handler.handlerchain</strong></dt>
         <dd>This loads the core CommandHandlers. Only remove this if you really 

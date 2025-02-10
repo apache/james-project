@@ -32,21 +32,23 @@ import io.netty.util.concurrent.EventExecutorGroup;
 @ChannelHandler.Sharable
 public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketChannel> extends AbstractChannelPipelineFactory<C> {
     private final boolean proxyRequired;
+    private final boolean proxyFirst;
     private Supplier<Encryption> secure;
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
                                                   int maxConnections, int maxConnectsPerIp,
-                                                  boolean proxyRequired,
+                                                  boolean proxyRequired, boolean proxyFirst,
                                                   ChannelHandlerFactory frameHandlerFactory,
                                                   EventExecutorGroup eventExecutorGroup) {
         super(timeout, maxConnections, maxConnectsPerIp, proxyRequired, frameHandlerFactory, eventExecutorGroup);
         this.proxyRequired = proxyRequired;
+        this.proxyFirst = proxyFirst;
     }
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
-            int maxConnections, int maxConnectsPerIp, boolean proxyRequired, Supplier<Encryption> secure,
-            ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
-        this(timeout, maxConnections, maxConnectsPerIp, proxyRequired, frameHandlerFactory, eventExecutorGroup);
+                                                  int maxConnections, int maxConnectsPerIp, boolean proxyRequired, boolean proxyFirst, Supplier<Encryption> secure,
+                                                  ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
+        this(timeout, maxConnections, maxConnectsPerIp, proxyRequired, proxyFirst, frameHandlerFactory, eventExecutorGroup);
 
         this.secure = secure;
     }
@@ -56,7 +58,7 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
         super.initChannel(channel);
 
         if (isSSLSocket()) {
-            if (proxyRequired) {
+            if (proxyRequired && proxyFirst) {
                 channel.pipeline().addAfter(HandlerConstants.PROXY_HANDLER, HandlerConstants.SSL_HANDLER, secure.get().sslHandler());
             } else {
                 channel.pipeline().addFirst(HandlerConstants.SSL_HANDLER, secure.get().sslHandler());

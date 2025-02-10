@@ -57,6 +57,11 @@ this case, if nobody is present, the value "localhost" will be used.
 with other proxies (e.g. traefik). If enabled, it is *required* to initiate the connection
 using HAProxy's proxy protocol.
 
+| proxyFirst
+| Wether proxy frames should be handled before SSL handshakes. This allows setting either the loadbalancer in TCP mode
+(so transparent for SSL then Proxy frames needs to be handled first) or set up SSL termination between proxy and server
+(more suited for some cloud vendors). Defaults to true (TCP transparent).
+
 | authRequired
 | (deprecated) use auth.announce instead.
 
