@@ -94,7 +94,7 @@ public class WebAdminServer implements Startable {
             .collect(ImmutableList.toImmutableList());
     }
 
-    private static List<PublicRoutes> publicRoutes(List<Routes>  routes) {
+    private static List<PublicRoutes> publicRoutes(List<Routes> routes) {
         return routes.stream()
             .filter(PublicRoutes.class::isInstance)
             .map(PublicRoutes.class::cast)
@@ -178,7 +178,7 @@ public class WebAdminServer implements Startable {
         service.notFound((req, res) -> ErrorResponder.builder()
             .statusCode(NOT_FOUND_404)
             .type(NOT_FOUND)
-            .message("%s %s can not be found", req.requestMethod(), req.pathInfo())
+            .message("%s %s can not be found", req.requestMethod(), req.uri())
             .asString());
 
         service.internalServerError((req, res) -> ErrorResponder.builder()

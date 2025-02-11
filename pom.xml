@@ -2319,11 +2319,6 @@
                 <version>5.21.0</version>
             </dependency>
             <dependency>
-                <groupId>com.sparkjava</groupId>
-                <artifactId>spark-core</artifactId>
-                <version>2.9.4</version>
-            </dependency>
-            <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-core</artifactId>
                 <version>2.3.0.1</version>
@@ -3036,6 +3031,11 @@
                 <groupId>org.threeten</groupId>
                 <artifactId>threeten-extra</artifactId>
                 <version>1.8.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.zoomba-lang</groupId>
+                <artifactId>spark-core</artifactId>
+                <version>3.0.1</version>
             </dependency>
             <dependency>
                 <groupId>pl.pragmatists</groupId>

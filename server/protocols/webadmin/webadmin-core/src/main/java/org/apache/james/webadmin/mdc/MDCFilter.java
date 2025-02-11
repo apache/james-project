@@ -39,7 +39,7 @@ public class MDCFilter implements Filter {
             .addToContext(MDCBuilder.HOST, request.host())
             .addToContext(VERB, request.requestMethod())
             .addToContext(MDCBuilder.PROTOCOL, "webadmin")
-            .addToContext(MDCBuilder.ACTION, request.pathInfo())
+            .addToContext(MDCBuilder.ACTION, request.uri())
             .addToContext(MDCBuilder.USER, request.attribute(AuthenticationFilter.LOGIN))
             .build();
         request.attribute(MDC_CLOSEABLE, mdcCloseable);

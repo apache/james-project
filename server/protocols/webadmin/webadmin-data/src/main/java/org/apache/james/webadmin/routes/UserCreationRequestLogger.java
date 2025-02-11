@@ -39,7 +39,7 @@ import spark.Request;
 public class UserCreationRequestLogger implements RequestLogger {
     @Override
     public boolean applies(Request request) {
-        return request.pathInfo().startsWith(UserRoutes.USERS)
+        return request.uri().startsWith(UserRoutes.USERS)
             && request.requestMethod().equals("PUT");
     }
 

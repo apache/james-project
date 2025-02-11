@@ -29,11 +29,10 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import javax.servlet.http.HttpServletResponse;
-
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.james.core.MailAddress;

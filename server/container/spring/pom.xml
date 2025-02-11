@@ -119,11 +119,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.sparkjava</groupId>
-            <artifactId>spark-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
         </dependency>
@@ -209,6 +204,11 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.zoomba-lang</groupId>
+            <artifactId>spark-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>pl.pragmatists</groupId>
