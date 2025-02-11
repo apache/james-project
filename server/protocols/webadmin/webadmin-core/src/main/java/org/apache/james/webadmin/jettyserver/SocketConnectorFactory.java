@@ -22,6 +22,7 @@ package org.apache.james.webadmin.jettyserver;
 import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.eclipse.jetty.server.AbstractConnectionFactory;
 import org.eclipse.jetty.server.ForwardedRequestCustomizer;
@@ -153,6 +154,7 @@ public class SocketConnectorFactory {
 
     private static HttpConnectionFactory createHttpConnectionFactory(boolean trustForwardHeaders) {
         HttpConfiguration httpConfig = new HttpConfiguration();
+        httpConfig.setUriCompliance(UriCompliance.UNSAFE);
         httpConfig.setSecureScheme("https");
         if (trustForwardHeaders) {
             httpConfig.addCustomizer(new ForwardedRequestCustomizer());
@@ -162,6 +164,7 @@ public class SocketConnectorFactory {
 
     private static HTTP2ServerConnectionFactory createHttp2ConnectionFactory(boolean trustForwardHeaders) {
         HttpConfiguration httpConfig = new HttpConfiguration();
+        httpConfig.setUriCompliance(UriCompliance.UNSAFE);
         httpConfig.setSecureScheme("https");
         if (trustForwardHeaders) {
             httpConfig.addCustomizer(new ForwardedRequestCustomizer());

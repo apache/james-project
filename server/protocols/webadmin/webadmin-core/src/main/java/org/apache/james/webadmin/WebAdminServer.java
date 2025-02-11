@@ -40,6 +40,7 @@ import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
+import org.apache.james.webadmin.jettyserver.EmbeddedJettyFactory;
 import org.apache.james.webadmin.mdc.LoggingRequestFilter;
 import org.apache.james.webadmin.mdc.LoggingResponseFilter;
 import org.apache.james.webadmin.mdc.MDCCleanupFilter;
@@ -58,6 +59,7 @@ import com.google.common.collect.ImmutableList;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import spark.Service;
+import spark.embeddedserver.EmbeddedServers;
 
 public class WebAdminServer implements Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebAdminServer.class);
@@ -73,6 +75,10 @@ public class WebAdminServer implements Startable {
     private final MetricFactory metricFactory;
     private final LoggingRequestFilter loggingRequestFilter;
 
+    public enum Identifiers {
+        JAMES_JETTY
+    }
+
     @Inject
     protected WebAdminServer(WebAdminConfiguration configuration,
                              @Named("webAdminRoutes") List<Routes> routesList,
@@ -85,6 +91,10 @@ public class WebAdminServer implements Startable {
         this.authenticationFilter = authenticationFilter;
         this.metricFactory = metricFactory;
         this.loggingRequestFilter = loggingRequestFilter;
+
+        EmbeddedServers.add(
+            Identifiers.JAMES_JETTY,
+            new EmbeddedJettyFactory());
         this.service = Service.ignite();
     }
 
@@ -102,6 +112,7 @@ public class WebAdminServer implements Startable {
     }
 
     public WebAdminServer start() {
+        service.embeddedServerIdentifier(Identifiers.JAMES_JETTY);
         service.initExceptionHandler(e -> {
             throw new RuntimeException(e);
         });

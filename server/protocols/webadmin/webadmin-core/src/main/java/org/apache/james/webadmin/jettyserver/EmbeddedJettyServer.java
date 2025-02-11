@@ -28,7 +28,6 @@ import java.util.Optional;
 import jakarta.servlet.DispatcherType;
 
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee10.servlet.SessionHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -39,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import spark.embeddedserver.EmbeddedServer;
 import spark.embeddedserver.VirtualThreadAware;
 import spark.embeddedserver.jetty.JettyServerFactory;
-import spark.embeddedserver.jetty.SocketConnectorFactory;
 import spark.embeddedserver.jetty.websocket.WebSocketHandlerWrapper;
 import spark.embeddedserver.jetty.websocket.WebSocketServletContextHandlerFactory;
 import spark.http.matching.MatcherFilter;
@@ -139,12 +137,12 @@ public class EmbeddedJettyServer extends VirtualThreadAware.Proxy implements Emb
         final ServletContextHandler servletContextHandler = webSocketServletContextHandler == null ?
             new ServletContextHandler() : webSocketServletContextHandler;
 
-        final SessionHandler sessionHandler = new SessionHandler();
+        final JettyHandler sessionHandler = new JettyHandler(matcherFilter);
         sessionHandler.getSessionCookieConfig().setHttpOnly(httpOnly);
         servletContextHandler.setSessionHandler(sessionHandler);
 
         servletContextHandler.addFilter(matcherFilter, "/*", EnumSet.allOf(DispatcherType.class));
-
+        servletContextHandler.getServletHandler().setDecodeAmbiguousURIs(true);
         server.setHandler(servletContextHandler);
 
         logger.info("== {} has ignited ...", NAME);
