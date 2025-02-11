@@ -123,11 +123,13 @@ public class NettyServer extends AbstractAsyncServer {
     @Override
     protected AbstractChannelPipelineFactory createPipelineFactory() {
 
+        boolean proxyFirst = true;
         return new AbstractSSLAwareChannelPipelineFactory(
             getTimeout(),
             maxCurConnections,
             maxCurConnectionsPerIP,
             proxyRequired,
+            proxyFirst,
             () -> secure,
             getFrameHandlerFactory(),
             new DefaultEventLoopGroup(16)) {

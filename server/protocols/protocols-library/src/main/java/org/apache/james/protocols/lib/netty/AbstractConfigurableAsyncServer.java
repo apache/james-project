@@ -90,6 +90,7 @@ public abstract class AbstractConfigurableAsyncServer
 
     /** The name of the parameter defining the service hello name. */
     public static final String PROXY_REQUIRED = "proxyRequired";
+    public static final String PROXY_FIRST = "proxyFirst";
 
     public static final int DEFAULT_MAX_EXECUTOR_COUNT = 16;
 
@@ -98,6 +99,7 @@ public abstract class AbstractConfigurableAsyncServer
     private boolean enabled;
 
     protected boolean proxyRequired;
+    protected boolean proxyFirst;
 
     protected int connPerIP;
 
@@ -251,6 +253,7 @@ public abstract class AbstractConfigurableAsyncServer
         Optional.ofNullable(config.getBoolean("useEpoll", null)).ifPresent(this::setUseEpoll);
 
         proxyRequired = config.getBoolean(PROXY_REQUIRED, false);
+        proxyFirst = config.getBoolean(PROXY_FIRST, false);
 
         doConfigure(config);
 
@@ -488,7 +491,7 @@ public abstract class AbstractConfigurableAsyncServer
     @Override
     protected AbstractChannelPipelineFactory createPipelineFactory() {
         return new AbstractSSLAwareChannelPipelineFactory<>(getTimeout(), connectionLimit, connPerIP,
-            proxyRequired,
+            proxyRequired, proxyFirst,
             this::getEncryption, getFrameHandlerFactory(), getExecutorGroup()) {
 
             @Override
