@@ -51,6 +51,7 @@ import org.apache.james.jmap.cassandra.identity.CassandraCustomIdentityModule;
 import org.apache.james.jmap.cassandra.projections.CassandraEmailQueryView;
 import org.apache.james.jmap.cassandra.projections.CassandraEmailQueryViewModule;
 import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjection;
+import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjectionDeletionCallback;
 import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjectionModule;
 import org.apache.james.jmap.cassandra.pushsubscription.CassandraPushSubscriptionModule;
 import org.apache.james.jmap.cassandra.pushsubscription.CassandraPushSubscriptionRepository;
@@ -58,6 +59,7 @@ import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
 import org.apache.james.jmap.cassandra.upload.CassandraUploadUsageRepository;
 import org.apache.james.jmap.cassandra.upload.UploadDAO;
 import org.apache.james.jmap.cassandra.upload.UploadModule;
+import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.utils.PropertiesProvider;
@@ -110,6 +112,9 @@ public class CassandraJmapModule extends AbstractModule {
         eventDTOModuleBinder.addBinding().toInstance(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED);
         eventDTOModuleBinder.addBinding().toInstance(FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT);
 
+        Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class)
+            .addBinding()
+            .to(CassandraMessageFastViewProjectionDeletionCallback.class);
 
         Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
             .addBinding()
