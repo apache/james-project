@@ -31,6 +31,9 @@ public class FeignHelper {
 
     public static String extractBody(Response response) {
         try {
+            if (response.body() == null) {
+                return null;
+            }
             return IOUtils.toString(response.body().asInputStream(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException(e);

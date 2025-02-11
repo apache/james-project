@@ -23,6 +23,7 @@ import feign.Feign;
 import feign.Logger;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
+import feign.okhttp.OkHttpClient;
 import feign.slf4j.Slf4jLogger;
 
 public class WebAdminHTTPClientFactory {
@@ -34,6 +35,7 @@ public class WebAdminHTTPClientFactory {
 
     public static Feign.Builder feignBuilder() {
         return Feign.builder()
+            .client(new OkHttpClient())
             .decoder(new JacksonDecoder())
             .encoder(new JacksonEncoder())
             .logger(new Slf4jLogger("james-webadmin-http-client"))
