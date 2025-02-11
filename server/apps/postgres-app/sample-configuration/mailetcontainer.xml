@@ -63,6 +63,7 @@
                 <matcher match="SMTPAuthSuccessful"/>
                 <matcher match="SMTPIsAuthNetwork"/>
                 <matcher match="SentByMailet"/>
+                <matcher match="org.apache.james.jmap.mailet.SentByJmap"/>
             </matcher>
 
             <mailet match="All" class="RemoveMimeHeader">
@@ -75,6 +76,12 @@
             </mailet>
             <mailet match="All" class="RecipientRewriteTable">
                 <errorProcessor>rrt-error</errorProcessor>
+            </mailet>
+            <mailet match="All" class="VacationMailet">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
+            <mailet match="All" class="org.apache.james.jmap.mailet.filter.JMAPFiltering">
+                <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="RecipientIsLocal" class="Sieve"/>
             <mailet match="RecipientIsLocal" class="AddDeliveredToHeader"/>
