@@ -24,6 +24,7 @@ import java.time.Duration
 import java.util.Optional
 import java.util.concurrent.TimeUnit
 
+import com.google.common.collect.ImmutableList
 import com.google.inject.AbstractModule
 import com.google.inject.multibindings.Multibinder
 import io.restassured.RestAssured.requestSpecification
@@ -104,5 +105,20 @@ trait JmapPreviewContract {
 
     mailboxProbe.deleteMailbox("#private", BOB.asString, DefaultMailboxes.INBOX)
     awaitAtMostTenSeconds.until(() => messageFastViewProjectionProbe.retrieve(messageId).isEmpty)
+  }
+
+  @Test
+  def jmapPreviewShouldBeWellRemovedWhenDeleteMessage(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox("#private", BOB.asString, DefaultMailboxes.INBOX)
+
+    val composedMessageId = mailboxProbe.appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+        .build(createTestMessage))
+
+    val messageFastViewProjectionProbe: MessageFastViewProjectionProbe = server.getProbe(classOf[MessageFastViewProjectionProbe])
+    awaitAtMostTenSeconds.until(() => messageFastViewProjectionProbe.retrieve(composedMessageId.getMessageId).isPresent)
+
+    mailboxProbe.deleteMessage(ImmutableList.of(composedMessageId.getUid), MailboxPath.inbox(BOB), BOB.asString)
+    awaitAtMostTenSeconds.until(() => messageFastViewProjectionProbe.retrieve(composedMessageId.getMessageId).isEmpty)
   }
 }
