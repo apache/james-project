@@ -480,10 +480,7 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         return mailboxMapper.execute(() -> block(mailboxMapper.findMailboxById(mailboxId)
-            .map(Throwing.<Mailbox, Mailbox>function(mailbox -> {
-                assertIsOwner(session, mailbox.generateAssociatedPath());
-                return mailbox;
-            }).sneakyThrow())
+            .filterWhen(mailbox -> assertCanDeleteReactive(session, mailbox.generateAssociatedPath()).thenReturn(true))
             .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session))));
     }
 
@@ -493,10 +490,7 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         return mailboxMapper.executeReactive(mailboxMapper.findMailboxById(mailboxId)
-            .map(Throwing.<Mailbox, Mailbox>function(mailbox -> {
-                assertIsOwner(session, mailbox.generateAssociatedPath());
-                return mailbox;
-            }).sneakyThrow())
+            .filterWhen(mailbox -> assertCanDeleteReactive(session, mailbox.generateAssociatedPath()).thenReturn(true))
             .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session)));
     }
 

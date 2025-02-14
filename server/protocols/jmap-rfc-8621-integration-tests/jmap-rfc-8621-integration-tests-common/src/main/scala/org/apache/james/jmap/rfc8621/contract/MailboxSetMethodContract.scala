@@ -2681,13 +2681,50 @@ trait MailboxSetMethodContract {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "notDestroyed": {
          |        "${mailboxId.serialize}": {
-         |          "type": "notFound",
-         |          "description": "#private:andre@domain.tld:mailbox"
+         |          "type": "invalidArguments",
+         |          "description": "user 'bob@domain.tld' is not allowed to delete the mailbox '#private:andre@domain.tld:mailbox'"
          |        }
          |      }
          |    },
          |    "c1"]]
          |}""".stripMargin)
+  }
+
+  @Test
+  def deleteShouldSuccessWhenHasRight(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.DeleteMailbox))
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "destroy": ["${mailboxId.serialize}"]
+         |           },
+         |    "c1"
+         |       ]
+         |   ]
+         |}
+         |""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("methodResponses[0][1].destroyed", hasSize(1))
+      .body("methodResponses[0][1].destroyed[0]", equalTo(mailboxId.serialize))
   }
 
   @Test
