@@ -224,9 +224,14 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         }
     }
 
-    public void deleteMessage(List<MessageUid> messageUids, MailboxPath mailboxPath, String user) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(user));
+    public void deleteMessage(List<MessageUid> messageUids, MailboxPath mailboxPath, Username user) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
         messageManager.delete(messageUids, mailboxSession);
+    }
+
+    public void moveMessages(MessageRange set, MailboxPath from, MailboxPath to, Username user) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
+        mailboxManager.moveMessages(set, from, to, mailboxSession);
     }
 }

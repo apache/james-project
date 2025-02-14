@@ -36,7 +36,7 @@ import org.apache.james.jmap.rfc8621.contract.Fixture.{ANDRE, BOB, BOB_PASSWORD,
 import org.apache.james.jmap.rfc8621.contract.JmapPreviewContract.createTestMessage
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
-import org.apache.james.mailbox.model.{MailboxPath, MessageId}
+import org.apache.james.mailbox.model.{MailboxPath, MessageId, MessageRange}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.utils.{DataProbeImpl, GuiceProbe}
@@ -118,7 +118,22 @@ trait JmapPreviewContract {
     val messageFastViewProjectionProbe: MessageFastViewProjectionProbe = server.getProbe(classOf[MessageFastViewProjectionProbe])
     awaitAtMostTenSeconds.until(() => messageFastViewProjectionProbe.retrieve(composedMessageId.getMessageId).isPresent)
 
-    mailboxProbe.deleteMessage(ImmutableList.of(composedMessageId.getUid), MailboxPath.inbox(BOB), BOB.asString)
+    mailboxProbe.deleteMessage(ImmutableList.of(composedMessageId.getUid), MailboxPath.inbox(BOB), BOB)
     awaitAtMostTenSeconds.until(() => messageFastViewProjectionProbe.retrieve(composedMessageId.getMessageId).isEmpty)
+  }
+
+  @Test
+  def shouldKeepPreviewWhenExpungedAndStillReferenced(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox("#private", BOB.asString, DefaultMailboxes.INBOX)
+    mailboxProbe.createMailbox("#private", BOB.asString, "otherBox")
+
+    val composedMessageId = mailboxProbe.appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .build(createTestMessage))
+
+    mailboxProbe.moveMessages(MessageRange.all, MailboxPath.inbox(BOB), MailboxPath.forUser(BOB, "otherBox"), BOB)
+
+    val messageFastViewProjectionProbe: MessageFastViewProjectionProbe = server.getProbe(classOf[MessageFastViewProjectionProbe])
+    awaitAtMostTenSeconds.until(() => messageFastViewProjectionProbe.retrieve(composedMessageId.getMessageId).isPresent)
   }
 }
