@@ -8271,36 +8271,25 @@ trait MailboxSetMethodContract {
     val aCLProbeImpl = server.getProbe(classOf[ACLProbeImpl])
     aCLProbeImpl.replaceRights(path, ANDRE.asString, MailboxACL.FULL_RIGHTS)
 
-    val request = s"""
-        |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
-        |   "methodCalls": [
-        |       [
-        |           "Mailbox/set",
-        |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-        |                "update": {
-        |                    "${mailboxId.serialize}": {
-        |                      "parentId": "${parentId.serialize}"
-        |                    }
-        |                }
-        |           },
-        |           "c1"
-        |       ],
-        |       ["Mailbox/get",
-        |         {
-        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-        |           "ids": ["${parentId.serialize}"],
-        |           "properties": ["id", "name", "parentId", "rights"]
-        |          },
-        |          "c2"]
-        |   ]
-        |}
-        |""".stripMargin
-
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
+      .body(s"""{
+              |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+              |   "methodCalls": [
+              |       [
+              |           "Mailbox/set",
+              |           {
+              |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+              |                "update": {
+              |                    "${mailboxId.serialize}": {
+              |                      "parentId": "${parentId.serialize}"
+              |                    }
+              |                }
+              |           },
+              |           "c1"
+              |       ]
+              |   ]
+              |}""".stripMargin)
     .when
       .post
     .`then`
@@ -8312,7 +8301,7 @@ trait MailboxSetMethodContract {
       .asString
 
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].oldState", "methodResponses[0][1].newState", "methodResponses[1][1].state")
+      .whenIgnoringPaths("methodResponses[0][1].oldState", "methodResponses[0][1].newState")
       .isEqualTo(
       s"""{
          |  "sessionState": "${SESSION_STATE.value}",
@@ -8322,20 +8311,57 @@ trait MailboxSetMethodContract {
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
-         |    }, "c1"],
-         |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "list": [{
-         |        "id": "${parentId.serialize}",
-         |        "name": "parent",
-         |        "rights": {
-         |          "${ANDRE.asString()}": ["l"]
-         |        }
-         |      }],
-         |      "notFound": []
-         |    }, "c2"]
+         |    }, "c1"]
          |  ]
          |}""".stripMargin)
+
+
+    awaitAtMostTenSeconds.untilAsserted(() =>{
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(
+          s"""{
+            |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+            |   "methodCalls": [
+            |       ["Mailbox/get",
+            |         {
+            |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+            |           "ids": ["${parentId.serialize}"],
+            |           "properties": ["id", "name", "parentId", "rights"]
+            |          },
+            |          "c2"]
+            |   ]
+            |}""".stripMargin)
+      .when
+        .post
+      .`then`
+        .log().ifValidationFails()
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .isEqualTo(
+          s"""{
+             |  "sessionState": "${SESSION_STATE.value}",
+             |  "methodResponses": [
+             |    ["Mailbox/get", {
+             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |      "state": "$${json-unit.ignore}",
+             |      "list": [{
+             |        "id": "${parentId.serialize}",
+             |        "name": "parent",
+             |        "rights": {
+             |          "${ANDRE.asString()}": ["l"]
+             |        }
+             |      }],
+             |      "notFound": []
+             |    }, "c2"]
+             |  ]
+             |}""".stripMargin)
+    })
   }
 
   @Test
