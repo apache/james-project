@@ -26,7 +26,7 @@ import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.mail.{MailboxGet, MailboxSetError, MailboxSetRequest, RemoveEmailsOnDestroy, UnparsedMailboxId}
 import org.apache.james.jmap.method.MailboxSetDeletePerformer.{MailboxDeletionFailure, MailboxDeletionResult, MailboxDeletionResults, MailboxDeletionSuccess}
-import org.apache.james.mailbox.exception.MailboxNotFoundException
+import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
 import org.apache.james.util.{AuditTrail, ReactorUtils}
@@ -57,6 +57,9 @@ object MailboxSetDeletePerformer {
       case e: IllegalArgumentException =>
         LOGGER.info("Illegal argument in Mailbox/set delete", e)
         SetError.invalidArguments(SetErrorDescription(s"${mailboxId.id} is not a mailboxId: ${e.getMessage}"))
+      case e: InsufficientRightsException =>
+        LOGGER.info("Attempt to delete a mailbox without sufficient rights")
+        SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case e =>
         LOGGER.error("Failed to delete mailbox", e)
         SetError.serverFail(SetErrorDescription(exception.getMessage))

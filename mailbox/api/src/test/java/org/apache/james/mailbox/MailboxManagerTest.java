@@ -2237,7 +2237,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MailboxId inboxId = mailboxManager.createMailbox(inbox, sessionUser1).get();
 
             assertThatThrownBy(() -> mailboxManager.deleteMailbox(inboxId, sessionUser2))
-                .isInstanceOf(MailboxNotFoundException.class);
+                .isInstanceOf(InsufficientRightsException.class)
+                .hasMessageContaining("is not allowed to delete the mailbox");
         }
 
         @Test
