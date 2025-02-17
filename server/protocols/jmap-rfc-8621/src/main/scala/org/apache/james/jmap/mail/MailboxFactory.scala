@@ -112,7 +112,7 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
         maySetKeywords = MaySetKeywords(rights.contains(Right.Write)),
         mayCreateChild = MayCreateChild(false),
         mayRename = MayRename(false),
-        mayDelete = MayDelete(false),
+        mayDelete = MayDelete(rights.contains(Right.DeleteMailbox)),
         maySubmit = MaySubmit(false))
   }
 
