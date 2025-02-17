@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.mail
 
-import org.apache.james.core.Username
+import org.apache.james.jmap.mail.Right.DeleteMailbox
 import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Rfc4314Rights => JavaRfc4314Rights, Right => JavaRight}
 import org.apache.james.mailbox.model.{MailboxACL => JavaMailboxACL}
 import org.scalatest.matchers.must.Matchers
@@ -85,7 +85,7 @@ class RightsTest extends AnyWordSpec with Matchers {
       val acl = new JavaMailboxACL(Map(
         USER_ENTRYKEY -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aetxk")).asJava)
 
-      Rights.fromACL(MailboxACL.fromJava(acl)) must be(Rights.of(USER_ENTRYKEY, Seq(Right.Administer, Right.Expunge, Right.DeleteMessages)))
+      Rights.fromACL(MailboxACL.fromJava(acl)) must be(Rights.of(USER_ENTRYKEY, Seq(Right.Administer, Right.Expunge, Right.DeleteMessages, Right.DeleteMailbox)))
     }
   }
   "To ACL" should  {
