@@ -31,6 +31,7 @@ import org.apache.james.events.RegistrationKey;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaChangeNotifier;
 import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.reactivestreams.Publisher;
 
@@ -48,12 +49,12 @@ public class DefaultQuotaChangeNotifier implements QuotaChangeNotifier {
     private static final ImmutableSet<RegistrationKey> NO_REGISTRATION_KEYS = ImmutableSet.of();
 
     private final UsernameSupplier usernameSupplier;
-    private final DefaultUserQuotaRootResolver quotaRootResolver;
+    private final UserQuotaRootResolver quotaRootResolver;
     private final EventBus eventBus;
     private final QuotaManager quotaManager;
 
     @Inject
-    public DefaultQuotaChangeNotifier(UsernameSupplier usernameSupplier, DefaultUserQuotaRootResolver quotaRootResolver,
+    public DefaultQuotaChangeNotifier(UsernameSupplier usernameSupplier, UserQuotaRootResolver quotaRootResolver,
                                       EventBus eventBus, QuotaManager quotaManager) {
         this.usernameSupplier = usernameSupplier;
         this.quotaRootResolver = quotaRootResolver;
