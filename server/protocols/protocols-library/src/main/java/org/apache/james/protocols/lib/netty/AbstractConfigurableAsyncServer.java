@@ -253,7 +253,7 @@ public abstract class AbstractConfigurableAsyncServer
         Optional.ofNullable(config.getBoolean("useEpoll", null)).ifPresent(this::setUseEpoll);
 
         proxyRequired = config.getBoolean(PROXY_REQUIRED, false);
-        proxyFirst = config.getBoolean(PROXY_FIRST, false);
+        proxyFirst = config.getBoolean(PROXY_FIRST, true);
 
         doConfigure(config);
 
