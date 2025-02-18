@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
@@ -221,5 +222,16 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         } finally {
             closeSession(mailboxSession);
         }
+    }
+
+    public void deleteMessage(List<MessageUid> messageUids, MailboxPath mailboxPath, Username user) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
+        messageManager.delete(messageUids, mailboxSession);
+    }
+
+    public void moveMessages(MessageRange set, MailboxPath from, MailboxPath to, Username user) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
+        mailboxManager.moveMessages(set, from, to, mailboxSession);
     }
 }

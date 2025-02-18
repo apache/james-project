@@ -25,7 +25,6 @@ import java.io.IOException;
 
 import jakarta.inject.Inject;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
@@ -39,12 +38,10 @@ import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -83,10 +80,6 @@ public class ComputeMessageFastViewProjectionListener implements EventListener.R
             MailboxSession session = sessionProvider.createSystemSession(event.getUsername());
             return handleAddedEvent((Added) event, session);
         }
-        if (event instanceof Expunged) {
-            MailboxSession session = sessionProvider.createSystemSession(event.getUsername());
-            return handleExpungedEvent((Expunged) event, session);
-        }
         return Mono.empty();
     }
 
@@ -113,14 +106,6 @@ public class ComputeMessageFastViewProjectionListener implements EventListener.R
     @VisibleForTesting
     MessageFastViewPrecomputedProperties computeFastViewPrecomputedProperties(MessageResult messageResult) throws MailboxException, IOException {
         return messageFastViewPrecomputedPropertiesFactory.from(messageResult);
-    }
-
-    private Mono<Void> handleExpungedEvent(Expunged expunged, MailboxSession session) {
-        ImmutableSet<MessageId> expungedMessageIds = expunged.getMessageIds();
-        return Mono.from(messageIdManager.accessibleMessagesReactive(expungedMessageIds, session))
-            .flatMapIterable(accessibleMessageIds -> CollectionUtils.subtract(expungedMessageIds, accessibleMessageIds))
-            .flatMap(messageFastViewProjection::delete, DEFAULT_CONCURRENCY)
-            .then();
     }
 
 }
