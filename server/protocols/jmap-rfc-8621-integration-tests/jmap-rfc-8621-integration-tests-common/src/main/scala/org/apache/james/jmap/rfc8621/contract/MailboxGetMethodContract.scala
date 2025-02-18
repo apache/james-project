@@ -813,6 +813,78 @@ trait MailboxGetMethodContract {
   }
 
   @Test
+  def getMailboxesShouldReturnDeleteMailboxRight(server: GuiceJamesServer): Unit = {
+    val targetUser2: String = "touser2@" + DOMAIN.asString
+    val mailboxName: String = "myMailbox"
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, mailboxName))
+      .serialize
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(MailboxPath.forUser(BOB, mailboxName), targetUser2, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup, Right.DeleteMailbox))
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .withOptions(Option.IGNORING_ARRAY_ORDER)
+      .inPath("methodResponses[0][1].list[0].rights")
+      .isEqualTo("""{ "touser2@domain.tld": [ "l", "r", "x" ] }""")
+  }
+
+  @Test
+  def myRightsShouldReturnCorrectMayDeleteWhenHasRightInSharedMailbox(server: GuiceJamesServer): Unit = {
+    val sharedMailboxName = "AndreShared"
+    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.DeleteMailbox))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${andreMailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body("methodResponses[0][1].list[0].myRights.mayDelete", equalTo(true))
+  }
+
+  @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def getMailboxesShouldReturnDelegatedNamespaceWhenSharedMailbox(server: GuiceJamesServer): Unit = {
     val sharedMailboxName = "AndreShared"

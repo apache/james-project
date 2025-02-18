@@ -6525,7 +6525,7 @@ trait MailboxSetMethodContract {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |                "update": {
          |                    "${mailboxId.serialize}": {
-         |                      "sharedWith/${ANDRE.asString()}": ["x"]
+         |                      "sharedWith/${ANDRE.asString()}": ["y"]
          |                    }
          |                }
          |           },
@@ -6561,7 +6561,7 @@ trait MailboxSetMethodContract {
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
-         |                        "description": "Specified value do not match the expected JSON format: List(((0),List(JsonValidationError(List(Unknown right 'x'),List()))))",
+         |                        "description": "Specified value do not match the expected JSON format: List(((0),List(JsonValidationError(List(Unknown right 'y'),List()))))",
          |                        "properties": [
          |                            "sharedWith/andre@domain.tld"
          |                        ]

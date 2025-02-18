@@ -67,8 +67,9 @@ object Right {
   val DeleteMessages = Right(JavaRight.DeleteMessages)
   val Write = Right(JavaRight.Write)
   val Post = Right(JavaRight.Post)
+  val DeleteMailbox = Right(JavaRight.DeleteMailbox)
 
-  private val allRights = Seq(Administer, Expunge, Insert, Lookup, Read, Seen, DeleteMessages, Write, Post)
+  private val allRights = Seq(Administer, Expunge, Insert, Lookup, Read, Seen, DeleteMessages, Write, Post, DeleteMailbox)
 
   def forRight(right: JavaRight): Option[Right] = allRights.find(_.right.equals(right))
 
