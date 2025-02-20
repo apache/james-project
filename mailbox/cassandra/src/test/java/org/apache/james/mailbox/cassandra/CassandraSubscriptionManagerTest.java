@@ -38,7 +38,6 @@ import org.apache.james.mailbox.SubscriptionManagerContract;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -60,6 +59,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -110,7 +110,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         CassandraUidProvider uidProvider = null;
         CassandraModSeqProvider modSeqProvider = null;
         RecomputeMailboxCountersService recomputeMailboxCountersService = null;
-        CassandraAttachmentMapper.AttachmentIdAssignationStrategy attachmentIdAssignationStrategy = null;
+        AttachmentIdAssignationStrategy attachmentIdAssignationStrategy = null;
 
         mailboxSessionMapperFactory =  new CassandraMailboxSessionMapperFactory(
             uidProvider,

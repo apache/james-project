@@ -31,7 +31,6 @@ import java.util.List;
 import jakarta.inject.Inject;
 
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.mailbox.AttachmentIdFactory;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -39,6 +38,7 @@ import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
@@ -53,24 +53,6 @@ import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentMapper implements AttachmentMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraAttachmentMapper.class);
-
-    public interface AttachmentIdAssignationStrategy {
-        AttachmentId assign(ParsedAttachment parsedAttachment, MessageId messageId);
-
-        class Default implements AttachmentIdAssignationStrategy {
-            private final AttachmentIdFactory attachmentIdFactory;
-
-            @Inject
-            public Default(AttachmentIdFactory attachmentIdFactory) {
-                this.attachmentIdFactory = attachmentIdFactory;
-            }
-
-            @Override
-            public AttachmentId assign(ParsedAttachment parsedAttachment, MessageId messageId) {
-                return attachmentIdFactory.random();
-            }
-        }
-    }
 
     private final CassandraAttachmentDAOV2 attachmentDAOV2;
     private final BlobStore blobStore;
