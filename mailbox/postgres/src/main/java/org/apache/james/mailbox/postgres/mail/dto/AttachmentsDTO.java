@@ -32,7 +32,7 @@ import java.util.stream.StreamSupport;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
-import org.apache.james.mailbox.model.UuidBackedAttachmentId;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.postgres.mail.MessageRepresentation;
 import org.jooq.BindingGetResultSetContext;
 import org.jooq.BindingSetStatementContext;
@@ -95,7 +95,7 @@ public class AttachmentsDTO extends ArrayList<MessageRepresentation.AttachmentRe
         }
 
         private MessageRepresentation.AttachmentRepresentation fromJsonNode(JsonNode jsonNode) {
-            AttachmentId attachmentId = UuidBackedAttachmentId.from(jsonNode.get(ATTACHMENT_ID_PROPERTY).asText());
+            AttachmentId attachmentId = StringBackedAttachmentId.from(jsonNode.get(ATTACHMENT_ID_PROPERTY).asText());
             Optional<String> name = Optional.ofNullable(jsonNode.get(NAME_PROPERTY)).map(JsonNode::asText);
             Optional<Cid> cid = Optional.ofNullable(jsonNode.get(CID_PROPERTY)).map(JsonNode::asText).map(Cid::from);
             boolean isInline = jsonNode.get(IN_LINE_PROPERTY).asBoolean();

@@ -46,8 +46,8 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.SessionProvider;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.UuidBackedAttachmentIdFactory;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.indexer.MessageIdReIndexer;
@@ -140,7 +140,7 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
         bind(MessageIdManager.class).to(StoreMessageIdManager.class);
         bind(RightManager.class).to(StoreRightManager.class);
-        bind(AttachmentIdFactory.class).to(UuidBackedAttachmentIdFactory.class);
+        bind(AttachmentIdFactory.class).to(StringBackedAttachmentIdFactory.class);
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
         bind(AttachmentContentLoader.class).to(AttachmentManager.class);
         bind(AttachmentMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);

@@ -26,7 +26,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
-import org.apache.james.mailbox.model.UuidBackedAttachmentId;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
@@ -36,8 +36,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresAttachmentBlobReferenceSourceTest {
 
-    private static final AttachmentId ATTACHMENT_ID = UuidBackedAttachmentId.random();
-    private static final AttachmentId ATTACHMENT_ID_2 = UuidBackedAttachmentId.random();
+    private static final AttachmentId ATTACHMENT_ID = StringBackedAttachmentId.random();
+    private static final AttachmentId ATTACHMENT_ID_2 = StringBackedAttachmentId.random();
     private static final BlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 
     @RegisterExtension

@@ -33,7 +33,7 @@ import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
-import org.apache.james.mailbox.model.UuidBackedAttachmentId;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 
@@ -112,7 +112,7 @@ public class PostgresAttachmentMapper implements AttachmentMapper {
         return Mono.fromCallable(parsedAttachment::getContent)
             .flatMap(content -> Mono.from(blobStore.save(blobStore.getDefaultBucketName(), parsedAttachment.getContent(), BlobStore.StoragePolicy.LOW_COST))
                 .flatMap(blobId -> {
-                    AttachmentId attachmentId = UuidBackedAttachmentId.random();
+                    AttachmentId attachmentId = StringBackedAttachmentId.random();
                     return postgresAttachmentDAO.storeAttachment(AttachmentMetadata.builder()
                             .attachmentId(attachmentId)
                             .type(parsedAttachment.getContentType())
