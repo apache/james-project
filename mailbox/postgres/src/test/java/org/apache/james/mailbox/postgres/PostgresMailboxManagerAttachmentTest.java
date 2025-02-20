@@ -39,6 +39,7 @@ import org.apache.james.events.MemoryEventDeadLetters;
 import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
@@ -55,6 +56,7 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -84,7 +86,8 @@ public class PostgresMailboxManagerAttachmentTest extends AbstractMailboxManager
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
         mapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, blobIdFactory,
-            PostgresConfiguration.builder().username("a").password("a").build());
+            PostgresConfiguration.builder().username("a").password("a").build(),
+            new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParserImpl messageParser = new MessageParserImpl();

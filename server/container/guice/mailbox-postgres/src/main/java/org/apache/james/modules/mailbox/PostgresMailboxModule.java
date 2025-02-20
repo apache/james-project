@@ -76,6 +76,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.event.MailboxSubscriptionListener;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
@@ -146,6 +147,7 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(AttachmentMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
         bind(MailboxCounterCorrector.class).toInstance(MailboxCounterCorrector.DEFAULT);
         bind(MessageParser.class).toInstance(new MessageParserImpl());
+        bind(AttachmentIdAssignationStrategy.class).to(AttachmentIdAssignationStrategy.Default.class);
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
         bind(MessageIdReIndexer.class).to(MessageIdReIndexerImpl.class);

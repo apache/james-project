@@ -33,6 +33,7 @@ import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
 import org.apache.james.events.delivery.InVmEventDelivery;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
@@ -44,6 +45,7 @@ import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -70,7 +72,8 @@ public class DeleteMessageListenerTest extends DeleteMessageListenerContract {
             Clock.systemUTC(),
             blobStore,
             BLOB_ID_FACTORY,
-            PostgresConfiguration.builder().username("a").password("a").build());
+            PostgresConfiguration.builder().username("a").password("a").build(),
+            new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParserImpl messageParser = new MessageParserImpl();

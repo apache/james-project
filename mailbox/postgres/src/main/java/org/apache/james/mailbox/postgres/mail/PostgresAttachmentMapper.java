@@ -33,8 +33,8 @@ import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
-import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 
 import com.github.fge.lambdas.Throwing;
@@ -47,10 +47,12 @@ public class PostgresAttachmentMapper implements AttachmentMapper {
 
     private final PostgresAttachmentDAO postgresAttachmentDAO;
     private final BlobStore blobStore;
+    private final AttachmentIdAssignationStrategy attachmentIdAssignationStrategy;
 
-    public PostgresAttachmentMapper(PostgresAttachmentDAO postgresAttachmentDAO, BlobStore blobStore) {
+    public PostgresAttachmentMapper(PostgresAttachmentDAO postgresAttachmentDAO, BlobStore blobStore, AttachmentIdAssignationStrategy attachmentIdAssignationStrategy) {
         this.postgresAttachmentDAO = postgresAttachmentDAO;
         this.blobStore = blobStore;
+        this.attachmentIdAssignationStrategy = attachmentIdAssignationStrategy;
     }
 
     @Override
@@ -112,7 +114,7 @@ public class PostgresAttachmentMapper implements AttachmentMapper {
         return Mono.fromCallable(parsedAttachment::getContent)
             .flatMap(content -> Mono.from(blobStore.save(blobStore.getDefaultBucketName(), parsedAttachment.getContent(), BlobStore.StoragePolicy.LOW_COST))
                 .flatMap(blobId -> {
-                    AttachmentId attachmentId = StringBackedAttachmentId.random();
+                    AttachmentId attachmentId = attachmentIdAssignationStrategy.assign(parsedAttachment, ownerMessageId);
                     return postgresAttachmentDAO.storeAttachment(AttachmentMetadata.builder()
                             .attachmentId(attachmentId)
                             .type(parsedAttachment.getContentType())
