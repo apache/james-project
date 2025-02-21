@@ -52,6 +52,7 @@ import org.apache.james.mailbox.cassandra.user.CassandraSubscriptionMapper;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
@@ -104,7 +105,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                                 CassandraUserMailboxRightsDAO userMailboxRightsDAO,
                                                 RecomputeMailboxCountersService recomputeMailboxCountersService,
                                                 CassandraConfiguration cassandraConfiguration,
-                                                BatchSizes batchSizes, CassandraAttachmentMapper.AttachmentIdAssignationStrategy attachmentIdAssignationStrategy,
+                                                BatchSizes batchSizes, AttachmentIdAssignationStrategy attachmentIdAssignationStrategy,
                                                 Clock clock) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;

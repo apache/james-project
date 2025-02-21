@@ -58,6 +58,7 @@ import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.MailboxReactorUtils;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -102,7 +103,8 @@ public class PostgresMessageMapper implements MessageMapper {
                                  PostgresUidProvider uidProvider,
                                  BlobStore blobStore,
                                  Clock clock,
-                                 BlobId.Factory blobIdFactory) {
+                                 BlobId.Factory blobIdFactory,
+                                 AttachmentIdAssignationStrategy attachmentIdAssignationStrategy) {
         this.messageDAO = new PostgresMessageDAO(postgresExecutor, blobIdFactory);
         this.mailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExecutor);
         this.mailboxDAO = new PostgresMailboxDAO(postgresExecutor);
@@ -110,7 +112,7 @@ public class PostgresMessageMapper implements MessageMapper {
         this.uidProvider = uidProvider;
         this.blobStore = blobStore;
         this.clock = clock;
-        PostgresAttachmentMapper attachmentMapper = new PostgresAttachmentMapper(new PostgresAttachmentDAO(postgresExecutor, blobIdFactory), blobStore);
+        PostgresAttachmentMapper attachmentMapper = new PostgresAttachmentMapper(new PostgresAttachmentDAO(postgresExecutor, blobIdFactory), blobStore, attachmentIdAssignationStrategy);
         this.messageRetriever = new PostgresMessageRetriever(blobStore, blobIdFactory, attachmentMapper);
     }
 

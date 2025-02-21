@@ -42,6 +42,7 @@ import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
@@ -59,6 +60,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
@@ -112,7 +114,8 @@ public class PostgresHostSystem extends JamesImapHostSystem {
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
 
         PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, blobIdFactory,
-            PostgresConfiguration.builder().username("a").password("a").build());
+            PostgresConfiguration.builder().username("a").password("a").build(),
+            new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParserImpl();

@@ -47,6 +47,7 @@ import org.apache.james.mailbox.postgres.user.PostgresSubscriptionDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
@@ -62,18 +63,21 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final BlobId.Factory blobIdFactory;
     private final Clock clock;
     private final RowLevelSecurity rowLevelSecurity;
+    private final AttachmentIdAssignationStrategy attachmentIdAssignationStrategy;
 
     @Inject
     public PostgresMailboxSessionMapperFactory(PostgresExecutor.Factory executorFactory,
                                                Clock clock,
                                                BlobStore blobStore,
                                                BlobId.Factory blobIdFactory,
-                                               PostgresConfiguration postgresConfiguration) {
+                                               PostgresConfiguration postgresConfiguration,
+                                               AttachmentIdAssignationStrategy attachmentIdAssignationStrategy) {
         this.executorFactory = executorFactory;
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
         this.clock = clock;
         this.rowLevelSecurity = postgresConfiguration.getRowLevelSecurity();
+        this.attachmentIdAssignationStrategy = attachmentIdAssignationStrategy;
     }
 
     @Override
@@ -94,7 +98,8 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
             getUidProvider(session),
             blobStore,
             clock,
-            blobIdFactory);
+            blobIdFactory,
+            attachmentIdAssignationStrategy);
     }
 
     @Override
@@ -132,7 +137,7 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     @Override
     public PostgresAttachmentMapper createAttachmentMapper(MailboxSession session) {
         PostgresAttachmentDAO postgresAttachmentDAO = new PostgresAttachmentDAO(executorFactory.create(session.getUser().getDomainPart()), blobIdFactory);
-        return new PostgresAttachmentMapper(postgresAttachmentDAO, blobStore);
+        return new PostgresAttachmentMapper(postgresAttachmentDAO, blobStore, attachmentIdAssignationStrategy);
     }
 
     @Override

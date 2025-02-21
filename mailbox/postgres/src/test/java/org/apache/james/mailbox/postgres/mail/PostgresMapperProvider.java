@@ -31,6 +31,7 @@ import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
@@ -41,6 +42,7 @@ import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
@@ -60,6 +62,7 @@ public class PostgresMapperProvider implements MapperProvider {
     private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
     private final UidProvider messageUidProvider;
+    private final AttachmentIdAssignationStrategy attachmentIdAssignationStrategy;
 
     public PostgresMapperProvider(PostgresExtension postgresExtension) {
         this.postgresExtension = postgresExtension;
@@ -68,6 +71,7 @@ public class PostgresMapperProvider implements MapperProvider {
         this.blobIdFactory = new PlainBlobId.Factory();
         this.blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
         this.messageUidProvider = new PostgresUidProvider(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()));
+        this.attachmentIdAssignationStrategy = new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory());
     }
 
     @Override
@@ -94,7 +98,8 @@ public class PostgresMapperProvider implements MapperProvider {
             uidProvider,
             blobStore,
             updatableTickingClock,
-            blobIdFactory);
+            blobIdFactory,
+            attachmentIdAssignationStrategy);
     }
 
     @Override
@@ -104,7 +109,9 @@ public class PostgresMapperProvider implements MapperProvider {
             new PostgresMessageDAO(postgresExtension.getDefaultPostgresExecutor(), blobIdFactory),
             new PostgresMailboxMessageDAO(postgresExtension.getDefaultPostgresExecutor()),
             new PostgresModSeqProvider(mailboxDAO),
-            new PostgresAttachmentMapper(new PostgresAttachmentDAO(postgresExtension.getDefaultPostgresExecutor(), blobIdFactory), blobStore),
+            new PostgresAttachmentMapper(new PostgresAttachmentDAO(postgresExtension.getDefaultPostgresExecutor(), blobIdFactory),
+                blobStore,
+                new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory())),
             blobStore,
             blobIdFactory,
             updatableTickingClock);

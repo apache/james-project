@@ -35,6 +35,7 @@ import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -45,6 +46,7 @@ import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -82,7 +84,8 @@ public class PostgresMessageMapperRowLevelSecurityTest {
             new UpdatableTickingClock(Instant.now()),
             new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
             blobIdFactory,
-            PostgresConfiguration.builder().username("a").password("a").build());
+            PostgresConfiguration.builder().username("a").password("a").build(),
+            new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
 
         mailbox = generateMailbox();
     }
