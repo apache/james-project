@@ -21,6 +21,10 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.IntStream;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -32,6 +36,7 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -442,5 +447,36 @@ public abstract class MailboxMapperACLTest {
         ACLDiff expectAclDiff = ACLDiff.computeDiff(MailboxACL.EMPTY, MailboxACL.EMPTY.apply(aclCommand));
 
         assertThat(mailboxMapper.updateACL(benwaInboxMailbox, aclCommand).block()).isEqualTo(expectAclDiff);
+    }
+
+    @Test
+    protected void updateAclShouldWorkWellInMultiThreadEnv() throws ExecutionException, InterruptedException {
+        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Administer, MailboxACL.Right.Write);
+        MailboxACL.Rfc4314Rights newRights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Write);
+
+        ConcurrentTestRunner.builder()
+            .reactorOperation((threadNumber, step) -> {
+                int userNumber = threadNumber / 2;
+                MailboxACL.EntryKey key = MailboxACL.EntryKey.createUserEntryKey("user" + userNumber);
+                if (threadNumber % 2 == 0) {
+                    return mailboxMapper.updateACL(benwaInboxMailbox, MailboxACL.command().key(key).rights(rights).asReplacement())
+                        .then();
+                } else {
+                    return mailboxMapper.updateACL(benwaInboxMailbox, MailboxACL.command().key(key).rights(newRights).asAddition())
+                        .then();
+                }
+            })
+            .threadCount(10)
+            .operationCount(1)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        MailboxACL expectedMailboxACL = new MailboxACL(IntStream.range(0, 5).boxed()
+            .collect(ImmutableMap.toImmutableMap(userNumber -> MailboxACL.EntryKey.createUserEntryKey("user" + userNumber), userNumber -> rights)));
+
+        assertThat(
+            mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId())
+                .block()
+                .getACL())
+            .isEqualTo(expectedMailboxACL);
     }
 }

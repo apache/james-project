@@ -19,11 +19,14 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
+import java.util.concurrent.ExecutionException;
+
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperACLTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RLSSupportPostgresMailboxMapperACLTest extends MailboxMapperACLTest {
@@ -35,5 +38,10 @@ class RLSSupportPostgresMailboxMapperACLTest extends MailboxMapperACLTest {
     protected MailboxMapper createMailboxMapper() {
         return new RLSSupportPostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()),
             new PostgresMailboxMemberDAO(postgresExtension.getDefaultPostgresExecutor()));
+    }
+
+    @Override
+    @Disabled("not yet implemented")
+    protected void updateAclShouldWorkWellInMultiThreadEnv() throws ExecutionException, InterruptedException {
     }
 }
