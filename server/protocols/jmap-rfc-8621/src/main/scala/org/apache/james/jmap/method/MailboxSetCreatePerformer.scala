@@ -93,30 +93,29 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier) {
 
-
-
   def createMailboxes(mailboxSession: MailboxSession,
-                              mailboxSetRequest: MailboxSetRequest,
-                              processingContext: ProcessingContext): SMono[(MailboxCreationResults, ProcessingContext)] = {
+                      mailboxSetRequest: MailboxSetRequest,
+                      processingContext: ProcessingContext,
+                      supportSharedMailbox: Boolean): SMono[(MailboxCreationResults, ProcessingContext)] =
     SFlux.fromIterable(mailboxSetRequest.create
-      .getOrElse(Map.empty)
-      .view)
-      .fold((MailboxCreationResults(Nil), processingContext)){
-        (acc : (MailboxCreationResults, ProcessingContext), elem: (MailboxCreationId, JsObject)) => {
+        .getOrElse(Map.empty)
+        .view)
+      .fold((MailboxCreationResults(Nil), processingContext)) {
+        (acc: (MailboxCreationResults, ProcessingContext), elem: (MailboxCreationId, JsObject)) => {
           val (mailboxCreationId, jsObject) = elem
-          val (creationResult, updatedProcessingContext) = createMailbox(mailboxSession, mailboxCreationId, jsObject, acc._2)
+          val (creationResult, updatedProcessingContext) = createMailbox(mailboxSession, mailboxCreationId, jsObject, acc._2, supportSharedMailbox)
           (MailboxCreationResults(acc._1.created :+ creationResult), updatedProcessingContext)
         }
       }
       .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-  }
 
   private def createMailbox(mailboxSession: MailboxSession,
                             mailboxCreationId: MailboxCreationId,
                             jsObject: JsObject,
-                            processingContext: ProcessingContext): (MailboxCreationResult, ProcessingContext) = {
+                            processingContext: ProcessingContext,
+                            supportSharedMailbox: Boolean): (MailboxCreationResult, ProcessingContext) = {
     parseCreate(jsObject)
-      .flatMap(mailboxCreationRequest => resolvePath(mailboxSession, mailboxCreationRequest)
+      .flatMap(mailboxCreationRequest => resolvePath(mailboxSession, mailboxCreationRequest, supportSharedMailbox)
         .flatMap(path => createMailbox(mailboxSession = mailboxSession,
           path = path,
           mailboxCreationRequest = mailboxCreationRequest)))
@@ -136,7 +135,8 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
       })
 
   private def resolvePath(mailboxSession: MailboxSession,
-                          mailboxCreationRequest: MailboxCreationRequest): Either[Exception, MailboxPath] = {
+                          mailboxCreationRequest: MailboxCreationRequest,
+                          supportSharedMailbox: Boolean): Either[Exception, MailboxPath] = {
     if (mailboxCreationRequest.name.value.contains(mailboxSession.getPathDelimiter)) {
       return Left(new MailboxNameException(s"The mailbox '${mailboxCreationRequest.name.value}' contains an illegal character: '${mailboxSession.getPathDelimiter}'"))
     }
@@ -146,7 +146,8 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
           .toEither
           .left
           .map(e => new IllegalArgumentException(e.getMessage, e))
-        parentPath <- retrievePath(parentId, mailboxSession)
+        parentPathPreAssert <- retrievePath(parentId, mailboxSession)
+        parentPath <- validateCapabilityIfSharedMailbox(mailboxSession, parentId, supportSharedMailbox).apply(parentPathPreAssert)
       } yield {
         parentPath.child(mailboxCreationRequest.name, mailboxSession.getPathDelimiter)
       })
@@ -158,6 +159,13 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
   } catch {
     case e: Exception => Left(e)
   }
+
+  private def validateCapabilityIfSharedMailbox(mailboxSession: MailboxSession, id: MailboxId, supportSharedMailbox: Boolean): MailboxPath => Either[Exception, MailboxPath] =
+    mailboxPath => if (!mailboxPath.belongsTo(mailboxSession) && !supportSharedMailbox) {
+      Left(new MailboxNotFoundException(id))
+    } else {
+      Right(mailboxPath)
+    }
 
   private def recordCreationIdInProcessingContext(mailboxCreationId: MailboxCreationId,
                                                   processingContext: ProcessingContext,

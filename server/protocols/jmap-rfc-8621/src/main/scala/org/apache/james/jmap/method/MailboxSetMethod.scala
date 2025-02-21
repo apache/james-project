@@ -32,7 +32,8 @@ import org.apache.james.jmap.method.MailboxSetCreatePerformer.MailboxCreationRes
 import org.apache.james.jmap.method.MailboxSetDeletePerformer.MailboxDeletionResults
 import org.apache.james.jmap.method.MailboxSetUpdatePerformer.MailboxUpdateResults
 import org.apache.james.jmap.routes.SessionSupplier
-import org.apache.james.mailbox.MailboxSession
+import org.apache.james.mailbox.exception.MailboxNotFoundException
+import org.apache.james.mailbox.{MailboxSession, MessageManager}
 import org.apache.james.mailbox.model.MailboxId
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.JsObject
@@ -43,6 +44,13 @@ case class SystemMailboxChangeException(mailboxId: MailboxId) extends Exception
 case class LoopInMailboxGraphException(mailboxId: MailboxId) extends Exception
 case class MailboxHasChildException(mailboxId: MailboxId) extends Exception
 case class MailboxCreationParseException(setError: SetError) extends Exception
+
+object MailboxSetMethod {
+  def assertCapabilityIfSharedMailbox(mailboxSession: MailboxSession, id: MailboxId, supportSharedMailbox: Boolean): MessageManager => SMono[Boolean] =
+    mailbox => if (!mailbox.getMailboxPath.belongsTo(mailboxSession) && !supportSharedMailbox)
+      SMono.error(new MailboxNotFoundException(id))
+    else SMono.just(true)
+}
 
 class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
                                  createPerformer: MailboxSetCreatePerformer,
@@ -58,9 +66,10 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxSetRequest): SMono[InvocationWithContext] = for {
     oldState <- retrieveState(capabilities, mailboxSession)
-    creationResults <- createPerformer.createMailboxes(mailboxSession, request, invocation.processingContext)
+    supportSharedMailbox = capabilities.contains(JAMES_SHARES)
+    creationResults <- createPerformer.createMailboxes(mailboxSession, request, invocation.processingContext, supportSharedMailbox)
     updateResults <- updatePerformer.updateMailboxes(mailboxSession, request, capabilities)
-    deletionResults <- deletePerformer.deleteMailboxes(mailboxSession, request)
+    deletionResults <- deletePerformer.deleteMailboxes(mailboxSession, request, supportSharedMailbox)
     newState <- retrieveState(capabilities, mailboxSession)
     response = createResponse(capabilities, invocation.invocation, request, creationResults._1, deletionResults, updateResults, oldState, newState)
   } yield InvocationWithContext(response, creationResults._2)
