@@ -2127,6 +2127,88 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void renameMailboxByIdShouldReturnRenamedResultWhenDestinationIsSharedMailboxWithParentHasCreateMailboxRight() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxSession user2Session = mailboxManager.createSystemSession(USER_2);
+
+            MailboxPath originalMailboxPath = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath sharedMailboxPath = MailboxPath.forUser(USER_2, "shared");
+            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(originalMailboxPath, session);
+            Optional<MailboxId> sharedMailboxId = mailboxManager.createMailbox(sharedMailboxPath, user2Session);
+
+            // Given right on shared mailbox
+            mailboxManager.setRights(sharedMailboxPath, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_1)
+                    .rights(MailboxACL.Right.CreateMailbox)
+                    .asAddition()),
+                user2Session);
+
+            MailboxPath newMailboxPath = sharedMailboxPath.child("mbx2", session.getPathDelimiter());
+
+            List<MailboxRenamedResult> mailboxRenamedResults = mailboxManager.renameMailbox(mailboxId.get(), newMailboxPath, session);
+
+            assertThat(mailboxRenamedResults).hasSize(1);
+            assertThat(mailboxRenamedResults.getFirst().getDestinationPath()).isEqualTo(newMailboxPath);
+            assertThat(mailboxRenamedResults.getFirst().getOriginPath()).isEqualTo(originalMailboxPath);
+        }
+
+        @Test
+        void renameMailboxByIdShouldReturnRenamedResultWhenOriginalIsSharedMailboxWithDeleteMailboxRight() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxSession user2Session = mailboxManager.createSystemSession(USER_2);
+
+            MailboxPath destinationMailboxPath = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath sharedMailboxPath = MailboxPath.forUser(USER_2, "shared");
+            Optional<MailboxId> sharedMailboxId = mailboxManager.createMailbox(sharedMailboxPath, user2Session);
+
+            // Given right on shared mailbox
+            mailboxManager.setRights(sharedMailboxPath, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_1)
+                    .rights(MailboxACL.Right.DeleteMailbox)
+                    .asAddition()),
+                user2Session);
+
+            List<MailboxRenamedResult> mailboxRenamedResults = mailboxManager.renameMailbox(sharedMailboxId.get(), destinationMailboxPath, session);
+
+            assertThat(mailboxRenamedResults).hasSize(1);
+            assertThat(mailboxRenamedResults.getFirst().getDestinationPath()).isEqualTo(destinationMailboxPath);
+            assertThat(mailboxRenamedResults.getFirst().getOriginPath()).isEqualTo(sharedMailboxPath);
+        }
+
+        @Test
+        void renameMailboxByIdShouldReturnRenamedResultWhenBothPathsAreSharedMailboxesWithRights() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxSession user2Session = mailboxManager.createSystemSession(USER_2);
+
+            MailboxPath sharedMailboxPath = MailboxPath.forUser(USER_2, "shared");
+            Optional<MailboxId> sharedMailboxId = mailboxManager.createMailbox(sharedMailboxPath, user2Session);
+
+            MailboxPath sharedChildMailboxPath = sharedMailboxPath.child("child1", user2Session.getPathDelimiter());
+            Optional<MailboxId> sharedChildMailboxId = mailboxManager.createMailbox(sharedChildMailboxPath, user2Session);
+
+            MailboxPath destinationMailboxPath = sharedMailboxPath.child("child1New", user2Session.getPathDelimiter());
+
+            // Given right on shared mailbox
+            mailboxManager.setRights(sharedMailboxPath, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_1)
+                    .rights(MailboxACL.Right.CreateMailbox)
+                    .asAddition()),
+                user2Session);
+
+            mailboxManager.setRights(sharedChildMailboxPath, MailboxACL.EMPTY.apply(MailboxACL.command()
+                    .forUser(USER_1)
+                    .rights(MailboxACL.Right.DeleteMailbox)
+                    .asAddition()),
+                user2Session);
+
+            List<MailboxRenamedResult> mailboxRenamedResults = mailboxManager.renameMailbox(sharedChildMailboxId.get(), destinationMailboxPath, session);
+
+            assertThat(mailboxRenamedResults).hasSize(1);
+            assertThat(mailboxRenamedResults.getFirst().getDestinationPath()).isEqualTo(destinationMailboxPath);
+            assertThat(mailboxRenamedResults.getFirst().getOriginPath()).isEqualTo(sharedChildMailboxPath);
+        }
+
+        @Test
         void user1ShouldNotBeAbleToCreateInboxTwice() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
             mailboxManager.startProcessingRequest(session);
