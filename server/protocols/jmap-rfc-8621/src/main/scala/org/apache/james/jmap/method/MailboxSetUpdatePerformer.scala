@@ -22,7 +22,7 @@ package org.apache.james.jmap.method
 import com.google.common.collect.ImmutableMap
 import eu.timepit.refined.auto._
 import jakarta.inject.Inject
-import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError}
 import org.apache.james.jmap.json.MailboxSerializer
@@ -114,8 +114,8 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
                                           mailboxIdFactory: MailboxId.Factory) {
 
   def updateMailboxes(mailboxSession: MailboxSession,
-                              mailboxSetRequest: MailboxSetRequest,
-                              capabilities: Set[CapabilityIdentifier]): SMono[MailboxUpdateResults] = {
+                      mailboxSetRequest: MailboxSetRequest,
+                      capabilities: Set[CapabilityIdentifier]): SMono[MailboxUpdateResults] =
     SFlux.fromIterable(mailboxSetRequest.update.getOrElse(Seq()))
       .flatMap({
         case (unparsedMailboxId: UnparsedMailboxId, patch: MailboxPatchObject) =>
@@ -127,7 +127,6 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
       }, maxConcurrency = 5)
       .collectSeq()
       .map(MailboxUpdateResults)
-  }
 
   private def updateMailbox(mailboxSession: MailboxSession,
                             mailboxId: MailboxId,
@@ -135,23 +134,25 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
                             patch: MailboxPatchObject,
                             capabilities: Set[CapabilityIdentifier]): SMono[MailboxUpdateResult] = {
     patch.validate(mailboxIdFactory, serializer, capabilities, mailboxSession)
-      .fold(e => SMono.error(e), validatedPatch =>
-        updateMailboxRights(mailboxId, validatedPatch, mailboxSession)
-          .`then`(updateSubscription(mailboxId, validatedPatch, mailboxSession))
-          .`then`(updateMailboxPath(mailboxId, unparsedMailboxId, validatedPatch, mailboxSession)))
+      .fold(e => SMono.error(e), validatedPatch => {
+        val supportSharedMailbox: Boolean = capabilities.contains(JAMES_SHARES)
+        getMessageManager(supportSharedMailbox, mailboxId, mailboxSession)
+          .flatMap(messageManager => updateMailboxRights(mailboxId, validatedPatch, mailboxSession)
+            .`then`(updateSubscription(mailboxId, validatedPatch, mailboxSession, messageManager))
+            .`then`(updateMailboxPath(mailboxId, unparsedMailboxId, validatedPatch, mailboxSession, messageManager, supportSharedMailbox)))
+      })
   }
 
-  private def updateSubscription(mailboxId: MailboxId, validatedPatch: ValidatedMailboxPatchObject, mailboxSession: MailboxSession): SMono[MailboxUpdateResult] = {
+  private def updateSubscription(mailboxId: MailboxId, validatedPatch: ValidatedMailboxPatchObject, mailboxSession: MailboxSession, messageManager: MessageManager): SMono[MailboxUpdateResult] = {
     validatedPatch.isSubscribedUpdate.map(isSubscribedUpdate => {
       SMono.fromCallable(() => {
-        val mailbox = mailboxManager.getMailbox(mailboxId, mailboxSession)
-        val isOwner = mailbox.getMailboxPath.belongsTo(mailboxSession)
+        val isOwner = messageManager.getMailboxPath.belongsTo(mailboxSession)
         val shouldSubscribe = isSubscribedUpdate.isSubscribed.map(_.value).getOrElse(isOwner)
 
         if (shouldSubscribe) {
-          subscriptionManager.subscribe(mailboxSession, mailbox.getMailboxPath)
+          subscriptionManager.subscribe(mailboxSession, messageManager.getMailboxPath)
         } else {
-          subscriptionManager.unsubscribe(mailboxSession, mailbox.getMailboxPath)
+          subscriptionManager.unsubscribe(mailboxSession, messageManager.getMailboxPath)
         }
       }).`then`(SMono.just[MailboxUpdateResult](MailboxUpdateSuccess(mailboxId)))
         .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
@@ -162,44 +163,44 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
   private def updateMailboxPath(mailboxId: MailboxId,
                                 unparsedMailboxId: UnparsedMailboxId,
                                 validatedPatch: ValidatedMailboxPatchObject,
-                                mailboxSession: MailboxSession): SMono[MailboxUpdateResult] = {
+                                mailboxSession: MailboxSession,
+                                mailbox: MessageManager,
+                                supportSharedMailbox: Boolean): SMono[MailboxUpdateResult] = {
     if (validatedPatch.shouldUpdateMailboxPath) {
-      SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
-        .flatMap(mailbox =>
-          SMono.fromCallable[MailboxUpdateResult](() => {
-            try {
-              if (isASystemMailbox(mailbox) && !DefaultMailboxes.INBOX.equalsIgnoreCase(mailbox.getMailboxPath.getName)) {
-                throw SystemMailboxChangeException(mailboxId)
-              }
-              if (validatedPatch.parentIdUpdate.flatMap(_.newId).contains(mailboxId)) {
-                throw LoopInMailboxGraphException(mailboxId)
-              }
-              val oldPath = mailbox.getMailboxPath
-              val newPath = applyParentIdUpdate(mailboxId, validatedPatch.parentIdUpdate, mailboxSession)
-                .andThen(applyNameUpdate(validatedPatch.nameUpdate, mailboxSession))
-                .apply(oldPath)
-              if (!oldPath.equals(newPath)) {
-                mailboxManager.renameMailbox(mailboxId,
-                  newPath,
-                  RenameOption.RENAME_SUBSCRIPTIONS,
-                  mailboxSession)
-              }
-              MailboxUpdateSuccess(mailboxId)
-            } catch {
-              case e: Exception => MailboxUpdateFailure(unparsedMailboxId, e, Some(validatedPatch))
+      SMono.fromCallable[MailboxUpdateResult](() => {
+          try {
+            if (isASystemMailbox(mailbox) && !DefaultMailboxes.INBOX.equalsIgnoreCase(mailbox.getMailboxPath.getName)) {
+              throw SystemMailboxChangeException(mailboxId)
             }
-          }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-            .flatMap(updateResult => createInboxIfNeeded(mailbox.getMailboxPath, mailboxSession)
-              .`then`(SMono.just(updateResult))))
+            if (validatedPatch.parentIdUpdate.flatMap(_.newId).contains(mailboxId)) {
+              throw LoopInMailboxGraphException(mailboxId)
+            }
+            val oldPath = mailbox.getMailboxPath
+            val newPath = applyParentIdUpdate(mailboxId, validatedPatch.parentIdUpdate, mailboxSession, supportSharedMailbox)
+              .andThen(applyNameUpdate(validatedPatch.nameUpdate, mailboxSession))
+              .apply(oldPath)
+            if (!oldPath.equals(newPath)) {
+              mailboxManager.renameMailbox(mailboxId,
+                newPath,
+                RenameOption.RENAME_SUBSCRIPTIONS,
+                mailboxSession)
+            }
+            MailboxUpdateSuccess(mailboxId)
+          } catch {
+            case e: Exception => MailboxUpdateFailure(unparsedMailboxId, e, Some(validatedPatch))
+          }
+        }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+        .flatMap(updateResult => createInboxIfNeeded(mailbox.getMailboxPath, mailboxSession)
+          .`then`(SMono.just(updateResult)))
     } else {
       SMono.just[MailboxUpdateResult](MailboxUpdateSuccess(mailboxId))
     }
   }
 
-  private def applyParentIdUpdate(mailboxId: MailboxId, maybeParentIdUpdate: Option[ParentIdUpdate], mailboxSession: MailboxSession): MailboxPath => MailboxPath = {
-    maybeParentIdUpdate.map(parentIdUpdate => applyParentIdUpdate(mailboxId, parentIdUpdate, mailboxSession))
+  private def applyParentIdUpdate(mailboxId: MailboxId, maybeParentIdUpdate: Option[ParentIdUpdate],
+                                  mailboxSession: MailboxSession, supportSharedMailbox: Boolean): MailboxPath => MailboxPath =
+    maybeParentIdUpdate.map(parentIdUpdate => applyParentIdUpdate(mailboxId, parentIdUpdate, mailboxSession, supportSharedMailbox))
       .getOrElse(x => x)
-  }
 
   private def applyNameUpdate(maybeNameUpdate: Option[NameUpdate], mailboxSession: MailboxSession): MailboxPath => MailboxPath = {
     originalPath => maybeNameUpdate.map(nameUpdate => {
@@ -213,7 +214,8 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
     }).getOrElse(originalPath)
   }
 
-  private def applyParentIdUpdate(mailboxId: MailboxId, parentIdUpdate: ParentIdUpdate, mailboxSession: MailboxSession): MailboxPath => MailboxPath = {
+  private def applyParentIdUpdate(mailboxId: MailboxId, parentIdUpdate: ParentIdUpdate,
+                                  mailboxSession: MailboxSession, supportSharedMailbox: Boolean): MailboxPath => MailboxPath = {
     originalPath => {
       val currentName = originalPath.getName(mailboxSession.getPathDelimiter)
       parentIdUpdate.newId
@@ -233,11 +235,16 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
             throw LoopInMailboxGraphException(mailboxId)
           }
           val parentPath = mailboxManager.getMailbox(id, mailboxSession).getMailboxPath
+          if (!parentPath.belongsTo(mailboxSession) && !supportSharedMailbox) throw new MailboxNotFoundException(id)
           parentPath.child(currentName, mailboxSession.getPathDelimiter)
         })
         .getOrElse(MailboxPath.forUser(originalPath.getUser, currentName))
     }
   }
+
+  private def getMessageManager(supportSharedMailbox: Boolean, mailboxId: MailboxId, mailboxSession: MailboxSession): SMono[MessageManager] =
+    SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
+      .filterWhen(MailboxSetMethod.assertCapabilityIfSharedMailbox(mailboxSession, mailboxId, supportSharedMailbox))
 
   private def updateMailboxRights(mailboxId: MailboxId,
                                   validatedPatch: ValidatedMailboxPatchObject,
