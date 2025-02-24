@@ -78,7 +78,7 @@ public class DeleteMessageListenerWithRLSTest extends DeleteMessageListenerContr
             Clock.systemUTC(),
             blobStore,
             blobIdFactory,
-            PostgresConfiguration.builder().username("a").password("a").build(),
+            postgresExtension.getPostgresConfiguration(),
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();

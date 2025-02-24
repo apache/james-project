@@ -73,7 +73,7 @@ public class PostgresMessageMapperRowLevelSecurityTest {
     private Mailbox mailbox;
 
     private Mailbox generateMailbox() {
-        MailboxMapper mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()));
+        MailboxMapper mailboxMapper = postgresMailboxSessionMapperFactory.getMailboxMapper(aliceSession);
         return mailboxMapper.create(benwaInboxPath, UID_VALIDITY).block();
     }
 
@@ -84,7 +84,7 @@ public class PostgresMessageMapperRowLevelSecurityTest {
             new UpdatableTickingClock(Instant.now()),
             new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
             blobIdFactory,
-            PostgresConfiguration.builder().username("a").password("a").build(),
+            postgresExtension.getPostgresConfiguration(),
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
 
         mailbox = generateMailbox();

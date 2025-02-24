@@ -101,7 +101,7 @@ public class PostgresMailboxManagerProvider {
             Clock.systemUTC(),
             blobStore,
             blobIdFactory,
-            PostgresConfiguration.builder().username("a").password("a").build(),
+            postgresExtension.getPostgresConfiguration(),
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
     }
 
