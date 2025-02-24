@@ -344,9 +344,19 @@
                 <configuration>
                     <from>
                         <image>eclipse-temurin:21-jre-jammy</image>
+                        <platforms>
+                            <platform>
+                                <architecture>amd64</architecture>
+                                <os>linux</os>
+                            </platform>
+                            <platform>
+                                <architecture>arm64</architecture>
+                                <os>linux</os>
+                            </platform>
+                        </platforms>
                     </from>
                     <to>
-                        <image>apache/james</image>
+                        <image>ghcr.io/appscode/inbox-server</image> 
                         <tags>
                             <tag>postgres-latest</tag>
                         </tags>
@@ -425,7 +435,7 @@
                 <executions>
                     <execution>
                         <goals>
-                            <goal>buildTar</goal>
+                            <goal>build</goal>
                         </goals>
                         <phase>package</phase>
                     </execution>
