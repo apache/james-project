@@ -414,9 +414,11 @@ public class RecipientRewriteTableProcessor {
                 return new Decision(recipient, RrtExecutionResult.success(newMailAddresses));
             }
             return new Decision(recipient, RrtExecutionResult.success(recipient));
-        } catch (Exception e) {
+        } catch (RecipientRewriteTable.ErrorMappingException e) {
             LOGGER.warn("Could not rewrite recipient {}", recipient, e);
             return new Decision(recipient, RrtExecutionResult.error(recipient));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
