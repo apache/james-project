@@ -2122,7 +2122,7 @@ trait MailboxSetMethodContract {
     val request =
       s"""
         |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
@@ -2185,7 +2185,7 @@ trait MailboxSetMethodContract {
     val request =
       s"""
         |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
@@ -2643,7 +2643,7 @@ trait MailboxSetMethodContract {
     val request =
       s"""
         |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
@@ -2691,7 +2691,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
-  def deleteShouldSuccessWhenHasRight(server: GuiceJamesServer): Unit = {
+  def deleteSharedMailboxShouldSuccessWhenHasRight(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.forUser(ANDRE, "mailbox")
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
@@ -2700,7 +2700,7 @@ trait MailboxSetMethodContract {
     val request =
       s"""
          |{
-         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
          |   "methodCalls": [
          |       [
          |           "Mailbox/set",
@@ -3791,7 +3791,7 @@ trait MailboxSetMethodContract {
     val request =
       s"""
         |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
@@ -8121,7 +8121,7 @@ trait MailboxSetMethodContract {
 
     val request = s"""
         |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
@@ -8184,7 +8184,7 @@ trait MailboxSetMethodContract {
 
     val request = s"""
         |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
@@ -8247,7 +8247,7 @@ trait MailboxSetMethodContract {
 
     val request = s"""
         |{
-        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
