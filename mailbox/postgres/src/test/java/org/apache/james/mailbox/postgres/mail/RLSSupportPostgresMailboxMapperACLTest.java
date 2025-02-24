@@ -19,29 +19,39 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
-import java.util.concurrent.ExecutionException;
+import java.time.Instant;
 
+import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.PlainBlobId;
+import org.apache.james.blob.memory.MemoryBlobStoreDAO;
+import org.apache.james.mailbox.MailboxSessionUtil;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
+import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperACLTest;
-import org.junit.jupiter.api.Disabled;
+import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RLSSupportPostgresMailboxMapperACLTest extends MailboxMapperACLTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresMailboxModule.MODULE,
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresModule.aggregateModules(PostgresMailboxModule.MODULE,
         PostgresMailboxMemberModule.MODULE));
 
     @Override
     protected MailboxMapper createMailboxMapper() {
-        return new RLSSupportPostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()),
-            new PostgresMailboxMemberDAO(postgresExtension.getDefaultPostgresExecutor()));
-    }
-
-    @Override
-    @Disabled("not yet implemented")
-    protected void updateAclShouldWorkWellInMultiThreadEnv() throws ExecutionException, InterruptedException {
+        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
+        PostgresMailboxSessionMapperFactory postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(),
+            new UpdatableTickingClock(Instant.now()),
+            new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
+            blobIdFactory,
+            PostgresConfiguration.builder().username("a").password("a").rowLevelSecurityEnabled().byPassRLSUser("b").byPassRLSPassword("b").build(),
+            new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
+        return postgresMailboxSessionMapperFactory.getMailboxMapper(MailboxSessionUtil.create(BENWA));
     }
 }

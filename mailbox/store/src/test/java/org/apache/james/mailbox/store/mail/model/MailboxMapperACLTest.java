@@ -43,6 +43,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableMap;
 
 public abstract class MailboxMapperACLTest {
+    public static Username BENWA = Username.of("benwa@domain.org");
     private static final UidValidity UID_VALIDITY = UidValidity.of(42);
     private static final Username USER = Username.of("user");
     private static final Username USER_1 = Username.of("user1");
@@ -57,7 +58,7 @@ public abstract class MailboxMapperACLTest {
     @BeforeEach
     void setUp() {
         mailboxMapper = createMailboxMapper();
-        MailboxPath benwaInboxPath = MailboxPath.forUser(Username.of("benwa"), "INBOX");
+        MailboxPath benwaInboxPath = MailboxPath.forUser(BENWA, "INBOX");
         benwaInboxMailbox = mailboxMapper.create(benwaInboxPath, UID_VALIDITY).block();
     }
 

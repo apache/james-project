@@ -52,7 +52,8 @@ public class PostgresMailboxMemberDAO {
                 .map(username -> dslContext.newRecord(USER_NAME, MAILBOX_ID)
                     .value1(username.asString())
                     .value2(mailboxId.asUuid()))
-                .toList())));
+                .toList())
+            .onConflictDoNothing()));
     }
 
     public Mono<Void> delete(PostgresMailboxId mailboxId, List<Username> usernames) {
