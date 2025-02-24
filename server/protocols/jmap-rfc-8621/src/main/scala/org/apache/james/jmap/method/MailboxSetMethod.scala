@@ -33,8 +33,8 @@ import org.apache.james.jmap.method.MailboxSetDeletePerformer.MailboxDeletionRes
 import org.apache.james.jmap.method.MailboxSetUpdatePerformer.MailboxUpdateResults
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.exception.MailboxNotFoundException
-import org.apache.james.mailbox.{MailboxSession, MessageManager}
 import org.apache.james.mailbox.model.MailboxId
+import org.apache.james.mailbox.{MailboxSession, MessageManager}
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.SMono
