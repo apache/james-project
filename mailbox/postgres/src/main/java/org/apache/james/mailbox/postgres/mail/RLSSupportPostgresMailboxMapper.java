@@ -19,20 +19,21 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
+import java.time.Duration;
 import java.util.function.Function;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.acl.PositiveUserACLDiff;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 
-import com.github.fge.lambdas.Throwing;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 public class RLSSupportPostgresMailboxMapper extends PostgresMailboxMapper {
     private final PostgresMailboxDAO postgresMailboxDAO;
@@ -56,30 +57,36 @@ public class RLSSupportPostgresMailboxMapper extends PostgresMailboxMapper {
 
     @Override
     public Mono<ACLDiff> updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) {
-        MailboxACL oldACL = mailbox.getACL();
-        MailboxACL newACL = Throwing.supplier(() -> oldACL.apply(mailboxACLCommand)).get();
-        ACLDiff aclDiff = ACLDiff.computeDiff(oldACL, newACL);
-        PositiveUserACLDiff userACLDiff = new PositiveUserACLDiff(aclDiff);
-        return upsertACL(mailbox, newACL, aclDiff, userACLDiff);
+        return postgresMailboxDAO.getACL(mailbox.getMailboxId())
+            .flatMap(pairMailboxACLAndVersion -> {
+                try {
+                    MailboxACL newACL = pairMailboxACLAndVersion.getLeft().apply(mailboxACLCommand);
+                    return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), newACL, pairMailboxACLAndVersion.getRight())
+                        .thenReturn(ACLDiff.computeDiff(pairMailboxACLAndVersion.getLeft(), newACL));
+                } catch (UnsupportedRightException e) {
+                    throw new RuntimeException(e);
+                }
+            }).retryWhen(Retry.backoff(3, Duration.ofMillis(100))
+                .filter(throwable -> throwable instanceof PostgresACLUpsertException))
+            .flatMap(aclDiff -> updateMembersOfMailbox(mailbox, new PositiveUserACLDiff(aclDiff))
+                .thenReturn(aclDiff));
     }
 
     @Override
     public Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL) {
-        MailboxACL oldACL = mailbox.getACL();
-        ACLDiff aclDiff = ACLDiff.computeDiff(oldACL, mailboxACL);
-        PositiveUserACLDiff userACLDiff = new PositiveUserACLDiff(aclDiff);
-        return upsertACL(mailbox, mailboxACL, aclDiff, userACLDiff);
+        return postgresMailboxDAO.getACL(mailbox.getMailboxId())
+            .flatMap(pairMailboxACLAndVersion ->
+                postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), mailboxACL, pairMailboxACLAndVersion.getRight())
+                    .thenReturn(ACLDiff.computeDiff(pairMailboxACLAndVersion.getLeft(), mailboxACL))).retryWhen(Retry.backoff(3, Duration.ofMillis(100))
+                .filter(throwable -> throwable instanceof PostgresACLUpsertException))
+            .flatMap(aclDiff -> updateMembersOfMailbox(mailbox, new PositiveUserACLDiff(aclDiff))
+                .thenReturn(aclDiff));
     }
 
-    private Mono<ACLDiff> upsertACL(Mailbox mailbox, MailboxACL newACL, ACLDiff aclDiff, PositiveUserACLDiff userACLDiff) {
-        return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), newACL)
-            .then(postgresMailboxMemberDAO.delete(PostgresMailboxId.class.cast(mailbox.getMailboxId()),
-                userACLDiff.removedEntries().map(entry -> Username.of(entry.getKey().getName())).toList()))
+    private Mono<Void> updateMembersOfMailbox(Mailbox mailbox, PositiveUserACLDiff userACLDiff) {
+        return postgresMailboxMemberDAO.delete(PostgresMailboxId.class.cast(mailbox.getMailboxId()),
+                userACLDiff.removedEntries().map(entry -> Username.of(entry.getKey().getName())).toList())
             .then(postgresMailboxMemberDAO.insert(PostgresMailboxId.class.cast(mailbox.getMailboxId()),
-                userACLDiff.addedEntries().map(entry -> Username.of(entry.getKey().getName())).toList()))
-            .then(Mono.fromCallable(() -> {
-                mailbox.setACL(newACL);
-                return aclDiff;
-            }));
+                userACLDiff.addedEntries().map(entry -> Username.of(entry.getKey().getName())).toList()));
     }
 }
