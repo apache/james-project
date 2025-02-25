@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import static org.apache.james.PostgresJamesConfiguration.EventBusImpl.RABBITMQ;
+
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -250,7 +252,10 @@ public class PostgresJamesServerMain implements JamesServerMain {
 
     private static Module chooseJmapModules(PostgresJamesConfiguration configuration) {
         if (configuration.isJmapEnabled()) {
-            return Modules.combine(new JMAPEventBusModule(), new JMAPListenerModule());
+            if (configuration.eventBusImpl() == RABBITMQ) {
+                return Modules.combine(new JMAPEventBusModule(), new JMAPListenerModule());
+            }
+            return new JMAPListenerModule();
         }
         return binder -> {
         };
