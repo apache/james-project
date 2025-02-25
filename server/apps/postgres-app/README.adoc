@@ -12,7 +12,7 @@ Edit these files to alter the james image name/tag:
 [source]
 ```bash
 
-    mvn clean install -Dmaven.javadoc.skip=true -DskipTests --pl :james-server-postgres-app --am
+    mvn -T 4 clean install -Dmaven.javadoc.skip=true -DskipTests --pl :james-server-postgres-app --am
 
     docker compose -f server/apps/postgres-app/docker-compose-distributed.yml up -d
 ```
