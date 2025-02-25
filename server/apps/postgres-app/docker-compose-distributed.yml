@@ -61,7 +61,7 @@ services:
       - james
 
   s3:
-    image: registry.scality.com/cloudserver/cloudserver:8.7.25
+    image: ghcr.io/scality/cloudserver:8cbe2c066b3505b26d339dc67315d1041b8c7f3a #v8.80.41
     container_name: s3.docker.test
     environment:
       - SCALITY_ACCESS_KEY_ID=accessKey1
