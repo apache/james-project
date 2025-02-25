@@ -226,7 +226,7 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
                 receiverProvider::createReceiver,
                 receiver -> receiver.consumeManualAck(QUEUE, new ConsumeOptions().qos(QOS)),
                 Receiver::close)
-            .flatMap(this::handleMessage)
+            .flatMap(this::handleMessage, QOS)
             .subscribeOn(Schedulers.boundedElastic())
             .subscribe();
     }
@@ -248,9 +248,10 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
 
             return callback.forMessage(copyCommandDTO.asPojo(mailboxIdFactory, messageIdFactory, blobIdFactory))
                 .timeout(Duration.ofMinutes(5))
-                .doOnError(e -> {
+                .onErrorResume(e -> {
                     LOGGER.error("Failed executing deletion callback for {}", copyCommandDTO.messageId, e);
                     delivery.nack(REQUEUE);
+                    return Mono.empty();
                 })
                 .doOnSuccess(any -> delivery.ack())
                 .doOnCancel(() -> delivery.nack(REQUEUE));
