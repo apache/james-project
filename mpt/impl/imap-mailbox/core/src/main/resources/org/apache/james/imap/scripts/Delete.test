@@ -33,7 +33,7 @@ C: 11 DELETE deletetest
 S: 11 OK DELETE completed.
 
 # Delete folder first, then subfolder.
-C: 14 DELETE deletetest1.subfolder1
+C: 14 DELETE deletetest1
 S: 14 OK DELETE completed.
-C: 13 DELETE deletetest1
+C: 13 DELETE deletetest1.subfolder1
 S: 13 OK DELETE completed.
