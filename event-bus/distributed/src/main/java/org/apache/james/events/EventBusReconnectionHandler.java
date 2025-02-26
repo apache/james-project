@@ -19,8 +19,6 @@
 
 package org.apache.james.events;
 
-import jakarta.inject.Inject;
-
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.reactivestreams.Publisher;
 
@@ -29,10 +27,9 @@ import com.rabbitmq.client.Connection;
 import reactor.core.publisher.Mono;
 
 public class EventBusReconnectionHandler implements SimpleConnectionPool.ReconnectionHandler {
-    private final RabbitMQEventBus rabbitMQEventBus;
+    private final EventBus rabbitMQEventBus;
 
-    @Inject
-    public EventBusReconnectionHandler(RabbitMQEventBus rabbitMQEventBus) {
+    public EventBusReconnectionHandler(EventBus rabbitMQEventBus) {
         this.rabbitMQEventBus = rabbitMQEventBus;
     }
 

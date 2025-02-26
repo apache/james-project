@@ -83,6 +83,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
         this.isStopping = false;
     }
 
+    @Override
     public void start() {
         if (!isRunning && !isStopping) {
 
@@ -97,6 +98,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
         }
     }
 
+    @Override
     public void restart() {
         keyRegistrationHandler.restart();
         groupRegistrationHandler.restart();

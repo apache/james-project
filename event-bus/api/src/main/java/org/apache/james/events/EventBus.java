@@ -100,4 +100,8 @@ public interface EventBus {
     default Collection<Group> listRegisteredGroups() {
         return ImmutableList.of();
     }
+
+    void start();
+
+    void restart();
 }

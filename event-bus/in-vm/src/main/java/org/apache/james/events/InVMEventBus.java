@@ -168,4 +168,14 @@ public class InVMEventBus implements EventBus {
             .flatMap(registrationKey -> registrations.get(registrationKey).stream())
             .collect(ImmutableSet.toImmutableSet());
     }
+
+    @Override
+    public void start() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void restart() {
+        throw new UnsupportedOperationException();
+    }
 }

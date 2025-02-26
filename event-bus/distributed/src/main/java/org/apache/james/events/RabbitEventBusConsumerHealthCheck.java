@@ -36,11 +36,11 @@ import reactor.core.publisher.Mono;
 public class RabbitEventBusConsumerHealthCheck implements HealthCheck {
     public static final String COMPONENT = "EventbusConsumers";
 
-    private final RabbitMQEventBus eventBus;
+    private final EventBus eventBus;
     private final NamingStrategy namingStrategy;
     private final SimpleConnectionPool connectionPool;
 
-    public RabbitEventBusConsumerHealthCheck(RabbitMQEventBus eventBus, NamingStrategy namingStrategy,
+    public RabbitEventBusConsumerHealthCheck(EventBus eventBus, NamingStrategy namingStrategy,
                                              SimpleConnectionPool connectionPool) {
         this.eventBus = eventBus;
         this.namingStrategy = namingStrategy;

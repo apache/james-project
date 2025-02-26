@@ -52,7 +52,7 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 
 import reactor.rabbitmq.Sender;
 
-public class RabbitMQEventBusModule extends AbstractModule {
+public class MailboxEventBusModule extends AbstractModule {
 
     @Override
     protected void configure() {
@@ -64,10 +64,6 @@ public class RabbitMQEventBusModule extends AbstractModule {
         bind(RetryBackoffConfiguration.class).toInstance(RetryBackoffConfiguration.DEFAULT);
         bind(EventBusId.class).toInstance(EventBusId.random());
 
-        Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
-        reconnectionHandlerMultibinder.addBinding().to(KeyReconnectionHandler.class);
-        reconnectionHandlerMultibinder.addBinding().to(EventBusReconnectionHandler.class);
-
         Multibinder.newSetBinder(binder(), HealthCheck.class)
             .addBinding().to(RabbitMQMailboxEventBusDeadLetterQueueHealthCheck.class);
     }
@@ -76,6 +72,16 @@ public class RabbitMQEventBusModule extends AbstractModule {
     HealthCheck healthCheck(RabbitMQEventBus eventBus, NamingStrategy namingStrategy,
                             SimpleConnectionPool connectionPool) {
         return new RabbitEventBusConsumerHealthCheck(eventBus, namingStrategy, connectionPool);
+    }
+
+    @ProvidesIntoSet
+    SimpleConnectionPool.ReconnectionHandler provideReconnectionHandler(RabbitMQEventBus eventBus) {
+        return new EventBusReconnectionHandler(eventBus);
+    }
+
+    @ProvidesIntoSet
+    SimpleConnectionPool.ReconnectionHandler provideReconnectionHandler(NamingStrategy namingStrategy, EventBusId eventBusId, RabbitMQConfiguration configuration) {
+        return new KeyReconnectionHandler(namingStrategy, eventBusId, configuration);
     }
 
     @ProvidesIntoSet
