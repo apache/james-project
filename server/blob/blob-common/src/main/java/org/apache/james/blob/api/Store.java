@@ -126,7 +126,7 @@ public interface Store<T, I> {
                             out.reset();
                             out.close();
                         }, size));
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         out.reset();
                         out.close();
                         throw e;
