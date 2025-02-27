@@ -101,7 +101,12 @@ public interface EventBus {
         return ImmutableList.of();
     }
 
-    void start();
+    default void start() {
+    }
 
-    void restart();
+    default void restart() {
+    }
+
+    default void stop() {
+    }
 }
