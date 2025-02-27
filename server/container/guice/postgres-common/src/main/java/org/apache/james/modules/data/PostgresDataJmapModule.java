@@ -37,7 +37,9 @@ import org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDAO;
 import org.apache.james.jmap.postgres.projections.PostgresEmailQueryView;
 import org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewManager;
 import org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjection;
+import org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionDeletionCallback;
 import org.apache.james.jmap.postgres.upload.PostgresUploadRepository;
+import org.apache.james.mailbox.postgres.DeleteMessageListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
@@ -64,6 +66,10 @@ public class PostgresDataJmapModule extends AbstractModule {
 
         bind(PostgresMessageFastViewProjection.class).in(Scopes.SINGLETON);
         bind(MessageFastViewProjection.class).to(PostgresMessageFastViewProjection.class);
+
+        Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class)
+            .addBinding()
+            .to(PostgresMessageFastViewProjectionDeletionCallback.class);
 
         bind(PostgresEmailQueryView.class).in(Scopes.SINGLETON);
         bind(EmailQueryView.class).to(PostgresEmailQueryView.class);
