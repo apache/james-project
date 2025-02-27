@@ -23,9 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 
-import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
@@ -41,7 +39,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
@@ -67,8 +64,7 @@ public class PostgresAnnotationMapperRowLevelSecurityTest {
     private MailboxId mailboxId;
 
     private MailboxId generateMailboxId() {
-        PostgresExecutor postgresExecutor = postgresExtension.getExecutorFactory().create(BENWA.getDomainPart());
-        MailboxMapper mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExecutor));
+        MailboxMapper mailboxMapper = postgresMailboxSessionMapperFactory.getMailboxMapper(aliceSession);
         return mailboxMapper.create(benwaInboxPath, UID_VALIDITY).block().getMailboxId();
     }
 
@@ -79,7 +75,7 @@ public class PostgresAnnotationMapperRowLevelSecurityTest {
             new UpdatableTickingClock(Instant.now()),
             new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
             blobIdFactory,
-            PostgresConfiguration.builder().username("a").password("a").build(),
+            postgresExtension.getPostgresConfiguration(),
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
 
         mailboxId = generateMailboxId();

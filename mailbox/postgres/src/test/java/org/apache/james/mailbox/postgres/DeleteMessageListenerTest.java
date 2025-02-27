@@ -24,7 +24,6 @@ import static org.apache.james.mailbox.postgres.PostgresMailboxManagerProvider.B
 import java.time.Clock;
 import java.time.Instant;
 
-import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -72,7 +71,7 @@ public class DeleteMessageListenerTest extends DeleteMessageListenerContract {
             Clock.systemUTC(),
             blobStore,
             BLOB_ID_FACTORY,
-            PostgresConfiguration.builder().username("a").password("a").build(),
+            postgresExtension.getPostgresConfiguration(),
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();

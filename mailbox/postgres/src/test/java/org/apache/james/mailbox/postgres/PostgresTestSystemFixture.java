@@ -24,7 +24,6 @@ import static org.mockito.Mockito.mock;
 import java.time.Clock;
 import java.time.Instant;
 
-import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
 import org.apache.james.backends.postgres.quota.PostgresQuotaLimitDAO;
@@ -72,7 +71,7 @@ public class PostgresTestSystemFixture {
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
 
         return new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, blobIdFactory,
-            PostgresConfiguration.builder().username("a").password("a").build(),
+            postgresExtension.getPostgresConfiguration(),
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
     }
 
