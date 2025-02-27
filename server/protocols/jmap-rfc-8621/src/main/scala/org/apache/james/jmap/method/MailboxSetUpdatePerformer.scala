@@ -82,8 +82,8 @@ object MailboxSetUpdatePerformer {
         LOGGER.info("Attempt to create a loop in mailbox graph was rejected: {}", e.getMessage)
         SetError.invalidArguments(SetErrorDescription("A mailbox parentId property can not be set to itself or one of its child"), Some(Properties("parentId")))
       case e: InsufficientRightsException =>
-        LOGGER.info("Attempt to create a mailbox while having insufficient rights was rejected: {}", e.getMessage)
-        SetError.invalidArguments(SetErrorDescription("Invalid change to a delegated mailbox"))
+        LOGGER.info("Attempt to set a mailbox while having insufficient rights was rejected: {}", e.getMessage)
+        SetError.forbidden(SetErrorDescription("Invalid change to a delegated mailbox"))
       case e: IllegalArgumentException =>
         LOGGER.info("Illegal argument in Mailbox/set update", e)
         SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
