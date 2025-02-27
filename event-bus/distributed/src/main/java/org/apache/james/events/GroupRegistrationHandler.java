@@ -63,10 +63,6 @@ import reactor.util.retry.Retry;
 class GroupRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupRegistrationHandler.class);
 
-    public static class GroupRegistrationHandlerGroup extends Group {
-
-    }
-
     static final Group GROUP = new GroupRegistrationHandlerGroup();
 
     private final NamingStrategy namingStrategy;
