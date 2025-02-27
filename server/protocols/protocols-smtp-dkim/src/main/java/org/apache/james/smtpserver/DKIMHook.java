@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import com.google.common.base.Splitter;
 import jakarta.inject.Inject;
 import jakarta.mail.Address;
 import jakarta.mail.MessagingException;
@@ -54,6 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
