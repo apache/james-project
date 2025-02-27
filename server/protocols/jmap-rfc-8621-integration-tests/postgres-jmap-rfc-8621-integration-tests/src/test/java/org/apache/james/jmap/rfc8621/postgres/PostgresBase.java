@@ -28,6 +28,7 @@ import org.apache.james.PostgresJamesServerMain;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.jmap.rfc8621.contract.IdentityProbeModule;
+import org.apache.james.jmap.rfc8621.contract.JmapPreviewProbeModule;
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -54,6 +55,7 @@ public class PostgresBase {
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new DelegationProbeModule())
-            .overrideWith(new IdentityProbeModule()))
+            .overrideWith(new IdentityProbeModule())
+            .overrideWith(new JmapPreviewProbeModule()))
         .build();
 }
