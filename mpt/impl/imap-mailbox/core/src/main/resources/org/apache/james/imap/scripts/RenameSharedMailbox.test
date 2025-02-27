@@ -1,0 +1,107 @@
+################################################################
+# Licensed to the Apache Software Foundation (ASF) under one   #
+# or more contributor license agreements.  See the NOTICE file #
+# distributed with this work for additional information        #
+# regarding copyright ownership.  The ASF licenses this file   #
+# to you under the Apache License, Version 2.0 (the            #
+# "License"); you may not use this file except in compliance   #
+# with the License.  You may obtain a copy of the License at   #
+#                                                              #
+#   http://www.apache.org/licenses/LICENSE-2.0                 #
+#                                                              #
+# Unless required by applicable law or agreed to in writing,   #
+# software distributed under the License is distributed on an  #
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       #
+# KIND, either express or implied.  See the License for the    #
+# specific language governing permissions and limitations      #
+# under the License.                                           #
+################################################################
+
+
+# List all accessible mailboxes, including delegated mailboxes from other users
+C: a0 LIST "" "*"
+SUB {
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox-eilprstwx\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child1-eiklprstwx\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child2-eiklprstw\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.otherSharedMailbox\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox.child3\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child3.sub1\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"INBOX\"
+}
+S: a0 OK LIST completed.
+
+C: a02 STATUS #user.boby.sharedMailbox.child1-eiklprstwx (MESSAGES)
+S: \* STATUS \"#user.boby.sharedMailbox.child1-eiklprstwx\" \(MESSAGES 10\)
+S: a02 OK STATUS completed.
+
+# Retrieve the rights on the shared mailbox
+C: a1 MYRIGHTS #user.boby.sharedMailbox
+S: \* MYRIGHTS \"#user.boby.sharedMailbox\" \"eiklprstwx\"
+S: a1 OK MYRIGHTS completed.
+
+# Cannot rename a shared mailbox without the "delete mailbox" right
+C: a2 MYRIGHTS #user.boby.sharedMailbox.child2-eiklprstw
+S: \* MYRIGHTS \"#user.boby.sharedMailbox.child2-eiklprstw\" \"eiklprstw\"
+S: a2 OK MYRIGHTS completed.
+C: a3 RENAME #user.boby.sharedMailbox.child2-eiklprstw #user.boby.sharedMailbox.newChild2
+S: a3 NO RENAME processing failed.
+
+# Cannot rename a shared mailbox if the parent of the target mailbox lacks the "create mailbox" right
+C: a4 MYRIGHTS #user.boby.sharedMailbox-eilprstwx
+S: \* MYRIGHTS \"#user.boby.sharedMailbox-eilprstwx\" \"eilprstwx\"
+S: a4 OK MYRIGHTS completed.
+C: a5 RENAME #user.boby.sharedMailbox.child1-eiklprstwx #user.boby.sharedMailbox-eilprstwx.newChild1
+S: a5 NO RENAME processing failed.
+
+# Cannot rename a mailbox to an existing mailbox name
+C: a52 RENAME #user.boby.sharedMailbox.child1-eiklprstwx #user.boby.sharedMailbox.child2-eiklprstw
+S: a52 NO RENAME failed. Mailbox already exists.
+
+# Can rename a shared mailbox within the same parent if the user has rights
+C: a6 RENAME #user.boby.sharedMailbox.child1-eiklprstwx #user.boby.sharedMailbox.newChild1
+S: a6 OK RENAME completed.
+
+# Can move a shared mailbox to an owner’s mailbox if the user has the rights
+C: a7 RENAME #user.boby.sharedMailbox.newChild1 ownerChild1
+S: a7 OK RENAME completed.
+
+# Can move an owner's mailbox to a shared mailbox if the user has rights
+C: a8 RENAME ownerChild1 #user.boby.sharedMailbox.newChild1
+S: a8 OK RENAME completed.
+
+# Can rename a shared mailbox under a different parent if the user has rights
+C: a9 RENAME #user.boby.sharedMailbox.newChild1 #user.boby.otherSharedMailbox.newChild1
+S: a9 OK RENAME completed.
+
+# Can rename a mailbox to a different hierarchy level if the user has permission
+C: a11 RENAME #user.boby.otherSharedMailbox.newChild1 #user.boby.otherSharedMailbox.sub1.newChild1
+S: a11 OK RENAME completed.
+
+# SubMailbox is renamed
+C: A111 RENAME #user.boby.sharedMailbox.child3 #user.boby.sharedMailbox.child3New
+S: A111 OK RENAME completed.
+C: A112 LIST "#user.boby.sharedMailbox.child3New.sub1" "*"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child3New.sub1\"
+S: A112 OK LIST completed.
+C: A113 MYRIGHTS #user.boby.sharedMailbox.child3
+S: A113 NO MYRIGHTS failed. Mailbox not found.
+
+# List all mailboxes after renaming operations
+C: a12 LIST "" "*"
+SUB {
+S: \* LIST \(\\HasNoChildren\) \".\" \"INBOX\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.otherSharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.otherSharedMailbox.sub1.newChild1\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox-eilprstwx\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child2-eiklprstw\"
+S: \* LIST \(\\HasChildren\) \".\" \"#user.boby.sharedMailbox.child3New\"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.sharedMailbox.child3New.sub1\"
+}
+S: a12 OK LIST completed.
+
+C: a13 STATUS #user.boby.otherSharedMailbox.sub1.newChild1 (MESSAGES)
+S: \* STATUS \"#user.boby.otherSharedMailbox.sub1.newChild1\" \(MESSAGES 10\)
+S: a13 OK STATUS completed.

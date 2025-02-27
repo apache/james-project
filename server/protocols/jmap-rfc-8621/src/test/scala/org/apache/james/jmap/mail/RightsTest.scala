@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.mail
 
-import org.apache.james.jmap.mail.Right.DeleteMailbox
 import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Rfc4314Rights => JavaRfc4314Rights, Right => JavaRight}
 import org.apache.james.mailbox.model.{MailboxACL => JavaMailboxACL}
 import org.scalatest.matchers.must.Matchers

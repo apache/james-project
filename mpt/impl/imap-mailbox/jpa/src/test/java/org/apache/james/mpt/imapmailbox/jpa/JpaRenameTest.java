@@ -22,6 +22,7 @@ package org.apache.james.mpt.imapmailbox.jpa;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.Rename;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class JpaRenameTest extends Rename {
@@ -31,5 +32,10 @@ public class JpaRenameTest extends Rename {
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return hostSystemExtension.getHostSystem();
+    }
+
+    @Override
+    @Disabled("JPA does not support ACL capabilities")
+    public void testRenameSharedMailbox() throws Exception {
     }
 }

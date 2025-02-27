@@ -85,6 +85,10 @@
         </dependency>
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>
+            <artifactId>json-unit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.json-unit</groupId>
             <artifactId>json-unit-assertj</artifactId>
         </dependency>
         <dependency>
