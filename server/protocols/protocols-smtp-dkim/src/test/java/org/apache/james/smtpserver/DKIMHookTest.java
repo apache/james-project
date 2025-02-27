@@ -22,6 +22,7 @@ package org.apache.james.smtpserver;
 import static org.apache.james.smtpserver.DKIMHook.Config.DEFAULT_VALIDATED_ENTITIES;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
@@ -250,8 +251,22 @@ class DKIMHookTest {
             configuration.addProperty("expectedDToken", "apache.org");
 
             assertThat(DKIMHook.Config.parse(configuration))
-                .isEqualTo(new DKIMHook.Config(false, false, Optional.of(Domain.of("linagora.com")),
-                    ImmutableList.of(ValidatedEntity.envelope), Optional.of("apache.org")));
+                .isEqualTo(new DKIMHook.Config(false, false, Optional.of(List.of(Domain.of("linagora.com"))),
+                    ImmutableList.of(ValidatedEntity.envelope), Optional.of(List.of("apache.org"))));
+        }
+
+        @Test
+        void multivaluedConfiguration() {
+            BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
+            configuration.addProperty("forceCRLF", false);
+            configuration.addProperty("signatureRequired", false);
+            configuration.addProperty("onlyForSenderDomain", "linagora.com,linto.ai");
+            configuration.addProperty("validatedEntities", "envelope");
+            configuration.addProperty("expectedDToken", "apache.org,linagora.vn");
+
+            assertThat(DKIMHook.Config.parse(configuration))
+                .isEqualTo(new DKIMHook.Config(false, false, Optional.of(List.of(Domain.of("linagora.com"), Domain.of("linto.ai"))),
+                    ImmutableList.of(ValidatedEntity.envelope), Optional.of(List.of("apache.org", "linagora.vn"))));
         }
     }
 }

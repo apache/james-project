@@ -22,6 +22,7 @@ package org.apache.james.smtpserver;
 import static org.apache.james.protocols.smtp.SMTPRetCode.AUTH_REQUIRED;
 import static org.apache.james.protocols.smtp.SMTPRetCode.LOCAL_ERROR;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -52,6 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -91,7 +93,7 @@ public class DKIMHook implements JamesMessageHook {
 
     @FunctionalInterface
     interface DKIMCheckNeeded extends Predicate<Mail> {
-        static DKIMCheckNeeded or(ImmutableList<DKIMCheckNeeded> checkNeededs) {
+        static DKIMCheckNeeded or(List<DKIMCheckNeeded> checkNeededs) {
             return mail -> checkNeededs.stream()
                 .anyMatch(predicate -> predicate.test(mail));
         }
@@ -138,6 +140,7 @@ public class DKIMHook implements JamesMessageHook {
         }
 
         DKIMCheckNeeded ALL = any -> true;
+        DKIMCheckNeeded NONE = any -> false;
     }
 
     @FunctionalInterface
@@ -149,6 +152,16 @@ public class DKIMHook implements JamesMessageHook {
                     return b.validate(sender, records);
                 }
                 return hookResult;
+            };
+        }
+
+        static SignatureRecordValidation or(SignatureRecordValidation a, SignatureRecordValidation b) {
+            return (sender, records) -> {
+                HookResult hookResult = a.validate(sender, records);
+                if (hookResult.equals(HookResult.DECLINED)) {
+                    return hookResult;
+                }
+                return b.validate(sender, records);
             };
         }
 
@@ -194,13 +207,16 @@ public class DKIMHook implements JamesMessageHook {
                 config.getBoolean("forceCRLF", true),
                 config.getBoolean("signatureRequired", true),
                 Optional.ofNullable(config.getString("onlyForSenderDomain", null))
-                    .map(Domain::of),
+                    .map(s -> Splitter.on(',').splitToStream(s)
+                        .map(Domain::of)
+                        .toList()),
                 Optional.ofNullable(config.getString("validatedEntities", null))
                     .map(entities -> Stream.of(entities.split(","))
                         .map(ValidatedEntity::from)
                         .collect(ImmutableList.toImmutableList()))
                     .orElse(DEFAULT_VALIDATED_ENTITIES),
-                Optional.ofNullable(config.getString("expectedDToken", null)));
+                Optional.ofNullable(config.getString("expectedDToken", null))
+                    .map(s -> Splitter.on(',').splitToList(s)));
         }
 
         public enum ValidatedEntity {
@@ -219,12 +235,12 @@ public class DKIMHook implements JamesMessageHook {
 
         private final boolean forceCRLF;
         private final boolean signatureRequired;
-        private final Optional<Domain> onlyForSenderDomain;
+        private final Optional<List<Domain>> onlyForSenderDomain;
         private final ImmutableList<ValidatedEntity> validatedEntities;
-        private final Optional<String> expectedDToken;
+        private final Optional<List<String>> expectedDToken;
 
-        public Config(boolean forceCRLF, boolean signatureRequired, Optional<Domain> onlyForSenderDomain,
-                      ImmutableList<ValidatedEntity> validatedEntities, Optional<String> expectedDToken) {
+        public Config(boolean forceCRLF, boolean signatureRequired, Optional<List<Domain>> onlyForSenderDomain,
+                      ImmutableList<ValidatedEntity> validatedEntities, Optional<List<String>> expectedDToken) {
             this.forceCRLF = forceCRLF;
             this.signatureRequired = signatureRequired;
             this.onlyForSenderDomain = onlyForSenderDomain;
@@ -234,15 +250,20 @@ public class DKIMHook implements JamesMessageHook {
 
         DKIMCheckNeeded dkimCheckNeeded() {
             return onlyForSenderDomain
-                .map(domain -> DKIMCheckNeeded.or(computeDKIMChecksNeeded(domain)))
+                .map(domains -> DKIMCheckNeeded.or(domains.stream()
+                    .map(this::computeDKIMChecksNeeded)
+                    .flatMap(Collection::stream)
+                    .toList()))
                 .orElse(DKIMCheckNeeded.ALL);
         }
 
         SignatureRecordValidation signatureRecordValidation() {
             return SignatureRecordValidation.and(
                 SignatureRecordValidation.signatureRequired(signatureRequired),
-                expectedDToken.map(SignatureRecordValidation::expectedDToken)
-                    .orElse(SignatureRecordValidation.ALLOW_ALL));
+                expectedDToken.map(tokens -> tokens.stream()
+                    .map(SignatureRecordValidation::expectedDToken)
+                    .reduce(SignatureRecordValidation::or)
+                    .get()).orElse(SignatureRecordValidation.ALLOW_ALL));
         }
 
         private ImmutableList<DKIMCheckNeeded> computeDKIMChecksNeeded(Domain domain) {
