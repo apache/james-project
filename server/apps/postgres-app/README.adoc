@@ -6,15 +6,16 @@ This server targets reactive James deployments with postgresql database.
 === Compile and run with docker compose
 Edit these files to alter the james image name/tag:
 
-- *server/apps/postgres-app/pom.xml*
-- *server/apps/postgres-app/docker-compose-distributed.yml*
+- *server/apps/postgres-app/pom.xml line 359*
+- *server/apps/postgres-app/docker-compose-minimal.yml line 6*
 
+The image is pushes to the registry defined int he pom.xml file.
 [source]
 ```bash
 
     mvn -T 4 clean install -Dmaven.javadoc.skip=true -DskipTests --pl :james-server-postgres-app --am
 
-    docker compose -f server/apps/postgres-app/docker-compose-distributed.yml up -d
+    docker compose -f server/apps/postgres-app/docker-compose-minimal.yml up -d
 ```
 
 == Requirements
