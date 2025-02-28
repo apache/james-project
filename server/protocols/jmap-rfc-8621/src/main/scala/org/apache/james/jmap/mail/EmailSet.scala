@@ -74,11 +74,17 @@ object SubType {
 
 case class ClientPartId(id: Id)
 
-case class ClientBody(partId: ClientPartId, `type`: Type)
+case class ClientBody(partId: ClientPartId, `type`: Type, specificHeaders: List[EmailHeader]) {
+}
+
+case class ClientBodyWithoutHeaders(partId: ClientPartId, `type`: Type) {
+  def withHeaders(specificHeaders: List[EmailHeader]): ClientBody =
+    ClientBody(partId, `type`, specificHeaders)
+}
 
 case class ClientEmailBodyValueWithoutHeaders(value: String,
-                                isEncodingProblem: Option[IsEncodingProblem],
-                                isTruncated: Option[IsTruncated]) {
+                                              isEncodingProblem: Option[IsEncodingProblem],
+                                              isTruncated: Option[IsTruncated]) {
   def withHeaders(specificHeaders: List[EmailHeader]): ClientEmailBodyValue =
     ClientEmailBodyValue(value, isEncodingProblem, isTruncated, specificHeaders)
 }
@@ -86,7 +92,7 @@ case class ClientEmailBodyValueWithoutHeaders(value: String,
 case class ClientEmailBodyValue(value: String,
                                 isEncodingProblem: Option[IsEncodingProblem],
                                 isTruncated: Option[IsTruncated],
-                                specificHeaders: List[EmailHeader])
+                                @deprecated("specificHeaders should be set on EmailBodyPart as RFC8621") specificHeaders: List[EmailHeader])
 
 case class ClientBodyPart(value: String, specificHeaders: List[EmailHeader])
 
@@ -356,7 +362,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
   def validateHtmlBody: Either[IllegalArgumentException, Option[ClientBodyPart]] = htmlBody match {
     case None => Right(None)
     case Some(html :: Nil) if !html.`type`.value.equals("text/html") => Left(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
-    case Some(html :: Nil) => retrieveCorrespondingBody(html.partId)
+    case Some(html :: Nil) => retrieveCorrespondingBody(html)
       .getOrElse(Left(new IllegalArgumentException("Expecting bodyValues to contain the part specified in htmlBody")))
     case _ => Left(new IllegalArgumentException("Expecting htmlBody to contains only 1 part"))
   }
@@ -364,7 +370,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
   def validateTextBody: Either[IllegalArgumentException, Option[ClientBodyPart]] = textBody match {
     case None => Right(None)
     case Some(text :: Nil) if !text.`type`.value.equals("text/plain") => Left(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
-    case Some(text :: Nil) => retrieveCorrespondingBody(text.partId)
+    case Some(text :: Nil) => retrieveCorrespondingBody(text)
       .getOrElse(Left(new IllegalArgumentException("Expecting bodyValues to contain the part specified in textBody")))
     case _ => Left(new IllegalArgumentException("Expecting textBody to contains only 1 part"))
   }
@@ -389,14 +395,15 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     }
   }
 
-  private def retrieveCorrespondingBody(partId: ClientPartId): Option[Either[IllegalArgumentException, Some[ClientBodyPart]]] =
+  private def retrieveCorrespondingBody(clientBody: ClientBody): Option[Either[IllegalArgumentException, Some[ClientBodyPart]]] =
     bodyValues.getOrElse(Map())
-      .get(partId)
+      .get(clientBody.partId)
       .map {
         case part if part.isTruncated.isDefined && part.isTruncated.get.value => Left(new IllegalArgumentException("Expecting isTruncated to be false"))
         case part if part.isEncodingProblem.isDefined && part.isEncodingProblem.get.value => Left(new IllegalArgumentException("Expecting isEncodingProblem to be false"))
+        case part if part.specificHeaders.nonEmpty && clientBody.specificHeaders.nonEmpty => Left(new IllegalArgumentException("Could not set specific headers on both EmailBodyPart and EmailBodyValue"))
         case part => Right(Some(
-          ClientBodyPart(part.value, part.specificHeaders)))
+          ClientBodyPart(part.value, Option(clientBody.specificHeaders).filter(_.nonEmpty).getOrElse(part.specificHeaders))))
       }
 
   private def validateSpecificHeaders(message: Message.Builder): Either[IllegalArgumentException, Unit] = {
