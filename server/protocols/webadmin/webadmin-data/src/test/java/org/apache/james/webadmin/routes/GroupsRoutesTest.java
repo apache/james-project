@@ -35,6 +35,7 @@ import static org.mockito.Mockito.spy;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.james.DefaultUserEntityValidator;
 import org.apache.james.RecipientRewriteTableUserEntityValidator;
 import org.apache.james.UserEntityValidator;
