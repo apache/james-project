@@ -41,10 +41,10 @@ public class RspamdExtension implements GuiceModuleTestExtension {
     public static final String PASSWORD = "admin";
 
     private static final DockerImageName RSPAMD_IMAGE = DockerImageName.parse("rspamd/rspamd").withTag("3.9.1");
-    private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis").withTag("7.2.5");
+    private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("apache/kvrocks").withTag("2.11.1");
     private static final DockerImageName CLAMAV_IMAGE = DockerImageName.parse("clamav/clamav").withTag("1.3");
     private static final int RSPAMD_DEFAULT_PORT = 11334;
-    private static final int REDIS_DEFAULT_PORT = 6379;
+    private static final int REDIS_DEFAULT_PORT = 6666;
     private static final int CLAMAV_DEFAULT_PORT = 3310;
 
     private final GenericContainer<?> rspamdContainer;
@@ -80,7 +80,7 @@ public class RspamdExtension implements GuiceModuleTestExtension {
     public GenericContainer<?> rspamdContainer(Network network) {
         return new GenericContainer<>(RSPAMD_IMAGE)
             .withExposedPorts(RSPAMD_DEFAULT_PORT)
-            .withEnv("RSPAMD_REDIS_SERVERS", "redis")
+            .withEnv("RSPAMD_REDIS_SERVERS", "redis:6666")
             .withEnv("RSPAMD_CLAMAV_SERVERS", "clamav")
             .withEnv("RSPAMD_PASSWORD", PASSWORD)
             .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/antivirus.conf"), "/etc/rspamd/override.d/antivirus.conf")
@@ -119,7 +119,7 @@ public class RspamdExtension implements GuiceModuleTestExtension {
 
     public void redisFlushAll() {
         try {
-            redisContainer.execInContainer("redis-cli", "flushall");
+            redisContainer.execInContainer("redis-cli", "-p", "6666", "flushall");
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
