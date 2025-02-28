@@ -30,6 +30,7 @@ import io.restassured.RestAssured.{`given`, `with`, requestSpecification}
 import io.restassured.builder.ResponseSpecBuilder
 import io.restassured.http.ContentType.JSON
 import jakarta.mail.Flags
+import net.javacrumbs.jsonunit.JsonMatchers.jsonEquals
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
 import org.apache.http.HttpStatus.{SC_CREATED, SC_OK}
@@ -3451,8 +3452,9 @@ trait EmailSetMethodContract {
            |}""".stripMargin)
   }
 
+  @deprecated("specificHeaders should be set on EmailBodyPart as RFC8621")
   @Test
-  def bodyPartShouldSupportSpecificHeaders(server: GuiceJamesServer): Unit = {
+  def emailBodyValueShouldSupportSpecificHeaders(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
@@ -3553,6 +3555,166 @@ trait EmailSetMethodContract {
            |    "type": "multipart/alternative"
            |  }
            |}""".stripMargin)
+  }
+
+  @Test
+  def shouldSupportSpecificHeadersInEmailBodyPart(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "htmlBody": [
+         |            {
+         |              "partId": "a49d",
+         |              "type": "text/html",
+         |              "header:Specific:asText": "MATCHME"
+         |            }
+         |          ],
+         |          "bodyValues": {
+         |            "a49d": {
+         |              "value": "$htmlBody",
+         |              "isTruncated": false,
+         |              "isEncodingProblem": false
+         |            }
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |      {
+         |        "accountId": "$ACCOUNT_ID",
+         |        "ids": ["#aaaaaa"],
+         |        "properties": ["bodyStructure"],
+         |        "bodyProperties": ["type", "disposition", "cid", "subParts", "header:Specific:asText"]
+         |      },
+         |    "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[1][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |  "id": "$messageId",
+           |  "bodyStructure": {
+           |    "subParts": [
+           |      {
+           |        "header:Specific:asText": "MATCHME",
+           |        "type": "text/plain"
+           |      },
+           |      {
+           |        "header:Specific:asText": "MATCHME",
+           |        "type": "text/html"
+           |      }
+           |    ],
+           |    "header:Specific:asText": null,
+           |    "type": "multipart/alternative"
+           |  }
+           |}""".stripMargin)
+  }
+
+  @Test
+  def shouldFailIfSpecificHeadersSetInBothEmailBodyPartAndEmailBodyValue(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "htmlBody": [
+         |            {
+         |              "partId": "a49d",
+         |              "type": "text/html",
+         |              "header:Specific:asText": "MATCHME"
+         |            }
+         |          ],
+         |          "bodyValues": {
+         |            "a49d": {
+         |              "value": "$htmlBody",
+         |              "isTruncated": false,
+         |              "isEncodingProblem": false,
+         |              "header:Specific:asText": "MATCHME2"
+         |            }
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("methodResponses[0][1].notCreated",
+        jsonEquals(
+          """{
+            |    "aaaaaa": {
+            |        "type": "invalidArguments",
+            |        "description": "Could not set specific headers on both EmailBodyPart and EmailBodyValue"
+            |    }
+            |}""".stripMargin))
   }
 
   @Test
