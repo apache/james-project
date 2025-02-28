@@ -35,6 +35,7 @@ import static org.mockito.Mockito.spy;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.james.DefaultUserEntityValidator;
 import org.apache.james.RecipientRewriteTableUserEntityValidator;
 import org.apache.james.UserEntityValidator;
@@ -123,7 +124,7 @@ class GroupsRoutesTest {
                 new RecipientRewriteTableUserEntityValidator(memoryRecipientRewriteTable));
             memoryRecipientRewriteTable.setUserEntityValidator(validator);
             memoryRecipientRewriteTable.setUsersRepository(usersRepository);
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, new JsonTransformer(mappingSourceModule)),
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, new JsonTransformer(mappingSourceModule), new ObjectMapper()),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
@@ -504,7 +505,7 @@ class GroupsRoutesTest {
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
             memoryRecipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
             memoryRecipientRewriteTable.setUsersRepository(userRepository);
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, new JsonTransformer()),
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, new JsonTransformer(), new ObjectMapper()),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 

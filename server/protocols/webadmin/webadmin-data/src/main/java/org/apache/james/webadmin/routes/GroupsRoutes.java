@@ -84,16 +84,16 @@ public class GroupsRoutes implements Routes {
 
     private final JsonTransformer jsonTransformer;
     private final RecipientRewriteTable recipientRewriteTable;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     private final MailAddress dummyUser = new MailAddress("fc8f9dc08044a0c0ff9528fe997","fc8f9dc08044a0c0a8c23c68");
 
     @Inject
     @VisibleForTesting
-    GroupsRoutes(RecipientRewriteTable recipientRewriteTable, JsonTransformer jsonTransformer) throws AddressException {
+    GroupsRoutes(RecipientRewriteTable recipientRewriteTable, JsonTransformer jsonTransformer, ObjectMapper objectMapper) throws AddressException {
         this.jsonTransformer = jsonTransformer;
         this.recipientRewriteTable = recipientRewriteTable;
+        this.objectMapper = objectMapper;
     }
 
     @Override
