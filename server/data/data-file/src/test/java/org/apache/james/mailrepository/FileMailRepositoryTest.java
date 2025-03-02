@@ -85,7 +85,6 @@ public class FileMailRepositoryTest {
         @Override
         protected BaseHierarchicalConfiguration withConfigurationOptions(BaseHierarchicalConfiguration configuration) {
             configuration.addProperty("[@FIFO]", "false");
-            configuration.addProperty("[@CACHEKEYS]", "true");
             return configuration;
         }
     }
@@ -111,7 +110,6 @@ public class FileMailRepositoryTest {
 
         protected BaseHierarchicalConfiguration withConfigurationOptions(BaseHierarchicalConfiguration configuration) {
             configuration.addProperty("[@FIFO]", "false");
-            configuration.addProperty("[@CACHEKEYS]", "true");
             return configuration;
         }
 
@@ -133,37 +131,12 @@ public class FileMailRepositoryTest {
     }
 
     @Nested
-    @DisplayName("No cache configuration")
-    public class NoCacheFileMailRepositoryTest extends GenericFileMailRepositoryTest {
-
-        @Override
-        protected BaseHierarchicalConfiguration withConfigurationOptions(BaseHierarchicalConfiguration configuration) {
-            configuration.addProperty("[@FIFO]", "false");
-            configuration.addProperty("[@CACHEKEYS]", "false");
-            return configuration;
-        }
-    }
-
-    @Nested
     @DisplayName("Fifo configuration")
     public class FifoFileMailRepositoryTest extends GenericFileMailRepositoryTest {
 
         @Override
         protected BaseHierarchicalConfiguration withConfigurationOptions(BaseHierarchicalConfiguration configuration) {
             configuration.addProperty("[@FIFO]", "true");
-            configuration.addProperty("[@CACHEKEYS]", "true");
-            return configuration;
-        }
-    }
-
-    @Nested
-    @DisplayName("Fifo no cache configuration")
-    public class FifoNoCacheFileMailRepositoryTest extends GenericFileMailRepositoryTest {
-
-        @Override
-        protected BaseHierarchicalConfiguration withConfigurationOptions(BaseHierarchicalConfiguration configuration) {
-            configuration.addProperty("[@FIFO]", "true");
-            configuration.addProperty("[@CACHEKEYS]", "false");
             return configuration;
         }
     }
