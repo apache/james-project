@@ -29,7 +29,7 @@ import org.apache.james.jmap.api.model.{EmailAddress, EmailerName}
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Id, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{AddressesHeaderValue, AllHeaderValues, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientEmailBodyValueWithoutHeaders, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddressGroup, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailImport, EmailImportRequest, EmailImportResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue, UnparsedMessageId, UncheckedAddressesHeaderValue, UncheckedEmail, UncheckedEmailAddress}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, AllHeaderValues, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientBodyWithoutHeaders, ClientCid, ClientEmailBodyValue, ClientEmailBodyValueWithoutHeaders, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddressGroup, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailImport, EmailImportRequest, EmailImportResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue, UncheckedAddressesHeaderValue, UncheckedEmail, UncheckedEmailAddress, UnparsedMessageId}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{Format, JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
@@ -291,13 +291,16 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
 
   private implicit val typeReads: Reads[Type] = Json.valueReads[Type]
   private implicit val clientPartIdReads: Reads[ClientPartId] = Json.valueReads[ClientPartId]
-  private val rawClientBodyReads: Reads[ClientBody] = Json.reads[ClientBody]
+  private val rawClientBodyWithoutHeaderReads: Reads[ClientBodyWithoutHeaders] = Json.reads[ClientBodyWithoutHeaders]
+
   private implicit val clientBodyReads: Reads[ClientBody] = {
     case JsObject(underlying) if underlying.contains("charset") => JsError("charset must not be specified in htmlBody")
     case JsObject(underlying) if underlying.contains("size") => JsError("size must not be specified in htmlBody")
     case JsObject(underlying) if underlying.contains("header:Content-Transfer-Encoding") => JsError("Content-Transfer-Encoding must not be specified in htmlBody or textBody")
     case JsObject(underlying) if underlying.keySet.exists(s => s.startsWith("header:Content-Transfer-Encoding:asText")) => JsError("Content-Transfer-Encoding must not be specified in htmlBody or textBody")
-    case o: JsObject => rawClientBodyReads.reads(o)
+    case o: JsObject if o.value.contains("headers") => JsError("'headers' is not allowed")
+    case o: JsObject => extractSpecificHeaders(o).fold(e => JsError(e.getMessage),
+      specificHeaders => rawClientBodyWithoutHeaderReads.reads(o).map(_.withHeaders(specificHeaders)))
     case _ => JsError("Expecting a JsObject to represent an ClientHtmlBody")
   }
 

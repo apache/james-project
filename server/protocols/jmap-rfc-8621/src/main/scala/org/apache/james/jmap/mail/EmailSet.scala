@@ -33,7 +33,7 @@ import org.apache.james.jmap.core.{AccountId, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.mail.Disposition.INLINE
 import org.apache.james.jmap.mail.EmailCreationRequest.KEYWORD_DRAFT
 import org.apache.james.jmap.method.{SetRequest, WithAccountId}
-import org.apache.james.jmap.routes.{Blob, BlobResolvers}
+import org.apache.james.jmap.routes.{Blob, BlobNotFoundException, BlobResolvers, UploadedBlob}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.{Cid, MessageId}
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
@@ -45,12 +45,16 @@ import org.apache.james.mime4j.field.{ContentIdFieldImpl, Fields}
 import org.apache.james.mime4j.message.{BodyPartBuilder, MultipartBuilder}
 import org.apache.james.mime4j.stream.{Field, NameValuePair, RawField}
 import org.apache.james.mime4j.util.MimeUtil
+import org.apache.james.util.ReactorUtils
 import org.apache.james.util.html.HtmlTextExtractor
 import play.api.libs.json.JsObject
+import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
-import scala.util.{Right, Try, Using}
+import scala.util.{Right, Try}
+
+case class AttachmentNotFoundException(blobId: BlobId) extends RuntimeException
 
 object EmailSet {
   def asUnparsed(messageId: MessageId): UnparsedMessageId = refined.refineV[IdConstraint](messageId.serialize()) match {
@@ -74,11 +78,21 @@ object SubType {
 
 case class ClientPartId(id: Id)
 
-case class ClientBody(partId: ClientPartId, `type`: Type)
+case class ClientBody(partId: Option[ClientPartId],
+                      blobId: Option[BlobId],
+                      `type`: Type,
+                      specificHeaders: List[EmailHeader])
+
+case class ClientBodyWithoutHeaders(partId: Option[ClientPartId],
+                                    blobId: Option[BlobId],
+                                    `type`: Type) {
+  def withHeaders(specificHeaders: List[EmailHeader]): ClientBody =
+    ClientBody(partId, blobId, `type`, specificHeaders)
+}
 
 case class ClientEmailBodyValueWithoutHeaders(value: String,
-                                isEncodingProblem: Option[IsEncodingProblem],
-                                isTruncated: Option[IsTruncated]) {
+                                              isEncodingProblem: Option[IsEncodingProblem],
+                                              isTruncated: Option[IsTruncated]) {
   def withHeaders(specificHeaders: List[EmailHeader]): ClientEmailBodyValue =
     ClientEmailBodyValue(value, isEncodingProblem, isTruncated, specificHeaders)
 }
@@ -86,7 +100,7 @@ case class ClientEmailBodyValueWithoutHeaders(value: String,
 case class ClientEmailBodyValue(value: String,
                                 isEncodingProblem: Option[IsEncodingProblem],
                                 isTruncated: Option[IsTruncated],
-                                specificHeaders: List[EmailHeader])
+                                @deprecated("specificHeaders should be set on EmailBodyPart as RFC8621") specificHeaders: List[EmailHeader])
 
 case class ClientBodyPart(value: String, specificHeaders: List[EmailHeader])
 
@@ -184,46 +198,51 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]],
                                 specificHeaders: List[EmailHeader],
                                 attachments: Option[List[Attachment]]) {
+
   def toMime4JMessage(blobResolvers: BlobResolvers,
                       htmlTextExtractor: HtmlTextExtractor,
-                      mailboxSession: MailboxSession): Either[Throwable, Message] =
-    validateHtmlBody
-      .flatMap(maybeHtmlBody => validateTextBody.map((maybeHtmlBody, _)))
-      .flatMap {
-        case (maybeHtmlBody, maybeTextBody) =>
-          val builder = Message.Builder.of
-          references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
-          inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
-          subject.foreach(value => builder.setSubject(value.value))
-          val maybeFrom: Option[List[Mime4jMailbox]] = from.flatMap(_.asMime4JMailboxList)
-          maybeFrom.map(_.asJava).foreach(builder.setFrom)
-          to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)
-          cc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setCc)
-          bcc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setBcc)
-          sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
-          replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
-          builder.setDate( sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).getOrElse(new Date()))
-          builder.setField(new RawField(FieldName.MESSAGE_ID, messageId.flatMap(_.asString).getOrElse(generateUniqueMessageId(maybeFrom))))
-          validateSpecificHeaders(builder)
-            .flatMap(_ => {
-              specificHeaders.flatMap(_.asFields).foreach(builder.addField)
-              attachments.filter(_.nonEmpty).map(attachments =>
-                createMultipartWithAttachments(maybeHtmlBody, maybeTextBody, attachments, blobResolvers, htmlTextExtractor, mailboxSession)
-                  .map(multipartBuilder => {
-                    builder.setBody(multipartBuilder)
-                    builder.build
-                  }))
-                .getOrElse({
-                  builder.setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor))
-                  Right(builder.build)
-                })
-            })
+                      mailboxSession: MailboxSession): SMono[Message] = {
+
+    val baseMessageBuilderPublisher: SMono[Message.Builder] = SMono.fromCallable(() => {
+        val builder: Message.Builder = Message.Builder.of
+        references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
+        inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
+        subject.foreach(value => builder.setSubject(value.value))
+        val maybeFrom: Option[List[Mime4jMailbox]] = from.flatMap(_.asMime4JMailboxList)
+        maybeFrom.map(_.asJava).foreach(builder.setFrom)
+        to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)
+        cc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setCc)
+        bcc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setBcc)
+        sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
+        replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
+        builder.setDate(sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).getOrElse(new Date()))
+        builder.setField(new RawField(FieldName.MESSAGE_ID, messageId.flatMap(_.asString).getOrElse(generateUniqueMessageId(maybeFrom))))
+        validateSpecificHeaders(builder)
+          .map(_ => {
+            specificHeaders.flatMap(_.asFields).foreach(builder.addField)
+            builder
+          })
+      })
+      .flatMap(_.fold(SMono.error, SMono.just))
+
+    for {
+      maybeHtmlBody  <- validateHtmlBody(blobResolvers, mailboxSession).map(Some(_)).switchIfEmpty(SMono.just(None))
+      maybeTextBody  <- validateTextBody(blobResolvers, mailboxSession).map(Some(_)).switchIfEmpty(SMono.just(None))
+      messageBuilder <- baseMessageBuilderPublisher
+      multipartBody  <- attachments match {
+        case None | Some(Nil) => SMono.just(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor))
+        case Some(attachmentList) => createMultipartWithAttachments(maybeHtmlBody, maybeTextBody, attachmentList, blobResolvers, htmlTextExtractor, mailboxSession)
       }
+    } yield {
+      messageBuilder.setBody(multipartBody)
+      messageBuilder.build()
+    }
+  }
 
   private def generateUniqueMessageId(fromAddress: Option[List[Mime4jMailbox]]): String =
     MimeUtil.createUniqueMessageId(fromAddress.flatMap(_.headOption).map(_.getDomain).orNull)
 
-  private def createAlternativeBody(htmlBody: Option[ClientBodyPart], textBody: Option[ClientBodyPart], htmlTextExtractor: HtmlTextExtractor) = {
+  private def createAlternativeBody(htmlBody: Option[ClientBodyPart], textBody: Option[ClientBodyPart], htmlTextExtractor: HtmlTextExtractor): MultipartBuilder = {
     val alternativeBuilder = MultipartBuilder.create(SubType.ALTERNATIVE_SUBTYPE)
     val replacement: ClientBodyPart = textBody.getOrElse(ClientBodyPart(
       htmlTextExtractor.toPlainText(htmlBody.map(_.value).getOrElse("")),
@@ -251,29 +270,25 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                              attachments: List[Attachment],
                                              blobResolvers: BlobResolvers,
                                              htmlTextExtractor: HtmlTextExtractor,
-                                             mailboxSession: MailboxSession): Either[Throwable, MultipartBuilder] = {
-    val maybeAttachments: Either[Throwable, List[LoadedAttachment]] =
-      attachments
-        .map(loadWithMetadata(blobResolvers, mailboxSession))
-        .sequence
+                                             mailboxSession: MailboxSession): SMono[MultipartBuilder] =
+    SFlux.fromIterable(attachments)
+      .concatMap(loadWithMetadata(blobResolvers, mailboxSession), ReactorUtils.LOW_CONCURRENCY)
+      .collectSeq()
+      .map(list => {
+        (list.filter(_.isInline), list.filter(!_.isInline)) match {
+          case (Nil, normalAttachments) => createMixedBody(maybeHtmlBody, maybeTextBody, normalAttachments.toList, htmlTextExtractor)
+          case (inlineAttachments, Nil) => createRelatedBody(maybeHtmlBody, maybeTextBody, inlineAttachments.toList, htmlTextExtractor)
+          case (inlineAttachments, normalAttachments) => createMixedRelatedBody(maybeHtmlBody, maybeTextBody, inlineAttachments.toList, normalAttachments.toList, htmlTextExtractor)
+        }
+      })
 
-    maybeAttachments.map(list => {
-      (list.filter(_.isInline), list.filter(!_.isInline)) match {
-        case (Nil, normalAttachments) => createMixedBody(maybeHtmlBody, maybeTextBody, normalAttachments, htmlTextExtractor)
-        case (inlineAttachments, Nil) => createRelatedBody(maybeHtmlBody, maybeTextBody, inlineAttachments, htmlTextExtractor)
-        case (inlineAttachments, normalAttachments) => createMixedRelatedBody(maybeHtmlBody, maybeTextBody, inlineAttachments, normalAttachments, htmlTextExtractor)
+  private def loadWithMetadata(blobResolvers: BlobResolvers, mailboxSession: MailboxSession)(attachment: Attachment): SMono[LoadedAttachment] =
+    blobResolvers.resolve(attachment.blobId, mailboxSession)
+      .onErrorMap {
+        case notFoundException: BlobNotFoundException => AttachmentNotFoundException(notFoundException.blobId)
+        case e => e
       }
-    })
-  }
-
-  private def loadWithMetadata(blobResolvers: BlobResolvers, mailboxSession: MailboxSession)(attachment: Attachment): Either[Throwable, LoadedAttachment] =
-    Try(blobResolvers.resolve(attachment.blobId, mailboxSession).block())
-      .toEither.flatMap(blob => load(blob).map(content => LoadedAttachment(attachment, blob, content)))
-
-  private def load(blob: Blob): Either[Throwable, Array[Byte]] =
-    Using(blob.content) {
-      _.readAllBytes()
-    }.toEither
+      .map(blob => LoadedAttachment(attachment, blob, blob.content.readAllBytes()))
 
   private def createMixedRelatedBody(maybeHtmlBody: Option[ClientBodyPart],
                                      maybeTextBody: Option[ClientBodyPart],
@@ -353,21 +368,23 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
       .filter(!_._1.equalsIgnoreCase("charset"))
       .toMap
 
-  def validateHtmlBody: Either[IllegalArgumentException, Option[ClientBodyPart]] = htmlBody match {
-    case None => Right(None)
-    case Some(html :: Nil) if !html.`type`.value.equals("text/html") => Left(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
-    case Some(html :: Nil) => retrieveCorrespondingBody(html.partId)
-      .getOrElse(Left(new IllegalArgumentException("Expecting bodyValues to contain the part specified in htmlBody")))
-    case _ => Left(new IllegalArgumentException("Expecting htmlBody to contains only 1 part"))
-  }
+  private def validateHtmlBody(blobResolvers: BlobResolvers, mailboxSession: MailboxSession): SMono[ClientBodyPart] =
+    htmlBody match {
+      case None => SMono.empty
+      case Some(html :: Nil) if !html.`type`.value.equals("text/html") => SMono.error(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
+      case Some(html :: Nil) => retrieveCorrespondingBody(html, blobResolvers, mailboxSession)
+        .switchIfEmpty(SMono.error(new IllegalArgumentException("Expecting bodyValues to contain the part specified in htmlBody")))
+      case _ => SMono.error(new IllegalArgumentException("Expecting htmlBody to contains only 1 part"))
+    }
 
-  def validateTextBody: Either[IllegalArgumentException, Option[ClientBodyPart]] = textBody match {
-    case None => Right(None)
-    case Some(text :: Nil) if !text.`type`.value.equals("text/plain") => Left(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
-    case Some(text :: Nil) => retrieveCorrespondingBody(text.partId)
-      .getOrElse(Left(new IllegalArgumentException("Expecting bodyValues to contain the part specified in textBody")))
-    case _ => Left(new IllegalArgumentException("Expecting textBody to contains only 1 part"))
-  }
+  private def validateTextBody(blobResolvers: BlobResolvers, mailboxSession: MailboxSession): SMono[ClientBodyPart] =
+    textBody match {
+      case None => SMono.empty
+      case Some(text :: Nil) if !text.`type`.value.equals("text/plain") => SMono.error(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
+      case Some(text :: Nil) => retrieveCorrespondingBody(text, blobResolvers, mailboxSession)
+        .switchIfEmpty(SMono.error(new IllegalArgumentException("Expecting bodyValues to contain the part specified in textBody")))
+      case _ => SMono.error(new IllegalArgumentException("Expecting textBody to contains only 1 part"))
+    }
 
   def validateRequest: Either[IllegalArgumentException, EmailCreationRequest] = validateEmailAddressHeader
 
@@ -389,15 +406,44 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     }
   }
 
-  private def retrieveCorrespondingBody(partId: ClientPartId): Option[Either[IllegalArgumentException, Some[ClientBodyPart]]] =
-    bodyValues.getOrElse(Map())
-      .get(partId)
-      .map {
-        case part if part.isTruncated.isDefined && part.isTruncated.get.value => Left(new IllegalArgumentException("Expecting isTruncated to be false"))
-        case part if part.isEncodingProblem.isDefined && part.isEncodingProblem.get.value => Left(new IllegalArgumentException("Expecting isEncodingProblem to be false"))
-        case part => Right(Some(
-          ClientBodyPart(part.value, part.specificHeaders)))
+  private def retrieveCorrespondingBody(clientBody: ClientBody,
+                                        blobResolvers: BlobResolvers,
+                                        mailboxSession: MailboxSession): SMono[ClientBodyPart] =
+    (clientBody.partId, clientBody.blobId) match {
+      case (None, None) => SMono.error(new IllegalArgumentException("Expecting either partId or blobId to be defined"))
+      case (Some(_), Some(_)) => SMono.error(new IllegalArgumentException("Expecting only one of partId or blobId to be defined"))
+      case (Some(_), None) => retrieveCorrespondingBodyFromPartId(clientBody)
+      case (None, Some(_)) => retrieveCorrespondingBodyFromBlobId(clientBody, blobResolvers, mailboxSession)
+    }
+
+  private def retrieveCorrespondingBodyFromBlobId(clientBody: ClientBody,
+                                                  blobResolvers: BlobResolvers,
+                                                  mailboxSession: MailboxSession): SMono[ClientBodyPart] = {
+    SMono.justOrEmpty(clientBody.blobId)
+      .flatMap(blobResolvers.resolve(_, mailboxSession))
+      .flatMap {
+        case uploadedBlob: UploadedBlob =>
+          val mimeType: String = uploadedBlob.contentType.mimeType().asString()
+          if (mimeType == "text/plain" || mimeType == "text/html") {
+            val charset = uploadedBlob.contentType.charset().orElse(StandardCharsets.UTF_8)
+            val content = new String(uploadedBlob.content.readAllBytes(), charset)
+            SMono.just(ClientBodyPart(content, clientBody.specificHeaders))
+          } else {
+            SMono.error(new IllegalArgumentException("Blob: Unsupported content type. Expecting text/plain or text/html"))
+          }
+        case _ => SMono.error(new IllegalArgumentException("Blob resolution failed or blob type is invalid"))
       }
+  }
+
+  private def retrieveCorrespondingBodyFromPartId(clientBody: ClientBody): SMono[ClientBodyPart] =
+    bodyValues.getOrElse(Map())
+      .get(clientBody.partId.get) match {
+      case Some(part) if part.isTruncated.exists(_.value) => SMono.error(new IllegalArgumentException("Expecting isTruncated to be false"))
+      case Some(part) if part.isEncodingProblem.exists(_.value) => SMono.error(new IllegalArgumentException("Expecting isEncodingProblem to be false"))
+      case Some(part) if part.specificHeaders.nonEmpty && clientBody.specificHeaders.nonEmpty => SMono.error(new IllegalArgumentException("Could not set specific headers on both EmailBodyPart and EmailBodyValue"))
+      case Some(part) => SMono.just(ClientBodyPart(part.value, Option(clientBody.specificHeaders).filter(_.nonEmpty).getOrElse(part.specificHeaders)))
+      case None => SMono.empty
+    }
 
   private def validateSpecificHeaders(message: Message.Builder): Either[IllegalArgumentException, Unit] = {
     specificHeaders.map(header => {
