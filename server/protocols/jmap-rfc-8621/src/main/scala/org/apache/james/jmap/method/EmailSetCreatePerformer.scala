@@ -30,7 +30,7 @@ import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
-import org.apache.james.jmap.mail.{BlobId, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, ThreadId}
+import org.apache.james.jmap.mail.{AttachmentNotFoundException, BlobId, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, ThreadId}
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers}
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -38,7 +38,6 @@ import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaEx
 import org.apache.james.mailbox.model.MailboxId
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.mime4j.dom.Message
-import org.apache.james.util.ReactorUtils
 import org.apache.james.util.html.HtmlTextExtractor
 import org.slf4j.LoggerFactory
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -72,9 +71,12 @@ object EmailSetCreatePerformer {
       case e: MailboxNotFoundException =>
         LOGGER.info(s"Mailbox ${e.getMessage}")
         SetError.notFound(SetErrorDescription("Mailbox " + e.getMessage))
-      case e: BlobNotFoundException =>
+      case e: AttachmentNotFoundException =>
         LOGGER.info(s"Attachment not found: ${e.blobId.value}")
         SetError.invalidArguments(SetErrorDescription(s"Attachment not found: ${e.blobId.value}"), Some(Properties("attachments")))
+      case e: BlobNotFoundException =>
+        LOGGER.info(s"Blob not found: ${e.blobId.value}")
+        SetError.invalidArguments(SetErrorDescription(s"Blob not found: ${e.blobId.value}"), Some(Properties("blobId")))
       case e: SizeExceededException =>
         LOGGER.info("Attempt to create too big of a message")
         SetError.tooLarge(SetErrorDescription(e.getMessage))
@@ -115,14 +117,11 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
     if (mailboxIds.size != 1) {
       SMono.just(CreationFailure(clientId, new IllegalArgumentException("mailboxIds need to have size 1")))
     } else {
-      SMono.fromCallable(() => request.toMime4JMessage(blobResolvers, htmlTextExtractor, mailboxSession))
-        .flatMap(either => either.fold(e => SMono.just(CreationFailure(clientId, e)),
-          message =>
-            asAppendCommand(request, message)
-              .fold(e => SMono.error(e),
-              appendCommand => append(clientId, appendCommand, mailboxSession, mailboxIds))))
-        .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
-        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+      request.toMime4JMessage(blobResolvers, htmlTextExtractor, mailboxSession)
+        .flatMap(message => asAppendCommand(request, message)
+          .fold(e => SMono.error(e),
+            appendCommand => append(clientId, appendCommand, mailboxSession, mailboxIds)))
+        .onErrorResume(error => SMono.just[CreationResult](CreationFailure(clientId, error)))
     }
   }
 
