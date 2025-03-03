@@ -51,6 +51,7 @@ public class JettyHandler extends SessionHandler {
             final HttpServletResponse httpServletResponse = servletContextRequest.getHttpServletResponse();
             final HttpServletRequest httpServletRequest = servletContextRequest.getServletApiRequest();
             final HttpRequestWrapper wrapper = new HttpRequestWrapper(httpServletRequest);
+            httpServletResponse.setHeader("Connection", "close");
 
             filter.doFilter(wrapper, httpServletResponse, null);
             callback.succeeded();
