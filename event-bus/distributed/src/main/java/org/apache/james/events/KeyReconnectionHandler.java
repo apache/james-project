@@ -26,8 +26,6 @@ import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateExclusive;
 
-import jakarta.inject.Inject;
-
 import org.apache.james.backends.rabbitmq.QueueArguments;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
@@ -47,7 +45,6 @@ public class KeyReconnectionHandler implements SimpleConnectionPool.Reconnection
     private final EventBusId eventBusId;
     private final RabbitMQConfiguration configuration;
 
-    @Inject
     public KeyReconnectionHandler(NamingStrategy namingStrategy, EventBusId eventBusId, RabbitMQConfiguration configuration) {
         this.namingStrategy = namingStrategy;
         this.eventBusId = eventBusId;

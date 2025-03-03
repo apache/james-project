@@ -100,4 +100,13 @@ public interface EventBus {
     default Collection<Group> listRegisteredGroups() {
         return ImmutableList.of();
     }
+
+    default void start() {
+    }
+
+    default void restart() {
+    }
+
+    default void stop() {
+    }
 }

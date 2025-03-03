@@ -19,22 +19,5 @@
 
 package org.apache.james.events;
 
-import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
-import org.reactivestreams.Publisher;
-
-import com.rabbitmq.client.Connection;
-
-import reactor.core.publisher.Mono;
-
-public class EventBusReconnectionHandler implements SimpleConnectionPool.ReconnectionHandler {
-    private final EventBus rabbitMQEventBus;
-
-    public EventBusReconnectionHandler(EventBus rabbitMQEventBus) {
-        this.rabbitMQEventBus = rabbitMQEventBus;
-    }
-
-    @Override
-    public Publisher<Void> handleReconnection(Connection connection) {
-        return Mono.fromRunnable(rabbitMQEventBus::restart);
-    }
+public class GroupRegistrationHandlerGroup extends Group {
 }

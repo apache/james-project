@@ -57,7 +57,7 @@ import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.data.CassandraVacationModule;
 import org.apache.james.modules.event.JMAPEventBusModule;
-import org.apache.james.modules.event.RabbitMQEventBusModule;
+import org.apache.james.modules.event.MailboxEventBusModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
 import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
 import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
@@ -175,7 +175,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         .with(new RabbitMQModule(),
             new RabbitMQMailQueueModule(),
             new RabbitMailQueueRoutesModule(),
-            new RabbitMQEventBusModule(),
+            new MailboxEventBusModule(),
             new DistributedTaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
