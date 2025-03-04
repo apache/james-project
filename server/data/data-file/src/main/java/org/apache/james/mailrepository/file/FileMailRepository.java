@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,11 +65,7 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
     private FilePersistentStreamRepository streamRepository;
     private FilePersistentObjectRepository objectRepository;
     private String destination;
-    private Set<String> keys;
-    private final Object lock = new Object();
     private boolean fifo;
-    private boolean cacheKeys; // experimental: for use with write mostly
-    // repositories such as spam and error
     private FileSystem fileSystem;
 
     /**
@@ -114,8 +109,6 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
         destination = config.getString("[@destinationURL]");
         LOGGER.debug("FileMailRepository.destinationURL: {}", destination);
         fifo = config.getBoolean("[@FIFO]", false);
-        cacheKeys = config.getBoolean("[@CACHEKEYS]", true);
-        // ignore model
     }
 
     @Override
@@ -135,10 +128,6 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
             streamRepository.configure(reposConfiguration);
             streamRepository.init();
 
-            if (cacheKeys) {
-                keys = Collections.synchronizedSet(new HashSet<>());
-            }
-
             // Finds non-matching pairs and deletes the extra files
 
             HashSet<String> streamKeys = streamRepository.list().collect(Collectors.toCollection(HashSet::new));
@@ -147,25 +136,19 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
             @SuppressWarnings("unchecked")
             Collection<String> strandedStreams = (Collection<String>) streamKeys.clone();
             strandedStreams.removeAll(objectKeys);
-            for (Object strandedStream : strandedStreams) {
-                MailKey key = new MailKey((String) strandedStream);
+            for (String strandedStream : strandedStreams) {
+                MailKey key = new MailKey(strandedStream);
                 remove(key);
             }
 
             @SuppressWarnings("unchecked")
             Collection<String> strandedObjects = (Collection<String>) objectKeys.clone();
             strandedObjects.removeAll(streamKeys);
-            for (Object strandedObject : strandedObjects) {
-                MailKey key = new MailKey((String) strandedObject);
+            for (String strandedObject : strandedObjects) {
+                MailKey key = new MailKey(strandedObject);
                 remove(key);
             }
 
-            if (keys != null) {
-                // Next get a list from the object repository
-                // and use that for the list of keys
-                keys.clear();
-                objectRepository.list().forEach(keys::add);
-            }
             LOGGER.debug("{} created in {}", getClass().getName(), destination);
         } catch (Exception e) {
             LOGGER.error("Failed to retrieve Store component", e);
@@ -218,15 +201,12 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
 
     private void internalStore(Mail mc) throws MessagingException, IOException {
         String key = mc.getName();
-        if (keys != null) {
-            keys.add(key);
-        }
+
         boolean saveStream = true;
 
         MimeMessage message = mc.getMessage();
 
-        if (message instanceof MimeMessageWrapper) {
-            MimeMessageWrapper wrapper = (MimeMessageWrapper) message;
+        if (message instanceof MimeMessageWrapper wrapper) {
             LOGGER.trace("Retrieving from: {}", wrapper.getSourceId());
             LOGGER.trace("Saving to:       {}/{}", destination, mc.getName());
             LOGGER.trace("Modified: {}", wrapper.isModified());
@@ -243,45 +223,30 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
             }
         }
         if (saveStream) {
-            OutputStream out = null;
-            try {
-                if (message instanceof MimeMessageWrapper) {
-                    // we need to force the loading of the message from the
-                    // stream as we want to override the old message
-                    ((MimeMessageWrapper) message).loadMessage();
-                    out = streamRepository.put(key);
-
-                    ((MimeMessageWrapper) message).writeTo(out, out, null, true);
-
-                } else {
-                    out = streamRepository.put(key);
-                    mc.getMessage().writeTo(out);
-
-                }
-
-            } finally {
-                if (out != null) {
-                    out.close();
-                }
-            }
+            saveStream(mc, message, key);
         }
         // Always save the header information
         objectRepository.put(key, mc);
     }
 
+    private void saveStream(Mail mc, MimeMessage message, String key) throws MessagingException, IOException {
+        try (OutputStream out = streamRepository.put(key)) {
+            if (message instanceof MimeMessageWrapper mimeMessageWrapper) {
+                // we need to force the loading of the message from the
+                // stream as we want to override the old message
+                mimeMessageWrapper.loadMessage();
+                mimeMessageWrapper.writeTo(out, out, null, true);
+            } else {
+                mc.getMessage().writeTo(out);
+            }
+        }
+    }
+
     @Override
     public Mail retrieve(MailKey key) throws MessagingException {
         try {
-            Mail mc;
-            try {
-                mc = (Mail) objectRepository.get(key.asString());
-            } catch (RuntimeException re) {
-                if (re.getCause() instanceof Error) {
-                    LOGGER.warn("Error when retrieving mail, not deleting: {}", re, re);
-                } else {
-                    LOGGER.warn("Exception retrieving mail: {}, so we're deleting it.", re, re);
-                    remove(key);
-                }
+            Mail mc = retrieveMailWithoutMessage(key);
+            if (mc == null) {
                 return null;
             }
             MimeMessageStreamRepositorySource source = new MimeMessageStreamRepositorySource(streamRepository, destination, key.asString());
@@ -294,6 +259,19 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
         }
     }
 
+    private Mail retrieveMailWithoutMessage(MailKey key) throws MessagingException {
+        try {
+            return  (Mail) objectRepository.get(key.asString());
+        } catch (RuntimeException re) {
+            if (re.getCause() instanceof Error) {
+                LOGGER.warn("Error when retrieving mail, not deleting: {}", re, re);
+            } else {
+                LOGGER.warn("Exception retrieving mail: {}, so we're deleting it.", re, re);
+                remove(key);
+            }
+            return null;
+        }
+    }
 
     @Override
     public void remove(MailKey key) throws MessagingException {
@@ -320,9 +298,6 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
     }
 
     private void internalRemove(MailKey key) {
-        if (keys != null) {
-            keys.remove(key.asString());
-        }
         streamRepository.remove(key.asString());
         objectRepository.remove(key.asString());
     }
@@ -336,20 +311,12 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
     private Stream<MailKey> listStream() {
         // Fix ConcurrentModificationException by cloning
         // the keyset before getting an iterator
-        final ArrayList<String> clone;
-        if (keys != null) {
-            synchronized (lock) {
-                clone = new ArrayList<>(keys);
-            }
-        } else {
-            clone = objectRepository.list().collect(Collectors.toCollection(ArrayList::new));
-        }
+        ArrayList<String> clone = objectRepository.list().collect(Collectors.toCollection(ArrayList::new));
         if (fifo) {
             Collections.sort(clone); // Keys is a HashSet; impose FIFO for apps
         }
         // that need it
-        return clone
-            .stream()
+        return objectRepository.list()
             .map(MailKey::new);
     }
 }
