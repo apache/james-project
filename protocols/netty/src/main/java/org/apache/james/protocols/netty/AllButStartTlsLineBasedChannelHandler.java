@@ -64,7 +64,7 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
                 .map(Boolean.class::cast)
                 .orElse(false);
             if (hasCommandInjection(trimedLowerCasedInput) || startTlsInFlight) {
-                throw new CommandInjectionDetectedException();
+                throw new CommandInjectionDetectedException(trimedLowerCasedInput);
             }
             // Prevents further reads on this channel to avoid race conditions
             // Framer can accept IMAP requests sent concurrently while the channel is
