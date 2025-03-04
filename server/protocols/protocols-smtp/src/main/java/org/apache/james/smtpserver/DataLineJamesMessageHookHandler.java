@@ -23,6 +23,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -74,7 +75,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                 || line[line.length - 2] != '\r'
                 || line[line.length - 1] != '\n') {
 
-                throw new CommandInjectionDetectedException();
+                throw new CommandInjectionDetectedException(new String(line, StandardCharsets.UTF_8));
             }
         }
     }

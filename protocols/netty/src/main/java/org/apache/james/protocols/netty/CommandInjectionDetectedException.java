@@ -19,5 +19,7 @@
 package org.apache.james.protocols.netty;
 
 public class CommandInjectionDetectedException extends RuntimeException {
-
+    public CommandInjectionDetectedException(String input) {
+        super("Client input: " + input);
+    }
 }
