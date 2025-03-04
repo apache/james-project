@@ -3,7 +3,7 @@ services:
     depends_on:
       postgres:
         condition: service_started
-    image: apache/james:postgres-latest
+    image: shn27/inbox-server:postgres-latest
     container_name: james
     hostname: james.local
     command:
