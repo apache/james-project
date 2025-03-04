@@ -25,10 +25,13 @@ import java.util.Map;
 
 import org.apache.james.core.Username;
 import org.apache.james.rrt.lib.Mappings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public interface DataProbe {
 
     class FluentDataProbe {
+        private static final Logger LOGGER = LoggerFactory.getLogger(FluentDataProbe.class);
 
         private final DataProbe dataProbe;
 
@@ -47,6 +50,15 @@ public interface DataProbe {
 
         public FluentDataProbe addDomain(String domain) throws Exception {
             dataProbe.addDomain(domain);
+            return this;
+        }
+
+        public FluentDataProbe addDomainIfNotExists(String domain) throws Exception {
+            if (!dataProbe.containsDomain(domain)) {
+                addDomain(domain);
+            } else {
+                LOGGER.info("Domain '{}' already exists", domain);
+            }
             return this;
         }
     }
