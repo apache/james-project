@@ -21,13 +21,13 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -47,6 +47,8 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -102,11 +104,13 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     private final JsonTransformer jsonTransformer;
     private final Set<HealthCheck> healthChecks;
+    private final ObjectMapper objectMapper;
 
     @Inject
-    public HealthCheckRoutes(@Named("resolved-checks") Set<HealthCheck> healthChecks, JsonTransformer jsonTransformer) {
+    public HealthCheckRoutes(@Named("resolved-checks") Set<HealthCheck> healthChecks, JsonTransformer jsonTransformer, ObjectMapper objectMapper) {
         this.healthChecks = healthChecks;
         this.jsonTransformer = jsonTransformer;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -160,9 +164,15 @@ public class HealthCheckRoutes implements PublicRoutes {
     }
 
     private Set<ComponentName> getComponentNames(Request request) {
-        return Optional.ofNullable(request.queryParamsValues(QUERY_PARAM_COMPONENT_NAMES))
-            .stream()
-            .flatMap(Stream::of)
+    return Optional.ofNullable(request.body())
+            .filter(body -> !body.isEmpty())
+            .map(body -> {
+                try {
+                    return objectMapper.readValue(body, String[].class);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException("Error parsing JSON body: " + e.getMessage(), e);
+                }
+            }).stream().flatMap(Arrays::stream)
             .map(ComponentName::new)
             .collect(ImmutableSet.toImmutableSet());
     }

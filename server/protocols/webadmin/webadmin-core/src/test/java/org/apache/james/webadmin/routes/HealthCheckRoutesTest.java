@@ -43,6 +43,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.restassured.RestAssured;
 import net.javacrumbs.jsonunit.core.Option;
 import reactor.core.publisher.Mono;
@@ -78,7 +80,7 @@ class HealthCheckRoutesTest {
     @BeforeEach
     void setUp() throws Exception {
         healthChecks = new HashSet<>();
-        webAdminServer = WebAdminUtils.createWebAdminServer(new HealthCheckRoutes(healthChecks, new JsonTransformer()))
+        webAdminServer = WebAdminUtils.createWebAdminServer(new HealthCheckRoutes(healthChecks, new JsonTransformer(), new ObjectMapper()))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
