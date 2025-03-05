@@ -25,6 +25,7 @@ import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.EmailQueryViewManager;
+import org.apache.james.jmap.api.projections.ThreadQueryView;
 
 public class PostgresEmailQueryViewManager implements EmailQueryViewManager {
     private final PostgresExecutor.Factory executorFactory;
@@ -37,5 +38,10 @@ public class PostgresEmailQueryViewManager implements EmailQueryViewManager {
     @Override
     public EmailQueryView getEmailQueryView(Username username) {
         return new PostgresEmailQueryView(new PostgresEmailQueryViewDAO(executorFactory.create(username.getDomainPart())));
+    }
+
+    @Override
+    public ThreadQueryView getThreadQueryView(Username username) {
+        return new PostgresThreadQueryView(new PostgresThreadQueryViewDAO(executorFactory.create(username.getDomainPart())));
     }
 }

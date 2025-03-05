@@ -21,9 +21,9 @@ package org.apache.james.jmap.mail
 
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
-import org.apache.james.jmap.core.{AccountId, UuidState}
+import org.apache.james.jmap.core.{AccountId, LimitUnparsed, PositionUnparsed, UuidState}
 import org.apache.james.jmap.method.{GetRequest, WithAccountId}
-import org.apache.james.mailbox.model.MessageId
+import org.apache.james.mailbox.model.{MessageId, ThreadId}
 
 case class Thread(id: Id, emailIds: List[MessageId])
 
@@ -54,3 +54,20 @@ case class ThreadChangesResponse(accountId: AccountId,
                                  created: List[Id],
                                  updated: List[Id],
                                  destroyed: List[Id])
+
+case class ThreadQueryRequest(accountId: AccountId,
+                              position: Option[PositionUnparsed],
+                              limit: Option[LimitUnparsed],
+                              filter: Option[FilterQuery],
+                             ) extends WithAccountId {
+  val validatedFilter: Either[UnsupportedNestingException, Option[FilterQuery]] =
+    filter match {
+      case Some(filterQuery) => FilterQuery.validateFilter(filterQuery).map(Some(_))
+      case None => scala.Right(None)
+    }
+}
+
+case class ThreadQueryResponse(accountId: AccountId,
+                               ids: Seq[ThreadId],
+                             )
+

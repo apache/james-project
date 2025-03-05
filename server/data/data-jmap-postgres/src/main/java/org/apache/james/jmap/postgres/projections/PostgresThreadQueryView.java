@@ -17,28 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.projections;
+package org.apache.james.jmap.postgres.projections;
+
+import java.time.ZonedDateTime;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.core.Username;
+import org.apache.james.jmap.api.projections.ThreadQueryView;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.postgres.PostgresMailboxId;
+import org.apache.james.util.streams.Limit;
 
-public class DefaultEmailQueryViewManager implements EmailQueryViewManager {
-    private EmailQueryView emailQueryView;
-    private ThreadQueryView threadQueryView;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+public class PostgresThreadQueryView implements ThreadQueryView {
+    private PostgresThreadQueryViewDAO threadQueryViewDAO;
 
     @Inject
-    public DefaultEmailQueryViewManager(EmailQueryView emailQueryView) {
-        this.emailQueryView = emailQueryView;
+    public PostgresThreadQueryView(PostgresThreadQueryViewDAO threadQueryViewDAO) {
+        this.threadQueryViewDAO = threadQueryViewDAO;
     }
 
     @Override
-    public EmailQueryView getEmailQueryView(Username username) {
-        return emailQueryView;
+    public Flux<ThreadId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit) {
+        System.out.println("chole amar chander gari");
+        return threadQueryViewDAO.findLatestThreadIds(PostgresMailboxId.class.cast(mailboxId), 10);
     }
 
     @Override
-    public ThreadQueryView getThreadQueryView(Username username) {
-        return threadQueryView;
+    public Mono<Void> delete(MailboxId mailboxId, ThreadId threadId) {
+        return null;
+    }
+
+    @Override
+    public Mono<Void> delete(MailboxId mailboxId) {
+        return null;
+    }
+
+    @Override
+    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, ThreadId threadId) {
+        return null;
     }
 }

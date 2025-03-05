@@ -21,8 +21,8 @@ package org.apache.james.jmap.json
 
 import jakarta.inject.Inject
 import org.apache.james.jmap.core.{CanCalculateChanges, LimitUnparsed, PositionUnparsed, QueryState}
-import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, And, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, FilterOperator, FilterQuery, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, HeaderContains, HeaderExist, IsAscending, Keyword, Not, Operator, Or, ReceivedAtSortProperty, SentAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty}
-import org.apache.james.mailbox.model.{MailboxId, MessageId}
+import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, And, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, FilterOperator, FilterQuery, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, HeaderContains, HeaderExist, IsAscending, Keyword, Not, Operator, Or, ReceivedAtSortProperty, SentAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, ThreadQueryRequest, ThreadQueryResponse, To, ToSortProperty}
+import org.apache.james.mailbox.model.{MailboxId, MessageId, ThreadId}
 import play.api.libs.json._
 
 import scala.util.Try
@@ -129,6 +129,7 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val collapseThreadsReads: Reads[CollapseThreads] = Json.valueReads[CollapseThreads]
   private implicit val anchorReads: Reads[Anchor] = Json.valueReads[Anchor]
   private implicit val anchorOffsetReads: Reads[AnchorOffset] = Json.valueReads[AnchorOffset]
+  private implicit val threadIdWrites: Writes[ThreadId] = id => JsString(id.serialize())
 
   private implicit val emailQueryRequestReads: Reads[EmailQueryRequest] = Json.reads[EmailQueryRequest]
 
@@ -137,4 +138,12 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   def serialize(emailQueryResponse: EmailQueryResponse): JsObject = Json.toJsObject(emailQueryResponse)
 
   def deserializeEmailQueryRequest(input: JsValue): JsResult[EmailQueryRequest] = Json.fromJson[EmailQueryRequest](input)
+
+  private implicit val threadQueryReads: Reads[ThreadQueryRequest] = Json.reads[ThreadQueryRequest]
+
+  private implicit val queryResponseWrites: OWrites[ThreadQueryResponse] = Json.writes[ThreadQueryResponse]
+
+  def serializeThreadQuery(ThreadQueryResponse: ThreadQueryResponse): JsObject = Json.toJson(ThreadQueryResponse).as[JsObject]
+
+  def deserializeThreadQuery(input: JsValue): JsResult[ThreadQueryRequest] = Json.fromJson[ThreadQueryRequest](input)
 }
