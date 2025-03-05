@@ -75,18 +75,12 @@ class ThreadQueryMethod @Inject()(serializer: EmailQuerySerializer,
   }
 
   private def executeQuery(session: MailboxSession, request: ThreadQueryRequest, position: Position, limit: Limit): SMono[ThreadQueryResponse] = {
-    println("Email Query Method execute Query called ")
-    println("req: ", request)
-
-    val ids1: SMono[Seq[ThreadId]] = testThread(session, position, limit, request)
-    println("TESTING PURPOSE:", ids1)
-
-    ids1.map(ids => toResponse(request, ids))
+    val ids: SMono[Seq[ThreadId]] = getLatestThread(session, position, limit, request)
+    ids.map(ids => toResponse(request, ids))
   }
 
 
-  private def testThread(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: ThreadQueryRequest): SMono[Seq[ThreadId]] = {
-    println("kaka queryViewForListingSortedByReceivedAt")
+  private def getLatestThread(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: ThreadQueryRequest): SMono[Seq[ThreadId]] = {
     val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
     val thread: SFlux[ThreadId] = SFlux.fromPublisher(threadQueryViewManager
       .getThreadQueryView(mailboxSession.getUser).listMailboxContentSortedBySentAt(mailboxId,JavaLimit.from(limitToUse.value + position.value)))
