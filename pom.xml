@@ -572,6 +572,7 @@
         <module>server</module>
         <module>testing/base</module>
         <module>third-party</module>
+        <module>message-fast-view-cleaning-extension</module>
     </modules>
 
     <scm>
