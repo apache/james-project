@@ -50,7 +50,7 @@ public interface DataProbe {
 
         public FluentDataProbe addDomain(String domain) throws Exception {
             if (!dataProbe.containsDomain(domain)) {
-                addDomain(domain);
+                dataProbe.addDomain(domain);
             } else {
                 LOGGER.info("Domain '{}' already exists", domain);
             }
