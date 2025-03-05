@@ -23,6 +23,4 @@ import org.apache.james.core.Username;
 
 public interface EmailQueryViewManager {
     EmailQueryView getEmailQueryView(Username username);
-
-    ThreadQueryView getThreadQueryView(Username username);
 }

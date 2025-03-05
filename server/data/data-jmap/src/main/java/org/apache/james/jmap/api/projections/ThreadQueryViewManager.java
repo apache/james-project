@@ -19,20 +19,8 @@
 
 package org.apache.james.jmap.api.projections;
 
-import jakarta.inject.Inject;
-
 import org.apache.james.core.Username;
 
-public class DefaultEmailQueryViewManager implements EmailQueryViewManager {
-    private EmailQueryView emailQueryView;
-
-    @Inject
-    public DefaultEmailQueryViewManager(EmailQueryView emailQueryView) {
-        this.emailQueryView = emailQueryView;
-    }
-
-    @Override
-    public EmailQueryView getEmailQueryView(Username username) {
-        return emailQueryView;
-    }
+public interface ThreadQueryViewManager {
+    ThreadQueryView getThreadQueryView(Username username);
 }

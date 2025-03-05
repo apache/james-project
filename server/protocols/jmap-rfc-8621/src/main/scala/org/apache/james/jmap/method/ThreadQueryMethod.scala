@@ -20,7 +20,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import jakarta.inject.Inject
-import org.apache.james.jmap.api.projections.EmailQueryViewManager
+import org.apache.james.jmap.api.projections.{EmailQueryViewManager, ThreadQueryViewManager}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.Limit.Limit
@@ -38,13 +38,13 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 
 
 class ThreadQueryMethod @Inject()(serializer: EmailQuerySerializer,
-                                          val metricFactory: MetricFactory,
-                                          val configuration: JmapRfc8621Configuration,
-                                          val sessionSupplier: SessionSupplier,
-                                          val sessionTranslator: SessionTranslator,
-                                          val threadIdFactory: JavaThreadId.Factory,
-                                          val threadQueryViewManager: EmailQueryViewManager,
-                                          val mailboxManager: MailboxManager) extends MethodRequiringAccountId[ThreadQueryRequest] {
+                                  val metricFactory: MetricFactory,
+                                  val configuration: JmapRfc8621Configuration,
+                                  val sessionSupplier: SessionSupplier,
+                                  val sessionTranslator: SessionTranslator,
+                                  val threadIdFactory: JavaThreadId.Factory,
+                                  val threadQueryViewManager: ThreadQueryViewManager,
+                                  val mailboxManager: MailboxManager) extends MethodRequiringAccountId[ThreadQueryRequest] {
   override val methodName: MethodName = MethodName("Thread/query")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 

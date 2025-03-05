@@ -17,22 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.projections;
+package org.apache.james.jmap.postgres.projections;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
+import org.apache.james.jmap.api.projections.ThreadQueryView;
+import org.apache.james.jmap.api.projections.ThreadQueryViewManager;
 
-public class DefaultEmailQueryViewManager implements EmailQueryViewManager {
-    private EmailQueryView emailQueryView;
+public class PostgresThreadQueryViewManager implements ThreadQueryViewManager {
+    private final PostgresExecutor.Factory executorFactory;
 
     @Inject
-    public DefaultEmailQueryViewManager(EmailQueryView emailQueryView) {
-        this.emailQueryView = emailQueryView;
+    public PostgresThreadQueryViewManager(PostgresExecutor.Factory executorFactory) {
+        this.executorFactory = executorFactory;
     }
 
     @Override
-    public EmailQueryView getEmailQueryView(Username username) {
-        return emailQueryView;
+    public ThreadQueryView getThreadQueryView(Username username) {
+        return new PostgresThreadQueryView(new PostgresThreadQueryViewDAO(executorFactory.create(username.getDomainPart())));
     }
 }
