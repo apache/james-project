@@ -79,11 +79,10 @@ class ThreadQueryMethod @Inject()(serializer: EmailQuerySerializer,
     ids.map(ids => toResponse(request, ids))
   }
 
-
   private def getLatestThread(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: ThreadQueryRequest): SMono[Seq[ThreadId]] = {
     val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
     val thread: SFlux[ThreadId] = SFlux.fromPublisher(threadQueryViewManager
-      .getThreadQueryView(mailboxSession.getUser).listMailboxContentSortedBySentAt(mailboxId,JavaLimit.from(limitToUse.value + position.value)))
+      .getThreadQueryView(mailboxSession.getUser).listLatestThreadIdsSortedByReceivedAt(mailboxId,JavaLimit.from(limitToUse.value + position.value)))
 
     fromThreadViewEntries(mailboxId, thread, mailboxSession, position, limitToUse)
   }

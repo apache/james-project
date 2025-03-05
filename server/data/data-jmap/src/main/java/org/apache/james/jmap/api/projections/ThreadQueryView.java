@@ -84,26 +84,24 @@ public interface ThreadQueryView {
      *
      *    - RFC-8621:
      *
-     *    ["Email/query",
+     *    ["Thread/query",
      *     {
      *       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
      *       "filter: {
      *           "inMailbox":"abcd"
      *       }
-     *       "sort": [{
-     *         "property":"sentAt",
-     *         "isAscending": false
-     *       }]
+     *       "position":0,
+     *       "limit":10,
      *     },
      *     "c1"]
      *
      *   - Draft
      *
-     *   [["getThreadList", {"filter":{"inMailboxes": ["abcd"]}, "sort": ["date desc"]}, "#0"]]
+     *   [["getThreadList", {"filter":{"inMailboxes": ["abcd"]},"position":0,"limit":10, , "#0"]]
      *
      * @return ThreadIds of the Threads in this mailbox, sorted by sentAt.
      */
-    Flux<ThreadId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit);
+    Flux<ThreadId> listLatestThreadIdsSortedByReceivedAt(MailboxId mailboxId, Limit limit);
 
   
     Mono<Void> delete(MailboxId mailboxId, ThreadId threadId);

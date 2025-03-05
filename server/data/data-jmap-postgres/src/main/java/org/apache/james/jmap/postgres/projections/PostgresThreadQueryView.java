@@ -41,9 +41,8 @@ public class PostgresThreadQueryView implements ThreadQueryView {
     }
 
     @Override
-    public Flux<ThreadId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit) {
-        System.out.println("chole amar chander gari");
-        return threadQueryViewDAO.findLatestThreadIds(PostgresMailboxId.class.cast(mailboxId), 10);
+    public Flux<ThreadId> listLatestThreadIdsSortedByReceivedAt(MailboxId mailboxId, Limit limit) {
+        return threadQueryViewDAO.listLatestThreadIdsSortedByReceivedAt(PostgresMailboxId.class.cast(mailboxId), 10);
     }
 
     @Override

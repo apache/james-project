@@ -52,26 +52,7 @@ public class PostgresThreadQueryViewDAO {
         this.postgresExecutor = postgresExecutor;
     }
 
-    public Flux<ThreadId> findLatestThreadIds(PostgresMailboxId mailboxId, int limit) {
-        System.out.println("gram chara oi thread id r path");
-        Flux<ThreadId> ans = postgresExecutor.executeRows(dslContext -> Flux.from(dslContext
-                .select(THREAD_ID, DSL.max(PostgresMessageModule.MessageToMailboxTable.INTERNAL_DATE).as("latest_date")) // Select thread_id and max internal_date
-                .from(PostgresMessageModule.MessageToMailboxTable.TABLE_NAME)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid())) // Filter by mailboxId
-                .groupBy(THREAD_ID) // Group by thread_id
-                .orderBy(DSL.field("latest_date").desc()) // Order by latest_date in descending order
-                .limit(limit) // Limit
-        ), EAGER_FETCH).map(record ->
-                ThreadId.fromBaseMessageId(PostgresMessageId.Factory.of(record.get(PostgresThreadModule.PostgresThreadTable.THREAD_ID))));
-
-        System.out.println("THREAD IDs");
-
-        ans.subscribe(
-                ThreadId -> System.out.println("Thread_ID: " + ThreadId),
-                error -> System.err.println("Error: " + error),
-                () -> System.out.println("Done printing Thread_IDs")
-        );
-
+    public Flux<ThreadId> listLatestThreadIdsSortedByReceivedAt(PostgresMailboxId mailboxId, int limit) {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext
                 .select(THREAD_ID, DSL.max(PostgresMessageModule.MessageToMailboxTable.INTERNAL_DATE).as("latest_date")) // Select thread_id and max internal_date
                 .from(PostgresMessageModule.MessageToMailboxTable.TABLE_NAME)
