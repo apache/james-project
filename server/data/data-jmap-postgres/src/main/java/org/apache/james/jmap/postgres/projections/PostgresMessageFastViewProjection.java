@@ -26,6 +26,7 @@ import static org.apache.james.jmap.postgres.projections.PostgresMessageFastView
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
@@ -41,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresMessageFastViewProjection implements MessageFastViewProjection {
@@ -83,6 +85,11 @@ public class PostgresMessageFastViewProjection implements MessageFastViewProject
                 LOGGER.error("Error while retrieving MessageFastView projection item for {}", messageId, e);
                 return Mono.empty();
             });
+    }
+
+    @Override
+    public Flux<MessageId> getAllMessageIds() {
+        throw new NotImplementedException();
     }
 
     private MessageFastViewPrecomputedProperties toMessageFastViewPrecomputedProperties(Record record) {

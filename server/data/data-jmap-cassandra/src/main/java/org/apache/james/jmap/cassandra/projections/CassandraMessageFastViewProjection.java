@@ -50,6 +50,7 @@ import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMessageFastViewProjection implements MessageFastViewProjection {
@@ -62,12 +63,13 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
 
     private final PreparedStatement storeStatement;
     private final PreparedStatement retrieveStatement;
+    private final PreparedStatement getAllMessageIdsStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement truncateStatement;
     private final DriverExecutionProfile cachingProfile;
 
     @Inject
-    CassandraMessageFastViewProjection(MetricFactory metricFactory, CqlSession session) {
+    public CassandraMessageFastViewProjection(MetricFactory metricFactory, CqlSession session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
         this.deleteStatement = session.prepare(deleteFrom(TABLE_NAME)
@@ -83,6 +85,10 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
         this.retrieveStatement = session.prepare(selectFrom(TABLE_NAME)
             .all()
             .whereColumn(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID))
+            .build());
+
+        this.getAllMessageIdsStatement = session.prepare(selectFrom(TABLE_NAME)
+            .all()
             .build());
 
         this.truncateStatement = session.prepare(QueryBuilder.truncate(TABLE_NAME).build());
@@ -126,6 +132,13 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
 
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUuid(MESSAGE_ID, ((CassandraMessageId) messageId).get()));
+    }
+
+    @Override
+    public Flux<MessageId> getAllMessageIds() {
+        return cassandraAsyncExecutor.executeRows(getAllMessageIdsStatement.bind())
+            .map(row -> row.get(MESSAGE_ID, TypeCodecs.UUID))
+            .map(CassandraMessageId.Factory::of);
     }
 
     @Override

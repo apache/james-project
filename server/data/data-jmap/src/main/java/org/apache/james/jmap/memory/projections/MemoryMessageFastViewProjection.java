@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.mailbox.model.MessageId;
@@ -31,6 +32,7 @@ import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryMessageFastViewProjection implements MessageFastViewProjection {
@@ -61,6 +63,11 @@ public class MemoryMessageFastViewProjection implements MessageFastViewProjectio
         return Mono.fromSupplier(() -> projectionItems.get(messageId))
             .doOnNext(preview -> metricRetrieveHitCount.increment())
             .switchIfEmpty(Mono.fromRunnable(metricRetrieveMissCount::increment));
+    }
+
+    @Override
+    public Flux<MessageId> getAllMessageIds() {
+        throw new NotImplementedException();
     }
 
     @Override

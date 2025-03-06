@@ -46,6 +46,8 @@ public interface MessageFastViewProjection {
 
     Publisher<Void> delete(MessageId messageId);
 
+    Publisher<MessageId> getAllMessageIds();
+
     @VisibleForTesting
     Publisher<Void> clear();
 
