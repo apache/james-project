@@ -19,84 +19,38 @@
 
 package org.apache.james.backends.redis
 
-import org.apache.james.core.healthcheck.Result
 import org.apache.james.server.core.filesystem.FileSystemImpl
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.extension.ExtendWith
-import org.junit.jupiter.api.{AfterEach, BeforeEach, Test}
-import reactor.core.scala.publisher.SMono
+import org.junit.jupiter.api.{AfterEach, BeforeEach}
 
 @ExtendWith(Array(classOf[RedisExtension]))
-class RedisStandaloneHealthCheckTest {
-
+class RedisStandaloneHealthCheckTest extends RedisHealthCheckTest {
   var redisHealthCheck: RedisHealthCheck = _
+  var redisStandaloneContainer: DockerRedis = _
 
   @BeforeEach
   def setup(redis: DockerRedis): Unit = {
     val redisConfiguration: StandaloneRedisConfiguration = StandaloneRedisConfiguration.from(redis.redisURI().toString)
-
     redisHealthCheck = new RedisHealthCheck(redisConfiguration, new RedisClientFactory(FileSystemImpl.forTesting()))
+    redisStandaloneContainer = redis
   }
 
   @AfterEach
-  def cleaner(redis: DockerRedis): Unit =
-    if (redis.isPaused) {
-      redis.unPause()
+  def afterEach(): Unit =
+    if (redisStandaloneContainer.isPaused) {
+      redisStandaloneContainer.unPause()
     }
 
-  @Test
-  def checkShouldReturnHealthyWhenRedisIsRunning(): Unit = {
-    val result: Result = SMono.fromPublisher(redisHealthCheck.check()).block()
+  @Override
+  def getRedisHealthCheck(): RedisHealthCheck = redisHealthCheck
 
-    assertThat(result.isHealthy).isTrue
+  @Override
+  def pauseRedis(): Unit = {
+    redisStandaloneContainer.pause()
   }
 
-  @Test
-  def multipleCheckInShortPeriodShouldReturnHealthyWhenRedisIsRunning(): Unit = {
-    val check1: Result = SMono.fromPublisher(redisHealthCheck.check()).block()
-    val check2: Result = SMono.fromPublisher(redisHealthCheck.check()).block()
-    val check3: Result = SMono.fromPublisher(redisHealthCheck.check()).block()
-
-    SoftAssertions.assertSoftly(softly => {
-      softly.assertThat(check1.isHealthy).isTrue
-      softly.assertThat(check2.isHealthy).isTrue
-      softly.assertThat(check3.isHealthy).isTrue
-    })
+  @Override
+  def unpauseRedis(): Unit = {
+    redisStandaloneContainer.unPause()
   }
-
-  @Test
-  def checkShouldReturnDegradedWhenRedisIsDown(redis: DockerRedis): Unit = {
-    redis.pause()
-    val result: Result = SMono.fromPublisher(redisHealthCheck.check()).block()
-
-    assertThat(result.isDegraded).isTrue
-  }
-
-  @Test
-  def checkShouldReturnHealthyWhenRedisIsRecovered(redis: DockerRedis): Unit = {
-    redis.pause()
-    redis.unPause()
-    val result: Result = SMono.fromPublisher(redisHealthCheck.check()).block()
-
-    assertThat(result.isHealthy).isTrue
-  }
-
-  @Test
-  def multipleCheckInShortPeriodShouldReturnMixedResultWhenRedisIsUnstable(redis: DockerRedis): Unit = {
-    val check1: Result = SMono.fromPublisher(redisHealthCheck.check()).block()
-
-    redis.pause()
-    val check2: Result = SMono.fromPublisher(redisHealthCheck.check()).block()
-
-    redis.unPause()
-    val check3: Result = SMono.fromPublisher(redisHealthCheck.check()).block()
-
-    SoftAssertions.assertSoftly(softly => {
-      softly.assertThat(check1.isHealthy).isTrue
-      softly.assertThat(check2.isDegraded).isTrue
-      softly.assertThat(check3.isHealthy).isTrue
-    })
-  }
-
 }

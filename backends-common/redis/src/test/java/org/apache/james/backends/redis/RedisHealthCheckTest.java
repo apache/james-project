@@ -19,17 +19,21 @@
 
 package org.apache.james.backends.redis;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.core.healthcheck.Result;
+import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import reactor.core.publisher.Mono;
 
 public abstract class RedisHealthCheckTest {
+  private static final ConditionFactory AWAIT = Awaitility.await()
+      .pollInterval(2, TimeUnit.SECONDS)
+      .atMost(20, TimeUnit.SECONDS);
 
   protected abstract RedisHealthCheck getRedisHealthCheck();
 
@@ -47,10 +51,7 @@ public abstract class RedisHealthCheckTest {
   public void checkShouldReturnDegradedWhenRedisIsDown() {
     pauseRedis();
 
-    Awaitility.await()
-        .pollInterval(2, TimeUnit.SECONDS)
-        .atMost(20, TimeUnit.SECONDS)
-        .untilAsserted(() -> assertThat(Mono.from(getRedisHealthCheck().check()).block().isDegraded()).isTrue());
+    AWAIT.untilAsserted(() -> assertThat(Mono.from(getRedisHealthCheck().check()).block().isDegraded()).isTrue());
   }
 
   @Test
@@ -58,9 +59,36 @@ public abstract class RedisHealthCheckTest {
     pauseRedis();
     unpauseRedis();
 
-    Awaitility.await()
-        .pollInterval(2, TimeUnit.SECONDS)
-        .atMost(20, TimeUnit.SECONDS)
-        .untilAsserted(() -> assertThat(Mono.from(getRedisHealthCheck().check()).block().isHealthy()).isTrue());
+    AWAIT.untilAsserted(() -> assertThat(Mono.from(getRedisHealthCheck().check()).block().isHealthy()).isTrue());
+  }
+
+  @Test
+  public void multipleCheckInShortPeriodShouldReturnHealthyWhenRedisIsRunning() {
+    Result check1 = Mono.from(getRedisHealthCheck().check()).block();
+    Result check2 = Mono.from(getRedisHealthCheck().check()).block();
+    Result check3 = Mono.from(getRedisHealthCheck().check()).block();
+
+    SoftAssertions.assertSoftly(softly -> {
+        softly.assertThat(check1.isHealthy()).isTrue();
+        softly.assertThat(check2.isHealthy()).isTrue();
+        softly.assertThat(check3.isHealthy()).isTrue();
+    });
+  }
+
+  @Test
+  public void  multipleCheckInShortPeriodShouldReturnMixedResultWhenRedisIsUnstable() {
+    Result check1 = Mono.from(getRedisHealthCheck().check()).block();
+
+    pauseRedis();
+    Result check2 = Mono.from(getRedisHealthCheck().check()).block();
+
+    unpauseRedis();
+    Result check3 = Mono.from(getRedisHealthCheck().check()).block();
+
+    SoftAssertions.assertSoftly(softly -> {
+      softly.assertThat(check1.isHealthy()).isTrue();
+      softly.assertThat(check2.isDegraded()).isTrue();
+      softly.assertThat(check3.isHealthy()).isTrue();
+    });
   }
 }
