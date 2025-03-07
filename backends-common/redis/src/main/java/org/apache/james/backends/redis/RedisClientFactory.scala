@@ -22,7 +22,7 @@ package org.apache.james.backends.redis
 import java.time.Duration
 
 import io.lettuce.core.{ClientOptions, RedisClient, SslOptions}
-import io.lettuce.core.cluster.RedisClusterClient
+import io.lettuce.core.cluster.{ClusterClientOptions, RedisClusterClient}
 import io.lettuce.core.resource.ClientResources
 import jakarta.inject.{Inject, Singleton}
 import org.apache.james.filesystem.api.FileSystem
@@ -56,12 +56,16 @@ class RedisClientFactory @Singleton() @Inject()
       .threadFactoryProvider(poolName => NamedThreadFactory.withName(s"redis-driver-$poolName"))
     redisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
     redisConfiguration.workerThreads.foreach(value => resourceBuilder.computationThreadPoolSize(value))
-    RedisClusterClient.create(resourceBuilder.build(),
+    val redisClient = RedisClusterClient.create(resourceBuilder.build(),
       redisConfiguration.redisURI.value
         .map(rURI => {
           maybeTimeout.foreach(timeout => rURI.setTimeout(timeout))
           rURI
         }).asJava)
+    redisClient.setOptions(ClusterClientOptions.builder(
+        createClientOptions(redisConfiguration.useSSL, redisConfiguration.mayBeSSLConfiguration))
+      .build())
+    redisClient
   }
 
   def createMasterReplicaClient(redisConfiguration: MasterReplicaRedisConfiguration): RedisClient = {

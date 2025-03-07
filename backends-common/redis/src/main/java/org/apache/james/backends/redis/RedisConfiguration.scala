@@ -178,18 +178,27 @@ case class MasterReplicaRedisConfiguration(redisURI: RedisUris, useSSL: Boolean,
 object ClusterRedisConfiguration {
   def from(config: Configuration): ClusterRedisConfiguration =
     from(config.getStringArray(REDIS_URL_PROPERTY_NAME),
+      config.getBoolean(REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE),
+      SSLConfiguration.from(config),
       RedisConfiguration.redisIoThreadsFrom(config),
       RedisConfiguration.redisWorkerThreadsFrom(config))
 
   def from(redisUris: Array[String],
+           ioThreads: Option[Int],
+           workerThreads: Option[Int]): ClusterRedisConfiguration =
+    from(redisUris, useSSL = false, Option.empty, ioThreads, workerThreads)
+
+  def from(redisUris: Array[String],
+           useSSL: Boolean,
+           mayBeSSLConfiguration: Option[SSLConfiguration],
            ioThreads: Option[Int] = None,
            workerThreads: Option[Int] = None): ClusterRedisConfiguration = {
     Preconditions.checkArgument(redisUris != null && redisUris.length > 0)
-    ClusterRedisConfiguration(RedisUris.from(redisUris), ioThreads, workerThreads)
+    ClusterRedisConfiguration(RedisUris.from(redisUris), useSSL, mayBeSSLConfiguration, ioThreads, workerThreads)
   }
 }
 
-case class ClusterRedisConfiguration(redisURI: RedisUris, ioThreads: Option[Int], workerThreads: Option[Int]) extends RedisConfiguration {
+case class ClusterRedisConfiguration(redisURI: RedisUris, useSSL: Boolean, mayBeSSLConfiguration: Option[SSLConfiguration], ioThreads: Option[Int], workerThreads: Option[Int]) extends RedisConfiguration {
   override def asString: String = MoreObjects.toStringHelper(this)
     .add("topology", CLUSTER_TOPOLOGY)
     .add("redisURI", redisURI.value.map(_.toString).mkString(";"))
