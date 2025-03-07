@@ -58,6 +58,7 @@ class ThreadQueryMethod @Inject()(serializer: EmailQuerySerializer,
                              request: ThreadQueryRequest,
                              capabilities: Set[CapabilityIdentifier]): SMono[Invocation] = {
     def validation: Either[Throwable, SMono[Invocation]] = for {
+        _ <- Either.cond(requiredCapabilities.subsetOf(capabilities), (), new MissingCapabilityException(s"Missing required capabilities: ${requiredCapabilities.diff(capabilities)}"))
         limit <- Limit.validateRequestLimit(request.limit)
         position <- Position.validateRequestPosition(request.position)
       } yield {
