@@ -20,6 +20,7 @@
 package org.apache.james.messagefastview.cleanup;
 
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.inject.Inject;
@@ -38,7 +39,7 @@ public class MessageFastViewCleanupService {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageFastViewCleanupService.class);
     private static final int MESSAGE_IDS_PER_SECOND = 1000;
     private static final Funnel<CharSequence> BLOOM_FILTER_FUNNEL = Funnels.stringFunnel(StandardCharsets.US_ASCII);
-    public static final int EXPECTED_BLOOM_FILTER_INSERTIONS = 10000000;
+    public static final int EXPECTED_BLOOM_FILTER_INSERTIONS = 50000000;
     public static final double FALSE_POSITIVE_PROBABLITY = 0.01;
 
     private final CassandraMessageDAO messageDAO;
@@ -51,35 +52,30 @@ public class MessageFastViewCleanupService {
     }
 
     public Mono<Long> cleanup() {
-        return populatedBloomFilter()
-            .flatMap(this::cleanup);
+        String salt = UUID.randomUUID().toString();
+        return populatedBloomFilter(salt)
+            .flatMap(bloomFilter -> cleanup(bloomFilter, salt));
     }
 
-    private Mono<Long> cleanup(BloomFilter<CharSequence> bloomFilter) {
+    private Mono<Long> cleanup(BloomFilter<CharSequence> bloomFilter, String salt) {
         AtomicLong totalDeleted = new AtomicLong();
         return Flux.from(messageFastViewDAO.getAllMessageIds())
-            .filter(messageId -> !bloomFilter.mightContain(messageId.serialize()))
+            .filter(messageId -> !bloomFilter.mightContain(salt + messageId.serialize()))
             .flatMap(messageId -> Mono.from(messageFastViewDAO.delete(messageId))
-                    .doOnSuccess(any -> {
-                        long total = totalDeleted.get();
-                        if (total % 1000 == 0) {
-                            LOGGER.info("Message fast view items deleted: {}", total);
-                        }
-                        totalDeleted.incrementAndGet();
-                    }),
+                    .doOnSuccess(any -> LOGGER.info("Total records deleted: {}", totalDeleted.incrementAndGet())),
                 MESSAGE_IDS_PER_SECOND)
             .then()
             .thenReturn(totalDeleted.get())
             .doFinally(any -> LOGGER.info("Message fast view cleanup complete. Total deleted: {}", totalDeleted.get()));
     }
 
-    private Mono<BloomFilter<CharSequence>> populatedBloomFilter() {
+    private Mono<BloomFilter<CharSequence>> populatedBloomFilter(String salt) {
         return Mono.fromCallable(() -> BloomFilter.create(
                 BLOOM_FILTER_FUNNEL,
                 EXPECTED_BLOOM_FILTER_INSERTIONS,
                 FALSE_POSITIVE_PROBABLITY))
             .flatMap(bloomFilter -> messageDAO.getAllMessageIds()
-                .map(messageId -> bloomFilter.put(messageId.serialize()))
+                .map(messageId -> bloomFilter.put(salt + messageId.serialize()))
                 .then()
                 .thenReturn(bloomFilter));
     }
