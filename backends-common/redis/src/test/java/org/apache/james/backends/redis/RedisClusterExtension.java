@@ -19,18 +19,12 @@
 
 package org.apache.james.backends.redis;
 
-import static java.lang.Boolean.TRUE;
-import static org.apache.james.backends.redis.DockerRedis.DEFAULT_IMAGE_NAME;
-import static org.apache.james.backends.redis.DockerRedis.DEFAULT_PORT;
-
 import java.io.IOException;
 import java.net.URI;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -45,24 +39,26 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.wait.strategy.Wait;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 
+import static java.lang.Boolean.TRUE;
+import static org.apache.james.backends.redis.DockerRedis.DEFAULT_PORT;
 import scala.jdk.javaapi.OptionConverters;
 
 public class RedisClusterExtension implements GuiceModuleTestExtension {
 
-    public static class RedisClusterContainer extends ArrayList<GenericContainer> {
-        public RedisClusterContainer(Collection<? extends GenericContainer> c) {
+    public static class RedisClusterContainer extends ArrayList<DockerRedis> {
+        public RedisClusterContainer(Collection<? extends DockerRedis> c) {
             super(c);
         }
 
         public ClusterRedisConfiguration getRedisConfiguration() {
             return ClusterRedisConfiguration.from(this.stream()
+                    .map(DockerRedis::getContainer)
                     .map(redisURIFunction())
                     .map(URI::toString)
                     .toArray(String[]::new),
@@ -71,12 +67,12 @@ public class RedisClusterExtension implements GuiceModuleTestExtension {
         }
 
         public void pauseOne() {
-            GenericContainer firstNode = this.get(0);
+            GenericContainer<?> firstNode = this.get(0).getContainer();
             firstNode.getDockerClient().pauseContainerCmd(firstNode.getContainerId()).exec();
         }
 
         public void unPauseOne() {
-            GenericContainer firstNode = this.get(0);
+            GenericContainer<?> firstNode = this.get(0).getContainer();
             if (TRUE.equals(firstNode.getDockerClient().inspectContainerCmd(firstNode.getContainerId())
                 .exec()
                 .getState()
@@ -86,45 +82,44 @@ public class RedisClusterExtension implements GuiceModuleTestExtension {
         }
     }
 
-    public static final Function<String, GenericContainer> redisContainerSupplier = alias ->
-        new GenericContainer<>(DEFAULT_IMAGE_NAME)
-            .withExposedPorts(DEFAULT_PORT)
-            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-" + alias + "-test-" + UUID.randomUUID()))
-            .withCommand("redis-server", "/usr/local/etc/redis/redis.conf")
-            .withNetworkAliases(alias)
-            .withClasspathResourceMapping("redis_cluster.conf",
-                "/usr/local/etc/redis/redis.conf",
-                BindMode.READ_ONLY)
-            .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1)
-                .withStartupTimeout(Duration.ofMinutes(2)));
-
-    static final GenericContainer redis1 = redisContainerSupplier.apply("redis1");
-    static final GenericContainer redis2 = redisContainerSupplier.apply("redis2");
-    static final GenericContainer redis3 = redisContainerSupplier.apply("redis3").dependsOn(redis1, redis2);
+    private final DockerRedis redis1;
+    private final DockerRedis redis2;
+    private final DockerRedis redis3;
 
     private RedisClusterContainer redisClusterContainer;
     private final Network network;
 
     public RedisClusterExtension() {
-        this(Network.newNetwork());
+        this.network = Network.newNetwork();
+        redis1 = createClusterContainer("redis1");
+        redis2 = createClusterContainer("redis2");
+        redis3 = createClusterContainer("redis3");
     }
 
-    public RedisClusterExtension(Network network) {
-        this.network = network;
-        redis1.withNetwork(network);
-        redis2.withNetwork(network);
-        redis3.withNetwork(network);
+    private DockerRedis createClusterContainer(String alias) {
+        DockerRedis redis = new DockerRedis(alias);
+
+        redis.getContainer()
+            .withCommand("redis-server", "/usr/local/etc/redis/redis.conf")
+            .withNetwork(network)
+            .withClasspathResourceMapping("redis_cluster.conf",
+                "/usr/local/etc/redis/redis.conf",
+                BindMode.READ_ONLY);
+
+        return redis;
     }
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws IOException, InterruptedException {
+        redis1.start();
+        redis2.start();
         redis3.start();
         initialRedisCluster();
         redisClusterContainer = new RedisClusterContainer(List.of(redis1, redis2, redis3));
     }
 
-    private static void initialRedisCluster() throws IOException, InterruptedException {
-        String executeResult = redis3.execInContainer("sh",
+    private void initialRedisCluster() throws IOException, InterruptedException {
+        String executeResult = redis3.getContainer().execInContainer("sh",
             "-c",
             "echo 'yes' | redis-cli --cluster create " +
                 "redis1:6379 " +
@@ -147,7 +142,7 @@ public class RedisClusterExtension implements GuiceModuleTestExtension {
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        redisClusterContainer.forEach(Throwing.consumer(container -> container.execInContainer("redis-cli", "flushall")));
+        redisClusterContainer.forEach(Throwing.consumer(DockerRedis::flushAll));
     }
 
     @Override

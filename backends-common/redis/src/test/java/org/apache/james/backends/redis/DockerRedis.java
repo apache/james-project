@@ -27,7 +27,6 @@ import java.util.UUID;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
@@ -37,26 +36,26 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
 
 public class DockerRedis {
+    private static final String DEFAULT_ALIAS = "redis";
+
     public static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("redis").withTag("7.2.5");
     public static final int DEFAULT_PORT = 6379;
 
     private final GenericContainer<?> container;
 
     public DockerRedis() {
-        this.container = getContainer();
+        this.container = createContainer(DEFAULT_ALIAS);
     }
 
-    public DockerRedis(Network network) {
-        this.container = getContainer()
-            .withNetwork(network);
+    public DockerRedis(String alias) {
+        this.container = createContainer(alias);
     }
 
-    private GenericContainer<?> getContainer() {
+    private GenericContainer<?> createContainer(String alias) {
         return new GenericContainer<>(DEFAULT_IMAGE_NAME)
             .withExposedPorts(DEFAULT_PORT)
             .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-redis-test-" + UUID.randomUUID()))
-            .withCommand("--loglevel", "debug")
-            .withNetworkAliases("redis")
+            .withNetworkAliases(alias)
             .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1)
                 .withStartupTimeout(Duration.ofMinutes(2)));
     }
@@ -101,5 +100,9 @@ public class DockerRedis {
 
     public void flushAll() {
         createClient().flushall();
+    }
+
+    public GenericContainer<?> getContainer() {
+        return container;
     }
 }
