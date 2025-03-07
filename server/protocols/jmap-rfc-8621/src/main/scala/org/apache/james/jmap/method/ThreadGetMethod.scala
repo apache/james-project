@@ -75,7 +75,6 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
     limit match {
       case Right(validLimit) =>
         if (validLimit.value != 256) {
-          println("aci boss ",validLimit.value)
           getThreadResponse(request, mailboxSession, validLimit)
             .reduce(ThreadGetResult.empty)(ThreadGetResult.merge)
             .map(threadGetResult => threadGetResult.asResponse(request.accountId))
@@ -85,7 +84,6 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
               methodCallId = invocation.invocation.methodCallId))
             .map(InvocationWithContext(_, invocation.processingContext))
         } else{
-          println("nai boss")
           getThreadResponse(request, mailboxSession)
             .reduce(ThreadGetResult.empty)(ThreadGetResult.merge)
             .map(threadGetResult => threadGetResult.asResponse(request.accountId))
