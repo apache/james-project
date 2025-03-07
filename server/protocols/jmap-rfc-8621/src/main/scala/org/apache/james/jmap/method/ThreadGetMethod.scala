@@ -23,7 +23,8 @@ import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{AccountId, Invocation, JmapRfc8621Configuration, SessionTranslator, UuidState}
+import org.apache.james.jmap.core.Limit.Limit
+import org.apache.james.jmap.core.{AccountId, Invocation, JmapRfc8621Configuration, Limit, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.ThreadSerializer
 import org.apache.james.jmap.mail.{Thread, ThreadGetRequest, ThreadGetResponse, ThreadNotFound, UnparsedThreadId}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -31,6 +32,7 @@ import org.apache.james.mailbox.exception.ThreadNotFoundException
 import org.apache.james.mailbox.model.{ThreadId => JavaThreadId}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
+import org.apache.james.util.streams.Limit.limit
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.util.Try
@@ -68,15 +70,36 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
   override val methodName: MethodName = MethodName("Thread/get")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
-  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: ThreadGetRequest): SMono[InvocationWithContext] =
-    getThreadResponse(request, mailboxSession)
-      .reduce(ThreadGetResult.empty)(ThreadGetResult.merge)
-      .map(threadGetResult => threadGetResult.asResponse(request.accountId))
-      .map(threadGetResponse => Invocation(
-        methodName = methodName,
-        arguments = Arguments(ThreadSerializer.serialize(threadGetResponse)),
-        methodCallId = invocation.invocation.methodCallId))
-      .map(InvocationWithContext(_, invocation.processingContext))
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: ThreadGetRequest): SMono[InvocationWithContext] = {
+    val limit: Either[IllegalArgumentException, Limit.Limit] = Limit.validateRequestLimit(request.limit)
+    limit match {
+      case Right(validLimit) =>
+        if (validLimit.value != 256) {
+          println("aci boss ",validLimit.value)
+          getThreadResponse(request, mailboxSession, validLimit)
+            .reduce(ThreadGetResult.empty)(ThreadGetResult.merge)
+            .map(threadGetResult => threadGetResult.asResponse(request.accountId))
+            .map(threadGetResponse => Invocation(
+              methodName = methodName,
+              arguments = Arguments(ThreadSerializer.serialize(threadGetResponse)),
+              methodCallId = invocation.invocation.methodCallId))
+            .map(InvocationWithContext(_, invocation.processingContext))
+        } else{
+          println("nai boss")
+          getThreadResponse(request, mailboxSession)
+            .reduce(ThreadGetResult.empty)(ThreadGetResult.merge)
+            .map(threadGetResult => threadGetResult.asResponse(request.accountId))
+            .map(threadGetResponse => Invocation(
+              methodName = methodName,
+              arguments = Arguments(ThreadSerializer.serialize(threadGetResponse)),
+              methodCallId = invocation.invocation.methodCallId))
+            .map(InvocationWithContext(_, invocation.processingContext))
+        }
+      case Left(error)       =>
+        println(s"Error: ${error.getMessage}")
+        null
+    }
+  }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, ThreadGetRequest] =
     ThreadSerializer.deserialize(invocation.arguments.value).asEitherRequest
@@ -97,4 +120,22 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
                 case e => SMono.error(e)
               }))
       })
+
+  private def getThreadResponse(threadGetRequest: ThreadGetRequest,
+                                mailboxSession: MailboxSession,
+                                limit: Limit): SFlux[ThreadGetResult] = {
+    SFlux.fromIterable(threadGetRequest.ids)
+      .flatMap(unparsedThreadId => {
+        Try(threadIdFactory.fromString(unparsedThreadId.id.toString()))
+          .fold(_ => SFlux.just(ThreadGetResult.notFound(unparsedThreadId)),
+            threadId => SFlux.fromPublisher(mailboxManager.getThread(threadId, mailboxSession, limit.value))
+              .collectSeq()
+              .map(seq => Thread(id = unparsedThreadId.id, emailIds = seq.toList))
+              .map(ThreadGetResult.found)
+              .onErrorResume({
+                case _: ThreadNotFoundException => SMono.just(ThreadGetResult.notFound(unparsedThreadId))
+                case e => SMono.error(e)
+              }))
+      })
+  }
 }

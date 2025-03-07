@@ -927,6 +927,11 @@ public class StoreMailboxManager implements MailboxManager {
         return threadIdGuessingAlgorithm.getMessageIdsInThread(threadId, session);
     }
 
+    @Override
+    public Flux<MessageId> getThread(ThreadId threadId, MailboxSession session, int limit) {
+        return threadIdGuessingAlgorithm.getLatestMessageIdsInThread(threadId, session, limit);
+    }
+
     public Flux<MailboxId> getInMailboxIds(MultimailboxesSearchQuery expression, MailboxSession session) {
         if (expression.getInMailboxes().isEmpty()) {
             return accessibleMailboxIds(expression.getNamespace(), Right.Read, session);

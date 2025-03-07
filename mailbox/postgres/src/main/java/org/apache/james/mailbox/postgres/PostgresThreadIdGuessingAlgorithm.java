@@ -78,7 +78,14 @@ public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgori
     public Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session) {
         PostgresThreadDAO threadDAO = threadDAOFactory.create(session.getUser().getDomainPart());
         return threadDAO.findMessageIds(threadId, session.getUser())
-            .switchIfEmpty(Flux.error(new ThreadNotFoundException(threadId)));
+                .switchIfEmpty(Flux.error(new ThreadNotFoundException(threadId)));
+    }
+
+    @Override
+    public Flux<MessageId> getLatestMessageIdsInThread(ThreadId threadId, MailboxSession session, int limit) {
+        PostgresThreadDAO threadDAO = threadDAOFactory.create(session.getUser().getDomainPart());
+        return threadDAO.findLatestMessageIds(threadId, session.getUser(), limit)
+                .switchIfEmpty(Flux.error(new ThreadNotFoundException(threadId)));
     }
 
     private Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {

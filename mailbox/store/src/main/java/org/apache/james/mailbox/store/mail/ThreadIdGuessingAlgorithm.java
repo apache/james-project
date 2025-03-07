@@ -35,4 +35,6 @@ public interface ThreadIdGuessingAlgorithm {
     Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> thisMimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session);
 
     Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session);
+
+    Flux<MessageId> getLatestMessageIdsInThread(ThreadId threadId, MailboxSession session, int limit);
 }

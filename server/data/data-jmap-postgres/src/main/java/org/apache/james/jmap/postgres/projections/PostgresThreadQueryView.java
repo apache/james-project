@@ -42,7 +42,7 @@ public class PostgresThreadQueryView implements ThreadQueryView {
 
     @Override
     public Flux<ThreadId> listLatestThreadIdsSortedByReceivedAt(MailboxId mailboxId, Limit limit) {
-        return threadQueryViewDAO.listLatestThreadIdsSortedByReceivedAt(PostgresMailboxId.class.cast(mailboxId), 10);
+        return threadQueryViewDAO.listLatestThreadIdsSortedByReceivedAt(PostgresMailboxId.class.cast(mailboxId), limit);
     }
 
     @Override

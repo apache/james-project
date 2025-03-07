@@ -398,6 +398,17 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     Publisher<MessageId> getThread(ThreadId threadId, MailboxSession session);
 
     /**
+     * Returns the list of latest MessageId of messages belonging to that Thread of certain limit
+     *
+     * @param threadId
+     *          target Thread
+     * @param session
+     *          the context for this call, not null
+     * @return  the list of MessageId of messages belonging to that Thread
+     */
+    Publisher<MessageId> getThread(ThreadId threadId, MailboxSession session, int limit);
+
+    /**
      * Does the given mailbox exist?
      * 
      * @param mailboxPath

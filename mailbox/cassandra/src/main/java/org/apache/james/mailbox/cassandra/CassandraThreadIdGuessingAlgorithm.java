@@ -95,6 +95,12 @@ public class CassandraThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgor
             .switchIfEmpty(Mono.error(() -> new ThreadNotFoundException(threadId)));
     }
 
+    @Override
+    public Flux<MessageId> getLatestMessageIdsInThread(ThreadId threadId, MailboxSession session, int limit) {
+        return null;
+    }
+
+
     private Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {
         Set<MimeMessageId> mimeMessageIds = new HashSet<>();
         mimeMessageId.ifPresent(mimeMessageIds::add);

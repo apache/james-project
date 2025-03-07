@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.json
 
-import org.apache.james.jmap.core.UuidState
+import org.apache.james.jmap.core.{LimitUnparsed, UuidState}
 import org.apache.james.jmap.mail.{Thread, ThreadChangesRequest, ThreadChangesResponse, ThreadGetRequest, ThreadGetResponse, ThreadNotFound, UnparsedThreadId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.{JsObject, JsResult, JsString, JsValue, Json, OWrites, Reads, Writes}
@@ -29,6 +29,7 @@ import scala.language.implicitConversions
 object ThreadSerializer {
   private implicit val messageIdWrites: Writes[MessageId] = messageId => JsString(messageId.serialize())
   private implicit val unparsedThreadIdReads: Reads[UnparsedThreadId] = Json.valueReads[UnparsedThreadId]
+  private implicit val limitUnparsedReads: Reads[LimitUnparsed] = Json.valueReads[LimitUnparsed]
   private implicit val threadGetReads: Reads[ThreadGetRequest] = Json.reads[ThreadGetRequest]
   private implicit val threadChangesReads: Reads[ThreadChangesRequest] = Json.reads[ThreadChangesRequest]
   private implicit val threadWrites: OWrites[Thread] = Json.writes[Thread]

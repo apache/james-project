@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.jooq.Record;
+import org.jooq.impl.DSL;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -108,6 +109,17 @@ public class PostgresThreadDAO {
                 .and(THREAD_ID.eq(PostgresMessageId.class.cast(threadId.getBaseMessageId()).asUuid()))
                 .orderBy(MESSAGE_ID)))
             .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
+    }
+
+    public Flux<MessageId> findLatestMessageIds(ThreadId threadId, Username username, int limit) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID)
+                        .from(TABLE_NAME)
+                        .where(USERNAME.eq(username.asString()))
+                        .and(THREAD_ID.eq(PostgresMessageId.class.cast(threadId.getBaseMessageId()).asUuid()))
+                        .orderBy(DSL.field(MESSAGE_ID).desc())
+                        .limit(limit)
+                        ))
+                .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
     }
 
     public Pair<Optional<Integer>, ThreadId> readRecord(Record record) {

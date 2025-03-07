@@ -39,6 +39,7 @@ import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule;
+import org.apache.james.util.streams.Limit;
 import org.jooq.impl.DSL;
 
 import reactor.core.publisher.Flux;
@@ -52,14 +53,14 @@ public class PostgresThreadQueryViewDAO {
         this.postgresExecutor = postgresExecutor;
     }
 
-    public Flux<ThreadId> listLatestThreadIdsSortedByReceivedAt(PostgresMailboxId mailboxId, int limit) {
+    public Flux<ThreadId> listLatestThreadIdsSortedByReceivedAt(PostgresMailboxId mailboxId, Limit limit) {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext
                 .select(THREAD_ID, DSL.max(PostgresMessageModule.MessageToMailboxTable.INTERNAL_DATE).as("latest_date")) // Select thread_id and max internal_date
                 .from(PostgresMessageModule.MessageToMailboxTable.TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid())) // Filter by mailboxId
                 .groupBy(THREAD_ID) // Group by thread_id
                 .orderBy(DSL.field("latest_date").desc()) // Order by latest_date in descending order
-                .limit(limit) // Limit
+                .limit(limit.getLimit().get())
         ), EAGER_FETCH).map(record ->
                 ThreadId.fromBaseMessageId(PostgresMessageId.Factory.of(record.get(PostgresThreadModule.PostgresThreadTable.THREAD_ID))));
     }

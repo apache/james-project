@@ -28,6 +28,7 @@ import org.apache.james.mailbox.model.{MessageId, ThreadId}
 case class Thread(id: Id, emailIds: List[MessageId])
 
 case class ThreadGetRequest(accountId: AccountId,
+                            limit: Option[LimitUnparsed],
                             ids: List[UnparsedThreadId]) extends WithAccountId with GetRequest {
   override def idCount: Option[Int] = Some(ids.size)
 }
