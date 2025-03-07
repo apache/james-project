@@ -51,6 +51,7 @@
     <module>metrics-graphite</module>
     <module>custom-healthcheck</module>
     <module>custom-imap</module>
+    <module>message-fast-view-cleanup-extension</module>
   </modules>
 
   <build>
