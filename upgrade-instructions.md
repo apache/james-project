@@ -35,6 +35,11 @@ Change list:
  - [JAMES-3946 White list removals](#james-3946-white-list-removals)
  - [JAMES-4052 Details in quota index](#james-4052-details-in-quota-index)
  - [JAMES-1409 Change JPARecipientRewriteTable to store separate record per target address](#james-1409-change-jparecipientrewritetable-to-store-separate-record-per-target-address)
+ - [Cleanup message fast view data](#cleanup-message-fast-view-data)
+
+### Cleanup message fast view data
+
+PR https://github.com/apache/james-project/pull/2635 has been done to remove redundant records in message fast view table when corresponding message are deleted. In order to delete old redundant message fast view data that relate to no existing message, message-fast-view-cleanup-extension in PR https://github.com/apache/james-project/pull/2667 should be used. Follow the instruction in README.md to use this extension.  
 
 ### JAMES-1409 Change JPARecipientRewriteTable to store separate record per target address
 
