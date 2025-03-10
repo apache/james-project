@@ -35,6 +35,11 @@ Change list:
  - [JAMES-3946 White list removals](#james-3946-white-list-removals)
  - [JAMES-4052 Details in quota index](#james-4052-details-in-quota-index)
  - [JAMES-1409 Change JPARecipientRewriteTable to store separate record per target address](#james-1409-change-jparecipientrewritetable-to-store-separate-record-per-target-address)
+ - [Cleanup message previews](#cleanup-message-previews)
+
+### Cleanup message previews
+
+Because message previews were not deleted upon mailbox deletion, a message previews cleanup extension (https://github.com/apache/james-project/pull/2667) has been made to remove redundant previews. Follow the instruction in README.md in the pull request to use this extension.  
 
 ### JAMES-1409 Change JPARecipientRewriteTable to store separate record per target address
 
