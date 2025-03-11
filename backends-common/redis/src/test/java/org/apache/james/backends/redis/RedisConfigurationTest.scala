@@ -48,7 +48,7 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
     config.addProperty("redis.workerThreads", 32)
 
     val redisConfig = RedisConfiguration.from(config)
-    redisConfig shouldEqual ClusterRedisConfiguration(RedisUris.liftOrThrow(List(RedisURI.create("redis://localhost:6379"), RedisURI.create("redis://localhost:6380"))), Some(16), Some(32))
+    redisConfig shouldEqual ClusterRedisConfiguration(RedisUris.liftOrThrow(List(RedisURI.create("redis://localhost:6379"), RedisURI.create("redis://localhost:6380"))), useSSL = false, mayBeSSLConfiguration = None, Some(16), Some(32))
   }
 
   it should "use default values for missing config values" in {
