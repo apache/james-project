@@ -1,7 +1,0 @@
-From: me@example.com
-To: you@example.com
-X-normal-header: normal header
-X-header.with.dots: header with dots
-Subject: Test me
-
-Please!

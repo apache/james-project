@@ -4,7 +4,10 @@ dockerfiles/run/**/*.lib
 dockerfiles/run/**/*.jar
 dockerfiles/run/**/keystore
 dockerfiles/run/**/glowroot
+mailbox/store/src/test/resources/eml/*.eml
+./server/container/guice/common/src/test/resources/eml
 .m2
+.eml
 test-run.log
 .mvn/.develocity
 build
