@@ -65,7 +65,7 @@ public class MessageFastViewCleanupService {
                     .doOnSuccess(any -> LOGGER.info("Total records deleted: {}", totalDeleted.incrementAndGet())),
                 MESSAGE_IDS_PER_SECOND)
             .then()
-            .thenReturn(totalDeleted.get())
+            .then(Mono.fromCallable(totalDeleted::get))
             .doFinally(any -> LOGGER.info("Message fast view cleanup complete. Total deleted: {}", totalDeleted.get()));
     }
 
@@ -75,7 +75,7 @@ public class MessageFastViewCleanupService {
                 EXPECTED_BLOOM_FILTER_INSERTIONS,
                 FALSE_POSITIVE_PROBABLITY))
             .flatMap(bloomFilter -> messageDAO.getAllMessageIds()
-                .map(messageId -> bloomFilter.put(salt + messageId.serialize()))
+                .concatMap(messageId -> Mono.fromRunnable(() -> bloomFilter.put(salt + messageId.serialize())))
                 .then()
                 .thenReturn(bloomFilter));
     }

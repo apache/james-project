@@ -34,7 +34,7 @@ import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 public class CassandraMessageDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
@@ -48,12 +48,11 @@ public class CassandraMessageDAO {
             .column(MESSAGE_ID)
             .all()
             .build();
-        simpleStatement.setPageSize(1000);
         this.select = session.prepare(simpleStatement);
     }
 
-    public Mono<MessageId> getAllMessageIds() {
-        return cassandraAsyncExecutor.executeSingleRow(select.bind())
+    public Flux<MessageId> getAllMessageIds() {
+        return cassandraAsyncExecutor.executeRows(select.bind())
             .map(row -> row.get(MESSAGE_ID, TypeCodecs.UUID))
             .map(CassandraMessageId.Factory::of);
     }
