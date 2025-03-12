@@ -19,17 +19,25 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import java.util.Optional;
+
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
+import org.apache.james.core.Username;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.RcptHook;
+import org.apache.james.util.AuditTrail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Handler which want to do a recipient check should extend this
@@ -44,7 +52,7 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
                 return HookResult.DECLINED;
             }
             if (!isValidRecipient(session, rcpt)) {
-                return reject(rcpt);
+                return reject(session, rcpt);
             }
             return HookResult.DECLINED;
         } catch (IllegalArgumentException e) {
@@ -64,8 +72,21 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
         }
     }
 
-    public HookResult reject(MailAddress rcpt) {
-        LOGGER.info("Rejected message. Unknown user: {}", rcpt);
+    public HookResult reject(SMTPSession session, MailAddress rcpt) {
+        MaybeSender sender = session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction).orElse(MaybeSender.nullSender());
+        AuditTrail.entry()
+            .username(() -> Optional.ofNullable(session.getUsername())
+                .map(Username::asString)
+                .orElse(""))
+            .remoteIP(() -> Optional.ofNullable(session.getRemoteAddress()))
+            .sessionId(session::getSessionID)
+            .protocol("SMTP")
+            .action("SPOOL")
+            .parameters(Throwing.supplier(() -> ImmutableMap.of(
+                "sender", sender.asString(),
+                "recipient",  rcpt.asString())))
+            .log("Rejected message. Unknown user: " + rcpt.asString());
+
         return HookResult.builder()
             .hookReturnCode(HookReturnCode.deny())
             .smtpReturnCode(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE)
