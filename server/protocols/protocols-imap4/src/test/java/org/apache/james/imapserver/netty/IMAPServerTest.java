@@ -3480,6 +3480,22 @@ class IMAPServerTest {
                 .contains("* ID (\"name\" \"Apache James\" \"version\" \"3.9.0\")")
                 .contains("OK ID completed.");
         }
+
+        @Test
+        void concurrentIdCommandsInTheSameSessionShouldSucceed() throws Exception {
+            IMAPServer imapServer = createImapServer("imapServer.xml");
+
+            testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().getFirst().getPort());
+            ConcurrentTestRunner.builder()
+                .operation((threadNumber, step) -> {
+                    assertThat(testIMAPClient.sendCommand("ID (\"name\" \"Apache James\")"))
+                        .contains("* ID NIL")
+                        .contains("OK ID completed.");
+                })
+                .threadCount(20)
+                .operationCount(10)
+                .runSuccessfullyWithin(Duration.ofMinutes(5));
+        }
     }
 
 }
