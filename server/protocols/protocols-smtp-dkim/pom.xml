@@ -33,7 +33,7 @@
     <name>Apache James :: Server :: SMTP :: DKIM</name>
 
     <properties>
-        <jdkim.version>0.3</jdkim.version>
+        <jdkim.version>0.4</jdkim.version>
     </properties>
 
     <dependencies>
