@@ -632,7 +632,7 @@
         <jsieve.version>0.8</jsieve.version>
         <spring.version>6.1.4</spring.version>
         <activmq-artemis.version>2.32.0</activmq-artemis.version>
-        <apache-jspf-resolver.version>1.0.4</apache-jspf-resolver.version>
+        <apache-jspf-resolver.version>1.0.5</apache-jspf-resolver.version>
         <angus-mail.version>2.0.2</angus-mail.version>
         <angus-activation.version>2.0.1</angus-activation.version>
         <jakarta.activation-api.version>2.1.2</jakarta.activation-api.version>
