@@ -147,7 +147,7 @@ public class MDCBuilder {
 
     @VisibleForTesting
     Map<String, String> buildContextMap() {
-        return contextMap.build();
+        return contextMap.buildKeepingLast();
     }
 
     public <T> T execute(Supplier<T> supplier) {

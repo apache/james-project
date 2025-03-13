@@ -65,6 +65,20 @@ class MDCBuilderTest {
     }
 
     @Test
+    void buildContextMapShouldNotFailWhenDuplicateKeys() {
+        // keep the last value when duplicate keys
+        assertThat(
+            MDCBuilder.create()
+                .addToContext(KEY_1, VALUE_1)
+                .addToContext(KEY_1, VALUE_2)
+                .addToContext(KEY_2, VALUE_2)
+                .buildContextMap())
+            .containsOnlyKeys(KEY_1, KEY_2)
+            .containsEntry(KEY_1, VALUE_2)
+            .containsEntry(KEY_2, VALUE_2);
+    }
+
+    @Test
     void addContextShouldFilterOutNullValues() {
         assertThat(
             MDCBuilder.create()
