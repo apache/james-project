@@ -28,6 +28,9 @@ import static org.apache.james.jmap.cassandra.projections.table.CassandraMessage
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.PREVIEW;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.TABLE_NAME;
 
+import java.time.Duration;
+import java.util.Optional;
+
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
@@ -39,6 +42,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.DurationParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +59,10 @@ import reactor.core.publisher.Mono;
 public class CassandraMessageFastViewProjection implements MessageFastViewProjection {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageFastViewProjection.class);
+
+    private static final Optional<Duration> TTL = Optional.ofNullable(System.getProperty("james.jmap.preview.ttl", null))
+        .map(DurationParser::parse);
+
     private final Metric metricRetrieveHitCount;
     private final Metric metricRetrieveMissCount;
 
@@ -74,11 +82,17 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
             .whereColumn(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID))
             .build());
 
-        this.storeStatement = session.prepare(insertInto(TABLE_NAME)
-            .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-            .value(PREVIEW, bindMarker(PREVIEW))
-            .value(HAS_ATTACHMENT, bindMarker(HAS_ATTACHMENT))
-            .build());
+        this.storeStatement = TTL.map(ttl -> session.prepare(insertInto(TABLE_NAME)
+                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
+                .value(PREVIEW, bindMarker(PREVIEW))
+                .value(HAS_ATTACHMENT, bindMarker(HAS_ATTACHMENT))
+                .usingTtl((int) ttl.getSeconds())
+                .build()))
+            .orElseGet(() -> session.prepare(insertInto(TABLE_NAME)
+                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
+                .value(PREVIEW, bindMarker(PREVIEW))
+                .value(HAS_ATTACHMENT, bindMarker(HAS_ATTACHMENT))
+                .build()));
 
         this.retrieveStatement = session.prepare(selectFrom(TABLE_NAME)
             .all()

@@ -109,6 +109,14 @@ This allows to prevent users from using some specific JMAP extensions.
 
 |===
 
+In cassandra we can set an expiry for preview in an attempt to mitigate disk space usage. In `jvm.properties`:
+
+....
+# Previews takes roughly 10% DB space though can easily be recomputed. Storing preview for historical preview is
+# also needless. This property allows setting an expiry for previews.
+# james.jmap.preview.ttl=30d
+....
+
 == Wire tapping
 
 Enabling *TRACE* on `org.apache.james.jmap.wire` enables reactor-netty wiretap, logging of
