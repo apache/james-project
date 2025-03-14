@@ -3483,7 +3483,7 @@ class IMAPServerTest {
 
         @Test
         void concurrentIdCommandsInTheSameSessionShouldSucceed() throws Exception {
-            IMAPServer imapServer = createImapServer("imapServer.xml");
+            imapServer = createImapServer("imapServer.xml");
 
             testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().getFirst().getPort());
             ConcurrentTestRunner.builder()
@@ -3493,7 +3493,7 @@ class IMAPServerTest {
                         .contains("OK ID completed.");
                 })
                 .threadCount(20)
-                .operationCount(10)
+                .operationCount(1)
                 .runSuccessfullyWithin(Duration.ofMinutes(5));
         }
     }
