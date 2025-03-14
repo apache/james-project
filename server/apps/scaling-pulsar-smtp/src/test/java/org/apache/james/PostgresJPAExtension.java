@@ -22,34 +22,27 @@ package org.apache.james;
 import java.util.UUID;
 
 import org.apache.james.backends.jpa.JPAConfiguration;
-import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.james.backends.postgres.DockerPostgresSingleton;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.output.OutputFrame;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-public class PostgresExtension implements GuiceModuleTestExtension {
+public class PostgresJPAExtension implements GuiceModuleTestExtension {
 
-    private static final Logger logger = LoggerFactory.getLogger(PostgresExtension.class);
+    private static final Logger logger = LoggerFactory.getLogger(PostgresJPAExtension.class);
 
-    private static void displayDockerLog(OutputFrame outputFrame) {
-        logger.info(outputFrame.getUtf8String().trim());
-    }
-
-    private final PostgreSQLContainer container;
+    private final PostgreSQLContainer container = DockerPostgresSingleton.SINGLETON;
     private JPAConfiguration jpaConfiguration;
 
-    public PostgresExtension() {
-        container = new PostgreSQLContainer<>("postgres:11")
-            .withLogConsumer(PostgresExtension::displayDockerLog);
+    public PostgresJPAExtension() {
     }
 
     @Override
-    public void beforeAll(ExtensionContext extensionContext) throws PulsarClientException {
+    public void beforeAll(ExtensionContext extensionContext) {
         container.start();
     }
 
@@ -64,16 +57,16 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         container.execInContainer("psql", "-U", container.getUsername(), "-c", "create database \"" + dbName + "\"");
         container.withDatabaseName(dbName);
         jpaConfiguration = JPAConfiguration.builder()
-            .driverName(container.getDriverClassName())
-            .driverURL(container.getJdbcUrl())
-            .username(container.getUsername())
-            .password(container.getPassword())
-            .build();
+                .driverName(container.getDriverClassName())
+                .driverURL(container.getJdbcUrl())
+                .username(container.getUsername())
+                .password(container.getPassword())
+                .build();
     }
 
     @Override
     public Module getModule() {
         return Modules.combine(binder -> binder.bind(JPAConfiguration.class)
-            .toInstance(jpaConfiguration));
+                .toInstance(jpaConfiguration));
     }
 }

@@ -57,7 +57,9 @@ services:
       - REMOTE_MANAGEMENT_DISABLE=1
 
   postgres:
-    image: postgres:14
+    image: postgres:16.3
+    ports:
+      - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=password
 
