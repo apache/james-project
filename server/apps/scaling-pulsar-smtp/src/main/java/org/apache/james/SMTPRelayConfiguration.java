@@ -28,6 +28,8 @@ import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.MissingArgumentException;
 import org.apache.james.server.core.configuration.Configuration;
 
+import com.google.common.base.MoreObjects;
+
 public class SMTPRelayConfiguration implements Configuration {
     public static class Builder {
         private Optional<String> rootDirectory;
@@ -98,4 +100,11 @@ public class SMTPRelayConfiguration implements Configuration {
         return directories;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("configurationPath", configurationPath)
+                .add("directories", directories)
+                .toString();
+    }
 }
