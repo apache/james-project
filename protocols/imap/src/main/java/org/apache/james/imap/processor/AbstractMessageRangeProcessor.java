@@ -21,6 +21,7 @@ package org.apache.james.imap.processor;
 
 import java.util.Objects;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
@@ -39,12 +40,14 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -118,6 +121,16 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                             .sneakyThrow())
                         .filter(Objects::nonNull)
                         .concatMap(range -> process(target.getId(), session.getSelected(), mailboxSession, range)
+                            .doOnNext(result -> AuditTrail.entry()
+                                .username(() -> mailboxSession.getUser().asString())
+                                .sessionId(() -> session.sessionId().asString())
+                                .protocol("IMAP")
+                                .action(getOperationName())
+                                .parameters(() -> ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
+                                    "targetId", target.getId().serialize(),
+                                    "selectedMailboxId", session.getSelected().getMailboxId().serialize(),
+                                    "range", range.getUidFrom().asLong() + ":" + range.getUidTo().asLong()))
+                                .log("IMAP " + getOperationName() + " succeeded."))
                             .map(IdRange::from))
                         .collect(ImmutableList.<IdRange>toImmutableList())
                         .map(IdRange::mergeRanges)
