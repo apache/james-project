@@ -19,15 +19,21 @@
 
 package org.apache.james.modules.data;
 
+import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.droplists.api.DropList;
 import org.apache.james.droplists.postgres.PostgresDropList;
+import org.apache.james.droplists.postgres.PostgresDropListModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 
 public class PostgresDropListsModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(DropList.class).to(PostgresDropList.class).in(Scopes.SINGLETON);
+
+        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
+        postgresDataDefinitions.addBinding().toInstance(PostgresDropListModule.MODULE);
     }
 }
