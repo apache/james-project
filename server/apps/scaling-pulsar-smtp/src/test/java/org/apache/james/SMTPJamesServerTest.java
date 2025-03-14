@@ -37,7 +37,7 @@ class SMTPJamesServerTest {
 
     @RegisterExtension
     static JamesServerExtension testExtension = TestingSmtpRelayJamesServerBuilder.forConfiguration(c -> c)
-        .extension(new PostgresExtension())
+        .extension(new PostgresJPAExtension())
         .extension(new PulsarExtension())
         .extension(new AwsS3BlobStoreExtension())
         .server(Main::createServer)

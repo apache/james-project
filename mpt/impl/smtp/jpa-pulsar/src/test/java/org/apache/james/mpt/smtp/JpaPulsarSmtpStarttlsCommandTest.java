@@ -23,7 +23,7 @@ import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnec
 
 import org.apache.james.JamesServerExtension;
 import org.apache.james.Main;
-import org.apache.james.PostgresExtension;
+import org.apache.james.PostgresJPAExtension;
 import org.apache.james.PulsarExtension;
 import org.apache.james.TestingSmtpRelayJamesServerBuilder;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -35,7 +35,7 @@ public class JpaPulsarSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
     @Order(1)
     @RegisterExtension
     static JamesServerExtension testExtension = TestingSmtpRelayJamesServerBuilder.forConfiguration(c -> c)
-            .extension(new PostgresExtension())
+            .extension(new PostgresJPAExtension())
             .extension(new PulsarExtension())
             .extension(new AwsS3BlobStoreExtension())
             .extension(new InMemoryDnsExtension())
