@@ -141,7 +141,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> imp
                     "size", String.valueOf(result.getSize()),
                     "mailboxName", mailbox.getMailboxPath().getName(),
                     "uid", String.valueOf(result.getId().getUid().asLong()),
-                    "meessageId", String.valueOf(result.getId().getMessageId().serialize())))
+                    "messageId", String.valueOf(result.getId().getMessageId().serialize())))
                 .log("IMAP APPEND succeeded."))
             .map(MessageManager.AppendResult::getId)
             .map(Throwing.<ComposedMessageId, ComposedMessageId>function(messageId -> {
