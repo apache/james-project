@@ -39,6 +39,7 @@ import com.google.common.base.Preconditions;
 
 @Entity(name = "JamesSieveScript")
 @Table(name = "JAMES_SIEVE_SCRIPT")
+@NamedQuery(name = "listAllSieveScripts", query = "SELECT sieveScript FROM JamesSieveScript sieveScript")
 @NamedQuery(name = "findAllByUsername", query = "SELECT sieveScript FROM JamesSieveScript sieveScript WHERE sieveScript.username=:username")
 @NamedQuery(name = "findActiveByUsername", query = "SELECT sieveScript FROM JamesSieveScript sieveScript WHERE sieveScript.username=:username AND sieveScript.isActive=true")
 @NamedQuery(name = "findSieveScript", query = "SELECT sieveScript FROM JamesSieveScript sieveScript WHERE sieveScript.username=:username AND sieveScript.scriptName=:scriptName")

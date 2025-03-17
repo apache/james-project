@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -66,10 +67,12 @@ public class JPASieveRepository implements SieveRepository {
     private static final String DEFAULT_SIEVE_QUOTA_USERNAME = "default.quota";
 
     private final TransactionRunner transactionRunner;
+    private final EntityManagerFactory entityManagerFactory;
 
     @Inject
     public JPASieveRepository(EntityManagerFactory entityManagerFactory) {
         this.transactionRunner = new TransactionRunner(entityManagerFactory);
+        this.entityManagerFactory = entityManagerFactory;
     }
 
     @Override
@@ -87,9 +90,9 @@ public class JPASieveRepository implements SieveRepository {
 
     private QuotaSizeLimit limitToUser(Username username) throws StorageException {
         return findQuotaForUser(username.asString())
-            .or(Throwing.supplier(() -> findQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME)).sneakyThrow())
-            .map(JPASieveQuota::toQuotaSize)
-            .orElse(QuotaSizeLimit.unlimited());
+                .or(Throwing.supplier(() -> findQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME)).sneakyThrow())
+                .map(JPASieveQuota::toQuotaSize)
+                .orElse(QuotaSizeLimit.unlimited());
     }
 
     private boolean overQuotaAfterModification(long usedSpace, long size, QuotaSizeLimit quota) {
@@ -126,6 +129,29 @@ public class JPASieveRepository implements SieveRepository {
     @Override
     public Flux<ScriptSummary> listScriptsReactive(Username username) {
         return Mono.fromCallable(() -> listScripts(username)).flatMapMany(Flux::fromIterable);
+    }
+
+
+    // This operation is not exposed in the interface on purpose.
+    // It only makes sense in the context of a migration tool and
+    // should not be used in normal operations.
+    @SuppressWarnings("unchecked")
+    public Stream<JPASieveScript> listAllSieveScripts() {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        return entityManager
+                .createNamedQuery("listAllSieveScripts")
+                .getResultStream();
+    }
+
+    // This operation is not exposed in the interface on purpose.
+    // It only makes sense in the context of a migration tool and
+    // should not be used in normal operations.
+    @SuppressWarnings("unchecked")
+    public Stream<JPASieveQuota> listAllSieveQuotas() {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        return entityManager
+                .createNamedQuery("listAllSieveQuotas")
+                .getResultStream();
     }
 
     private List<JPASieveScript> findAllSieveScriptsForUser(Username username) throws StorageException {

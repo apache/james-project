@@ -57,7 +57,7 @@ public class JPAUser implements User {
      */
     @VisibleForTesting
     static String hashPassword(String password, String nullableSalt, String nullableAlgorithm) {
-        Algorithm algorithm = Algorithm.of(Optional.ofNullable(nullableAlgorithm).orElse("SHA-512"));
+        Algorithm algorithm = buildAlgorithm(nullableAlgorithm);
         if (algorithm.isPBKDF2()) {
             return algorithm.digest(password, nullableSalt);
         }
@@ -67,6 +67,19 @@ public class JPAUser implements User {
         }
         return chooseHashFunction(algorithm.getName()).apply(credentials);
     }
+
+    private static Algorithm buildAlgorithm(String nullableAlgorithm) {
+        return Algorithm.of(Optional.ofNullable(nullableAlgorithm).orElse("SHA-512"));
+    }
+
+    public String getPasswordHash() {
+        return password;
+    }
+
+    public Algorithm getAlgorithm() {
+        return buildAlgorithm(alg);
+    }
+
 
     interface PasswordHashFunction extends Function<String, String> {}
 

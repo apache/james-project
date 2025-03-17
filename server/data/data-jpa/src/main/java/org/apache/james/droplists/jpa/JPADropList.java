@@ -88,6 +88,16 @@ public class JPADropList implements DropList {
             .doFinally(any -> EntityManagerUtils.safelyClose(entityManager));
     }
 
+    // This operation is not exposed in the interface on purpose.
+    // It only makes sense in the context of a migration tool and
+    // should not be used in normal operations.
+    public Flux<DropListEntry> listAll() {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        return Flux.fromStream(() -> getAllDropListEntries(entityManager)
+                        .map(JPADropListEntry::toDropListEntry))
+                .doFinally(any -> EntityManagerUtils.safelyClose(entityManager));
+    }
+
     @Override
     public Mono<Status> query(OwnerScope ownerScope, String owner, MailAddress sender) {
         Preconditions.checkArgument(ownerScope != null);
@@ -105,6 +115,13 @@ public class JPADropList implements DropList {
             .setParameter(OWNER_SCOPE, ownerScope.name())
             .setParameter(OWNER, owner)
             .getResultStream();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Stream<JPADropListEntry> getAllDropListEntries(EntityManager entityManager) {
+        return entityManager
+                .createNamedQuery("listAllDropListEntries")
+                .getResultStream();
     }
 
     private DropList.Status queryDropList(EntityManager entityManager, OwnerScope ownerScope, String owner, MailAddress sender) {
