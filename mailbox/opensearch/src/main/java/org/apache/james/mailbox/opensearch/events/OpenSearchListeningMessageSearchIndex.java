@@ -108,7 +108,7 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     }
 
     public interface Indexer {
-        Mono<Void> added(MailboxSession session, MailboxEvents.Added addedEvent, Mailbox mailbox, MailboxMessage message);
+        Mono<Void> added(MailboxSession session, Optional<MailboxEvents.Added> addedEvent, Mailbox mailbox, MailboxMessage message);
 
         static Indexer merge(Indexer defaultIndexer, Set<Indexer> overrides) {
             return (session, addedEvent, mailbox, message) -> defaultIndexer.added(session, addedEvent, mailbox, message)
@@ -133,7 +133,7 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
 
     class DefaultIndexer implements Indexer {
         @Override
-        public Mono<Void> added(MailboxSession session, MailboxEvents.Added addedEvent, Mailbox mailbox, MailboxMessage message) {
+        public Mono<Void> added(MailboxSession session, Optional<MailboxEvents.Added> addedEvent, Mailbox mailbox, MailboxMessage message) {
             LOGGER.info("Indexing mailbox {}-{} of user {} on message {}",
                 mailbox.getName(),
                 mailbox.getMailboxId().serialize(),
@@ -377,11 +377,11 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
 
     @Override
     public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message) {
-        return add(session, mailbox, message, null);
+        return add(session, mailbox, message, Optional.empty());
     }
 
     @Override
-    public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message, MailboxEvents.Added added) {
+    public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message, Optional<MailboxEvents.Added> added) {
         return Indexer.merge(new DefaultIndexer(), indexerOverrides)
             .added(session, added, mailbox, message);
     }

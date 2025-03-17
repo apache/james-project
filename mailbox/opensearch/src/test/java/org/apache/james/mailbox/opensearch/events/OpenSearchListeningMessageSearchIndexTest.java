@@ -177,8 +177,8 @@ class OpenSearchListeningMessageSearchIndexTest {
 
     static class FooIndexer implements OpenSearchListeningMessageSearchIndex.Indexer {
         @Override
-        public Mono<Void> added(MailboxSession session, MailboxEvents.Added addedEvent, Mailbox mailbox, MailboxMessage message) {
-            if (!addedEvent.isAppended()) {
+        public Mono<Void> added(MailboxSession session, Optional<MailboxEvents.Added> addedEvent, Mailbox mailbox, MailboxMessage message) {
+            if (addedEvent.isPresent() && !addedEvent.get().isAppended()) {
                 return Mono.empty();
             } else {
                 // Assume indexing the message when the message is appended
