@@ -36,7 +36,7 @@ public class PostgresQuotaGuiceModule extends AbstractModule {
     @Override
     public void configure() {
         bind(PostgresQuotaCurrentValueDAO.class).in(Scopes.SINGLETON);
-//        bind(PostgresQuotaLimitDAO.class).in(Scopes.SINGLETON);
+        bind(PostgresQuotaLimitDAO.class).in(Scopes.SINGLETON);
 
         Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
         postgresDataDefinitions.addBinding().toInstance(org.apache.james.backends.postgres.quota.PostgresQuotaModule.MODULE);

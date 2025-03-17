@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+unset JAVA_TOOL_OPTIONS
+java -cp /root/resources:/root/classes:/root/libs/* \
+-Dworking.directory=/root/conf \
+-Dlogback.configurationFile=/root/conf/logback.xml \
+org.apache.james.JpaToPgCoreDataMigration "$@"

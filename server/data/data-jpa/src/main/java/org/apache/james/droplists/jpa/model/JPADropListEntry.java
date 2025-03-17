@@ -45,6 +45,8 @@ import com.google.common.base.MoreObjects;
 @Table(name = "JAMES_DROP_LIST")
 @NamedQuery(name = "listDropListEntries",
     query = "SELECT j FROM JamesDropList j WHERE j.ownerScope = :ownerScope AND j.owner = :owner")
+@NamedQuery(name = "listAllDropListEntries",
+        query = "SELECT j FROM JamesDropList j")
 @NamedQuery(name = "queryDropListEntry",
     query = "SELECT j FROM JamesDropList j WHERE j.ownerScope = :ownerScope AND j.owner = :owner AND j.deniedEntity IN :deniedEntity")
 @NamedQuery(name = "removeDropListEntry",

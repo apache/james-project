@@ -27,12 +27,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
 
 import com.google.common.base.MoreObjects;
 
 @Entity(name = "JamesSieveQuota")
 @Table(name = "JAMES_SIEVE_QUOTA")
+@NamedQuery(name = "listAllSieveQuotas", query = "SELECT sieveQuota FROM JamesSieveQuota sieveQuota")
 @NamedQuery(name = "findByUsername", query = "SELECT sieveQuota FROM JamesSieveQuota sieveQuota WHERE sieveQuota.username=:username")
 public class JPASieveQuota {
 
@@ -90,5 +92,9 @@ public class JPASieveQuota {
                 .add("username", username)
                 .add("size", size)
                 .toString();
+    }
+
+    public Username getUsername() {
+        return Username.of(username);
     }
 }

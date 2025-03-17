@@ -180,7 +180,7 @@ public class BlobStoreModulesChooser {
         return encryptionModule.orElse(new NoEncryptionModule());
     }
 
-    private static List<Module> chooseStoragePolicyModule(StorageStrategy storageStrategy) {
+    public static List<Module> chooseStoragePolicyModule(StorageStrategy storageStrategy) {
         switch (storageStrategy) {
             case DEDUPLICATION:
                 Module deduplicationBlobModule = binder -> binder.bind(BlobStore.class)
