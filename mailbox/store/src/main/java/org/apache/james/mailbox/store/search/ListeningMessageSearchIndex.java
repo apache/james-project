@@ -20,6 +20,7 @@ package org.apache.james.mailbox.store.search;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import jakarta.mail.Flags;
@@ -141,7 +142,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         return Flux.fromIterable(MessageRange.toRanges(added.getUids()))
             .concatMap(range -> retrieveMailboxMessages(session, mailbox, range, fetchType))
             .publishOn(Schedulers.parallel())
-            .concatMap(mailboxMessage -> add(session, mailbox, mailboxMessage, added))
+            .concatMap(mailboxMessage -> add(session, mailbox, mailboxMessage, Optional.of(added)))
             .then();
     }
 
@@ -161,7 +162,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      */
     public abstract Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message);
 
-    public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message, Added added) {
+    public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message, Optional<Added> added) {
         return add(session, mailbox, message);
     }
 
