@@ -23,9 +23,9 @@ import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnec
 
 import org.apache.james.JamesServerExtension;
 import org.apache.james.Main;
-import org.apache.james.PostgresJPAExtension;
 import org.apache.james.PulsarExtension;
 import org.apache.james.TestingSmtpRelayJamesServerBuilder;
+import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -35,7 +35,7 @@ public class JpaPulsarForwardSmtpTest implements ForwardSmtpTest {
     @Order(1)
     @RegisterExtension
     static JamesServerExtension testExtension = TestingSmtpRelayJamesServerBuilder.forConfiguration(c -> c)
-            .extension(new PostgresJPAExtension())
+            .extension(PostgresExtension.empty())
             .extension(new PulsarExtension())
             .extension(new AwsS3BlobStoreExtension())
             .extension(new InMemoryDnsExtension())

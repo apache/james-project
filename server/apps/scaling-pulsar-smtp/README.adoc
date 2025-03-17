@@ -78,3 +78,10 @@ Note that you can create a domain via an environment variable. This domain will 
 ----
 --environment DOMAIN=domain.tld
 ----
+
+== Database backend migration
+
+Starting with James 3.9, the scaling-pulsar-smtp application uses the newly introduced Postgres backend instead of the JPA backend.
+
+If you previously deployed the scaling-pulsar-smtp application, you will want to run the https://github.com/apache/james-project/tree/master/server/apps/migration/migration-core-data-jpa-to-pg/sample-configuration[core data JPA to PG migration tool].
+

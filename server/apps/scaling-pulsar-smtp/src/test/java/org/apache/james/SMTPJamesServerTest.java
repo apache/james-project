@@ -27,6 +27,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ class SMTPJamesServerTest {
 
     @RegisterExtension
     static JamesServerExtension testExtension = TestingSmtpRelayJamesServerBuilder.forConfiguration(c -> c)
-        .extension(new PostgresJPAExtension())
+        .extension(PostgresExtension.empty())
         .extension(new PulsarExtension())
         .extension(new AwsS3BlobStoreExtension())
         .server(Main::createServer)
