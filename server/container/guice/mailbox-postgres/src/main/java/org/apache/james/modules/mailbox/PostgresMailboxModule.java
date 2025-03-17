@@ -85,6 +85,7 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.modules.data.PostgresCommonModule;
+import org.apache.james.modules.data.PostgresQuotaGuiceModule;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.utils.MailboxManagerDefinition;
@@ -107,7 +108,8 @@ public class PostgresMailboxModule extends AbstractModule {
         Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
         postgresDataDefinitions.addBinding().toInstance(PostgresMailboxAggregateModule.MODULE);
 
-        install(new PostgresQuotaModule());
+        install(new PostgresQuotaGuiceModule());
+        install(new PostgresMailboxQuotaModule());
 
         bind(PostgresMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(PostgresMailboxManager.class).in(Scopes.SINGLETON);
