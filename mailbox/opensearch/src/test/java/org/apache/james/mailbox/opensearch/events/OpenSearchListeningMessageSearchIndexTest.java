@@ -85,6 +85,7 @@ import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
@@ -174,6 +175,18 @@ class OpenSearchListeningMessageSearchIndexTest {
         }
     }
 
+    static class FooIndexer implements OpenSearchListeningMessageSearchIndex.Indexer {
+        @Override
+        public Mono<Void> added(MailboxSession session, MailboxEvents.Added addedEvent, Mailbox mailbox, MailboxMessage message) {
+            if (!addedEvent.isAppended()) {
+                return Mono.empty();
+            } else {
+                // Assume indexing the message when the message is appended
+                return Mono.empty();
+            }
+        }
+    }
+
     ReactorOpenSearchClient client;
     OpenSearchListeningMessageSearchIndex testee;
     MailboxSession session;
@@ -183,6 +196,7 @@ class OpenSearchListeningMessageSearchIndexTest {
     OpenSearchSearcher openSearchSearcher;
     SessionProviderImpl sessionProvider;
     UpdatableTickingClock clock;
+    MessageToOpenSearchJson messageToOpenSearchJson;
 
     @RegisterExtension
     DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
@@ -192,7 +206,7 @@ class OpenSearchListeningMessageSearchIndexTest {
         clock = new UpdatableTickingClock(Instant.now());
         mapperFactory = new InMemoryMailboxSessionMapperFactory(clock);
 
-        MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
+        messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("UTC"),
             IndexAttachments.YES,
@@ -256,6 +270,23 @@ class OpenSearchListeningMessageSearchIndexTest {
     @Test
     void addShouldBeIndempotent() throws Exception {
         testee.add(session, mailbox, MESSAGE_1).block();
+        testee.add(session, mailbox, MESSAGE_1).block();
+
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
+
+        SearchQuery query = SearchQuery.of(SearchQuery.all());
+        assertThat(testee.search(session, mailbox, query).toStream())
+            .containsExactly(MESSAGE_1.getUid());
+    }
+
+    @Test
+    void addShouldNotFailWhenOverrideIndexer() throws Exception {
+        testee = new OpenSearchListeningMessageSearchIndex(mapperFactory,
+            ImmutableSet.of(), openSearchIndexer, openSearchSearcher,
+            messageToOpenSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory(), new InMemoryMessageId.Factory(),
+            OpenSearchMailboxConfiguration.builder().build(), new RecordingMetricFactory(),
+            ImmutableSet.of(new FooIndexer()));
+
         testee.add(session, mailbox, MESSAGE_1).block();
 
         awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
