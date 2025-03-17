@@ -213,7 +213,7 @@
                     <to>
                         <image>apache/james</image>
                         <tags>
-                            <tag>migration/core-data-jpa-to-pg</tag>
+                            <tag>migration-core-data-jpa-to-pg-latest</tag>
                         </tags>
                     </to>
                     <container>
@@ -257,6 +257,24 @@
                     <execution>
                         <goals>
                             <goal>buildTar</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorSourceDirectory>src/assemble/</descriptorSourceDirectory>
+                    <tarLongFileMode>gnu</tarLongFileMode>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <finalName>james-server-memory-app</finalName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <goals>
+                            <goal>single</goal>
                         </goals>
                         <phase>package</phase>
                     </execution>

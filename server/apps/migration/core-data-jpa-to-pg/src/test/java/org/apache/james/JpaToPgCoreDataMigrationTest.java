@@ -162,7 +162,7 @@ class JpaToPgCoreDataMigrationTest {
     }
 
     @Test
-    void migrate_data() throws Exception {
+    void should_migrate_jpa_schema_to_pg_schema() throws Exception {
         // Given
         var domain = givenJpaDomain();
         var user = givenJpaUser(domain);
@@ -173,6 +173,31 @@ class JpaToPgCoreDataMigrationTest {
         var sieve = givenJpaSieveEntry(domain);
 
         // When
+        dataMigration.start();
+
+        // Then
+        verifyPgDomain(domain);
+        verifyPgUser(user);
+        verifyPgRecipientRewrite(recipientRewrite);
+        verifyPgRepositoryUrl(mailRepositoryUrl);
+        verifyPgMailInRepository(mail);
+        verifyPgDropList(dropListEntry);
+        verifyPgSieveEntry(sieve);
+    }
+
+    @Test
+    void should_be_idempotent_when_run_twice() throws Exception {
+        // Given
+        var domain = givenJpaDomain();
+        var user = givenJpaUser(domain);
+        var recipientRewrite = givenJpaRecipientRewrite(domain);
+        var mailRepositoryUrl = givenJpaMailRepositoryUrl();
+        var mail = givenJpaMailInRepository(domain, mailRepositoryUrl);
+        var dropListEntry = givenJpaDropList();
+        var sieve = givenJpaSieveEntry(domain);
+
+        // When
+        dataMigration.start();
         dataMigration.start();
 
         // Then

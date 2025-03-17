@@ -1,0 +1,20 @@
+= Guice-Memory Module How-to
+
+== Requirements
+
+ * Java SDK, the minimum version can be found in the https://github.com/apache/james-project/blob/master/pom.xml#L612[build descriptor]
+
+== Running
+
+To run james, you have to create a directory containing required configuration files.
+
+James requires the configuration to be in a subfolder of working directory that is called
+**conf**. A https://github.com/apache/james-project/tree/master/server/apps/migration/migration-core-data-jpa-to-pg/sample-configuration[sample directory]
+is provided with some default values you may need to replace. You will need to update its content to match your needs.
+
+Once everything is set up, you just have to run the jar with:
+
+[source]
+----
+$ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -jar migration-core-data-jpa-to-pg.jar
+----

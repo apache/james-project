@@ -1,0 +1,59 @@
+= James Core Data migration tool
+
+== Introduction ==
+
+Starting with James 3.9, a new SQL database backend was introduced. The new backend only targets PostgresSQL a modern, fully opensource, production ready database suitable for small to rather large deployments.
+
+The database schema for the new backend has been rebuilt from scratch and does not match the schema used by the legacy JPA stack.
+
+To facilitate migrating from any database backed by the JPA backend to PostgreSQL on the new backend, this migration tool will convert all the data from the JPA schema to the Jooq/PostgreSQL schema.
+
+The recommended migration process is to :
+
+- stop your server,
+- backup your database (and make sure you can restore your backup),
+- run the migration tool,
+- start your server with the new version.
+
+This tool is non-destructive (it only reads the JPA data), it is also designed to be idempotent.
+Running the migration several times will not crash because data already exists.
+
+Therefore, if an error occur you can quickly restart your service using the old version of your app.
+You can then analyse the problem and solve it before attempting the migration again.
+
+Once the migration is successful, you will have to delete the old tables using your usual DBA tools.
+
+
+== Building the application
+
+In order to build the packages, run:
+----
+mvn clean install -DskipTests
+----
+
+== ZIP distribution
+
+Available in `target` directory, the ZIP include detailed instructions.
+
+== Docker distribution
+
+To import the image locally:
+
+----
+docker image load -i target/jib-image.tar
+
+----
+
+Then run it:
+
+----
+docker run apache/james:migration-core-data-jpa-to-pg-latest
+
+----
+
+Use the https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags[JAVA_TOOL_OPTIONS environment option]
+to pass extra JVM flags. For instance:
+
+----
+docker run -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:scaling-pulsar-smtp-latest
+----
