@@ -22,14 +22,17 @@ services:
       - "5005:5005"
     environment:
       #- JDK_JAVA_OPTIONS=-Dlogback.configurationFile=/root/conf/logback.xml -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=0.0.0.0:5005 -Dworking.directory=/root/
-      - JDK_JAVA_OPTIONS=-Dlogback.configurationFile=/root/conf/logback.xml -Dworking.directory=/root/
+      - JDK_JAVA_OPTIONS=-Dlogback.configurationFile=/root/conf/logback.xml -Dworking.directory=/root/ --add-opens java.base/sun.net=ALL-UNNAMED
       - OBJECTSTORAGE_S3_ENDPOINT=http://s3.docker.test:8000/
       - OBJECTSTORAGE_S3_REGION=us-east-1
       - OBJECTSTORAGE_S3_ACCESSKEYID=accessKey1
       - OBJECTSTORAGE_S3_SECRETKEY=secretKey1
-      - DATABASE_URL=jdbc:postgresql://postgres/postgres
-      - DATABASE_USERNAME=postgres
-      - DATABASE_PASSWORD=password
+      - POSTGRESQL_DATABASE_NAME=postgres
+      - POSTGRESQL_DATABASE_SCHEMA=public
+      - POSTGRESQL_HOST=postgres
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=password
       - PULSAR_BROKER_URI=pulsar://pulsar:6650
       - PULSAR_ADMIN_URI=http://pulsar:8080/
       - PULSAR_NAMESPACE=public/default
