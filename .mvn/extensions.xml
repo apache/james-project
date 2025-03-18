@@ -8,7 +8,7 @@
       build scans capture information see https://docs.gradle.com/develocity/maven-extension/#captured_information
     -->
     <artifactId>develocity-maven-extension</artifactId>
-    <version>1.22.2</version>
+    <version>1.23.2</version>
   </extension>
   <extension>
     <groupId>com.gradle</groupId>
