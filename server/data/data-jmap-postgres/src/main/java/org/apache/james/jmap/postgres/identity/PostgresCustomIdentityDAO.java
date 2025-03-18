@@ -19,17 +19,17 @@
 
 package org.apache.james.jmap.postgres.identity;
 
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.BCC;
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.EMAIL;
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.HTML_SIGNATURE;
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.ID;
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.MAY_DELETE;
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.NAME;
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.REPLY_TO;
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.SORT_ORDER;
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.TABLE_NAME;
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.TEXT_SIGNATURE;
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.USERNAME;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.BCC;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.EMAIL;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.HTML_SIGNATURE;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.ID;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.MAY_DELETE;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.NAME;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.REPLY_TO;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.SORT_ORDER;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.TABLE_NAME;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.TEXT_SIGNATURE;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.USERNAME;
 
 import java.util.List;
 import java.util.Optional;

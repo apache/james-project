@@ -20,13 +20,14 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.DefaultVacationService;
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.VacationDeleteUserTaskStep;
 import org.apache.james.vacation.api.VacationRepository;
 import org.apache.james.vacation.api.VacationService;
 import org.apache.james.vacation.postgres.PostgresNotificationRegistry;
+import org.apache.james.vacation.postgres.PostgresVacationDataDefinition;
 import org.apache.james.vacation.postgres.PostgresVacationRepository;
 
 import com.google.inject.AbstractModule;
@@ -46,8 +47,8 @@ public class PostgresVacationModule extends AbstractModule {
         bind(PostgresNotificationRegistry.class).in(Scopes.SINGLETON);
         bind(NotificationRegistry.class).to(PostgresNotificationRegistry.class);
 
-        Multibinder<PostgresModule> postgresVacationModules = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresVacationModules.addBinding().toInstance(org.apache.james.vacation.postgres.PostgresVacationModule.MODULE);
+        Multibinder<PostgresDataDefinition> postgresVacationModules = Multibinder.newSetBinder(binder(), PostgresDataDefinition.class);
+        postgresVacationModules.addBinding().toInstance(PostgresVacationDataDefinition.MODULE);
 
         Multibinder<DeleteUserDataTaskStep> deleteUserDataTaskSteps = Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
         deleteUserDataTaskSteps.addBinding().to(VacationDeleteUserTaskStep.class);

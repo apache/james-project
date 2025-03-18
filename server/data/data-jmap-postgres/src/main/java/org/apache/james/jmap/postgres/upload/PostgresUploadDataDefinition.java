@@ -20,14 +20,14 @@
 package org.apache.james.jmap.postgres.upload;
 
 
-import static org.apache.james.jmap.postgres.upload.PostgresUploadModule.PostgresUploadTable.TABLE;
+import static org.apache.james.jmap.postgres.upload.PostgresUploadDataDefinition.PostgresUploadTable.TABLE;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.apache.james.backends.postgres.PostgresCommons;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -35,7 +35,7 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresUploadModule {
+public interface PostgresUploadDataDefinition {
     interface PostgresUploadTable {
 
         Table<Record> TABLE_NAME = DSL.table("uploads");
@@ -71,7 +71,7 @@ public interface PostgresUploadModule {
 
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
         .addTable(TABLE)
         .addIndex(PostgresUploadTable.USER_NAME_INDEX, PostgresUploadTable.ID_USERNAME_INDEX, PostgresUploadTable.UPLOAD_DATE_INDEX)
         .build();

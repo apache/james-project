@@ -26,7 +26,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.mailbox.DefaultMailboxes;
-import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
@@ -125,8 +125,8 @@ class BodyDeduplicationIntegrationTest implements MailsShouldBeWellReceived {
 
         // Then the body blobs are deduplicated
         int distinctBlobCount = postgresExtension.getDefaultPostgresExecutor()
-            .executeCount(dslContext -> Mono.from(dslContext.select(DSL.countDistinct(PostgresMessageModule.MessageTable.BODY_BLOB_ID))
-                .from(PostgresMessageModule.MessageTable.TABLE_NAME)))
+            .executeCount(dslContext -> Mono.from(dslContext.select(DSL.countDistinct(PostgresMessageDataDefinition.MessageTable.BODY_BLOB_ID))
+                .from(PostgresMessageDataDefinition.MessageTable.TABLE_NAME)))
             .block();
 
         assertThat(distinctBlobCount).isEqualTo(1);

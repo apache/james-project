@@ -26,7 +26,7 @@ import java.util.Set;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.postgres.PostgresConfiguration;
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresTableManager;
 import org.apache.james.backends.postgres.RowLevelSecurity;
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
@@ -59,7 +59,7 @@ public class PostgresCommonModule extends AbstractModule {
 
     @Override
     public void configure() {
-        Multibinder.newSetBinder(binder(), PostgresModule.class);
+        Multibinder.newSetBinder(binder(), PostgresDataDefinition.class);
 
         bind(PostgresExecutor.Factory.class).in(Scopes.SINGLETON);
         bind(PostgresConnectionClosure.class).asEagerSingleton();
@@ -130,16 +130,16 @@ public class PostgresCommonModule extends AbstractModule {
 
     @Provides
     @Singleton
-    PostgresModule composePostgresDataDefinitions(Set<PostgresModule> modules) {
-        return PostgresModule.aggregateModules(modules);
+    PostgresDataDefinition composePostgresDataDefinitions(Set<PostgresDataDefinition> modules) {
+        return PostgresDataDefinition.aggregateModules(modules);
     }
 
     @Provides
     @Singleton
     PostgresTableManager postgresTableManager(PostgresExecutor postgresExecutor,
-                                              PostgresModule postgresModule,
+                                              PostgresDataDefinition postgresDataDefinition,
                                               PostgresConfiguration postgresConfiguration) {
-        return new PostgresTableManager(postgresExecutor, postgresModule, postgresConfiguration);
+        return new PostgresTableManager(postgresExecutor, postgresDataDefinition, postgresConfiguration);
     }
 
     @Provides

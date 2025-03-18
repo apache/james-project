@@ -28,7 +28,7 @@ import org.apache.james.backends.postgres.PostgresCommons.{LOCAL_DATE_TIME_ZONED
 import org.apache.james.backends.postgres.utils.PostgresExecutor
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer
 import org.apache.james.task._
-import org.apache.james.task.eventsourcing.postgres.PostgresTaskExecutionDetailsProjectionModule._
+import org.apache.james.task.eventsourcing.postgres.PostgresTaskExecutionDetailsProjectionDataDefinition._
 import org.apache.james.util.ReactorUtils
 import org.jooq.JSONB.jsonb
 import org.jooq.{InsertQuery, Record}

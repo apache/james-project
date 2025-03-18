@@ -38,7 +38,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresAttachmentMapperTest extends AttachmentMapperTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresAttachmentModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresAttachmentDataDefinition.MODULE);
 
     static BlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 

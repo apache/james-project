@@ -22,7 +22,7 @@ package org.apache.james.backends.postgres.quota;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.SQLDataType.BIGINT;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.Name;
@@ -31,7 +31,7 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresQuotaModule {
+public interface PostgresQuotaDataDefinition {
     interface PostgresQuotaCurrentValueTable {
         Table<Record> TABLE_NAME = DSL.table("quota_current_value");
 
@@ -77,7 +77,7 @@ public interface PostgresQuotaModule {
             .build();
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
         .addTable(PostgresQuotaCurrentValueTable.TABLE)
         .addTable(PostgresQuotaLimitTable.TABLE)
         .build();

@@ -20,7 +20,7 @@
 package org.apache.james.mailbox.postgres.mail;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
+import org.apache.james.mailbox.postgres.PostgresMailboxAggregateDataDefinition;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageIdMapperTest;
 import org.apache.james.utils.UpdatableTickingClock;
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresMessageIdMapperTest extends MessageIdMapperTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
 
     private PostgresMapperProvider postgresMapperProvider;
 

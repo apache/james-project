@@ -17,52 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.droplists.postgres;
+package org.apache.james.eventsourcing.eventstore.postgres;
 
-import java.util.UUID;
+import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDataDefinition.PostgresEventStoreTable.INDEX;
+import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDataDefinition.PostgresEventStoreTable.TABLE;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
+import org.jooq.JSON;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresDropListModule {
-    interface PostgresDropListsTable {
-        Table<Record> TABLE_NAME = DSL.table("droplist");
+public interface PostgresEventStoreDataDefinition {
+    interface PostgresEventStoreTable {
+        Table<Record> TABLE_NAME = DSL.table("event_store");
 
-        Field<UUID> DROPLIST_ID = DSL.field("droplist_id", SQLDataType.UUID.notNull());
-        Field<String> OWNER_SCOPE = DSL.field("owner_scope", SQLDataType.VARCHAR);
-        Field<String> OWNER = DSL.field("owner", SQLDataType.VARCHAR);
-        Field<String> DENIED_ENTITY_TYPE = DSL.field("denied_entity_type", SQLDataType.VARCHAR);
-        Field<String> DENIED_ENTITY = DSL.field("denied_entity", SQLDataType.VARCHAR);
+        Field<String> AGGREGATE_ID = DSL.field("aggregate_id", SQLDataType.VARCHAR.notNull());
+        Field<Integer> EVENT_ID = DSL.field("event_id", SQLDataType.INTEGER.notNull());
+        Field<Integer> SNAPSHOT = DSL.field("snapshot", SQLDataType.INTEGER);
+        Field<JSON> EVENT = DSL.field("event", SQLDataType.JSON.notNull());
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
-                .column(DROPLIST_ID)
-                .column(OWNER_SCOPE)
-                .column(OWNER)
-                .column(DENIED_ENTITY_TYPE)
-                .column(DENIED_ENTITY)
-                .constraint(DSL.primaryKey(DROPLIST_ID))))
+                .column(AGGREGATE_ID)
+                .column(EVENT_ID)
+                .column(SNAPSHOT)
+                .column(EVENT)
+                .constraint(DSL.primaryKey(AGGREGATE_ID, EVENT_ID))))
             .disableRowLevelSecurity()
             .build();
 
-        PostgresIndex IDX_OWNER_SCOPE_OWNER = PostgresIndex.name("idx_owner_scope_owner")
+        PostgresIndex INDEX = PostgresIndex.name("event_store_aggregate_id_index")
             .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
-                .on(TABLE_NAME, OWNER_SCOPE, OWNER));
-
-        PostgresIndex IDX_OWNER_SCOPE_OWNER_DENIED_ENTITY = PostgresIndex.name("idx_owner_scope_owner_denied_entity")
-            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
-                .on(TABLE_NAME, OWNER_SCOPE, OWNER, DENIED_ENTITY));
+                .on(TABLE_NAME, AGGREGATE_ID));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
-        .addTable(PostgresDropListsTable.TABLE)
-        .addIndex(PostgresDropListsTable.IDX_OWNER_SCOPE_OWNER)
-        .addIndex(PostgresDropListsTable.IDX_OWNER_SCOPE_OWNER_DENIED_ENTITY)
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
+        .addTable(TABLE)
+        .addIndex(INDEX)
         .build();
 }

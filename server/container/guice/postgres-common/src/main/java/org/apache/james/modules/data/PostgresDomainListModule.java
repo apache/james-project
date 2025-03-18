@@ -19,11 +19,11 @@
 
 package org.apache.james.modules.data;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.domainlist.postgres.PostgresDomainDataDefinition;
 import org.apache.james.domainlist.postgres.PostgresDomainList;
-import org.apache.james.domainlist.postgres.PostgresDomainModule;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
@@ -37,7 +37,7 @@ public class PostgresDomainListModule extends AbstractModule {
     public void configure() {
         bind(PostgresDomainList.class).in(Scopes.SINGLETON);
         bind(DomainList.class).to(PostgresDomainList.class);
-        Multibinder.newSetBinder(binder(), PostgresModule.class).addBinding().toInstance(PostgresDomainModule.MODULE);
+        Multibinder.newSetBinder(binder(), PostgresDataDefinition.class).addBinding().toInstance(PostgresDomainDataDefinition.MODULE);
     }
 
     @ProvidesIntoSet

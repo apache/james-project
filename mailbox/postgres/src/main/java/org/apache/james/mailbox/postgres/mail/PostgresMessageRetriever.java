@@ -20,9 +20,9 @@
 package org.apache.james.mailbox.postgres.mail;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.ATTACHMENT_METADATA;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_BLOB_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HEADER_CONTENT;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.ATTACHMENT_METADATA;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.BODY_BLOB_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.HEADER_CONTENT;
 
 import java.util.List;
 import java.util.Map;

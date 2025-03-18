@@ -19,12 +19,13 @@
 
 package org.apache.james.modules.data;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStore;
+import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDataDefinition;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -37,8 +38,8 @@ public class PostgresEventStoreModule extends AbstractModule {
         bind(PostgresEventStore.class).in(Scopes.SINGLETON);
         bind(EventStore.class).to(PostgresEventStore.class);
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreModule.MODULE);
+        Multibinder<PostgresDataDefinition> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresDataDefinition.class);
+        postgresDataDefinitions.addBinding().toInstance(PostgresEventStoreDataDefinition.MODULE);
 
         Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {});
     }

@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresDomainListTest implements DomainListContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDomainModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDomainDataDefinition.MODULE);
 
     PostgresDomainList domainList;
 

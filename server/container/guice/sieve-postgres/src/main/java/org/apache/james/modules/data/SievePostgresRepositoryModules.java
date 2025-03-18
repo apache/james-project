@@ -19,8 +19,8 @@
 
 package org.apache.james.modules.data;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.sieve.postgres.PostgresSieveModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
+import org.apache.james.sieve.postgres.PostgresSieveDataDefinition;
 import org.apache.james.sieve.postgres.PostgresSieveQuotaDAO;
 import org.apache.james.sieve.postgres.PostgresSieveRepository;
 import org.apache.james.sieve.postgres.PostgresSieveScriptDAO;
@@ -34,7 +34,7 @@ import com.google.inject.multibindings.Multibinder;
 public class SievePostgresRepositoryModules extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), PostgresModule.class).addBinding().toInstance(PostgresSieveModule.MODULE);
+        Multibinder.newSetBinder(binder(), PostgresDataDefinition.class).addBinding().toInstance(PostgresSieveDataDefinition.MODULE);
 
         bind(PostgresSieveQuotaDAO.class).in(Scopes.SINGLETON);
         bind(PostgresSieveScriptDAO.class).in(Scopes.SINGLETON);

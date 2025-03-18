@@ -46,7 +46,7 @@ import reactor.core.scheduler.Schedulers;
 class PostgresUsersRepositoryTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresUserModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresUserDataDefinition.MODULE);
 
     @Nested
     class WhenEnableVirtualHosting implements UsersRepositoryContract.WithVirtualHostingContract {

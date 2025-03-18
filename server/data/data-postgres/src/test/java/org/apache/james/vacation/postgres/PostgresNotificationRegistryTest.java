@@ -19,8 +19,8 @@
 
 package org.apache.james.vacation.postgres;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.core.MailAddress;
 import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.NotificationRegistryContract;
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresNotificationRegistryTest implements NotificationRegistryContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresVacationModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresVacationDataDefinition.MODULE));
 
     NotificationRegistry notificationRegistry;
     RecipientId recipientId;

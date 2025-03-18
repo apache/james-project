@@ -44,40 +44,48 @@ public class GuiceGenericLoader {
     public static class InvocationPerformer<T> {
         private final Injector injector;
         private final ExtendedClassLoader extendedClassLoader;
-        private final NamingScheme namingSheme;
+        private final NamingScheme namingScheme;
 
-        private InvocationPerformer(Injector injector, ExtendedClassLoader extendedClassLoader, NamingScheme namingSheme) {
+        private InvocationPerformer(Injector injector, ExtendedClassLoader extendedClassLoader, NamingScheme namingScheme) {
             this.injector = injector;
             this.extendedClassLoader = extendedClassLoader;
-            this.namingSheme = namingSheme;
+            this.namingScheme = namingScheme;
         }
 
         public T instantiate(ClassName className) throws ClassNotFoundException {
             try {
-                Class<T> clazz = locateClass(className, namingSheme);
+                Class<T> clazz = locateClass(className);
                 return injector.getInstance(clazz);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to load " + className.getName(), e);
             }
         }
 
-        private Class<T> locateClass(ClassName className, NamingScheme namingScheme) throws ClassNotFoundException {
-            ImmutableList<Class<T>> classes = namingScheme.toFullyQualifiedClassNames(className)
-                .flatMap(this::tryLocateClass)
-                .collect(ImmutableList.toImmutableList());
+        public Class<T> locateClass(ClassName className) throws ClassNotFoundException {
+            ImmutableList<Class<T>> classes = this.namingScheme.toFullyQualifiedClassNames(className)
+                    .flatMap(this::tryLocateClass)
+                    .collect(ImmutableList.toImmutableList());
 
             if (classes.size() == 0) {
                 throw new ClassNotFoundException(className.getName());
             }
             if (classes.size() > 1) {
                 LOGGER.warn("Ambiguous class name for {}. Corresponding classes are {} and {} will be loaded",
-                    className, classes, classes.get(0));
+                        className, classes, classes.get(0));
             }
             return classes.get(0);
         }
 
         private Stream<Class<T>> tryLocateClass(FullyQualifiedClassName className) {
             return (Stream) extendedClassLoader.locateClass(className).stream();
+        }
+
+        public InvocationPerformer<T> withChildModule(Module childModule) {
+            return new InvocationPerformer<>(injector.createChildInjector(childModule), extendedClassLoader, namingScheme);
+        }
+
+        public InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {
+            return new InvocationPerformer<>(injector, extendedClassLoader, namingSheme);
         }
     }
 
@@ -90,21 +98,21 @@ public class GuiceGenericLoader {
         this.extendedClassLoader = extendedClassLoader;
 
         Module additionalExtensionBindings = Modules.combine(extensionConfiguration.getAdditionalGuiceModulesForExtensions()
-            .stream()
-            .map(Throwing.<ClassName, Module>function(className -> instantiateNoChildModule(injector, className)))
-            .peek(module -> LOGGER.info("Enabling injects contained in " + module.getClass().getCanonicalName()))
-            .collect(ImmutableList.toImmutableList()));
+                .stream()
+                .map(Throwing.<ClassName, Module>function(className -> instantiateNoChildModule(injector, className)))
+                .peek(module -> LOGGER.info("Enabling injects contained in " + module.getClass().getCanonicalName()))
+                .collect(ImmutableList.toImmutableList()));
         this.injector = injector.createChildInjector(additionalExtensionBindings);
     }
 
     private <T> T instantiateNoChildModule(Injector injector, ClassName className) throws ClassNotFoundException {
         return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY)
-            .instantiate(className);
+                .instantiate(className);
     }
 
     public <T> T instantiate(ClassName className) throws ClassNotFoundException {
         return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY)
-            .instantiate(className);
+                .instantiate(className);
     }
 
     public <T> InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {

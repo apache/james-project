@@ -20,12 +20,12 @@
 package org.apache.james.vault.metadata;
 
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
-import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataModule.DeletedMessageMetadataTable.BLOB_ID;
-import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataModule.DeletedMessageMetadataTable.BUCKET_NAME;
-import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataModule.DeletedMessageMetadataTable.MESSAGE_ID;
-import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataModule.DeletedMessageMetadataTable.METADATA;
-import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataModule.DeletedMessageMetadataTable.OWNER;
-import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataModule.DeletedMessageMetadataTable.TABLE_NAME;
+import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.BLOB_ID;
+import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.BUCKET_NAME;
+import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.MESSAGE_ID;
+import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.METADATA;
+import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.OWNER;
+import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.TABLE_NAME;
 import static org.jooq.JSONB.jsonb;
 
 import java.util.function.Function;

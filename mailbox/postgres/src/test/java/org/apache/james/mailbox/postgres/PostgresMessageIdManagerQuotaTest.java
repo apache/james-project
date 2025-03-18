@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.postgres;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
+import org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -32,9 +32,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresMessageIdManagerQuotaTest extends AbstractMessageIdManagerQuotaTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(
-        PostgresMailboxAggregateModule.MODULE,
-        PostgresQuotaModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(
+        PostgresMailboxAggregateDataDefinition.MODULE,
+        PostgresQuotaDataDefinition.MODULE));
 
     @Override
     protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, CurrentQuotaManager currentQuotaManager) throws Exception {

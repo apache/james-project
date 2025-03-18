@@ -27,7 +27,7 @@ import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.StringBackedAttachmentId;
-import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
+import org.apache.james.mailbox.postgres.PostgresMailboxAggregateDataDefinition;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +41,7 @@ class PostgresAttachmentBlobReferenceSourceTest {
     private static final BlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
 
     private PostgresAttachmentBlobReferenceSource testee;
 

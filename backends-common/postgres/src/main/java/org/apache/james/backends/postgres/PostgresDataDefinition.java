@@ -25,27 +25,27 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
-public interface PostgresModule {
+public interface PostgresDataDefinition {
 
-    static PostgresModule aggregateModules(PostgresModule... modules) {
+    static PostgresDataDefinition aggregateModules(PostgresDataDefinition... modules) {
         return builder()
             .modules(modules)
             .build();
     }
 
-    static PostgresModule aggregateModules(Collection<PostgresModule> modules) {
+    static PostgresDataDefinition aggregateModules(Collection<PostgresDataDefinition> modules) {
         return builder()
             .modules(modules)
             .build();
     }
 
-    PostgresModule EMPTY_MODULE = builder().build();
+    PostgresDataDefinition EMPTY_MODULE = builder().build();
 
     List<PostgresTable> tables();
 
     List<PostgresIndex> tableIndexes();
 
-    class Impl implements PostgresModule {
+    class Impl implements PostgresDataDefinition {
         private final List<PostgresTable> tables;
         private final List<PostgresIndex> tableIndexes;
 
@@ -94,7 +94,7 @@ public interface PostgresModule {
             return this;
         }
 
-        public Builder modules(Collection<PostgresModule> modules) {
+        public Builder modules(Collection<PostgresDataDefinition> modules) {
             modules.forEach(module -> {
                 addTable(module.tables());
                 addIndex(module.tableIndexes());
@@ -102,11 +102,11 @@ public interface PostgresModule {
             return this;
         }
 
-        public Builder modules(PostgresModule... modules) {
+        public Builder modules(PostgresDataDefinition... modules) {
             return modules(ImmutableList.copyOf(modules));
         }
 
-        public PostgresModule build() {
+        public PostgresDataDefinition build() {
             return new Impl(tables.build(), tableIndexes.build());
         }
     }
@@ -115,13 +115,13 @@ public interface PostgresModule {
         return new Builder();
     }
 
-    static PostgresModule table(PostgresTable... tables) {
+    static PostgresDataDefinition table(PostgresTable... tables) {
         return builder()
             .addTable(ImmutableList.copyOf(tables))
             .build();
     }
 
-    static PostgresModule tableIndex(PostgresIndex... tableIndexes) {
+    static PostgresDataDefinition tableIndex(PostgresIndex... tableIndexes) {
         return builder()
             .addIndex(ImmutableList.copyOf(tableIndexes))
             .build();

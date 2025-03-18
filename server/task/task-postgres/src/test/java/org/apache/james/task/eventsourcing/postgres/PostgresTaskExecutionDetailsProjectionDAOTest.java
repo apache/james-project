@@ -48,7 +48,7 @@ import reactor.core.publisher.Flux;
 
 class PostgresTaskExecutionDetailsProjectionDAOTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresTaskExecutionDetailsProjectionModule.MODULE());
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresTaskExecutionDetailsProjectionDataDefinition.MODULE());
 
     private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = JsonTaskAdditionalInformationSerializer.of(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
 

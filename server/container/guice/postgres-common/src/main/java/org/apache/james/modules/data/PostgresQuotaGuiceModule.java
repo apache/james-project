@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.data;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
 import org.apache.james.backends.postgres.quota.PostgresQuotaLimitDAO;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
@@ -38,8 +38,8 @@ public class PostgresQuotaGuiceModule extends AbstractModule {
         bind(PostgresQuotaCurrentValueDAO.class).in(Scopes.SINGLETON);
         bind(PostgresQuotaLimitDAO.class).in(Scopes.SINGLETON);
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(org.apache.james.backends.postgres.quota.PostgresQuotaModule.MODULE);
+        Multibinder<PostgresDataDefinition> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresDataDefinition.class);
+        postgresDataDefinitions.addBinding().toInstance(org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.MODULE);
     }
 
     @ProvidesIntoSet

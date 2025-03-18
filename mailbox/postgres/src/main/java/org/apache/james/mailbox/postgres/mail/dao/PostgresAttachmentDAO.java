@@ -33,7 +33,7 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
-import org.apache.james.mailbox.postgres.mail.PostgresAttachmentModule.PostgresAttachmentTable;
+import org.apache.james.mailbox.postgres.mail.PostgresAttachmentDataDefinition.PostgresAttachmentTable;
 
 import com.google.common.collect.ImmutableList;
 

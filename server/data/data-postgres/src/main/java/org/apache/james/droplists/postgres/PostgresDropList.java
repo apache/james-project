@@ -21,12 +21,12 @@ package org.apache.james.droplists.postgres;
 
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
 import static org.apache.james.droplists.api.DeniedEntityType.DOMAIN;
-import static org.apache.james.droplists.postgres.PostgresDropListModule.PostgresDropListsTable.DENIED_ENTITY;
-import static org.apache.james.droplists.postgres.PostgresDropListModule.PostgresDropListsTable.DENIED_ENTITY_TYPE;
-import static org.apache.james.droplists.postgres.PostgresDropListModule.PostgresDropListsTable.DROPLIST_ID;
-import static org.apache.james.droplists.postgres.PostgresDropListModule.PostgresDropListsTable.OWNER;
-import static org.apache.james.droplists.postgres.PostgresDropListModule.PostgresDropListsTable.OWNER_SCOPE;
-import static org.apache.james.droplists.postgres.PostgresDropListModule.PostgresDropListsTable.TABLE_NAME;
+import static org.apache.james.droplists.postgres.PostgresDropListDataDefinition.PostgresDropListsTable.DENIED_ENTITY;
+import static org.apache.james.droplists.postgres.PostgresDropListDataDefinition.PostgresDropListsTable.DENIED_ENTITY_TYPE;
+import static org.apache.james.droplists.postgres.PostgresDropListDataDefinition.PostgresDropListsTable.DROPLIST_ID;
+import static org.apache.james.droplists.postgres.PostgresDropListDataDefinition.PostgresDropListsTable.OWNER;
+import static org.apache.james.droplists.postgres.PostgresDropListDataDefinition.PostgresDropListsTable.OWNER_SCOPE;
+import static org.apache.james.droplists.postgres.PostgresDropListDataDefinition.PostgresDropListsTable.TABLE_NAME;
 
 import java.util.List;
 import java.util.UUID;

@@ -57,7 +57,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class DeleteMessageListenerTest extends DeleteMessageListenerContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
 
     private static PostgresMailboxManager mailboxManager;
     private static BlobStore blobStore;

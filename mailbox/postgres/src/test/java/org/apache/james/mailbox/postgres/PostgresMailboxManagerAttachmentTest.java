@@ -75,7 +75,7 @@ import com.google.common.collect.ImmutableSet;
 public class PostgresMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
     private static PostgresMailboxManager mailboxManager;
     private static PostgresMailboxManager parseFailingMailboxManager;
     private static PostgresMailboxSessionMapperFactory mapperFactory;

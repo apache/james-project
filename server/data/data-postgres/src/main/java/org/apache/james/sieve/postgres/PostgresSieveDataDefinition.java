@@ -22,8 +22,8 @@ package org.apache.james.sieve.postgres;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -31,7 +31,7 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresSieveModule {
+public interface PostgresSieveDataDefinition {
     interface PostgresSieveScriptTable {
         Table<Record> TABLE_NAME = DSL.table("sieve_scripts");
 
@@ -63,7 +63,7 @@ public interface PostgresSieveModule {
                 .where(IS_ACTIVE)));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
         .addTable(PostgresSieveScriptTable.TABLE)
         .addIndex(PostgresSieveScriptTable.MAXIMUM_ONE_ACTIVE_SCRIPT_PER_USER_UNIQUE_INDEX)
         .build();

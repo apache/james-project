@@ -41,7 +41,7 @@ public class PostgresEmailQueryViewManagerRLSTest {
     private static final ZonedDateTime DATE_2 = ZonedDateTime.parse("2010-10-30T16:12:00Z");
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresEmailQueryViewModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresEmailQueryViewDataDefinition.MODULE);
 
     private EmailQueryViewManager emailQueryViewManager;
 

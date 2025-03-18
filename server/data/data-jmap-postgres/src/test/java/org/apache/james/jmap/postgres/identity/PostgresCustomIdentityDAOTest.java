@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresCustomIdentityDAOTest implements CustomIdentityDAOContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresCustomIdentityModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresCustomIdentityDataDefinition.MODULE);
 
     @Override
     public CustomIdentityDAO testee() {

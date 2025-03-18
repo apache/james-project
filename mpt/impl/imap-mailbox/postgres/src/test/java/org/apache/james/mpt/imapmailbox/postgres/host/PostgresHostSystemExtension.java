@@ -19,10 +19,10 @@
 
 package org.apache.james.mpt.imapmailbox.postgres.host;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
-import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
+import org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition;
+import org.apache.james.mailbox.postgres.PostgresMailboxAggregateDataDefinition;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -38,9 +38,9 @@ public class PostgresHostSystemExtension implements BeforeEachCallback, AfterEac
     private final PostgresExtension postgresExtension;
 
     public PostgresHostSystemExtension() {
-        this.postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(
-            PostgresMailboxAggregateModule.MODULE,
-            PostgresQuotaModule.MODULE));
+        this.postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(
+            PostgresMailboxAggregateDataDefinition.MODULE,
+            PostgresQuotaDataDefinition.MODULE));
         try {
             hostSystem = PostgresHostSystem.build(postgresExtension);
         } catch (Exception e) {

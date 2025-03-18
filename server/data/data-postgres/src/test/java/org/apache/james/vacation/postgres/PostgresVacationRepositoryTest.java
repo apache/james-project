@@ -19,8 +19,8 @@
 
 package org.apache.james.vacation.postgres;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.vacation.api.VacationRepository;
 import org.apache.james.vacation.api.VacationRepositoryContract;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresVacationRepositoryTest implements VacationRepositoryContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresModule.aggregateModules(PostgresVacationModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresVacationDataDefinition.MODULE));
 
     VacationRepository vacationRepository;
 

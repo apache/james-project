@@ -48,7 +48,7 @@ import com.github.fge.lambdas.Throwing;
 public class PostgresUidProviderTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxDataDefinition.MODULE);
 
     private UidProvider uidProvider;
 

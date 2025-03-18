@@ -38,9 +38,9 @@ import reactor.core.publisher.Mono;
 class PostgresTableManagerTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresModule.EMPTY_MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresDataDefinition.EMPTY_MODULE);
 
-    Function<PostgresModule, PostgresTableManager> tableManagerFactory =
+    Function<PostgresDataDefinition, PostgresTableManager> tableManagerFactory =
         module -> new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.ENABLED);
 
     @Test
@@ -55,7 +55,7 @@ class PostgresTableManagerTest {
             .disableRowLevelSecurity()
             .build();
 
-        PostgresModule module = PostgresModule.table(table);
+        PostgresDataDefinition module = PostgresDataDefinition.table(table);
 
         PostgresTableManager testee = tableManagerFactory.apply(module);
 
@@ -84,7 +84,7 @@ class PostgresTableManagerTest {
                 .column("columB", SQLDataType.INTEGER)).disableRowLevelSecurity()
             .build();
 
-        PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1, table2));
+        PostgresTableManager testee = tableManagerFactory.apply(PostgresDataDefinition.table(table1, table2));
 
         testee.initializeTables()
             .block();
@@ -106,7 +106,7 @@ class PostgresTableManagerTest {
                 .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity()
             .build();
 
-        PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1));
+        PostgresTableManager testee = tableManagerFactory.apply(PostgresDataDefinition.table(table1));
 
         testee.initializeTables()
             .block();
@@ -123,7 +123,7 @@ class PostgresTableManagerTest {
                 .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity()
             .build();
 
-        tableManagerFactory.apply(PostgresModule.table(table1))
+        tableManagerFactory.apply(PostgresDataDefinition.table(table1))
             .initializeTables()
             .block();
 
@@ -132,7 +132,7 @@ class PostgresTableManagerTest {
                 .column("columB", SQLDataType.INTEGER)).disableRowLevelSecurity()
             .build();
 
-        tableManagerFactory.apply(PostgresModule.table(table1Changed))
+        tableManagerFactory.apply(PostgresDataDefinition.table(table1Changed))
             .initializeTables()
             .block();
 
@@ -158,7 +158,7 @@ class PostgresTableManagerTest {
             .createIndexStep((dsl, idn) -> dsl.createIndex(idn)
                 .on(DSL.table(tableName), DSL.field("colum1").asc()));
 
-        PostgresModule module = PostgresModule.builder()
+        PostgresDataDefinition module = PostgresDataDefinition.builder()
             .addTable(table)
             .addIndex(index)
             .build();
@@ -197,7 +197,7 @@ class PostgresTableManagerTest {
             .createIndexStep((dsl, idn) -> dsl.createIndex(idn)
                 .on(DSL.table(tableName), DSL.field("colum2").desc()));
 
-        PostgresModule module = PostgresModule.builder()
+        PostgresDataDefinition module = PostgresDataDefinition.builder()
             .addTable(table)
             .addIndex(index1, index2)
             .build();
@@ -231,7 +231,7 @@ class PostgresTableManagerTest {
             .createIndexStep((dsl, idn) -> dsl.createIndex(idn)
                 .on(DSL.table(tableName), DSL.field("colum1").asc()));
 
-        PostgresModule module = PostgresModule.builder()
+        PostgresDataDefinition module = PostgresDataDefinition.builder()
             .addTable(table)
             .addIndex(index)
             .build();
@@ -255,7 +255,7 @@ class PostgresTableManagerTest {
                 .column("column1", SQLDataType.INTEGER.notNull())).disableRowLevelSecurity()
             .build();
 
-        PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1));
+        PostgresTableManager testee = tableManagerFactory.apply(PostgresDataDefinition.table(table1));
         testee.initializeTables()
             .block();
 
@@ -298,7 +298,7 @@ class PostgresTableManagerTest {
             .supportsRowLevelSecurity()
             .build();
 
-        PostgresModule module = PostgresModule.table(table);
+        PostgresDataDefinition module = PostgresDataDefinition.table(table);
 
         PostgresTableManager testee = tableManagerFactory.apply(module);
 
@@ -339,7 +339,7 @@ class PostgresTableManagerTest {
             .supportsRowLevelSecurity()
             .build();
 
-        PostgresModule module = PostgresModule.table(table);
+        PostgresDataDefinition module = PostgresDataDefinition.table(table);
         PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.DISABLED);
 
         testee.initializeTables()
@@ -360,7 +360,7 @@ class PostgresTableManagerTest {
             .supportsRowLevelSecurity()
             .build();
 
-        PostgresModule module = PostgresModule.table(rlsTable);
+        PostgresDataDefinition module = PostgresDataDefinition.table(rlsTable);
 
         PostgresTableManager testee = tableManagerFactory.apply(module);
         testee.initializeTables().block();
@@ -379,7 +379,7 @@ class PostgresTableManagerTest {
             .disableRowLevelSecurity()
             .addAdditionalAlterQueries("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)")
             .build();
-        PostgresModule module = PostgresModule.table(table);
+        PostgresDataDefinition module = PostgresDataDefinition.table(table);
         PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.DISABLED);
 
         testee.initializeTables().block();
@@ -405,7 +405,7 @@ class PostgresTableManagerTest {
             .disableRowLevelSecurity()
             .addAdditionalAlterQueries(new PostgresTable.NonRLSOnlyAdditionalAlterQuery("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)"))
             .build();
-        PostgresModule module = PostgresModule.table(table);
+        PostgresDataDefinition module = PostgresDataDefinition.table(table);
         PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.DISABLED);
 
         testee.initializeTables().block();
@@ -431,7 +431,7 @@ class PostgresTableManagerTest {
             .disableRowLevelSecurity()
             .addAdditionalAlterQueries(new PostgresTable.NonRLSOnlyAdditionalAlterQuery("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)"))
             .build();
-        PostgresModule module = PostgresModule.table(table);
+        PostgresDataDefinition module = PostgresDataDefinition.table(table);
         PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.ENABLED);
 
         testee.initializeTables().block();
@@ -457,7 +457,7 @@ class PostgresTableManagerTest {
             .disableRowLevelSecurity()
             .addAdditionalAlterQueries("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)")
             .build();
-        PostgresModule module = PostgresModule.table(table);
+        PostgresDataDefinition module = PostgresDataDefinition.table(table);
         PostgresTableManager testee = new PostgresTableManager(postgresExtension.getDefaultPostgresExecutor(), module, RowLevelSecurity.DISABLED);
 
         testee.initializeTables().block();

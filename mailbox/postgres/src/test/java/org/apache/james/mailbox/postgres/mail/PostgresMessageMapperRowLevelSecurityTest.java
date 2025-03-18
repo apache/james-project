@@ -41,7 +41,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
-import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
+import org.apache.james.mailbox.postgres.PostgresMailboxAggregateDataDefinition;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
@@ -65,7 +65,7 @@ public class PostgresMessageMapperRowLevelSecurityTest {
     private static final MailboxSession bobDomain2Session = MailboxSessionUtil.create(Username.of("bob@domain2"));
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
 
     private PostgresMailboxSessionMapperFactory postgresMailboxSessionMapperFactory;
     private Mailbox mailbox;

@@ -48,7 +48,7 @@ import reactor.core.publisher.Mono;
 
 class PostgresMailboxManagerTest extends MailboxManagerTest<PostgresMailboxManager> {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
 
     Optional<PostgresMailboxManager> mailboxManager = Optional.empty();
 

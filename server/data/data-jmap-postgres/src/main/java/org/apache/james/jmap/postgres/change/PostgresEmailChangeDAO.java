@@ -19,14 +19,14 @@
 
 package org.apache.james.jmap.postgres.change;
 
-import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.ACCOUNT_ID;
-import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.CREATED;
-import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.DATE;
-import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.DESTROYED;
-import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.IS_SHARED;
-import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.STATE;
-import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.TABLE_NAME;
-import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.UPDATED;
+import static org.apache.james.jmap.postgres.change.PostgresEmailChangeDataDefinition.PostgresEmailChangeTable.ACCOUNT_ID;
+import static org.apache.james.jmap.postgres.change.PostgresEmailChangeDataDefinition.PostgresEmailChangeTable.CREATED;
+import static org.apache.james.jmap.postgres.change.PostgresEmailChangeDataDefinition.PostgresEmailChangeTable.DATE;
+import static org.apache.james.jmap.postgres.change.PostgresEmailChangeDataDefinition.PostgresEmailChangeTable.DESTROYED;
+import static org.apache.james.jmap.postgres.change.PostgresEmailChangeDataDefinition.PostgresEmailChangeTable.IS_SHARED;
+import static org.apache.james.jmap.postgres.change.PostgresEmailChangeDataDefinition.PostgresEmailChangeTable.STATE;
+import static org.apache.james.jmap.postgres.change.PostgresEmailChangeDataDefinition.PostgresEmailChangeTable.TABLE_NAME;
+import static org.apache.james.jmap.postgres.change.PostgresEmailChangeDataDefinition.PostgresEmailChangeTable.UPDATED;
 
 import java.util.Arrays;
 import java.util.List;

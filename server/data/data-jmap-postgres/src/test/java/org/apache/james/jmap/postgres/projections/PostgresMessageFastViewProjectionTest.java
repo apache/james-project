@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.postgres.projections;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionContract;
 import org.apache.james.mailbox.model.MessageId;
@@ -32,7 +32,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresMessageFastViewProjectionTest implements MessageFastViewProjectionContract {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(
-        PostgresModule.aggregateModules(PostgresMessageFastViewProjectionModule.MODULE));
+        PostgresDataDefinition.aggregateModules(PostgresMessageFastViewProjectionDataDefinition.MODULE));
 
     private PostgresMessageFastViewProjection testee;
     private PostgresMessageId.Factory postgresMessageIdFactory;

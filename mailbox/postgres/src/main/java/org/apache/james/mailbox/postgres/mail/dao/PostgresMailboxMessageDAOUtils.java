@@ -20,30 +20,30 @@
 package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DESCRIPTION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DISPOSITION_PARAMETERS;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DISPOSITION_TYPE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_LANGUAGE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_LOCATION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_MD5;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_TRANSFER_ENCODING;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_TYPE_PARAMETERS;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.INTERNAL_DATE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.SIZE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_ANSWERED;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_DELETED;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_DRAFT;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_FLAGGED;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_RECENT;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_SEEN;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.MAILBOX_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.MESSAGE_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.MESSAGE_UID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.MOD_SEQ;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.SAVE_DATE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.THREAD_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.USER_FLAGS;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DESCRIPTION;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DISPOSITION_PARAMETERS;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DISPOSITION_TYPE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_LANGUAGE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_LOCATION;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_MD5;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_TRANSFER_ENCODING;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_TYPE_PARAMETERS;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.INTERNAL_DATE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.SIZE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.IS_ANSWERED;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.IS_DELETED;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.IS_DRAFT;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.IS_FLAGGED;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.IS_RECENT;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.IS_SEEN;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.MAILBOX_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.MESSAGE_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.MESSAGE_UID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.MOD_SEQ;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.SAVE_DATE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.THREAD_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.USER_FLAGS;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -64,7 +64,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
-import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -139,9 +139,9 @@ interface PostgresMailboxMessageDAOUtils {
     Function<Record, Properties> RECORD_TO_PROPERTIES_FUNCTION = record -> {
         PropertyBuilder property = new PropertyBuilder();
 
-        property.setMediaType(record.get(PostgresMessageModule.MessageTable.MIME_TYPE));
-        property.setSubType(record.get(PostgresMessageModule.MessageTable.MIME_SUBTYPE));
-        property.setTextualLineCount(Optional.ofNullable(record.get(PostgresMessageModule.MessageTable.TEXTUAL_LINE_COUNT))
+        property.setMediaType(record.get(PostgresMessageDataDefinition.MessageTable.MIME_TYPE));
+        property.setSubType(record.get(PostgresMessageDataDefinition.MessageTable.MIME_SUBTYPE));
+        property.setTextualLineCount(Optional.ofNullable(record.get(PostgresMessageDataDefinition.MessageTable.TEXTUAL_LINE_COUNT))
             .map(Long::valueOf)
             .orElse(null));
 

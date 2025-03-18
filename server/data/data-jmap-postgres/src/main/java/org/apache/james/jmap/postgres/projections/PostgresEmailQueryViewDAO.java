@@ -19,12 +19,12 @@
 
 package org.apache.james.jmap.postgres.projections;
 
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.MAILBOX_ID;
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.MESSAGE_ID;
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.PK_CONSTRAINT_NAME;
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.RECEIVED_AT;
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.SENT_AT;
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.TABLE_NAME;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MAILBOX_ID;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MESSAGE_ID;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.PK_CONSTRAINT_NAME;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.RECEIVED_AT;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.SENT_AT;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.TABLE_NAME;
 
 import java.time.ZonedDateTime;
 

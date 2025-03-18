@@ -19,11 +19,11 @@
 
 package org.apache.james.sieve.postgres;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
+import org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition;
 import org.apache.james.backends.postgres.quota.PostgresQuotaLimitDAO;
-import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.lib.SieveRepositoryContract;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,8 +31,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresSieveRepositoryTest implements SieveRepositoryContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresQuotaModule.MODULE,
-        PostgresSieveModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresQuotaDataDefinition.MODULE,
+        PostgresSieveDataDefinition.MODULE));
 
     SieveRepository sieveRepository;
 

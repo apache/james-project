@@ -19,10 +19,10 @@
 
 package org.apache.james.vacation.postgres;
 
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationNotificationRegistryTable.ACCOUNT_ID;
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationNotificationRegistryTable.EXPIRY_DATE;
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationNotificationRegistryTable.RECIPIENT_ID;
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationNotificationRegistryTable.TABLE_NAME;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationNotificationRegistryTable.ACCOUNT_ID;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationNotificationRegistryTable.EXPIRY_DATE;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationNotificationRegistryTable.RECIPIENT_ID;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationNotificationRegistryTable.TABLE_NAME;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;

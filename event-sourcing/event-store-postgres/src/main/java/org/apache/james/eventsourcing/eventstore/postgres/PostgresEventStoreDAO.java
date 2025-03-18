@@ -19,11 +19,11 @@
 
 package org.apache.james.eventsourcing.eventstore.postgres;
 
-import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreModule.PostgresEventStoreTable.AGGREGATE_ID;
-import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreModule.PostgresEventStoreTable.EVENT;
-import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreModule.PostgresEventStoreTable.EVENT_ID;
-import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreModule.PostgresEventStoreTable.SNAPSHOT;
-import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreModule.PostgresEventStoreTable.TABLE_NAME;
+import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDataDefinition.PostgresEventStoreTable.AGGREGATE_ID;
+import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDataDefinition.PostgresEventStoreTable.EVENT;
+import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDataDefinition.PostgresEventStoreTable.EVENT_ID;
+import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDataDefinition.PostgresEventStoreTable.SNAPSHOT;
+import static org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDataDefinition.PostgresEventStoreTable.TABLE_NAME;
 
 import java.util.List;
 import java.util.Optional;

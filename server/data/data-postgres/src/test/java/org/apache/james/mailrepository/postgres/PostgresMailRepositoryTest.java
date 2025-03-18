@@ -19,8 +19,8 @@
 
 package org.apache.james.mailrepository.postgres;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.blob.mail.MimeMessageStore;
@@ -37,7 +37,7 @@ public class PostgresMailRepositoryTest implements MailRepositoryContract {
     static final TestBlobId.Factory BLOB_ID_FACTORY = new TestBlobId.Factory();
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresMailRepositoryModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresMailRepositoryDataDefinition.MODULE));
 
     private PostgresMailRepository mailRepository;
 

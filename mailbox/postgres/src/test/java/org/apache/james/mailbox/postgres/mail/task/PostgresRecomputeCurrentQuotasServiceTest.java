@@ -20,14 +20,14 @@
 package org.apache.james.mailbox.postgres.mail.task;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
-import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
+import org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SessionProvider;
-import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
+import org.apache.james.mailbox.postgres.PostgresMailboxAggregateDataDefinition;
 import org.apache.james.mailbox.postgres.PostgresMailboxManagerProvider;
 import org.apache.james.mailbox.postgres.quota.PostgresCurrentQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
@@ -41,7 +41,7 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.postgres.PostgresUserModule;
+import org.apache.james.user.postgres.PostgresUserDataDefinition;
 import org.apache.james.user.postgres.PostgresUsersDAO;
 import org.apache.james.user.postgres.PostgresUsersRepository;
 import org.apache.james.user.postgres.PostgresUsersRepositoryConfiguration;
@@ -53,10 +53,10 @@ import com.google.common.collect.ImmutableSet;
 class PostgresRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServiceContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(
-        PostgresMailboxAggregateModule.MODULE,
-        PostgresQuotaModule.MODULE,
-        PostgresUserModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(
+        PostgresMailboxAggregateDataDefinition.MODULE,
+        PostgresQuotaDataDefinition.MODULE,
+        PostgresUserDataDefinition.MODULE));
 
     static final DomainList NO_DOMAIN_LIST = null;
 

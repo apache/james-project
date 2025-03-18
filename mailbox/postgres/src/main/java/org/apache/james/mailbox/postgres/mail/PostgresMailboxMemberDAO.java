@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberModule.PostgresMailboxMemberTable.MAILBOX_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberModule.PostgresMailboxMemberTable.TABLE_NAME;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberModule.PostgresMailboxMemberTable.USER_NAME;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberDataDefinition.PostgresMailboxMemberTable.MAILBOX_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberDataDefinition.PostgresMailboxMemberTable.TABLE_NAME;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberDataDefinition.PostgresMailboxMemberTable.USER_NAME;
 
 import java.util.List;
 

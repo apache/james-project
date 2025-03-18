@@ -19,13 +19,13 @@
 
 package org.apache.james.backends.postgres.quota;
 
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaLimitTable.IDENTIFIER;
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaLimitTable.PK_CONSTRAINT_NAME;
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaLimitTable.QUOTA_COMPONENT;
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaLimitTable.QUOTA_LIMIT;
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaLimitTable.QUOTA_SCOPE;
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaLimitTable.QUOTA_TYPE;
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaLimitTable.TABLE_NAME;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaLimitTable.IDENTIFIER;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaLimitTable.PK_CONSTRAINT_NAME;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaLimitTable.QUOTA_COMPONENT;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaLimitTable.QUOTA_LIMIT;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaLimitTable.QUOTA_SCOPE;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaLimitTable.QUOTA_TYPE;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaLimitTable.TABLE_NAME;
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
 
 import jakarta.inject.Inject;

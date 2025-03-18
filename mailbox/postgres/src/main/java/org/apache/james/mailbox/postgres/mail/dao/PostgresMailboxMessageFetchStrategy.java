@@ -21,13 +21,13 @@ package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
 import static org.apache.james.backends.postgres.PostgresCommons.tableField;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_START_OCTET;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HEADER_CONTENT;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.MAILBOX_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.MESSAGE_UID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.MOD_SEQ;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.SAVE_DATE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.BODY_START_OCTET;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.HEADER_CONTENT;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.MAILBOX_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.MESSAGE_UID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.MOD_SEQ;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.SAVE_DATE;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.BYTE_TO_CONTENT_FUNCTION;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_FLAGS_FUNCTION;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_PROPERTIES_FUNCTION;
@@ -42,8 +42,8 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
-import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
-import org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.jooq.Field;
@@ -64,10 +64,10 @@ public interface PostgresMailboxMessageFetchStrategy {
             .uid(MessageUid.of(record.get(MESSAGE_UID)))
             .modseq(ModSeq.of(record.get(MOD_SEQ)))
             .threadId(RECORD_TO_THREAD_ID_FUNCTION.apply(record))
-            .internalDate(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(PostgresMessageModule.MessageTable.INTERNAL_DATE, LocalDateTime.class)))
+            .internalDate(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(PostgresMessageDataDefinition.MessageTable.INTERNAL_DATE, LocalDateTime.class)))
             .saveDate(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(SAVE_DATE, LocalDateTime.class)))
             .flags(RECORD_TO_FLAGS_FUNCTION.apply(record))
-            .size(record.get(PostgresMessageModule.MessageTable.SIZE))
+            .size(record.get(PostgresMessageDataDefinition.MessageTable.SIZE))
             .bodyStartOctet(record.get(BODY_START_OCTET));
     }
 

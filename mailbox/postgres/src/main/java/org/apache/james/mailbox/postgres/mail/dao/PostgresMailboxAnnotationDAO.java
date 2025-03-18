@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.postgres.mail.dao;
 
-import static org.apache.james.mailbox.postgres.PostgresMailboxAnnotationModule.PostgresMailboxAnnotationTable.ANNOTATIONS;
-import static org.apache.james.mailbox.postgres.PostgresMailboxAnnotationModule.PostgresMailboxAnnotationTable.MAILBOX_ID;
-import static org.apache.james.mailbox.postgres.PostgresMailboxAnnotationModule.PostgresMailboxAnnotationTable.TABLE_NAME;
+import static org.apache.james.mailbox.postgres.PostgresMailboxAnnotationDataDefinition.PostgresMailboxAnnotationTable.ANNOTATIONS;
+import static org.apache.james.mailbox.postgres.PostgresMailboxAnnotationDataDefinition.PostgresMailboxAnnotationTable.MAILBOX_ID;
+import static org.apache.james.mailbox.postgres.PostgresMailboxAnnotationDataDefinition.PostgresMailboxAnnotationTable.TABLE_NAME;
 
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -23,8 +23,8 @@ import static org.jooq.impl.SQLDataType.BIGINT;
 
 import java.util.UUID;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.Name;
@@ -35,7 +35,7 @@ import org.jooq.impl.SQLDataType;
 import org.jooq.postgres.extensions.bindings.HstoreBinding;
 import org.jooq.postgres.extensions.types.Hstore;
 
-public interface PostgresMailboxModule {
+public interface PostgresMailboxDataDefinition {
     interface PostgresMailboxTable {
         Table<Record> TABLE_NAME = DSL.table("mailbox");
 
@@ -72,7 +72,7 @@ public interface PostgresMailboxModule {
                 .on(TABLE_NAME, USER_NAME, MAILBOX_NAMESPACE));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
         .addTable(PostgresMailboxTable.TABLE)
         .addIndex(PostgresMailboxTable.MAILBOX_USERNAME_NAMESPACE_INDEX)
         .build();

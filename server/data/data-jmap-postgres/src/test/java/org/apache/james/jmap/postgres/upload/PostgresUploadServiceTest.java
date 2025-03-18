@@ -21,10 +21,10 @@ package org.apache.james.jmap.postgres.upload;
 
 import java.time.Clock;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
-import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
+import org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
@@ -43,7 +43,7 @@ public class PostgresUploadServiceTest implements UploadServiceContract {
 
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(
-        PostgresModule.aggregateModules(PostgresUploadModule.MODULE, PostgresQuotaModule.MODULE));
+        PostgresDataDefinition.aggregateModules(PostgresUploadDataDefinition.MODULE, PostgresQuotaDataDefinition.MODULE));
 
     private PostgresUploadRepository uploadRepository;
     private PostgresUploadUsageRepository uploadUsageRepository;

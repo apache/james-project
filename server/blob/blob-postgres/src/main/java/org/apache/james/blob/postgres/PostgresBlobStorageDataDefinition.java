@@ -17,12 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.postgres.mail;
+package org.apache.james.blob.postgres;
 
-import java.util.UUID;
+import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.BUCKET_NAME_INDEX;
+import static org.jooq.impl.SQLDataType.BLOB;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -30,35 +31,32 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresAttachmentModule {
+public interface PostgresBlobStorageDataDefinition {
+    interface PostgresBlobStorageTable {
+        Table<Record> TABLE_NAME = DSL.table("blob_storage");
 
-    interface PostgresAttachmentTable {
-
-        Table<Record> TABLE_NAME = DSL.table("attachment");
-        Field<String> ID = DSL.field("id", SQLDataType.VARCHAR.notNull());
-        Field<String> BLOB_ID = DSL.field("blob_id", SQLDataType.VARCHAR);
-        Field<String> TYPE = DSL.field("type", SQLDataType.VARCHAR);
-        Field<UUID> MESSAGE_ID = DSL.field("message_id", SQLDataType.UUID);
-        Field<Long> SIZE = DSL.field("size", SQLDataType.BIGINT);
+        Field<String> BUCKET_NAME = DSL.field("bucket_name", SQLDataType.VARCHAR(200).notNull());
+        Field<String> BLOB_ID = DSL.field("blob_id", SQLDataType.VARCHAR(200).notNull());
+        Field<byte[]> DATA = DSL.field("data", BLOB.notNull());
+        Field<Integer> SIZE = DSL.field("size", SQLDataType.INTEGER.notNull());
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
-                .column(ID)
+                .column(BUCKET_NAME)
                 .column(BLOB_ID)
-                .column(TYPE)
-                .column(MESSAGE_ID)
+                .column(DATA)
                 .column(SIZE)
-                .constraint(DSL.primaryKey(ID))))
-            .supportsRowLevelSecurity()
+                .constraint(DSL.primaryKey(BUCKET_NAME, BLOB_ID))))
+            .disableRowLevelSecurity()
             .build();
 
-        PostgresIndex MESSAGE_ID_INDEX = PostgresIndex.name("attachment_message_id_index")
+        PostgresIndex BUCKET_NAME_INDEX = PostgresIndex.name("blob_storage_bucket_name_index")
             .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
-                .on(TABLE_NAME, MESSAGE_ID));
+                .on(TABLE_NAME, BUCKET_NAME));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
-        .addTable(PostgresAttachmentTable.TABLE)
-        .addIndex(PostgresAttachmentTable.MESSAGE_ID_INDEX)
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
+        .addTable(PostgresBlobStorageTable.TABLE)
+        .addIndex(BUCKET_NAME_INDEX)
         .build();
 }

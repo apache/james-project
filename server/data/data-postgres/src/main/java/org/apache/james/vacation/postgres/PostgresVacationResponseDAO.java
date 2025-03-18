@@ -20,14 +20,14 @@
 package org.apache.james.vacation.postgres;
 
 import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_ZONED_DATE_TIME_FUNCTION;
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationResponseTable.ACCOUNT_ID;
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationResponseTable.FROM_DATE;
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationResponseTable.HTML;
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationResponseTable.IS_ENABLED;
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationResponseTable.SUBJECT;
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationResponseTable.TABLE_NAME;
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationResponseTable.TEXT;
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationResponseTable.TO_DATE;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationResponseTable.ACCOUNT_ID;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationResponseTable.FROM_DATE;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationResponseTable.HTML;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationResponseTable.IS_ENABLED;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationResponseTable.SUBJECT;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationResponseTable.TABLE_NAME;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationResponseTable.TEXT;
+import static org.apache.james.vacation.postgres.PostgresVacationDataDefinition.PostgresVacationResponseTable.TO_DATE;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

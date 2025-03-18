@@ -19,12 +19,12 @@
 
 package org.apache.james.jmap.postgres.filtering;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStore;
 import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDAO;
-import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreModule;
+import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDataDefinition;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.FilteringManagementContract;
 import org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules;
@@ -33,8 +33,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresEventSourcingFilteringManagementTest implements FilteringManagementContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresFilteringProjectionModule.MODULE,
-        PostgresEventStoreModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresFilteringProjectionDataDefinition.MODULE,
+        PostgresEventStoreDataDefinition.MODULE));
 
     @Override
     public FilteringManagement instantiateFilteringManagement() {

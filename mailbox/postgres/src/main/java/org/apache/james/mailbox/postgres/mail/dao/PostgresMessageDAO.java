@@ -21,26 +21,26 @@ package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
 import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.ATTACHMENT_METADATA;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_BLOB_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_START_OCTET;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DESCRIPTION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DISPOSITION_PARAMETERS;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DISPOSITION_TYPE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_LANGUAGE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_LOCATION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_MD5;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_TRANSFER_ENCODING;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_TYPE_PARAMETERS;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HEADER_CONTENT;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.INTERNAL_DATE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.MESSAGE_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.MIME_SUBTYPE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.MIME_TYPE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.SIZE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.TABLE_NAME;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.TEXTUAL_LINE_COUNT;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.ATTACHMENT_METADATA;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.BODY_BLOB_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.BODY_START_OCTET;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DESCRIPTION;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DISPOSITION_PARAMETERS;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DISPOSITION_TYPE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_LANGUAGE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_LOCATION;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_MD5;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_TRANSFER_ENCODING;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_TYPE_PARAMETERS;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.HEADER_CONTENT;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.INTERNAL_DATE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.MESSAGE_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.MIME_SUBTYPE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.MIME_TYPE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.SIZE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.TABLE_NAME;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.TEXTUAL_LINE_COUNT;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.BYTE_TO_CONTENT_FUNCTION;
 
 import java.time.LocalDateTime;
@@ -57,7 +57,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.MessageRepresentation;
-import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
 import org.apache.james.mailbox.postgres.mail.dto.AttachmentsDTO;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.jooq.Record;
@@ -131,8 +131,8 @@ public class PostgresMessageDAO {
     private MessageRepresentation toMessageRepresentation(Record record, MessageId messageId) {
         return MessageRepresentation.builder()
             .messageId(messageId)
-            .internalDate(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(PostgresMessageModule.MessageTable.INTERNAL_DATE, LocalDateTime.class)))
-            .size(record.get(PostgresMessageModule.MessageTable.SIZE))
+            .internalDate(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(PostgresMessageDataDefinition.MessageTable.INTERNAL_DATE, LocalDateTime.class)))
+            .size(record.get(PostgresMessageDataDefinition.MessageTable.SIZE))
             .headerContent(BYTE_TO_CONTENT_FUNCTION.apply(record.get(HEADER_CONTENT)))
             .bodyBlobId(blobIdFactory.parse(record.get(BODY_BLOB_ID)))
             .attachments(record.get(ATTACHMENT_METADATA))

@@ -19,11 +19,11 @@
 
 package org.apache.james.blob.postgres;
 
-import static org.apache.james.blob.postgres.PostgresBlobStorageModule.PostgresBlobStorageTable.BLOB_ID;
-import static org.apache.james.blob.postgres.PostgresBlobStorageModule.PostgresBlobStorageTable.BUCKET_NAME;
-import static org.apache.james.blob.postgres.PostgresBlobStorageModule.PostgresBlobStorageTable.DATA;
-import static org.apache.james.blob.postgres.PostgresBlobStorageModule.PostgresBlobStorageTable.SIZE;
-import static org.apache.james.blob.postgres.PostgresBlobStorageModule.PostgresBlobStorageTable.TABLE_NAME;
+import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.BLOB_ID;
+import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.BUCKET_NAME;
+import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.DATA;
+import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.SIZE;
+import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.TABLE_NAME;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
