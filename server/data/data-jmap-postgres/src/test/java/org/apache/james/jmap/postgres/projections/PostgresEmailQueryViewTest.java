@@ -37,7 +37,7 @@ public class PostgresEmailQueryViewTest implements EmailQueryViewContract {
     public static final PostgresMessageId MESSAGE_ID_4 = MESSAGE_ID_FACTORY.generate();
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresEmailQueryViewModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresEmailQueryViewDataDefinition.MODULE);
 
     @Override
     public EmailQueryView testee() {

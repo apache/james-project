@@ -31,7 +31,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
 
     @Override
     protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus, Set<PreDeletionHook> preDeletionHooks) {

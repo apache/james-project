@@ -17,13 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.postgres.projections;
+package org.apache.james.domainlist.postgres;
 
-import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionModule.MessageFastViewProjectionTable.TABLE;
-
-import java.util.UUID;
-
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -31,26 +27,21 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresMessageFastViewProjectionModule {
-    interface MessageFastViewProjectionTable {
-        Table<Record> TABLE_NAME = DSL.table("message_fast_view_projection");
+public interface PostgresDomainDataDefinition {
+    interface PostgresDomainTable {
+        Table<Record> TABLE_NAME = DSL.table("domains");
 
-        Field<UUID> MESSAGE_ID = DSL.field("messageId", SQLDataType.UUID.notNull());
-        Field<String> PREVIEW = DSL.field("preview", SQLDataType.VARCHAR.notNull());
-        Field<Boolean> HAS_ATTACHMENT = DSL.field("has_attachment", SQLDataType.BOOLEAN.notNull());
+        Field<String> DOMAIN = DSL.field("domain", SQLDataType.VARCHAR.notNull());
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
-                .column(MESSAGE_ID)
-                .column(PREVIEW)
-                .column(HAS_ATTACHMENT)
-                .primaryKey(MESSAGE_ID)
-                .comment("Storing the JMAP projections for MessageFastView, an aggregation of JMAP properties expected to be fast to fetch.")))
+                .column(DOMAIN)
+                .primaryKey(DOMAIN)))
             .disableRowLevelSecurity()
             .build();
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
-        .addTable(TABLE)
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
+        .addTable(PostgresDomainTable.TABLE)
         .build();
 }

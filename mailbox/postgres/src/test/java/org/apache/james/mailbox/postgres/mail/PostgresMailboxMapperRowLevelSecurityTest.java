@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class PostgresMailboxMapperRowLevelSecurityTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresMailboxModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresMailboxDataDefinition.MODULE);
 
     private MailboxMapperFactory mailboxMapperFactory;
 

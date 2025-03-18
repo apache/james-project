@@ -17,31 +17,41 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.domainlist.postgres;
+package org.apache.james.mailbox.postgres;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable;
+
+import java.util.UUID;
+
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
+import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.SQLDataType;
+import org.jooq.postgres.extensions.bindings.HstoreBinding;
+import org.jooq.postgres.extensions.types.Hstore;
 
-public interface PostgresDomainModule {
-    interface PostgresDomainTable {
-        Table<Record> TABLE_NAME = DSL.table("domains");
+public interface PostgresMailboxAnnotationDataDefinition {
+    interface PostgresMailboxAnnotationTable {
+        Table<Record> TABLE_NAME = DSL.table("mailbox_annotations");
 
-        Field<String> DOMAIN = DSL.field("domain", SQLDataType.VARCHAR.notNull());
+        Field<UUID> MAILBOX_ID = DSL.field("mailbox_id", SQLDataType.UUID.notNull());
+        Field<Hstore> ANNOTATIONS = DSL.field("annotations", DefaultDataType.getDefaultDataType("hstore").asConvertedDataType(new HstoreBinding()).notNull());
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
-                .column(DOMAIN)
-                .primaryKey(DOMAIN)))
-            .disableRowLevelSecurity()
+                .column(MAILBOX_ID)
+                .column(ANNOTATIONS)
+                .primaryKey(MAILBOX_ID)
+                .constraints(DSL.constraint().foreignKey(MAILBOX_ID).references(PostgresMailboxTable.TABLE_NAME, PostgresMailboxTable.MAILBOX_ID).onDeleteCascade())))
+            .supportsRowLevelSecurity()
             .build();
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
-        .addTable(PostgresDomainTable.TABLE)
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
+        .addTable(PostgresMailboxAnnotationDataDefinition.PostgresMailboxAnnotationTable.TABLE)
         .build();
 }

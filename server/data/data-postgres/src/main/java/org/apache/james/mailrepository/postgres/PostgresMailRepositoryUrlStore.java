@@ -20,8 +20,8 @@
 package org.apache.james.mailrepository.postgres;
 
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
-import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryUrlTable.TABLE_NAME;
-import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryUrlTable.URL;
+import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryDataDefinition.PostgresMailRepositoryUrlTable.TABLE_NAME;
+import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryDataDefinition.PostgresMailRepositoryUrlTable.URL;
 
 import java.util.stream.Stream;
 

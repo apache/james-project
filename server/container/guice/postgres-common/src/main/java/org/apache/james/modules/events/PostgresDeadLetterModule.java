@@ -19,12 +19,12 @@
 
 package org.apache.james.modules.events;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventDeadLettersHealthCheck;
 import org.apache.james.events.PostgresEventDeadLetters;
-import org.apache.james.events.PostgresEventDeadLettersModule;
+import org.apache.james.events.PostgresEventDeadLettersDataDefinition;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -33,8 +33,8 @@ import com.google.inject.multibindings.Multibinder;
 public class PostgresDeadLetterModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), PostgresModule.class)
-            .addBinding().toInstance(PostgresEventDeadLettersModule.MODULE);
+        Multibinder.newSetBinder(binder(), PostgresDataDefinition.class)
+            .addBinding().toInstance(PostgresEventDeadLettersDataDefinition.MODULE);
 
         bind(PostgresEventDeadLetters.class).in(Scopes.SINGLETON);
         bind(EventDeadLetters.class).to(PostgresEventDeadLetters.class);

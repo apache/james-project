@@ -29,7 +29,7 @@ import org.apache.james.adapter.mailbox.MailboxUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.QuotaUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.events.EventListener;
 import org.apache.james.eventsourcing.Event;
@@ -55,7 +55,7 @@ import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.DeleteMessageListener;
-import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
+import org.apache.james.mailbox.postgres.PostgresMailboxAggregateDataDefinition;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
@@ -105,8 +105,8 @@ public class PostgresMailboxModule extends AbstractModule {
     protected void configure() {
         install(new PostgresCommonModule());
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresMailboxAggregateModule.MODULE);
+        Multibinder<PostgresDataDefinition> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresDataDefinition.class);
+        postgresDataDefinitions.addBinding().toInstance(PostgresMailboxAggregateDataDefinition.MODULE);
 
         install(new PostgresQuotaGuiceModule());
         install(new PostgresMailboxQuotaModule());

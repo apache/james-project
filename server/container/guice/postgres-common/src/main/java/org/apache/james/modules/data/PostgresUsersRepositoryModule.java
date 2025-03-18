@@ -20,11 +20,11 @@
 package org.apache.james.modules.data;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.lib.UsersDAO;
-import org.apache.james.user.postgres.PostgresUserModule;
+import org.apache.james.user.postgres.PostgresUserDataDefinition;
 import org.apache.james.user.postgres.PostgresUsersDAO;
 import org.apache.james.user.postgres.PostgresUsersRepository;
 import org.apache.james.user.postgres.PostgresUsersRepositoryConfiguration;
@@ -57,8 +57,8 @@ public class PostgresUsersRepositoryModule extends AbstractModule {
         bind(PostgresUsersDAO.class).in(Scopes.SINGLETON);
         bind(UsersDAO.class).to(PostgresUsersDAO.class);
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresUserModule.MODULE);
+        Multibinder<PostgresDataDefinition> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresDataDefinition.class);
+        postgresDataDefinitions.addBinding().toInstance(PostgresUserDataDefinition.MODULE);
     }
 
     @ProvidesIntoSet

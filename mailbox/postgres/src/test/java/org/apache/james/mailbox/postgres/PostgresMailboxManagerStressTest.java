@@ -31,7 +31,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresMailboxManagerStressTest implements MailboxManagerStressContract<PostgresMailboxManager> {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
 
     Optional<PostgresMailboxManager> mailboxManager = Optional.empty();
 

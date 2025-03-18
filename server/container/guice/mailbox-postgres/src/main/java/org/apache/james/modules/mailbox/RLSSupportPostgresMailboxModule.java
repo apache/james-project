@@ -19,8 +19,8 @@
 
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberDataDefinition;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -28,7 +28,7 @@ import com.google.inject.multibindings.Multibinder;
 public class RLSSupportPostgresMailboxModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresMailboxMemberModule.MODULE);
+        Multibinder<PostgresDataDefinition> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresDataDefinition.class);
+        postgresDataDefinitions.addBinding().toInstance(PostgresMailboxMemberDataDefinition.MODULE);
     }
 }

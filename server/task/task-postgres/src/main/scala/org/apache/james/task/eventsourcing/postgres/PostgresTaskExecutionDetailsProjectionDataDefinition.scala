@@ -22,11 +22,11 @@ package org.apache.james.task.eventsourcing.postgres
 import java.time.LocalDateTime
 import java.util.UUID
 
-import org.apache.james.backends.postgres.{PostgresCommons, PostgresIndex, PostgresModule, PostgresTable}
+import org.apache.james.backends.postgres.{PostgresCommons, PostgresIndex, PostgresDataDefinition, PostgresTable}
 import org.jooq.impl.{DSL, SQLDataType}
 import org.jooq.{Field, JSONB, Record, Table}
 
-object PostgresTaskExecutionDetailsProjectionModule {
+object PostgresTaskExecutionDetailsProjectionDataDefinition {
   val TABLE_NAME: Table[Record] = DSL.table("task_execution_details_projection")
 
   val TASK_ID: Field[UUID] = DSL.field("task_id", SQLDataType.UUID.notNull)
@@ -64,7 +64,7 @@ object PostgresTaskExecutionDetailsProjectionModule {
     .createIndexStep((dsl, indexName) => dsl.createIndexIfNotExists(indexName)
       .on(TABLE_NAME, SUBMITTED_DATE));
 
-  val MODULE: PostgresModule = PostgresModule
+  val MODULE: PostgresDataDefinition = PostgresDataDefinition
     .builder
     .addTable(TABLE)
     .addIndex(SUBMITTED_DATE_INDEX)

@@ -33,7 +33,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
+import org.apache.james.mailbox.postgres.PostgresMailboxAggregateDataDefinition;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
@@ -52,7 +52,7 @@ public class PostgresMessageBlobReferenceSourceTest {
     private static final MessageUid MESSAGE_UID = MessageUid.of(1);
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
 
     PostgresMessageBlobReferenceSource blobReferenceSource;
     PostgresMessageDAO postgresMessageDAO;

@@ -33,7 +33,7 @@ import reactor.core.publisher.Mono;
 
 public class PostgresDelegationStoreTest implements DelegationStoreContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresUserModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresUserDataDefinition.MODULE);
 
     private PostgresUsersDAO postgresUsersDAO;
     private PostgresDelegationStore postgresDelegationStore;

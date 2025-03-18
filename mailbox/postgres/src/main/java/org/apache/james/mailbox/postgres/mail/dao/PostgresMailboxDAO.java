@@ -19,17 +19,17 @@
 
 package org.apache.james.mailbox.postgres.mail.dao;
 
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ACL;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ACL_VERSION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_HIGHEST_MODSEQ;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_LAST_UID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_NAME;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_NAMESPACE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_NAME_USER_NAME_NAMESPACE_UNIQUE_CONSTRAINT;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_UID_VALIDITY;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.TABLE_NAME;
-import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.USER_NAME;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable.MAILBOX_ACL;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable.MAILBOX_ACL_VERSION;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable.MAILBOX_HIGHEST_MODSEQ;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable.MAILBOX_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable.MAILBOX_LAST_UID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable.MAILBOX_NAME;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable.MAILBOX_NAMESPACE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable.MAILBOX_NAME_USER_NAME_NAMESPACE_UNIQUE_CONSTRAINT;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable.MAILBOX_UID_VALIDITY;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable.TABLE_NAME;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition.PostgresMailboxTable.USER_NAME;
 import static org.jooq.impl.DSL.coalesce;
 
 import java.util.LinkedHashMap;

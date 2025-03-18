@@ -19,12 +19,12 @@
 
 package org.apache.james.backends.postgres.quota;
 
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.COMPONENT;
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.CURRENT_VALUE;
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.IDENTIFIER;
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.PRIMARY_KEY_CONSTRAINT_NAME;
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.TABLE_NAME;
-import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.TYPE;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaCurrentValueTable.COMPONENT;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaCurrentValueTable.CURRENT_VALUE;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaCurrentValueTable.IDENTIFIER;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaCurrentValueTable.PRIMARY_KEY_CONSTRAINT_NAME;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaCurrentValueTable.TABLE_NAME;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition.PostgresQuotaCurrentValueTable.TYPE;
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
 
 import java.util.function.Function;

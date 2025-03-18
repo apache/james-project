@@ -30,8 +30,8 @@ import java.util.UUID;
 
 import jakarta.mail.Flags;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.MessageUid;
@@ -43,8 +43,8 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
-import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule;
-import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -62,8 +62,8 @@ import reactor.core.publisher.Flux;
 public class PostgresMailboxMessageDAOTest {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(
-        PostgresModule.aggregateModules(PostgresMailboxModule.MODULE,
-            PostgresMessageModule.MODULE));
+        PostgresDataDefinition.aggregateModules(PostgresMailboxDataDefinition.MODULE,
+            PostgresMessageDataDefinition.MODULE));
 
     private final MessageId.Factory messageIdFactory = new PostgresMessageId.Factory();
     private final BlobId.Factory blobIdFactory = new PlainBlobId.Factory();

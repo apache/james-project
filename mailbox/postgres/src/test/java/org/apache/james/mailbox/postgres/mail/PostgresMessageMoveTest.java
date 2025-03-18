@@ -20,7 +20,7 @@
 package org.apache.james.mailbox.postgres.mail;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
+import org.apache.james.mailbox.postgres.PostgresMailboxAggregateDataDefinition;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMoveTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresMessageMoveTest extends MessageMoveTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
 
     @Override
     protected MapperProvider createMapperProvider() {

@@ -21,7 +21,7 @@ package org.apache.james.mailbox.postgres.quota;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
-import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
+import org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaManagerContract;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresCurrentQuotaManagerTest implements CurrentQuotaManagerContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaDataDefinition.MODULE);
 
     private PostgresCurrentQuotaManager currentQuotaManager;
 

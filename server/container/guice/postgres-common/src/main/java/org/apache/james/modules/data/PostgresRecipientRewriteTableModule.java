@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.data;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -27,6 +27,7 @@ import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.postgres.PostgresRecipientRewriteTable;
 import org.apache.james.rrt.postgres.PostgresRecipientRewriteTableDAO;
+import org.apache.james.rrt.postgres.PostgresRecipientRewriteTableDataDefinition;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -47,7 +48,7 @@ public class PostgresRecipientRewriteTableModule extends AbstractModule {
         bind(CanSendFromImpl.class).in(Scopes.SINGLETON);
         bind(CanSendFrom.class).to(CanSendFromImpl.class);
 
-        Multibinder.newSetBinder(binder(), PostgresModule.class).addBinding().toInstance(org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.MODULE);
+        Multibinder.newSetBinder(binder(), PostgresDataDefinition.class).addBinding().toInstance(PostgresRecipientRewriteTableDataDefinition.MODULE);
     }
 
     @ProvidesIntoSet

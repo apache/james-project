@@ -19,8 +19,8 @@
 
 package org.apache.james.vault.metadata;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -31,7 +31,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresDeletedMessageMetadataVaultTest implements DeletedMessageMetadataVaultContract {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(
-        PostgresModule.aggregateModules(PostgresDeletedMessageMetadataModule.MODULE));
+        PostgresDataDefinition.aggregateModules(PostgresDeletedMessageMetadataDataDefinition.MODULE));
 
     @Override
     public DeletedMessageMetadataVault metadataVault() {

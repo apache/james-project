@@ -19,18 +19,18 @@
 
 package org.apache.james.jmap.postgres.projections;
 
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.MAILBOX_ID_INDEX;
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.MAILBOX_ID_RECEIVED_AT_INDEX;
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.MAILBOX_ID_SENT_AT_INDEX;
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.TABLE;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MAILBOX_ID_INDEX;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MAILBOX_ID_RECEIVED_AT_INDEX;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MAILBOX_ID_SENT_AT_INDEX;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.TABLE;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
-import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
 import org.jooq.Field;
 import org.jooq.Name;
 import org.jooq.Record;
@@ -38,12 +38,12 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresEmailQueryViewModule {
+public interface PostgresEmailQueryViewDataDefinition {
     interface PostgresEmailQueryViewTable {
         Table<Record> TABLE_NAME = DSL.table("email_query_view");
 
         Field<UUID> MAILBOX_ID = DSL.field("mailbox_id", SQLDataType.UUID.notNull());
-        Field<UUID> MESSAGE_ID = PostgresMessageModule.MESSAGE_ID;
+        Field<UUID> MESSAGE_ID = PostgresMessageDataDefinition.MESSAGE_ID;
         Field<OffsetDateTime> RECEIVED_AT = DSL.field("received_at", SQLDataType.TIMESTAMPWITHTIMEZONE.notNull());
         Field<OffsetDateTime> SENT_AT = DSL.field("sent_at", SQLDataType.TIMESTAMPWITHTIMEZONE.notNull());
 
@@ -72,7 +72,7 @@ public interface PostgresEmailQueryViewModule {
                 .on(TABLE_NAME, MAILBOX_ID, SENT_AT));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
         .addTable(TABLE)
         .addIndex(MAILBOX_ID_INDEX)
         .addIndex(MAILBOX_ID_RECEIVED_AT_INDEX)

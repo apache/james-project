@@ -17,49 +17,41 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault.metadata;
+package org.apache.james.mailbox.postgres.mail;
 
-import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataModule.DeletedMessageMetadataTable.OWNER_MESSAGE_ID_INDEX;
-import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataModule.DeletedMessageMetadataTable.TABLE;
+import java.util.UUID;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
-import org.jooq.JSONB;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresDeletedMessageMetadataModule {
-    interface DeletedMessageMetadataTable {
-        Table<Record> TABLE_NAME = DSL.table("deleted_messages_metadata");
+public interface PostgresMailboxMemberDataDefinition {
+    interface PostgresMailboxMemberTable {
+        Table<Record> TABLE_NAME = DSL.table("mailbox_member");
 
-        Field<String> BUCKET_NAME = DSL.field("bucket_name", SQLDataType.VARCHAR.notNull());
-        Field<String> OWNER = DSL.field("owner", SQLDataType.VARCHAR.notNull());
-        Field<String> MESSAGE_ID = DSL.field("messageId", SQLDataType.VARCHAR.notNull());
-        Field<String> BLOB_ID = DSL.field("blob_id", SQLDataType.VARCHAR.notNull());
-        Field<JSONB> METADATA = DSL.field("metadata", SQLDataType.JSONB.notNull());
+        Field<String> USER_NAME = DSL.field("user_name", SQLDataType.VARCHAR(255));
+        Field<UUID> MAILBOX_ID = DSL.field("mailbox_id", SQLDataType.UUID.notNull());
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
-                .column(BUCKET_NAME)
-                .column(OWNER)
-                .column(MESSAGE_ID)
-                .column(BLOB_ID)
-                .column(METADATA)
-                .primaryKey(BUCKET_NAME, OWNER, MESSAGE_ID)))
-            .disableRowLevelSecurity()
+                .column(USER_NAME)
+                .column(MAILBOX_ID)
+                .constraint(DSL.primaryKey(USER_NAME, MAILBOX_ID))))
+            .supportsRowLevelSecurity()
             .build();
 
-        PostgresIndex OWNER_MESSAGE_ID_INDEX = PostgresIndex.name("owner_messageId_index")
-            .createIndexStep((dsl, indexName) -> dsl.createUniqueIndexIfNotExists(indexName)
-                .on(TABLE_NAME, OWNER, MESSAGE_ID));
+        PostgresIndex MAILBOX_MEMBER_USERNAME_INDEX = PostgresIndex.name("mailbox_member_username_index")
+            .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, USER_NAME));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
-        .addTable(TABLE)
-        .addIndex(OWNER_MESSAGE_ID_INDEX)
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
+        .addTable(PostgresMailboxMemberTable.TABLE)
+        .addIndex(PostgresMailboxMemberTable.MAILBOX_MEMBER_USERNAME_INDEX)
         .build();
 }

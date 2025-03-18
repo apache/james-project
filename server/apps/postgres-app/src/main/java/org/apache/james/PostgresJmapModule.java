@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
@@ -30,7 +30,7 @@ import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
-import org.apache.james.jmap.postgres.PostgresDataJMapAggregateModule;
+import org.apache.james.jmap.postgres.PostgresDataJMapAggregateDataDefinition;
 import org.apache.james.jmap.postgres.change.PostgresEmailChangeRepository;
 import org.apache.james.jmap.postgres.change.PostgresMailboxChangeRepository;
 import org.apache.james.jmap.postgres.change.PostgresStateFactory;
@@ -53,7 +53,7 @@ public class PostgresJmapModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), PostgresModule.class).addBinding().toInstance(PostgresDataJMapAggregateModule.MODULE);
+        Multibinder.newSetBinder(binder(), PostgresDataDefinition.class).addBinding().toInstance(PostgresDataJMapAggregateDataDefinition.MODULE);
 
         bind(EmailChangeRepository.class).to(PostgresEmailChangeRepository.class);
         bind(PostgresEmailChangeRepository.class).in(Scopes.SINGLETON);

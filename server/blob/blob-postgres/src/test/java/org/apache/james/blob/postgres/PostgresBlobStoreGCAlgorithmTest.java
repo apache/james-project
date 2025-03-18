@@ -46,7 +46,7 @@ import reactor.core.publisher.Mono;
 public class PostgresBlobStoreGCAlgorithmTest implements BloomFilterGCAlgorithmContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresBlobStorageModule.MODULE, PostgresExtension.PoolSize.LARGE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresBlobStorageDataDefinition.MODULE, PostgresExtension.PoolSize.LARGE);
     private PostgresBlobStoreDAO blobStore;
 
     @BeforeAll

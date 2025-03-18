@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresMessageIdManagerStorageTest extends AbstractMessageIdManagerStorageTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
 
     @Override
     protected MessageIdManagerTestSystem createTestingData() {

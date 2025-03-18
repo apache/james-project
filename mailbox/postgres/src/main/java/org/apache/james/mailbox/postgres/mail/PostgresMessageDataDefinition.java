@@ -25,8 +25,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.apache.james.backends.postgres.PostgresCommons.DataTypes;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.apache.james.mailbox.postgres.mail.dto.AttachmentsDTO;
 import org.jooq.Field;
@@ -36,7 +36,7 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.postgres.extensions.types.Hstore;
 
-public interface PostgresMessageModule {
+public interface PostgresMessageDataDefinition {
 
     Field<UUID> MESSAGE_ID = DSL.field("message_id", SQLDataType.UUID.notNull());
     Field<LocalDateTime> INTERNAL_DATE = DSL.field("internal_date", DataTypes.TIMESTAMP);
@@ -44,12 +44,12 @@ public interface PostgresMessageModule {
 
     interface MessageTable {
         Table<Record> TABLE_NAME = DSL.table("message");
-        Field<UUID> MESSAGE_ID = PostgresMessageModule.MESSAGE_ID;
+        Field<UUID> MESSAGE_ID = PostgresMessageDataDefinition.MESSAGE_ID;
         Field<String> BODY_BLOB_ID = DSL.field("body_blob_id", SQLDataType.VARCHAR(200).notNull());
         Field<String> MIME_TYPE = DSL.field("mime_type", SQLDataType.VARCHAR(200));
         Field<String> MIME_SUBTYPE = DSL.field("mime_subtype", SQLDataType.VARCHAR(200));
-        Field<LocalDateTime> INTERNAL_DATE = PostgresMessageModule.INTERNAL_DATE;
-        Field<Long> SIZE = PostgresMessageModule.SIZE;
+        Field<LocalDateTime> INTERNAL_DATE = PostgresMessageDataDefinition.INTERNAL_DATE;
+        Field<Long> SIZE = PostgresMessageDataDefinition.SIZE;
         Field<Integer> BODY_START_OCTET = DSL.field("body_start_octet", SQLDataType.INTEGER.notNull());
         Field<byte[]> HEADER_CONTENT = DSL.field("header_content", SQLDataType.BLOB.notNull());
         Field<Integer> TEXTUAL_LINE_COUNT = DSL.field("textual_line_count", SQLDataType.INTEGER);
@@ -100,10 +100,10 @@ public interface PostgresMessageModule {
         Field<UUID> MAILBOX_ID = DSL.field("mailbox_id", SQLDataType.UUID.notNull());
         Field<Long> MESSAGE_UID = DSL.field("message_uid", SQLDataType.BIGINT.notNull());
         Field<Long> MOD_SEQ = DSL.field("mod_seq", SQLDataType.BIGINT.notNull());
-        Field<UUID> MESSAGE_ID = PostgresMessageModule.MESSAGE_ID;
+        Field<UUID> MESSAGE_ID = PostgresMessageDataDefinition.MESSAGE_ID;
         Field<UUID> THREAD_ID = DSL.field("thread_id", SQLDataType.UUID);
-        Field<LocalDateTime> INTERNAL_DATE = PostgresMessageModule.INTERNAL_DATE;
-        Field<Long> SIZE = PostgresMessageModule.SIZE;
+        Field<LocalDateTime> INTERNAL_DATE = PostgresMessageDataDefinition.INTERNAL_DATE;
+        Field<Long> SIZE = PostgresMessageDataDefinition.SIZE;
         Field<Boolean> IS_DELETED = DSL.field("is_deleted", SQLDataType.BOOLEAN.nullable(false)
             .defaultValue(DSL.field("false", SQLDataType.BOOLEAN)));
         Field<Boolean> IS_ANSWERED = DSL.field("is_answered", SQLDataType.BOOLEAN.nullable(false));
@@ -176,7 +176,7 @@ public interface PostgresMessageModule {
 
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
         .addTable(MessageTable.TABLE)
         .addTable(MessageToMailboxTable.TABLE)
         .addIndex(MessageToMailboxTable.MESSAGE_ID_INDEX)

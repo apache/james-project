@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.MetricableBlobStore;
@@ -104,8 +104,8 @@ public class Main implements JamesServerMain {
             binder -> {
                 Multibinder.newSetBinder(binder, MailRepositoryFactory.class)
                         .addBinding().to(PostgresMailRepositoryFactory.class);
-                Multibinder.newSetBinder(binder, PostgresModule.class)
-                        .addBinding().toInstance(org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.MODULE);
+                Multibinder.newSetBinder(binder, PostgresDataDefinition.class)
+                        .addBinding().toInstance(org.apache.james.mailrepository.postgres.PostgresMailRepositoryDataDefinition.MODULE);
                 binder.bind(MailRepositoryUrlStore.class).to(PostgresMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
             },
             new CoreDataModule(),

@@ -19,10 +19,10 @@
 
 package org.apache.james.jmap.postgres.upload;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
-import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
+import org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.jmap.api.upload.UploadUsageRepositoryContract;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +32,7 @@ public class PostgresUploadUsageRepositoryTest implements UploadUsageRepositoryC
 
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(
-        PostgresModule.aggregateModules(PostgresUploadModule.MODULE, PostgresQuotaModule.MODULE));
+        PostgresDataDefinition.aggregateModules(PostgresUploadDataDefinition.MODULE, PostgresQuotaDataDefinition.MODULE));
 
     private PostgresUploadUsageRepository uploadUsageRepository;
 

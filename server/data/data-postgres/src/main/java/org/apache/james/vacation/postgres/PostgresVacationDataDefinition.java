@@ -22,8 +22,8 @@ package org.apache.james.vacation.postgres;
 import java.time.LocalDateTime;
 
 import org.apache.james.backends.postgres.PostgresCommons;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -31,7 +31,7 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresVacationModule {
+public interface PostgresVacationDataDefinition {
     interface PostgresVacationResponseTable {
         Table<Record> TABLE_NAME = DSL.table("vacation_response");
 
@@ -83,7 +83,7 @@ public interface PostgresVacationModule {
                 .on(TABLE_NAME, ACCOUNT_ID, RECIPIENT_ID, EXPIRY_DATE));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
         .addTable(PostgresVacationResponseTable.TABLE)
         .addTable(PostgresVacationNotificationRegistryTable.TABLE)
         .addIndex(PostgresVacationNotificationRegistryTable.ACCOUNT_ID_INDEX, PostgresVacationNotificationRegistryTable.FULL_COMPOSITE_INDEX)

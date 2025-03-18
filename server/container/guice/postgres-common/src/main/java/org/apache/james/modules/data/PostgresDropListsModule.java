@@ -19,10 +19,10 @@
 
 package org.apache.james.modules.data;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.droplists.api.DropList;
 import org.apache.james.droplists.postgres.PostgresDropList;
-import org.apache.james.droplists.postgres.PostgresDropListModule;
+import org.apache.james.droplists.postgres.PostgresDropListDataDefinition;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -33,7 +33,7 @@ public class PostgresDropListsModule extends AbstractModule {
     protected void configure() {
         bind(DropList.class).to(PostgresDropList.class).in(Scopes.SINGLETON);
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresDropListModule.MODULE);
+        Multibinder<PostgresDataDefinition> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresDataDefinition.class);
+        postgresDataDefinitions.addBinding().toInstance(PostgresDropListDataDefinition.MODULE);
     }
 }

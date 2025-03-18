@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresSubscriptionManagerTest implements SubscriptionManagerContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateDataDefinition.MODULE);
 
     SubscriptionManager subscriptionManager;
 

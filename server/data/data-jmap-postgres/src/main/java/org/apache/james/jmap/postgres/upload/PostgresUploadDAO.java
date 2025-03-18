@@ -20,7 +20,7 @@
 package org.apache.james.jmap.postgres.upload;
 
 import static org.apache.james.backends.postgres.PostgresCommons.INSTANT_TO_LOCAL_DATE_TIME;
-import static org.apache.james.jmap.postgres.upload.PostgresUploadModule.PostgresUploadTable;
+import static org.apache.james.jmap.postgres.upload.PostgresUploadDataDefinition.PostgresUploadTable;
 
 import java.time.LocalDateTime;
 import java.util.Optional;

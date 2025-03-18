@@ -45,7 +45,7 @@ class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
     static Duration CONCURRENT_TEST_DURATION = Duration.ofMinutes(5);
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresBlobStorageModule.MODULE, PostgresExtension.PoolSize.LARGE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresBlobStorageDataDefinition.MODULE, PostgresExtension.PoolSize.LARGE);
 
     private PostgresBlobStoreDAO blobStore;
 

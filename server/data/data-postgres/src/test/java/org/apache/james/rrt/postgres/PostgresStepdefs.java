@@ -18,13 +18,13 @@
  ****************************************************************/
 package org.apache.james.rrt.postgres;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
-import org.apache.james.user.postgres.PostgresUserModule;
+import org.apache.james.user.postgres.PostgresUserDataDefinition;
 import org.apache.james.user.postgres.PostgresUsersDAO;
 import org.apache.james.user.postgres.PostgresUsersRepository;
 import org.apache.james.user.postgres.PostgresUsersRepositoryConfiguration;
@@ -35,7 +35,7 @@ import io.cucumber.java.After;
 import io.cucumber.java.Before;
 
 public class PostgresStepdefs {
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresRecipientRewriteTableModule.MODULE, PostgresUserModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresRecipientRewriteTableDataDefinition.MODULE, PostgresUserDataDefinition.MODULE));
 
     private final RewriteTablesStepdefs mainStepdefs;
 

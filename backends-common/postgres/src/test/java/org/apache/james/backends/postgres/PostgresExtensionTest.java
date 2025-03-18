@@ -55,7 +55,7 @@ class PostgresExtensionTest {
         .createIndexStep((dslContext, indexName) -> dslContext.createIndex(indexName)
             .on(DSL.table("table2"), DSL.field("column1").desc()));
 
-    static PostgresModule POSTGRES_MODULE = PostgresModule.builder()
+    static PostgresDataDefinition POSTGRES_MODULE = PostgresDataDefinition.builder()
         .addTable(TABLE_1, TABLE_2)
         .addIndex(INDEX_1, INDEX_2)
         .build();

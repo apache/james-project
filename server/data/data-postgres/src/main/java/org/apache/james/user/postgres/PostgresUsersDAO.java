@@ -21,14 +21,14 @@ package org.apache.james.user.postgres;
 
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.EAGER_FETCH;
-import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.ALGORITHM;
-import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.AUTHORIZED_USERS;
-import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.DELEGATED_USERS;
-import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.HASHED_PASSWORD;
-import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.TABLE;
-import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.TABLE_NAME;
-import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.USERNAME;
-import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.USERNAME_PRIMARY_KEY;
+import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.ALGORITHM;
+import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.AUTHORIZED_USERS;
+import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.DELEGATED_USERS;
+import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.HASHED_PASSWORD;
+import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.TABLE;
+import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.TABLE_NAME;
+import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.USERNAME;
+import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.USERNAME_PRIMARY_KEY;
 import static org.jooq.impl.DSL.count;
 
 import java.util.Iterator;

@@ -19,7 +19,7 @@
 
 package org.apache.james.user.postgres;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.Name;
@@ -28,7 +28,7 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresUserModule {
+public interface PostgresUserDataDefinition {
     interface PostgresUserTable {
         Table<Record> TABLE_NAME = DSL.table("users");
 
@@ -52,7 +52,7 @@ public interface PostgresUserModule {
             .build();
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
         .addTable(PostgresUserTable.TABLE)
         .build();
 }

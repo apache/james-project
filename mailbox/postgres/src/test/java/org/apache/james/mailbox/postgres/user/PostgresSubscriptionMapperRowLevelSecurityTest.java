@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresSubscriptionMapperRowLevelSecurityTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresSubscriptionModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresSubscriptionDataDefinition.MODULE);
 
     private SubscriptionMapperFactory subscriptionMapperFactory;
 

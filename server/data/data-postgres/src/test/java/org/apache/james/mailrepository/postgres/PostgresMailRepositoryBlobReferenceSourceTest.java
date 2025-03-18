@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.mail.MessagingException;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.PlainBlobId;
@@ -43,7 +43,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresMailRepositoryBlobReferenceSourceTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresMailRepositoryModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresMailRepositoryDataDefinition.MODULE));
 
     private static final MailRepositoryUrl URL = MailRepositoryUrl.fromPathAndProtocol(new Protocol("postgres"), MailRepositoryPath.from("testrepo"));
 

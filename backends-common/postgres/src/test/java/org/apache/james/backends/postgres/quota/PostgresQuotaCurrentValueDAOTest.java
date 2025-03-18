@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresQuotaCurrentValueDAOTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaDataDefinition.MODULE);
 
     private static final QuotaCurrentValue.Key QUOTA_KEY = QuotaCurrentValue.Key.of(QuotaComponent.MAILBOX, "james@abc.com", QuotaType.SIZE);
 

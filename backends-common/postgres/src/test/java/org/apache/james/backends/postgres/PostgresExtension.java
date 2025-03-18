@@ -70,25 +70,25 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         }
     }
 
-    public static PostgresExtension withRowLevelSecurity(PostgresModule module) {
+    public static PostgresExtension withRowLevelSecurity(PostgresDataDefinition module) {
         return new PostgresExtension(module, RowLevelSecurity.ENABLED);
     }
 
-    public static PostgresExtension withoutRowLevelSecurity(PostgresModule module) {
+    public static PostgresExtension withoutRowLevelSecurity(PostgresDataDefinition module) {
         return withoutRowLevelSecurity(module, PoolSize.SMALL);
     }
 
-    public static PostgresExtension withoutRowLevelSecurity(PostgresModule module, PoolSize poolSize) {
+    public static PostgresExtension withoutRowLevelSecurity(PostgresDataDefinition module, PoolSize poolSize) {
         return new PostgresExtension(module, RowLevelSecurity.DISABLED, Optional.of(poolSize));
     }
 
     public static PostgresExtension empty() {
-        return withoutRowLevelSecurity(PostgresModule.EMPTY_MODULE);
+        return withoutRowLevelSecurity(PostgresDataDefinition.EMPTY_MODULE);
     }
 
     public static final PoolSize DEFAULT_POOL_SIZE = PoolSize.SMALL;
     public static PostgreSQLContainer<?> PG_CONTAINER = DockerPostgresSingleton.SINGLETON;
-    private final PostgresModule postgresModule;
+    private final PostgresDataDefinition postgresDataDefinition;
     private final RowLevelSecurity rowLevelSecurity;
     private final PostgresFixture.Database selectedDatabase;
     private PoolSize poolSize;
@@ -110,12 +110,12 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .exec();
     }
 
-    private PostgresExtension(PostgresModule postgresModule, RowLevelSecurity rowLevelSecurity) {
-        this(postgresModule, rowLevelSecurity, Optional.empty());
+    private PostgresExtension(PostgresDataDefinition postgresDataDefinition, RowLevelSecurity rowLevelSecurity) {
+        this(postgresDataDefinition, rowLevelSecurity, Optional.empty());
     }
 
-    private PostgresExtension(PostgresModule postgresModule, RowLevelSecurity rowLevelSecurity, Optional<PoolSize> maybePoolSize) {
-        this.postgresModule = postgresModule;
+    private PostgresExtension(PostgresDataDefinition postgresDataDefinition, RowLevelSecurity rowLevelSecurity, Optional<PoolSize> maybePoolSize) {
+        this.postgresDataDefinition = postgresDataDefinition;
         this.rowLevelSecurity = rowLevelSecurity;
         if (rowLevelSecurity.isRowLevelSecurityEnabled()) {
             this.selectedDatabase = PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
@@ -193,7 +193,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             metricFactory)
             .create();
 
-        this.postgresTableManager = new PostgresTableManager(defaultPostgresExecutor, postgresModule, rowLevelSecurity);
+        this.postgresTableManager = new PostgresTableManager(defaultPostgresExecutor, postgresDataDefinition, rowLevelSecurity);
     }
 
     @Override

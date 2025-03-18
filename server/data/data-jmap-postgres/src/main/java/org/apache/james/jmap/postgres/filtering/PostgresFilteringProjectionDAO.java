@@ -19,10 +19,10 @@
 
 package org.apache.james.jmap.postgres.filtering;
 
-import static org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionModule.PostgresFilteringProjectionTable.AGGREGATE_ID;
-import static org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionModule.PostgresFilteringProjectionTable.EVENT_ID;
-import static org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionModule.PostgresFilteringProjectionTable.RULES;
-import static org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionModule.PostgresFilteringProjectionTable.TABLE_NAME;
+import static org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionDataDefinition.PostgresFilteringProjectionTable.AGGREGATE_ID;
+import static org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionDataDefinition.PostgresFilteringProjectionTable.EVENT_ID;
+import static org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionDataDefinition.PostgresFilteringProjectionTable.RULES;
+import static org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionDataDefinition.PostgresFilteringProjectionTable.TABLE_NAME;
 
 import java.util.List;
 

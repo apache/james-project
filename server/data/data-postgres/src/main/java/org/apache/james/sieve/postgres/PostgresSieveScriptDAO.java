@@ -20,14 +20,14 @@
 package org.apache.james.sieve.postgres;
 
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
-import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.ACTIVATION_DATE_TIME;
-import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.IS_ACTIVE;
-import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.SCRIPT_CONTENT;
-import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.SCRIPT_ID;
-import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.SCRIPT_NAME;
-import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.SCRIPT_SIZE;
-import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.TABLE_NAME;
-import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.USERNAME;
+import static org.apache.james.sieve.postgres.PostgresSieveDataDefinition.PostgresSieveScriptTable.ACTIVATION_DATE_TIME;
+import static org.apache.james.sieve.postgres.PostgresSieveDataDefinition.PostgresSieveScriptTable.IS_ACTIVE;
+import static org.apache.james.sieve.postgres.PostgresSieveDataDefinition.PostgresSieveScriptTable.SCRIPT_CONTENT;
+import static org.apache.james.sieve.postgres.PostgresSieveDataDefinition.PostgresSieveScriptTable.SCRIPT_ID;
+import static org.apache.james.sieve.postgres.PostgresSieveDataDefinition.PostgresSieveScriptTable.SCRIPT_NAME;
+import static org.apache.james.sieve.postgres.PostgresSieveDataDefinition.PostgresSieveScriptTable.SCRIPT_SIZE;
+import static org.apache.james.sieve.postgres.PostgresSieveDataDefinition.PostgresSieveScriptTable.TABLE_NAME;
+import static org.apache.james.sieve.postgres.PostgresSieveDataDefinition.PostgresSieveScriptTable.USERNAME;
 
 import java.time.OffsetDateTime;
 import java.util.function.Function;

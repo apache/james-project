@@ -19,14 +19,14 @@
 
 package org.apache.james.events;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresEventDeadLettersTest implements EventDeadLettersContract.AllContracts {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(
-        PostgresModule.aggregateModules(PostgresEventDeadLettersModule.MODULE));
+        PostgresDataDefinition.aggregateModules(PostgresEventDeadLettersDataDefinition.MODULE));
 
     @Override
     public EventDeadLetters eventDeadLetters() {

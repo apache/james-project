@@ -19,8 +19,8 @@
 
 package org.apache.james.mailrepository.postgres;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -35,7 +35,7 @@ public class PostgresMailRepositoryUrlStoreExtension implements ParameterResolve
     private final PostgresExtension postgresExtension;
 
     public PostgresMailRepositoryUrlStoreExtension() {
-        postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresMailRepositoryModule.MODULE));
+        postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresMailRepositoryDataDefinition.MODULE));
     }
 
     @Override

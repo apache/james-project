@@ -17,46 +17,49 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.postgres;
+package org.apache.james.vault.metadata;
 
-import static org.apache.james.blob.postgres.PostgresBlobStorageModule.PostgresBlobStorageTable.BUCKET_NAME_INDEX;
-import static org.jooq.impl.SQLDataType.BLOB;
+import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.OWNER_MESSAGE_ID_INDEX;
+import static org.apache.james.vault.metadata.PostgresDeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.TABLE;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
+import org.jooq.JSONB;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresBlobStorageModule {
-    interface PostgresBlobStorageTable {
-        Table<Record> TABLE_NAME = DSL.table("blob_storage");
+public interface PostgresDeletedMessageMetadataDataDefinition {
+    interface DeletedMessageMetadataTable {
+        Table<Record> TABLE_NAME = DSL.table("deleted_messages_metadata");
 
-        Field<String> BUCKET_NAME = DSL.field("bucket_name", SQLDataType.VARCHAR(200).notNull());
-        Field<String> BLOB_ID = DSL.field("blob_id", SQLDataType.VARCHAR(200).notNull());
-        Field<byte[]> DATA = DSL.field("data", BLOB.notNull());
-        Field<Integer> SIZE = DSL.field("size", SQLDataType.INTEGER.notNull());
+        Field<String> BUCKET_NAME = DSL.field("bucket_name", SQLDataType.VARCHAR.notNull());
+        Field<String> OWNER = DSL.field("owner", SQLDataType.VARCHAR.notNull());
+        Field<String> MESSAGE_ID = DSL.field("messageId", SQLDataType.VARCHAR.notNull());
+        Field<String> BLOB_ID = DSL.field("blob_id", SQLDataType.VARCHAR.notNull());
+        Field<JSONB> METADATA = DSL.field("metadata", SQLDataType.JSONB.notNull());
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(BUCKET_NAME)
+                .column(OWNER)
+                .column(MESSAGE_ID)
                 .column(BLOB_ID)
-                .column(DATA)
-                .column(SIZE)
-                .constraint(DSL.primaryKey(BUCKET_NAME, BLOB_ID))))
+                .column(METADATA)
+                .primaryKey(BUCKET_NAME, OWNER, MESSAGE_ID)))
             .disableRowLevelSecurity()
             .build();
 
-        PostgresIndex BUCKET_NAME_INDEX = PostgresIndex.name("blob_storage_bucket_name_index")
-            .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
-                .on(TABLE_NAME, BUCKET_NAME));
+        PostgresIndex OWNER_MESSAGE_ID_INDEX = PostgresIndex.name("owner_messageId_index")
+            .createIndexStep((dsl, indexName) -> dsl.createUniqueIndexIfNotExists(indexName)
+                .on(TABLE_NAME, OWNER, MESSAGE_ID));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
-        .addTable(PostgresBlobStorageTable.TABLE)
-        .addIndex(BUCKET_NAME_INDEX)
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
+        .addTable(TABLE)
+        .addIndex(OWNER_MESSAGE_ID_INDEX)
         .build();
 }

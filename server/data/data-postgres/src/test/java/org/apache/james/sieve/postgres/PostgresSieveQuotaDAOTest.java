@@ -21,11 +21,11 @@ package org.apache.james.sieve.postgres;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
+import org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition;
 import org.apache.james.backends.postgres.quota.PostgresQuotaLimitDAO;
-import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresSieveQuotaDAOTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresQuotaModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresQuotaDataDefinition.MODULE));
 
     private static final Username USERNAME = Username.of("user");
     private static final QuotaSizeLimit QUOTA_SIZE = QuotaSizeLimit.size(15L);

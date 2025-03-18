@@ -17,12 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.postgres.mail;
+package org.apache.james.jmap.postgres.projections;
+
+import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionDataDefinition.MessageFastViewProjectionTable.TABLE;
 
 import java.util.UUID;
 
-import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -30,28 +31,26 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresMailboxMemberModule {
-    interface PostgresMailboxMemberTable {
-        Table<Record> TABLE_NAME = DSL.table("mailbox_member");
+public interface PostgresMessageFastViewProjectionDataDefinition {
+    interface MessageFastViewProjectionTable {
+        Table<Record> TABLE_NAME = DSL.table("message_fast_view_projection");
 
-        Field<String> USER_NAME = DSL.field("user_name", SQLDataType.VARCHAR(255));
-        Field<UUID> MAILBOX_ID = DSL.field("mailbox_id", SQLDataType.UUID.notNull());
+        Field<UUID> MESSAGE_ID = DSL.field("messageId", SQLDataType.UUID.notNull());
+        Field<String> PREVIEW = DSL.field("preview", SQLDataType.VARCHAR.notNull());
+        Field<Boolean> HAS_ATTACHMENT = DSL.field("has_attachment", SQLDataType.BOOLEAN.notNull());
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
-                .column(USER_NAME)
-                .column(MAILBOX_ID)
-                .constraint(DSL.primaryKey(USER_NAME, MAILBOX_ID))))
-            .supportsRowLevelSecurity()
+                .column(MESSAGE_ID)
+                .column(PREVIEW)
+                .column(HAS_ATTACHMENT)
+                .primaryKey(MESSAGE_ID)
+                .comment("Storing the JMAP projections for MessageFastView, an aggregation of JMAP properties expected to be fast to fetch.")))
+            .disableRowLevelSecurity()
             .build();
-
-        PostgresIndex MAILBOX_MEMBER_USERNAME_INDEX = PostgresIndex.name("mailbox_member_username_index")
-            .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
-                .on(TABLE_NAME, USER_NAME));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
-        .addTable(PostgresMailboxMemberTable.TABLE)
-        .addIndex(PostgresMailboxMemberTable.MAILBOX_MEMBER_USERNAME_INDEX)
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
+        .addTable(TABLE)
         .build();
 }

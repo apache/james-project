@@ -19,8 +19,8 @@
 
 package modules;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.blob.postgres.PostgresBlobStorageModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
+import org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -29,7 +29,7 @@ public class BlobPostgresModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresBlobStorageModule.MODULE);
+        Multibinder<PostgresDataDefinition> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresDataDefinition.class);
+        postgresDataDefinitions.addBinding().toInstance(PostgresBlobStorageDataDefinition.MODULE);
     }
 }

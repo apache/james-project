@@ -17,16 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.postgres.mail.dao;
-
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.MESSAGE_ID_INDEX;
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.TABLE;
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.THREAD_ID_INDEX;
+package org.apache.james.mailbox.postgres.mail;
 
 import java.util.UUID;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -34,39 +30,35 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresThreadModule {
-    interface PostgresThreadTable {
-        Table<Record> TABLE_NAME = DSL.table("thread");
+public interface PostgresAttachmentDataDefinition {
 
-        Field<String> USERNAME = DSL.field("username", SQLDataType.VARCHAR(255).notNull());
-        Field<Integer> HASH_MIME_MESSAGE_ID = DSL.field("hash_mime_message_id", SQLDataType.INTEGER.notNull());
-        Field<UUID> MESSAGE_ID = DSL.field("message_id", SQLDataType.UUID.notNull());
-        Field<UUID> THREAD_ID = DSL.field("thread_id", SQLDataType.UUID.notNull());
-        Field<Integer> HASH_BASE_SUBJECT = DSL.field("hash_base_subject", SQLDataType.INTEGER);
+    interface PostgresAttachmentTable {
+
+        Table<Record> TABLE_NAME = DSL.table("attachment");
+        Field<String> ID = DSL.field("id", SQLDataType.VARCHAR.notNull());
+        Field<String> BLOB_ID = DSL.field("blob_id", SQLDataType.VARCHAR);
+        Field<String> TYPE = DSL.field("type", SQLDataType.VARCHAR);
+        Field<UUID> MESSAGE_ID = DSL.field("message_id", SQLDataType.UUID);
+        Field<Long> SIZE = DSL.field("size", SQLDataType.BIGINT);
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
-                .column(USERNAME)
-                .column(HASH_MIME_MESSAGE_ID)
+                .column(ID)
+                .column(BLOB_ID)
+                .column(TYPE)
                 .column(MESSAGE_ID)
-                .column(THREAD_ID)
-                .column(HASH_BASE_SUBJECT)
-                .constraint(DSL.primaryKey(USERNAME, HASH_MIME_MESSAGE_ID, MESSAGE_ID))))
+                .column(SIZE)
+                .constraint(DSL.primaryKey(ID))))
             .supportsRowLevelSecurity()
             .build();
 
-        PostgresIndex MESSAGE_ID_INDEX = PostgresIndex.name("thread_message_id_index")
+        PostgresIndex MESSAGE_ID_INDEX = PostgresIndex.name("attachment_message_id_index")
             .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
-                .on(TABLE_NAME, USERNAME, MESSAGE_ID));
-
-        PostgresIndex THREAD_ID_INDEX = PostgresIndex.name("thread_thread_id_index")
-            .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
-                .on(TABLE_NAME, USERNAME, THREAD_ID));
+                .on(TABLE_NAME, MESSAGE_ID));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
-        .addTable(TABLE)
-        .addIndex(MESSAGE_ID_INDEX)
-        .addIndex(THREAD_ID_INDEX)
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
+        .addTable(PostgresAttachmentTable.TABLE)
+        .addIndex(PostgresAttachmentTable.MESSAGE_ID_INDEX)
         .build();
 }

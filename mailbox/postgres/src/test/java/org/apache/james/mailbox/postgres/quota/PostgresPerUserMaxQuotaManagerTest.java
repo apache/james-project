@@ -20,8 +20,8 @@
 package org.apache.james.mailbox.postgres.quota;
 
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition;
 import org.apache.james.backends.postgres.quota.PostgresQuotaLimitDAO;
-import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaChangeNotifier;
 import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
@@ -29,7 +29,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaDataDefinition.MODULE);
 
     @Override
     protected MaxQuotaManager provideMaxQuotaManager() {

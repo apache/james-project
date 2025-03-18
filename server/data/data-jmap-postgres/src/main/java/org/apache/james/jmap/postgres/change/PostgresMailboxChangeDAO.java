@@ -19,15 +19,15 @@
 
 package org.apache.james.jmap.postgres.change;
 
-import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.ACCOUNT_ID;
-import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.CREATED;
-import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.DATE;
-import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.DESTROYED;
-import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.IS_COUNT_CHANGE;
-import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.IS_SHARED;
-import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.STATE;
-import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.TABLE_NAME;
-import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.UPDATED;
+import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeDataDefinition.PostgresMailboxChangeTable.ACCOUNT_ID;
+import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeDataDefinition.PostgresMailboxChangeTable.CREATED;
+import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeDataDefinition.PostgresMailboxChangeTable.DATE;
+import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeDataDefinition.PostgresMailboxChangeTable.DESTROYED;
+import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeDataDefinition.PostgresMailboxChangeTable.IS_COUNT_CHANGE;
+import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeDataDefinition.PostgresMailboxChangeTable.IS_SHARED;
+import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeDataDefinition.PostgresMailboxChangeTable.STATE;
+import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeDataDefinition.PostgresMailboxChangeTable.TABLE_NAME;
+import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeDataDefinition.PostgresMailboxChangeTable.UPDATED;
 
 import java.util.Arrays;
 import java.util.List;

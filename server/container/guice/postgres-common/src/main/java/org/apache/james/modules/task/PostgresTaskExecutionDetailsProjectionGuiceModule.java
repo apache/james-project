@@ -19,10 +19,10 @@
 
 package org.apache.james.modules.task;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.postgres.PostgresTaskExecutionDetailsProjection;
-import org.apache.james.task.eventsourcing.postgres.PostgresTaskExecutionDetailsProjectionModule;
+import org.apache.james.task.eventsourcing.postgres.PostgresTaskExecutionDetailsProjectionDataDefinition;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -34,7 +34,7 @@ public class PostgresTaskExecutionDetailsProjectionGuiceModule extends AbstractM
         bind(TaskExecutionDetailsProjection.class).to(PostgresTaskExecutionDetailsProjection.class)
             .in(Scopes.SINGLETON);
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresTaskExecutionDetailsProjectionModule.MODULE());
+        Multibinder<PostgresDataDefinition> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresDataDefinition.class);
+        postgresDataDefinitions.addBinding().toInstance(PostgresTaskExecutionDetailsProjectionDataDefinition.MODULE());
     }
 }

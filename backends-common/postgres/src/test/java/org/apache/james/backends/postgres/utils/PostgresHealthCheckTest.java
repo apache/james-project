@@ -22,7 +22,7 @@ package org.apache.james.backends.postgres.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
+import org.apache.james.backends.postgres.quota.PostgresQuotaDataDefinition;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.core.healthcheck.ResultStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +35,7 @@ public class PostgresHealthCheckTest {
     private PostgresHealthCheck testee;
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaDataDefinition.MODULE);
 
     @BeforeEach
     void setup() {

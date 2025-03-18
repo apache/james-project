@@ -19,13 +19,13 @@
 
 package org.apache.james.jmap.postgres.identity;
 
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.TABLE;
-import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule.PostgresCustomIdentityTable.USERNAME_INDEX;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.TABLE;
+import static org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDataDefinition.PostgresCustomIdentityTable.USERNAME_INDEX;
 
 import java.util.UUID;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
 import org.jooq.JSON;
@@ -34,7 +34,7 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresCustomIdentityModule {
+public interface PostgresCustomIdentityDataDefinition {
     interface PostgresCustomIdentityTable {
         Table<Record> TABLE_NAME = DSL.table("custom_identity");
 
@@ -70,7 +70,7 @@ public interface PostgresCustomIdentityModule {
                 .on(TABLE_NAME, USERNAME));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
         .addTable(TABLE)
         .addIndex(USERNAME_INDEX)
         .build();

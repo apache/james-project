@@ -19,20 +19,20 @@
 
 package org.apache.james.mailbox.postgres;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.mail.PostgresAttachmentModule;
-import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule;
-import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
+import org.apache.james.mailbox.postgres.mail.PostgresAttachmentDataDefinition;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDataDefinition;
+import org.apache.james.mailbox.postgres.user.PostgresSubscriptionDataDefinition;
 
-public interface PostgresMailboxAggregateModule {
+public interface PostgresMailboxAggregateDataDefinition {
 
-    PostgresModule MODULE = PostgresModule.aggregateModules(
-        PostgresMailboxModule.MODULE,
-        PostgresSubscriptionModule.MODULE,
-        PostgresMessageModule.MODULE,
-        PostgresMailboxAnnotationModule.MODULE,
-        PostgresAttachmentModule.MODULE,
-        PostgresThreadModule.MODULE);
+    PostgresDataDefinition MODULE = PostgresDataDefinition.aggregateModules(
+        PostgresMailboxDataDefinition.MODULE,
+        PostgresSubscriptionDataDefinition.MODULE,
+        PostgresMessageDataDefinition.MODULE,
+        PostgresMailboxAnnotationDataDefinition.MODULE,
+        PostgresAttachmentDataDefinition.MODULE,
+        PostgresThreadDataDefinition.MODULE);
 }

@@ -20,12 +20,12 @@
 package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.IN_CLAUSE_MAX_SIZE;
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.HASH_BASE_SUBJECT;
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.HASH_MIME_MESSAGE_ID;
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.MESSAGE_ID;
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.TABLE_NAME;
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.THREAD_ID;
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.USERNAME;
+import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDataDefinition.PostgresThreadTable.HASH_BASE_SUBJECT;
+import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDataDefinition.PostgresThreadTable.HASH_MIME_MESSAGE_ID;
+import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDataDefinition.PostgresThreadTable.MESSAGE_ID;
+import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDataDefinition.PostgresThreadTable.TABLE_NAME;
+import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDataDefinition.PostgresThreadTable.THREAD_ID;
+import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDataDefinition.PostgresThreadTable.USERNAME;
 
 import java.util.Collection;
 import java.util.Optional;

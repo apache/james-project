@@ -42,12 +42,12 @@ public class PostgresTableManager implements Startable {
     public static final int INITIALIZATION_PRIORITY = 1;
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresTableManager.class);
     private final PostgresExecutor postgresExecutor;
-    private final PostgresModule module;
+    private final PostgresDataDefinition module;
     private final RowLevelSecurity rowLevelSecurity;
 
     @Inject
     public PostgresTableManager(PostgresExecutor postgresExecutor,
-                                PostgresModule module,
+                                PostgresDataDefinition module,
                                 PostgresConfiguration postgresConfiguration) {
         this.postgresExecutor = postgresExecutor;
         this.module = module;
@@ -55,7 +55,7 @@ public class PostgresTableManager implements Startable {
     }
 
     @VisibleForTesting
-    public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresModule module, RowLevelSecurity rowLevelSecurity) {
+    public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresDataDefinition module, RowLevelSecurity rowLevelSecurity) {
         this.postgresExecutor = postgresExecutor;
         this.module = module;
         this.rowLevelSecurity = rowLevelSecurity;

@@ -19,10 +19,10 @@
 
 package org.apache.james.events;
 
-import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEventDeadLettersTable.EVENT;
-import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEventDeadLettersTable.GROUP;
-import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEventDeadLettersTable.INSERTION_ID;
-import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEventDeadLettersTable.TABLE_NAME;
+import static org.apache.james.events.PostgresEventDeadLettersDataDefinition.PostgresEventDeadLettersTable.EVENT;
+import static org.apache.james.events.PostgresEventDeadLettersDataDefinition.PostgresEventDeadLettersTable.GROUP;
+import static org.apache.james.events.PostgresEventDeadLettersDataDefinition.PostgresEventDeadLettersTable.INSERTION_ID;
+import static org.apache.james.events.PostgresEventDeadLettersDataDefinition.PostgresEventDeadLettersTable.TABLE_NAME;
 
 import jakarta.inject.Inject;
 

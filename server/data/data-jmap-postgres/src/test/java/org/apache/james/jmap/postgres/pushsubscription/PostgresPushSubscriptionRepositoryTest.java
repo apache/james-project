@@ -21,8 +21,8 @@ package org.apache.james.jmap.postgres.pushsubscription;
 
 import java.util.Set;
 
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.jmap.api.change.TypeStateFactory;
 import org.apache.james.jmap.api.model.TypeName;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
@@ -37,7 +37,7 @@ class PostgresPushSubscriptionRepositoryTest implements PushSubscriptionReposito
 
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(
-        PostgresModule.aggregateModules(PostgresPushSubscriptionModule.MODULE));
+        PostgresDataDefinition.aggregateModules(PostgresPushSubscriptionDataDefinition.MODULE));
 
     UpdatableTickingClock clock;
     PushSubscriptionRepository pushSubscriptionRepository;

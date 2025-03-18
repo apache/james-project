@@ -22,7 +22,7 @@ package org.apache.james.jmap.postgres.pushsubscription;
 import static org.apache.james.backends.postgres.PostgresCommons.IN_CLAUSE_MAX_SIZE;
 import static org.apache.james.backends.postgres.PostgresCommons.OFFSET_DATE_TIME_ZONED_DATE_TIME_FUNCTION;
 import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
-import static org.apache.james.jmap.postgres.pushsubscription.PostgresPushSubscriptionModule.PushSubscriptionTable.PRIMARY_KEY_CONSTRAINT;
+import static org.apache.james.jmap.postgres.pushsubscription.PostgresPushSubscriptionDataDefinition.PushSubscriptionTable.PRIMARY_KEY_CONSTRAINT;
 
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -43,7 +43,7 @@ import org.apache.james.jmap.api.model.PushSubscriptionId;
 import org.apache.james.jmap.api.model.PushSubscriptionKeys;
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL;
 import org.apache.james.jmap.api.model.TypeName;
-import org.apache.james.jmap.postgres.pushsubscription.PostgresPushSubscriptionModule.PushSubscriptionTable;
+import org.apache.james.jmap.postgres.pushsubscription.PostgresPushSubscriptionDataDefinition.PushSubscriptionTable;
 import org.jooq.Record;
 
 import com.google.common.base.Preconditions;

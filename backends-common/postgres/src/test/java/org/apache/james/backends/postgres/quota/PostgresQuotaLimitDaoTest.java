@@ -35,7 +35,7 @@ public class PostgresQuotaLimitDaoTest {
     private PostgresQuotaLimitDAO postgresQuotaLimitDao;
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaDataDefinition.MODULE);
 
     @BeforeEach
     void setup() {

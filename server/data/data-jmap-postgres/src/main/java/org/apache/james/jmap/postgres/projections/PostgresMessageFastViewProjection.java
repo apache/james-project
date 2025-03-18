@@ -19,10 +19,10 @@
 
 package org.apache.james.jmap.postgres.projections;
 
-import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionModule.MessageFastViewProjectionTable.HAS_ATTACHMENT;
-import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionModule.MessageFastViewProjectionTable.MESSAGE_ID;
-import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionModule.MessageFastViewProjectionTable.PREVIEW;
-import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionModule.MessageFastViewProjectionTable.TABLE_NAME;
+import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionDataDefinition.MessageFastViewProjectionTable.HAS_ATTACHMENT;
+import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionDataDefinition.MessageFastViewProjectionTable.MESSAGE_ID;
+import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionDataDefinition.MessageFastViewProjectionTable.PREVIEW;
+import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionDataDefinition.MessageFastViewProjectionTable.TABLE_NAME;
 
 import jakarta.inject.Inject;
 

@@ -22,8 +22,8 @@ package org.apache.james.mailbox.postgres.mail;
 import java.time.Instant;
 
 import org.apache.james.backends.postgres.PostgresConfiguration;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
@@ -40,8 +40,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RLSSupportPostgresMailboxMapperACLTest extends MailboxMapperACLTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresModule.aggregateModules(PostgresMailboxModule.MODULE,
-        PostgresMailboxMemberModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresMailboxDataDefinition.MODULE,
+        PostgresMailboxMemberDataDefinition.MODULE));
 
     @Override
     protected MailboxMapper createMailboxMapper() {

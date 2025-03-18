@@ -17,38 +17,39 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.postgres.filtering;
+package org.apache.james.mailbox.postgres.user;
 
-import static org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionModule.PostgresFilteringProjectionTable.TABLE;
-
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
+import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
-import org.jooq.JSON;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresFilteringProjectionModule {
-    interface PostgresFilteringProjectionTable {
-        Table<Record> TABLE_NAME = DSL.table("filters_projection");
-
-        Field<String> AGGREGATE_ID = DSL.field("aggregate_id", SQLDataType.VARCHAR.notNull());
-        Field<Integer> EVENT_ID = DSL.field("event_id", SQLDataType.INTEGER.notNull());
-        Field<JSON> RULES = DSL.field("rules", SQLDataType.JSON.notNull());
-
-        PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
-            .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
-                .column(AGGREGATE_ID)
-                .column(EVENT_ID)
-                .column(RULES)
-                .constraint(DSL.primaryKey(AGGREGATE_ID))))
-            .disableRowLevelSecurity()
-            .build();
-    }
-
-    PostgresModule MODULE = PostgresModule.builder()
+public interface PostgresSubscriptionDataDefinition {
+    /**
+     * See {@link MailboxManager.MAX_MAILBOX_NAME_LENGTH}
+     */
+    Field<String> MAILBOX = DSL.field("mailbox", SQLDataType.VARCHAR(255).notNull());
+    /**
+     * See {@link Username.MAXIMUM_MAIL_ADDRESS_LENGTH}
+     */
+    Field<String> USER = DSL.field("user_name", SQLDataType.VARCHAR(255).notNull());
+    Table<Record> TABLE_NAME = DSL.table("subscription");
+    PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
+        .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
+            .column(MAILBOX)
+            .column(USER)
+            .constraint(DSL.unique(MAILBOX, USER))))
+        .supportsRowLevelSecurity()
+        .build();
+    PostgresIndex INDEX = PostgresIndex.name("subscription_user_index")
+        .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
+            .on(TABLE_NAME, USER));
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
         .addTable(TABLE)
+        .addIndex(INDEX)
         .build();
 }

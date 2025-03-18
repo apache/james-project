@@ -19,11 +19,11 @@
 
 package org.apache.james.rrt.postgres;
 
-import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.PostgresRecipientRewriteTableTable.DOMAIN_NAME;
-import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.PostgresRecipientRewriteTableTable.PK_CONSTRAINT_NAME;
-import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.PostgresRecipientRewriteTableTable.TABLE_NAME;
-import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.PostgresRecipientRewriteTableTable.TARGET_ADDRESS;
-import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.PostgresRecipientRewriteTableTable.USERNAME;
+import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableDataDefinition.PostgresRecipientRewriteTableTable.DOMAIN_NAME;
+import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableDataDefinition.PostgresRecipientRewriteTableTable.PK_CONSTRAINT_NAME;
+import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableDataDefinition.PostgresRecipientRewriteTableTable.TABLE_NAME;
+import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableDataDefinition.PostgresRecipientRewriteTableTable.TARGET_ADDRESS;
+import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableDataDefinition.PostgresRecipientRewriteTableTable.USERNAME;
 
 import jakarta.inject.Inject;
 

@@ -17,44 +17,52 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rrt.postgres;
+package org.apache.james.droplists.postgres;
 
+import java.util.UUID;
+
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresIndex;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
-import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
-public interface PostgresRecipientRewriteTableModule {
-    interface PostgresRecipientRewriteTableTable {
-        Table<Record> TABLE_NAME = DSL.table("rrt");
+public interface PostgresDropListDataDefinition {
+    interface PostgresDropListsTable {
+        Table<Record> TABLE_NAME = DSL.table("droplist");
 
-        Field<String> USERNAME = DSL.field("username", SQLDataType.VARCHAR(255).notNull());
-        Field<String> DOMAIN_NAME = DSL.field("domain_name", SQLDataType.VARCHAR(255).notNull());
-        Field<String> TARGET_ADDRESS = DSL.field("target_address", SQLDataType.VARCHAR(255).notNull());
-
-        Name PK_CONSTRAINT_NAME = DSL.name("rrt_pkey");
+        Field<UUID> DROPLIST_ID = DSL.field("droplist_id", SQLDataType.UUID.notNull());
+        Field<String> OWNER_SCOPE = DSL.field("owner_scope", SQLDataType.VARCHAR);
+        Field<String> OWNER = DSL.field("owner", SQLDataType.VARCHAR);
+        Field<String> DENIED_ENTITY_TYPE = DSL.field("denied_entity_type", SQLDataType.VARCHAR);
+        Field<String> DENIED_ENTITY = DSL.field("denied_entity", SQLDataType.VARCHAR);
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
-                .column(USERNAME)
-                .column(DOMAIN_NAME)
-                .column(TARGET_ADDRESS)
-                .constraint(DSL.constraint(PK_CONSTRAINT_NAME).primaryKey(USERNAME, DOMAIN_NAME, TARGET_ADDRESS))))
+                .column(DROPLIST_ID)
+                .column(OWNER_SCOPE)
+                .column(OWNER)
+                .column(DENIED_ENTITY_TYPE)
+                .column(DENIED_ENTITY)
+                .constraint(DSL.primaryKey(DROPLIST_ID))))
             .disableRowLevelSecurity()
             .build();
 
-        PostgresIndex INDEX = PostgresIndex.name("idx_rrt_target_address")
+        PostgresIndex IDX_OWNER_SCOPE_OWNER = PostgresIndex.name("idx_owner_scope_owner")
             .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
-                .on(TABLE_NAME, TARGET_ADDRESS));
+                .on(TABLE_NAME, OWNER_SCOPE, OWNER));
+
+        PostgresIndex IDX_OWNER_SCOPE_OWNER_DENIED_ENTITY = PostgresIndex.name("idx_owner_scope_owner_denied_entity")
+            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, OWNER_SCOPE, OWNER, DENIED_ENTITY));
     }
 
-    PostgresModule MODULE = PostgresModule.builder()
-        .addTable(PostgresRecipientRewriteTableTable.TABLE)
-        .addIndex(PostgresRecipientRewriteTableTable.INDEX)
+    PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
+        .addTable(PostgresDropListsTable.TABLE)
+        .addIndex(PostgresDropListsTable.IDX_OWNER_SCOPE_OWNER)
+        .addIndex(PostgresDropListsTable.IDX_OWNER_SCOPE_OWNER_DENIED_ENTITY)
         .build();
 }

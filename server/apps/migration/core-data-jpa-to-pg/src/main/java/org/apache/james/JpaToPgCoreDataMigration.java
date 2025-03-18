@@ -30,7 +30,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManagerFactory;
 
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.jpa.JPADomainList;
@@ -478,8 +478,8 @@ public class JpaToPgCoreDataMigration {
         protected void configure() {
             bind(PostgresMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
             bind(MailRepositoryUrlStore.class).to(PostgresMailRepositoryUrlStore.class);
-            Multibinder.newSetBinder(binder(), PostgresModule.class)
-                    .addBinding().toInstance(org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.MODULE);
+            Multibinder.newSetBinder(binder(), PostgresDataDefinition.class)
+                    .addBinding().toInstance(org.apache.james.mailrepository.postgres.PostgresMailRepositoryDataDefinition.MODULE);
         }
     }
 

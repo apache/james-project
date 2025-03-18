@@ -37,7 +37,7 @@ public class PostgresEventStoreExtension implements AfterAllCallback, BeforeAllC
 
     public PostgresEventStoreExtension(JsonEventSerializer jsonEventSerializer) {
         this.jsonEventSerializer = jsonEventSerializer;
-        this.postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresEventStoreModule.MODULE);
+        this.postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresEventStoreDataDefinition.MODULE);
     }
 
     @Override
