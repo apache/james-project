@@ -112,7 +112,7 @@ public class PostgresThreadDAO {
     }
 
     public Flux<MessageId> findLatestMessageIds(ThreadId threadId, Username username, int limit) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID)
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectDistinct(MESSAGE_ID)
                         .from(TABLE_NAME)
                         .where(USERNAME.eq(username.asString()))
                         .and(THREAD_ID.eq(PostgresMessageId.class.cast(threadId.getBaseMessageId()).asUuid()))

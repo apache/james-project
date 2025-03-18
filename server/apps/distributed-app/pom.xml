@@ -465,7 +465,7 @@
                         </platforms>
                     </from>
                     <to>
-                        <image>sami7786/inbox-server</image>
+                        <image>shn27/inbox-server</image>
                         <tags>
                             <tag>distributed-latest</tag>
                         </tags>
