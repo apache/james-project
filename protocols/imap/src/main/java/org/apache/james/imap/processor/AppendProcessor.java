@@ -27,6 +27,7 @@ import java.util.List;
 import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -49,12 +50,14 @@ import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 
@@ -96,7 +99,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> imp
 
         session.stopDetectingCommandInjection();
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, session.getMailboxSession()))
-            .flatMap(mailbox -> appendToMailbox(messageIn, datetime, flags, session, request, mailbox, responder, mailboxPath))
+            .flatMap(mailbox -> appendToMailbox(messageIn, datetime, flags, session, request, mailbox, responder))
             .doOnEach(logOnError(MailboxNotFoundException.class, e -> LOGGER.debug("Append failed for mailbox {}", mailboxPath, e)))
             .onErrorResume(MailboxNotFoundException.class, e -> {
                 // Indicates that the mailbox does not exist
@@ -117,7 +120,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> imp
             });
     }
 
-    private Mono<Void> appendToMailbox(Content message, Date datetime, Flags flagsToBeSet, ImapSession session, AppendRequest request, MessageManager mailbox, Responder responder, MailboxPath mailboxPath) {
+    private Mono<Void> appendToMailbox(Content message, Date datetime, Flags flagsToBeSet, ImapSession session, AppendRequest request, MessageManager mailbox, Responder responder) {
         final MailboxSession mailboxSession = session.getMailboxSession();
         final SelectedMailbox selectedMailbox = session.getSelected();
         final boolean isSelectedMailbox = selectedMailbox != null && selectedMailbox.getMailboxId().equals(mailbox.getId());
@@ -128,6 +131,18 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> imp
                 .withFlags(flagsToBeSet)
                 .isRecent(!isSelectedMailbox)
                 .build(message), mailboxSession))
+            .doOnSuccess(result -> AuditTrail.entry()
+                .username(() -> mailboxSession.getUser().asString())
+                .sessionId(() -> session.sessionId().asString())
+                .protocol("IMAP")
+                .action("APPEND")
+                .parameters(() -> ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
+                    "mailboxId", mailbox.getId().serialize(),
+                    "size", String.valueOf(result.getSize()),
+                    "mailboxName", mailbox.getMailboxPath().getName(),
+                    "uid", String.valueOf(result.getId().getUid().asLong()),
+                    "messageId", String.valueOf(result.getId().getMessageId().serialize())))
+                .log("IMAP APPEND succeeded."))
             .map(MessageManager.AppendResult::getId)
             .map(Throwing.<ComposedMessageId, ComposedMessageId>function(messageId -> {
                     if (isSelectedMailbox) {
