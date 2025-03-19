@@ -19,7 +19,7 @@
 
 package org.apache.james.vault.metadata;
 
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.MODULE;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 

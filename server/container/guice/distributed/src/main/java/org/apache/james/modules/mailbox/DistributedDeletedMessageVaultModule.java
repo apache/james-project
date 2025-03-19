@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
@@ -30,7 +30,7 @@ import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.blob.BucketNameGenerator;
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
 import org.apache.james.vault.metadata.CassandraDeletedMessageMetadataVault;
-import org.apache.james.vault.metadata.DeletedMessageMetadataModule;
+import org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition;
 import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.MetadataDAO;
 import org.apache.james.vault.metadata.StorageInformationDAO;
@@ -46,10 +46,10 @@ public class DistributedDeletedMessageVaultModule extends AbstractModule {
     protected void configure() {
         install(new DeletedMessageVaultModule());
 
-        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
+        Multibinder<CassandraDataDefinition> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraDataDefinition.class);
         cassandraDataDefinitions
             .addBinding()
-            .toInstance(DeletedMessageMetadataModule.MODULE);
+            .toInstance(DeletedMessageMetadataDataDefinition.MODULE);
 
         bind(MetadataDAO.class).in(Scopes.SINGLETON);
         bind(StorageInformationDAO.class).in(Scopes.SINGLETON);

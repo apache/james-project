@@ -30,7 +30,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
-import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentDataDefinition;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +45,7 @@ class CassandraAttachmentDAOV2Test {
     private static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAttachmentModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAttachmentDataDefinition.MODULE);
 
     private CassandraAttachmentDAOV2 testee;
     private AttachmentBlobReferenceSource blobReferenceSource;

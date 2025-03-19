@@ -21,7 +21,7 @@ package org.apache.james.vault.metadata;
 
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.MODULE;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.MODULE;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.BUCKET_NAME;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.DELETED_MESSAGE_2;

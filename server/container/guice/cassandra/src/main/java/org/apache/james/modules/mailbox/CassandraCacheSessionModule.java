@@ -21,7 +21,7 @@ package org.apache.james.modules.mailbox;
 
 import java.util.Set;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.ResilientClusterProvider;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
@@ -41,7 +41,7 @@ public class CassandraCacheSessionModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(InitializedCacheCluster.class).in(Scopes.SINGLETON);
-        Multibinder.newSetBinder(binder(), CassandraModule.class, Names.named(InjectionNames.CACHE));
+        Multibinder.newSetBinder(binder(), CassandraDataDefinition.class, Names.named(InjectionNames.CACHE));
     }
 
     @Named(InjectionNames.CACHE)
@@ -56,15 +56,15 @@ public class CassandraCacheSessionModule extends AbstractModule {
     @Provides
     CqlSession provideSession(@Named(InjectionNames.CACHE) KeyspaceConfiguration keyspaceConfiguration,
                               InitializedCacheCluster cluster,
-                              @Named(InjectionNames.CACHE) CassandraModule module) {
+                              @Named(InjectionNames.CACHE) CassandraDataDefinition module) {
         return new SessionWithInitializedTablesFactory(cluster.cluster, module).get();
     }
 
     @Named(InjectionNames.CACHE)
     @Provides
     @Singleton
-    CassandraModule composeCacheDefinitions(@Named(InjectionNames.CACHE) Set<CassandraModule> modules) {
-        return CassandraModule.aggregateModules(modules);
+    CassandraDataDefinition composeCacheDefinitions(@Named(InjectionNames.CACHE) Set<CassandraDataDefinition> modules) {
+        return CassandraDataDefinition.aggregateModules(modules);
     }
 
     static class InitializedCacheCluster {

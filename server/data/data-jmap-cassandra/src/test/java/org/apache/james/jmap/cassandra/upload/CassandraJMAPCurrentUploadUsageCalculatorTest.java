@@ -22,8 +22,8 @@ package org.apache.james.jmap.cassandra.upload;
 import java.time.Clock;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
@@ -39,7 +39,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class CassandraJMAPCurrentUploadUsageCalculatorTest implements JMAPCurrentUploadUsageCalculatorContract {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(UploadModule.MODULE, CassandraMutualizedQuotaModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(UploadDataDefinition.MODULE, CassandraMutualizedQuotaDataDefinition.MODULE));
 
     private UploadRepository uploadRepository;
     private UploadUsageRepository uploadUsageRepository;

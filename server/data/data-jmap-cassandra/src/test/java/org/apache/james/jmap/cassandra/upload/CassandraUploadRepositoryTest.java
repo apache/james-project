@@ -38,7 +38,7 @@ import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandra = new CassandraClusterExtension(UploadModule.MODULE);
+    static CassandraClusterExtension cassandra = new CassandraClusterExtension(UploadDataDefinition.MODULE);
     private CassandraUploadRepository testee;
     private UpdatableTickingClock clock;
 

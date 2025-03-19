@@ -21,7 +21,7 @@ package org.apache.james.modules.queue.rabbitmq;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.eventsourcing.Event;
@@ -35,6 +35,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueBrowser;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueMailDelete;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueMailStore;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueView;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewStartUpCheck;
 import org.apache.james.queue.rabbitmq.view.cassandra.ContentStartDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.DeletedMailsDAO;
@@ -63,8 +64,8 @@ public class CassandraMailQueueViewModule extends AbstractModule {
         bind(CassandraMailQueueMailStore.class).in(Scopes.SINGLETON);
         bind(ContentStartDAO.class).in(Scopes.SINGLETON);
 
-        Multibinder<CassandraModule> cassandraModuleBinder = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraModuleBinder.addBinding().toInstance(org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.MODULE);
+        Multibinder<CassandraDataDefinition> cassandraModuleBinder = Multibinder.newSetBinder(binder(), CassandraDataDefinition.class);
+        cassandraModuleBinder.addBinding().toInstance(CassandraMailQueueViewDataDefinition.MODULE);
 
         bind(EventsourcingConfigurationManagement.class).in(Scopes.SINGLETON);
         Multibinder<EventDTOModule<? extends Event, ? extends EventDTO>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {});

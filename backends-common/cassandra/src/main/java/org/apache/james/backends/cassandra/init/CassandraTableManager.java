@@ -26,7 +26,7 @@ import java.util.function.Predicate;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraTable.InitializationStatus;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -42,10 +42,10 @@ import reactor.core.scheduler.Schedulers;
 public class CassandraTableManager {
 
     private final CqlSession session;
-    private final CassandraModule module;
+    private final CassandraDataDefinition module;
 
     @Inject
-    public CassandraTableManager(CassandraModule module, CqlSession session) {
+    public CassandraTableManager(CassandraDataDefinition module, CqlSession session) {
         this.session = session;
         this.module = module;
     }

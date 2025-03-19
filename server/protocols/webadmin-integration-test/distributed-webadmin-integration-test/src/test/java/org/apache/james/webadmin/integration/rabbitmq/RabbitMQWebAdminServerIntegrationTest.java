@@ -39,10 +39,10 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.TestingSession;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
-import org.apache.james.blob.cassandra.cache.CassandraBlobCacheModule;
+import org.apache.james.blob.cassandra.cache.CassandraBlobCacheDataDefinition;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
@@ -95,7 +95,7 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
                 .to(TestingSession.class);
             bind(CqlSession.class)
                 .to(TestingSession.class);
-            Multibinder.newSetBinder(binder(), CassandraModule.class).addBinding().toInstance(CassandraBlobCacheModule.MODULE);
+            Multibinder.newSetBinder(binder(), CassandraDataDefinition.class).addBinding().toInstance(CassandraBlobCacheDataDefinition.MODULE);
         }
 
         @Provides

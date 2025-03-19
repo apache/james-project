@@ -38,7 +38,7 @@ class CassandraActiveScriptDAOTest {
     private static final ScriptName NEW_SCRIPT_NAME = new ScriptName("newScriptName");
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryDataDefinition.MODULE);
 
     private CassandraActiveScriptDAO activeScriptDAO;
 

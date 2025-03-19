@@ -27,8 +27,8 @@ import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.mailrepository.api.MailKey;
@@ -51,9 +51,9 @@ class CassandraMailRepositoryMailDAOTest {
     static final MailKey KEY_1 = new MailKey("key1");
     static final TestBlobId.Factory BLOB_ID_FACTORY = new TestBlobId.Factory();
 
-    public static final CassandraModule MODULE = CassandraModule.aggregateModules(
-            CassandraMailRepositoryModule.MODULE,
-            CassandraSchemaVersionModule.MODULE);
+    public static final CassandraDataDefinition MODULE = CassandraDataDefinition.aggregateModules(
+            CassandraMailRepositoryDataDefinition.MODULE,
+            CassandraSchemaVersionDataDefinition.MODULE);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);

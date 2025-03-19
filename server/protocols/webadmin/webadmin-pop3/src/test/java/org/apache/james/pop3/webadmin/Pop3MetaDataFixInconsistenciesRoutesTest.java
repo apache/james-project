@@ -32,11 +32,11 @@ import jakarta.mail.Flags;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.blob.api.PlainBlobId;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
+import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MessageUid;
@@ -46,7 +46,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageMetadata;
-import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMessageDataDefinition;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -56,7 +56,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.pop3server.mailbox.CassandraPop3MetadataStore;
-import org.apache.james.pop3server.mailbox.Pop3MetadataModule;
+import org.apache.james.pop3server.mailbox.Pop3MetadataDataDefinition;
 import org.apache.james.pop3server.mailbox.Pop3MetadataStore;
 import org.apache.james.pop3server.mailbox.task.MetaDataFixInconsistenciesAdditionalInformationDTO;
 import org.apache.james.pop3server.mailbox.task.MetaDataFixInconsistenciesService;
@@ -167,11 +167,11 @@ class Pop3MetaDataFixInconsistenciesRoutesTest {
     private CassandraMessageDAOV3 cassandraMessageDAOV3;
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraSchemaVersionModule.MODULE,
-        CassandraMessageModule.MODULE,
-        CassandraBlobModule.MODULE,
-        Pop3MetadataModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        CassandraSchemaVersionDataDefinition.MODULE,
+        CassandraMessageDataDefinition.MODULE,
+        CassandraBlobDataDefinition.MODULE,
+        Pop3MetadataDataDefinition.MODULE));
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {

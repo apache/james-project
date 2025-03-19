@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.core.Domain;
@@ -32,13 +32,13 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
-import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
+import org.apache.james.domainlist.cassandra.CassandraDomainListDataDefinition;
 import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAOV1;
 import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAOV2;
-import org.apache.james.sieve.cassandra.CassandraSieveQuotaModule;
+import org.apache.james.sieve.cassandra.CassandraSieveQuotaDataDefinition;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
-import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
+import org.apache.james.user.cassandra.CassandraUsersRepositoryDataDefinition;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,11 +61,11 @@ class SieveQuotaMigrationTest {
     }
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraSieveQuotaModule.MODULE,
-        CassandraUsersRepositoryModule.MODULE,
-        CassandraDomainListModule.MODULE,
-        CassandraMutualizedQuotaModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        CassandraSieveQuotaDataDefinition.MODULE,
+        CassandraUsersRepositoryDataDefinition.MODULE,
+        CassandraDomainListDataDefinition.MODULE,
+        CassandraMutualizedQuotaDataDefinition.MODULE));
 
     private CassandraSieveQuotaDAOV1 oldDAO;
     private CassandraSieveQuotaDAOV2 newDAO;

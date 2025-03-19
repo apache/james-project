@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
 
 public class CassandraDelegationStoreTest implements DelegationStoreContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraUsersRepositoryModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraUsersRepositoryDataDefinition.MODULE);
 
     private CassandraDelegationStore testee;
     private CassandraUsersDAO cassandraUsersDAO;

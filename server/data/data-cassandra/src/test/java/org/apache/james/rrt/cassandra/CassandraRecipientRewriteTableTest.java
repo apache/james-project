@@ -21,24 +21,24 @@ package org.apache.james.rrt.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableContract;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
-import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
+import org.apache.james.user.cassandra.CassandraUsersRepositoryDataDefinition;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraRecipientRewriteTableTest implements RecipientRewriteTableContract {
-    static final CassandraModule MODULE = CassandraModule.aggregateModules(
-        CassandraRRTModule.MODULE,
-        CassandraUsersRepositoryModule.MODULE,
-        CassandraSchemaVersionModule.MODULE);
+    static final CassandraDataDefinition MODULE = CassandraDataDefinition.aggregateModules(
+        CassandraRRTDataDefinition.MODULE,
+        CassandraUsersRepositoryDataDefinition.MODULE,
+        CassandraSchemaVersionDataDefinition.MODULE);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);

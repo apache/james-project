@@ -44,7 +44,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraBucketDAOTest {
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobDataDefinition.MODULE);
 
     private CassandraBucketDAO testee;
 

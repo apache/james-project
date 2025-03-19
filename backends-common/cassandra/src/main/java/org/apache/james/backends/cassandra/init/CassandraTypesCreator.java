@@ -19,7 +19,7 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.components.CassandraType.InitializationStatus;
 
@@ -34,7 +34,7 @@ public class CassandraTypesCreator {
     private final ImmutableList<CassandraType> types;
     private final CqlSession session;
 
-    public CassandraTypesCreator(CassandraModule module, CqlSession session) {
+    public CassandraTypesCreator(CassandraDataDefinition module, CqlSession session) {
         this.types = ImmutableList.copyOf(module.moduleTypes());
         this.session = session;
     }

@@ -24,11 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
+import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaDataDefinition;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
 import org.junit.jupiter.api.Test;
@@ -37,10 +37,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraPerUserMaxQuotaManagerV1Test extends GenericMaxQuotaManagerTest {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraBlobModule.MODULE,
-        CassandraMailboxQuotaModule.MODULE,
-        CassandraMutualizedQuotaModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        CassandraBlobDataDefinition.MODULE,
+        CassandraMailboxQuotaDataDefinition.MODULE,
+        CassandraMutualizedQuotaDataDefinition.MODULE));
 
     @Override
     protected MaxQuotaManager provideMaxQuotaManager() {

@@ -21,19 +21,19 @@ package org.apache.james.vacation.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeDataDefinition;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.vacation.api.VacationRepository;
 import org.apache.james.vacation.api.VacationRepositoryContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraVacationRepositoryTest implements VacationRepositoryContract {
-    static final CassandraModule MODULE = CassandraModule.aggregateModules(
-        CassandraSchemaVersionModule.MODULE,
-        CassandraVacationModule.MODULE,
-        CassandraZonedDateTimeModule.MODULE);
+    static final CassandraDataDefinition MODULE = CassandraDataDefinition.aggregateModules(
+        CassandraSchemaVersionDataDefinition.MODULE,
+        CassandraVacationDataDefinition.MODULE,
+        CassandraZonedDateTimeDataDefinition.MODULE);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);

@@ -33,7 +33,7 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
+import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeDataDefinition;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.util.ValuePatch;
 import org.apache.james.vacation.api.AccountId;
@@ -59,7 +59,7 @@ public class CassandraVacationDAO {
 
     @Inject
     public CassandraVacationDAO(CqlSession session, CassandraTypesProvider cassandraTypesProvider) {
-        this.zonedDateTimeUserType = cassandraTypesProvider.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME);
+        this.zonedDateTimeUserType = cassandraTypesProvider.getDefinedUserType(CassandraZonedDateTimeDataDefinition.ZONED_DATE_TIME);
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
         this.readStatement = session.prepare(selectFrom(CassandraVacationTable.TABLE_NAME)
@@ -101,7 +101,7 @@ public class CassandraVacationDAO {
     }
 
     private Optional<ZonedDateTime> retrieveDate(Row row, String dateField) {
-        return CassandraZonedDateTimeModule.fromUDTOptional(row.getUdtValue(dateField));
+        return CassandraZonedDateTimeDataDefinition.fromUDTOptional(row.getUdtValue(dateField));
     }
 
     private RegularInsert createSpecificUpdate(VacationPatch vacationPatch, RegularInsert baseInsert) {
@@ -118,7 +118,7 @@ public class CassandraVacationDAO {
     public BiFunction<VacationPatch, RegularInsert, RegularInsert> applyPatchForFieldZonedDateTime(String field, Function<VacationPatch, ValuePatch<ZonedDateTime>> getter) {
         return (vacation, insert) ->
             getter.apply(vacation)
-                .mapNotKeptToOptional(optionalValue -> applyPatchForField(field, CassandraZonedDateTimeModule.toUDT(zonedDateTimeUserType, optionalValue), insert))
+                .mapNotKeptToOptional(optionalValue -> applyPatchForField(field, CassandraZonedDateTimeDataDefinition.toUDT(zonedDateTimeUserType, optionalValue), insert))
                 .orElse(insert);
     }
 

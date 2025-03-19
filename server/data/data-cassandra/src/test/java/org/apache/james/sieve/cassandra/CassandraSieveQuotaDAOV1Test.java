@@ -21,14 +21,14 @@ package org.apache.james.sieve.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraSieveQuotaDAOV1Test implements CassandraSieveQuotaDAOContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraSieveRepositoryModule.MODULE, CassandraSieveQuotaModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        CassandraSieveRepositoryDataDefinition.MODULE, CassandraSieveQuotaDataDefinition.MODULE));
 
     private CassandraSieveQuotaDAOV1 sieveQuotaDAO;
 

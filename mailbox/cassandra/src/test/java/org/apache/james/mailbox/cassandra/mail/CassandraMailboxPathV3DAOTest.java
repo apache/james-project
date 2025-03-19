@@ -30,9 +30,9 @@ import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxDataDefinition;
 import org.apache.james.mailbox.model.Mailbox;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,8 +42,8 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class CassandraMailboxPathV3DAOTest {
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraMailboxModule.MODULE, CassandraSchemaVersionModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        CassandraMailboxDataDefinition.MODULE, CassandraSchemaVersionDataDefinition.MODULE));
 
     CassandraMailboxPathV3DAO testee;
 

@@ -26,13 +26,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.BlobTables;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
+import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -49,10 +49,10 @@ import com.datastax.oss.driver.api.core.cql.ResultSet;
 class CassandraMailRepositoryWithFakeImplementationsTest {
     @RegisterExtension
     static CassandraClusterExtension extension = new CassandraClusterExtension(
-        CassandraModule.aggregateModules(
-            CassandraMailRepositoryModule.MODULE,
-            CassandraBlobModule.MODULE,
-            CassandraSchemaVersionModule.MODULE));
+        CassandraDataDefinition.aggregateModules(
+            CassandraMailRepositoryDataDefinition.MODULE,
+            CassandraBlobDataDefinition.MODULE,
+            CassandraSchemaVersionDataDefinition.MODULE));
 
     private static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     private static final PlainBlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();

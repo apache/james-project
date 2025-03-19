@@ -29,9 +29,9 @@ import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.TestingSession;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
-import org.apache.james.blob.cassandra.cache.CassandraBlobCacheModule;
+import org.apache.james.blob.cassandra.cache.CassandraBlobCacheDataDefinition;
 import org.apache.james.core.Domain;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -85,7 +85,7 @@ class CassandraCacheQueryTest {
                 .to(TestingSession.class);
             bind(CqlSession.class)
                 .to(TestingSession.class);
-            Multibinder.newSetBinder(binder(), CassandraModule.class).addBinding().toInstance(CassandraBlobCacheModule.MODULE);
+            Multibinder.newSetBinder(binder(), CassandraDataDefinition.class).addBinding().toInstance(CassandraBlobCacheDataDefinition.MODULE);
         }
 
         @Provides

@@ -19,7 +19,7 @@
 
 package org.apache.james.backends.cassandra;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -32,11 +32,11 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 
 public class CassandraClusterExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
     private final DockerCassandraExtension cassandraExtension;
-    private final CassandraModule cassandraModule;
+    private final CassandraDataDefinition cassandraDataDefinition;
     private CassandraCluster cassandraCluster;
 
-    public CassandraClusterExtension(CassandraModule cassandraModule) {
-        this.cassandraModule = cassandraModule;
+    public CassandraClusterExtension(CassandraDataDefinition cassandraDataDefinition) {
+        this.cassandraDataDefinition = cassandraDataDefinition;
         this.cassandraExtension = new DockerCassandraExtension();
     }
 
@@ -62,7 +62,7 @@ public class CassandraClusterExtension implements BeforeAllCallback, BeforeEachC
     }
 
     private void start() {
-        cassandraCluster = CassandraCluster.create(cassandraModule, cassandraExtension.getDockerCassandra().getHost());
+        cassandraCluster = CassandraCluster.create(cassandraDataDefinition, cassandraExtension.getDockerCassandra().getHost());
     }
 
     @Override

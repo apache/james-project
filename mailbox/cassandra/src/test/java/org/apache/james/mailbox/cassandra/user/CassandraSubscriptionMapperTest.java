@@ -19,7 +19,7 @@
 package org.apache.james.mailbox.cassandra.user;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionDataDefinition;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraSubscriptionMapperTest extends SubscriptionMapperTest {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSubscriptionModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSubscriptionDataDefinition.MODULE);
 
     @Override
     protected SubscriptionMapper createSubscriptionMapper() {

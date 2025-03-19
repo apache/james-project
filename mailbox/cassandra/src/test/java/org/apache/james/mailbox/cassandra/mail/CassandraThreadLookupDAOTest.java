@@ -28,7 +28,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.modules.CassandraThreadModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraThreadDataDefinition;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ class CassandraThreadLookupDAOTest {
     private static final Username BOB = Username.of("bob");
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraThreadModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraThreadDataDefinition.MODULE);
 
     private CassandraThreadLookupDAO testee;
     private CassandraMessageId messageId1;
