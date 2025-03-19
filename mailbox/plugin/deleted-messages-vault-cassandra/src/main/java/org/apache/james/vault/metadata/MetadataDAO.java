@@ -24,11 +24,11 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.DeletedMessageMetadataTable.BUCKET_NAME;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.DeletedMessageMetadataTable.MESSAGE_ID;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.DeletedMessageMetadataTable.OWNER;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.DeletedMessageMetadataTable.PAYLOAD;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.DeletedMessageMetadataTable.TABLE;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.BUCKET_NAME;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.MESSAGE_ID;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.OWNER;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.PAYLOAD;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.DeletedMessageMetadataTable.TABLE;
 
 import jakarta.inject.Inject;
 

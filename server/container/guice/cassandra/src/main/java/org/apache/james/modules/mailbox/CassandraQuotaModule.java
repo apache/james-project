@@ -19,11 +19,12 @@
 
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.events.EventListener;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaDataDefinition;
 import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
@@ -56,9 +57,9 @@ public class CassandraQuotaModule extends AbstractModule {
         bind(QuotaRootDeserializer.class).to(DefaultUserQuotaRootResolver.class);
         bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
 
-        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule.MODULE);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraMutualizedQuotaModule.MODULE);
+        Multibinder<CassandraDataDefinition> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraDataDefinition.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraMailboxQuotaDataDefinition.MODULE);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraMutualizedQuotaDataDefinition.MODULE);
 
         bind(ListeningCurrentQuotaUpdater.class).in(Scopes.SINGLETON);
         bind(QuotaUpdater.class).to(ListeningCurrentQuotaUpdater.class);

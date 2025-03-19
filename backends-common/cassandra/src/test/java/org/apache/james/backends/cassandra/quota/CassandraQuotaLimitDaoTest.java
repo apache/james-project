@@ -22,8 +22,8 @@ package org.apache.james.backends.cassandra.quota;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaLimit;
@@ -38,7 +38,7 @@ public class CassandraQuotaLimitDaoTest {
     private CassandraQuotaLimitDao cassandraQuotaLimitDao;
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraMutualizedQuotaModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(CassandraMutualizedQuotaDataDefinition.MODULE));
 
     @BeforeEach
     void setup() {

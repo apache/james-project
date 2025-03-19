@@ -20,24 +20,24 @@
 package org.apache.james.mpt.managesieve.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
-import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
+import org.apache.james.domainlist.cassandra.CassandraDomainListDataDefinition;
 import org.apache.james.mpt.ManageSieveMPTContract;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
 import org.apache.james.mpt.managesieve.cassandra.host.CassandraHostSystem;
-import org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule;
-import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
+import org.apache.james.sieve.cassandra.CassandraSieveRepositoryDataDefinition;
+import org.apache.james.user.cassandra.CassandraUsersRepositoryDataDefinition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraManageSieveMPTTest implements ManageSieveMPTContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraDomainListModule.MODULE,
-        CassandraSieveRepositoryModule.MODULE,
-        CassandraMutualizedQuotaModule.MODULE,
-        CassandraUsersRepositoryModule.MODULE));
+    static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        CassandraDomainListDataDefinition.MODULE,
+        CassandraSieveRepositoryDataDefinition.MODULE,
+        CassandraMutualizedQuotaDataDefinition.MODULE,
+        CassandraUsersRepositoryDataDefinition.MODULE));
 
     private ManageSieveHostSystem system;
 

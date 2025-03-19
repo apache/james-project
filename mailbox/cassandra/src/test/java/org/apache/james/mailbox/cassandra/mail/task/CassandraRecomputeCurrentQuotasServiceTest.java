@@ -24,10 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
+import org.apache.james.domainlist.cassandra.CassandraDomainListDataDefinition;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -47,7 +47,7 @@ import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
-import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
+import org.apache.james.user.cassandra.CassandraUsersRepositoryDataDefinition;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -62,10 +62,10 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
     static final DomainList NO_DOMAIN_LIST = null;
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
         MailboxAggregateModule.MODULE_WITH_QUOTA,
-        CassandraDomainListModule.MODULE,
-        CassandraUsersRepositoryModule.MODULE));
+        CassandraDomainListDataDefinition.MODULE,
+        CassandraUsersRepositoryDataDefinition.MODULE));
 
     UsersRepositoryImpl usersRepository;
     StoreMailboxManager mailboxManager;

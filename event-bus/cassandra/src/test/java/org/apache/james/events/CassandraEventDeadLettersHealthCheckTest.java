@@ -29,7 +29,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraEventDeadLettersHealthCheckTest implements EventDeadLettersHealthCheckContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandraClusterExtension = new CassandraClusterExtension(CassandraEventDeadLettersModule.MODULE);
+    static CassandraClusterExtension cassandraClusterExtension = new CassandraClusterExtension(CassandraEventDeadLettersDataDefinition.MODULE);
     private EventDeadLettersHealthCheck testee;
     private CassandraEventDeadLetters eventDeadLetters;
     private DockerCassandra dockerCassandra;

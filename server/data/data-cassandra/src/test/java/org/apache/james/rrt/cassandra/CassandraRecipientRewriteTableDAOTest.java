@@ -41,7 +41,7 @@ class CassandraRecipientRewriteTableDAOTest {
     private static final Mapping MAPPING_2 = Mapping.alias(ADDRESS_2);
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRRTModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRRTDataDefinition.MODULE);
 
     private CassandraRecipientRewriteTableDAO dao;
 

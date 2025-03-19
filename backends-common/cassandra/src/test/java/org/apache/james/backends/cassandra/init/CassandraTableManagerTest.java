@@ -24,10 +24,10 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,9 +40,9 @@ import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 class CassandraTableManagerTest {
     private static final String TABLE_NAME = "tablename";
 
-    public static final CassandraModule MODULE = CassandraModule.aggregateModules(
-            CassandraSchemaVersionModule.MODULE,
-            CassandraModule.table(TABLE_NAME)
+    public static final CassandraDataDefinition MODULE = CassandraDataDefinition.aggregateModules(
+            CassandraSchemaVersionDataDefinition.MODULE,
+            CassandraDataDefinition.table(TABLE_NAME)
                 .comment("Testing table")
                 .statement(statement -> types -> statement
                     .withPartitionKey("id", DataTypes.TIMEUUID)

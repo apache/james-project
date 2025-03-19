@@ -30,18 +30,18 @@ import jakarta.mail.Flags;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsDataDefinition;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Mailbox;
@@ -69,12 +69,12 @@ class CassandraIndexTableHandlerTest {
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
-        CassandraModule.aggregateModules(
-            CassandraMailboxCounterModule.MODULE,
-            CassandraMailboxRecentsModule.MODULE,
-            CassandraFirstUnseenModule.MODULE,
-            CassandraApplicableFlagsModule.MODULE,
-            CassandraDeletedMessageModule.MODULE));
+        CassandraDataDefinition.aggregateModules(
+            CassandraMailboxCounterDataDefinition.MODULE,
+            CassandraMailboxRecentsDataDefinition.MODULE,
+            CassandraFirstUnseenDataDefinition.MODULE,
+            CassandraApplicableFlagsDataDefinition.MODULE,
+            CassandraDeletedMessageDataDefinition.MODULE));
 
     private CassandraMailboxCounterDAO mailboxCounterDAO;
     private CassandraMailboxRecentsDAO mailboxRecentsDAO;

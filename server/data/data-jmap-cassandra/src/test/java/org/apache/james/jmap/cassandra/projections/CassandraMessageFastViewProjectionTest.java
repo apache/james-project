@@ -35,7 +35,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraMessageFastViewProjectionTest implements MessageFastViewProjectionContract {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraMessageFastViewProjectionModule.MODULE);
+    static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraMessageFastViewProjectionDataDefinition.MODULE);
 
     private CassandraMessageFastViewProjection testee;
     private CassandraMessageId.Factory cassandraMessageIdFactory;

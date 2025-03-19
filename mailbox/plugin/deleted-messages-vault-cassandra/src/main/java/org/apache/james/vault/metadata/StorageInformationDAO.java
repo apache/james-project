@@ -23,11 +23,11 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.BLOB_ID;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.BUCKET_NAME;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.MESSAGE_ID;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.OWNER;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.TABLE;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.StorageInformationTable.BLOB_ID;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.StorageInformationTable.BUCKET_NAME;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.StorageInformationTable.MESSAGE_ID;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.StorageInformationTable.OWNER;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.StorageInformationTable.TABLE;
 
 import jakarta.inject.Inject;
 

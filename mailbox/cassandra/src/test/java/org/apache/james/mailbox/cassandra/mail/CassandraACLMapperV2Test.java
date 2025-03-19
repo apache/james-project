@@ -30,16 +30,16 @@ import java.util.concurrent.TimeoutException;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.Scenario.Barrier;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
-import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreDataDefinition;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraAclDataDefinition;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraACLMapperV2Test extends CassandraACLMapperContract {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
-        CassandraModule.aggregateModules(CassandraAclModule.MODULE, CassandraSchemaVersionModule.MODULE, CassandraEventStoreModule.MODULE()));
+        CassandraDataDefinition.aggregateModules(CassandraAclDataDefinition.MODULE, CassandraSchemaVersionDataDefinition.MODULE, CassandraEventStoreDataDefinition.MODULE()));
 
     private CassandraACLMapper cassandraACLMapper;
 

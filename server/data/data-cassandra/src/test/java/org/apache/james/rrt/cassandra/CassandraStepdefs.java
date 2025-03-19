@@ -20,13 +20,13 @@ package org.apache.james.rrt.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
-import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
+import org.apache.james.user.cassandra.CassandraUsersRepositoryDataDefinition;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.junit.Rule;
 
@@ -51,7 +51,7 @@ public class CassandraStepdefs {
     @Before
     public void setup() {
         cassandra = CassandraCluster.create(
-            CassandraModule.aggregateModules(CassandraRRTModule.MODULE, CassandraUsersRepositoryModule.MODULE, CassandraSchemaVersionModule.MODULE),
+            CassandraDataDefinition.aggregateModules(CassandraRRTDataDefinition.MODULE, CassandraUsersRepositoryDataDefinition.MODULE, CassandraSchemaVersionDataDefinition.MODULE),
             cassandraServer.getHost());
         mainStepdefs.setUp(Throwing.supplier(this::getRecipientRewriteTable).sneakyThrow());
     }

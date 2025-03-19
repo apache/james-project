@@ -55,7 +55,7 @@ import reactor.core.publisher.Mono;
 
 class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, DeduplicationBlobStoreContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobDataDefinition.MODULE);
 
     private BlobStore testee;
     private CassandraDefaultBucketDAO defaultBucketDAO;

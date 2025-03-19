@@ -39,7 +39,7 @@ import org.apache.james.backends.cassandra.Scenario.InjectedFailureException;
 import org.apache.james.backends.cassandra.StatementRecorder.Selector;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +54,7 @@ import reactor.core.scheduler.Schedulers;
 class TestingSessionTest {
     public static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSchemaVersionModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSchemaVersionDataDefinition.MODULE);
 
     private CassandraSchemaVersionDAO dao;
 

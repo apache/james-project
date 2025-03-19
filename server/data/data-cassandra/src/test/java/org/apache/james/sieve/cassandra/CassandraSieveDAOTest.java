@@ -57,7 +57,7 @@ class CassandraSieveDAOTest {
         .build();
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryDataDefinition.MODULE);
 
     private CassandraSieveDAO sieveDAO;
 

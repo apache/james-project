@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
  - Upgrade javax -> jakarta. See releated upgrade instructions.
  - Upgrade Java 11 -> 21. See related upgrade instructions.
+ - API change: CassandraModule and all associated Cassandra*Module were renamed to CassandraDataDefinition and Cassandra*DataDefinition respectively.
 
 ### Removals
 
@@ -82,6 +83,7 @@ Please use RFC-8621 implementation rather than this outdated draft.
 
 ### Improvements
 
+ - JAMES-4123 Renames CassandraModule to CassandraDataDefinition
  - JAMES-4103 Allow customizing MessageParser
  - JAMES-3967 RelayLimit: add error log
  - JAMES-3967 Store mails when relay is exceeded

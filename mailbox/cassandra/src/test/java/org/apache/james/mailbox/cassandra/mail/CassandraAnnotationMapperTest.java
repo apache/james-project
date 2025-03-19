@@ -20,11 +20,11 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
-import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationDataDefinition;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.model.AnnotationMapperTest;
@@ -33,9 +33,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraAnnotationMapperTest extends AnnotationMapperTest {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraBlobModule.MODULE,
-        CassandraAnnotationModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        CassandraBlobDataDefinition.MODULE,
+        CassandraAnnotationDataDefinition.MODULE));
 
     @Override
     protected AnnotationMapper createAnnotationMapper() {

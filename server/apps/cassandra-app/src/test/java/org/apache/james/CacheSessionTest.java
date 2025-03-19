@@ -24,7 +24,7 @@ import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.modules.mailbox.CassandraCacheSessionModule;
@@ -83,9 +83,9 @@ class CacheSessionTest {
         .extension(new CassandraExtension())
         .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .combineWith(new CassandraCacheSessionModule()))
-        .overrideServerModule(binder -> Multibinder.newSetBinder(binder, CassandraModule.class, Names.named(InjectionNames.CACHE))
+        .overrideServerModule(binder -> Multibinder.newSetBinder(binder, CassandraDataDefinition.class, Names.named(InjectionNames.CACHE))
             .addBinding()
-            .toInstance(CassandraModule.table(TABLE_NAME)
+            .toInstance(CassandraDataDefinition.table(TABLE_NAME)
                 .comment("Testing table")
                 .statement(statement -> types -> statement
                     .withPartitionKey("id", TIMEUUID)

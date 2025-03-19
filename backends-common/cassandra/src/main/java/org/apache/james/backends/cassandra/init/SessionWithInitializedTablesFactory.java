@@ -24,7 +24,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
@@ -34,12 +34,12 @@ import com.datastax.oss.driver.api.core.CqlSession;
 
 @Singleton
 public class SessionWithInitializedTablesFactory implements Provider<CqlSession> {
-    private final CassandraModule module;
+    private final CassandraDataDefinition module;
     private final CqlSession session;
 
     @Inject
     public SessionWithInitializedTablesFactory(CqlSession cluster,
-                                               CassandraModule module) {
+                                               CassandraDataDefinition module) {
         this.module = module;
         this.session = createSession(cluster);
     }
@@ -58,19 +58,19 @@ public class SessionWithInitializedTablesFactory implements Provider<CqlSession>
         }
     }
 
-    private boolean allOperationsAreFullyPerformed(CqlSession session, CassandraModule module) {
+    private boolean allOperationsAreFullyPerformed(CqlSession session, CassandraDataDefinition module) {
         boolean types = createTypes(session, module);
 
         boolean tables = createTables(session, module);
         return types && tables;
     }
 
-    private boolean createTypes(CqlSession session, CassandraModule module) {
+    private boolean createTypes(CqlSession session, CassandraDataDefinition module) {
         return new CassandraTypesCreator(module, session)
                 .initializeTypes() == CassandraType.InitializationStatus.FULL;
     }
 
-    private boolean createTables(CqlSession session, CassandraModule module) {
+    private boolean createTables(CqlSession session, CassandraDataDefinition module) {
         CassandraTypesProvider cassandraTypesProvider = new CassandraTypesProvider(session);
         return new CassandraTableManager(module, session)
             .initializeTables(cassandraTypesProvider) == CassandraTable.InitializationStatus.FULL;

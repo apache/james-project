@@ -22,10 +22,10 @@ package org.apache.james.jmap.cassandra.filtering;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
-import static org.apache.james.jmap.cassandra.filtering.CassandraFilteringProjectionModule.AGGREGATE_ID;
-import static org.apache.james.jmap.cassandra.filtering.CassandraFilteringProjectionModule.EVENT_ID;
-import static org.apache.james.jmap.cassandra.filtering.CassandraFilteringProjectionModule.RULES;
-import static org.apache.james.jmap.cassandra.filtering.CassandraFilteringProjectionModule.TABLE_NAME;
+import static org.apache.james.jmap.cassandra.filtering.CassandraFilteringProjectionDataDefinition.AGGREGATE_ID;
+import static org.apache.james.jmap.cassandra.filtering.CassandraFilteringProjectionDataDefinition.EVENT_ID;
+import static org.apache.james.jmap.cassandra.filtering.CassandraFilteringProjectionDataDefinition.RULES;
+import static org.apache.james.jmap.cassandra.filtering.CassandraFilteringProjectionDataDefinition.TABLE_NAME;
 
 import java.util.List;
 import java.util.Optional;

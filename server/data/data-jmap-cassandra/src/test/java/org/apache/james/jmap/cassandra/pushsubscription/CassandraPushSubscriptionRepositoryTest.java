@@ -21,7 +21,7 @@ package org.apache.james.jmap.cassandra.pushsubscription;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.jmap.api.change.TypeStateFactory;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepositoryContract;
@@ -33,7 +33,7 @@ import scala.jdk.javaapi.CollectionConverters;
 
 
 public class CassandraPushSubscriptionRepositoryTest implements PushSubscriptionRepositoryContract {
-    static final CassandraModule MODULE = CassandraPushSubscriptionModule.MODULE;
+    static final CassandraDataDefinition MODULE = CassandraPushSubscriptionDataDefinition.MODULE;
 
     UpdatableTickingClock clock;
     PushSubscriptionRepository pushSubscriptionRepository;

@@ -19,10 +19,10 @@
 
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.mailbox.cassandra.mail.CassandraThreadDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
-import org.apache.james.mailbox.cassandra.modules.CassandraThreadModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraThreadDataDefinition;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -34,8 +34,8 @@ public class CassandraThreadIdGuessingModule extends AbstractModule {
         bind(CassandraThreadDAO.class).in(Scopes.SINGLETON);
         bind(CassandraThreadLookupDAO.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), CassandraModule.class)
+        Multibinder.newSetBinder(binder(), CassandraDataDefinition.class)
             .addBinding()
-            .toInstance(CassandraThreadModule.MODULE);
+            .toInstance(CassandraThreadDataDefinition.MODULE);
     }
 }

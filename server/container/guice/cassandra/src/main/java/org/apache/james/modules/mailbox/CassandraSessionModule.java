@@ -23,8 +23,8 @@ import java.util.Set;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeDataDefinition;
 import org.apache.james.backends.cassandra.init.KeyspaceFactory;
 import org.apache.james.backends.cassandra.init.ResilientClusterProvider;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
@@ -33,8 +33,8 @@ import org.apache.james.backends.cassandra.init.configuration.ClusterConfigurati
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraHealthCheck;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.mailbox.store.BatchSizes;
@@ -69,9 +69,9 @@ public class CassandraSessionModule extends AbstractModule {
 
         bind(CqlSession.class).toProvider(SessionWithInitializedTablesFactory.class);
 
-        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraZonedDateTimeModule.MODULE);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraSchemaVersionModule.MODULE);
+        Multibinder<CassandraDataDefinition> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraDataDefinition.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraZonedDateTimeDataDefinition.MODULE);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraSchemaVersionDataDefinition.MODULE);
 
         bind(CassandraSchemaVersionManager.class).in(Scopes.SINGLETON);
         bind(CassandraSchemaVersionDAO.class).in(Scopes.SINGLETON);
@@ -87,14 +87,14 @@ public class CassandraSessionModule extends AbstractModule {
     @Singleton
     @Provides
     SessionWithInitializedTablesFactory provideSessionFactory(InitializedCluster cluster,
-                                                              CassandraModule module) {
+                                                              CassandraDataDefinition module) {
         return new SessionWithInitializedTablesFactory(cluster.cluster, module);
     }
 
     @Provides
     @Singleton
-    CassandraModule composeDataDefinitions(Set<CassandraModule> modules) {
-        return CassandraModule.aggregateModules(modules);
+    CassandraDataDefinition composeDataDefinitions(Set<CassandraDataDefinition> modules) {
+        return CassandraDataDefinition.aggregateModules(modules);
     }
 
     @Provides

@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -35,8 +35,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraSieveRepositoryTest implements SieveRepositoryContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraSieveRepositoryModule.MODULE, CassandraMutualizedQuotaModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        CassandraSieveRepositoryDataDefinition.MODULE, CassandraMutualizedQuotaDataDefinition.MODULE));
 
     SieveRepository sieveRepository;
     CassandraSieveQuotaDAO cassandraSieveQuotaDAO;

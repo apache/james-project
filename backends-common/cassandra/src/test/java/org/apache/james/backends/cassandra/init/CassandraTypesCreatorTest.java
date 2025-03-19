@@ -23,9 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -39,12 +39,12 @@ class CassandraTypesCreatorTest {
     private static final String TYPE_NAME_2 = "typename2";
     private static final String PROPERTY_2 = "property2";
 
-    public static final CassandraModule MODULE = CassandraModule.aggregateModules(
-            CassandraSchemaVersionModule.MODULE,
-            CassandraModule.type(TYPE_NAME_1)
+    public static final CassandraDataDefinition MODULE = CassandraDataDefinition.aggregateModules(
+            CassandraSchemaVersionDataDefinition.MODULE,
+            CassandraDataDefinition.type(TYPE_NAME_1)
                 .statement(statement -> statement.withField(PROPERTY_1, DataTypes.TEXT))
                 .build(),
-            CassandraModule.type(TYPE_NAME_2)
+            CassandraDataDefinition.type(TYPE_NAME_2)
                 .statement(statement -> statement.withField(PROPERTY_2, DataTypes.TEXT))
                 .build());
 

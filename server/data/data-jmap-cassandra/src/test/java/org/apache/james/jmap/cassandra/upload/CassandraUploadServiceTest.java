@@ -23,8 +23,8 @@ import java.time.Clock;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
@@ -34,15 +34,15 @@ import org.apache.james.jmap.api.upload.UploadService;
 import org.apache.james.jmap.api.upload.UploadServiceContract;
 import org.apache.james.jmap.api.upload.UploadServiceDefaultImpl;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaDataDefinition;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraUploadServiceTest implements UploadServiceContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        UploadModule.MODULE, CassandraMailboxQuotaModule.MODULE, CassandraMutualizedQuotaModule.MODULE));
+    static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        UploadDataDefinition.MODULE, CassandraMailboxQuotaDataDefinition.MODULE, CassandraMutualizedQuotaDataDefinition.MODULE));
 
     private CassandraUploadRepository uploadRepository;
     private CassandraUploadUsageRepository uploadUsageRepository;

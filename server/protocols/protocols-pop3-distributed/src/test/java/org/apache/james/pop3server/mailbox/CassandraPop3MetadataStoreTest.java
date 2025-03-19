@@ -29,7 +29,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraPop3MetadataStoreTest implements Pop3MetadataStoreContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandra = new CassandraClusterExtension(Pop3MetadataModule.MODULE);
+    static CassandraClusterExtension cassandra = new CassandraClusterExtension(Pop3MetadataDataDefinition.MODULE);
 
     CassandraPop3MetadataStore testee;
 

@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +37,7 @@ class CassandraTypeProviderTest {
     private static final String TYPE_NAME = "typename";
     private static final String PROPERTY = "property";
 
-    public static final CassandraModule.Impl MODULE = CassandraModule.type(TYPE_NAME)
+    public static final CassandraDataDefinition.Impl MODULE = CassandraDataDefinition.type(TYPE_NAME)
         .statement(statement -> statement.withField(PROPERTY, DataTypes.TEXT))
         .build();
     @RegisterExtension

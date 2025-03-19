@@ -31,7 +31,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Domain;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
-import org.apache.james.rrt.cassandra.CassandraRRTModule;
+import org.apache.james.rrt.cassandra.CassandraRRTDataDefinition;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTableDAO;
 import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigration;
 import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigrationTaskAdditionalInformationDTO;
@@ -67,7 +67,7 @@ class CassandraMappingsRoutesTest {
     private MemoryTaskManager taskManager;
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRRTModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRRTDataDefinition.MODULE);
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {

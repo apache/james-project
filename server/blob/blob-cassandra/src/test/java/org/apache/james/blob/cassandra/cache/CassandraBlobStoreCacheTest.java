@@ -37,7 +37,7 @@ import reactor.core.publisher.Mono;
 class CassandraBlobStoreCacheTest implements BlobStoreCacheContract {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobCacheModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobCacheDataDefinition.MODULE);
 
     private static final int DEFAULT_THRESHOLD_IN_BYTES = EIGHT_KILOBYTES.length;
     private static final Duration _2_SEC_TTL = Duration.ofSeconds(2);

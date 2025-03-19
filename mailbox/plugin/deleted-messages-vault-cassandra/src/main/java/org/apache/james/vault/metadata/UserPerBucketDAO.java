@@ -23,9 +23,9 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserPerBucketTable.BUCKET_NAME;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserPerBucketTable.TABLE;
-import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserPerBucketTable.USER;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.UserPerBucketTable.BUCKET_NAME;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.UserPerBucketTable.TABLE;
+import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.UserPerBucketTable.USER;
 
 import jakarta.inject.Inject;
 

@@ -35,7 +35,7 @@ public class CassandraBlobStoreDAOTest implements BlobStoreDAOContract {
     private static final int CHUNK_SIZE = 10240;
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobDataDefinition.MODULE);
 
     private BlobStoreDAO testee;
     private CassandraDefaultBucketDAO defaultBucketDAO;

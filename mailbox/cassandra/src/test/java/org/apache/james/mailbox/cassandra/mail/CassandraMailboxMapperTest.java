@@ -30,21 +30,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.Scenario;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
-import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreDataDefinition;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraAclDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxDataDefinition;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -81,11 +81,11 @@ class CassandraMailboxMapperTest {
 
     private static final Mailbox MAILBOX_BIS = new Mailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID_2);
 
-    private static final CassandraModule MODULES = CassandraModule.aggregateModules(
-        CassandraAclModule.MODULE,
-        CassandraEventStoreModule.MODULE(),
-        CassandraMailboxModule.MODULE,
-        CassandraSchemaVersionModule.MODULE);
+    private static final CassandraDataDefinition MODULES = CassandraDataDefinition.aggregateModules(
+        CassandraAclDataDefinition.MODULE,
+        CassandraEventStoreDataDefinition.MODULE(),
+        CassandraMailboxDataDefinition.MODULE,
+        CassandraSchemaVersionDataDefinition.MODULE);
     private static final int TRY_COUNT_BEFORE_FAILURE = 6;
 
     @RegisterExtension

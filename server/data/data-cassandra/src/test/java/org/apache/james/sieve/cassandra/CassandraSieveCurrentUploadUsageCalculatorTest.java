@@ -20,8 +20,8 @@
 package org.apache.james.sieve.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.core.Username;
@@ -36,8 +36,8 @@ import com.datastax.oss.driver.api.core.CqlSession;
 public class CassandraSieveCurrentUploadUsageCalculatorTest implements SieveCurrentUploadUsageCalculatorContract {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraSieveRepositoryModule.MODULE, CassandraMutualizedQuotaModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        CassandraSieveRepositoryDataDefinition.MODULE, CassandraMutualizedQuotaDataDefinition.MODULE));
 
     SieveCurrentUploadUsageCalculator sieveCurrentUploadUsageCalculator;
     SieveRepository sieveRepository;

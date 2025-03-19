@@ -20,20 +20,20 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreDataDefinition;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
-import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraAclDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraModSeqDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraUidDataDefinition;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
@@ -41,14 +41,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMailboxMapperGenericTest {
-    private static final CassandraModule MODULES = CassandraModule.aggregateModules(
-        CassandraAclModule.MODULE,
-        CassandraBlobModule.MODULE,
-        CassandraEventStoreModule.MODULE(),
-        CassandraMailboxModule.MODULE,
-        CassandraModSeqModule.MODULE,
-        CassandraSchemaVersionModule.MODULE,
-        CassandraUidModule.MODULE);
+    private static final CassandraDataDefinition MODULES = CassandraDataDefinition.aggregateModules(
+        CassandraAclDataDefinition.MODULE,
+        CassandraBlobDataDefinition.MODULE,
+        CassandraEventStoreDataDefinition.MODULE(),
+        CassandraMailboxDataDefinition.MODULE,
+        CassandraModSeqDataDefinition.MODULE,
+        CassandraSchemaVersionDataDefinition.MODULE,
+        CassandraUidDataDefinition.MODULE);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULES);

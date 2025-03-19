@@ -20,16 +20,17 @@
 package org.apache.james.modules.mailrepository;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.mailrepository.api.MailRepositoryFactory;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepository;
+import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryDataDefinition;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryFactory;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryKeysDAO;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDaoV2;
-import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlModule;
+import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlDataDefinition;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlStore;
 import org.apache.james.mailrepository.cassandra.MailRepositoryBlobReferenceSource;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
@@ -56,9 +57,9 @@ public class CassandraMailRepositoryModule extends AbstractModule {
                     CassandraMailRepository.class.getName(),
                     new BaseHierarchicalConfiguration()));
 
-        Multibinder<CassandraModule> cassandraModuleBinder = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraModuleBinder.addBinding().toInstance(org.apache.james.mailrepository.cassandra.CassandraMailRepositoryModule.MODULE);
-        cassandraModuleBinder.addBinding().toInstance(CassandraMailRepositoryUrlModule.MODULE);
+        Multibinder<CassandraDataDefinition> cassandraModuleBinder = Multibinder.newSetBinder(binder(), CassandraDataDefinition.class);
+        cassandraModuleBinder.addBinding().toInstance(CassandraMailRepositoryDataDefinition.MODULE);
+        cassandraModuleBinder.addBinding().toInstance(CassandraMailRepositoryUrlDataDefinition.MODULE);
 
         Multibinder.newSetBinder(binder(), BlobReferenceSource.class)
             .addBinding().to(MailRepositoryBlobReferenceSource.class);

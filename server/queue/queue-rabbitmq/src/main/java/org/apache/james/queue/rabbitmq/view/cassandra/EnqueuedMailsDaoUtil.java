@@ -19,26 +19,26 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ATTRIBUTES;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.BODY_BLOB_ID;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.BUCKET_ID;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ENQUEUED_TIME;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ENQUEUE_ID;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.ERROR_MESSAGE;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.HEADER_BLOB_ID;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.LAST_UPDATED;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.NAME;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.PER_RECIPIENT_SPECIFIC_HEADERS;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.QUEUE_NAME;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.RECIPIENTS;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.REMOTE_ADDR;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.REMOTE_HOST;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.SENDER;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.STATE;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.TIME_RANGE_START;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.HeaderEntry.HEADER_NAME_INDEX;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.HeaderEntry.HEADER_VALUE_INDEX;
-import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.HeaderEntry.USER_INDEX;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.ATTRIBUTES;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.BODY_BLOB_ID;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.BUCKET_ID;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.ENQUEUED_TIME;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.ENQUEUE_ID;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.ERROR_MESSAGE;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.HEADER_BLOB_ID;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.LAST_UPDATED;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.NAME;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.PER_RECIPIENT_SPECIFIC_HEADERS;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.QUEUE_NAME;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.RECIPIENTS;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.REMOTE_ADDR;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.REMOTE_HOST;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.SENDER;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.STATE;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.EnqueuedMailsTable.TIME_RANGE_START;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.HeaderEntry.HEADER_NAME_INDEX;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.HeaderEntry.HEADER_VALUE_INDEX;
+import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewDataDefinition.HeaderEntry.USER_INDEX;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

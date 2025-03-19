@@ -26,7 +26,7 @@ import java.time.Duration;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.DockerCassandra;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -41,7 +41,7 @@ class ResilientClusterProviderTest {
         .disableDurableWrites();
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraExtension = new CassandraClusterExtension(CassandraModule.EMPTY_MODULE);
+    static CassandraClusterExtension cassandraExtension = new CassandraClusterExtension(CassandraDataDefinition.EMPTY_MODULE);
 
     @Test
     void getShouldNotThrowWhenHealthyCassandra() {

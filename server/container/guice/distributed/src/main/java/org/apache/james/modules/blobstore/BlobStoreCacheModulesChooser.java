@@ -26,13 +26,13 @@ import jakarta.inject.Named;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.cassandra.cache.BlobStoreCache;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
-import org.apache.james.blob.cassandra.cache.CassandraBlobCacheModule;
+import org.apache.james.blob.cassandra.cache.CassandraBlobCacheDataDefinition;
 import org.apache.james.blob.cassandra.cache.CassandraBlobStoreCache;
 import org.apache.james.blob.cassandra.cache.CassandraCacheConfiguration;
 import org.apache.james.modules.mailbox.CassandraCacheSessionModule;
@@ -68,9 +68,9 @@ public class BlobStoreCacheModulesChooser {
             bind(CassandraBlobStoreCache.class).in(Scopes.SINGLETON);
             bind(BlobStoreCache.class).to(CassandraBlobStoreCache.class);
 
-            Multibinder.newSetBinder(binder(), CassandraModule.class, Names.named(InjectionNames.CACHE))
+            Multibinder.newSetBinder(binder(), CassandraDataDefinition.class, Names.named(InjectionNames.CACHE))
                 .addBinding()
-                .toInstance(CassandraBlobCacheModule.MODULE);
+                .toInstance(CassandraBlobCacheDataDefinition.MODULE);
         }
 
         @Provides

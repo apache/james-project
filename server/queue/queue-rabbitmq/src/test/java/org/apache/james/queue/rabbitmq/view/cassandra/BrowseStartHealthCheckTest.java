@@ -26,8 +26,8 @@ import java.time.Duration;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.core.healthcheck.ResultStatus;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +39,7 @@ import reactor.core.publisher.Mono;
 class BrowseStartHealthCheckTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
-        CassandraModule.aggregateModules(CassandraSchemaVersionModule.MODULE,CassandraMailQueueViewModule.MODULE));
+        CassandraDataDefinition.aggregateModules(CassandraSchemaVersionDataDefinition.MODULE, CassandraMailQueueViewDataDefinition.MODULE));
 
     private BrowseStartHealthCheck testee;
     private BrowseStartDAO browseStartDAO;

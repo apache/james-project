@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraBlobStoreTest implements CassandraBlobStoreContract, DeduplicationBlobStoreContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobDataDefinition.MODULE);
 
     private BlobStore testee;
     private CassandraDefaultBucketDAO defaultBucketDAO;

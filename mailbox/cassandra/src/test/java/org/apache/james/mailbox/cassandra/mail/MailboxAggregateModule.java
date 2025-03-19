@@ -19,46 +19,46 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraThreadModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
+import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraAclDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraMessageDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraModSeqDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraThreadDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraUidDataDefinition;
 
 public interface MailboxAggregateModule {
-    CassandraModule MODULE = CassandraModule.aggregateModules(
-        CassandraAclModule.MODULE,
-        CassandraAnnotationModule.MODULE,
-        CassandraApplicableFlagsModule.MODULE,
-        CassandraAttachmentModule.MODULE,
-        CassandraBlobModule.MODULE,
-        CassandraEventStoreModule.MODULE(),
-        CassandraDeletedMessageModule.MODULE,
-        CassandraFirstUnseenModule.MODULE,
-        CassandraMailboxCounterModule.MODULE,
-        CassandraMailboxModule.MODULE,
-        CassandraMailboxRecentsModule.MODULE,
-        CassandraMessageModule.MODULE,
-        CassandraModSeqModule.MODULE,
-        CassandraSchemaVersionModule.MODULE,
-        CassandraSubscriptionModule.MODULE,
-        CassandraUidModule.MODULE,
-        CassandraThreadModule.MODULE);
+    CassandraDataDefinition MODULE = CassandraDataDefinition.aggregateModules(
+        CassandraAclDataDefinition.MODULE,
+        CassandraAnnotationDataDefinition.MODULE,
+        CassandraApplicableFlagsDataDefinition.MODULE,
+        CassandraAttachmentDataDefinition.MODULE,
+        CassandraBlobDataDefinition.MODULE,
+        CassandraEventStoreDataDefinition.MODULE(),
+        CassandraDeletedMessageDataDefinition.MODULE,
+        CassandraFirstUnseenDataDefinition.MODULE,
+        CassandraMailboxCounterDataDefinition.MODULE,
+        CassandraMailboxDataDefinition.MODULE,
+        CassandraMailboxRecentsDataDefinition.MODULE,
+        CassandraMessageDataDefinition.MODULE,
+        CassandraModSeqDataDefinition.MODULE,
+        CassandraSchemaVersionDataDefinition.MODULE,
+        CassandraSubscriptionDataDefinition.MODULE,
+        CassandraUidDataDefinition.MODULE,
+        CassandraThreadDataDefinition.MODULE);
 
-    CassandraModule MODULE_WITH_QUOTA = CassandraModule.aggregateModules(CassandraMailboxQuotaModule.MODULE, CassandraMutualizedQuotaModule.MODULE, MODULE);
+    CassandraDataDefinition MODULE_WITH_QUOTA = CassandraDataDefinition.aggregateModules(CassandraMailboxQuotaDataDefinition.MODULE, CassandraMutualizedQuotaDataDefinition.MODULE, MODULE);
 }

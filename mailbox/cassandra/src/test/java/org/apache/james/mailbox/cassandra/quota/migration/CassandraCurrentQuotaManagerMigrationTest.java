@@ -28,8 +28,8 @@ import static org.mockito.Mockito.when;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
@@ -37,8 +37,8 @@ import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
-import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
+import org.apache.james.domainlist.cassandra.CassandraDomainListDataDefinition;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaDataDefinition;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV1;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV2;
 import org.apache.james.mailbox.model.CurrentQuotas;
@@ -48,7 +48,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
-import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
+import org.apache.james.user.cassandra.CassandraUsersRepositoryDataDefinition;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,11 +59,11 @@ public class CassandraCurrentQuotaManagerMigrationTest {
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot(MailboxConstants.USER_NAMESPACE + SEPARATOR + BOB.asString(), BOB.getDomainPart());
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraMailboxQuotaModule.MODULE,
-        CassandraUsersRepositoryModule.MODULE,
-        CassandraDomainListModule.MODULE,
-        CassandraMutualizedQuotaModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        CassandraMailboxQuotaDataDefinition.MODULE,
+        CassandraUsersRepositoryDataDefinition.MODULE,
+        CassandraDomainListDataDefinition.MODULE,
+        CassandraMutualizedQuotaDataDefinition.MODULE));
 
     private UsersRepositoryImpl<CassandraUsersDAO> getUsersRepository() throws Exception {
         boolean enableVirtualHosting = false;
