@@ -29,7 +29,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageDataDefinition;
 import org.apache.james.mailbox.model.MessageRange;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +45,7 @@ class CassandraDeletedMessageDAOTest {
     private static final MessageUid UID_8 = MessageUid.of(8);
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDeletedMessageModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDeletedMessageDataDefinition.MODULE);
 
     private CassandraDeletedMessageDAO testee;
 

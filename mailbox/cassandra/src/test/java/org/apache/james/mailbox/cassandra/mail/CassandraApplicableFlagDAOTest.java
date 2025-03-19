@@ -28,7 +28,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsDataDefinition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,7 +42,7 @@ class CassandraApplicableFlagDAOTest {
     private static final CassandraId CASSANDRA_ID = CassandraId.timeBased();
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraApplicableFlagsModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraApplicableFlagsDataDefinition.MODULE);
 
     private CassandraApplicableFlagDAO testee;
 

@@ -27,12 +27,12 @@ import java.util.function.Supplier;
 
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -56,15 +56,15 @@ class SessionWithInitializedTablesFactoryTest {
     private static final String TYPE_NAME = "typename";
     private static final String PROPERTY = "property";
 
-    public static final CassandraModule MODULE = CassandraModule.aggregateModules(
-            CassandraSchemaVersionModule.MODULE,
-            CassandraModule.table(TABLE_NAME)
+    public static final CassandraDataDefinition MODULE = CassandraDataDefinition.aggregateModules(
+            CassandraSchemaVersionDataDefinition.MODULE,
+            CassandraDataDefinition.table(TABLE_NAME)
                     .comment("Testing table")
                     .statement(statement -> types -> statement
                             .withPartitionKey("id", DataTypes.TIMEUUID)
                             .withClusteringColumn("clustering", DataTypes.BIGINT))
                     .build(),
-            CassandraModule.type(TYPE_NAME)
+            CassandraDataDefinition.type(TYPE_NAME)
                     .statement(statement -> statement.withField(PROPERTY, DataTypes.TEXT))
                     .build());
 

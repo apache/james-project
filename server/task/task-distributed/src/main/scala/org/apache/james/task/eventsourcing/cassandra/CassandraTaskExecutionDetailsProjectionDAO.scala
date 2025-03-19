@@ -22,7 +22,7 @@ import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.cql.{BoundStatement, Row}
 import com.datastax.oss.driver.api.core.data.UdtValue
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder.{bindMarker, deleteFrom, insertInto, selectFrom}
-import org.apache.james.backends.cassandra.init.{CassandraTypesProvider, CassandraZonedDateTimeModule}
+import org.apache.james.backends.cassandra.init.{CassandraTypesProvider, CassandraZonedDateTimeDataDefinition}
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer
 import org.apache.james.task._
@@ -38,7 +38,7 @@ import scala.compat.java8.OptionConverters._
 
 class CassandraTaskExecutionDetailsProjectionDAO @Inject()(session: CqlSession, typesProvider: CassandraTypesProvider, jsonTaskAdditionalInformationSerializer: JsonTaskAdditionalInformationSerializer) {
   private val cassandraAsyncExecutor = new CassandraAsyncExecutor(session)
-  private val dateType = typesProvider.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME)
+  private val dateType = typesProvider.getDefinedUserType(CassandraZonedDateTimeDataDefinition.ZONED_DATE_TIME)
 
   private val insertStatement = session.prepare(insertInto(TABLE_NAME)
     .value(TASK_ID, bindMarker(TASK_ID))
@@ -74,16 +74,16 @@ class CassandraTaskExecutionDetailsProjectionDAO @Inject()(session: CqlSession, 
       .setUuid(TASK_ID, details.getTaskId.getValue)
       .setString(TYPE, details.getType.asString())
       .setString(STATUS, details.getStatus.getValue)
-      .setUdtValue(SUBMITTED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getSubmittedDate))
+      .setUdtValue(SUBMITTED_DATE, CassandraZonedDateTimeDataDefinition.toUDT(dateType, details.getSubmittedDate))
       .setString(SUBMITTED_NODE, details.getSubmittedNode.asString)
 
     val bindOptionalFieldOperations = List(
-      (statement: BoundStatement) => bindOptionalUDTValue(statement, STARTED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getStartedDate)),
+      (statement: BoundStatement) => bindOptionalUDTValue(statement, STARTED_DATE, CassandraZonedDateTimeDataDefinition.toUDT(dateType, details.getStartedDate)),
       (statement: BoundStatement) => bindOptionalStringValue(statement, RAN_NODE, details.getRanNode.map[String](_.asString)),
-      (statement: BoundStatement) => bindOptionalUDTValue(statement, COMPLETED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getCompletedDate)),
-      (statement: BoundStatement) => bindOptionalUDTValue(statement, CANCELED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getCanceledDate)),
+      (statement: BoundStatement) => bindOptionalUDTValue(statement, COMPLETED_DATE, CassandraZonedDateTimeDataDefinition.toUDT(dateType, details.getCompletedDate)),
+      (statement: BoundStatement) => bindOptionalUDTValue(statement, CANCELED_DATE, CassandraZonedDateTimeDataDefinition.toUDT(dateType, details.getCanceledDate)),
       (statement: BoundStatement) => bindOptionalStringValue(statement, CANCEL_REQUESTED_NODE, details.getCancelRequestedNode.map[String](_.asString)),
-      (statement: BoundStatement) => bindOptionalUDTValue(statement, FAILED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getFailedDate)),
+      (statement: BoundStatement) => bindOptionalUDTValue(statement, FAILED_DATE, CassandraZonedDateTimeDataDefinition.toUDT(dateType, details.getFailedDate)),
       (statement: BoundStatement) => bindOptionalStringValue(statement, ADDITIONAL_INFORMATION, serializeAdditionalInformation),
     )
 
@@ -133,14 +133,14 @@ class CassandraTaskExecutionDetailsProjectionDAO @Inject()(session: CqlSession, 
       taskId = TaskId.fromUUID(row.getUuid(TASK_ID)),
       `type` = TaskType.of(row.getString(TYPE)),
       status = TaskManager.Status.fromString(row.getString(STATUS)),
-      submittedDate = CassandraZonedDateTimeModule.fromUDT(row.getUdtValue(SUBMITTED_DATE)),
+      submittedDate = CassandraZonedDateTimeDataDefinition.fromUDT(row.getUdtValue(SUBMITTED_DATE)),
       submittedNode = Hostname(row.getString(SUBMITTED_NODE)),
-      startedDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUdtValue(STARTED_DATE)),
+      startedDate = CassandraZonedDateTimeDataDefinition.fromUDTOptional(row.getUdtValue(STARTED_DATE)),
       ranNode = Optional.ofNullable(row.getString(RAN_NODE)).map(Hostname(_)),
-      completedDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUdtValue(COMPLETED_DATE)),
-      canceledDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUdtValue(CANCELED_DATE)),
+      completedDate = CassandraZonedDateTimeDataDefinition.fromUDTOptional(row.getUdtValue(COMPLETED_DATE)),
+      canceledDate = CassandraZonedDateTimeDataDefinition.fromUDTOptional(row.getUdtValue(CANCELED_DATE)),
       cancelRequestedNode = Optional.ofNullable(row.getString(CANCEL_REQUESTED_NODE)).map(Hostname(_)),
-      failedDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUdtValue(FAILED_DATE)),
+      failedDate = CassandraZonedDateTimeDataDefinition.fromUDTOptional(row.getUdtValue(FAILED_DATE)),
       additionalInformation = () => deserializeAdditionalInformation(taskType, row))
   }
 

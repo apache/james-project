@@ -20,7 +20,7 @@ package org.apache.james.backends.cassandra;
 
 import java.util.Optional;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.CassandraTableManager;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.ClusterFactory;
@@ -35,7 +35,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 public final class CassandraCluster implements AutoCloseable {
     private static final String KEYSPACE = "testing";
 
-    public static CassandraCluster create(CassandraModule module, Host host) {
+    public static CassandraCluster create(CassandraDataDefinition module, Host host) {
         assertClusterNotRunning();
         CassandraCluster cassandraCluster = new CassandraCluster(module, host);
         startStackTrace = Optional.of(new Exception("initial connection call trace"));
@@ -50,13 +50,13 @@ public final class CassandraCluster implements AutoCloseable {
 
     private static Optional<Exception> startStackTrace = Optional.empty();
 
-    private final CassandraModule module;
+    private final CassandraDataDefinition module;
     private final CqlSession nonPrivilegedCluster;
     private final TestingSession nonPrivilegedSession;
     private final CassandraTypesProvider typesProvider;
     private final ClusterConfiguration clusterConfiguration;
 
-    private CassandraCluster(CassandraModule module, Host host) throws RuntimeException {
+    private CassandraCluster(CassandraDataDefinition module, Host host) throws RuntimeException {
         this.module = module;
 
         this.clusterConfiguration = DockerCassandra.configurationBuilder(host).build();

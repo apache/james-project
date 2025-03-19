@@ -39,7 +39,7 @@ public class CassandraEmailQueryViewTest implements EmailQueryViewContract {
     public static final CassandraMessageId MESSAGE_ID_4 = MESSAGE_ID_FACTORY.generate();
 
     @RegisterExtension
-    static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraEmailQueryViewModule.MODULE);
+    static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraEmailQueryViewDataDefinition.MODULE);
 
     private CassandraEmailQueryView testee;
 

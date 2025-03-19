@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraEventDeadLettersTest implements EventDeadLettersContract.AllContracts {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraClusterExtension = new CassandraClusterExtension(CassandraEventDeadLettersModule.MODULE);
+    static CassandraClusterExtension cassandraClusterExtension = new CassandraClusterExtension(CassandraEventDeadLettersDataDefinition.MODULE);
 
     private CassandraEventDeadLetters eventDeadLetters;
 

@@ -20,13 +20,15 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.DefaultVacationService;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.VacationDeleteUserTaskStep;
 import org.apache.james.vacation.api.VacationRepository;
 import org.apache.james.vacation.api.VacationService;
 import org.apache.james.vacation.cassandra.CassandraNotificationRegistry;
+import org.apache.james.vacation.cassandra.CassandraNotificationRegistryDataDefinition;
+import org.apache.james.vacation.cassandra.CassandraVacationDataDefinition;
 import org.apache.james.vacation.cassandra.CassandraVacationRepository;
 
 import com.google.inject.AbstractModule;
@@ -46,9 +48,9 @@ public class CassandraVacationModule extends AbstractModule {
         bind(CassandraNotificationRegistry.class).in(Scopes.SINGLETON);
         bind(NotificationRegistry.class).to(CassandraNotificationRegistry.class);
 
-        Multibinder<CassandraModule> cassandraVacationDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraVacationDefinitions.addBinding().toInstance(org.apache.james.vacation.cassandra.CassandraVacationModule.MODULE);
-        cassandraVacationDefinitions.addBinding().toInstance(org.apache.james.vacation.cassandra.CassandraNotificationRegistryModule.MODULE);
+        Multibinder<CassandraDataDefinition> cassandraVacationDefinitions = Multibinder.newSetBinder(binder(), CassandraDataDefinition.class);
+        cassandraVacationDefinitions.addBinding().toInstance(CassandraVacationDataDefinition.MODULE);
+        cassandraVacationDefinitions.addBinding().toInstance(CassandraNotificationRegistryDataDefinition.MODULE);
 
         Multibinder<DeleteUserDataTaskStep> deleteUserDataTaskSteps = Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
         deleteUserDataTaskSteps.addBinding().to(VacationDeleteUserTaskStep.class);

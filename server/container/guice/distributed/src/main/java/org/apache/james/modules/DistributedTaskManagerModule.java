@@ -27,7 +27,7 @@ import jakarta.inject.Singleton;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.modules.server.HostnameModule;
@@ -77,7 +77,7 @@ public class DistributedTaskManagerModule extends AbstractModule {
         bind(CancelRequestQueueName.class).toInstance(CancelRequestQueueName.generate());
         bind(TerminationQueueName.class).toInstance(TerminationQueueName.generate());
 
-        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
+        Multibinder<CassandraDataDefinition> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraDataDefinition.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraTaskExecutionDetailsProjectionModule.MODULE());
 
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);

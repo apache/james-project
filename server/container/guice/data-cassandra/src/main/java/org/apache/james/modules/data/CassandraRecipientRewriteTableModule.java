@@ -19,12 +19,12 @@
 
 package org.apache.james.modules.data;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
-import org.apache.james.rrt.cassandra.CassandraRRTModule;
+import org.apache.james.rrt.cassandra.CassandraRRTDataDefinition;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTable;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTableDAO;
 import org.apache.james.rrt.lib.AliasReverseResolverImpl;
@@ -49,8 +49,8 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
         bind(AliasReverseResolver.class).to(AliasReverseResolverImpl.class);
         bind(CanSendFromImpl.class).in(Scopes.SINGLETON);
         bind(CanSendFrom.class).to(CanSendFromImpl.class);
-        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraRRTModule.MODULE);
+        Multibinder<CassandraDataDefinition> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraDataDefinition.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraRRTDataDefinition.MODULE);
     }
 
     @ProvidesIntoSet

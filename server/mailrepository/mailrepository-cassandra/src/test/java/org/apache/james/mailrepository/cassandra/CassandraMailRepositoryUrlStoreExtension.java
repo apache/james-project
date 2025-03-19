@@ -33,7 +33,7 @@ public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolv
     private final CassandraClusterExtension cassandraCluster;
 
     public CassandraMailRepositoryUrlStoreExtension() {
-        cassandraCluster = new CassandraClusterExtension(CassandraMailRepositoryUrlModule.MODULE);
+        cassandraCluster = new CassandraClusterExtension(CassandraMailRepositoryUrlDataDefinition.MODULE);
     }
 
     @Override

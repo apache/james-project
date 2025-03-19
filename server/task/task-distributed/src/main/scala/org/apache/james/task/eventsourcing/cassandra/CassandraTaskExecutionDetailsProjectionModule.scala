@@ -20,8 +20,8 @@ package org.apache.james.task.eventsourcing.cassandra
 
 import com.datastax.oss.driver.api.core.`type`.DataTypes
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder
-import org.apache.james.backends.cassandra.components.CassandraModule
-import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition
+import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeDataDefinition
 
 object CassandraTaskExecutionDetailsProjectionTable {
   val TABLE_NAME: String = "taskExecutionDetailsProjection"
@@ -42,7 +42,7 @@ object CassandraTaskExecutionDetailsProjectionTable {
 
 object CassandraTaskExecutionDetailsProjectionModule {
 
-  val MODULE: CassandraModule = CassandraModule.table(CassandraTaskExecutionDetailsProjectionTable.TABLE_NAME)
+  val MODULE: CassandraDataDefinition = CassandraDataDefinition.table(CassandraTaskExecutionDetailsProjectionTable.TABLE_NAME)
     .comment("Projection of TaskExecutionDetails used by the distributed task manager")
     .options(options => options.withCaching(true, SchemaBuilder.RowsPerPartition.NONE))
     .statement(statement => types => statement
@@ -50,13 +50,13 @@ object CassandraTaskExecutionDetailsProjectionModule {
       .withColumn(CassandraTaskExecutionDetailsProjectionTable.ADDITIONAL_INFORMATION, DataTypes.TEXT)
       .withColumn(CassandraTaskExecutionDetailsProjectionTable.TYPE, DataTypes.TEXT)
       .withColumn(CassandraTaskExecutionDetailsProjectionTable.STATUS, DataTypes.TEXT)
-      .withColumn(CassandraTaskExecutionDetailsProjectionTable.SUBMITTED_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.SUBMITTED_DATE, types.getDefinedUserType(CassandraZonedDateTimeDataDefinition.ZONED_DATE_TIME))
       .withColumn(CassandraTaskExecutionDetailsProjectionTable.SUBMITTED_NODE, DataTypes.TEXT)
-      .withColumn(CassandraTaskExecutionDetailsProjectionTable.STARTED_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.STARTED_DATE, types.getDefinedUserType(CassandraZonedDateTimeDataDefinition.ZONED_DATE_TIME))
       .withColumn(CassandraTaskExecutionDetailsProjectionTable.RAN_NODE, DataTypes.TEXT)
-      .withColumn(CassandraTaskExecutionDetailsProjectionTable.COMPLETED_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
-      .withColumn(CassandraTaskExecutionDetailsProjectionTable.CANCELED_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.COMPLETED_DATE, types.getDefinedUserType(CassandraZonedDateTimeDataDefinition.ZONED_DATE_TIME))
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.CANCELED_DATE, types.getDefinedUserType(CassandraZonedDateTimeDataDefinition.ZONED_DATE_TIME))
       .withColumn(CassandraTaskExecutionDetailsProjectionTable.CANCEL_REQUESTED_NODE, DataTypes.TEXT)
-      .withColumn(CassandraTaskExecutionDetailsProjectionTable.FAILED_DATE, types.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME)))
+      .withColumn(CassandraTaskExecutionDetailsProjectionTable.FAILED_DATE, types.getDefinedUserType(CassandraZonedDateTimeDataDefinition.ZONED_DATE_TIME)))
     .build
 }

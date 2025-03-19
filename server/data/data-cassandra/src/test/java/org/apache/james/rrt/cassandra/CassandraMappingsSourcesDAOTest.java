@@ -38,7 +38,7 @@ class CassandraMappingsSourcesDAOTest {
     private static final Mapping MAPPING = Mapping.alias(ADDRESS);
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRRTModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRRTDataDefinition.MODULE);
 
     private static CassandraMappingsSourcesDAO dao;
 

@@ -47,7 +47,7 @@ class CacheDomainListTest {
     Domain domain1 = Domain.of("domain1.tld");
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDomainListModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDomainListDataDefinition.MODULE);
 
     CassandraDomainList domainList;
 

@@ -33,7 +33,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
-import org.apache.james.rrt.cassandra.CassandraRRTModule;
+import org.apache.james.rrt.cassandra.CassandraRRTDataDefinition;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTableDAO;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -57,7 +57,7 @@ class MappingsSourcesMigrationTest {
     private static final Mapping MAPPING = Mapping.alias(ADDRESS);
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRRTModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRRTDataDefinition.MODULE);
 
     private CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO;
     private CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO;

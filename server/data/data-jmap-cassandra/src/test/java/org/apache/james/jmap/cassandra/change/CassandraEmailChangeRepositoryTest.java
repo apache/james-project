@@ -27,9 +27,9 @@ import java.time.Duration;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeDataDefinition;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.jmap.api.change.EmailChange;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.EmailChangeRepositoryContract;
@@ -44,9 +44,9 @@ public class CassandraEmailChangeRepositoryTest implements EmailChangeRepository
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
-        CassandraModule.aggregateModules(CassandraEmailChangeModule.MODULE,
-            CassandraSchemaVersionModule.MODULE,
-            CassandraZonedDateTimeModule.MODULE));
+        CassandraDataDefinition.aggregateModules(CassandraEmailChangeDataDefinition.MODULE,
+            CassandraSchemaVersionDataDefinition.MODULE,
+            CassandraZonedDateTimeDataDefinition.MODULE));
 
     EmailChangeRepository emailChangeRepository;
     EmailChangeRepositoryDAO emailChangeRepositoryDAO;

@@ -20,9 +20,10 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.CoreDataModule;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.cassandra.CassandraDomainList;
+import org.apache.james.domainlist.cassandra.CassandraDomainListDataDefinition;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -40,7 +41,7 @@ public class CassandraDomainListModule extends AbstractModule {
 
         bind(CassandraDomainList.class).in(Scopes.SINGLETON);
         bind(DomainList.class).to(CassandraDomainList.class);
-        Multibinder.newSetBinder(binder(), CassandraModule.class).addBinding().toInstance(org.apache.james.domainlist.cassandra.CassandraDomainListModule.MODULE);
+        Multibinder.newSetBinder(binder(), CassandraDataDefinition.class).addBinding().toInstance(CassandraDomainListDataDefinition.MODULE);
     }
 
     @ProvidesIntoSet

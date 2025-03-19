@@ -35,7 +35,7 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
@@ -46,7 +46,7 @@ import org.apache.james.jmap.api.model.UploadMetaData;
 import org.apache.james.jmap.api.model.UploadNotFoundException;
 import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
 import org.apache.james.jmap.cassandra.upload.UploadDAO;
-import org.apache.james.jmap.cassandra.upload.UploadModule;
+import org.apache.james.jmap.cassandra.upload.UploadDataDefinition;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.server.blob.deduplication.PassThroughBlobStore;
@@ -90,8 +90,8 @@ class JmapUploadRoutesTest {
     private UpdatableTickingClock clock;
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        UploadModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        UploadDataDefinition.MODULE));
 
     @BeforeEach
     void setUp() {

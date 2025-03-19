@@ -32,7 +32,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraEventDeadLettersGroupDAOTest {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraClusterExtension = new CassandraClusterExtension(CassandraEventDeadLettersModule.MODULE);
+    static CassandraClusterExtension cassandraClusterExtension = new CassandraClusterExtension(CassandraEventDeadLettersDataDefinition.MODULE);
 
     private static CassandraEventDeadLettersGroupDAO GROUP_DAO;
 

@@ -28,7 +28,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenDataDefinition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -39,7 +39,7 @@ class CassandraFirstUnseenDAOTest {
     private static final MessageUid UID_2 = MessageUid.of(2);
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraFirstUnseenModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraFirstUnseenDataDefinition.MODULE);
 
     private CassandraFirstUnseenDAO testee;
 

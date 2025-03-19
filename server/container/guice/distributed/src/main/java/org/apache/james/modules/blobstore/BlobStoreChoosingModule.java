@@ -19,8 +19,8 @@
 
 package org.apache.james.modules.blobstore;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -28,7 +28,7 @@ import com.google.inject.multibindings.Multibinder;
 public class BlobStoreChoosingModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraBlobModule.MODULE);
+        Multibinder<CassandraDataDefinition> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraDataDefinition.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraBlobDataDefinition.MODULE);
     }
 }

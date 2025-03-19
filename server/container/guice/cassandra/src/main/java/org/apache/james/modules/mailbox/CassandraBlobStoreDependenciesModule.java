@@ -19,8 +19,8 @@
 
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.cassandra.CassandraDefaultBucketDAO;
@@ -36,7 +36,7 @@ public class CassandraBlobStoreDependenciesModule extends AbstractModule {
         bind(CassandraBlobStoreFactory.class).in(Scopes.SINGLETON);
         bind(CassandraBlobStoreDAO.class).in(Scopes.SINGLETON);
 
-        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraBlobModule.MODULE);
+        Multibinder<CassandraDataDefinition> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraDataDefinition.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraBlobDataDefinition.MODULE);
     }
 }

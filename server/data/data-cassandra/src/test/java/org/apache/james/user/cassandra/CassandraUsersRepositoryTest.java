@@ -36,7 +36,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraUsersRepositoryTest {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraUsersRepositoryModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraUsersRepositoryDataDefinition.MODULE);
 
     @Nested
     class WhenEnableVirtualHosting implements UsersRepositoryContract.WithVirtualHostingContract {

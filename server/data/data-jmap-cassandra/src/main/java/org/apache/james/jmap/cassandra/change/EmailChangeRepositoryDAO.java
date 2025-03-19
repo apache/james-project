@@ -41,7 +41,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
+import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeDataDefinition;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.jmap.api.change.EmailChange;
 import org.apache.james.jmap.api.change.State;
@@ -82,7 +82,7 @@ public class EmailChangeRepositoryDAO {
     public EmailChangeRepositoryDAO(CqlSession session, CassandraTypesProvider cassandraTypesProvider,
                                     CassandraChangesConfiguration cassandraChangesConfiguration) {
         executor = new CassandraAsyncExecutor(session);
-        zonedDateTimeUserType = cassandraTypesProvider.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME);
+        zonedDateTimeUserType = cassandraTypesProvider.getDefinedUserType(CassandraZonedDateTimeDataDefinition.ZONED_DATE_TIME);
 
         insertStatement = session.prepare(insertInto(TABLE_NAME)
             .value(ACCOUNT_ID, bindMarker(ACCOUNT_ID))
@@ -135,7 +135,7 @@ public class EmailChangeRepositoryDAO {
             .set(CREATED, toUuidSet(change.getCreated()), SET_OF_UUIDS_CODEC)
             .set(UPDATED, toUuidSet(change.getUpdated()), SET_OF_UUIDS_CODEC)
             .set(DESTROYED, toUuidSet(change.getDestroyed()), SET_OF_UUIDS_CODEC)
-            .setUdtValue(DATE, CassandraZonedDateTimeModule.toUDT(zonedDateTimeUserType, change.getDate()))
+            .setUdtValue(DATE, CassandraZonedDateTimeDataDefinition.toUDT(zonedDateTimeUserType, change.getDate()))
             .setInt(TTL_FOR_ROW, timeToLive));
     }
 
@@ -176,7 +176,7 @@ public class EmailChangeRepositoryDAO {
         return EmailChange.builder()
             .accountId(accountId)
             .state(State.of(row.getUuid(STATE)))
-            .date(CassandraZonedDateTimeModule.fromUDT(row.getUdtValue(DATE)))
+            .date(CassandraZonedDateTimeDataDefinition.fromUDT(row.getUdtValue(DATE)))
             .isShared(row.getBoolean(IS_DELEGATED))
             .created(toIdSet(row.get(CREATED, SET_OF_UUIDS_CODEC)))
             .updated(toIdSet(row.get(UPDATED, SET_OF_UUIDS_CODEC)))

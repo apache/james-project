@@ -20,11 +20,11 @@
 package org.apache.james.jmap.cassandra.filtering;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
-import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule$;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreDataDefinition$;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.FilteringManagementContract;
@@ -35,9 +35,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraEventSourcingFilteringManagementTest implements FilteringManagementContract {
     @RegisterExtension
-    static CassandraClusterExtension eventStoreExtension = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraEventStoreModule$.MODULE$.MODULE(),
-        CassandraFilteringProjectionModule.MODULE));
+    static CassandraClusterExtension eventStoreExtension = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
+        CassandraEventStoreDataDefinition$.MODULE$.MODULE(),
+        CassandraFilteringProjectionDataDefinition.MODULE));
 
     private EventStore eventStore;
 

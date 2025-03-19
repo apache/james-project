@@ -24,7 +24,7 @@ import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
 import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
-import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreDataDefinition;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -39,7 +39,7 @@ public class CassandraEventSourcingDLPConfigurationStoreExtension implements Bef
     private final CassandraClusterExtension cassandraExtension;
 
     public CassandraEventSourcingDLPConfigurationStoreExtension() {
-        cassandraExtension = new CassandraClusterExtension(CassandraEventStoreModule.MODULE());
+        cassandraExtension = new CassandraClusterExtension(CassandraEventStoreDataDefinition.MODULE());
     }
 
     @Override

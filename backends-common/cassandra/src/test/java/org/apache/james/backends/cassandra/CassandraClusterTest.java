@@ -21,7 +21,7 @@ package org.apache.james.backends.cassandra;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ class CassandraClusterTest {
     }
 
     private CassandraCluster createCluster() {
-        return CassandraCluster.create(CassandraModule.builder().build(), cassandraExtension.getDockerCassandra().getHost());
+        return CassandraCluster.create(CassandraDataDefinition.builder().build(), cassandraExtension.getDockerCassandra().getHost());
     }
 
     @Test
