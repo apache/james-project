@@ -65,7 +65,7 @@ public class RabbitEventBusConsumerHealthCheck implements HealthCheck {
     private Result check(Channel channel) {
         Stream<Group> groups = Stream.concat(
             eventBus.listRegisteredGroups().stream(),
-            Stream.of(new GroupRegistrationHandlerGroup()));
+            Stream.of(GroupRegistrationHandler.GROUP));
 
         Optional<String> queueWithoutConsumers = groups
             .map(namingStrategy::workQueue)
