@@ -39,12 +39,15 @@ public class RabbitEventBusConsumerHealthCheck implements HealthCheck {
     private final EventBus eventBus;
     private final NamingStrategy namingStrategy;
     private final SimpleConnectionPool connectionPool;
+    private final Group groupRegistrationHandlerGroup;
 
     public RabbitEventBusConsumerHealthCheck(EventBus eventBus, NamingStrategy namingStrategy,
-                                             SimpleConnectionPool connectionPool) {
+                                             SimpleConnectionPool connectionPool,
+                                             Group groupRegistrationHandlerGroup) {
         this.eventBus = eventBus;
         this.namingStrategy = namingStrategy;
         this.connectionPool = connectionPool;
+        this.groupRegistrationHandlerGroup = groupRegistrationHandlerGroup;
     }
 
     @Override
@@ -65,7 +68,7 @@ public class RabbitEventBusConsumerHealthCheck implements HealthCheck {
     private Result check(Channel channel) {
         Stream<Group> groups = Stream.concat(
             eventBus.listRegisteredGroups().stream(),
-            Stream.of(GroupRegistrationHandler.GROUP));
+            Stream.of(groupRegistrationHandlerGroup));
 
         Optional<String> queueWithoutConsumers = groups
             .map(namingStrategy::workQueue)

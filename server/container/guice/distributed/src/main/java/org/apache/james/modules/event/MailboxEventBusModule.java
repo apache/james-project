@@ -31,6 +31,7 @@ import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.GroupRegistrationHandler;
 import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.NamingStrategy;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
@@ -71,7 +72,8 @@ public class MailboxEventBusModule extends AbstractModule {
     @ProvidesIntoSet
     HealthCheck healthCheck(RabbitMQEventBus eventBus, NamingStrategy namingStrategy,
                             SimpleConnectionPool connectionPool) {
-        return new RabbitEventBusConsumerHealthCheck(eventBus, namingStrategy, connectionPool);
+        return new RabbitEventBusConsumerHealthCheck(eventBus, namingStrategy, connectionPool,
+            GroupRegistrationHandler.GROUP);
     }
 
     @ProvidesIntoSet
