@@ -60,10 +60,14 @@ import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.Sender;
 import reactor.util.retry.Retry;
 
-class GroupRegistrationHandler {
+public class GroupRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupRegistrationHandler.class);
 
-    static final Group GROUP = new GroupRegistrationHandlerGroup();
+    public static class GroupRegistrationHandlerGroup extends Group {
+
+    }
+
+    public static final Group GROUP = new GroupRegistrationHandlerGroup();
 
     private final NamingStrategy namingStrategy;
     private final Map<Group, GroupRegistration> groupRegistrations;
