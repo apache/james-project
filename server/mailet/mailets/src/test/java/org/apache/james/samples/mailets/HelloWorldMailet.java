@@ -38,13 +38,13 @@ public class HelloWorldMailet implements Mailet {
     }
 
     @Override
-    public String getMailetInfo() {
-        return "Example mailet";
+    public String getName() {
+        return config.getMailetName();
     }
 
     @Override
-    public MailetConfig getMailetConfig() {
-        return config;
+    public String getMailetInfo() {
+        return "Example mailet";
     }
 
     @Override

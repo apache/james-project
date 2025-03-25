@@ -21,6 +21,7 @@ package org.apache.james.mailetcontainer.impl.jmx;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.management.NotCompliantMBeanException;
@@ -37,12 +38,13 @@ public final class MailetManagement extends StandardMBean implements MailetManag
     private final AtomicLong slowestProcessing = new AtomicLong(-1);
     private final AtomicLong lastProcessing = new AtomicLong(-1);
 
-    private final MailetConfig config;
+    private final Optional<MailetConfig> config;
+    private final String mailetName;
 
-    public MailetManagement(MailetConfig config) throws NotCompliantMBeanException {
+    public MailetManagement(Optional<MailetConfig> config, String mailetName) throws NotCompliantMBeanException {
         super(MailetManagementMBean.class);
         this.config = config;
-
+        this.mailetName = mailetName;
     }
 
     public void update(long processTime, boolean success) {
@@ -65,19 +67,22 @@ public final class MailetManagement extends StandardMBean implements MailetManag
 
     @Override
     public String getMailetName() {
-        return config.getMailetName();
+        return mailetName;
     }
 
     @Override
     public String[] getMailetParameters() {
-        List<String> parameterList = new ArrayList<>();
-        Iterator<String> iterator = config.getInitParameterNames();
-        while (iterator.hasNext()) {
-            String name = iterator.next();
-            String value = config.getInitParameter(name);
-            parameterList.add(name + "=" + value);
-        }
-        return parameterList.toArray(String[]::new);
+        return config.map(c -> {
+                    List<String> parameterList = new ArrayList<>();
+                    Iterator<String> iterator = c.getInitParameterNames();
+                    while (iterator.hasNext()) {
+                        String name = iterator.next();
+                        String value = c.getInitParameter(name);
+                        parameterList.add(name + "=" + value);
+                    }
+                    return parameterList.toArray(String[]::new);
+                }
+        ).orElse(new String[0]);
     }
 
     @Override

@@ -25,9 +25,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.management.JMException;
 import javax.management.MBeanServer;
+import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 
 import org.apache.james.core.MailAddress;
@@ -36,7 +38,9 @@ import org.apache.james.mailetcontainer.impl.matchers.CompositeMatcher;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.mailet.Mailet;
+import org.apache.mailet.MailetConfig;
 import org.apache.mailet.Matcher;
+import org.apache.mailet.base.GenericMailet;
 
 /**
  * {@link MailetProcessorListener} implementation which register MBean's for all
@@ -98,13 +102,21 @@ public class JMXStateMailetProcessorListener implements MailetProcessorListener,
         int i = 0;
         while (mailets.hasNext()) {
             Mailet mailet = mailets.next();
-            MailetManagement mailetManagement = new MailetManagement(mailet.getMailetConfig());
+            MailetManagement mailetManagement = new MailetManagement(getOptionalMailetConfig(mailet), mailet.getName());
 
             String mailetMBeanName = parentMBeanName + ",subtype=mailet,index=" + (i++) + ",mailetname=" + mailetManagement.getMailetName();
             registerMBean(mailetMBeanName, mailetManagement);
             mailetMap.put(mailet, mailetManagement);
         }
 
+    }
+
+    private Optional<MailetConfig> getOptionalMailetConfig(Mailet mailet) throws NotCompliantMBeanException {
+        if (mailet instanceof GenericMailet m) {
+            return Optional.ofNullable(m.getMailetConfig());
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**

@@ -319,7 +319,8 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 throw new ConfigurationException("Unable to init matcher " + matcherName, ex);
             }
             try {
-                mailet = mailetLoader.getMailet(createMailetConfig(mailetClassName, c));
+                MailetConfig mailetConfig = createMailetConfig(mailetClassName, c);
+                mailet = mailetLoader.getMailet(mailetConfig);
                 LOGGER.info("Mailet {} instantiated.", mailetClassName);
             } catch (MessagingException ex) {
                 // **** Do better job printing out exception
@@ -331,7 +332,13 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
             }
 
             if (matcher != null && mailet != null) {
-                pairs.add(new MatcherMailetPair(matcher, mailet));
+                var processingErrorConfig = new MailProcessingErrorHandlingConfiguration(
+                        Optional.ofNullable(c.getString("onMailetException")),
+                        Optional.ofNullable(c.getString("onMatchException"))
+                );
+
+
+                pairs.add(new MatcherMailetPair(matcher, mailet, processingErrorConfig));
             } else {
                 throw new ConfigurationException("Unable to load Mailet or Matcher");
             }

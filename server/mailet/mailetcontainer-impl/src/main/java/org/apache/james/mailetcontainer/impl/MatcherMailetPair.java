@@ -18,24 +18,30 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.impl;
 
+import java.util.Optional;
+
+import org.apache.james.mailetcontainer.lib.MailProcessingErrorHandlingConfiguration;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * A pair of {@link Matcher} and {@link Mailet}
  */
-public class MatcherMailetPair {
-    private final Matcher matcher;
-    private final Mailet mailet;
-
+public record MatcherMailetPair(
+        Matcher matcher,
+        Mailet mailet,
+        MailProcessingErrorHandlingConfiguration processingErrorConfig
+) {
+    @VisibleForTesting
     public MatcherMailetPair(Matcher matcher, Mailet mailet) {
-        this.matcher = matcher;
-        this.mailet = mailet;
+        this(matcher, mailet, MailProcessingErrorHandlingConfiguration.empty());
     }
 
     /**
      * Return the {@link Matcher} of this pair
-     * 
+     *
      * @return matcher
      */
     public Matcher getMatcher() {
@@ -44,16 +50,19 @@ public class MatcherMailetPair {
 
     /**
      * Return the {@link Mailet} of this pair
-     * 
+     *
      * @return mailet
      */
     public Mailet getMailet() {
         return mailet;
     }
 
-    public String getOnMatchException() {
-        return mailet.getMailetConfig()
-            .getInitParameter("onMatchException");
+    public Optional<String> onMatchException() {
+        return processingErrorConfig.onMatchException();
+    }
+
+    public Optional<String> onMailetException() {
+        return processingErrorConfig.onMailetException();
     }
 
 }

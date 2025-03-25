@@ -202,7 +202,7 @@ public class MailetProcessorImpl extends AbstractStateMailetProcessor {
             this.pairs = pairs;
             this.pairsToBeProcessed = pairs.stream()
                 .map(pair -> Pair.of(new MatcherSplitter(metricFactory, this, pair),
-                    new ProcessorImpl(metricFactory, this, pair.getMailet())))
+                    new ProcessorImpl(metricFactory, pair.getMailet(), pair.processingErrorConfig(), this.getListeners())))
                 .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
         } catch (Exception e) {
             throw new MessagingException("Unable to setup routing for MailetMatcherPairs", e);

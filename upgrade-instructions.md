@@ -36,6 +36,19 @@ Change list:
  - [JAMES-4052 Details in quota index](#james-4052-details-in-quota-index)
  - [JAMES-1409 Change JPARecipientRewriteTable to store separate record per target address](#james-1409-change-jparecipientrewritetable-to-store-separate-record-per-target-address)
  - [JAMES-4118 Cleanup message previews](#james-4118-cleanup-message-previews)
+ - [JAMES-4128 Breaking Mailet API changes](#james-4128-breaking-mailet-api-changes)
+
+### JAMES-4128 Breaking Mailet API changes
+Date: 02/04/2025
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-4126
+
+The Mailet API has been slightly reworked to improve mailet encapsulation and make implementation easier. 
+    
+- Method getMailetConfig() has been removed
+- Method getName() has been added with a default to the simple class name
+- implementers no longer have to override getMailetInfo, init or destroy
+- implementers of mailets can inject the configuration through the constructor when using guice. Constructor injection of the config is not compatible with spring applications.
 
 ### JAMES-4118 Cleanup message previews
 

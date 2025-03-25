@@ -21,6 +21,8 @@ package org.apache.james.mailetcontainer.impl;
 
 import static org.mockito.Mockito.mock;
 
+import java.util.Collection;
+
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailetcontainer.api.MailProcessor;
@@ -34,22 +36,19 @@ import org.apache.mailet.base.test.FakeMailContext;
 public class MailetProcessorImplTest extends AbstractStateMailetProcessorTest {
 
     @Override
-    protected AbstractStateMailetProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> configuration) throws Exception {
+    protected AbstractStateMailetProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> configuration, Collection<AbstractStateMailetProcessor.MailetProcessorListener> listeners) throws Exception {
         MailetProcessorImpl processor = null;
-        try {
-            processor = new MailetProcessorImpl("anyName", new RecordingMetricFactory());
-            processor.setMailetContext(FakeMailContext.defaultContext());
-            processor.setMailetLoader(new MockMailetLoader());
-            processor.setMatcherLoader(new MockMatcherLoader());
-            processor.setRootMailProcessor(mock(MailProcessor.class));
-            processor.configure(configuration);
-            processor.init();
-            return processor;
-        } finally {
-            if (processor != null) {
-                processor.destroy();
-            }
+        processor = new MailetProcessorImpl("anyName", new RecordingMetricFactory());
+        processor.setMailetContext(FakeMailContext.defaultContext());
+        processor.setMailetLoader(new MockMailetLoader());
+        processor.setMatcherLoader(new MockMatcherLoader());
+        processor.setRootMailProcessor(mock(MailProcessor.class));
+        processor.configure(configuration);
+        for (var listener : listeners) {
+            processor.addListener(listener);
         }
+        processor.init();
+        return processor;
     }
 
 }
