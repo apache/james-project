@@ -639,7 +639,7 @@
         <slf4j.version>2.0.13</slf4j.version>
 
         <circe.version>0.14.9</circe.version>
-        <dnsjava.version>3.5.2</dnsjava.version>
+        <dnsjava.version>3.6.0</dnsjava.version>
         <junit.jupiter.version>5.10.2</junit.jupiter.version>
         <junit.platform.version>1.10.2</junit.platform.version>
         <junit.vintage.version>5.10.2</junit.vintage.version>
