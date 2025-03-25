@@ -45,11 +45,6 @@ public class ConstructorMailet implements Mailet {
     }
 
     @Override
-    public MailetConfig getMailetConfig() {
-        return null;
-    }
-
-    @Override
     public String getMailetInfo() {
         return "info";
     }

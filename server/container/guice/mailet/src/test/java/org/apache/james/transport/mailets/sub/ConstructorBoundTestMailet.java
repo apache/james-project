@@ -40,7 +40,7 @@ public class ConstructorBoundTestMailet implements Mailet {
     }
 
     @Override
-    public MailetConfig getMailetConfig() {
-        return config;
+    public String getName() {
+        return config.getMailetName();
     }
 }

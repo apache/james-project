@@ -60,6 +60,7 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
+import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,11 +84,19 @@ public class MailetContainerModule extends AbstractModule {
     private static final boolean MAILET_CONTAINER_CHECK_ENABLED = Boolean.parseBoolean(System.getProperty("james.mailet.container.check.enabled", "true"));
 
     public static final ProcessorsCheck.Impl BCC_Check = new ProcessorsCheck.Impl(
-        "transport",
-        All.class,
-        RemoveMimeHeader.class,
-        pair -> Arrays.asList(pair.getMailet().getMailetConfig().getInitParameter("name").toLowerCase().split(",")).contains("bcc"),
-        "Should be configured to remove Bcc header");
+            "transport",
+            All.class,
+            RemoveMimeHeader.class,
+            pair -> {
+                if (pair.getMailet() instanceof GenericMailet genericMailet) {
+                    return Arrays
+                            .asList(genericMailet.getMailetConfig().getInitParameter("name").toLowerCase().split(","))
+                            .contains("bcc");
+                } else {
+                    return false;
+                }
+            },
+            "Should be configured to remove Bcc header");
 
     @Override
     protected void configure() {
@@ -128,7 +137,7 @@ public class MailetContainerModule extends AbstractModule {
     private HierarchicalConfiguration<ImmutableNode> getJamesSpoolerConfiguration(ConfigurationProvider configurationProvider) {
         try {
             return configurationProvider.getConfiguration("mailetcontainer")
-                .configurationAt("spooler");
+                    .configurationAt("spooler");
         } catch (Exception e) {
             LOGGER.warn("Could not locate configuration for James Spooler. Assuming empty configuration for this component.");
             return new BaseHierarchicalConfiguration();
@@ -138,8 +147,8 @@ public class MailetContainerModule extends AbstractModule {
     @ProvidesIntoSet
     InitializationOperation initMailetContext(ConfigurationProvider configurationProvider, JamesMailetContext mailetContext) {
         return InitilizationOperationBuilder
-            .forClass(JamesMailetContext.class)
-            .init(() -> mailetContext.configure(getMailetContextConfiguration(configurationProvider)));
+                .forClass(JamesMailetContext.class)
+                .init(() -> mailetContext.configure(getMailetContextConfiguration(configurationProvider)));
     }
 
     @VisibleForTesting
@@ -206,19 +215,19 @@ public class MailetContainerModule extends AbstractModule {
 
         private void checkProcessors() throws ConfigurationException {
             ImmutableListMultimap<String, MatcherMailetPair> processors = Arrays.stream(compositeProcessorImpl.getProcessorStates())
-                .flatMap(state -> {
-                    MailProcessor processor = compositeProcessorImpl.getProcessor(state);
-                    if (processor instanceof MailetProcessorImpl) {
-                        MailetProcessorImpl camelProcessor = (MailetProcessorImpl) processor;
-                        return camelProcessor.getPairs().stream()
-                            .map(pair -> Pair.of(state, pair));
-                    } else {
-                        throw new RuntimeException("Can not perform checks as transport processor is not an instance of " + MailProcessor.class);
-                    }
-                })
-                .collect(ImmutableListMultimap.toImmutableListMultimap(
-                    Pair::getKey,
-                    Pair::getValue));
+                    .flatMap(state -> {
+                        MailProcessor processor = compositeProcessorImpl.getProcessor(state);
+                        if (processor instanceof MailetProcessorImpl) {
+                            MailetProcessorImpl camelProcessor = (MailetProcessorImpl) processor;
+                            return camelProcessor.getPairs().stream()
+                                    .map(pair -> Pair.of(state, pair));
+                        } else {
+                            throw new RuntimeException("Can not perform checks as transport processor is not an instance of " + MailProcessor.class);
+                        }
+                    })
+                    .collect(ImmutableListMultimap.toImmutableListMultimap(
+                            Pair::getKey,
+                            Pair::getValue));
             for (ProcessorsCheck check : processorsCheckSet) {
                 check.check(processors);
             }
@@ -283,7 +292,7 @@ public class MailetContainerModule extends AbstractModule {
                 this(processorName, matcherClass, mailetClass, Optional.empty(), Optional.empty());
             }
 
-            public Impl(String processorName, Class<? extends Matcher> matcherClass, Class<? extends Mailet> mailetClass, Predicate<? super MatcherMailetPair> additionalFilter, String additionalErrorMessage) {
+            public Impl(String processorName, Class<? extends Matcher> matcherClass, Class<? extends GenericMailet> mailetClass, Predicate<? super MatcherMailetPair> additionalFilter, String additionalErrorMessage) {
                 this(processorName, matcherClass, mailetClass, Optional.of(additionalFilter), Optional.of(additionalErrorMessage));
             }
 
@@ -303,12 +312,12 @@ public class MailetContainerModule extends AbstractModule {
                 }
                 Preconditions.checkNotNull(pairs);
                 pairs.stream()
-                    .filter(pair -> pair.getMailet().getClass().equals(mailetClass))
-                    .filter(pair -> pair.getMatcher().getClass().equals(matcherClass))
-                    .filter(additionalFilter.orElse(any -> true))
-                    .findAny()
-                    .orElseThrow(() -> new ConfigurationException("Missing " + mailetClass.getName() + " in mailets configuration (mailetcontainer -> processors -> " + processorName + "). " +
-                        additionalErrorMessage.orElse("")));
+                        .filter(pair -> pair.getMailet().getClass().equals(mailetClass))
+                        .filter(pair -> pair.getMatcher().getClass().equals(matcherClass))
+                        .filter(additionalFilter.orElse(any -> true))
+                        .findAny()
+                        .orElseThrow(() -> new ConfigurationException("Missing " + mailetClass.getName() + " in mailets configuration (mailetcontainer -> processors -> " + processorName + "). " +
+                                additionalErrorMessage.orElse("")));
             }
         }
     }

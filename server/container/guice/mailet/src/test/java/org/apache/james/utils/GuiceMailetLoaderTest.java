@@ -68,7 +68,7 @@ class GuiceMailetLoaderTest {
             .build());
 
         assertThat(mailet).isInstanceOf(ConstructorBoundTestMailet.class);
-        assertThat(mailet.getMailetConfig()).isNotNull();
+        assertThat(mailet.getName()).isEqualTo("sub.ConstructorBoundTestMailet");
     }
 
     @Test

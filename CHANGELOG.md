@@ -10,7 +10,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - Upgrade javax -> jakarta. See releated upgrade instructions.
  - Upgrade Java 11 -> 21. See related upgrade instructions.
  - API change: CassandraModule and all associated Cassandra*Module were renamed to CassandraDataDefinition and Cassandra*DataDefinition respectively.
-
+ - API change : Mailet API has been cleaned up and no longer exposes the mailet config, exposing only the mailet's name instead.
+ - API change : GenericMailet can have its config bound by constructor and this is the preferred way to initialize your mailets. `init` is still called but will eventually be removed in a later release. 
+ 
 ### Removals
 
  - JAMES-3946 WhiteList manager removals (#2299)
@@ -82,7 +84,8 @@ Please use RFC-8621 implementation rather than this outdated draft.
 - JAMES-3824 SMTP Extension for Message Transfer Priorities
 
 ### Improvements
-
+ 
+ - JAMES-4125 rework mailet api
  - JAMES-4123 Renames CassandraModule to CassandraDataDefinition
  - JAMES-4103 Allow customizing MessageParser
  - JAMES-3967 RelayLimit: add error log

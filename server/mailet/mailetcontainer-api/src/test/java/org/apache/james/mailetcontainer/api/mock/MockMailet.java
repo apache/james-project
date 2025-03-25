@@ -31,8 +31,8 @@ public class MockMailet implements Mailet {
     }
 
     @Override
-    public MailetConfig getMailetConfig() {
-        return config;
+    public String getName() {
+        return config.getMailetName();
     }
 
     @Override

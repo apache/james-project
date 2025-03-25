@@ -42,11 +42,6 @@ public class ExcludedFromDocumentationMailet implements Mailet {
     }
 
     @Override
-    public MailetConfig getMailetConfig() {
-        return null;
-    }
-
-    @Override
     public String getMailetInfo() {
         return null;
     }

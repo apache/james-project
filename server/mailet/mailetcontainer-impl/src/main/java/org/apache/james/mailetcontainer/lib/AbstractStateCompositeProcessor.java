@@ -42,7 +42,6 @@ import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.ProcessorImpl;
 import org.apache.james.mailetcontainer.impl.jmx.JMXStateCompositeProcessorListener;
 import org.apache.mailet.Mail;
-import org.apache.mailet.Mailet;
 import org.apache.mailet.ProcessingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,7 +136,7 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
             .stream()
             .filter(MailetProcessorImpl.class::isInstance)
             .map(MailetProcessorImpl.class::cast)
-            .flatMap(processor -> processor.getPairs().stream().map(MatcherMailetPair::getMailet))
+            .flatMap(processor -> processor.getPairs().stream())
             .flatMap(this::requiredProcessorStates)
             .filter(state -> !state.equals(new ProcessingState("propagate"))
                 && !state.equals(new ProcessingState("ignore"))
@@ -151,13 +150,17 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
         }
     }
 
-    private Stream<ProcessingState> requiredProcessorStates(Mailet mailet) {
-        return Stream.concat(mailet.requiredProcessingState().stream(),
-            Stream.of(
-                    Optional.ofNullable(mailet.getMailetConfig().getInitParameter("onMailetException")),
-                    Optional.ofNullable(mailet.getMailetConfig().getInitParameter("onMatchException")))
-                .flatMap(Optional::stream)
-                .map(ProcessingState::new));
+    private Stream<ProcessingState> requiredProcessorStates(MatcherMailetPair matcherMailetPair) {
+        var mailet = matcherMailetPair.getMailet();
+
+        return Stream.concat(
+                mailet.requiredProcessingState().stream(),
+                Stream.of(
+                                matcherMailetPair.onMailetException(),
+                                matcherMailetPair.onMatchException()
+                        ).flatMap(Optional::stream)
+                        .map(ProcessingState::new)
+        );
     }
 
     @PostConstruct

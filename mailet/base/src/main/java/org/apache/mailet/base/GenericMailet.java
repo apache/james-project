@@ -177,7 +177,6 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
      *
      * @return the MailetConfig object that initialized this mailet
      */
-    @Override
     public MailetConfig getMailetConfig() {
         return config;
     }
@@ -204,6 +203,10 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
         return config.getMailetName();
     }
 
+    @Override
+    public String getName() {
+        return getMailetName();
+    }
 
     /**
      * <p>Called by the mailet container to indicate to a mailet that the

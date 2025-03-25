@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 import jakarta.mail.MessagingException;
 
@@ -63,7 +62,7 @@ public class MatcherSplitter {
         this.metricFactory = metricFactory;
         this.container = container;
         this.matcher = pair.getMatcher();
-        this.onMatchException = Optional.ofNullable(pair.getOnMatchException())
+        this.onMatchException = pair.onMatchException()
             .map(s -> s.trim().toLowerCase(Locale.US))
             .orElse(Mail.ERROR);
     }
