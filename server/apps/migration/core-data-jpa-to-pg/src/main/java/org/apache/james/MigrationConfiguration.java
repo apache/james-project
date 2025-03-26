@@ -49,6 +49,7 @@ public record MigrationConfiguration(
         private Builder() {
             rootDirectory = Optional.empty();
             configurationPath = Optional.empty();
+            blobStoreConfiguration = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -119,6 +120,7 @@ public record MigrationConfiguration(
         return MoreObjects.toStringHelper(this)
                 .add("configurationPath", configurationPath)
                 .add("directories", directories)
+                .add("blobStoreConfiguration", blobStoreConfiguration)
                 .toString();
     }
 }
