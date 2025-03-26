@@ -13,7 +13,7 @@
         </appender>
 
         <appender name="LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-                <file>/logs/james.log</file>
+                <file>logs/james.log</file>
                 <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
                     <fileNamePattern>/logs/james.%i.log.tar.gz</fileNamePattern>
                     <minIndex>1</minIndex>
