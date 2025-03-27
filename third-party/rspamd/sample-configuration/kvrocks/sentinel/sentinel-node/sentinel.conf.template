@@ -1,0 +1,9 @@
+port 26379
+loglevel debug
+
+sentinel monitor mymaster kvrocks-master 6379 2
+sentinel auth-pass mymaster secret1
+sentinel down-after-milliseconds mymaster 5000
+sentinel failover-timeout mymaster 10000
+sentinel parallel-syncs mymaster 1
+sentinel resolve-hostnames yes
