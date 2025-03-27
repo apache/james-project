@@ -1,0 +1,119 @@
+version: '3'
+
+services:
+
+  james:
+    depends_on:
+      rspamd:
+          condition: service_healthy
+    image: apache/james:memory-latest
+    container_name: james
+    hostname: james.local
+    command:
+      - --generate-keystore
+    volumes:
+      - ./target/apache-james-rspamd-jar-with-dependencies.jar:/root/extensions-jars/james-server-rspamd.jar
+      - ./sample-configuration/extensions.properties:/root/conf/extensions.properties
+      - ./sample-configuration/mailetcontainer_memory.xml:/root/conf/mailetcontainer.xml
+      - ./sample-configuration/listeners.xml:/root/conf/listeners.xml
+      - ./sample-configuration/rspamd.properties:/root/conf/rspamd.properties
+      - ./sample-configuration/webadmin.properties:/root/conf/webadmin.properties
+      - ./sample-configuration/healthcheck.properties:/root/conf/healthcheck.properties
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8000:8000"
+
+  kvrocks-master:
+    image: apache/kvrocks:2.11.1
+    container_name: kvrocks-master
+    volumes:
+      - ./sample-configuration/kvrocks/sentinel/master-node/kvrocks.conf:/var/lib/kvrocks/kvrocks.conf
+      - kvrocks_master_data:/var/lib/kvrocks
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping", "|", "grep", "PONG" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  kvrocks-replica-1:
+    image: apache/kvrocks:2.11.1
+    container_name: kvrocks-replica-1
+    depends_on:
+      kvrocks-master:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping", "|", "grep", "PONG" ]
+    volumes:
+      - ./sample-configuration/kvrocks/sentinel/replica-node/kvrocks.conf:/var/lib/kvrocks/kvrocks.conf
+      - kvrocks_replica1_data:/var/lib/kvrocks
+
+  kvrocks-replica-2:
+    image: apache/kvrocks:2.11.1
+    container_name: kvrocks-replica-2
+    depends_on:
+      kvrocks-master:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping", "|", "grep", "PONG" ]
+    volumes:
+      - ./sample-configuration/kvrocks/sentinel/replica-node/kvrocks.conf:/var/lib/kvrocks/kvrocks.conf
+      - kvrocks_replica2_data:/var/lib/kvrocks
+
+  sentinel-1:
+    image: redis:7.2.5
+    container_name: sentinel-1
+    depends_on:
+      kvrocks-master:
+        condition: service_healthy
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./sample-configuration/kvrocks/sentinel/sentinel-node/sentinel.conf.template:/usr/local/etc/redis/sentinel.conf.template
+      - ./sample-configuration/kvrocks/sentinel/sentinel-node/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
+
+  sentinel-2:
+    image: redis:7.2.5
+    container_name: sentinel-2
+    depends_on:
+      kvrocks-master:
+        condition: service_healthy
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./sample-configuration/kvrocks/sentinel/sentinel-node/sentinel.conf.template:/usr/local/etc/redis/sentinel.conf.template
+      - ./sample-configuration/kvrocks/sentinel/sentinel-node/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
+
+  sentinel-3:
+    image: redis:7.2.5
+    container_name: sentinel-3
+    depends_on:
+      kvrocks-master:
+        condition: service_healthy
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./sample-configuration/kvrocks/sentinel/sentinel-node/sentinel.conf.template:/usr/local/etc/redis/sentinel.conf.template
+      - ./sample-configuration/kvrocks/sentinel/sentinel-node/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
+
+  rspamd:
+    depends_on:
+      kvrocks-master:
+          condition: service_healthy
+    container_name: rspamd
+    image: rspamd/rspamd:3.9.1
+    environment:
+      - RSPAMD_PASSWORD=admin
+    volumes:
+      - ./sample-configuration/classifier-bayes.conf:/etc/rspamd/local.d/classifier-bayes.conf
+      - ./sample-configuration/rspamd-kvrocks-sentinel.conf:/etc/rspamd/local.d/redis.conf
+      - ./sample-configuration/worker-controller.inc:/etc/rspamd/local.d/worker-controller.inc
+    ports:
+      - 11334:11334
+  
+volumes:
+  kvrocks_master_data:
+  kvrocks_replica1_data:
+  kvrocks_replica2_data:
