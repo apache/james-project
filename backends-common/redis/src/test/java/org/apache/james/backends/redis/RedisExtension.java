@@ -31,7 +31,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 
 public class RedisExtension implements GuiceModuleTestExtension {
-    private static final DockerRedis DOCKER_REDIS_SINGLETON = new DockerRedis();
+    private static final DockerKvrocks DOCKER_REDIS_SINGLETON = new DockerKvrocks();
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
@@ -59,7 +59,7 @@ public class RedisExtension implements GuiceModuleTestExtension {
         };
     }
 
-    public DockerRedis dockerRedis() {
+    public DockerKvrocks dockerRedis() {
         return DOCKER_REDIS_SINGLETON;
     }
 
