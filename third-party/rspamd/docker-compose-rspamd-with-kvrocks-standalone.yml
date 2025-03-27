@@ -1,0 +1,69 @@
+version: '3'
+
+services:
+
+  james:
+    depends_on:
+      rspamd:
+          condition: service_healthy
+    image: apache/james:memory-latest
+    container_name: james
+    hostname: james.local
+    command:
+      - --generate-keystore
+    volumes:
+      - ./target/apache-james-rspamd-jar-with-dependencies.jar:/root/extensions-jars/james-server-rspamd.jar
+      - ./sample-configuration/extensions.properties:/root/conf/extensions.properties
+      - ./sample-configuration/mailetcontainer_memory.xml:/root/conf/mailetcontainer.xml
+      - ./sample-configuration/listeners.xml:/root/conf/listeners.xml
+      - ./sample-configuration/rspamd.properties:/root/conf/rspamd.properties
+      - ./sample-configuration/webadmin.properties:/root/conf/webadmin.properties
+      - ./sample-configuration/healthcheck.properties:/root/conf/healthcheck.properties
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8000:8000"
+
+  kvrocks:
+    image: apache/kvrocks:2.11.1
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping", "|", "grep", "PONG" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - ./sample-configuration/kvrocks/standalone/kvrocks.conf:/var/lib/kvrocks/kvrocks.conf
+      - kvrocks_data:/var/lib/kvrocks
+    networks:
+      default:
+        aliases:
+          - redis
+
+  clamav:
+    image: clamav/clamav:1.3
+
+  rspamd:
+    depends_on:
+      clamav:
+          condition: service_healthy
+      kvrocks:
+          condition: service_started
+    container_name: rspamd
+    image: rspamd/rspamd:3.9.1
+    environment:
+      - RSPAMD_PASSWORD=admin
+    volumes:
+      - ./sample-configuration/antivirus.conf:/etc/rspamd/local.d/antivirus.conf
+      - ./sample-configuration/statistic.conf:/etc/rspamd/local.d/statistic.conf
+      - ./sample-configuration/redis.conf:/etc/rspamd/local.d/redis.conf
+      - ./sample-configuration/worker-controller.inc:/etc/rspamd/local.d/worker-controller.inc
+    ports:
+      - 11334:11334
+  
+volumes:
+  kvrocks_data:
