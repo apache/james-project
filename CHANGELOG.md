@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - Upgrade javax -> jakarta. See releated upgrade instructions.
  - Upgrade Java 11 -> 21. See related upgrade instructions.
  - API change: CassandraModule and all associated Cassandra*Module were renamed to CassandraDataDefinition and Cassandra*DataDefinition respectively.
+ - API change: RedisClientFactory logic was moved to a new RedisConnectionFactory class, handling client creation and returning directly a connection to Redis ready to be used. 
 
 ### Removals
 
