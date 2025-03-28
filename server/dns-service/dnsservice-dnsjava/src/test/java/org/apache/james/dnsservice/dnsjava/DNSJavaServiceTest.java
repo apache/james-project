@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -79,6 +80,7 @@ class DNSJavaServiceTest {
 
         dnsServer.setResolver(null);
         mockedCache = mock(Cache.class);
+        when(mockedCache.getDClass()).thenReturn(DClass.IN);
     }
 
     @AfterEach
