@@ -1,0 +1,113 @@
+version: '3'
+
+services:
+
+  james:
+    depends_on:
+      rspamd:
+          condition: service_healthy
+    image: apache/james:memory-latest
+    container_name: james
+    hostname: james.local
+    command:
+      - --generate-keystore
+    volumes:
+      - ./target/apache-james-rspamd-jar-with-dependencies.jar:/root/extensions-jars/james-server-rspamd.jar
+      - ./sample-configuration/extensions.properties:/root/conf/extensions.properties
+      - ./sample-configuration/mailetcontainer_memory.xml:/root/conf/mailetcontainer.xml
+      - ./sample-configuration/listeners.xml:/root/conf/listeners.xml
+      - ./sample-configuration/rspamd.properties:/root/conf/rspamd.properties
+      - ./sample-configuration/webadmin.properties:/root/conf/webadmin.properties
+      - ./sample-configuration/healthcheck.properties:/root/conf/healthcheck.properties
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8000:8000"
+
+  redis-master:
+    image: redis:7.2.5
+    container_name: redis-master
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./sample-configuration/redis/master/redis.conf.template:/usr/local/etc/redis/redis.conf.template
+      - ./sample-configuration/redis/master/docker-entrypoint-master.sh:/usr/local/etc/redis/docker-entrypoint.sh
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping", "|", "grep", "PONG"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  redis-replica-1:
+    image: redis:7.2.5
+    container_name: redis-replica-1
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./sample-configuration/redis/replica/redis.conf.template:/usr/local/etc/redis/redis.conf.template
+      - ./sample-configuration/redis/replica/docker-entrypoint-replica.sh:/usr/local/etc/redis/docker-entrypoint.sh
+
+  redis-replica-2:
+    image: redis:7.2.5
+    container_name: redis-replica-2
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./sample-configuration/redis/replica/redis.conf.template:/usr/local/etc/redis/redis.conf.template
+      - ./sample-configuration/redis/replica/docker-entrypoint-replica.sh:/usr/local/etc/redis/docker-entrypoint.sh
+
+  sentinel-1:
+    image: redis:7.2.5
+    container_name: sentinel-1
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./sample-configuration/redis/sentinel/sentinel.conf.template:/usr/local/etc/redis/sentinel.conf.template
+      - ./sample-configuration/redis/sentinel/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
+
+  sentinel-2:
+    image: redis:7.2.5
+    container_name: sentinel-2
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./sample-configuration/redis/sentinel/sentinel.conf.template:/usr/local/etc/redis/sentinel.conf.template
+      - ./sample-configuration/redis/sentinel/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
+
+  sentinel-3:
+    image: redis:7.2.5
+    container_name: sentinel-3
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    command: sh /usr/local/etc/redis/docker-entrypoint.sh
+    volumes:
+      - ./sample-configuration/redis/sentinel/sentinel.conf.template:/usr/local/etc/redis/sentinel.conf.template
+      - ./sample-configuration/redis/sentinel/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
+
+  rspamd:
+    depends_on:
+      redis-master:
+          condition: service_healthy
+    container_name: rspamd
+    image: rspamd/rspamd:3.9.1
+    environment:
+      - RSPAMD_PASSWORD=admin
+    volumes:
+      - ./sample-configuration/classifier-bayes.conf:/etc/rspamd/local.d/classifier-bayes.conf
+      - ./sample-configuration/rspamd-redis-sentinel.conf:/etc/rspamd/local.d/redis.conf
+      - ./sample-configuration/worker-controller.inc:/etc/rspamd/local.d/worker-controller.inc
+    ports:
+      - 11334:11334
