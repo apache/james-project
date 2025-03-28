@@ -1,0 +1,5 @@
+loglevel debug
+appendonly yes
+replicaof redis-master 6379
+masterauth secret1
+requirepass secret1
