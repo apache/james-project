@@ -35,7 +35,8 @@ class RedisClusterHealthCheckTest {
 
   @BeforeEach
   def setup(redis: RedisClusterContainer): Unit = {
-    redisHealthCheck = new RedisHealthCheck(redis.getRedisConfiguration, new RedisClientFactory(FileSystemImpl.forTesting()), new RedisConnectionFactory)
+    val redisConfiguration = redis.getRedisConfiguration
+    redisHealthCheck = new RedisHealthCheck(redisConfiguration, new RedisConnectionFactory(FileSystemImpl.forTesting(), redisConfiguration))
   }
 
   @AfterEach

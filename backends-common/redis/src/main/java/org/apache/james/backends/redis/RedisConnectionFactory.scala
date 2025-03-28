@@ -19,42 +19,130 @@
 
 package org.apache.james.backends.redis
 
-import io.lettuce.core.RedisClient
-import io.lettuce.core.api.reactive.RedisReactiveCommands
-import io.lettuce.core.cluster.RedisClusterClient
+import java.time.Duration
+
+import io.lettuce.core.api.reactive.{RedisReactiveCommands, RedisSetReactiveCommands}
 import io.lettuce.core.cluster.api.reactive.RedisAdvancedClusterReactiveCommands
+import io.lettuce.core.cluster.{ClusterClientOptions, RedisClusterClient}
 import io.lettuce.core.codec.StringCodec
 import io.lettuce.core.masterreplica.MasterReplica
-import jakarta.inject.Singleton
+import io.lettuce.core.resource.ClientResources
+import io.lettuce.core.{AbstractRedisClient, ClientOptions, RedisClient, SslOptions}
+import jakarta.annotation.PreDestroy
+import jakarta.inject.{Inject, Singleton}
+import org.apache.james.filesystem.api.FileSystem
+import org.apache.james.util.concurrent.NamedThreadFactory
+import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 
-class RedisConnectionFactory @Singleton() {
-  def getConnection(redisConfiguration: RedisConfiguration, redisClient: RedisClient): RedisReactiveCommands[String, String] =
+class RedisConnectionFactory @Singleton() @Inject()
+(fileSystem: FileSystem, redisConfiguration: RedisConfiguration) {
+  val rawRedisClient: AbstractRedisClient = redisConfiguration match {
+    case standaloneConfiguration: StandaloneRedisConfiguration => createStandaloneClient(standaloneConfiguration)
+    case masterReplicaRedisConfiguration: MasterReplicaRedisConfiguration => createMasterReplicaClient(masterReplicaRedisConfiguration)
+    case clusterRedisConfiguration: ClusterRedisConfiguration => createClusterClient(clusterRedisConfiguration)
+    case sentinelRedisConfiguration: SentinelRedisConfiguration => createSentinelClient(sentinelRedisConfiguration)
+  }
+
+  def createStandaloneClient(standaloneRedisConfiguration: StandaloneRedisConfiguration): RedisClient =
+    createStandaloneClient(standaloneRedisConfiguration, Option.empty)
+
+  def createStandaloneClient(standaloneRedisConfiguration: StandaloneRedisConfiguration, timeout: Duration): RedisClient =
+    createStandaloneClient(standaloneRedisConfiguration, Option.apply(timeout))
+
+  def createStandaloneClient(standaloneRedisConfiguration: StandaloneRedisConfiguration, maybeTimeout: Option[Duration]): RedisClient = {
+    maybeTimeout.foreach(timeout => standaloneRedisConfiguration.redisURI.setTimeout(timeout))
+    val redisClient = RedisClient.create(standaloneRedisConfiguration.redisURI)
+    redisClient.setOptions(createClientOptions(standaloneRedisConfiguration.useSSL, standaloneRedisConfiguration.mayBeSSLConfiguration))
+    redisClient
+  }
+
+  def createClusterClient(clusterRedisConfiguration: ClusterRedisConfiguration): RedisClusterClient =
+    createClusterClient(clusterRedisConfiguration, Option.empty)
+
+  def createClusterClient(clusterRedisConfiguration: ClusterRedisConfiguration, timeout: Duration): RedisClusterClient =
+    createClusterClient(clusterRedisConfiguration, Option.apply(timeout))
+
+  def createClusterClient(clusterRedisConfiguration: ClusterRedisConfiguration, maybeTimeout: Option[Duration]): RedisClusterClient = {
+    val resourceBuilder: ClientResources.Builder = ClientResources.builder()
+      .threadFactoryProvider(poolName => NamedThreadFactory.withName(s"redis-driver-$poolName"))
+    redisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
+    redisConfiguration.workerThreads.foreach(value => resourceBuilder.computationThreadPoolSize(value))
+    val redisClient = RedisClusterClient.create(resourceBuilder.build(),
+      clusterRedisConfiguration.redisURI.value
+        .map(rURI => {
+          maybeTimeout.foreach(timeout => rURI.setTimeout(timeout))
+          rURI
+        }).asJava)
+    redisClient.setOptions(ClusterClientOptions.builder(
+        createClientOptions(clusterRedisConfiguration.useSSL, clusterRedisConfiguration.mayBeSSLConfiguration))
+      .build())
+    redisClient
+  }
+
+  def createMasterReplicaClient(masterReplicaRedisConfiguration: MasterReplicaRedisConfiguration): RedisClient = {
+    val redisClient = RedisClient.create
+    redisClient.setOptions(createClientOptions(masterReplicaRedisConfiguration.useSSL, masterReplicaRedisConfiguration.mayBeSSLConfiguration))
+    redisClient
+  }
+
+  def createSentinelClient(sentinelRedisConfiguration: SentinelRedisConfiguration): RedisClient = {
+    val redisClient = RedisClient.create
+    redisClient.setOptions(createClientOptions(sentinelRedisConfiguration.useSSL, sentinelRedisConfiguration.mayBeSSLConfiguration))
+    redisClient
+  }
+
+  def getConnection(): RedisSetReactiveCommands[String, String] =
     redisConfiguration match {
-      case redisMasterReplicaConfiguration: MasterReplicaRedisConfiguration => getMasterReplicaConnection(redisMasterReplicaConfiguration, redisClient)
-      case _: StandaloneRedisConfiguration => getStandaloneConnection(redisClient)
-      case redisSentinelConfiguration: SentinelRedisConfiguration => getSentinelConnection(redisSentinelConfiguration, redisClient)
+      case _: ClusterRedisConfiguration => getClusterConnection()
+      case redisMasterReplicaConfiguration: MasterReplicaRedisConfiguration => getMasterReplicaConnection(redisMasterReplicaConfiguration)
+      case _: StandaloneRedisConfiguration => getStandaloneConnection()
+      case redisSentinelConfiguration: SentinelRedisConfiguration => getSentinelConnection(redisSentinelConfiguration)
       case _ => throw new NotImplementedError()
     }
 
-  def getClusterConnection(redisClusterClient: RedisClusterClient): RedisAdvancedClusterReactiveCommands[String, String] = {
+  private def getClusterConnection(): RedisAdvancedClusterReactiveCommands[String, String] = {
+    val redisClusterClient = rawRedisClient.asInstanceOf[RedisClusterClient]
     redisClusterClient.getPartitions
     redisClusterClient.connect().reactive()
   }
 
-  private def getMasterReplicaConnection(redisConfiguration: MasterReplicaRedisConfiguration, redisClient: RedisClient): RedisReactiveCommands[String, String] =
-    MasterReplica.connect(redisClient,
+  private def getMasterReplicaConnection(masterReplicaRedisConfiguration: MasterReplicaRedisConfiguration): RedisReactiveCommands[String, String] =
+    MasterReplica.connect(rawRedisClient.asInstanceOf[RedisClient],
         StringCodec.UTF8,
-        redisConfiguration.redisURI.value.asJava)
+        masterReplicaRedisConfiguration.redisURI.value.asJava)
       .reactive()
 
-  private def getStandaloneConnection(redisClient: RedisClient): RedisReactiveCommands[String, String] =
-    redisClient.connect().reactive()
+  private def getStandaloneConnection(): RedisReactiveCommands[String, String] =
+    rawRedisClient.asInstanceOf[RedisClient].connect().reactive()
 
-  private def getSentinelConnection(redisConfiguration: SentinelRedisConfiguration, redisClient: RedisClient): RedisReactiveCommands[String, String] =
-    MasterReplica.connect(redisClient,
+  private def getSentinelConnection(sentinelRedisConfiguration: SentinelRedisConfiguration): RedisReactiveCommands[String, String] =
+    MasterReplica.connect(rawRedisClient.asInstanceOf[RedisClient],
         StringCodec.UTF8,
-        redisConfiguration.redisURI)
+        sentinelRedisConfiguration.redisURI)
       .reactive()
+
+  private def createClientOptions(useSSL: Boolean, mayBeSSLConfiguration: Option[SSLConfiguration]): ClientOptions = {
+    val clientOptionsBuilder = ClientOptions.builder
+    if (useSSL) {
+      mayBeSSLConfiguration.foreach(sslConfig => {
+        if (!sslConfig.ignoreCertificateCheck) {
+          sslConfig.maybeKeyStore.foreach(redisKeyStore => {
+            val sslOptions = SslOptions.builder.jdkSslProvider.keystore(fileSystem.getFile(redisKeyStore.keyStoreFilePath), redisKeyStore.keyStorePassword.toCharArray).build
+            clientOptionsBuilder.sslOptions(sslOptions)
+          })
+        }
+      })
+    }
+    clientOptionsBuilder.build()
+  }
+
+  @PreDestroy
+  def close(): Unit = {
+    Mono.fromCompletionStage(rawRedisClient.shutdownAsync())
+      .subscribeOn(Schedulers.boundedElastic())
+      .subscribe()
+  }
 }

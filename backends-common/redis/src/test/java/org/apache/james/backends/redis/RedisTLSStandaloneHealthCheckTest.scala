@@ -31,7 +31,8 @@ class RedisTLSStandaloneHealthCheckTest extends RedisHealthCheckTest {
 
   @BeforeEach
   def setup(redisContainer: RedisContainer): Unit = {
-    redisHealthCheck = new RedisHealthCheck(redisContainer.getConfiguration, new RedisClientFactory(FileSystemImpl.forTesting()), new RedisConnectionFactory)
+    val redisConfiguration = redisContainer.getConfiguration
+    redisHealthCheck = new RedisHealthCheck(redisConfiguration, new RedisConnectionFactory(FileSystemImpl.forTesting(), redisConfiguration))
     this.redisContainer = redisContainer;
   }
 
