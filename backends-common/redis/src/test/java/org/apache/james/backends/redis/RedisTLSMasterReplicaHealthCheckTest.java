@@ -34,7 +34,7 @@ class RedisTLSMasterReplicaHealthCheckTest extends RedisHealthCheckTest {
 
     @BeforeEach
     void setup() {
-        redisHealthCheck = new RedisHealthCheck(redisMasterReplicaExtension.getRedisMasterReplicaContainer().getRedisConfiguration(), new RedisClientFactory(FileSystemImpl.forTesting()));
+        redisHealthCheck = new RedisHealthCheck(redisMasterReplicaExtension.getRedisMasterReplicaContainer().getRedisConfiguration(), new RedisClientFactory(FileSystemImpl.forTesting()), new RedisConnectionFactory());
         redisMasterReplicaContainer = redisMasterReplicaExtension.getRedisMasterReplicaContainer();
     }
 

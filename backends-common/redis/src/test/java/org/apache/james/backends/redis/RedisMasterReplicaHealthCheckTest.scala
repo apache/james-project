@@ -31,7 +31,7 @@ class RedisMasterReplicaHealthCheckTest extends RedisHealthCheckTest {
 
   @BeforeEach
   def setup(redis: RedisMasterReplicaContainer): Unit = {
-    redisHealthCheck = new RedisHealthCheck(redis.getRedisConfiguration, new RedisClientFactory(FileSystemImpl.forTesting()))
+    redisHealthCheck = new RedisHealthCheck(redis.getRedisConfiguration, new RedisClientFactory(FileSystemImpl.forTesting()), new RedisConnectionFactory)
     redisMasterReplicaContainer = redis
   }
 
