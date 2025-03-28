@@ -1,0 +1,4 @@
+loglevel debug
+appendonly yes
+requirepass secret1
+masterauth secret1
