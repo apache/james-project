@@ -243,3 +243,16 @@ Note that you can turn off `reportAdded` (which reports incoming messages as Ham
     </listener>
 </listeners>
 ```
+
+## Apache Kvrocks as Rspamd storage
+The Rspamd extension can use Apache Kvrocks as storage. Apache Kvrocks is a more suitable option for Rspamd storage compared to Redis for several reasons:
+- Kvrocks stores data on disk, which is beneficial when dealing with large datasets that may not fit entirely in memory. This ensures that you can handle more extensive spam training data without running into Redis memory limitations.
+- Kvrocks is Redis APIs compatible.
+
+We document accordingly the docker compose setup:
+- [Apache James + Rspamd + Apache Kvrocks standalone](docker-compose-rspamd-with-kvrocks-standalone.yml)
+- [Apache James + Rspamd + Apache Kvrocks Sentinel](docker-compose-rspamd-with-kvrocks-sentinel.yml)
+  
+  Please note that to make Rspamd work well with Kvrocks Sentinel:
+  - Configure `slave-read-only no` in `kvrocks.conf` file (allow Rspamd to execute read-only Lua script to get its Bayes statistics against the Kvrocks replicas, which Kvrocks is strict about by default). 
+  - Use Rspamd `3.10` or later.
