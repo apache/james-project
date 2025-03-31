@@ -31,7 +31,7 @@ class RedisSentinelHealthCheckTest extends RedisHealthCheckTest {
 
   @BeforeEach
   def setup(redis: RedisSentinelCluster): Unit = {
-    redisHealthCheck = new RedisHealthCheck(redis.redisSentinelContainerList.getRedisConfiguration, new RedisClientFactory(FileSystemImpl.forTesting()))
+    redisHealthCheck = new RedisHealthCheck(new RedisClientFactory(FileSystemImpl.forTesting(), redis.redisSentinelContainerList.getRedisConfiguration), redis.redisSentinelContainerList.getRedisConfiguration)
     redisSentinelCluster = redis
   }
 

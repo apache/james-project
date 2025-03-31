@@ -34,7 +34,8 @@ class RedisTLSSentinelHealthCheckTest extends RedisHealthCheckTest {
 
     @BeforeEach
     public void setup() {
-        redisHealthCheck = new RedisHealthCheck(redisSentinelExtension.getRedisSentinelCluster().redisSentinelContainerList().getRedisConfiguration(), new RedisClientFactory(FileSystemImpl.forTesting()));
+        SentinelRedisConfiguration redisConfiguration = redisSentinelExtension.getRedisSentinelCluster().redisSentinelContainerList().getRedisConfiguration();
+        redisHealthCheck = new RedisHealthCheck(new RedisClientFactory(FileSystemImpl.forTesting(), redisConfiguration), redisConfiguration);
         redisSentinelCluster = redisSentinelExtension.getRedisSentinelCluster();
     }
 

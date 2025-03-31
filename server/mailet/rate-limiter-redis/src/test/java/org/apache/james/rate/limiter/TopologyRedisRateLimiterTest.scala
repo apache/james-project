@@ -41,7 +41,7 @@ trait TopologyRedisRateLimiterTest {
 
   @Test
   def rateLimitShouldWorkNormally(): Unit = {
-    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(getRedisConfiguration(), new RedisClientFactory(FileSystemImpl.forTesting()))
+    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(getRedisConfiguration(), new RedisClientFactory(FileSystemImpl.forTesting(), getRedisConfiguration()))
     val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
     val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key1"), 4)).block()
     assertThat(actual).isEqualTo(AcceptableRate)
