@@ -176,7 +176,7 @@ public class KvrocksSentinelExtension implements GuiceModuleTestExtension {
         kvrocksMasterReplicaContainerList.forEach(Throwing.consumer(container -> container.execInContainer("redis-cli", "flushall")));
     }
 
-    public KvrocksSentinel getRedisSentinelCluster() {
+    public KvrocksSentinel getKvrocksSentinelCluster() {
         return kvrocksSentinel;
     }
 
