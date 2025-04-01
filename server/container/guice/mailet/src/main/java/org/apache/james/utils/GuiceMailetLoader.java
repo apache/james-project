@@ -56,9 +56,8 @@ public class GuiceMailetLoader implements MailetLoader {
             Class<Mailet> mailetClass = mailetLoader.locateClass(className);
             MailetConfig mailetConfig = resolveConfiguration(mailetClass, config);
             Mailet result = mailetLoader.withChildModule(
-                            binder -> binder.bind(MailetConfig.class).toInstance(mailetConfig)
-                    )
-                    .instantiate(className);
+                    binder -> binder.bind(MailetConfig.class).toInstance(mailetConfig)
+            ).instantiate(className);
             result.init(resolveConfiguration(result, config));
             return result;
         } catch (Exception e) {
