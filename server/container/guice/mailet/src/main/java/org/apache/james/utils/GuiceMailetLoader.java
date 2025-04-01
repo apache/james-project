@@ -45,7 +45,8 @@ public class GuiceMailetLoader implements MailetLoader {
         this.configurationOverrides = mailetConfigurationOverrides.stream()
                 .collect(ImmutableMap.toImmutableMap(
                         MailetConfigurationOverride::getClazz,
-                        MailetConfigurationOverride::getNewConfiguration));
+                        MailetConfigurationOverride::getNewConfiguration
+                ));
     }
 
     @Override
