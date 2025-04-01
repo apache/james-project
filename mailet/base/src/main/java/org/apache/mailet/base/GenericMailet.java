@@ -66,6 +66,13 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
 
     private MailetConfig config = null;
 
+    public GenericMailet(MailetConfig config) {
+        this.config = config;
+    }
+
+    public GenericMailet() {
+    }
+
     /**
      * Called by the mailer container to indicate to a mailet that the
      * mailet is being taken out of service.
