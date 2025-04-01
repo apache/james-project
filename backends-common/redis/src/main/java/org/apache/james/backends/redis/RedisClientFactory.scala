@@ -24,15 +24,18 @@ import java.time.Duration
 import io.lettuce.core.cluster.{ClusterClientOptions, RedisClusterClient}
 import io.lettuce.core.resource.ClientResources
 import io.lettuce.core.{AbstractRedisClient, ClientOptions, RedisClient, SslOptions}
+import jakarta.annotation.PreDestroy
 import jakarta.inject.{Inject, Singleton}
 import org.apache.james.filesystem.api.FileSystem
 import org.apache.james.util.concurrent.NamedThreadFactory
+import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 
 class RedisClientFactory @Singleton() @Inject()
 (fileSystem: FileSystem, redisConfiguration: RedisConfiguration) {
-  def createRawRedisClient(): AbstractRedisClient = redisConfiguration match {
+  val rawRedisClient: AbstractRedisClient = redisConfiguration match {
     case standaloneRedisConfiguration: StandaloneRedisConfiguration => createStandaloneClient(standaloneRedisConfiguration)
     case masterReplicaRedisConfiguration: MasterReplicaRedisConfiguration => createMasterReplicaClient(masterReplicaRedisConfiguration)
     case clusterRedisConfiguration: ClusterRedisConfiguration => createClusterClient(clusterRedisConfiguration)
@@ -88,5 +91,12 @@ class RedisClientFactory @Singleton() @Inject()
       })
     }
     clientOptionsBuilder.build()
+  }
+
+  @PreDestroy
+  def close(): Unit = {
+    Mono.fromCompletionStage(rawRedisClient.shutdownAsync())
+      .subscribeOn(Schedulers.boundedElastic())
+      .subscribe()
   }
 }

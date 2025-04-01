@@ -51,7 +51,7 @@ class RedisRateLimiterModule() extends AbstractModule {
 }
 
 class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisConfiguration, redisClientFactory: RedisClientFactory) extends RateLimiterFactory {
-  private val rawRedisClient: AbstractRedisClient = redisClientFactory.createRawRedisClient()
+  private val rawRedisClient: AbstractRedisClient = redisClientFactory.rawRedisClient
   private val rateLimitjFactory: AbstractRequestRateLimiterFactory[RedisSlidingWindowRequestRateLimiter] = redisConfiguration match {
     case _: StandaloneRedisConfiguration => new RedisSingleInstanceRateLimitjFactory(rawRedisClient.asInstanceOf[RedisClient])
 

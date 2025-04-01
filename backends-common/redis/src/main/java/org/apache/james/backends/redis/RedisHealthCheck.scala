@@ -26,14 +26,11 @@ import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.codec.StringCodec
 import io.lettuce.core.masterreplica.MasterReplica
 import io.lettuce.core.{AbstractRedisClient, RedisClient}
-import jakarta.annotation.PreDestroy
 import jakarta.inject.Inject
 import org.apache.james.backends.redis.RedisHealthCheck.{healthCheckKey, healthCheckValue, healthcheckTimeout, redisComponent}
 import org.apache.james.core.healthcheck.{ComponentName, HealthCheck, Result}
 import org.reactivestreams.Publisher
-import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.DurationConverters._
@@ -47,7 +44,7 @@ object RedisHealthCheck {
 
 class RedisHealthCheck @Inject()(redisClientFactory: RedisClientFactory, redisConfiguration: RedisConfiguration) extends HealthCheck {
 
-  private val rawRedisClient: AbstractRedisClient = redisClientFactory.createRawRedisClient()
+  private val rawRedisClient: AbstractRedisClient = redisClientFactory.rawRedisClient
   private val redisCommand: RedisStringReactiveCommands[String, String] = redisConfiguration match {
     case _: StandaloneRedisConfiguration => rawRedisClient.asInstanceOf[RedisClient].connect().reactive()
     case _: ClusterRedisConfiguration => rawRedisClient.asInstanceOf[RedisClusterClient].connect().reactive()
@@ -70,11 +67,4 @@ class RedisHealthCheck @Inject()(redisClientFactory: RedisClientFactory, redisCo
       .map(_ => Result.healthy(redisComponent))
       .switchIfEmpty(SMono.just(Result.degraded(redisComponent, "Can not write to Redis.")))
       .onErrorResume(_ => SMono.just(Result.degraded(redisComponent, "Can not connect to Redis.")))
-
-  @PreDestroy
-  def close(): Unit = {
-    Mono.fromCompletionStage(rawRedisClient.shutdownAsync())
-      .subscribeOn(Schedulers.boundedElastic())
-      .subscribe()
-  }
 }
