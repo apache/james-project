@@ -74,15 +74,6 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
     }
 
     /**
-     * Called by the mailer container to indicate to a mailet that the
-     * mailet is being taken out of service.
-     */
-    @Override
-    public void destroy() {
-        //Do nothing
-    }
-
-    /**
      * <p>Gets a boolean valued init parameter.</p>
      * <p>A convenience method. The result is parsed
      * from the value of the named parameter in the {@link MailetConfig}.</p>
@@ -200,18 +191,6 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
     @Override
     public MailetContext getMailetContext() {
         return getMailetConfig().getMailetContext();
-    }
-
-    /**
-     * Returns information about the mailet, such as author, version, and
-     * copyright.  By default, this method returns an empty string. Override
-     * this method to have it return a meaningful value.
-     *
-     * @return information about this mailet, by default an empty string
-     */
-    @Override
-    public String getMailetInfo() {
-        return "";
     }
 
     /**

@@ -35,25 +35,12 @@ public class ConstructorBoundTestMailet implements Mailet {
     }
 
     @Override
-    public void init(MailetConfig config) throws MessagingException {
-    }
-
-    @Override
     public void service(Mail mail) throws MessagingException {
 
     }
 
     @Override
-    public void destroy() {
-    }
-
-    @Override
     public MailetConfig getMailetConfig() {
         return config;
-    }
-
-    @Override
-    public String getMailetInfo() {
-        return "";
     }
 }

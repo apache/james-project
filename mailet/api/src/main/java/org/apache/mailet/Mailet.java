@@ -80,7 +80,8 @@ public interface Mailet {
      *          and initialization parameters
      * @throws MessagingException if an error occurs
      */
-    void init(MailetConfig config) throws MessagingException;
+    default void init(MailetConfig config) throws MessagingException {
+    }
 
     /**
      * Services a mail message.
@@ -109,7 +110,8 @@ public interface Mailet {
      * are being held (such as memory, file handles or threads) and make sure
      * that any persistent information is properly stored.
      */
-    void destroy();
+    default void destroy() {
+    }
 
     /**
      * Returns a MailetConfig object, which provides initialization parameters
@@ -127,14 +129,19 @@ public interface Mailet {
     /**
      * Returns information about the mailet, such as author, version and
      * copyright.
+     * <p>
+     * By default, this method returns an empty string. Override this method
+     * to have it return a meaningful value.
      *
      * @return the Mailet information (as a plain text string)
      */
-    String getMailetInfo();
+    default String getMailetInfo() {
+        return "";
+    }
 
     /**
      * @return the list of processors that needs to be present according to this mailet configuration.
-     *
+     * <p>
      * Needs to be called after {@link Mailet::init()}
      */
     default Collection<ProcessingState> requiredProcessingState() {
