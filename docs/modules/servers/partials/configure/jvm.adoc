@@ -124,6 +124,17 @@ Ex in `jvm.properties`:
 james.jmap.email.set.range.threshold=3
 ----
 
+== JMAP MDC: configure value for original IP header
+
+Configure the header to get the original JMAP client's IP address. This is useful when James is behind a reverse proxy.
+
+Defaults to the `x-forwarded-for` header.
+
+Ex in `jvm.properties`:
+----
+james.jmap.mdc.original.ip.header=x-real-ip
+----
+
 == Enable S3 metrics
 
 James supports extracting some S3 client-level metrics e.g. number of connections being used, time to acquire an S3 connection, total time to finish a S3 request...
