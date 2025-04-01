@@ -25,6 +25,8 @@ import com.google.common.collect.ImmutableList
 import com.google.inject.{AbstractModule, Provides, Scopes}
 import es.moki.ratelimitj.core.limiter.request.{AbstractRequestRateLimiterFactory, ReactiveRequestRateLimiter, RequestLimitRule}
 import es.moki.ratelimitj.redis.request.{RedisClusterRateLimiterFactory, RedisSlidingWindowRequestRateLimiter, RedisRateLimiterFactory => RedisSingleInstanceRateLimitjFactory}
+import io.lettuce.core.cluster.RedisClusterClient
+import io.lettuce.core.{AbstractRedisClient, RedisClient}
 import jakarta.inject.Inject
 import org.apache.james.backends.redis.{ClusterRedisConfiguration, MasterReplicaRedisConfiguration, RedisClientFactory, RedisConfiguration, SentinelRedisConfiguration, StandaloneRedisConfiguration}
 import org.apache.james.rate.limiter.api.Increment.Increment
@@ -49,22 +51,22 @@ class RedisRateLimiterModule() extends AbstractModule {
 }
 
 class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisConfiguration, redisClientFactory: RedisClientFactory) extends RateLimiterFactory {
-  val rateLimitjFactory: AbstractRequestRateLimiterFactory[RedisSlidingWindowRequestRateLimiter] = redisConfiguration match {
-    case standaloneConfiguration: StandaloneRedisConfiguration => new RedisSingleInstanceRateLimitjFactory(redisClientFactory.createStandaloneClient(standaloneConfiguration))
+  private val rawRedisClient: AbstractRedisClient = redisClientFactory.createRawRedisClient()
+  private val rateLimitjFactory: AbstractRequestRateLimiterFactory[RedisSlidingWindowRequestRateLimiter] = redisConfiguration match {
+    case _: StandaloneRedisConfiguration => new RedisSingleInstanceRateLimitjFactory(rawRedisClient.asInstanceOf[RedisClient])
 
-    case clusterRedisConfiguration: ClusterRedisConfiguration =>
-      new RedisClusterRateLimiterFactory(redisClientFactory.createClusterClient(clusterRedisConfiguration))
+    case _: ClusterRedisConfiguration =>
+      new RedisClusterRateLimiterFactory(rawRedisClient.asInstanceOf[RedisClusterClient])
 
     case masterReplicaRedisConfiguration: MasterReplicaRedisConfiguration => new RedisMasterReplicaRateLimiterFactory(
-      redisClientFactory.createMasterReplicaClient(masterReplicaRedisConfiguration),
+      rawRedisClient.asInstanceOf[RedisClient],
       masterReplicaRedisConfiguration.redisURI.value.asJava,
       masterReplicaRedisConfiguration.readFrom)
 
-    case sentinelRedisConfiguration: SentinelRedisConfiguration =>
-      new RedisMasterReplicaRateLimiterFactory(redisClientFactory.createSentinelClient(sentinelRedisConfiguration),
-        ImmutableList.of(sentinelRedisConfiguration.redisURI),
-        sentinelRedisConfiguration.readFrom
-      )
+    case sentinelRedisConfiguration: SentinelRedisConfiguration => new RedisMasterReplicaRateLimiterFactory(
+      rawRedisClient.asInstanceOf[RedisClient],
+      ImmutableList.of(sentinelRedisConfiguration.redisURI),
+      sentinelRedisConfiguration.readFrom)
 
     case _ => throw new NotImplementedError()
   }
