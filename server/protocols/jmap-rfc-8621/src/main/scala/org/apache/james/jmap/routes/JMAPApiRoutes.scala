@@ -35,6 +35,7 @@ import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
+import org.apache.james.jmap.routes.JMAPApiRoutes.ORIGINAL_IP_HEADER
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.util.{MDCBuilder, ReactorUtils}
@@ -48,6 +49,7 @@ import scala.util.Try
 
 object JMAPApiRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[JMAPApiRoutes])
+  val ORIGINAL_IP_HEADER: String = System.getProperty("james.jmap.mdc.original.ip.header", "x-forwarded-for")
 }
 
 case class StreamConstraintsExceptionWithInput(cause: StreamConstraintsException, input: Array[Byte]) extends RuntimeException(cause)
@@ -78,7 +80,7 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
       .`then`()
       .contextWrite(ReactorUtils.context("MDCBuilder.IP", MDCBuilder.create()
         .addToContext(MDCBuilder.IP, Option(httpServerRequest.hostAddress()).map(_.toString()).getOrElse(""))
-        .addToContext("x-forwarded-for", Option(httpServerRequest.requestHeaders().get("X-Forwarded-For")).getOrElse(""))
+        .addToContext(ORIGINAL_IP_HEADER, Option(httpServerRequest.requestHeaders().get(ORIGINAL_IP_HEADER)).getOrElse(""))
         .addToContext("User-Agent", Option(httpServerRequest.requestHeaders().get("User-Agent")).getOrElse(""))))
 
   private def requestAsJsonStream(httpServerRequest: HttpServerRequest): SMono[RequestObject] =
