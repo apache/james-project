@@ -38,7 +38,7 @@ class KvrocksRateLimiterTest extends RateLimiterContract {
     redisRateLimiterConfiguration = StandaloneRedisConfiguration.from(kvrocks.redisURI().toString)
   }
 
-  override def testee(): RateLimiterFactory = new RedisRateLimiterFactory(redisRateLimiterConfiguration, new RedisClientFactory(FileSystemImpl.forTesting()))
+  override def testee(): RateLimiterFactory = new RedisRateLimiterFactory(redisRateLimiterConfiguration, new RedisClientFactory(FileSystemImpl.forTesting(), redisRateLimiterConfiguration))
 
   override def sleep(duration: Duration): Unit = Thread.sleep(duration.toMillis)
 }
