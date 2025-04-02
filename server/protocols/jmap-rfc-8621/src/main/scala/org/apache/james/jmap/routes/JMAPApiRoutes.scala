@@ -23,6 +23,8 @@ import java.util.stream
 import java.util.stream.Stream
 
 import com.fasterxml.jackson.core.exc.StreamConstraintsException
+import com.google.common.annotations.VisibleForTesting
+import com.google.common.base.Splitter
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpResponseStatus.OK
@@ -45,11 +47,23 @@ import reactor.core.publisher.{Mono, SynchronousSink}
 import reactor.core.scala.publisher.SMono
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
+import scala.jdk.OptionConverters._
 import scala.util.Try
 
 object JMAPApiRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[JMAPApiRoutes])
   val ORIGINAL_IP_HEADER: String = System.getProperty("james.jmap.mdc.original.ip.header", "x-forwarded-for")
+
+  @VisibleForTesting
+  def extractOriginalClientIP(originalIpHeader: String): String =
+    Option(originalIpHeader)
+      .flatMap(value => Splitter.on(',')
+        .trimResults
+        .omitEmptyStrings
+        .splitToStream(value)
+        .findFirst()
+        .toScala)
+      .getOrElse("")
 }
 
 case class StreamConstraintsExceptionWithInput(cause: StreamConstraintsException, input: Array[Byte]) extends RuntimeException(cause)
@@ -80,8 +94,11 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
       .`then`()
       .contextWrite(ReactorUtils.context("MDCBuilder.IP", MDCBuilder.create()
         .addToContext(MDCBuilder.IP, Option(httpServerRequest.hostAddress()).map(_.toString()).getOrElse(""))
-        .addToContext(ORIGINAL_IP_HEADER, Option(httpServerRequest.requestHeaders().get(ORIGINAL_IP_HEADER)).getOrElse(""))
+        .addToContext(ORIGINAL_IP_HEADER, extractOriginalClientIP(httpServerRequest))
         .addToContext("User-Agent", Option(httpServerRequest.requestHeaders().get("User-Agent")).getOrElse(""))))
+
+  private def extractOriginalClientIP(httpServerRequest: HttpServerRequest): String =
+    JMAPApiRoutes.extractOriginalClientIP(httpServerRequest.requestHeaders().get(ORIGINAL_IP_HEADER))
 
   private def requestAsJsonStream(httpServerRequest: HttpServerRequest): SMono[RequestObject] =
     SMono.fromPublisher(httpServerRequest

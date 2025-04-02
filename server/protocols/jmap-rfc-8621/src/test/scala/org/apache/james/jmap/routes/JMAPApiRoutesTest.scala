@@ -272,6 +272,23 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     jmapServer.stop()
   }
 
+  "Extract original client IP address" should "work well" in {
+    assert(JMAPApiRoutes.extractOriginalClientIP("203.0.113.195, 2001:db8:85a3:8d3:1319:8a2e:370:7348")
+      .equals("203.0.113.195"))
+
+    assert(JMAPApiRoutes.extractOriginalClientIP("203.0.113.195")
+      .equals("203.0.113.195"))
+
+    assert(JMAPApiRoutes.extractOriginalClientIP("203.0.113.195  ")
+      .equals("203.0.113.195"))
+
+    assert(JMAPApiRoutes.extractOriginalClientIP(null)
+      .equals(""))
+
+    assert(JMAPApiRoutes.extractOriginalClientIP("")
+      .equals(""))
+  }
+
   "RFC-8621 version, GET" should "not supported and return 404 status" in {
     val headers: Headers = Headers.headers(
       new Header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER),
