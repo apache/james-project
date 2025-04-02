@@ -34,12 +34,10 @@ import java.util.function.Function;
 import jakarta.inject.Singleton;
 
 import org.apache.james.GuiceModuleTestExtension;
-import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.Runnables;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
-import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -55,29 +53,20 @@ import scala.jdk.javaapi.OptionConverters;
 public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
     public static final String START_REPLICA_COMMAND = "redis-server --appendonly yes --port 6379 --slaveof redis1 6379 --requirepass 123 --masterauth 123";
     public static final String START_MASTER_COMMAND = "redis-server --appendonly yes --port 6379 --requirepass 123 --masterauth 123";
-    public static final String TLS_REPLICA_COMMAND = "redis-server --appendonly yes --port 0 --slaveof redis1 6379 --requirepass 123 --masterauth 123" +
-        " --tls-port 6379 --tls-cert-file /etc/redis/certificate.crt --tls-key-file /etc/redis/private.key --tls-ca-cert-file /etc/redis/rootCA.crt --tls-replication yes";
-    public static final String TLS_MASTER_COMMAND = "redis-server --appendonly yes --port 0 --requirepass 123 --masterauth 123" +
-        " --tls-port 6379 --tls-cert-file /etc/redis/certificate.crt --tls-key-file /etc/redis/private.key --tls-ca-cert-file /etc/redis/rootCA.crt --tls-replication yes";
 
     public static class RedisMasterReplicaContainer extends ArrayList<GenericContainer> {
         private final MasterReplicaRedisConfiguration masterReplicaRedisConfiguration;
 
-        public RedisMasterReplicaContainer(Collection<? extends GenericContainer> c, boolean tlsEnabled) {
+        public RedisMasterReplicaContainer(Collection<? extends GenericContainer> c) {
             super(c);
             String[] redisUris = this.stream()
-                .map(redisURIFunction(tlsEnabled))
+                .map(redisURIFunction())
                 .toArray(String[]::new);
-            if (tlsEnabled) {
-                masterReplicaRedisConfiguration = MasterReplicaRedisConfiguration.from(redisUris,
-                    SSLConfiguration.from(FileSystem.CLASSPATH_PROTOCOL + "keystore.p12", "secret"),
-                    ReadFrom.MASTER);
-            } else {
-                masterReplicaRedisConfiguration = MasterReplicaRedisConfiguration.from(redisUris,
-                    ReadFrom.MASTER,
-                    OptionConverters.toScala(Optional.empty()),
-                    OptionConverters.toScala(Optional.empty()));
-            }
+            masterReplicaRedisConfiguration = MasterReplicaRedisConfiguration.from(redisUris,
+                ReadFrom.MASTER,
+                OptionConverters.toScala(Optional.empty()),
+                OptionConverters.toScala(Optional.empty()));
+
         }
 
         public MasterReplicaRedisConfiguration getRedisConfiguration() {
@@ -99,19 +88,11 @@ public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
             }
         }
 
-        private Function<GenericContainer, String> redisURIFunction(boolean tlsEnabled) {
-            if (tlsEnabled) {
-                return redisContainer -> "rediss://123@" +
-                    redisContainer.getHost() +
-                    ":" +
-                    redisContainer.getMappedPort(DEFAULT_PORT) +
-                    "?verifyPeer=NONE";
-            } else {
-                return redisContainer -> "redis://123@" +
-                    redisContainer.getHost() +
-                    ":" +
-                    redisContainer.getMappedPort(DEFAULT_PORT);
-            }
+        private Function<GenericContainer, String> redisURIFunction() {
+            return redisContainer -> "redis://123@" +
+                redisContainer.getHost() +
+                ":" +
+                redisContainer.getMappedPort(DEFAULT_PORT);
         }
     }
 
@@ -120,20 +101,10 @@ public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
     final GenericContainer redis3;
 
     private RedisMasterReplicaContainer redisMasterReplicaContainer;
-    private final boolean tlsEnabled;
     private final Network network;
 
     public RedisMasterReplicaExtension() {
-        this(false, Network.newNetwork());
-    }
-
-    public RedisMasterReplicaExtension(boolean tlsEnable) {
-        this(tlsEnable, Network.newNetwork());
-    }
-
-    public RedisMasterReplicaExtension(boolean tlsEnable, Network network) {
-        this.tlsEnabled = tlsEnable;
-        this.network = network;
+        network = Network.newNetwork();;
         redis1 = createRedisContainer("redis1", false);
         redis2 = createRedisContainer("redis2", true);
         redis3 = createRedisContainer("redis3", true);
@@ -147,7 +118,7 @@ public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
         redis1.start();
         redis2.start();
         redis3.start();
-        redisMasterReplicaContainer = new RedisMasterReplicaContainer(List.of(redis1, redis2, redis3), tlsEnabled);
+        redisMasterReplicaContainer = new RedisMasterReplicaContainer(List.of(redis1, redis2, redis3));
     }
 
     @Override
@@ -196,28 +167,13 @@ public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
             .withNetworkAliases(alias)
             .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1)
                 .withStartupTimeout(Duration.ofMinutes(2)));
-        if (tlsEnabled) {
-            genericContainer.withClasspathResourceMapping("certificate.crt",
-                    "/etc/redis/certificate.crt",
-                    BindMode.READ_ONLY)
-                .withClasspathResourceMapping("private.key",
-                    "/etc/redis/private.key",
-                    BindMode.READ_ONLY)
-                .withClasspathResourceMapping("rootCA.crt",
-                    "/etc/redis/rootCA.crt",
-                    BindMode.READ_ONLY);
-            if (isSlave) {
-                genericContainer.withCommand(TLS_REPLICA_COMMAND);
-            } else {
-                genericContainer.withCommand(TLS_MASTER_COMMAND);
-            }
+
+        if (isSlave) {
+            genericContainer.withCommand(START_REPLICA_COMMAND);
         } else {
-            if (isSlave) {
-                genericContainer.withCommand(START_REPLICA_COMMAND);
-            } else {
-                genericContainer.withCommand(START_MASTER_COMMAND);
-            }
+            genericContainer.withCommand(START_MASTER_COMMAND);
         }
+
         return genericContainer;
     }
 }

@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 import jakarta.inject.Singleton;
 
 import org.apache.james.GuiceModuleTestExtension;
-import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.Runnables;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -53,10 +52,6 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
     public static final String SENTINEL_PASSWORD = "321";
     public static final String START_REPLICA_COMMAND = "redis-server --appendonly yes --port 6379 --slaveof redis1 6379 --requirepass 123 --masterauth 123";
     public static final String START_MASTER_COMMAND = "redis-server --appendonly yes --port 6379 --requirepass 123 --masterauth 123";
-    public static final String TLS_REPLICA_COMMAND = "redis-server --appendonly yes --port 0 --slaveof redis1 6379 --requirepass 123 --masterauth 123" +
-        " --tls-port 6379 --tls-cert-file /etc/redis/certificate.crt --tls-key-file /etc/redis/private.key --tls-ca-cert-file /etc/redis/rootCA.crt --tls-replication yes";
-    public static final String TLS_MASTER_COMMAND = "redis-server --appendonly yes --port 0 --requirepass 123 --masterauth 123" +
-        " --tls-port 6379 --tls-cert-file /etc/redis/certificate.crt --tls-key-file /etc/redis/private.key --tls-ca-cert-file /etc/redis/rootCA.crt --tls-replication yes";
 
     public static class RedisMasterReplicaContainerList extends ArrayList<GenericContainer> {
         public RedisMasterReplicaContainerList(Collection<? extends GenericContainer> c) {
@@ -82,18 +77,12 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
     public static class RedisSentinelContainerList extends ArrayList<GenericContainer> {
         private final SentinelRedisConfiguration sentinelRedisConfiguration;
 
-        public RedisSentinelContainerList(Collection<? extends GenericContainer> c, boolean tlsEnabled) {
+        public RedisSentinelContainerList(Collection<? extends GenericContainer> c) {
             super(c);
-            String sentinelURI = createRedisSentinelURI(tlsEnabled);
-            if (tlsEnabled) {
-                sentinelRedisConfiguration = SentinelRedisConfiguration.from(sentinelURI,
-                    SSLConfiguration.from(FileSystem.CLASSPATH_PROTOCOL + "keystore.p12", "secret"),
-                    ReadFrom.MASTER);
-            } else {
-                sentinelRedisConfiguration = SentinelRedisConfiguration.from(sentinelURI,
-                    ReadFrom.MASTER,
-                    SENTINEL_PASSWORD);
-            }
+            String sentinelURI = createRedisSentinelURI();
+            sentinelRedisConfiguration = SentinelRedisConfiguration.from(sentinelURI,
+                ReadFrom.MASTER,
+                SENTINEL_PASSWORD);
         }
 
         public SentinelRedisConfiguration getRedisConfiguration() {
@@ -115,20 +104,12 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
             }
         }
 
-        private String createRedisSentinelURI(boolean tlsEnabled) {
+        private String createRedisSentinelURI() {
             StringBuilder sb = new StringBuilder();
-            if (tlsEnabled) {
-                sb.append("rediss-sentinel://123@");
-            } else {
-                sb.append("redis-sentinel://123@");
-            }
+            sb.append("redis-sentinel://123@");
             sb.append(this.stream().map(container -> container.getHost() + ":" + container.getMappedPort(SENTINEL_PORT))
                 .collect(Collectors.joining(",")));
-            if (tlsEnabled) {
-                sb.append("?sentinelMasterId=mymaster&verifyPeer=NONE");
-            } else {
-                sb.append("?sentinelMasterId=mymaster");
-            }
+            sb.append("?sentinelMasterId=mymaster");
             return sb.toString();
         }
     }
@@ -147,20 +128,10 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
     private RedisMasterReplicaContainerList redisMasterReplicaContainerList;
     private RedisSentinelContainerList redisSentinelContainerList;
     private RedisSentinelCluster redisSentinelCluster;
-    private final boolean tlsEnabled;
     private final Network network;
 
     public RedisSentinelExtension() {
-        this(false, Network.newNetwork());
-    }
-
-    public RedisSentinelExtension(boolean tlsEnable) {
-        this(tlsEnable, Network.newNetwork());
-    }
-
-    public RedisSentinelExtension(boolean tlsEnable, Network network) {
-        this.tlsEnabled = tlsEnable;
-        this.network = network;
+        network = Network.newNetwork();
         redis1 = createRedisContainer("redis1", false);
         redis2 = createRedisContainer("redis2", true);
         redis3 = createRedisContainer("redis3", true);
@@ -184,7 +155,7 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
         sentinel2.start();
         sentinel3.start();
         redisMasterReplicaContainerList = new RedisMasterReplicaContainerList(List.of(redis1, redis2, redis3));
-        redisSentinelContainerList = new RedisSentinelContainerList(List.of(sentinel1, sentinel2, sentinel3), tlsEnabled);
+        redisSentinelContainerList = new RedisSentinelContainerList(List.of(sentinel1, sentinel2, sentinel3));
         redisSentinelCluster = new RedisSentinelCluster(redisMasterReplicaContainerList, redisSentinelContainerList);
     }
 
@@ -236,28 +207,12 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
             .withNetworkAliases(alias)
             .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1)
                 .withStartupTimeout(Duration.ofMinutes(2)));
-        if (tlsEnabled) {
-            genericContainer.withClasspathResourceMapping("certificate.crt",
-                    "/etc/redis/certificate.crt",
-                    BindMode.READ_ONLY)
-                .withClasspathResourceMapping("private.key",
-                    "/etc/redis/private.key",
-                    BindMode.READ_ONLY)
-                .withClasspathResourceMapping("rootCA.crt",
-                    "/etc/redis/rootCA.crt",
-                    BindMode.READ_ONLY);
-            if (isSlave) {
-                genericContainer.withCommand(TLS_REPLICA_COMMAND);
-            } else {
-                genericContainer.withCommand(TLS_MASTER_COMMAND);
-            }
+        if (isSlave) {
+            genericContainer.withCommand(START_REPLICA_COMMAND);
         } else {
-            if (isSlave) {
-                genericContainer.withCommand(START_REPLICA_COMMAND);
-            } else {
-                genericContainer.withCommand(START_MASTER_COMMAND);
-            }
+            genericContainer.withCommand(START_MASTER_COMMAND);
         }
+
         return genericContainer;
     }
 
@@ -265,28 +220,14 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
         GenericContainer genericContainer = new GenericContainer<>(DEFAULT_IMAGE_NAME)
             .withExposedPorts(SENTINEL_PORT)
             .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-" + alias + "-test-" + UUID.randomUUID()))
+            .withClasspathResourceMapping("sentinel.conf",
+                "/etc/redis/sentinel.conf",
+                BindMode.READ_ONLY)
             .withCommand("redis-sentinel /etc/redis/sentinel.conf")
             .withNetworkAliases(alias)
             .waitingFor(Wait.forLogMessage(".*monitor master.*", 1)
                 .withStartupTimeout(Duration.ofMinutes(2)));
-        if (tlsEnabled) {
-            genericContainer.withClasspathResourceMapping("sentinel_tls.conf",
-                    "/etc/redis/sentinel.conf",
-                    BindMode.READ_ONLY)
-                .withClasspathResourceMapping("certificate.crt",
-                    "/etc/redis/certificate.crt",
-                    BindMode.READ_ONLY)
-                .withClasspathResourceMapping("private.key",
-                    "/etc/redis/private.key",
-                    BindMode.READ_ONLY)
-                .withClasspathResourceMapping("rootCA.crt",
-                    "/etc/redis/rootCA.crt",
-                    BindMode.READ_ONLY);
-        } else {
-            genericContainer.withClasspathResourceMapping("sentinel.conf",
-                "/etc/redis/sentinel.conf",
-                BindMode.READ_ONLY);
-        }
+
         return genericContainer;
     }
 }
