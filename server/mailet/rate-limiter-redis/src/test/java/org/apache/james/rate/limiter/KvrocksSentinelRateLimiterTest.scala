@@ -33,7 +33,7 @@ import org.apache.james.server.core.filesystem.FileSystemImpl
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode}
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.extension.ExtendWith
-import org.junit.jupiter.api.{AfterEach, Test}
+import org.junit.jupiter.api.{AfterEach, BeforeEach, Test}
 import reactor.core.scala.publisher.SMono
 
 object KvrocksSentinelRateLimiterTest {
@@ -43,6 +43,15 @@ object KvrocksSentinelRateLimiterTest {
 
 @ExtendWith(Array(classOf[KvrocksSentinelExtension]))
 class KvrocksSentinelRateLimiterTest {
+  var rateLimiter: RateLimiter = _
+
+  @BeforeEach
+  def setUp(kvrocksSentinel: KvrocksSentinel): Unit = {
+    val redisConfiguration = kvrocksSentinel.redisSentinelContainerList.getRedisConfiguration
+    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(redisConfiguration,
+      new RedisClientFactory(FileSystemImpl.forTesting(), redisConfiguration))
+    rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
+  }
 
   @AfterEach
   def afterEach(kvrocksSentinel: KvrocksSentinel): Unit = {
@@ -51,29 +60,19 @@ class KvrocksSentinelRateLimiterTest {
   }
 
   @Test
-  def rateLimitShouldBeAcceptableWhenLimitIsAcceptable(kvrocksSentinel: KvrocksSentinel): Unit = {
-    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(kvrocksSentinel.redisSentinelContainerList.getRedisConfiguration,
-      new RedisClientFactory(FileSystemImpl.forTesting()))
-    val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
+  def rateLimitShouldBeAcceptableWhenLimitIsAcceptable(): Unit = {
     val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key" + UUID.randomUUID().toString), 4)).block()
     assertThat(actual).isEqualTo(AcceptableRate)
   }
 
   @Test
-  def rateLimitShouldWorkNormallyWhenLimitExceeded(kvrocksSentinel: KvrocksSentinel): Unit = {
-    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(kvrocksSentinel.redisSentinelContainerList.getRedisConfiguration,
-      new RedisClientFactory(FileSystemImpl.forTesting()))
-    val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
+  def rateLimitShouldWorkNormallyWhenLimitExceeded(): Unit = {
     val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key" + UUID.randomUUID().toString), 5)).block()
     assertThat(actual).isEqualTo(RateExceeded)
   }
 
   @Test
   def rateLimitShouldWorkNormallyAfterFailoverComplete(kvrocksSentinel: KvrocksSentinel): Unit = {
-    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(kvrocksSentinel.redisSentinelContainerList.getRedisConfiguration,
-      new RedisClientFactory(FileSystemImpl.forTesting()))
-    val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
-
     // Before failover, the rate limit should be working normally
     assertThat(SMono(rateLimiter.rateLimit(TestKey("key" + UUID.randomUUID().toString), 5)).block())
       .isEqualTo(RateExceeded)
