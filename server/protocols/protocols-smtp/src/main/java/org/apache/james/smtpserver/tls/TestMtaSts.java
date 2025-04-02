@@ -32,7 +32,9 @@ import org.slf4j.LoggerFactory;
  *
  * SMTP MTA Strict Transport Security (MTA-STS)
  *
- * Aimed at enforcing mode testing
+ * Aimed at enforcing mode testing. The goal of this SMTP hook is to
+ * allow administrator to evaluate the impact of enforcing MTA-STS
+ * by logging the taffic that would be blocked.
  */
 public class TestMtaSts implements MailHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestMtaSts.class);

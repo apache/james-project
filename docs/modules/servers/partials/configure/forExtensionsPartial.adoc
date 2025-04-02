@@ -12,3 +12,4 @@ By omitting these files, no extra behaviour is added.
 ** xref:{xref-base}/collecting-events.adoc[This page] documents event collection
 ** xref:{xref-base}/dsn.adoc[This page] specified how to support SMTP Delivery Submission Notification (link:https://tools.ietf.org/html/rfc3461[RFC-3461])
 ** xref:{xref-base}/droplists.adoc[This page] allows configuring drop lists.
+** xref:{xref-base}/mta-sts.adoc[This page] for configuring MTA-STS (RFC-8461)
