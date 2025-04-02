@@ -31,7 +31,7 @@ Sample set up:
 
 === Advertizing MTA-STS support
 
-Configuring the MDA is only part of the story. Remains telling the world about it.
+Configuring the MTA is only part of the story. Remains telling the world about it.
 
 First is needed a DNS record for the MTA-STS policy:
 
