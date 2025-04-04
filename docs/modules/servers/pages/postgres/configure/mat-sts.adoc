@@ -1,0 +1,4 @@
+= Postgresql James Server &mdash; MTA STS
+:navtitle: MTA-STS
+
+include::partial$configure/mta-sts.adoc[]

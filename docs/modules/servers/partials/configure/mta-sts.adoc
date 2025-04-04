@@ -1,0 +1,67 @@
+link:https://datatracker.ietf.org/doc/html/rfc8461[MTA-STS] is a standard for a SMTP server to advertise its TLS
+set up and whether SSL is required for it to accept emails.
+
+== Securing incoming traffic with MTA-STS
+
+Apache James supports tools for MTA-STS on the incoming traffic.
+
+The *EnforceMtaSts* SMTP hook can be used to ensure *MAIL FROM* transactions only happens on encrypted channels
+and matches the MTA-STS 'enforce' policy.
+
+Sample set up:
+
+....xml
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.tls.EnforceMtaSts"/>
+</handlerchain>
+....
+
+The *TestMtaSts* SMTP hook can be used to audit *MAIL FROM* transactions on unencrypted channels
+and matches the MTA-STS 'testing' policy. It will log but accept emails from such connections.
+Sample set up:
+
+
+....xml
+<handlerchain>
+    <!-- ... -->
+    <handler class="org.apache.james.smtpserver.tls.TestMtaSts"/>
+</handlerchain>
+....
+
+=== Advertizing MTA-STS support
+
+Configuring the MTA is only part of the story. Remains telling the world about it.
+
+First is needed a DNS record for the MTA-STS policy:
+
+....
+_mta-sts.mydomain.com.  in TXT "v=STSv1; id=20250403T140800"
+....
+
+Then the policy should be published on `https://mta-sts.mydomain.com/.well-known/mta-sts.txt` which yields:
+
+....
+version: STSv1
+mode: enforce
+mx: mx.mydomain.com
+max_age: 86400
+....
+
+=== Receiving TLS RPT reports
+
+link:https://datatracker.ietf.org/doc/html/rfc8460[SMTP TLS Reporting] allows remote senders to notice you on failures
+to establish a TLS connection and thus is a valuable debugging asset.
+
+Where to send the TLSRPT report can be configured via a DNS record:
+
+....
+  _smtp._tls.example.com. IN TXT "v=TLSRPTv1;rua=mailto:reports=mydomain@administator.com"
+....
+
+Please note that if MTA-STS mode is 'enforce' then hosting the TLSRPT rua on a distinct domain is needed so that sending
+of the report can downgrade to clear text if needed.
+
+== Securing outgoing traffic with MTA-STS
+
+This part of the specification is not implemented yet. Contributions are welcomed.
