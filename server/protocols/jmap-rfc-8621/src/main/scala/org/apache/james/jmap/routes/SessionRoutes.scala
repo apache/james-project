@@ -24,7 +24,7 @@ import java.util.stream.Stream
 
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpMethod
-import io.netty.handler.codec.http.HttpResponseStatus.{INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
+import io.netty.handler.codec.http.HttpResponseStatus.{INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED}
 import jakarta.inject.{Inject, Named}
 import org.apache.commons.lang3.tuple.Pair
 import org.apache.james.core.Username
@@ -32,7 +32,7 @@ import org.apache.james.jmap.HttpConstants.{JSON_CONTENT_TYPE, JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPRoutes.CORS_CONTROL
 import org.apache.james.jmap.JMAPServer.REACTOR_NETTY_METRICS_ENABLE
 import org.apache.james.jmap.core.{JmapRfc8621Configuration, ProblemDetails, Session, UrlPrefixes}
-import org.apache.james.jmap.exceptions.UnauthorizedException
+import org.apache.james.jmap.exceptions.{UnauthorizedException, UserNotFoundException}
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
@@ -123,6 +123,10 @@ class SessionRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: 
         LOGGER.warn("Unauthorized", e)
         respondDetails(e.addHeaders(response),
           ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage))
+      case e: UserNotFoundException =>
+        LOGGER.warn("User not found", e)
+        respondDetails(e.addHeaders(response),
+          ProblemDetails(status = NOT_FOUND, detail = e.getMessage))
       case e =>
         LOGGER.error("Unexpected error upon requesting session", e)
         respondDetails(response,

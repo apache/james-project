@@ -27,13 +27,13 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Splitter
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpMethod
-import io.netty.handler.codec.http.HttpResponseStatus.OK
+import io.netty.handler.codec.http.HttpResponseStatus.{OK, NOT_FOUND}
 import jakarta.inject.{Inject, Named}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.{MaxSizeRequest, ProblemDetails, RequestObject}
-import org.apache.james.jmap.exceptions.UnauthorizedException
+import org.apache.james.jmap.exceptions.{UnauthorizedException, UserNotFoundException}
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
@@ -147,6 +147,7 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
 
   private def handleError(throwable: Throwable, response: HttpServerResponse): SMono[Void] = throwable match {
     case e: UnauthorizedException => respondDetails(e.addHeaders(response), ProblemDetails.forThrowable(throwable))
+    case e: UserNotFoundException => respondDetails(e.addHeaders(response), ProblemDetails(status = NOT_FOUND, detail = e.getMessage))
     case _ => respondDetails(response, ProblemDetails.forThrowable(throwable))
   }
 

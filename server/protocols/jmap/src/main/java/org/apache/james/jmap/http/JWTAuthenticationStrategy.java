@@ -23,6 +23,7 @@ import jakarta.inject.Named;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
+import org.apache.james.jmap.exceptions.UserNotFoundException;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -68,6 +69,10 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
                     usersRepository.assertValid(username);
                 } catch (UsersRepositoryException e) {
                     throw new UnauthorizedException("Invalid username", e);
+                }
+
+                if (!usersRepository.contains(username)) {
+                    throw new UserNotFoundException("User not found");
                 }
 
                 return username;

@@ -30,7 +30,10 @@ import java.util.stream.IntStream;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
+import org.apache.james.core.Username;
 import org.apache.james.jwt.JwtTokenVerifier;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.eclipse.jetty.http.HttpStatus;
 
 import spark.Request;
@@ -41,11 +44,13 @@ public class JwtFilter implements AuthenticationFilter {
     public static final String AUTHORIZATION_HEADER_NAME = "Authorization";
     public static final String OPTIONS = "OPTIONS";
 
+    private final UsersRepository usersRepository;
     private final JwtTokenVerifier jwtTokenVerifier;
 
     @Inject
-    public JwtFilter(@Named("webadmin") JwtTokenVerifier.Factory jwtTokenVerifierFactory) {
+    public JwtFilter(@Named("webadmin") JwtTokenVerifier.Factory jwtTokenVerifierFactory, UsersRepository usersRepository) {
         this.jwtTokenVerifier = jwtTokenVerifierFactory.create();
+        this.usersRepository = usersRepository;
     }
 
     @Override
@@ -65,10 +70,23 @@ public class JwtFilter implements AuthenticationFilter {
 
             switch (userType.get()) {
                 case "agent":
+                    Optional<String> userName = jwtTokenVerifier.verifyAndExtractClaim(bearer.get(), "sub", String.class);
+                    if (userName.isEmpty()) {
+                        halt(HttpStatus.UNAUTHORIZED_401, "Expected 'sub' claim to contain username");
+                    }
+                    
+                    try {
+                        if (!usersRepository.contains(Username.of(userName.get()))) {
+                            halt(HttpStatus.UNAUTHORIZED_401, "User not found");
+                        }
+                    } catch (UsersRepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+
                     Optional<LinkedHashMap> permissionObject = jwtTokenVerifier.verifyAndExtractClaim(bearer.get(), "permissions", LinkedHashMap.class);
 
                     if (permissionObject.isEmpty()) {
-                        halt(HttpStatus.UNAUTHORIZED_401, "Permissions claim not found.");
+                        halt(HttpStatus.UNAUTHORIZED_401, "Permissions claim not found for agent.");
                     }
 
                     LinkedHashMap<String, List<String>> permissionClaims = new LinkedHashMap<>();
@@ -93,7 +111,7 @@ public class JwtFilter implements AuthenticationFilter {
                 case "admin":
                     break;
                 default:
-                    halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user. Unknown/Missing user type");
+                    halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user. Unknown user type : '" + userType.get() + "'");
             }
 
             request.attribute(LOGIN, login);

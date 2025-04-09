@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 
 import org.apache.james.jwt.JwtTokenVerifier;
+import org.apache.james.user.api.UsersRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,11 +40,13 @@ import spark.Response;
 class JwtFilterTest {
     private JwtTokenVerifier jwtTokenVerifier;
     private JwtFilter jwtFilter;
+    private UsersRepository usersRepository;
 
     @BeforeEach
     void setUp() {
         jwtTokenVerifier = mock(JwtTokenVerifier.class);
-        jwtFilter = new JwtFilter(() -> jwtTokenVerifier);
+        usersRepository = mock(UsersRepository.class);
+        jwtFilter = new JwtFilter(() -> jwtTokenVerifier, usersRepository);
     }
 
     @Test

@@ -30,6 +30,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
+import io.netty.handler.codec.http.HttpResponseStatus._
 import io.netty.handler.codec.http.{HttpMethod, QueryStringDecoder}
 import jakarta.inject.{Inject, Named}
 import org.apache.james.core.{ConnectionDescription, ConnectionDescriptionSupplier, Disconnector, Username}
@@ -40,7 +41,7 @@ import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.TypeName
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener}
 import org.apache.james.jmap.core.{OutboundMessage, PingMessage, ProblemDetails, StateChange}
-import org.apache.james.jmap.exceptions.UnauthorizedException
+import org.apache.james.jmap.exceptions.{UnauthorizedException, UserNotFoundException}
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.{PushSerializer, ResponseSerializer}
@@ -229,6 +230,7 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
 
   private def handleConnectionEstablishmentError(throwable: Throwable, response: HttpServerResponse): SMono[Void] = throwable match {
     case e: UnauthorizedException => respondDetails(e.addHeaders(response), ProblemDetails.forThrowable(throwable))
+    case e: UserNotFoundException => respondDetails(e.addHeaders(response), ProblemDetails(status = NOT_FOUND, detail = e.getMessage))
     case _ => respondDetails(response, ProblemDetails.forThrowable(throwable))
   }
 

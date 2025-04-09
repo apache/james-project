@@ -101,6 +101,10 @@
             <artifactId>commons-configuration2</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-data-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk18on</artifactId>
         </dependency>
