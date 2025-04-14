@@ -48,7 +48,7 @@ public class HookResultLogger implements HookResultHook {
                 hResult.getSmtpRetCode(),
                 hResult.getSmtpDescription());
         } else {
-            LOGGER.debug("{}: result= ({} {})", hook.getClass().getName(),
+            LOGGER.trace("{}: result= ({} {})", hook.getClass().getName(),
                 result.getAction(),
                 result.getConnectionStatus());
         }
