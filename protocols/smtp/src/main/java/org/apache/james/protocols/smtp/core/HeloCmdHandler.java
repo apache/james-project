@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -82,6 +83,8 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
         response.append(session.getConfiguration().getHelloName()).append(
                 " Hello ").append(parameters).append(" [").append(
                 session.getRemoteAddress().getAddress().getHostAddress()).append("])");
+
+        LOGGER.debug("HELO {} {}", StringUtils.abbreviate(command, 80), StringUtils.abbreviate(parameters, 80));
         return new SMTPResponse(SMTPRetCode.MAIL_OK, response);
     }
 

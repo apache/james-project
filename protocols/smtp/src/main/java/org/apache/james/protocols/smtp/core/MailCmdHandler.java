@@ -29,6 +29,7 @@ import java.util.StringTokenizer;
 import jakarta.inject.Inject;
 import jakarta.mail.internet.AddressException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
@@ -110,6 +111,8 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
             responseBuffer.append(sender.asString());
         }
         responseBuffer.append("> OK");
+
+        LOGGER.debug("MAIL FROM {}", StringUtils.abbreviate(sender.asString(), 80));
         return new SMTPResponse(SMTPRetCode.MAIL_OK, responseBuffer);
     }
 

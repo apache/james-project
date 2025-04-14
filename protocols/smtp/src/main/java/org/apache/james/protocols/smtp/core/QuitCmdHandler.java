@@ -31,6 +31,8 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.QuitHook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -38,6 +40,7 @@ import com.google.common.collect.ImmutableSet;
  * Handles QUIT command
  */
 public class QuitCmdHandler extends AbstractHookableCmdHandler<QuitHook> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(QuitCmdHandler.class);
 
     /**
      * The name of the command handled by the command handler
@@ -45,7 +48,7 @@ public class QuitCmdHandler extends AbstractHookableCmdHandler<QuitHook> {
     private static final Collection<String> COMMANDS = ImmutableSet.of("QUIT");
 
     private static final Response SYNTAX_ERROR;
-    
+
     static {
         SMTPResponse response = new SMTPResponse(
                 SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, DSNStatus
@@ -80,6 +83,8 @@ public class QuitCmdHandler extends AbstractHookableCmdHandler<QuitHook> {
                     " Service closing transmission channel");
             SMTPResponse ret = new SMTPResponse(SMTPRetCode.SYSTEM_QUIT, response);
             ret.setEndSession(true);
+
+            LOGGER.debug("QUIT");
             return ret;
         } else {
             return SYNTAX_ERROR;

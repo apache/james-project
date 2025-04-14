@@ -28,6 +28,7 @@ import java.util.StringTokenizer;
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -85,12 +86,14 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         MailAddress recipientAddress = session.getAttachment(CURRENT_RECIPIENT, State.Transaction).orElse(MailAddress.nullSender());
         rcptColl.add(recipientAddress);
         session.setAttachment(SMTPSession.RCPT_LIST, rcptColl, State.Transaction);
+
         StringBuilder response = new StringBuilder();
-        response
-                .append(
-                        DSNStatus.getStatus(DSNStatus.SUCCESS,
-                                DSNStatus.ADDRESS_VALID))
+        String status = DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.ADDRESS_VALID);
+        response.append(status)
                 .append(" Recipient <").append(recipientAddress).append("> OK");
+
+        LOGGER.debug("RCPT TO {}", StringUtils.abbreviate(recipientAddress.asString(), 80));
+
         return new SMTPResponse(SMTPRetCode.MAIL_OK, response);
 
     }
