@@ -25,6 +25,7 @@ import java.util.Locale;
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
@@ -95,6 +96,8 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
                 COMMAND_NAME, State.Connection);
 
         processExtensions(session, resp);
+
+        LOGGER.debug("EHLO {}", StringUtils.abbreviate(argument, 80));
  
         return resp;
     }
