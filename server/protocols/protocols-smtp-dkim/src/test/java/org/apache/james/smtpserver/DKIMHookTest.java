@@ -188,7 +188,7 @@ class DKIMHookTest {
         void andShouldKeepOnlyTheFirstSMTPDescription() {
             assertThat(DKIMHook.SignatureRecordValidation.and(
                     DKIMHook.SignatureRecordValidation.signatureRequired(true),
-                    DKIMHook.SignatureRecordValidation.expectedDToken("wrong.com"))
+                    new DKIMHook.DTokenSignatureRecordValidation("wrong.com"))
                 .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of()))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.deny()))
                 .satisfies(hookResult -> assertThat(hookResult.getSmtpDescription()).isEqualTo("DKIM check failed. Expecting DKIM signatures. Got none."));
@@ -196,7 +196,7 @@ class DKIMHookTest {
 
         @Test
         void expectedDTokenShouldDenyWhenWrongDToken() {
-            assertThat(DKIMHook.SignatureRecordValidation.expectedDToken("wrong.com")
+            assertThat(new DKIMHook.DTokenSignatureRecordValidation("wrong.com")
                 .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of(SIGNATURE_RECORD_1)))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.deny()))
                 .satisfies(hookResult -> assertThat(hookResult.getSmtpDescription()).isEqualTo("DKIM check failed. Wrong d token. Expecting wrong.com"));
@@ -204,21 +204,21 @@ class DKIMHookTest {
 
         @Test
         void expectedDTokenShouldDeclineWhenGoodDToken() {
-            assertThat(DKIMHook.SignatureRecordValidation.expectedDToken("linagora.com")
+            assertThat(new DKIMHook.DTokenSignatureRecordValidation("linagora.com")
                 .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of(SIGNATURE_RECORD_1)))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.declined()));
         }
 
         @Test
         void expectedDTokenShouldDeclineWhenGoodFirstDToken() {
-            assertThat(DKIMHook.SignatureRecordValidation.expectedDToken("linagora.com")
+            assertThat(new DKIMHook.DTokenSignatureRecordValidation("linagora.com")
                 .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of(SIGNATURE_RECORD_1, SIGNATURE_RECORD_2)))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.declined()));
         }
 
         @Test
         void expectedDTokenShouldDeclineWhenGoodSecondDToken() {
-            assertThat(DKIMHook.SignatureRecordValidation.expectedDToken("linagora.com")
+            assertThat(new DKIMHook.DTokenSignatureRecordValidation("linagora.com")
                 .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of(SIGNATURE_RECORD_2, SIGNATURE_RECORD_1)))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.declined()));
         }

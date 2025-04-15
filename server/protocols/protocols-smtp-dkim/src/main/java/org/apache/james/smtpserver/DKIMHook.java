@@ -155,16 +155,6 @@ public class DKIMHook implements JamesMessageHook {
             };
         }
 
-        static SignatureRecordValidation or(SignatureRecordValidation a, SignatureRecordValidation b) {
-            return (sender, records) -> {
-                HookResult hookResult = a.validate(sender, records);
-                if (hookResult.equals(HookResult.DECLINED)) {
-                    return hookResult;
-                }
-                return b.validate(sender, records);
-            };
-        }
-
         static SignatureRecordValidation signatureRequired(boolean required) {
             return (sender, records) -> {
                 if (required && (records == null || records.isEmpty())) {
@@ -179,24 +169,35 @@ public class DKIMHook implements JamesMessageHook {
             };
         }
 
-        static SignatureRecordValidation expectedDToken(String dToken) {
-            return (sender, records) -> {
-                if (records.stream().anyMatch(record -> record.getDToken().equals(dToken))) {
-                    return HookResult.DECLINED;
-                }
-                LOGGER.warn("DKIM check failed. Wrong d token. Expecting {}. Got {}.", dToken,
-                    records.stream().map(SignatureRecord::getDToken).collect(ImmutableSet.toImmutableSet()));
-                return HookResult.builder()
-                    .hookReturnCode(HookReturnCode.deny())
-                    .smtpReturnCode(AUTH_REQUIRED)
-                    .smtpDescription("DKIM check failed. Wrong d token. Expecting " + dToken)
-                    .build();
-            };
-        }
-
         SignatureRecordValidation ALLOW_ALL = (sender, records) -> HookResult.DECLINED;
 
         HookResult validate(MaybeSender maybeSender, List<SignatureRecord> records);
+    }
+
+    static class DTokenSignatureRecordValidation implements SignatureRecordValidation {
+        private final List<String> expectedDTokens;
+
+        DTokenSignatureRecordValidation(List<String> expectedDTokens) {
+            this.expectedDTokens = expectedDTokens;
+        }
+
+        DTokenSignatureRecordValidation(String expectedDToken) {
+            this(ImmutableList.of(expectedDToken));
+        }
+
+        @Override
+        public HookResult validate(MaybeSender maybeSender, List<SignatureRecord> records) {
+            if (records.stream().anyMatch(r -> expectedDTokens.stream().anyMatch(d -> r.getDToken().equals(d)))) {
+                return HookResult.DECLINED;
+            }
+            ImmutableSet<CharSequence> actualDToken = records.stream().map(SignatureRecord::getDToken).collect(ImmutableSet.toImmutableSet());
+            LOGGER.warn("DKIM check failed. Wrong d token. Expecting {}. Got {}.", expectedDTokens, actualDToken);
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.deny())
+                .smtpReturnCode(AUTH_REQUIRED)
+                .smtpDescription("DKIM check failed. Wrong d token. Expecting " + expectedDTokens + ". Got " + actualDToken)
+                .build();
+        }
     }
 
     public static class Config {
@@ -260,10 +261,7 @@ public class DKIMHook implements JamesMessageHook {
         SignatureRecordValidation signatureRecordValidation() {
             return SignatureRecordValidation.and(
                 SignatureRecordValidation.signatureRequired(signatureRequired),
-                expectedDToken.map(tokens -> tokens.stream()
-                    .map(SignatureRecordValidation::expectedDToken)
-                    .reduce(SignatureRecordValidation::or)
-                    .get()).orElse(SignatureRecordValidation.ALLOW_ALL));
+                expectedDToken.<SignatureRecordValidation>map(DTokenSignatureRecordValidation::new).orElse(SignatureRecordValidation.ALLOW_ALL));
         }
 
         private ImmutableList<DKIMCheckNeeded> computeDKIMChecksNeeded(Domain domain) {
