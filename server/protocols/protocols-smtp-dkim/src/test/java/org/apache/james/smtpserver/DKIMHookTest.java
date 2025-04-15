@@ -122,7 +122,7 @@ class DKIMHookTest {
         @Test
         void shouldDenyWhenNoDkimRecordsWhenTrue() {
             assertThat(DKIMHook.SignatureRecordValidation.signatureRequired(true)
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of()))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of()))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.deny()))
                 .satisfies(hookResult -> assertThat(hookResult.getSmtpDescription()).isEqualTo("DKIM check failed. Expecting DKIM signatures. Got none."));
         }
@@ -130,28 +130,28 @@ class DKIMHookTest {
         @Test
         void shouldDeclineWhenNoDkimRecordWhenTrue() {
             assertThat(DKIMHook.SignatureRecordValidation.signatureRequired(false)
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of()))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of()))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.declined()));
         }
 
         @Test
         void shouldDeclineWhenDkimRecordWhenTrue() {
             assertThat(DKIMHook.SignatureRecordValidation.signatureRequired(true)
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of(SIGNATURE_RECORD_1)))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of(SIGNATURE_RECORD_1)))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.declined()));
         }
 
         @Test
         void allShouldDeclineWhenNoDkimRecord() {
             assertThat(DKIMHook.SignatureRecordValidation.ALLOW_ALL
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of()))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of()))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.declined()));
         }
 
         @Test
         void allShouldDeclineWhenDkimRecord() {
             assertThat(DKIMHook.SignatureRecordValidation.ALLOW_ALL
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of(SIGNATURE_RECORD_1)))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of(SIGNATURE_RECORD_1)))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.declined()));
         }
 
@@ -160,7 +160,7 @@ class DKIMHookTest {
             assertThat(DKIMHook.SignatureRecordValidation.and(
                     DKIMHook.SignatureRecordValidation.ALLOW_ALL,
                     DKIMHook.SignatureRecordValidation.ALLOW_ALL)
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of()))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of()))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.declined()));
         }
 
@@ -169,7 +169,7 @@ class DKIMHookTest {
             assertThat(DKIMHook.SignatureRecordValidation.and(
                     DKIMHook.SignatureRecordValidation.signatureRequired(true),
                     DKIMHook.SignatureRecordValidation.ALLOW_ALL)
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of()))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of()))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.deny()))
                 .satisfies(hookResult -> assertThat(hookResult.getSmtpDescription()).isEqualTo("DKIM check failed. Expecting DKIM signatures. Got none."));
         }
@@ -179,7 +179,7 @@ class DKIMHookTest {
             assertThat(DKIMHook.SignatureRecordValidation.and(
                     DKIMHook.SignatureRecordValidation.ALLOW_ALL,
                     DKIMHook.SignatureRecordValidation.signatureRequired(true))
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of()))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of()))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.deny()))
                 .satisfies(hookResult -> assertThat(hookResult.getSmtpDescription()).isEqualTo("DKIM check failed. Expecting DKIM signatures. Got none."));
         }
@@ -189,7 +189,7 @@ class DKIMHookTest {
             assertThat(DKIMHook.SignatureRecordValidation.and(
                     DKIMHook.SignatureRecordValidation.signatureRequired(true),
                     new DKIMHook.DTokenSignatureRecordValidation("wrong.com"))
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of()))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of()))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.deny()))
                 .satisfies(hookResult -> assertThat(hookResult.getSmtpDescription()).isEqualTo("DKIM check failed. Expecting DKIM signatures. Got none."));
         }
@@ -197,7 +197,7 @@ class DKIMHookTest {
         @Test
         void expectedDTokenShouldDenyWhenWrongDToken() {
             assertThat(new DKIMHook.DTokenSignatureRecordValidation("wrong.com")
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of(SIGNATURE_RECORD_1)))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of(SIGNATURE_RECORD_1)))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.deny()))
                 .satisfies(hookResult -> assertThat(hookResult.getSmtpDescription()).isEqualTo("DKIM check failed. Wrong d token. Expecting wrong.com"));
         }
@@ -205,21 +205,21 @@ class DKIMHookTest {
         @Test
         void expectedDTokenShouldDeclineWhenGoodDToken() {
             assertThat(new DKIMHook.DTokenSignatureRecordValidation("linagora.com")
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of(SIGNATURE_RECORD_1)))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of(SIGNATURE_RECORD_1)))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.declined()));
         }
 
         @Test
         void expectedDTokenShouldDeclineWhenGoodFirstDToken() {
             assertThat(new DKIMHook.DTokenSignatureRecordValidation("linagora.com")
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of(SIGNATURE_RECORD_1, SIGNATURE_RECORD_2)))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of(SIGNATURE_RECORD_1, SIGNATURE_RECORD_2)))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.declined()));
         }
 
         @Test
         void expectedDTokenShouldDeclineWhenGoodSecondDToken() {
             assertThat(new DKIMHook.DTokenSignatureRecordValidation("linagora.com")
-                .validate(MaybeSender.getMailSender("bob@localhost"), ImmutableList.of(SIGNATURE_RECORD_2, SIGNATURE_RECORD_1)))
+                .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of(SIGNATURE_RECORD_2, SIGNATURE_RECORD_1)))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.declined()));
         }
     }
