@@ -199,7 +199,7 @@ class DKIMHookTest {
             assertThat(new DKIMHook.DTokenSignatureRecordValidation("wrong.com")
                 .validate(MaybeSender.getMailSender("bob@localhost"), "messageId", ImmutableList.of(SIGNATURE_RECORD_1)))
                 .satisfies(hookResult -> assertThat(hookResult.getResult()).isEqualTo(HookReturnCode.deny()))
-                .satisfies(hookResult -> assertThat(hookResult.getSmtpDescription()).isEqualTo("DKIM check failed. Wrong d token. Expecting wrong.com"));
+                .satisfies(hookResult -> assertThat(hookResult.getSmtpDescription()).isEqualTo("DKIM check failed. Wrong d token. Expecting [wrong.com]. Got [linagora.com]"));
         }
 
         @Test

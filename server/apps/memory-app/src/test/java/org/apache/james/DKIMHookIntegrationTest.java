@@ -187,7 +187,7 @@ public class DKIMHookIntegrationTest {
         server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
 
         assertThat(new String(dataResponse, StandardCharsets.UTF_8))
-            .contains("530 DKIM check failed. Wrong d token. Expecting avocat.fr");
+            .contains("530 DKIM check failed. Wrong d token. Expecting [avocat.fr]. Got [preprod-avocat.fr]");
     }
 
     @Test
