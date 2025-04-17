@@ -1,0 +1,12 @@
+# For the full configuration, visit https://github.com/tair-opensource/RedisShake/blob/v4/shake.toml
+[scan_reader]
+address = "${SHAKE_SRC_ADDRESS}" # Source Redis IP
+username = ""               # keep empty if not using ACL
+password = ""               # keep empty if no authentication is required
+scan = true
+count = 10000               # number of keys to scan per iteration, should use a suitable batch size
+
+[redis_writer]
+address = "${SHAKE_DST_ADDRESS}" # Target Kvrocks IP
+username = ""               # keep empty if not using ACL
+password = ""               # keep empty if no authentication is required
