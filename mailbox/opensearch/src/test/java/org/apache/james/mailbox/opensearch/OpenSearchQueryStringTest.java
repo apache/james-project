@@ -68,6 +68,7 @@ import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
 
 import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Mono;
 
 class OpenSearchQueryStringTest {
