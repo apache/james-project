@@ -256,3 +256,18 @@ We document accordingly the docker compose setup:
   Please note that to make Rspamd work well with Kvrocks Sentinel:
   - Configure `slave-read-only no` in `kvrocks.conf` file (allow Rspamd to execute read-only Lua script to get its Bayes statistics against the Kvrocks replicas, which Kvrocks is strict about by default). 
   - Use Rspamd `3.10` or later.
+
+### Migrate Rspamd data from Redis to Kvrocks
+
+Hereby we document a sample to use [RedisShake](https://github.com/tair-opensource/RedisShake) to migrate data from Redis to Kvrocks.
+
+Sample command:
+```bash
+docker run --network=emaily \
+  --entrypoint "/bin/sh" \
+  -v ${PWD}/sample-configuration/redis-shake/shake.toml:/app/shake.toml \
+  -e SHAKE_SRC_ADDRESS=redis:6379 \
+  -e SHAKE_DST_ADDRESS=kvrocks:6379 \
+  ghcr.io/tair-opensource/redisshake:4.4.0 \
+  -c "./redis-shake /app/shake.toml"
+```
