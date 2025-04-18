@@ -38,6 +38,7 @@ public class OpenSearchMailboxConfiguration {
         private Optional<IndexHeaders> indexHeaders;
         private Optional<Boolean> optimiseMoves;
         private Optional<Boolean> textFuzzinessSearch;
+        private Optional<Boolean> useQueryStringQuery;
         private Optional<IndexBody> indexBody;
         private Optional<IndexUser> indexUser;
 
@@ -49,6 +50,7 @@ public class OpenSearchMailboxConfiguration {
             indexHeaders = Optional.empty();
             optimiseMoves = Optional.empty();
             textFuzzinessSearch = Optional.empty();
+            useQueryStringQuery = Optional.empty();
             indexBody = Optional.empty();
             indexUser = Optional.empty();
         }
@@ -88,6 +90,12 @@ public class OpenSearchMailboxConfiguration {
             return this;
         }
 
+
+        public Builder useQueryStringQuery(Boolean useQueryStringQuery) {
+            this.useQueryStringQuery = Optional.ofNullable(useQueryStringQuery);
+            return this;
+        }
+
         public Builder indexBody(IndexBody indexBody) {
             this.indexBody = Optional.ofNullable(indexBody);
             return this;
@@ -107,6 +115,7 @@ public class OpenSearchMailboxConfiguration {
                 indexHeaders.orElse(IndexHeaders.YES),
                 optimiseMoves.orElse(DEFAULT_OPTIMIZE_MOVES),
                 textFuzzinessSearch.orElse(DEFAULT_TEXT_FUZZINESS_SEARCH),
+                useQueryStringQuery.orElse(DEFAULT_USE_SIMPLE_TEXT_QUERY),
                 indexBody.orElse(IndexBody.YES),
                 indexUser.orElse(IndexUser.NO));
         }
@@ -126,12 +135,14 @@ public class OpenSearchMailboxConfiguration {
     private static final String OPENSEARCH_INDEX_HEADERS = "opensearch.indexHeaders";
     private static final String OPENSEARCH_MESSAGE_INDEX_OPTIMIZE_MOVE = "opensearch.message.index.optimize.move";
     private static final String OPENSEARCH_TEXT_FUZZINESS_SEARCH = "opensearch.text.fuzziness.search";
+    private static final String OPENSEARCH_TEXT_STRING_QUERY = "opensearch.text.string.query";
     private static final String OPENSEARCH_INDEX_BODY = "opensearch.indexBody";
     private static final String OPENSEARCH_INDEX_USER = "opensearch.indexUser";
     private static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
     private static final boolean DEFAULT_INDEX_HEADERS = true;
     public static final boolean DEFAULT_OPTIMIZE_MOVES = false;
     public static final boolean DEFAULT_TEXT_FUZZINESS_SEARCH = false;
+    public static final boolean DEFAULT_USE_SIMPLE_TEXT_QUERY = false;
     public static final boolean DEFAULT_INDEX_BODY = true;
     public static final boolean DEFAULT_INDEX_USER = false;
     public static final OpenSearchMailboxConfiguration DEFAULT_CONFIGURATION = builder().build();
@@ -145,6 +156,7 @@ public class OpenSearchMailboxConfiguration {
             .indexHeaders(provideIndexHeaders(configuration))
             .optimiseMoves(configuration.getBoolean(OPENSEARCH_MESSAGE_INDEX_OPTIMIZE_MOVE, null))
             .textFuzzinessSearch(configuration.getBoolean(OPENSEARCH_TEXT_FUZZINESS_SEARCH, null))
+            .useQueryStringQuery(configuration.getBoolean(OPENSEARCH_TEXT_STRING_QUERY, null))
             .indexBody(provideIndexBody(configuration))
             .indexUser(provideIndexUser(configuration))
             .build();
@@ -206,12 +218,13 @@ public class OpenSearchMailboxConfiguration {
     private final IndexHeaders indexHeaders;
     private final boolean optimiseMoves;
     private final boolean textFuzzinessSearch;
+    private final boolean useQueryStringQuery;
     private final IndexBody indexBody;
     private final IndexUser indexUser;
 
     private OpenSearchMailboxConfiguration(IndexName indexMailboxName, ReadAliasName readAliasMailboxName,
                                            WriteAliasName writeAliasMailboxName, IndexAttachments indexAttachment,
-                                           IndexHeaders indexHeaders, boolean optimiseMoves, boolean textFuzzinessSearch,
+                                           IndexHeaders indexHeaders, boolean optimiseMoves, boolean textFuzzinessSearch, boolean useSimpleTextQuery,
                                            IndexBody indexBody, IndexUser indexUser) {
         this.indexMailboxName = indexMailboxName;
         this.readAliasMailboxName = readAliasMailboxName;
@@ -220,6 +233,7 @@ public class OpenSearchMailboxConfiguration {
         this.indexHeaders = indexHeaders;
         this.optimiseMoves = optimiseMoves;
         this.textFuzzinessSearch = textFuzzinessSearch;
+        this.useQueryStringQuery = useSimpleTextQuery;
         this.indexBody = indexBody;
         this.indexUser = indexUser;
     }
@@ -260,6 +274,10 @@ public class OpenSearchMailboxConfiguration {
         return indexUser;
     }
 
+    public boolean isUseQueryStringQuery() {
+        return useQueryStringQuery;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof OpenSearchMailboxConfiguration) {
@@ -271,6 +289,7 @@ public class OpenSearchMailboxConfiguration {
                 && Objects.equals(this.readAliasMailboxName, that.readAliasMailboxName)
                 && Objects.equals(this.optimiseMoves, that.optimiseMoves)
                 && Objects.equals(this.textFuzzinessSearch, that.textFuzzinessSearch)
+                && Objects.equals(this.useQueryStringQuery, that.useQueryStringQuery)
                 && Objects.equals(this.writeAliasMailboxName, that.writeAliasMailboxName)
                 && Objects.equals(this.indexBody, that.indexBody)
                 && Objects.equals(this.indexUser, that.indexUser);
@@ -281,6 +300,6 @@ public class OpenSearchMailboxConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(indexMailboxName, readAliasMailboxName, writeAliasMailboxName, indexAttachment, indexHeaders,
-            writeAliasMailboxName, optimiseMoves, textFuzzinessSearch, indexBody, indexUser);
+            writeAliasMailboxName, optimiseMoves, textFuzzinessSearch, useQueryStringQuery, indexBody, indexUser);
     }
 }
