@@ -113,6 +113,10 @@ class OpenSearchQueryStringTest {
         MailboxIndexCreationUtil.prepareClient(client, readAliasName, writeAliasName, indexName,
             openSearch.getDockerOpenSearch().configuration());
 
+        OpenSearchMailboxConfiguration openSearchMailboxConfiguration = OpenSearchMailboxConfiguration.builder()
+            .indexBody(IndexBody.YES)
+            .useQueryStringQuery(true)
+            .build();
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
@@ -123,12 +127,10 @@ class OpenSearchQueryStringTest {
                 preInstanciationStage.getMapperFactory(),
                 ImmutableSet.of(),
                 new OpenSearchIndexer(client, writeAliasName),
-                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter(OpenSearchMailboxConfiguration.builder()
-                    .useQueryStringQuery(true)
-                    .build())), SEARCH_SIZE, readAliasName, routingKeyFactory),
-                new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES, IndexBody.NO),
+                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter(openSearchMailboxConfiguration)), SEARCH_SIZE, readAliasName, routingKeyFactory),
+                new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES, IndexBody.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory,
-                OpenSearchMailboxConfiguration.builder().indexBody(IndexBody.NO).build(), new RecordingMetricFactory(),
+                openSearchMailboxConfiguration, new RecordingMetricFactory(),
                 ImmutableSet.of()))
             .noPreDeletionHooks()
             .storeQuotaManager()
@@ -152,8 +154,8 @@ class OpenSearchQueryStringTest {
 
     @Test
     void searchingByBodyContentShouldNotReturnMessageWhenNoIndexBody() throws Exception {
-        addMessage(session, inboxPath, "Lucas love avocado banana smoothie").block();
-        ComposedMessageId expectedId = addMessage(session, inboxPath, "Avocado grows in Mexico").block();
+        ComposedMessageId expectedId = addMessage(session, inboxPath, "Lucas love avocado banana smoothie").block();
+        addMessage(session, inboxPath, "Avocado grows in Mexico").block();
 
         awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 2L);
 

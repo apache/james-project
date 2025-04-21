@@ -51,6 +51,7 @@ import org.opensearch.client.opensearch._types.query_dsl.Operator;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryStringQuery;
 import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
+import org.opensearch.client.opensearch._types.query_dsl.SimpleQueryStringQuery;
 import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -224,6 +225,11 @@ public class CriterionConverter {
         switch (textCriterion.getType()) {
         case BODY:
             if (useQueryStringQuery) {
+                return new SimpleQueryStringQuery.Builder()
+                    .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY))
+                    .query(textCriterion.getOperator().getValue())
+                    .build().toQuery();
+            } else {
                 return new BoolQuery.Builder()
                     .should(new MatchQuery.Builder()
                         .field(JsonMessageConstants.TEXT_BODY)
@@ -241,15 +247,14 @@ public class CriterionConverter {
                         .toQuery())
                     .build()
                     .toQuery();
-            } else {
-                return new QueryStringQuery.Builder()
-                    .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY))
-                    .query(textCriterion.getOperator().getValue())
-                    .fuzziness(textFuzzinessSearchValue)
-                    .build().toQuery();
             }
         case FULL:
             if (useQueryStringQuery) {
+                return new SimpleQueryStringQuery.Builder()
+                    .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY, JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
+                    .query(textCriterion.getOperator().getValue())
+                    .build().toQuery();
+            } else {
                 return new BoolQuery.Builder()
                     .should(new MatchQuery.Builder()
                         .field(JsonMessageConstants.TEXT_BODY)
@@ -274,31 +279,24 @@ public class CriterionConverter {
                         .toQuery())
                     .build()
                     .toQuery();
-            } else {
-                return new QueryStringQuery.Builder()
-                    .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY, JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
-                    .query(textCriterion.getOperator().getValue())
-                    .fuzziness(textFuzzinessSearchValue)
-                    .build().toQuery();
             }
         case ATTACHMENTS:
             if (useQueryStringQuery) {
-            return new BoolQuery.Builder()
-                .should(new MatchQuery.Builder()
-                    .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
-                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
-                    .fuzziness(textFuzzinessSearchValue)
-                    .operator(Operator.And)
-                    .build()
-                    .toQuery())
-                .build()
-                .toQuery();
-            } else {
-                return new QueryStringQuery.Builder()
+                return new SimpleQueryStringQuery.Builder()
                     .fields(ImmutableList.of(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
                     .query(textCriterion.getOperator().getValue())
-                    .fuzziness(textFuzzinessSearchValue)
                     .build().toQuery();
+            } else {
+                return new BoolQuery.Builder()
+                    .should(new MatchQuery.Builder()
+                        .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
+                        .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                        .fuzziness(textFuzzinessSearchValue)
+                        .operator(Operator.And)
+                        .build()
+                        .toQuery())
+                    .build()
+                    .toQuery();
             }
         case ATTACHMENT_FILE_NAME:
             return new BoolQuery.Builder()
