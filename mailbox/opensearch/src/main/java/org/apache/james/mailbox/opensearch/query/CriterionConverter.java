@@ -494,6 +494,12 @@ public class CriterionConverter {
 
     private Query convertSubject(SearchQuery.SubjectCriterion headerCriterion) {
         if (useQueryStringQuery) {
+            return new QueryStringQuery.Builder()
+                .fields(ImmutableList.of(JsonMessageConstants.SUBJECT))
+                .query(headerCriterion.getSubject())
+                .fuzziness(textFuzzinessSearchValue)
+                .build().toQuery();
+        } else {
             return new MatchQuery.Builder()
                 .field(JsonMessageConstants.SUBJECT)
                 .query(new FieldValue.Builder()
@@ -503,12 +509,6 @@ public class CriterionConverter {
                 .operator(Operator.And)
                 .build()
                 .toQuery();
-        } else {
-            return new QueryStringQuery.Builder()
-                .fields(ImmutableList.of(JsonMessageConstants.SUBJECT))
-                .query(headerCriterion.getSubject())
-                .fuzziness(textFuzzinessSearchValue)
-                .build().toQuery();
         }
     }
 
