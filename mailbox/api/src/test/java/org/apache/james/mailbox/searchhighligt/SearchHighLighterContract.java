@@ -97,6 +97,132 @@ public interface SearchHighLighterContract {
     }
 
     @Test
+    default void shouldHtmlEscapeTheAmpersandCharacter() throws Exception {
+        MailboxSession session = session(USERNAME1);
+
+        // & (ampersand), < (less-than sign), and > (greater-than sign) characters must be HTML escaped
+        // following JMAP specs https://jmap.io/spec-mail.html#search-snippets
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("Hallo, this & character should be escaped.")
+                    .setBody("append contentA to inbox", StandardCharsets.UTF_8)),
+            session).getId();
+
+        verifyMessageWasIndexed(1);
+
+        // When searching for the word `character` in the subject
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.subject("character")))
+            .inMailboxes(List.of(m1.getMailboxId()))
+            .build();
+
+        List<SearchSnippet> searchSnippets = Flux.from(testee().highlightSearch(List.of(m1.getMessageId()), multiMailboxSearch, session))
+            .collectList()
+            .block();
+
+        // Then highlightSearch should return the SearchSnippet with the highlightedSubject that has ampersand character escaped.
+        assertThat(searchSnippets).hasSize(1);
+        assertSoftly(softly -> {
+            softly.assertThat(searchSnippets.getFirst().messageId()).isEqualTo(m1.getMessageId());
+            softly.assertThat(searchSnippets.getFirst().highlightedSubject()).contains("Hallo, this &amp; <mark>character</mark> should be escaped.");
+        });
+    }
+
+    @Test
+    default void shouldHtmlEscapeTheLessThanCharacter() throws Exception {
+        MailboxSession session = session(USERNAME1);
+
+        // & (ampersand), < (less-than sign), and > (greater-than sign) characters must be HTML escaped
+        // following JMAP specs https://jmap.io/spec-mail.html#search-snippets
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("Hallo, this < character should be escaped.")
+                    .setBody("append contentA to inbox", StandardCharsets.UTF_8)),
+            session).getId();
+
+        verifyMessageWasIndexed(1);
+
+        // When searching for the word `character` in the subject
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.subject("character")))
+            .inMailboxes(List.of(m1.getMailboxId()))
+            .build();
+
+        List<SearchSnippet> searchSnippets = Flux.from(testee().highlightSearch(List.of(m1.getMessageId()), multiMailboxSearch, session))
+            .collectList()
+            .block();
+
+        // Then highlightSearch should return the SearchSnippet with the highlightedSubject that has ampersand character escaped.
+        assertThat(searchSnippets).hasSize(1);
+        assertSoftly(softly -> {
+            softly.assertThat(searchSnippets.getFirst().messageId()).isEqualTo(m1.getMessageId());
+            softly.assertThat(searchSnippets.getFirst().highlightedSubject()).contains("Hallo, this &lt; <mark>character</mark> should be escaped.");
+        });
+    }
+
+    @Test
+    default void shouldHtmlEscapeTheGreaterThanCharacter() throws Exception {
+        MailboxSession session = session(USERNAME1);
+
+        // & (ampersand), < (less-than sign), and > (greater-than sign) characters must be HTML escaped
+        // following JMAP specs https://jmap.io/spec-mail.html#search-snippets
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("Hallo, this > character should be escaped.")
+                    .setBody("append contentA to inbox", StandardCharsets.UTF_8)),
+            session).getId();
+
+        verifyMessageWasIndexed(1);
+
+        // When searching for the word `character` in the subject
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.subject("character")))
+            .inMailboxes(List.of(m1.getMailboxId()))
+            .build();
+
+        List<SearchSnippet> searchSnippets = Flux.from(testee().highlightSearch(List.of(m1.getMessageId()), multiMailboxSearch, session))
+            .collectList()
+            .block();
+
+        // Then highlightSearch should return the SearchSnippet with the highlightedSubject that has ampersand character escaped.
+        assertThat(searchSnippets).hasSize(1);
+        assertSoftly(softly -> {
+            softly.assertThat(searchSnippets.getFirst().messageId()).isEqualTo(m1.getMessageId());
+            softly.assertThat(searchSnippets.getFirst().highlightedSubject()).contains("Hallo, this &gt; <mark>character</mark> should be escaped.");
+        });
+    }
+
+    @Test
+    default void shouldNotHtmlEscapeTheSlashCharacter() throws Exception {
+        MailboxSession session = session(USERNAME1);
+
+        ComposedMessageId m1 = appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo("to@james.local")
+                    .setSubject("Hallo, this / character should not be escaped.")
+                    .setBody("append contentA to inbox", StandardCharsets.UTF_8)),
+            session).getId();
+
+        verifyMessageWasIndexed(1);
+
+        // When searching for the word `character` in the subject
+        MultimailboxesSearchQuery multiMailboxSearch = MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.subject("character")))
+            .inMailboxes(List.of(m1.getMailboxId()))
+            .build();
+
+        List<SearchSnippet> searchSnippets = Flux.from(testee().highlightSearch(List.of(m1.getMessageId()), multiMailboxSearch, session))
+            .collectList()
+            .block();
+
+        // Then highlightSearch should return the SearchSnippet with the highlightedSubject that has ampersand character escaped.
+        assertThat(searchSnippets).hasSize(1);
+        assertSoftly(softly -> {
+            softly.assertThat(searchSnippets.getFirst().messageId()).isEqualTo(m1.getMessageId());
+            softly.assertThat(searchSnippets.getFirst().highlightedSubject()).contains("Hallo, this / <mark>character</mark> should not be escaped.");
+        });
+    }
+
+    @Test
     default void highlightSearchShouldReturnHighlightedBodyWhenMatched() throws Exception {
         MailboxSession session = session(USERNAME1);
 

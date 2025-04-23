@@ -55,6 +55,7 @@ import org.apache.james.mailbox.opensearch.query.CriterionConverter;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.mailbox.searchhighligt.SearchHighLighterContract;
 import org.apache.james.mailbox.searchhighligt.SearchHighlighter;
+import org.apache.james.mailbox.searchhighligt.SearchHighlighterConfiguration;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -155,7 +156,7 @@ public class OpenSearchSearchHighlighterTest implements SearchHighLighterContrac
         storeMailboxManager.createMailbox(inboxPath, session);
         inboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(inboxPath, session);
 
-        testee = new OpenSearchSearchHighlighter(openSearchSearcher, storeMailboxManager, messageIdFactory);
+        testee = new OpenSearchSearchHighlighter(openSearchSearcher, storeMailboxManager, messageIdFactory, SearchHighlighterConfiguration.DEFAULT);
     }
 
     @Override

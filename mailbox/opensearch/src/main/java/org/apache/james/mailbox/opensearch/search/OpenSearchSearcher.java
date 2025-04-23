@@ -85,7 +85,7 @@ public class OpenSearchSearcher {
             .build();
 
         this.highlightQuery = new Highlight.Builder()
-            .encoder(HighlighterEncoder.Html)
+            .encoder(HighlighterEncoder.Default)
             .fields(JsonMessageConstants.SUBJECT, highlightField)
             .fields(JsonMessageConstants.TEXT_BODY, highlightField)
             .fields(JsonMessageConstants.HTML_BODY, highlightField)

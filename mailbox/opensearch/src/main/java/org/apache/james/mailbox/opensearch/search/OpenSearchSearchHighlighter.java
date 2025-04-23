@@ -22,6 +22,7 @@ package org.apache.james.mailbox.opensearch.search;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -33,6 +34,7 @@ import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.searchhighligt.SearchHighlighter;
+import org.apache.james.mailbox.searchhighligt.SearchHighlighterConfiguration;
 import org.apache.james.mailbox.searchhighligt.SearchSnippet;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.opensearch.client.opensearch.core.search.Hit;
@@ -42,6 +44,40 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import reactor.core.publisher.Flux;
 
 public class OpenSearchSearchHighlighter implements SearchHighlighter {
+    private static class HtmlEscaper {
+        // Use a random UUID as part of the placeholder to avoid collision and potential attack bypassing HTML escaping
+        private static final UUID RANDOM_UUID = UUID.randomUUID();
+        private static final String HIGHLIGHT_OPEN_TAG_PLACEHOLDER = "HIGHLIGHT_OPEN_" + RANDOM_UUID;
+        private static final String HIGHLIGHT_CLOSE_TAG_PLACEHOLDER = "HIGHLIGHT_CLOSE_" + RANDOM_UUID;
+
+        public static String escapeHtmlPreservingHighlightTags(String input, String highlightOpenTag, String highlightCloseTag) {
+            String withHighlightTagPlaceholders = preserveHighlightTags(input, highlightOpenTag, highlightCloseTag);
+            String escaped = escapeHtmlCharacters(withHighlightTagPlaceholders);
+            return restoreHighlightTags(escaped, highlightOpenTag, highlightCloseTag);
+        }
+
+        private static String preserveHighlightTags(String input, String highlightOpenTag, String highlightCloseTag) {
+            return input
+                .replace(highlightOpenTag, HIGHLIGHT_OPEN_TAG_PLACEHOLDER)
+                .replace(highlightCloseTag, HIGHLIGHT_CLOSE_TAG_PLACEHOLDER);
+        }
+
+        private static String escapeHtmlCharacters(String input) {
+            // & (ampersand), < (less-than sign), and > (greater-than sign) MUST be HTML escaped following the JMAP specification
+            // cf https://jmap.io/spec-mail.html#search-snippets
+            return input
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+        }
+
+        private static String restoreHighlightTags(String input, String highlightOpenTag, String highlightCloseTag) {
+            return input
+                .replace(HIGHLIGHT_OPEN_TAG_PLACEHOLDER, highlightOpenTag)
+                .replace(HIGHLIGHT_CLOSE_TAG_PLACEHOLDER, highlightCloseTag);
+        }
+    }
+
     public static final String ATTACHMENT_TEXT_CONTENT_FIELD = JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT;
     public static final List<String> SNIPPET_FIELDS = List.of(
         JsonMessageConstants.MESSAGE_ID,
@@ -52,13 +88,16 @@ public class OpenSearchSearchHighlighter implements SearchHighlighter {
     private final OpenSearchSearcher openSearchSearcher;
     private final StoreMailboxManager storeMailboxManager;
     private final MessageId.Factory messageIdFactory;
+    private final SearchHighlighterConfiguration searchHighlighterConfiguration;
 
     @Inject
     @Singleton
-    public OpenSearchSearchHighlighter(OpenSearchSearcher openSearchSearcher, StoreMailboxManager storeMailboxManager, MessageId.Factory messageIdFactory) {
+    public OpenSearchSearchHighlighter(OpenSearchSearcher openSearchSearcher, StoreMailboxManager storeMailboxManager, MessageId.Factory messageIdFactory,
+                                       SearchHighlighterConfiguration searchHighlighterConfiguration) {
         this.openSearchSearcher = openSearchSearcher;
         this.storeMailboxManager = storeMailboxManager;
         this.messageIdFactory = messageIdFactory;
+        this.searchHighlighterConfiguration = searchHighlighterConfiguration;
     }
 
     @Override
@@ -86,11 +125,13 @@ public class OpenSearchSearchHighlighter implements SearchHighlighter {
         Map<String, List<String>> highlightHit = searchResult.highlight();
 
         Optional<String> highlightedSubject =  Optional.ofNullable(highlightHit.get(JsonMessageConstants.SUBJECT))
-            .map(List::getFirst);
+            .map(List::getFirst)
+            .map(subject -> HtmlEscaper.escapeHtmlPreservingHighlightTags(subject, searchHighlighterConfiguration.preTagFormatter(), searchHighlighterConfiguration.postTagFormatter()));
         Optional<String> highlightedTextBody = Optional.ofNullable(highlightHit.get(JsonMessageConstants.TEXT_BODY))
             .or(() -> Optional.ofNullable(highlightHit.get(JsonMessageConstants.HTML_BODY)))
             .or(() -> Optional.ofNullable(highlightHit.get(ATTACHMENT_TEXT_CONTENT_FIELD)))
-            .map(List::getFirst);
+            .map(List::getFirst)
+            .map(textBody -> HtmlEscaper.escapeHtmlPreservingHighlightTags(textBody, searchHighlighterConfiguration.preTagFormatter(), searchHighlighterConfiguration.postTagFormatter()));
 
         return new SearchSnippet(messageId, highlightedSubject, highlightedTextBody);
     }
