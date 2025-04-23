@@ -42,6 +42,7 @@ import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
 import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
+import org.apache.james.mailbox.searchhighligt.SearchHighlighterConfiguration;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.utils.InitializationOperation;
@@ -113,12 +114,14 @@ public class OpenSearchMailboxModule extends AbstractModule {
     private OpenSearchSearcher createMailboxOpenSearchSearcher(ReactorOpenSearchClient client,
                                                                QueryConverter queryConverter,
                                                                OpenSearchMailboxConfiguration configuration,
-                                                               RoutingKey.Factory<MailboxId> routingKeyFactory) {
+                                                               RoutingKey.Factory<MailboxId> routingKeyFactory,
+                                                               SearchHighlighterConfiguration searchHighlighterConfiguration) {
         return new OpenSearchSearcher(
             client,
             queryConverter,
             DEFAULT_SEARCH_SIZE,
-            configuration.getReadAliasMailboxName(), routingKeyFactory);
+            configuration.getReadAliasMailboxName(), routingKeyFactory,
+            searchHighlighterConfiguration);
     }
 
     @Provides
@@ -148,5 +151,11 @@ public class OpenSearchMailboxModule extends AbstractModule {
         return InitilizationOperationBuilder
             .forClass(MailboxIndexCreator.class)
             .init(instance::createIndex);
+    }
+
+    @Provides
+    @Singleton
+    SearchHighlighterConfiguration provideSearchHighlighterConfiguration() {
+        return SearchHighlighterConfiguration.DEFAULT;
     }
 }
