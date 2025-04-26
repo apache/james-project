@@ -62,7 +62,7 @@ class MinIOGenerationAwareBlobIdTest {
             SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(actual.getFamily()).isEqualTo(GenerationAwareBlobId.Configuration.DEFAULT.getFamily());
                 soft.assertThat(actual.getGeneration()).isEqualTo(628L);
-                soft.assertThat(actual.getDelegate()).isEqualTo(delegate.of("4/c/c/b/692e-3efb-40e9-8876-4ecfd51ffd4d"));
+                soft.assertThat(actual.getDelegate()).isEqualTo(delegate.of("4/c/cb692e-3efb-40e9-8876-4ecfd51ffd4d"));
             });
         }
     }
