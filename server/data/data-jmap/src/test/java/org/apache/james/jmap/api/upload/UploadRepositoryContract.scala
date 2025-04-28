@@ -21,7 +21,7 @@
 
  import java.io.InputStream
  import java.nio.charset.StandardCharsets
- import java.time.{Clock, Duration}
+ import java.time.Duration
  import java.util.UUID
 
  import org.apache.commons.io.IOUtils

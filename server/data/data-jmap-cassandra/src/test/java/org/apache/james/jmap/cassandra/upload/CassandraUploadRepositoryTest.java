@@ -22,13 +22,12 @@ package org.apache.james.jmap.cassandra.upload;
 import java.time.Clock;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.model.UploadId;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.upload.UploadRepositoryContract;
-import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -45,9 +44,9 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     @BeforeEach
     void setUp() {
         clock = new UpdatableTickingClock(Clock.systemUTC().instant());
+        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         testee = new CassandraUploadRepository(new UploadDAO(cassandra.getCassandraCluster().getConf(),
-            new PlainBlobId.Factory()), new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new PlainBlobId.Factory()),
-            clock);
+            blobIdFactory), blobIdFactory, new MemoryBlobStoreDAO(), clock);
     }
 
     @Override

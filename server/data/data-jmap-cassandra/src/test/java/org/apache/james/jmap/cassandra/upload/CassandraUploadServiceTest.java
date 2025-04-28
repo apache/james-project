@@ -26,7 +26,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
-import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.upload.UploadRepository;
@@ -35,7 +35,6 @@ import org.apache.james.jmap.api.upload.UploadServiceContract;
 import org.apache.james.jmap.api.upload.UploadServiceDefaultImpl;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaDataDefinition;
-import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -51,8 +50,9 @@ class CassandraUploadServiceTest implements UploadServiceContract {
     @BeforeEach
     void setUp(CassandraCluster cassandraCluster) {
         Clock clock = Clock.systemUTC();
-        uploadRepository = new CassandraUploadRepository(new UploadDAO(cassandraCluster.getConf(), new PlainBlobId.Factory()), new DeDuplicationBlobStore(new MemoryBlobStoreDAO(),
-            BucketName.of("default"), new PlainBlobId.Factory()), clock);
+        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
+        uploadRepository = new CassandraUploadRepository(new UploadDAO(cassandraCluster.getConf(),
+            blobIdFactory), blobIdFactory, new MemoryBlobStoreDAO(), clock);
         uploadUsageRepository = new CassandraUploadUsageRepository(new CassandraQuotaCurrentValueDao(cassandraCluster.getConf()));
         testee = new UploadServiceDefaultImpl(uploadRepository, uploadUsageRepository, UploadServiceContract.TEST_CONFIGURATION());
     }

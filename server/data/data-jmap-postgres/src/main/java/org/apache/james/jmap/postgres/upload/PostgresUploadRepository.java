@@ -20,18 +20,19 @@
 package org.apache.james.jmap.postgres.upload;
 
 import static org.apache.james.backends.postgres.PostgresCommons.INSTANT_TO_LOCAL_DATE_TIME;
-import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.io.InputStream;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.Upload;
@@ -49,17 +50,19 @@ import reactor.core.publisher.Mono;
 
 public class PostgresUploadRepository implements UploadRepository {
     public static final BucketName UPLOAD_BUCKET = BucketName.of("jmap-uploads");
-    private final BlobStore blobStore;
+    private final BlobId.Factory blobIdFactory;
+    private final BlobStoreDAO blobStoreDAO;
     private final Clock clock;
     private final PostgresUploadDAO.Factory uploadDAOFactory;
     private final PostgresUploadDAO byPassRLSUploadDAO;
 
     @Inject
     @Singleton
-    public PostgresUploadRepository(BlobStore blobStore, Clock clock,
+    public PostgresUploadRepository(BlobId.Factory blobIdFactory, BlobStoreDAO blobStoreDAO, Clock clock,
                                     PostgresUploadDAO.Factory uploadDAOFactory,
                                     PostgresUploadDAO byPassRLSUploadDAO) {
-        this.blobStore = blobStore;
+        this.blobIdFactory = blobIdFactory;
+        this.blobStoreDAO = blobStoreDAO;
         this.clock = clock;
         this.uploadDAOFactory = uploadDAOFactory;
         this.byPassRLSUploadDAO = byPassRLSUploadDAO;
@@ -68,17 +71,20 @@ public class PostgresUploadRepository implements UploadRepository {
     @Override
     public Mono<UploadMetaData> upload(InputStream data, ContentType contentType, Username user) {
         UploadId uploadId = generateId();
+        BlobId blobId = blobIdFactory.of(UUID.randomUUID().toString());
         PostgresUploadDAO uploadDAO = uploadDAOFactory.create(user.getDomainPart());
+
         return Mono.fromCallable(() -> new CountingInputStream(data))
-            .flatMap(countingInputStream -> Mono.from(blobStore.save(UPLOAD_BUCKET, countingInputStream, LOW_COST))
-                .map(blobId -> UploadMetaData.from(uploadId, contentType, countingInputStream.getCount(), blobId, clock.instant()))
-                .flatMap(uploadMetaData -> uploadDAO.insert(uploadMetaData, user)));
+            .flatMap(countingInputStream -> Mono.from(blobStoreDAO.save(UPLOAD_BUCKET, blobId, countingInputStream))
+                    .thenReturn(countingInputStream))
+                .map(countingInputStream -> UploadMetaData.from(uploadId, contentType, countingInputStream.getCount(), blobId, clock.instant()))
+                .flatMap(uploadMetaData -> uploadDAO.insert(uploadMetaData, user));
     }
 
     @Override
     public Mono<Upload> retrieve(UploadId id, Username user) {
         return uploadDAOFactory.create(user.getDomainPart()).get(id, user)
-            .flatMap(upload -> Mono.from(blobStore.readReactive(UPLOAD_BUCKET, upload.blobId(), LOW_COST))
+            .flatMap(upload -> Mono.from(blobStoreDAO.readReactive(UPLOAD_BUCKET, upload.blobId()))
                 .map(inputStream -> Upload.from(upload, () -> inputStream)))
             .switchIfEmpty(Mono.error(() -> new UploadNotFoundException(id)));
     }
@@ -101,7 +107,7 @@ public class PostgresUploadRepository implements UploadRepository {
             .flatMap(uploadPair -> {
                 Username username = uploadPair.getRight();
                 UploadMetaData upload = uploadPair.getLeft();
-                return Mono.from(blobStore.delete(UPLOAD_BUCKET, upload.blobId()))
+                return Mono.from(blobStoreDAO.delete(UPLOAD_BUCKET, upload.blobId()))
                     .then(byPassRLSUploadDAO.delete(upload.uploadId(), username));
             }, DEFAULT_CONCURRENCY)
             .then();
