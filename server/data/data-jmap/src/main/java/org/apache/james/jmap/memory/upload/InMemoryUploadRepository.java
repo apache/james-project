@@ -33,7 +33,6 @@ import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.Username;
