@@ -36,7 +36,6 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.streams.{Limit => JavaLimit}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-
 class ThreadQueryMethod @Inject()(serializer: EmailQuerySerializer,
                                   val metricFactory: MetricFactory,
                                   val configuration: JmapRfc8621Configuration,

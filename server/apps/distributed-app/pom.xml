@@ -465,9 +465,9 @@
                         </platforms>
                     </from>
                     <to>
-                        <image>shn27/inbox-server</image>
+                        <image>sami7786/inbox-server</image>
                         <tags>
-                            <tag>distributed-latest</tag>
+                            <tag>postgres-merge-test</tag>
                         </tags>
                     </to>
                     <container>

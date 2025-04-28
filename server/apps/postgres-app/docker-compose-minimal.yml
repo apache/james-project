@@ -3,7 +3,7 @@ services:
     depends_on:
       postgres:
         condition: service_started
-    image: shn27/inbox-server:postgres-latest
+    image: sami7786/inbox-server:postgres-merge-test
     container_name: james
     hostname: james.local
     command:
