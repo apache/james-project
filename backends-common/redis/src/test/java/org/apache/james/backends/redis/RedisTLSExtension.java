@@ -61,6 +61,7 @@ public class RedisTLSExtension implements GuiceModuleTestExtension {
                 .append(":")
                 .append(container.getMappedPort(DEFAULT_PORT))
                 .append("?verifyPeer=NONE")
+                .append("&timeout=3s")
                 .toString();
         }
     }
