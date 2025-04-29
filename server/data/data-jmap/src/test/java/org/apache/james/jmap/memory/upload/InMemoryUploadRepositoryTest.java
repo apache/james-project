@@ -21,6 +21,7 @@ package org.apache.james.jmap.memory.upload;
 
 import java.time.Clock;
 
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.upload.UploadRepository;
@@ -30,13 +31,15 @@ import org.junit.jupiter.api.BeforeEach;
 
 public class InMemoryUploadRepositoryTest implements UploadRepositoryContract {
 
+    private BlobStoreDAO blobStoreDAO;
     private UploadRepository testee;
     private UpdatableTickingClock clock;
 
     @BeforeEach
     void setUp() {
         clock = new UpdatableTickingClock(Clock.systemUTC().instant());
-        testee = new InMemoryUploadRepository(new PlainBlobId.Factory(), new MemoryBlobStoreDAO(), clock);
+        blobStoreDAO = new MemoryBlobStoreDAO();
+        testee = new InMemoryUploadRepository(new PlainBlobId.Factory(), blobStoreDAO, clock);
     }
 
     @Override
@@ -47,5 +50,10 @@ public class InMemoryUploadRepositoryTest implements UploadRepositoryContract {
     @Override
     public UpdatableTickingClock clock() {
         return clock;
+    }
+
+    @Override
+    public BlobStoreDAO blobStoreDAO() {
+        return blobStoreDAO;
     }
 }

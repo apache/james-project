@@ -23,6 +23,7 @@ import java.time.Clock;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.model.UploadId;
@@ -38,6 +39,7 @@ import com.datastax.oss.driver.api.core.uuid.Uuids;
 class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     @RegisterExtension
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(UploadDataDefinition.MODULE);
+    private BlobStoreDAO blobStoreDAO;
     private CassandraUploadRepository testee;
     private UpdatableTickingClock clock;
 
@@ -45,8 +47,9 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     void setUp() {
         clock = new UpdatableTickingClock(Clock.systemUTC().instant());
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
+        blobStoreDAO = new MemoryBlobStoreDAO();
         testee = new CassandraUploadRepository(new UploadDAO(cassandra.getCassandraCluster().getConf(),
-            blobIdFactory), blobIdFactory, new MemoryBlobStoreDAO(), clock);
+            blobIdFactory), blobIdFactory, blobStoreDAO, clock);
     }
 
     @Override
@@ -75,5 +78,10 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     @Override
     public UpdatableTickingClock clock() {
         return clock;
+    }
+
+    @Override
+    public BlobStoreDAO blobStoreDAO() {
+        return blobStoreDAO;
     }
 }

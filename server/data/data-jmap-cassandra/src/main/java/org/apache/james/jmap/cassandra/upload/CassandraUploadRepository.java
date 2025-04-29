@@ -25,7 +25,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 import jakarta.inject.Inject;
 
@@ -64,7 +63,7 @@ public class CassandraUploadRepository implements UploadRepository {
     @Override
     public Mono<UploadMetaData> upload(InputStream data, ContentType contentType, Username user) {
         UploadId uploadId = generateId();
-        BlobId blobId = blobIdFactory.of(UUID.randomUUID().toString());
+        BlobId blobId = blobIdFactory.of(uploadId.asString());
 
         return Mono.fromCallable(() -> new CountingInputStream(data))
             .flatMap(countingInputStream -> Mono.from(blobStoreDAO.save(UPLOAD_BUCKET, blobId, countingInputStream))

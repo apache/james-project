@@ -24,6 +24,7 @@ import java.time.Clock;
 import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.upload.UploadRepository;
@@ -37,6 +38,7 @@ class PostgresUploadRepositoryTest implements UploadRepositoryContract {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(
         PostgresDataDefinition.aggregateModules(PostgresUploadDataDefinition.MODULE));
+    private BlobStoreDAO blobStoreDAO;
     private UploadRepository testee;
     private UpdatableTickingClock clock;
 
@@ -46,7 +48,8 @@ class PostgresUploadRepositoryTest implements UploadRepositoryContract {
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         PostgresUploadDAO uploadDAO = new PostgresUploadDAO(postgresExtension.getDefaultPostgresExecutor(), blobIdFactory);
         PostgresUploadDAO.Factory uploadFactory = new PostgresUploadDAO.Factory(blobIdFactory, postgresExtension.getExecutorFactory());
-        testee = new PostgresUploadRepository(blobIdFactory, new MemoryBlobStoreDAO(), clock, uploadFactory, uploadDAO);
+        blobStoreDAO = new MemoryBlobStoreDAO();
+        testee = new PostgresUploadRepository(blobIdFactory, blobStoreDAO, clock, uploadFactory, uploadDAO);
     }
 
     @Override
@@ -57,5 +60,10 @@ class PostgresUploadRepositoryTest implements UploadRepositoryContract {
     @Override
     public UpdatableTickingClock clock() {
         return clock;
+    }
+
+    @Override
+    public BlobStoreDAO blobStoreDAO() {
+        return blobStoreDAO;
     }
 }

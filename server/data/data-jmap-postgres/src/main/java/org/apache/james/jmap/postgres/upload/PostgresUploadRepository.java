@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -71,7 +70,7 @@ public class PostgresUploadRepository implements UploadRepository {
     @Override
     public Mono<UploadMetaData> upload(InputStream data, ContentType contentType, Username user) {
         UploadId uploadId = generateId();
-        BlobId blobId = blobIdFactory.of(UUID.randomUUID().toString());
+        BlobId blobId = blobIdFactory.of(uploadId.asString());
         PostgresUploadDAO uploadDAO = uploadDAOFactory.create(user.getDomainPart());
 
         return Mono.fromCallable(() -> new CountingInputStream(data))

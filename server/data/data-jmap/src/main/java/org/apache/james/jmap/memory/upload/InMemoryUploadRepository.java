@@ -27,7 +27,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import jakarta.inject.Inject;
 
@@ -74,13 +73,14 @@ public class InMemoryUploadRepository implements UploadRepository {
         Preconditions.checkNotNull(data);
         Preconditions.checkNotNull(contentType);
         Preconditions.checkNotNull(user);
-        BlobId blobId = blobIdFactory.of(UUID.randomUUID().toString());
+
+        UploadId uploadId = UploadId.random();
+        BlobId blobId = blobIdFactory.of(uploadId.asString());
 
         return Mono.fromCallable(() -> new CountingInputStream(data))
             .flatMap(dataAsByte -> Mono.from(blobStoreDAO.save(bucketName, blobId, dataAsByte))
                     .thenReturn(dataAsByte))
                 .map(dataAsByte -> {
-                    UploadId uploadId = UploadId.random();
                     Instant uploadDate = clock.instant();
                     uploadStore.put(uploadId, new ImmutablePair<>(user, UploadMetaData.from(uploadId, contentType, dataAsByte.getCount(), blobId, uploadDate)));
                     return UploadMetaData.from(uploadId, contentType, dataAsByte.getCount(), blobId, uploadDate);
