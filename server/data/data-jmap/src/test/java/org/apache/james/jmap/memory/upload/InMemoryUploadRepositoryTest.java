@@ -21,26 +21,25 @@ package org.apache.james.jmap.memory.upload;
 
 import java.time.Clock;
 
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.upload.UploadRepositoryContract;
-import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
 
 public class InMemoryUploadRepositoryTest implements UploadRepositoryContract {
 
+    private BlobStoreDAO blobStoreDAO;
     private UploadRepository testee;
     private UpdatableTickingClock clock;
 
     @BeforeEach
     void setUp() {
-        BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, new PlainBlobId.Factory());
         clock = new UpdatableTickingClock(Clock.systemUTC().instant());
-        testee = new InMemoryUploadRepository(blobStore, clock);
+        blobStoreDAO = new MemoryBlobStoreDAO();
+        testee = new InMemoryUploadRepository(new PlainBlobId.Factory(), blobStoreDAO, clock);
     }
 
     @Override
@@ -51,5 +50,10 @@ public class InMemoryUploadRepositoryTest implements UploadRepositoryContract {
     @Override
     public UpdatableTickingClock clock() {
         return clock;
+    }
+
+    @Override
+    public BlobStoreDAO blobStoreDAO() {
+        return blobStoreDAO;
     }
 }
