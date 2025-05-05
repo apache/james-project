@@ -65,9 +65,9 @@ object WebPushClientHeader {
 
 sealed abstract class WebPushException(message: String) extends RuntimeException(message)
 
-case class WebPushInvalidRequestException(detailError: String) extends WebPushException(s"Bad request when call to Push Server. ${detailError}")
+case class WebPushInvalidRequestException(detailError: String) extends WebPushException(s"Bad request when call to Push Server. $detailError")
 
-case class WebPushTemporarilyUnavailableException(detailError: String) extends WebPushException(s"Error when call to Push Server. ${detailError}")
+case class WebPushTemporarilyUnavailableException(httpCode: Int, detailError: String) extends WebPushException(s"Error when call to Push Server: code $httpCode. $detailError")
 
 object DefaultWebPushClient {
   val PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH: Int = 1024
