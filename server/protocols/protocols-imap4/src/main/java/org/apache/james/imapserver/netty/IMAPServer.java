@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import static org.apache.james.imapserver.netty.HAProxyMessageHandler.PROXY_INFO;
+
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.SocketAddress;
@@ -394,7 +396,10 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                 return new ConnectionDescription(
                     "IMAP",
                     jmxName,
-                    Optional.ofNullable(channel.remoteAddress()).map(this::addressAsString),
+                    Optional.ofNullable(channel.attr(PROXY_INFO)).flatMap(attr -> Optional.ofNullable(attr.get()))
+                        .map(proxyInfo -> (SocketAddress) proxyInfo.getSource())
+                        .or(() -> Optional.ofNullable(channel.remoteAddress()))
+                        .map(this::addressAsString),
                     Optional.ofNullable(channel.attr(CONNECTION_DATE)).flatMap(attribute -> Optional.ofNullable(attribute.get())),
                     channel.isActive(),
                     channel.isOpen(),
