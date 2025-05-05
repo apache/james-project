@@ -71,8 +71,8 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 
-class OpenSearchNoIndexBodyIntegrationTest {
-    static final int SEARCH_SIZE = 1;
+class OpenSearchQueryStringTest {
+    static final int SEARCH_SIZE = 10;
     private static final Username USERNAME = Username.of("user");
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
         .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
@@ -113,6 +113,10 @@ class OpenSearchNoIndexBodyIntegrationTest {
         MailboxIndexCreationUtil.prepareClient(client, readAliasName, writeAliasName, indexName,
             openSearch.getDockerOpenSearch().configuration());
 
+        OpenSearchMailboxConfiguration openSearchMailboxConfiguration = OpenSearchMailboxConfiguration.builder()
+            .indexBody(IndexBody.YES)
+            .useQueryStringQuery(true)
+            .build();
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
@@ -123,10 +127,10 @@ class OpenSearchNoIndexBodyIntegrationTest {
                 preInstanciationStage.getMapperFactory(),
                 ImmutableSet.of(),
                 new OpenSearchIndexer(client, writeAliasName),
-                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, readAliasName, routingKeyFactory),
-                new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES, IndexBody.NO),
+                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter(openSearchMailboxConfiguration)), SEARCH_SIZE, readAliasName, routingKeyFactory),
+                new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES, IndexBody.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory,
-                OpenSearchMailboxConfiguration.builder().indexBody(IndexBody.NO).build(), new RecordingMetricFactory(),
+                openSearchMailboxConfiguration, new RecordingMetricFactory(),
                 ImmutableSet.of()))
             .noPreDeletionHooks()
             .storeQuotaManager()
@@ -150,37 +154,26 @@ class OpenSearchNoIndexBodyIntegrationTest {
 
     @Test
     void searchingByBodyContentShouldNotReturnMessageWhenNoIndexBody() throws Exception {
-        addMessage(session, inboxPath).block();
+        ComposedMessageId expectedId = addMessage(session, inboxPath, "Lucas love avocado banana smoothie").block();
+        addMessage(session, inboxPath, "Avocado grows in Mexico").block();
 
-        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 2L);
 
-        SearchQuery searchQuery = SearchQuery.of(SearchQuery.bodyContains("Hello"));
-
-        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).collectList().block())
-            .isEmpty();
-    }
-
-    @Test
-    void searchingAllShoulReturnMessageWhenNoIndexBody() throws Exception {
-        ComposedMessageId composedMessageId = addMessage(session, inboxPath).block();
-
-        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 1L);
-
-        SearchQuery searchQuery = SearchQuery.of(SearchQuery.all());
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.bodyContains("\"love avocado\""));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).collectList().block())
-            .containsExactly(composedMessageId.getUid());
+            .containsOnly(expectedId.getUid());
     }
 
 
-    private Mono<ComposedMessageId> addMessage(MailboxSession session, MailboxPath mailboxPath) throws Exception {
+    private Mono<ComposedMessageId> addMessage(MailboxSession session, MailboxPath mailboxPath, String message) throws Exception {
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "user@example.com";
         return Mono.from(messageManager.appendMessageReactive(MessageManager.AppendCommand.from(
                     Message.Builder.of()
                         .setTo(recipient)
-                        .setBody("Hello", StandardCharsets.UTF_8)),
+                        .setBody(message, StandardCharsets.UTF_8)),
                 session))
             .map(MessageManager.AppendResult::getId);
     }

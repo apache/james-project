@@ -49,22 +49,27 @@ import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
 import org.opensearch.client.opensearch._types.query_dsl.NestedQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Operator;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.QueryStringQuery;
 import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
+import org.opensearch.client.opensearch._types.query_dsl.SimpleQueryStringQuery;
 import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 public class CriterionConverter {
 
     private final Map<Class<?>, Function<Criterion, Query>> criterionConverterMap;
     private final Map<Class<?>, BiFunction<String, HeaderOperator, Query>> headerOperatorConverterMap;
     private final String textFuzzinessSearchValue;
+    private final boolean useQueryStringQuery;
 
     @Inject
     public CriterionConverter(OpenSearchMailboxConfiguration openSearchMailboxConfiguration) {
         this.criterionConverterMap = new HashMap<>();
         this.headerOperatorConverterMap = new HashMap<>();
         this.textFuzzinessSearchValue = evaluateFuzzinessValue(openSearchMailboxConfiguration.textFuzzinessSearchEnable());
+        this.useQueryStringQuery = openSearchMailboxConfiguration.isUseQueryStringQuery();
         
         registerCriterionConverters();
         registerHeaderOperatorConverters();
@@ -75,6 +80,7 @@ public class CriterionConverter {
         this.criterionConverterMap = new HashMap<>();
         this.headerOperatorConverterMap = new HashMap<>();
         this.textFuzzinessSearchValue = evaluateFuzzinessValue(DEFAULT_TEXT_FUZZINESS_SEARCH);
+        this.useQueryStringQuery = false;
 
         registerCriterionConverters();
         registerHeaderOperatorConverters();
@@ -218,59 +224,80 @@ public class CriterionConverter {
     private Query convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
         switch (textCriterion.getType()) {
         case BODY:
-            return new BoolQuery.Builder()
-                .should(new MatchQuery.Builder()
-                    .field(JsonMessageConstants.TEXT_BODY)
-                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
-                    .fuzziness(textFuzzinessSearchValue)
-                    .operator(Operator.And)
+            if (useQueryStringQuery) {
+                return new SimpleQueryStringQuery.Builder()
+                    .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY))
+                    .query(textCriterion.getOperator().getValue())
+                    .build().toQuery();
+            } else {
+                return new BoolQuery.Builder()
+                    .should(new MatchQuery.Builder()
+                        .field(JsonMessageConstants.TEXT_BODY)
+                        .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                        .fuzziness(textFuzzinessSearchValue)
+                        .operator(Operator.And)
+                        .build()
+                        .toQuery())
+                    .should(new MatchQuery.Builder()
+                        .field(JsonMessageConstants.HTML_BODY)
+                        .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                        .fuzziness(textFuzzinessSearchValue)
+                        .operator(Operator.And)
+                        .build()
+                        .toQuery())
                     .build()
-                    .toQuery())
-                .should(new MatchQuery.Builder()
-                    .field(JsonMessageConstants.HTML_BODY)
-                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
-                    .fuzziness(textFuzzinessSearchValue)
-                    .operator(Operator.And)
-                    .build()
-                    .toQuery())
-                .build()
-                .toQuery();
+                    .toQuery();
+            }
         case FULL:
-            return new BoolQuery.Builder()
-                .should(new MatchQuery.Builder()
-                    .field(JsonMessageConstants.TEXT_BODY)
-                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
-                    .fuzziness(textFuzzinessSearchValue)
-                    .operator(Operator.And)
+            if (useQueryStringQuery) {
+                return new SimpleQueryStringQuery.Builder()
+                    .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY, JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
+                    .query(textCriterion.getOperator().getValue())
+                    .build().toQuery();
+            } else {
+                return new BoolQuery.Builder()
+                    .should(new MatchQuery.Builder()
+                        .field(JsonMessageConstants.TEXT_BODY)
+                        .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                        .fuzziness(textFuzzinessSearchValue)
+                        .operator(Operator.And)
+                        .build()
+                        .toQuery())
+                    .should(new MatchQuery.Builder()
+                        .field(JsonMessageConstants.HTML_BODY)
+                        .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                        .fuzziness(textFuzzinessSearchValue)
+                        .operator(Operator.And)
+                        .build()
+                        .toQuery())
+                    .should(new MatchQuery.Builder()
+                        .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
+                        .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                        .fuzziness(textFuzzinessSearchValue)
+                        .operator(Operator.And)
+                        .build()
+                        .toQuery())
                     .build()
-                    .toQuery())
-                .should(new MatchQuery.Builder()
-                    .field(JsonMessageConstants.HTML_BODY)
-                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
-                    .fuzziness(textFuzzinessSearchValue)
-                    .operator(Operator.And)
-                    .build()
-                    .toQuery())
-                .should(new MatchQuery.Builder()
-                    .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
-                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
-                    .fuzziness(textFuzzinessSearchValue)
-                    .operator(Operator.And)
-                    .build()
-                    .toQuery())
-                .build()
-                .toQuery();
+                    .toQuery();
+            }
         case ATTACHMENTS:
-            return new BoolQuery.Builder()
-                .should(new MatchQuery.Builder()
-                    .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
-                    .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
-                    .fuzziness(textFuzzinessSearchValue)
-                    .operator(Operator.And)
+            if (useQueryStringQuery) {
+                return new SimpleQueryStringQuery.Builder()
+                    .fields(ImmutableList.of(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
+                    .query(textCriterion.getOperator().getValue())
+                    .build().toQuery();
+            } else {
+                return new BoolQuery.Builder()
+                    .should(new MatchQuery.Builder()
+                        .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT)
+                        .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                        .fuzziness(textFuzzinessSearchValue)
+                        .operator(Operator.And)
+                        .build()
+                        .toQuery())
                     .build()
-                    .toQuery())
-                .build()
-                .toQuery();
+                    .toQuery();
+            }
         case ATTACHMENT_FILE_NAME:
             return new BoolQuery.Builder()
                 .should(new MatchQuery.Builder()
@@ -466,15 +493,23 @@ public class CriterionConverter {
     }
 
     private Query convertSubject(SearchQuery.SubjectCriterion headerCriterion) {
-        return new MatchQuery.Builder()
-            .field(JsonMessageConstants.SUBJECT)
-            .query(new FieldValue.Builder()
-                .stringValue(headerCriterion.getSubject())
-                .build())
-            .fuzziness(textFuzzinessSearchValue)
-            .operator(Operator.And)
-            .build()
-            .toQuery();
+        if (useQueryStringQuery) {
+            return new QueryStringQuery.Builder()
+                .fields(ImmutableList.of(JsonMessageConstants.SUBJECT))
+                .query(headerCriterion.getSubject())
+                .fuzziness(textFuzzinessSearchValue)
+                .build().toQuery();
+        } else {
+            return new MatchQuery.Builder()
+                .field(JsonMessageConstants.SUBJECT)
+                .query(new FieldValue.Builder()
+                    .stringValue(headerCriterion.getSubject())
+                    .build())
+                .fuzziness(textFuzzinessSearchValue)
+                .operator(Operator.And)
+                .build()
+                .toQuery();
+        }
     }
 
     private Query manageAddressFields(String headerName, String value) {
