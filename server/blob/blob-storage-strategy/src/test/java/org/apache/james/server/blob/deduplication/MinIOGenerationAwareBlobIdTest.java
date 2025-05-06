@@ -95,6 +95,22 @@ class MinIOGenerationAwareBlobIdTest {
         }
 
         @Test
+        void previousFourFolderDepthBlobIdsShouldBeParsedAsMinIOGenerationAwareBlobId() {
+            String fourDepthBlobIdString = delegate.of("1/628/3/6/8/2/5033-d835-4490-9f5a-eef120b1e85c").asString();
+
+            BlobId actual = testee.parse(fourDepthBlobIdString);
+            assertThat(actual)
+                .isInstanceOfSatisfying(MinIOGenerationAwareBlobId.class, actualBlobId -> {
+                    SoftAssertions.assertSoftly(soft -> {
+                        soft.assertThat(actualBlobId.getFamily()).isEqualTo(1);
+                        soft.assertThat(actualBlobId.getGeneration()).isEqualTo(628L);
+                        soft.assertThat(actualBlobId.getDelegate().asString()).isEqualTo("3/6/8/2/5033-d835-4490-9f5a-eef120b1e85c");
+                        soft.assertThat(actualBlobId.asString()).isEqualTo("1/628/3/6/8/2/5033-d835-4490-9f5a-eef120b1e85c");
+                    });
+                });
+        }
+
+        @Test
         void noFamilyShouldBeParsable() {
             String originalBlobId = "abcdef";
             String blobIdString = "0/0/" + delegate.of(originalBlobId).asString();
@@ -206,7 +222,7 @@ class MinIOGenerationAwareBlobIdTest {
         void asStringShouldIntegrateFamilyAndGeneration() {
             BlobId blobId = testee.of("36825033-d835-4490-9f5a-eef120b1e85c");
 
-            assertThat(blobId.asString()).isEqualTo("1/628/3/6/8/2/5033-d835-4490-9f5a-eef120b1e85c");
+            assertThat(blobId.asString()).isEqualTo("1/628/3/6/825033-d835-4490-9f5a-eef120b1e85c");
         }
 
         @Test
@@ -220,7 +236,8 @@ class MinIOGenerationAwareBlobIdTest {
         @ValueSource(strings = {
             "1/2/a/b/c/d/efgh",
             "abc",
-            "1/2/abc"
+            "1/2/abc",
+            "1/628/3/6/8/2/5033-d835-4490-9f5a-eef120b1e85c"
         })
         void asStringShouldRevertFromString(String blobIdString) {
             BlobId blobId = testee.parse(blobIdString);
