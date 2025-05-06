@@ -131,8 +131,8 @@ class DefaultWebPushClient @Inject()(configuration: PushClientConfiguration) ext
         case HttpResponseStatus.CREATED => Mono.empty()
         case HttpResponseStatus.BAD_REQUEST => preProcessingData(dataBuf)
           .flatMap(string => Mono.error(WebPushInvalidRequestException(string)))
-        case _ => preProcessingData(dataBuf)
-          .flatMap(string => Mono.error(WebPushTemporarilyUnavailableException(string)))
+        case statusCode: HttpResponseStatus => preProcessingData(dataBuf)
+          .flatMap(string => Mono.error(WebPushTemporarilyUnavailableException(statusCode.code, string)))
       }.`then`()
 
   private def preProcessingData(dataBuf: ByteBufMono): Mono[String] =
