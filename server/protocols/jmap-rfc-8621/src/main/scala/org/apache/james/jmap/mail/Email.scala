@@ -626,7 +626,8 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
           size = sanitizeSize(firstMessage.getSize)),
         header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
         bodyMetadata = EmailBodyMetadata(
-          hasAttachment = HasAttachment(!bodyStructure.attachments.exists(attachment -> attachment.disposition.contains(ATTACHMENT) || attachment.cid.isEmpty)),
+          hasAttachment = HasAttachment(bodyStructure.attachments.exists(attachment =>
+            attachment.disposition.contains(ATTACHMENT) && attachment.cid.isEmpty)),
           preview = preview),
         body = EmailBody(
           bodyStructure = bodyStructure,

@@ -4829,6 +4829,120 @@ trait EmailGetMethodContract {
   }
 
   @Test
+  def inlinedAttachmentMailShouldNotBeCountedAsHasAttachmentWhenEmailFullView(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/simple-inlined-attachment.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"ids": ["${messageId.serialize}"],
+         |				"properties": [
+         |					"id",
+         |					"subject",
+         |					"from",
+         |					"to",
+         |					"cc",
+         |					"bcc",
+         |					"keywords",
+         |					"size",
+         |					"receivedAt",
+         |					"sentAt",
+         |					"preview",
+         |					"hasAttachment",
+         |					"attachments",
+         |					"replyTo",
+         |					"mailboxIds"
+         |				],
+         |				"fetchTextBodyValues": true
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
+      s"""{
+         |    "sessionState": "${SESSION_STATE.value}",
+         |    "methodResponses": [
+         |        [
+         |            "Email/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "state": "33ac468f-7903-4f68-ac3e-8120505b5c3d",
+         |                "list": [
+         |                    {
+         |                        "id": "${messageId.serialize}",
+         |                        "keywords": {},
+         |                        "mailboxIds": {
+         |                            "${mailboxId.serialize}": true
+         |                        },
+         |                        "size": 7638,
+         |                        "receivedAt": "$${json-unit.ignore}",
+         |                        "to": [
+         |                            {
+         |                                "name": "Alice",
+         |                                "email": "alice@domain.tld"
+         |                            }
+         |                        ],
+         |                        "from": [
+         |                            {
+         |                                "name": "Bob",
+         |                                "email": "bob@domain.tld"
+         |                            }
+         |                        ],
+         |                        "subject": "inlined attachment",
+         |                        "sentAt": "$${json-unit.ignore}",
+         |                        "attachments": [
+         |                            {
+         |                                "partId": "5",
+         |                                "blobId": "${messageId.serialize}_5",
+         |                                "size": 4334,
+         |                                "name": "Screenshot 2025-05-06 at 09.50.27.png",
+         |                                "type": "image/png",
+         |                                "charset": "base64",
+         |                                "disposition": "inline",
+         |                                "cid": "e612b3e0-2a24-11f0-aacf-77a69744ec20"
+         |                            }
+         |                        ],
+         |                        "hasAttachment": false,
+         |                        "preview": "start[Screenshot 2025-05-06 at 09]end"
+         |                    }
+         |                ],
+         |                "notFound": []
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
   def shouldUseFastViewWithAttachmentMetadataWhenSupportedBodyProperties(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.inbox(BOB)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
