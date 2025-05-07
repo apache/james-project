@@ -38,6 +38,7 @@ import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperti
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{Properties, UTCDate}
 import org.apache.james.jmap.mail.BracketHeader.sanitize
+import org.apache.james.jmap.mail.Disposition.ATTACHMENT
 import org.apache.james.jmap.mail.EmailFullViewFactory.extractBodyValues
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
 import org.apache.james.jmap.mail.EmailHeaderName.{ADDRESSES_NAMES, DATE, MESSAGE_ID_NAMES}
@@ -625,7 +626,8 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
           size = sanitizeSize(firstMessage.getSize)),
         header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
         bodyMetadata = EmailBodyMetadata(
-          hasAttachment = HasAttachment(!firstMessage.getLoadedAttachments.isEmpty),
+          hasAttachment = HasAttachment(bodyStructure.attachments.exists(attachment =>
+            attachment.disposition.contains(ATTACHMENT) && attachment.cid.isEmpty)),
           preview = preview),
         body = EmailBody(
           bodyStructure = bodyStructure,
