@@ -74,13 +74,11 @@ public class MinIOGenerationAwareBlobId implements BlobId, GenerationAware {
         }
 
         private static String injectFoldersInBlobId(String blobIdPart) {
-            int folderDepthToCreate = 4;
+            int folderDepthToCreate = 2;
             if (blobIdPart.length() > folderDepthToCreate) {
                 return blobIdPart.charAt(0) + "/" +
                     blobIdPart.charAt(1) + "/" +
-                    blobIdPart.charAt(2) + "/" +
-                    blobIdPart.charAt(3) + "/" +
-                    blobIdPart.substring(4);
+                    blobIdPart.substring(2);
             }
             return blobIdPart;
         }
