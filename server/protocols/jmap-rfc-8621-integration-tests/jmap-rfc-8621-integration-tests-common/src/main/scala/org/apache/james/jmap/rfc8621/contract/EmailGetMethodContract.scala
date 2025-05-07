@@ -4902,7 +4902,7 @@ trait EmailGetMethodContract {
          |                        "mailboxIds": {
          |                            "${mailboxId.serialize}": true
          |                        },
-         |                        "size": 7638,
+         |                        "size": 7609,
          |                        "receivedAt": "$${json-unit.ignore}",
          |                        "to": [
          |                            {
