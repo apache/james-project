@@ -33,7 +33,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-public class GuiceGenericLoader {
+public class GuiceGenericLoader implements GuiceLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(GuiceGenericLoader.class);
 
     @VisibleForTesting
@@ -41,7 +41,7 @@ public class GuiceGenericLoader {
         return new GuiceGenericLoader(Guice.createInjector(), extendedClassLoader, ExtensionConfiguration.DEFAULT);
     }
 
-    public static class InvocationPerformer<T> {
+    public static class InvocationPerformer<T> implements GuiceLoader.InvocationPerformer<T> {
         private final Injector injector;
         private final ExtendedClassLoader extendedClassLoader;
         private final NamingScheme namingScheme;
@@ -52,6 +52,7 @@ public class GuiceGenericLoader {
             this.namingScheme = namingScheme;
         }
 
+        @Override
         public T instantiate(ClassName className) throws ClassNotFoundException {
             try {
                 Class<T> clazz = locateClass(className);
@@ -80,10 +81,12 @@ public class GuiceGenericLoader {
             return (Stream) extendedClassLoader.locateClass(className).stream();
         }
 
+        @Override
         public InvocationPerformer<T> withChildModule(Module childModule) {
             return new InvocationPerformer<>(injector.createChildInjector(childModule), extendedClassLoader, namingScheme);
         }
 
+        @Override
         public InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {
             return new InvocationPerformer<>(injector, extendedClassLoader, namingSheme);
         }
@@ -110,15 +113,18 @@ public class GuiceGenericLoader {
                 .instantiate(className);
     }
 
+    @Override
     public <T> T instantiate(ClassName className) throws ClassNotFoundException {
         return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY)
                 .instantiate(className);
     }
 
+    @Override
     public <T> InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {
         return new InvocationPerformer<>(injector, extendedClassLoader, namingSheme);
     }
 
+    @Override
     public <T> InvocationPerformer<T> withChildModule(Module childModule) {
         return new InvocationPerformer<>(injector.createChildInjector(childModule), extendedClassLoader, NamingScheme.IDENTITY);
     }
