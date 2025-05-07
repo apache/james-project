@@ -109,7 +109,7 @@ public class RedisSentinelExtension implements GuiceModuleTestExtension {
             sb.append("redis-sentinel://123@");
             sb.append(this.stream().map(container -> container.getHost() + ":" + container.getMappedPort(SENTINEL_PORT))
                 .collect(Collectors.joining(",")));
-            sb.append("?sentinelMasterId=mymaster");
+            sb.append("?sentinelMasterId=mymaster&timeout=3s");
             return sb.toString();
         }
     }

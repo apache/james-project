@@ -20,10 +20,9 @@
 package org.apache.james.backends.redis
 
 import java.time.Duration
-
 import io.lettuce.core.cluster.{ClusterClientOptions, RedisClusterClient}
 import io.lettuce.core.resource.ClientResources
-import io.lettuce.core.{AbstractRedisClient, ClientOptions, RedisClient, SslOptions}
+import io.lettuce.core.{AbstractRedisClient, ClientOptions, RedisClient, SslOptions, TimeoutOptions}
 import jakarta.annotation.PreDestroy
 import jakarta.inject.{Inject, Singleton}
 import org.apache.james.filesystem.api.FileSystem
@@ -80,6 +79,7 @@ class RedisClientFactory @Singleton() @Inject()
 
   private def createClientOptions(useSSL: Boolean, mayBeSSLConfiguration: Option[SSLConfiguration]): ClientOptions = {
     val clientOptionsBuilder = ClientOptions.builder
+    clientOptionsBuilder.timeoutOptions(TimeoutOptions.enabled)
     if (useSSL) {
       mayBeSSLConfiguration.foreach(sslConfig => {
         if (!sslConfig.ignoreCertificateCheck) {

@@ -176,6 +176,7 @@ public class RedisClusterExtension implements GuiceModuleTestExtension {
             .setScheme("redis")
             .setHost(redisContainer.getHost())
             .setPort(redisContainer.getMappedPort(DEFAULT_PORT))
+            .setParameter("timeout", "3s")
             .build()).get();
     }
 }

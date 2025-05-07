@@ -19,25 +19,21 @@
 
 package org.apache.james.backends.redis
 
-import java.time.Duration
-
 import io.lettuce.core.api.reactive.RedisStringReactiveCommands
 import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.codec.StringCodec
 import io.lettuce.core.masterreplica.MasterReplica
 import io.lettuce.core.{AbstractRedisClient, RedisClient}
 import jakarta.inject.Inject
-import org.apache.james.backends.redis.RedisHealthCheck.{healthCheckKey, healthCheckValue, healthcheckTimeout, redisComponent}
+import org.apache.james.backends.redis.RedisHealthCheck.{healthCheckKey, healthCheckValue, redisComponent}
 import org.apache.james.core.healthcheck.{ComponentName, HealthCheck, Result}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
-import scala.jdk.DurationConverters._
 
 object RedisHealthCheck {
   val redisComponent: ComponentName = new ComponentName("Redis")
-  val healthcheckTimeout: Duration = Duration.ofSeconds(3)
   val healthCheckKey: String = "healthcheck"
   val healthCheckValue: String = "healthy"
 }
@@ -63,7 +59,6 @@ class RedisHealthCheck @Inject()(redisClientFactory: RedisClientFactory, redisCo
   override def check(): Publisher[Result] =
     SMono(redisCommand.set(healthCheckKey, healthCheckValue)
         .`then`(redisCommand.getdel(healthCheckKey)))
-      .timeout(healthcheckTimeout.toScala)
       .map(_ => Result.healthy(redisComponent))
       .switchIfEmpty(SMono.just(Result.degraded(redisComponent, "Can not write to Redis.")))
       .onErrorResume(_ => SMono.just(Result.degraded(redisComponent, "Can not connect to Redis.")))
