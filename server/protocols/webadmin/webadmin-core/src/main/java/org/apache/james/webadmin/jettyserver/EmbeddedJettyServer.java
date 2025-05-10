@@ -28,6 +28,7 @@ import java.util.Optional;
 import jakarta.servlet.DispatcherType;
 
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.SessionHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -137,7 +138,7 @@ public class EmbeddedJettyServer extends VirtualThreadAware.Proxy implements Emb
         final ServletContextHandler servletContextHandler = webSocketServletContextHandler == null ?
             new ServletContextHandler() : webSocketServletContextHandler;
 
-        final JettyHandler sessionHandler = new JettyHandler(matcherFilter);
+        final SessionHandler sessionHandler = new SessionHandler();
         sessionHandler.getSessionCookieConfig().setHttpOnly(httpOnly);
         servletContextHandler.setSessionHandler(sessionHandler);
 
