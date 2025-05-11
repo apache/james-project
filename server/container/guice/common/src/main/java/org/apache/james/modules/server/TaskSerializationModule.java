@@ -33,7 +33,7 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.utils.ExtensionConfiguration;
-import org.apache.james.utils.GuiceGenericLoader;
+import org.apache.james.utils.GuiceLoader;
 import org.apache.james.utils.NamingScheme;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class TaskSerializationModule extends AbstractModule {
     public Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> provideAdditionalInformationDTOModules(
         Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> additionalInformationDTOModules,
         ExtensionConfiguration extensionConfiguration,
-        GuiceGenericLoader loader) {
+        GuiceLoader loader) {
 
         Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> extensionAdditionalInformationDTOModules = extensionConfiguration.getTaskExtensions()
             .stream()
@@ -78,7 +78,7 @@ public class TaskSerializationModule extends AbstractModule {
     public Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> provideTaskDTOModules(
         Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> taskDTOModules,
         ExtensionConfiguration extensionConfiguration,
-        GuiceGenericLoader loader) {
+        GuiceLoader loader) {
 
         Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> extensionTaskDTOModules = extensionConfiguration.getTaskExtensions()
             .stream()

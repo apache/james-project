@@ -29,17 +29,17 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.imap.api.ConnectionCheck;
 import org.apache.james.imap.api.ConnectionCheckFactory;
 import org.apache.james.utils.ClassName;
-import org.apache.james.utils.GuiceGenericLoader;
+import org.apache.james.utils.GuiceLoader;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableSet;
 
 public class ConnectionCheckFactoryImpl implements ConnectionCheckFactory {
-    private final GuiceGenericLoader loader;
+    private final GuiceLoader guiceLoader;
 
     @Inject
-    public ConnectionCheckFactoryImpl(GuiceGenericLoader loader) {
-        this.loader = loader;
+    public ConnectionCheckFactoryImpl(GuiceLoader guiceLoader) {
+        this.guiceLoader = guiceLoader;
     }
 
     @Override
@@ -48,7 +48,7 @@ public class ConnectionCheckFactoryImpl implements ConnectionCheckFactory {
             .collect(ImmutableSet.toImmutableSet())
             .stream()
             .map(ClassName::new)
-            .map(Throwing.function(loader::instantiate))
+            .map(Throwing.function(guiceLoader::instantiate))
             .map(ConnectionCheck.class::cast)
             .collect(ImmutableSet.toImmutableSet());
     }

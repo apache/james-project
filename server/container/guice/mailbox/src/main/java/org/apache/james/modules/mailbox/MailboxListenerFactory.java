@@ -27,7 +27,7 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.events.EventListener;
 import org.apache.james.utils.ClassName;
-import org.apache.james.utils.GuiceGenericLoader;
+import org.apache.james.utils.GuiceLoader;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Module;
@@ -37,13 +37,14 @@ import com.google.inject.util.Modules;
 public class MailboxListenerFactory {
 
     public static class MailboxListenerBuilder {
-        private final GuiceGenericLoader genericLoader;
+        private final GuiceLoader guiceLoader;
         private Optional<ClassName> clazz;
         private Optional<EventListener.ExecutionMode> executionMode;
         private Optional<HierarchicalConfiguration<ImmutableNode>> configuration;
 
-        public MailboxListenerBuilder(GuiceGenericLoader genericLoader) {
-            this.genericLoader = genericLoader;
+        @Inject
+        public MailboxListenerBuilder(GuiceLoader genericLoader) {
+            this.guiceLoader = genericLoader;
             this.clazz = Optional.empty();
             this.executionMode = Optional.empty();
             this.configuration = Optional.empty();
@@ -82,19 +83,19 @@ public class MailboxListenerFactory {
                 binder -> binder.bind(new TypeLiteral<HierarchicalConfiguration<ImmutableNode>>() {})
                     .toInstance(configuration.orElse(new BaseHierarchicalConfiguration())));
 
-            return genericLoader.<EventListener>withChildModule(childModule)
+            return guiceLoader.<EventListener>withChildModule(childModule)
                 .instantiate(clazz.get());
         }
     }
 
-    private final GuiceGenericLoader genericLoader;
+    private final GuiceLoader guiceLoader;
 
     @Inject
-    public MailboxListenerFactory(GuiceGenericLoader genericLoader) {
-        this.genericLoader = genericLoader;
+    public MailboxListenerFactory(GuiceLoader guiceLoader) {
+        this.guiceLoader = guiceLoader;
     }
 
     public MailboxListenerBuilder newInstance() {
-        return new MailboxListenerBuilder(genericLoader);
+        return new MailboxListenerBuilder(guiceLoader);
     }
 }

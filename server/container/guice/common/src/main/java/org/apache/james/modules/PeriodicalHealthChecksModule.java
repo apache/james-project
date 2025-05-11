@@ -29,7 +29,7 @@ import org.apache.james.PeriodicalHealthChecks;
 import org.apache.james.PeriodicalHealthChecksConfiguration;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.utils.ClassName;
-import org.apache.james.utils.GuiceGenericLoader;
+import org.apache.james.utils.GuiceLoader;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.NamingScheme;
@@ -59,7 +59,7 @@ public class PeriodicalHealthChecksModule extends AbstractModule {
     @Singleton
     @Provides
     @Named("resolved-checks")
-    Set<HealthCheck> provideHealthChecks(Set<HealthCheck> builtInHealthChecks, GuiceGenericLoader loader,
+    Set<HealthCheck> provideHealthChecks(Set<HealthCheck> builtInHealthChecks, GuiceLoader loader,
                                          PeriodicalHealthChecksConfiguration configuration) {
         Set<HealthCheck> additionalHealthChecks = configuration.getAdditionalHealthChecks()
             .stream()

@@ -27,11 +27,11 @@ import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import com.google.inject.Inject;
 
 public class GuiceProtocolHandlerLoader implements ProtocolHandlerLoader {
-    private final GuiceGenericLoader genericLoader;
+    private final GuiceLoader guiceLoader;
 
     @Inject
-    public GuiceProtocolHandlerLoader(GuiceGenericLoader genericLoader) {
-        this.genericLoader = genericLoader;
+    public GuiceProtocolHandlerLoader(GuiceLoader genericLoader) {
+        this.guiceLoader = genericLoader;
     }
 
     @Override
@@ -48,7 +48,7 @@ public class GuiceProtocolHandlerLoader implements ProtocolHandlerLoader {
     private ProtocolHandler createProtocolHandler(String name) throws LoadingException {
         try {
             ClassName className = new ClassName(name);
-            return genericLoader.instantiate(className);
+            return guiceLoader.instantiate(className);
         } catch (Exception e) {
             throw new LoadingException("Can not load " + name, e);
         }

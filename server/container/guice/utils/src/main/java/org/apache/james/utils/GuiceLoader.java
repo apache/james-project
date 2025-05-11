@@ -27,6 +27,8 @@ public interface GuiceLoader {
 
         T instantiate(ClassName className) throws ClassNotFoundException;
 
+        Class<T> locateClass(ClassName className)throws ClassNotFoundException;
+
         InvocationPerformer<T> withChildModule(Module childModule);
 
         InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme);

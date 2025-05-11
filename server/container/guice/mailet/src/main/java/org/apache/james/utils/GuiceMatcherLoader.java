@@ -31,18 +31,18 @@ public class GuiceMatcherLoader implements MatcherLoader {
     private static final PackageName STANDARD_PACKAGE = PackageName.of("org.apache.james.transport.matchers.");
     private static final NamingScheme MATCHER_NAMING_SCHEME = new NamingScheme.OptionalPackagePrefix(STANDARD_PACKAGE);
 
-    private final GuiceGenericLoader genericLoader;
+    private final GuiceLoader guiceLoader;
 
     @Inject
-    public GuiceMatcherLoader(GuiceGenericLoader genericLoader) {
-        this.genericLoader = genericLoader;
+    public GuiceMatcherLoader(GuiceLoader guiceLoader) {
+        this.guiceLoader = guiceLoader;
     }
 
     @Override
     public Matcher getMatcher(MatcherConfig config) throws MessagingException {
         try {
             ClassName className = new ClassName(config.getMatcherName());
-            Matcher result = genericLoader.<Matcher>withNamingSheme(MATCHER_NAMING_SCHEME)
+            Matcher result = guiceLoader.<Matcher>withNamingSheme(MATCHER_NAMING_SCHEME)
                 .instantiate(className);
             result.init(config);
             return result;

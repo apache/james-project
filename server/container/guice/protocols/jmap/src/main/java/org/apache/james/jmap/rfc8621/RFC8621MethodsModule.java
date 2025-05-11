@@ -98,7 +98,7 @@ import org.apache.james.jmap.routes.UploadRoutes;
 import org.apache.james.jmap.routes.WebSocketRoutes;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.ClassName;
-import org.apache.james.utils.GuiceGenericLoader;
+import org.apache.james.utils.GuiceLoader;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.NamingScheme;
@@ -223,13 +223,13 @@ public class RFC8621MethodsModule extends AbstractModule {
     @Provides
     @Singleton
     @Named("jmapRFC8621AuthenticationStrategies")
-    public Set<AuthenticationStrategy> provideAuthenticationStrategies(GuiceGenericLoader loader,
+    public Set<AuthenticationStrategy> provideAuthenticationStrategies(GuiceLoader guiceLoader,
                                                                        JmapRfc8621Configuration configuration) {
         return configuration.getAuthenticationStrategiesAsJava()
             .orElse(DEFAULT_AUTHENTICATION_STRATEGIES)
             .stream()
             .map(ClassName::new)
-            .map(Throwing.function(loader.<AuthenticationStrategy>withNamingSheme(
+            .map(Throwing.function(guiceLoader.<AuthenticationStrategy>withNamingSheme(
                 new NamingScheme.OptionalPackagePrefix(IMPLICIT_AUTHENTICATION_STRATEGY_FQDN_PREFIX))::instantiate))
             .collect(ImmutableSet.toImmutableSet());
     }
