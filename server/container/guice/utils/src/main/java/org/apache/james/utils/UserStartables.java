@@ -43,19 +43,19 @@ public class UserStartables implements Startable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserStartables.class);
 
-    private final GuiceGenericLoader loader;
+    private final GuiceLoader guiceLoader;
     private final ExtensionConfiguration extensionConfiguration;
 
     @Inject
-    public UserStartables(GuiceGenericLoader loader, ExtensionConfiguration extensionConfiguration) {
-        this.loader = loader;
+    public UserStartables(GuiceGenericLoader guiceLoader, ExtensionConfiguration extensionConfiguration) {
+        this.guiceLoader = guiceLoader;
         this.extensionConfiguration = extensionConfiguration;
     }
 
     public void start() {
         extensionConfiguration.getStartables()
             .stream()
-            .map(Throwing.<ClassName, UserDefinedStartable>function(loader::instantiate))
+            .map(Throwing.<ClassName, UserDefinedStartable>function(guiceLoader::instantiate))
             .peek(module -> LOGGER.info("Starting {}", module.getClass().getCanonicalName()))
             .forEach(UserDefinedStartable::start);
     }

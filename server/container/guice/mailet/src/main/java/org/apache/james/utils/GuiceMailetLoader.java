@@ -36,11 +36,11 @@ public class GuiceMailetLoader implements MailetLoader {
     private static final PackageName STANDARD_PACKAGE = PackageName.of("org.apache.james.transport.mailets.");
     private static final NamingScheme MAILET_NAMING_SCHEME = new NamingScheme.OptionalPackagePrefix(STANDARD_PACKAGE);
 
-    private final GuiceGenericLoader genericLoader;
+    private final GuiceLoader genericLoader;
     private final Map<Class<? extends Mailet>, MailetConfig> configurationOverrides;
 
     @Inject
-    public GuiceMailetLoader(GuiceGenericLoader genericLoader, Set<MailetConfigurationOverride> mailetConfigurationOverrides) {
+    public GuiceMailetLoader(GuiceLoader genericLoader, Set<MailetConfigurationOverride> mailetConfigurationOverrides) {
         this.genericLoader = genericLoader;
         this.configurationOverrides = mailetConfigurationOverrides.stream()
                 .collect(ImmutableMap.toImmutableMap(

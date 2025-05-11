@@ -20,7 +20,7 @@ package org.apache.james.modules.mailbox;
 
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.utils.ClassName;
-import org.apache.james.utils.GuiceGenericLoader;
+import org.apache.james.utils.GuiceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,17 +29,17 @@ import com.google.inject.Inject;
 public class PreDeletionHookLoaderImpl implements PreDeletionHookLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(PreDeletionHookLoaderImpl.class);
 
-    private final GuiceGenericLoader genericLoader;
+    private final GuiceLoader guiceLoader;
 
     @Inject
-    PreDeletionHookLoaderImpl(GuiceGenericLoader guiceGenericLoader) {
-        this.genericLoader = guiceGenericLoader;
+    PreDeletionHookLoaderImpl(GuiceLoader guiceLoader) {
+        this.guiceLoader = guiceLoader;
     }
 
     @Override
     public PreDeletionHook createHook(PreDeletionHookConfiguration configuration) throws ClassNotFoundException {
         ClassName hookClass = new ClassName(configuration.getClazz());
         LOGGER.info("Loading user registered mailbox message deletionHook {}", hookClass);
-        return genericLoader.instantiate(hookClass);
+        return guiceLoader.instantiate(hookClass);
     }
 }

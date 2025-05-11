@@ -24,17 +24,17 @@ import org.apache.james.mailrepository.api.MailRepositoryLoader;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.utils.ClassName;
-import org.apache.james.utils.GuiceGenericLoader;
+import org.apache.james.utils.GuiceLoader;
 
 import com.google.inject.Inject;
 import com.google.inject.Module;
 
 public class GuiceMailRepositoryLoader implements MailRepositoryLoader {
-    private final GuiceGenericLoader genericLoader;
+    private final GuiceLoader guiceLoader;
 
     @Inject
-    public GuiceMailRepositoryLoader(GuiceGenericLoader genericLoader) {
-        this.genericLoader = genericLoader;
+    public GuiceMailRepositoryLoader(GuiceLoader guiceLoader) {
+        this.guiceLoader = guiceLoader;
     }
 
     @Override
@@ -42,7 +42,7 @@ public class GuiceMailRepositoryLoader implements MailRepositoryLoader {
         try {
             Module urlModule = binder -> binder.bind(MailRepositoryUrl.class).toInstance(url);
 
-            return genericLoader.<MailRepository>withChildModule(urlModule)
+            return guiceLoader.<MailRepository>withChildModule(urlModule)
                 .instantiate(new ClassName(fullyQualifiedClassName));
         } catch (ClassNotFoundException e) {
             throw new MailRepositoryStore.UnsupportedRepositoryStoreException("No Mail Repository found with class name " + fullyQualifiedClassName);

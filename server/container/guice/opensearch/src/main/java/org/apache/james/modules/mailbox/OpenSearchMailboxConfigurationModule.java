@@ -28,7 +28,7 @@ import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex.SearchOverride;
 import org.apache.james.utils.ClassName;
-import org.apache.james.utils.GuiceGenericLoader;
+import org.apache.james.utils.GuiceLoader;
 import org.apache.james.utils.NamingScheme;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
@@ -46,7 +46,7 @@ public class OpenSearchMailboxConfigurationModule extends AbstractModule {
 
 
     @Provides
-    Set<SearchOverride> provideSearchOverrides(GuiceGenericLoader loader, OpenSearchConfiguration configuration) {
+    Set<SearchOverride> provideSearchOverrides(GuiceLoader loader, OpenSearchConfiguration configuration) {
         return configuration.getSearchOverrides()
             .stream()
             .map(ClassName::new)
