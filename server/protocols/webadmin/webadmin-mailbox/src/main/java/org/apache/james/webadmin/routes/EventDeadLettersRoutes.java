@@ -38,6 +38,7 @@ import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
+import reactor.core.publisher.Mono;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -106,6 +107,7 @@ public class EventDeadLettersRoutes implements Routes {
 
         return eventDeadLettersService.getEvent(group, insertionId)
             .map(eventSerializer::toJson)
+            .switchIfEmpty(Mono.fromRunnable(() ->  response.status(HttpStatus.NOT_FOUND_404)))
             .block();
     }
 
