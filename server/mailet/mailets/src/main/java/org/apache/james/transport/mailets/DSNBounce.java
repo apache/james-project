@@ -20,6 +20,8 @@
 package org.apache.james.transport.mailets;
 
 import static org.apache.james.transport.mailets.remote.delivery.Bouncer.DELIVERY_ERROR;
+import static org.apache.mailet.base.AutomaticallySentMailDetector.AUTO_REPLIED_VALUE;
+import static org.apache.mailet.base.AutomaticallySentMailDetector.AUTO_SUBMITTED_HEADER;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -70,6 +72,7 @@ import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
@@ -395,6 +398,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         MimeMessage newMessage = new MimeMessage(Session.getDefaultInstance(System.getProperties(), null));
         newMessage.setContent(multipart);
         newMessage.setHeader(RFC2822Headers.CONTENT_TYPE, multipart.getContentType());
+        newMessage.setHeader(AUTO_SUBMITTED_HEADER, AUTO_REPLIED_VALUE);
         return newMessage;
     }
 
