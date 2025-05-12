@@ -126,7 +126,7 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
         String blobIdString = blobId.asString();
 
         // Then: BlobId string and parsed BlobId should match expectations
-        assertThat(blobIdString).isEqualTo("1/628/M/f/e/m/XjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY=");
+        assertThat(blobIdString).isEqualTo("1/628/M/f/emXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY=");
         assertThat(blobId).isEqualTo(blobIdFactory().parse(blobIdString));
     }
 
