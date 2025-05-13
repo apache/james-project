@@ -92,7 +92,8 @@ public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
             return redisContainer -> "redis://123@" +
                 redisContainer.getHost() +
                 ":" +
-                redisContainer.getMappedPort(DEFAULT_PORT);
+                redisContainer.getMappedPort(DEFAULT_PORT)
+                + "?timeout=3s";
         }
     }
 
