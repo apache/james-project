@@ -17,6 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
+/**
+ /**
+ * The `SanitizeMimeMessageId` mailet is designed to address a specific issue where some email clients, such as Outlook for Android, do not add the MIME `Message-ID` header to the emails they send.
+ * The absence of the `Message-ID` header can cause emails to be rejected by downstream mail servers,
+ * as required by RFC 5322 specifications.
+ *
+ * Sample configuration:
+ *
+ * <pre><code>
+ * &lt;mailet match="All" class="SanitizeMimeMessageId"&gt;
+ * &lt;/mailet&gt;
+ * </code></pre>
+ */
+
 package org.apache.james.transport.mailets;
 
 import jakarta.mail.MessagingException;

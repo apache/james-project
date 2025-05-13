@@ -1,0 +1,28 @@
+=== SanitizeMimeMessageId Mailet
+
+Some email clients, such as Outlook for Android, may send emails **without a `Message-ID` header**.
+
+== Why is this needed?
+ The absence of the `Message-ID` header can cause emails to be rejected by downstream mail servers,
+ as required by RFC 5322 specifications. For example, Gmail rejects messages without this header with
+ an error like the following:
+ 550-5.7.1 [IP] Messages missing a valid Message-ID header are not
+ 550-5.7.1 accepted. For more information, go to
+ 550-5.7.1 https://support.google.com/mail/?p=RfcMessageNonCompliant and review
+ 550 5.7.1 RFC 5322 specifications.
+
+To mitigate this, the `SanitizeMimeMessageId` mailet will automatically add a `Message-ID` to emails **that lack one**.
+
+== Configuration
+
+You can configure it simply by adding the following in your `mailetcontainer`:
+
+....
+<mailet match="All" class="SanitizeMimeMessageId"/>
+....
+
+== Behavior
+
+- If a `Message-ID` header already exists: nothing is done.
+- If the header is missing: a new one is generated and added.
+
