@@ -108,7 +108,7 @@ public class BucketNameResolver {
         }).orElse(Optional.of(bucketName));
     }
 
-    private boolean isNameSpace(BucketName bucketName) {
+    public boolean isNameSpace(BucketName bucketName) {
         return namespace
             .map(existingNamespace -> existingNamespace.equals(bucketName))
             .orElse(false);
