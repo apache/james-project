@@ -1874,6 +1874,23 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void renameMailboxToAnExistingMailboxShouldThrowMailboxExistsException() throws MailboxException {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath existingPath = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath toBeRenamed = MailboxPath.forUser(USER_1, "mbx2");
+
+            mailboxManager.createMailbox(existingPath, session);
+            subscriptionManager.subscribe(session, existingPath);
+
+            mailboxManager.createMailbox(toBeRenamed, session);
+            subscriptionManager.subscribe(session, toBeRenamed);
+
+            assertThatThrownBy(() -> mailboxManager.renameMailbox(toBeRenamed, existingPath, RENAME_SUBSCRIPTIONS, session))
+                .isInstanceOf(MailboxExistsException.class);
+        }
+
+        @Test
         void renameMailboxShouldRenameSubscriptionWhenCalledWithRenameSubscriptionOption() throws MailboxException {
             MailboxSession session = mailboxManager.createSystemSession(USER_1);
 

@@ -434,15 +434,20 @@ public class StoreMailboxManager implements MailboxManager {
             .flatMap(any -> inheritRightsReactive(mailboxSession, mailboxPath).thenReturn(any));
     }
 
-
-    private Mono<Void> assertCanCreateReactive(MailboxSession session, MailboxPath path) {
+    private Mono<Boolean> canCreateReactive(MailboxSession session, MailboxPath path) {
         if (path.belongsTo(session)) {
-            return Mono.empty();
+            return Mono.just(true);
         }
 
         return nearestExistingParent(session, path)
             .filterWhen(parent -> hasRightReactive(parent, Right.CreateMailbox, session))
-            .switchIfEmpty(Mono.error(new InsufficientRightsException("user '" + session.getUser().asString() + "' is not allowed to create the mailbox '" + path.asString() + "'")))
+            .hasElement();
+    }
+
+    private Mono<Void> assertCanCreateReactive(MailboxSession session, MailboxPath path) {
+        return canCreateReactive(session, path)
+            .filter(canCreate -> canCreate)
+            .switchIfEmpty(Mono.error(() -> new InsufficientRightsException("user '" + session.getUser().asString() + "' is not allowed to create the mailbox '" + path.asString() + "'")))
             .then();
     }
 
@@ -469,7 +474,7 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         mailboxMapper.execute(() -> block(mailboxMapper.findMailboxByPath(mailboxPath)
-            .filterWhen(mailbox -> assertCanDeleteReactive(session, mailbox.generateAssociatedPath()).thenReturn(true))
+            .flatMap(mailbox -> assertCanDeleteReactive(session, mailbox))
             .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session))
             .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxPath)))));
     }
@@ -480,7 +485,7 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         return mailboxMapper.execute(() -> block(mailboxMapper.findMailboxById(mailboxId)
-            .filterWhen(mailbox -> assertCanDeleteReactive(session, mailbox.generateAssociatedPath()).thenReturn(true))
+            .flatMap(mailbox -> assertCanDeleteReactive(session, mailbox))
             .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session))));
     }
 
@@ -490,7 +495,7 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         return mailboxMapper.executeReactive(mailboxMapper.findMailboxById(mailboxId)
-            .filterWhen(mailbox -> assertCanDeleteReactive(session, mailbox.generateAssociatedPath()).thenReturn(true))
+            .flatMap(mailbox -> assertCanDeleteReactive(session, mailbox))
             .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session)));
     }
 
@@ -500,33 +505,34 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         return mailboxMapper.executeReactive(mailboxMapper.findMailboxByPath(mailboxPath)
-            .filterWhen(mailbox -> assertCanDeleteReactive(session, mailbox.generateAssociatedPath()).thenReturn(true))
+            .flatMap(mailbox -> assertCanDeleteReactive(session, mailbox))
             .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session))
             .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxPath))))
             .then();
     }
 
-    private Mono<Void> assertCanDeleteReactive(MailboxSession session, MailboxPath path) {
+    private Mono<Mailbox> assertCanDeleteReactive(MailboxSession session, Mailbox mailbox) {
+        MailboxPath path = mailbox.generateAssociatedPath();
         if (path.belongsTo(session)) {
-            return Mono.empty();
+            return Mono.just(mailbox);
         }
         return Mono.from(hasRightReactive(path, Right.DeleteMailbox, session))
             .flatMap(hasRight -> {
                 if (hasRight) {
-                    return Mono.empty();
+                    return Mono.just(mailbox);
                 }
                 return Mono.error(new InsufficientRightsException("user '" + session.getUser().asString() + "' is not allowed to delete the mailbox '" + path.asString() + "'"));
             });
     }
 
-    private Mono<Void> assertCanDeleteWhenRename(MailboxSession session, MailboxPath path) {
+    private Mono<MailboxPath> assertCanDeleteWhenRename(MailboxSession session, MailboxPath path) {
         if (path.belongsTo(session)) {
-            return Mono.empty();
+            return Mono.just(path);
         }
         return Mono.from(myRightsReactive(path, session))
             .flatMap(rights -> {
                 if (rights.contains(Right.DeleteMailbox)) {
-                    return Mono.empty();
+                    return Mono.just(path);
                 } else if (!rights.contains(Right.Lookup)) {
                     return Mono.error(new MailboxNotFoundException(path));
                 } else {
@@ -633,7 +639,8 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         Mono<Mailbox> fromMailboxPublisher = mapper.findMailboxById(mailboxId)
-            .filterWhen(mailbox -> assertCanDeleteWhenRename(session, mailbox.generateAssociatedPath()).thenReturn(true))
+            .flatMap(mailbox -> assertCanDeleteWhenRename(session, mailbox.generateAssociatedPath())
+                .thenReturn(mailbox))
             .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxId)));
 
         return sanitizedMailboxPath(newMailboxPath, session)
@@ -642,16 +649,15 @@ public class StoreMailboxManager implements MailboxManager {
 
     private Mono<MailboxPath> sanitizedMailboxPath(MailboxPath mailboxPath, MailboxSession session) {
         Function<MailboxPath, Mono<Boolean>> assertNewMailboxPathDoesNotExist = newMailboxPath -> mailboxExists(mailboxPath, session)
-            .filter(FunctionalUtils.identityPredicate().negate())
-            .switchIfEmpty(Mono.error(new MailboxExistsException(mailboxPath.toString())))
-            .thenReturn(true);
+            .map(FunctionalUtils.negate());
 
-        Function<MailboxPath, Mono<Boolean>> assertRightToCreate = newMailboxPath -> assertCanCreateReactive(session, mailboxPath)
-            .thenReturn(true);
+        Function<MailboxPath, Mono<Boolean>> assertRightToCreate = newMailboxPath -> canCreateReactive(session, mailboxPath);
 
         return Mono.fromCallable(() -> mailboxPath.sanitize(session.getPathDelimiter()))
             .filterWhen(assertNewMailboxPathDoesNotExist)
+            .switchIfEmpty(Mono.error(() -> new MailboxExistsException(mailboxPath.toString())))
             .filterWhen(assertRightToCreate)
+            .switchIfEmpty(Mono.error(() -> new InsufficientRightsException("user '" + session.getUser().asString() + "' is not allowed to create the mailbox '" + mailboxPath.asString() + "'")))
             .flatMap(newMailboxPath -> Mono.fromCallable(() -> newMailboxPath.assertAcceptable(session.getPathDelimiter())));
     }
 
