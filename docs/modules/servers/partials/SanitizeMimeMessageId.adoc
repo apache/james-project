@@ -15,7 +15,7 @@ To mitigate this, the `SanitizeMimeMessageId` mailet will automatically add a `M
 
 == Configuration
 
-You can configure it simply by adding the following in your `mailetcontainer`:
+You can configure it simply by adding the following in your `mailetcontainer.xml` file:
 
 ....
 <mailet match="All" class="SanitizeMimeMessageId"/>
