@@ -70,15 +70,59 @@ public class EnforcedHeaderLimitationHookIntegrationTest {
         headers.append("HEADER1: value1\r\n");
         headers.append("HEADER2: value2\r\n");
         headers.append("HEADER3: value3\r\n");
-        headers.append("HEADER4: value4\r\n");
-        headers.append("HEADER5: value5\r\n");
-
-
-        smtpProtocol.sendShortMessageData(headers + "\r\nBody: Test body\r\n.\r\n");
+        smtpProtocol.sendShortMessageData(headers.toString() + "Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n\"");
 
         assertThat(smtpProtocol.getReplyString())
-            .as("too many header lines")
-            .isEqualTo("too many header lines");
+            .as("expected 552 error")
+            .isEqualTo("552 Header Lines are too many\r\n");
+    }
+
+    @Test
+    void shouldRejectWhenSizeTooLarge() throws Exception {
+        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream("smtpserver-EnforceHeader.xml")));
+        testSystem.smtpServer.init();
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        authenticate(smtpProtocol);
+
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS");
+        smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
+
+        StringBuilder headers = new StringBuilder();
+        headers.append("From: bob@localhost\r\n");
+        headers.append("HEADER1: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaazertyuytgyuetgfrugreyryutgryuryfguyrtgfruyrftguyyurgryegyugfreyurgiopqsdfghjklwxfyhgyuguygftfytfytfytftfteffsrzfztzzftztdtfcvbnzertyuiosdfghjkjnnzaesfrvfdt\r\n");
+        headers.append("HEADER2: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaazertyuighgghgguygjygyugyuguyyfuftyfytfyfythfytfryefopqsdfghjklwxfyhgyuguygftfytfytfytftfteffsrzfztzzftztdtfcvbnzertyuiosdfghjkjnnzaesfrvfdt\r\n");
+
+        smtpProtocol.sendShortMessageData(headers.toString() + "Subject: test mail for the smtp sever to check if the hook that controls the limits of lines and size allowed is correctly stopping the server from excepting ecxeeded quota iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii \r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n\"");
+
+        assertThat(smtpProtocol.getReplyString())
+            .as("expected 552 error")
+            .isEqualTo("552 Header size is too large\r\n");
+    }
+
+    @Test
+    void shouldSendMessageWhenWithinLimits() throws Exception {
+        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream("smtpserver-EnforceHeader.xml")));
+        testSystem.smtpServer.init();
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        authenticate(smtpProtocol);
+
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS");
+        smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
+        smtpProtocol.sendShortMessageData("From: bob@localhost\r\nFrom: bob@localhost\r\nto: aziz@localhost\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
+
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected message to be sent")
+            .isEqualTo(250);
     }
 
     private void authenticate(SMTPClient smtpProtocol) throws IOException {

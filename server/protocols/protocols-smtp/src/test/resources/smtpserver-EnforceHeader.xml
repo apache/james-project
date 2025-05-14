@@ -43,8 +43,8 @@
     <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
     <handlerchain>
         <handler class="org.apache.james.smtpserver.EnforceHeaderLimitationsMessageHook">
-            <maxLines>500</maxLines>
-            <maxSize>64</maxSize>
+            <maxLines>5</maxLines>
+            <maxSize>1</maxSize>
         </handler>
         <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
     </handlerchain>

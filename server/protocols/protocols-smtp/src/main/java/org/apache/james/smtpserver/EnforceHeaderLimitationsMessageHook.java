@@ -16,7 +16,10 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.smtpserver;
+
+import java.util.Enumeration;
 
 import jakarta.mail.Header;
 
@@ -34,29 +37,21 @@ public class EnforceHeaderLimitationsMessageHook implements JamesMessageHook {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EnforceHeaderLimitationsMessageHook.class);
     private static final int DEFAULT_MAX_LINES = 500;
-    private static final int DEFAULT_MAX_SIZE = 64;
+    private static final int DEFAULT_MAX_SIZE = 1024 * 64;
 
     private int maxLines;
     private int maxSize;
-
-    public EnforceHeaderLimitationsMessageHook() {
-        this(DEFAULT_MAX_LINES, DEFAULT_MAX_SIZE);
-    }
-
-    public EnforceHeaderLimitationsMessageHook(int maxLines, int maxSize) {
-        this.maxLines = maxLines;
-        this.maxSize = maxSize;
-    }
 
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
         try {
             int actualLines = 0;
             int actualSize = 0;
-            while (mail.getMessage().getAllHeaders().hasMoreElements()) {
-               Header header = mail.getMessage().getAllHeaders().nextElement();
+            Enumeration<Header> headers = mail.getMessage().getAllHeaders();
+            while (headers.hasMoreElements()) {
+               Header header = headers.nextElement();
                actualLines += 1;
-               actualSize += header.getName().length() + header.getValue().length();
+               actualSize += header.getName().length() + header.getValue().length() + 4;
                if (actualLines > maxLines) {
                    LOGGER.warn("Email rejected: too many header lines");
                    return HookResult.builder()
@@ -68,10 +63,10 @@ public class EnforceHeaderLimitationsMessageHook implements JamesMessageHook {
                if (actualSize > maxSize) {
                     LOGGER.warn("Email rejected: header size too large");
                     return HookResult.builder()
-                         .hookReturnCode(HookReturnCode.denySoft())
+                        .hookReturnCode(HookReturnCode.denySoft())
                         .smtpReturnCode(SMTPRetCode.QUOTA_EXCEEDED)
                         .smtpDescription("Header size is too large")
-                         .build();
+                        .build();
                }
            }
            return HookResult.DECLINED;
@@ -83,8 +78,8 @@ public class EnforceHeaderLimitationsMessageHook implements JamesMessageHook {
 
     @Override
     public void init(Configuration config) throws ConfigurationException {
-        this.maxSize = config.getInt("maxLines", DEFAULT_MAX_LINES);
-        this.maxLines = config.getInt("maxSize", DEFAULT_MAX_SIZE) * 1024;
+        this.maxLines = config.getInt("maxLines") <= 0 ? DEFAULT_MAX_LINES : config.getInt("maxLines", DEFAULT_MAX_LINES);
+        this.maxSize = config.getInt("maxSize") <= 0 ? DEFAULT_MAX_SIZE : config.getInt("maxSize", DEFAULT_MAX_SIZE) * 1024;
     }
 }
 
