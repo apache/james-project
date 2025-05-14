@@ -103,7 +103,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                         })
                         .onErrorResume(InsufficientRightsException.class, e -> {
                             no(acceptableMessage, responder, HumanReadableText.UNSUFFICIENT_RIGHTS);
-                            return ReactorUtils.logAsMono(() -> LOGGER.info("Processing failed due to insufficient rights", e));
+                            return ReactorUtils.logAsMono(() -> LOGGER.warn("Processing failed due to insufficient rights", e));
                         })
                         .onErrorResume(OverQuotaException.class, e -> {
                             no(acceptableMessage, responder, HumanReadableText.FAILURE_OVERQUOTA, StatusResponse.ResponseCode.overQuota());
