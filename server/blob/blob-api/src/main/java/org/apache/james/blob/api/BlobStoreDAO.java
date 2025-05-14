@@ -28,8 +28,6 @@ import org.reactivestreams.Publisher;
 
 import com.google.common.io.ByteSource;
 
-import reactor.core.publisher.Mono;
-
 public interface BlobStoreDAO {
     class ReactiveByteSource {
         private final long size;
@@ -57,11 +55,6 @@ public interface BlobStoreDAO {
      * @throws ObjectStoreIOException when an unexpected IO error occurs
      */
     InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
-
-    default Publisher<ReactiveByteSource> readAsByteSource(BucketName bucketName, BlobId blobId) {
-        return Mono.from(readBytes(bucketName, blobId))
-            .map(bytes -> new ReactiveByteSource(bytes.length, Mono.just(ByteBuffer.wrap(bytes))));
-    }
 
     Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId);
 
