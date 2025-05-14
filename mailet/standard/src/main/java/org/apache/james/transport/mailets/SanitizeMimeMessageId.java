@@ -24,19 +24,18 @@ import jakarta.mail.MessagingException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
- /**
- * The `SanitizeMimeMessageId` mailet is designed to address a specific issue where some email clients, such as Outlook for Android, do not add the MIME `Message-ID` header to the emails they send.
- * The absence of the `Message-ID` header can cause emails to be rejected by downstream mail servers,
- * as required by RFC 5322 specifications.
- *
- * Sample configuration:
- *
- * <pre><code>
- * &lt;mailet match="All" class="SanitizeMimeMessageId"&gt;
- * &lt;/mailet&gt;
- * </code></pre>
- */
- 
+/**
+* The `SanitizeMimeMessageId` mailet is designed to address a specific issue where some email clients, such as Outlook for Android, do not add the MIME `Message-ID` header to the emails they send.
+* The absence of the `Message-ID` header can cause emails to be rejected by downstream mail servers,
+* as required by RFC 5322 specifications.
+*
+* Sample configuration:
+*
+* <pre><code>
+* &lt;mailet match="All" class="SanitizeMimeMessageId"&gt;
+* &lt;/mailet&gt;
+* </code></pre>
+*/
 public class SanitizeMimeMessageId extends GenericMailet {
 
     @Override
