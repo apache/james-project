@@ -17,7 +17,6 @@
  * under the License.                                           *
  ****************************************************************/
 
-/**
  /**
  * The `SanitizeMimeMessageId` mailet is designed to address a specific issue where some email clients, such as Outlook for Android, do not add the MIME `Message-ID` header to the emails they send.
  * The absence of the `Message-ID` header can cause emails to be rejected by downstream mail servers,
