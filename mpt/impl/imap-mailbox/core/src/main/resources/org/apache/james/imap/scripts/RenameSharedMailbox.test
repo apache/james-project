@@ -46,14 +46,14 @@ C: a2 MYRIGHTS #user.boby.sharedMailbox.child2-eiklprstw
 S: \* MYRIGHTS \"#user.boby.sharedMailbox.child2-eiklprstw\" \"eiklprstw\"
 S: a2 OK MYRIGHTS completed.
 C: a3 RENAME #user.boby.sharedMailbox.child2-eiklprstw #user.boby.sharedMailbox.newChild2
-S: a3 NO RENAME processing failed.
+S: a3 NO RENAME failed. Insufficient rights.
 
 # Cannot rename a shared mailbox if the parent of the target mailbox lacks the "create mailbox" right
 C: a4 MYRIGHTS #user.boby.sharedMailbox-eilprstwx
 S: \* MYRIGHTS \"#user.boby.sharedMailbox-eilprstwx\" \"eilprstwx\"
 S: a4 OK MYRIGHTS completed.
 C: a5 RENAME #user.boby.sharedMailbox.child1-eiklprstwx #user.boby.sharedMailbox-eilprstwx.newChild1
-S: a5 NO RENAME processing failed.
+S: a5 NO RENAME failed. Insufficient rights.
 
 # Cannot rename a mailbox to an existing mailbox name
 C: a52 RENAME #user.boby.sharedMailbox.child1-eiklprstwx #user.boby.sharedMailbox.child2-eiklprstw
