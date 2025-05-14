@@ -41,10 +41,9 @@ public class SanitizeMimeMessageId extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-
-            if (mail.getMessage().getMessageID() == null) {
-                mail.getMessage().saveChanges();
-            }
+        if (mail.getMessage().getMessageID() == null) {
+            mail.getMessage().saveChanges();
+        }
     }
 
     @Override
