@@ -3573,7 +3573,7 @@ class IMAPServerTest {
             String response = testIMAPClient.sendCommand("RENAME #user.bobo.sharedMailbox.child1 #user.bobo.sharedMailbox.newChild");
 
             // Assert that the operation fails due to insufficient rights
-            assertThat(response).contains("NO RENAME processing failed.");
+            assertThat(response).contains("NO RENAME failed. Insufficient rights.");
         }
     }
 

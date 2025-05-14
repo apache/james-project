@@ -57,6 +57,7 @@ import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.exception.OverQuotaException;
@@ -99,6 +100,10 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                         .onErrorResume(DeniedAccessOnSharedMailboxException.class, e -> {
                             no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
                             return Mono.empty();
+                        })
+                        .onErrorResume(InsufficientRightsException.class, e -> {
+                            no(acceptableMessage, responder, HumanReadableText.UNSUFFICIENT_RIGHTS);
+                            return ReactorUtils.logAsMono(() -> LOGGER.info("Processing failed due to insufficient rights", e));
                         })
                         .onErrorResume(OverQuotaException.class, e -> {
                             no(acceptableMessage, responder, HumanReadableText.FAILURE_OVERQUOTA, StatusResponse.ResponseCode.overQuota());
