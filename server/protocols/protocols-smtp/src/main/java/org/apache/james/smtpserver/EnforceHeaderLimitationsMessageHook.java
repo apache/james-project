@@ -33,6 +33,26 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This class implements an SMTP hook to enforce limitations on the headers of incoming emails.
+ *
+ * It allows configuring and enforcing two types of restrictions:
+ * - A maximum number of header lines (default: 500).
+ * - A maximum total size of headers in bytes (default: 64 KB).
+ * If any of these thresholds are exceeded, the message is rejected with an SMTP error code:
+ *   <code>552 Too many header lines</code> if the number of lines exceeds the limit.
+ *   <code>552 Header size too large</code> if the total size exceeds the limit.
+ *
+ * Example XML configuration:
+ * <pre>{
+ * <handler class="org.apache.james.smtpserver.EnforceHeaderLimitationsMessageHook">
+ *     <maxLines>500</maxLines>
+ *     <maxSize>64</maxSize>
+ * </handler>
+ * }</pre>
+ *NB: The size is specified in KB, so 64 means 64 KB.
+ */
+
 public class EnforceHeaderLimitationsMessageHook implements JamesMessageHook {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EnforceHeaderLimitationsMessageHook.class);
