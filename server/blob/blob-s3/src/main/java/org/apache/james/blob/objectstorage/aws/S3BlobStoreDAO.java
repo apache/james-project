@@ -55,6 +55,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.RetryBackoffSpec;
 import software.amazon.awssdk.core.BytesWrapper;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.core.async.SdkPublisher;
@@ -115,6 +116,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     private final S3BlobStoreConfiguration configuration;
     private final BlobId.Factory blobIdFactory;
     private final S3RequestOption s3RequestOption;
+    private final java.util.Optional<BucketName> fallbackNamespace;
 
     @Inject
     public S3BlobStoreDAO(S3ClientFactory s3ClientFactory,
@@ -125,6 +127,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
         this.client = s3ClientFactory.get();
         this.blobIdFactory = blobIdFactory;
         this.s3RequestOption = s3RequestOption;
+        this.fallbackNamespace = configuration.getFallbackNamespace();
 
         bucketNameResolver = BucketNameResolver.builder()
             .prefix(configuration.getBucketPrefix())
@@ -154,16 +157,6 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .map(res -> ReactorUtils.toInputStream(res.flux));
     }
 
-    @Override
-    public Publisher<ReactiveByteSource> readAsByteSource(BucketName bucketName, BlobId blobId) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
-
-        return getObject(resolvedBucketName, blobId)
-            .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
-            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
-            .map(res -> new ReactiveByteSource(res.sdkResponse.contentLength(), res.flux));
-    }
-
     private static class FluxResponse {
         final CompletableFuture<FluxResponse> supportingCompletableFuture = new CompletableFuture<>();
         GetObjectResponse sdkResponse;
@@ -171,6 +164,17 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     private Mono<FluxResponse> getObject(BucketName bucketName, BlobId blobId) {
+        return getObjectFromStore(bucketName, blobId)
+            .onErrorResume(e -> e instanceof NoSuchKeyException || e instanceof NoSuchBucketException, e -> {
+                if (fallbackNamespace.isPresent() && bucketNameResolver.isNameSpace(bucketName)) {
+                    BucketName resolvedFallbackBucketName = bucketNameResolver.resolve(fallbackNamespace.get());
+                    return getObjectFromStore(resolvedFallbackBucketName, blobId);
+                }
+                return Mono.error(e);
+            });
+    }
+
+    private Mono<FluxResponse> getObjectFromStore(BucketName bucketName, BlobId blobId) {
         return buildGetObjectRequestBuilder(bucketName, blobId)
             .flatMap(getObjectRequestBuilder -> Mono.fromFuture(() ->
                     client.getObject(getObjectRequestBuilder.build(),
@@ -208,14 +212,29 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
-        return buildGetObjectRequestBuilder(resolvedBucketName, blobId)
-            .flatMap(putObjectRequest -> Mono.fromFuture(() ->
-                    client.getObject(putObjectRequest.build(), new MinimalCopyBytesResponseTransformer(configuration, blobId)))
+        return getObjectBytes(resolvedBucketName, blobId)
                 .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
                 .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
                 .publishOn(Schedulers.parallel())
                 .map(BytesWrapper::asByteArrayUnsafe)
-                .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause));
+                .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause);
+    }
+
+    private Mono<ResponseBytes<GetObjectResponse>> getObjectBytes(BucketName bucketName, BlobId blobId) {
+        return getObjectBytesFromStore(bucketName, blobId)
+                .onErrorResume(e -> e instanceof NoSuchKeyException || e instanceof NoSuchBucketException, e -> {
+                    if (fallbackNamespace.isPresent() && bucketNameResolver.isNameSpace(bucketName)) {
+                        BucketName resolvedFallbackBucketName = bucketNameResolver.resolve(fallbackNamespace.get());
+                        return getObjectBytesFromStore(resolvedFallbackBucketName, blobId);
+                    }
+                    return Mono.error(e);
+                });
+    }
+
+    private Mono<ResponseBytes<GetObjectResponse>> getObjectBytesFromStore(BucketName bucketName, BlobId blobId) {
+        return buildGetObjectRequestBuilder(bucketName, blobId)
+            .flatMap(putObjectRequest -> Mono.fromFuture(() ->
+                client.getObject(putObjectRequest.build(), new MinimalCopyBytesResponseTransformer(configuration, blobId))));
     }
 
     private Mono<GetObjectRequest.Builder> buildGetObjectRequestBuilder(BucketName bucketName, BlobId blobId) {

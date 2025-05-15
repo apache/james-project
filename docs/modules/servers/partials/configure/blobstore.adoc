@@ -124,6 +124,10 @@ BucketPrefix is the prefix of bucket names in James BlobStore
 | objectstorage.namespace
 | BlobStore default bucket name. Most of blobs storing in BlobStore are inside the default bucket.
 Unless a special case like storing blobs of deleted messages.
+
+| objectstorage.namespace.read.fallback
+| BlobStore fallback bucket name. Allows to fallback to a previous used bucket when blob is missing from the default one.
+It can be useful when migrating blobs to a new bucket for example.
 |===
 
 ==== SSE-C Configuration
