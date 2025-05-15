@@ -2373,7 +2373,7 @@ trait PushSubscriptionSetMethodContract {
            |                "notCreated": {
            |                    "4f29": {
            |                        "type": "serverFail",
-           |                        "description": "Error when call to Push Server. "
+           |                        "description": "Error when call to Push Server: code 500. "
            |                    }
            |                }
            |            },
