@@ -165,7 +165,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
 
     private Mono<FluxResponse> getObject(BucketName bucketName, BlobId blobId) {
         return getObjectFromStore(bucketName, blobId)
-            .onErrorResume(e -> {
+            .onErrorResume(e -> e instanceof NoSuchKeyException || e instanceof NoSuchBucketException, e -> {
                 if (fallbackNamespace.isPresent() && bucketNameResolver.isNameSpace(bucketName)) {
                     BucketName resolvedFallbackBucketName = bucketNameResolver.resolve(fallbackNamespace.get());
                     return getObjectFromStore(resolvedFallbackBucketName, blobId);
@@ -222,7 +222,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
 
     private Mono<ResponseBytes<GetObjectResponse>> getObjectBytes(BucketName bucketName, BlobId blobId) {
         return getObjectBytesFromStore(bucketName, blobId)
-                .onErrorResume(e -> {
+                .onErrorResume(e -> e instanceof NoSuchKeyException || e instanceof NoSuchBucketException, e -> {
                     if (fallbackNamespace.isPresent() && bucketNameResolver.isNameSpace(bucketName)) {
                         BucketName resolvedFallbackBucketName = bucketNameResolver.resolve(fallbackNamespace.get());
                         return getObjectBytesFromStore(resolvedFallbackBucketName, blobId);
