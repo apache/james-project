@@ -29,6 +29,7 @@ import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
+import org.apache.james.util.Size;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,10 +48,10 @@ import org.slf4j.LoggerFactory;
  * <pre>{
  * <handler class="org.apache.james.smtpserver.EnforceHeaderLimitationsMessageHook">
  *     <maxLines>500</maxLines>
- *     <maxSize>64</maxSize>
+ *     <maxSize>64KB</maxSize>
  * </handler>
  * }</pre>
- *NB: The size is specified in KB, so 64 means 64 KB.
+ *
  */
 
 public class EnforceHeaderLimitationsMessageHook implements JamesMessageHook {
@@ -60,7 +61,7 @@ public class EnforceHeaderLimitationsMessageHook implements JamesMessageHook {
     private static final int DEFAULT_MAX_SIZE = 1024 * 64;
 
     private int maxLines;
-    private int maxSize;
+    private long maxSize;
 
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
@@ -99,7 +100,8 @@ public class EnforceHeaderLimitationsMessageHook implements JamesMessageHook {
     @Override
     public void init(Configuration config) throws ConfigurationException {
         this.maxLines = config.getInt("maxLines") <= 0 ? DEFAULT_MAX_LINES : config.getInt("maxLines", DEFAULT_MAX_LINES);
-        this.maxSize = config.getInt("maxSize") <= 0 ? DEFAULT_MAX_SIZE : config.getInt("maxSize", DEFAULT_MAX_SIZE) * 1024;
+        long size = Size.parse(config.getString("maxSize")).asBytes();
+        this.maxSize = size > 0 ? size : DEFAULT_MAX_SIZE;
     }
 }
 
