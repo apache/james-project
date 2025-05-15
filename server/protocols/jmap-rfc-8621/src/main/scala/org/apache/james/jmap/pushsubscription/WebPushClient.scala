@@ -128,7 +128,7 @@ class DefaultWebPushClient @Inject()(configuration: PushClientConfiguration) ext
   private def afterHTTPResponseHandler(httpResponse: HttpClientResponse, dataBuf: ByteBufMono): Mono[Void] =
     Mono.just(httpResponse.status())
       .flatMap {
-        case HttpResponseStatus.CREATED => Mono.empty()
+        case HttpResponseStatus.OK | HttpResponseStatus.CREATED | HttpResponseStatus.ACCEPTED => Mono.empty()
         case HttpResponseStatus.BAD_REQUEST => preProcessingData(dataBuf)
           .flatMap(string => Mono.error(WebPushInvalidRequestException(string)))
         case _ => preProcessingData(dataBuf)

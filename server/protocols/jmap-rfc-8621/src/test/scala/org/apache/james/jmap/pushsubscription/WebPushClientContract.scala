@@ -21,6 +21,8 @@ package org.apache.james.jmap.pushsubscription
 
 import java.net.URL
 import java.nio.charset.StandardCharsets
+import java.time.Clock
+import java.util.UUID
 
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
 import org.apache.james.jmap.pushsubscription.WebPushClientTestFixture.PUSH_REQUEST_SAMPLE
@@ -31,6 +33,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
+import org.mockserver.model.NottableString.string
 import org.mockserver.verify.VerificationTimes
 import reactor.core.scala.publisher.SMono
 
@@ -108,6 +111,36 @@ trait WebPushClientContract {
     pushServer.verify(request()
       .withPath("/invalid"),
       VerificationTimes.atLeast(1))
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = Array(200, 201, 202))
+  def pushClientShouldAcceptFlexible20xCodes(httpStatusCode: Int, pushServer: ClientAndServer): Unit = {
+    pushServer
+      .when(request
+        .withPath("/pushh")
+        .withMethod("POST")
+        .withHeader(string("Content-type"), string("application/json charset=utf-8"))
+        .withHeader(string("Urgency"))
+        .withHeader(string("Topic"))
+        .withHeader(string("TTL")))
+      .respond(response
+        .withStatusCode(httpStatusCode)
+        .withHeader("Location", String.format("https://push.example.net/message/%s", UUID.randomUUID))
+        .withHeader("Date", Clock.systemUTC.toString)
+        .withBody(UUID.randomUUID.toString))
+
+    assertThatCode(() => SMono.fromPublisher(testee.push(PushSubscriptionServerURL.from(s"${pushServerBaseUrl.toString}/pushh").get, PUSH_REQUEST_SAMPLE))
+      .block())
+      .doesNotThrowAnyException()
+
+    pushServer.verify(request()
+      .withPath("/pushh")
+      .withHeader("TTL", "15")
+      .withHeader("Topic", "topicabc")
+      .withHeader("Urgency", "High")
+      .withBody(new String(PUSH_REQUEST_SAMPLE.payload, StandardCharsets.UTF_8)),
+      VerificationTimes.once)
   }
 
   @Test
