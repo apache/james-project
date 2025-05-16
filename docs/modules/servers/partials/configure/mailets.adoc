@@ -148,3 +148,5 @@ include::partial$UseHeaderRecipients.adoc[]
 include::partial$WrapText.adoc[]
 
 include::partial$SubAddressing.adoc[]
+
+include::partial$SanitizeMimeMessageId.adoc[]
