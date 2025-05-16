@@ -43,6 +43,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
 class AddDeliveredToHeaderTest {
+    public static final String RECIPIENT2 = "rené@" + DEFAULT_DOMAIN;
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
     @RegisterExtension
@@ -58,6 +59,7 @@ class AddDeliveredToHeaderTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(RECIPIENT2, PASSWORD);
         dataProbe.addUser(FROM, PASSWORD);
     }
 
@@ -78,5 +80,28 @@ class AddDeliveredToHeaderTest {
             .awaitMessage(awaitAtMostOneMinute);
         assertThat(testIMAPClient.readFirstMessageHeaders())
             .contains(AddDeliveredToHeader.DELIVERED_TO + ": " + RECIPIENT);
+    }
+
+    @Test
+    void receivedMessagesShouldContainDeliveredToHeadersI8N() throws Exception {
+        String message = "FROM: " + RECIPIENT2 + "\r\n" +
+            "subject: testé\r\n" +
+            "Content-Type: text/plain; charset=UTF-8\r\n" +
+            "Content-Encoding: 8bit\r\n" +
+            "\r\n" +
+            "contenté\r\n" +
+            ".\r\n";
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessageWithHeaders(FROM, RECIPIENT2, message);
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT2, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(testIMAPClient.readFirstMessageHeaders())
+            .contains("René")
+            .contains("testé")
+            .contains("contenté");
     }
 }
