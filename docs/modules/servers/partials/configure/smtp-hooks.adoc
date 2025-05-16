@@ -404,3 +404,5 @@ Example handlerchain configuration for `smtpserver.xml`:
 
 Would allow emails using `apache.org` as a MAIL FROM or from header domain if, and only if they contain a
 valid DKIM signature for the `apache.org` domain.
+
+include::partial$EnforceHeaderLimitationsMessageHook.adoc[]

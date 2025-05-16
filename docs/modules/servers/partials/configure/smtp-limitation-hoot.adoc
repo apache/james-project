@@ -1,0 +1,30 @@
+=== EnforceHeaderLimitationsMessageHook
+
+The `EnforceHeaderLimitationsMessageHook` is used to enforce limitations on the headers of incoming emails. It ensures that emails comply with configurable restrictions on the number of header lines and the total size of headers.
+
+To configure this hook, add it to the `<handlerchain>` section of your SMTP server configuration:
+
+* `maxLines`: The maximum number of header lines allowed (default: 500).
+* `maxSize`: The maximum total size of headers in kilobytes (default: 64 KB).
+
+- If the number of header lines exceeds the `maxLines` limit, the email is rejected with the SMTP error code `552 Too many header lines`.
+- If the total size of headers exceeds the `maxSize` limit, the email is rejected with the SMTP error code `552 Header size too large`.
+- If both limits are respected, the hook declines further processing, allowing the email to proceed.
+
+==== Example
+
+Here is an example of a SetUp using this hook:
+[source,xml]
+....
+<smtpserver enabled="true">
+    <handlerchain>
+        <handler class="org.apache.james.smtpserver.EnforceHeaderLimitationsMessageHook">
+            <maxLines>500</maxLines>
+            <maxSize>64</maxSize>
+        </handler>
+        <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+    </handlerchain>
+    <gracefulShutdown>false</gracefulShutdown>
+</smtpserver>
+....
+----
