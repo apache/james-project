@@ -27,7 +27,7 @@ import scala.jdk.CollectionConverters._
 
 case class TypeStateFactory @Inject()(setTypeName: java.util.Set[TypeName]) {
   val logger: Logger = LoggerFactory.getLogger(classOf[TypeStateFactory])
-  val all: scala.collection.mutable.Set[TypeName] = setTypeName.asScala
+  val all: Set[TypeName] = setTypeName.asScala.toSet
 
   def strictParse(string: String): Either[IllegalArgumentException, TypeName] =
     all.flatMap(_.parse(string))

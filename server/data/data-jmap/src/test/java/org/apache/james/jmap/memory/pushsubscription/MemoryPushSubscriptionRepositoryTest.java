@@ -19,10 +19,13 @@
 
 package org.apache.james.jmap.memory.pushsubscription;
 
+import org.apache.james.jmap.api.change.TypeStateFactory;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepositoryContract;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
+
+import scala.jdk.javaapi.CollectionConverters;
 
 public class MemoryPushSubscriptionRepositoryTest implements PushSubscriptionRepositoryContract {
     UpdatableTickingClock clock;
@@ -31,7 +34,8 @@ public class MemoryPushSubscriptionRepositoryTest implements PushSubscriptionRep
     @BeforeEach
     void setup() {
         clock = new UpdatableTickingClock(PushSubscriptionRepositoryContract.NOW());
-        pushSubscriptionRepository = new MemoryPushSubscriptionRepository(clock);
+        pushSubscriptionRepository = new MemoryPushSubscriptionRepository(clock,
+            new TypeStateFactory(CollectionConverters.asJava(PushSubscriptionRepositoryContract.TYPE_NAME_SET())));
     }
 
     @Override

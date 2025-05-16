@@ -32,6 +32,7 @@ import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
 import org.apache.james.jmap.rfc8621.contract.PushServerExtension;
 import org.apache.james.jmap.rfc8621.contract.PushSubscriptionProbeModule;
 import org.apache.james.jmap.rfc8621.contract.PushSubscriptionSetMethodContract;
+import org.apache.james.jmap.rfc8621.contract.probe.TypeStateModule;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
@@ -58,6 +59,7 @@ public class PostgresPushSubscriptionSetMethodTest implements PushSubscriptionSe
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new PushSubscriptionProbeModule())
+            .overrideWith(new TypeStateModule())
             .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))
         .build();
 

@@ -19,9 +19,10 @@
 
 package org.apache.james.jmap.api.pushsubscription
 
-import java.net.{URI, URL}
+import java.net.URI
 import java.time.Clock
 
+import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.identity.CustomIdentityDAOContract.bob
 import org.apache.james.jmap.api.model.{DeviceClientId, PushSubscriptionCreationRequest, PushSubscriptionServerURL}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepositoryContract.ALICE
@@ -31,13 +32,15 @@ import org.junit.jupiter.api.{BeforeEach, Test}
 import reactor.core.publisher.Flux
 import reactor.core.scala.publisher.SMono
 
+import scala.jdk.javaapi.CollectionConverters
+
 class PushDeleteUserDataTaskStepTest {
   var pushSubscriptionRepository: PushSubscriptionRepository = _
   var testee: PushDeleteUserDataTaskStep = _
 
   @BeforeEach
   def beforeEach(): Unit = {
-    pushSubscriptionRepository = new MemoryPushSubscriptionRepository(Clock.systemUTC())
+    pushSubscriptionRepository = new MemoryPushSubscriptionRepository(Clock.systemUTC(), TypeStateFactory(CollectionConverters.asJava(PushSubscriptionRepositoryContract.TYPE_NAME_SET)))
     testee = new PushDeleteUserDataTaskStep(pushSubscriptionRepository)
   }
 
@@ -52,7 +55,7 @@ class PushDeleteUserDataTaskStepTest {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     SMono.fromPublisher(pushSubscriptionRepository.save(ALICE, validRequest)).block().id
 
     SMono(testee.deleteUserData(ALICE)).block()

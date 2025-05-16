@@ -47,7 +47,8 @@ public class CassandraPushSubscriptionRepositoryTest implements PushSubscription
         pushSubscriptionRepository = new CassandraPushSubscriptionRepository(
             new CassandraPushSubscriptionDAO(cassandra.getConf(),
                 new TypeStateFactory(CollectionConverters.asJava(PushSubscriptionRepositoryContract.TYPE_NAME_SET()))),
-            clock);
+            clock,
+            new TypeStateFactory(CollectionConverters.asJava(PushSubscriptionRepositoryContract.TYPE_NAME_SET())));
     }
 
     @Override

@@ -30,6 +30,7 @@ import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
 import org.apache.james.jmap.rfc8621.contract.PushServerExtension;
 import org.apache.james.jmap.rfc8621.contract.PushSubscriptionProbeModule;
 import org.apache.james.jmap.rfc8621.contract.PushSubscriptionSetMethodContract;
+import org.apache.james.jmap.rfc8621.contract.probe.TypeStateModule;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -54,7 +55,7 @@ public class DistributedPushSubscriptionSetMethodTest implements PushSubscriptio
         .extension(new AwsS3BlobStoreExtension())
         .extension(new ClockExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule())
+            .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule(), new TypeStateModule())
             .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))
         .build();
 
