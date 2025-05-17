@@ -32,6 +32,7 @@ import java.util.Set;
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.jmap.api.change.TypeStateFactory;
 import org.apache.james.jmap.api.model.DeviceClientIdInvalidException;
 import org.apache.james.jmap.api.model.ExpireTimeInvalidException;
 import org.apache.james.jmap.api.model.InvalidPushSubscriptionKeys;
@@ -55,11 +56,13 @@ import scala.jdk.javaapi.OptionConverters;
 public class MemoryPushSubscriptionRepository implements PushSubscriptionRepository {
     private final Table<Username, PushSubscriptionId, PushSubscription> table;
     private final Clock clock;
+    private final TypeStateFactory typeStateFactory;
 
     @Inject
-    public MemoryPushSubscriptionRepository(Clock clock) {
+    public MemoryPushSubscriptionRepository(Clock clock, TypeStateFactory typeStateFactory) {
         this.clock = clock;
         this.table = HashBasedTable.create();
+        this.typeStateFactory = typeStateFactory;
     }
 
     @Override
@@ -78,7 +81,8 @@ public class MemoryPushSubscriptionRepository implements PushSubscriptionReposit
             })
             .thenReturn(PushSubscription.from(request,
                 evaluateExpiresTime(OptionConverters.toJava(request.expires().map(PushSubscriptionExpiredTime::value)),
-                    clock)))
+                    clock),
+                    typeStateFactory))
             .doOnNext(pushSubscription -> table.put(username, pushSubscription.id(), pushSubscription));
     }
 

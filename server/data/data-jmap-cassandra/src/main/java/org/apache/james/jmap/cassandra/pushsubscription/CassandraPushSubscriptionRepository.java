@@ -31,6 +31,7 @@ import java.util.Set;
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.jmap.api.change.TypeStateFactory;
 import org.apache.james.jmap.api.model.DeviceClientIdInvalidException;
 import org.apache.james.jmap.api.model.ExpireTimeInvalidException;
 import org.apache.james.jmap.api.model.InvalidPushSubscriptionKeys;
@@ -50,17 +51,20 @@ import scala.jdk.javaapi.OptionConverters;
 public class CassandraPushSubscriptionRepository implements PushSubscriptionRepository {
     private final CassandraPushSubscriptionDAO dao;
     private final Clock clock;
+    private final TypeStateFactory typeStateFactory;
 
     @Inject
-    public CassandraPushSubscriptionRepository(CassandraPushSubscriptionDAO dao, Clock clock) {
+    public CassandraPushSubscriptionRepository(CassandraPushSubscriptionDAO dao, Clock clock, TypeStateFactory typeStateFactory) {
         this.dao = dao;
         this.clock = clock;
+        this.typeStateFactory = typeStateFactory;
     }
 
     @Override
     public Publisher<PushSubscription> save(Username username, PushSubscriptionCreationRequest request) {
         PushSubscription pushSubscription = PushSubscription.from(request,
-            evaluateExpiresTime(OptionConverters.toJava(request.expires().map(PushSubscriptionExpiredTime::value)), clock));
+            evaluateExpiresTime(OptionConverters.toJava(request.expires().map(PushSubscriptionExpiredTime::value)), clock),
+            typeStateFactory);
 
         return isDuplicatedDeviceClientId(username, request.deviceClientId())
             .handle((isDuplicated, sink) -> {

@@ -80,7 +80,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
     val singleRecordSaved = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).count().block()
 
@@ -92,7 +92,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
     val newSavedSubscription = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).blockFirst().get
 
@@ -105,7 +105,7 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Some(PushSubscriptionExpiredTime(VALID_EXPIRE.plusDays(8))),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, request)).block().id
     val newSavedSubscription = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).blockFirst().get
 
@@ -118,7 +118,7 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Some(PushSubscriptionExpiredTime(INVALID_EXPIRE)),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
 
     assertThatThrownBy(() => SMono.fromPublisher(testee.save(ALICE, invalidRequest)).block())
       .isInstanceOf(classOf[ExpireTimeInvalidException])
@@ -129,13 +129,13 @@ trait PushSubscriptionRepositoryContract {
     val firstRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     SMono.fromPublisher(testee.save(ALICE, firstRequest)).block()
 
     val secondRequestWithDuplicatedDeviceClientId = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
 
     assertThatThrownBy(() => SMono.fromPublisher(testee.save(ALICE, secondRequestWithDuplicatedDeviceClientId)).block())
       .isInstanceOf(classOf[DeviceClientIdInvalidException])
@@ -146,7 +146,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
 
     assertThatThrownBy(() => SMono.fromPublisher(testee.updateExpireTime(ALICE, pushSubscriptionId, INVALID_EXPIRE)).block())
@@ -158,7 +158,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
     SMono.fromPublisher(testee.updateExpireTime(ALICE, pushSubscriptionId, MAX_EXPIRE.plusDays(1))).block()
 
@@ -179,7 +179,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
     SMono.fromPublisher(testee.updateExpireTime(ALICE, pushSubscriptionId, VALID_EXPIRE)).block()
 
@@ -192,7 +192,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
     val fixedExpires = SMono.fromPublisher(testee.updateExpireTime(ALICE, pushSubscriptionId, MAX_EXPIRE.plusDays(1))).block()
 
@@ -204,7 +204,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
 
     val newTypes: Set[TypeName] = Set(CustomTypeName1, CustomTypeName2)
@@ -236,7 +236,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
     val singleRecordSaved = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).count().block()
     assertThat(singleRecordSaved).isEqualTo(1)
@@ -252,7 +252,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
     val singleRecordSaved = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).count().block()
     assertThat(singleRecordSaved).isEqualTo(1)
@@ -285,12 +285,12 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = deviceClientId1,
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE)),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val validRequest2 = PushSubscriptionCreationRequest(
       deviceClientId = deviceClientId2,
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE)),
-      types = Seq(CustomTypeName2))
+      types = Some(Seq(CustomTypeName2)))
     val pushSubscriptionId1 = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
     val pushSubscriptionId2 = SMono.fromPublisher(testee.save(ALICE, validRequest2)).block().id
 
@@ -306,7 +306,7 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = deviceClientId1,
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE)),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId1 = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
     val pushSubscriptionId2 = PushSubscriptionId.generate()
 
@@ -321,7 +321,7 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE.plusDays(1))),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
 
     clock.setInstant(VALID_EXPIRE.plusDays(2).toInstant)
@@ -338,11 +338,11 @@ trait PushSubscriptionRepositoryContract {
     val validRequest1 = PushSubscriptionCreationRequest(
       deviceClientId = deviceClientId1,
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val validRequest2 = PushSubscriptionCreationRequest(
       deviceClientId = deviceClientId2,
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName2))
+      types = Some(Seq(CustomTypeName2)))
     val pushSubscriptionId1: PushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
     val pushSubscriptionId2: PushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest2)).block().id
 
@@ -360,7 +360,7 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE.plusDays(1))),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
 
     clock.setInstant(VALID_EXPIRE.plusDays(2).toInstant)
@@ -375,7 +375,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
     SMono.fromPublisher(testee.validateVerificationCode(ALICE, pushSubscriptionId)).block()
 
@@ -397,7 +397,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1),
+      types = Some(Seq(CustomTypeName1)),
       keys = fullKeyPair)
 
     val pushSubscriptionId1 = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
@@ -413,7 +413,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1),
+      types = Some(Seq(CustomTypeName1)),
       keys = emptyKeyPair)
     val pushSubscriptionId1 = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
 
@@ -429,7 +429,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
-      types = Seq(CustomTypeName1),
+      types = Some(Seq(CustomTypeName1)),
       keys = emptyP256hKey)
 
     assertThatThrownBy(() => SMono.fromPublisher(testee.save(ALICE, validRequest)).block())
@@ -443,7 +443,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL),
-      types = Seq(CustomTypeName1),
+      types = Some(Seq(CustomTypeName1)),
       keys = emptyAuthKey)
 
     assertThatThrownBy(() => SMono.fromPublisher(testee.save(ALICE, validRequest)).block())
@@ -455,7 +455,7 @@ trait PushSubscriptionRepositoryContract {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URL("https://example.com/push")),
-      types = Seq(CustomTypeName1))
+      types = Some(Seq(CustomTypeName1)))
 
     val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
 

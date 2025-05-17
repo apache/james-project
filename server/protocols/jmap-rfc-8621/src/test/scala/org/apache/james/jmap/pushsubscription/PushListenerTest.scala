@@ -66,7 +66,8 @@ class PushListenerTest {
   def setUp(): Unit = {
     val pushSerializer = PushSerializer(TypeStateFactory(ImmutableSet.of[TypeName](MailboxTypeName, EmailTypeName, EmailDeliveryTypeName)))
 
-    pushSubscriptionRepository = new MemoryPushSubscriptionRepository(Clock.systemUTC())
+    pushSubscriptionRepository = new MemoryPushSubscriptionRepository(Clock.systemUTC(),
+      TypeStateFactory(ImmutableSet.of[TypeName](MailboxTypeName, EmailTypeName, EmailDeliveryTypeName)))
     webPushClient = mock(classOf[WebPushClient])
     delegationStore = new MemoryDelegationStore()
     testee = new PushListener(pushSubscriptionRepository, webPushClient, pushSerializer, delegationStore, Clock.systemUTC())
@@ -87,7 +88,7 @@ class PushListenerTest {
     SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit"),
       url = url,
-      types = Seq(MailboxTypeName, EmailTypeName)))).block()
+      types = Some(Seq(MailboxTypeName, EmailTypeName))))).block()
 
     SMono(testee.reactiveEvent(StateChangeEvent(EventId.random(), bob,
       Map(EmailTypeName -> UuidState(UUID.randomUUID()))))).block()
@@ -100,7 +101,7 @@ class PushListenerTest {
     val id = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit"),
       url = url,
-      types = Seq(EmailDeliveryTypeName)))).block().id
+      types = Some(Seq(EmailDeliveryTypeName))))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
 
     SMono(testee.reactiveEvent(StateChangeEvent(EventId.random(), bob,
@@ -114,7 +115,7 @@ class PushListenerTest {
     val id = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit"),
       url = url,
-      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+      types = Some(Seq(EmailTypeName, MailboxTypeName))))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
 
     val state1 = UuidState(UUID.randomUUID())
@@ -136,7 +137,7 @@ class PushListenerTest {
     val bobSubscriptionId = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit1"),
       url = url,
-      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+      types = Some(Seq(EmailTypeName, MailboxTypeName))))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(bob, bobSubscriptionId)).block()
 
     val state1 = UuidState(UUID.randomUUID())
@@ -152,12 +153,12 @@ class PushListenerTest {
     val bobSubscriptionId = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit1"),
       url = url,
-      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+      types = Some(Seq(EmailTypeName, MailboxTypeName))))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(bob, bobSubscriptionId)).block()
     val aliceSubscriptionId = SMono(pushSubscriptionRepository.save(alice, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit2"),
       url = url,
-      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+      types = Some(Seq(EmailTypeName, MailboxTypeName))))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(alice, aliceSubscriptionId)).block()
 
     val state1 = UuidState(UUID.randomUUID())
@@ -180,7 +181,7 @@ class PushListenerTest {
     val bobSubscriptionId = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit1"),
       url = url,
-      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+      types = Some(Seq(EmailTypeName, MailboxTypeName))))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(bob, bobSubscriptionId)).block()
 
     val stateChangeBob = UuidState(UUID.randomUUID())
@@ -203,7 +204,7 @@ class PushListenerTest {
     val id = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit"),
       url = url,
-      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+      types = Some(Seq(EmailTypeName, MailboxTypeName))))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
 
     val state1 = UuidState(UUID.randomUUID())
@@ -227,7 +228,7 @@ class PushListenerTest {
     val id = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit"),
       url = url,
-      types = Seq(EmailDeliveryTypeName, EmailTypeName)))).block().id
+      types = Some(Seq(EmailDeliveryTypeName, EmailTypeName))))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
 
     val state1 = UuidState(UUID.randomUUID())
@@ -246,7 +247,7 @@ class PushListenerTest {
     val id = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit"),
       url = url,
-      types = Seq(EmailDeliveryTypeName, EmailTypeName)))).block().id
+      types = Some(Seq(EmailDeliveryTypeName, EmailTypeName))))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
 
     val state1 = UuidState(UUID.randomUUID())
@@ -264,7 +265,7 @@ class PushListenerTest {
     val id = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("junit"),
       url = url,
-      types = Seq(EmailDeliveryTypeName, EmailTypeName)))).block().id
+      types = Some(Seq(EmailDeliveryTypeName, EmailTypeName))))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
 
     val state1 = UuidState(UUID.randomUUID())
@@ -296,7 +297,7 @@ class PushListenerTest {
       keys = Some(PushSubscriptionKeys(p256dh = Base64.getUrlEncoder.encodeToString(uaPublicKey.getEncoded),
         auth = Base64.getUrlEncoder.encodeToString(authSecret))),
       url = url,
-      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+      types = Some(Seq(EmailTypeName, MailboxTypeName))))).block().id
     SMono(pushSubscriptionRepository.validateVerificationCode(bob, id)).block()
 
     val state1 = UuidState(UUID.randomUUID())

@@ -28,6 +28,7 @@ import java.util.{Base64, UUID}
 import com.google.crypto.tink.HybridEncrypt
 import com.google.crypto.tink.apps.webpush.WebPushHybridEncrypt
 import com.google.crypto.tink.subtle.EllipticCurves
+import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.ExpireTimeInvalidException.TIME_FORMATTER
 
 import scala.util.Try
@@ -96,7 +97,7 @@ case class PushSubscriptionCreationRequest(deviceClientId: DeviceClientId,
                                            url: PushSubscriptionServerURL,
                                            keys: Option[PushSubscriptionKeys] = None,
                                            expires: Option[PushSubscriptionExpiredTime] = None,
-                                           types: Seq[TypeName]) {
+                                           types: Option[Seq[TypeName]] = None) {
 
   def validate: Either[IllegalArgumentException, PushSubscriptionCreationRequest] =
     for {
@@ -107,10 +108,9 @@ case class PushSubscriptionCreationRequest(deviceClientId: DeviceClientId,
     }
 
   private def validateTypes: Either[IllegalArgumentException, PushSubscriptionCreationRequest] =
-    if (types.isEmpty) {
-      scala.Left(new IllegalArgumentException("types must not be empty"))
-    } else {
-      Right(this)
+    types match {
+      case Some(Seq()) => scala.Left(new IllegalArgumentException("types must not be empty"))
+      case _ => Right(this)
     }
 
   private def validateKeys: Either[IllegalArgumentException, PushSubscriptionCreationRequest] =
@@ -123,7 +123,8 @@ object PushSubscription {
   val EXPIRES_TIME_MAX_DAY: Int = 7
 
   def from(creationRequest: PushSubscriptionCreationRequest,
-           expireTime: PushSubscriptionExpiredTime): PushSubscription =
+           expireTime: PushSubscriptionExpiredTime,
+           typeStateFactory: TypeStateFactory): PushSubscription =
     PushSubscription(id = PushSubscriptionId.generate(),
       deviceClientId = creationRequest.deviceClientId,
       url = creationRequest.url,
@@ -131,7 +132,7 @@ object PushSubscription {
       verificationCode = VerificationCode.generate(),
       validated = !VALIDATED,
       expires = expireTime,
-      types = creationRequest.types)
+      types = creationRequest.types.getOrElse(typeStateFactory.all.toSeq))
 }
 
 case class PushSubscription(id: PushSubscriptionId,
