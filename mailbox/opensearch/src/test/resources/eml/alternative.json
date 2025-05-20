@@ -3,8 +3,8 @@
     {
       "mediaType":"application",
       "subtype":"json",
-      "fileName":null,
-      "fileExtension":null,
+      "fileName":"id_rsa.txt",
+      "fileExtension":"txt",
       "contentDisposition":"attachment",
       "textContent":null
     }

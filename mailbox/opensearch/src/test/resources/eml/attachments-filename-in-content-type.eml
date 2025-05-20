@@ -1,0 +1,48 @@
+MIME-Version: 1.0
+Subject: Hello xyz
+From: Bob <bob@linagora.com>
+To: alice@linagora.com
+Message-ID: <Mime4j.14.31ce45ac61ec422b.196e75ccf9b@linagora.com>
+User-Agent: Twake-Mail/0.15.3 Mozilla/5.0 (Macintosh; Intel Mac OS X
+ 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0
+ Safari/537.36
+Content-Type: multipart/mixed;
+ boundary="-=Part.16.2ce5c5497f23d613.196e75cd044.32ca13e0fd5dd663=-"
+
+---=Part.16.2ce5c5497f23d613.196e75cd044.32ca13e0fd5dd663=-
+Content-Type: multipart/alternative;
+ boundary="-=Part.15.4e5239b38c309d78.196e75cd043.9d6830842151817f=-"
+
+---=Part.15.4e5239b38c309d78.196e75cd043.9d6830842151817f=-
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Accept-Language: fr-FR, en-US, vi-VN, ru-RU, ar-TN, it-IT, de-DE
+Content-Language: vi-VN
+
+body
+
+
+---=Part.15.4e5239b38c309d78.196e75cd043.9d6830842151817f=-
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Accept-Language: fr-FR, en-US, vi-VN, ru-RU, ar-TN, it-IT, de-DE
+Content-Language: vi-VN
+
+<div>body<br><br></div>
+---=Part.15.4e5239b38c309d78.196e75cd043.9d6830842151817f=---
+
+---=Part.16.2ce5c5497f23d613.196e75cd044.32ca13e0fd5dd663=-
+Content-Type: text/plain; name="=?US-ASCII?Q?1.txt?="; charset=windows-1252
+Content-Disposition: attachment
+Content-Transfer-Encoding: base64
+
+d2hhdGV2ZXIK
+
+---=Part.16.2ce5c5497f23d613.196e75cd044.32ca13e0fd5dd663=-
+Content-Type: text/plain; name="=?US-ASCII?Q?2.txt?="; charset=windows-1252
+Content-Disposition: attachment
+Content-Transfer-Encoding: base64
+
+d2hhdGV2ZXIyCg==
+
+---=Part.16.2ce5c5497f23d613.196e75cd044.32ca13e0fd5dd663=---
