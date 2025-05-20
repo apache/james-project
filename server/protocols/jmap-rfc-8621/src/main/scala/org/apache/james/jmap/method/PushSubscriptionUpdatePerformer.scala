@@ -130,9 +130,12 @@ class PushSubscriptionUpdatePerformer @Inject()(pushSubscriptionRepository: Push
       SMono.error[PushSubscriptionUpdateResult](WrongVerificationCodeException())
     }
 
-  private def updateTypes(pushSubscription: PushSubscription, types: Set[TypeName], mailboxSession: MailboxSession): SMono[PushSubscriptionUpdateResult] =
+  private def updateTypes(pushSubscription: PushSubscription, maybeTypes: Option[Set[TypeName]], mailboxSession: MailboxSession): SMono[PushSubscriptionUpdateResult] = {
+    val types: Set[TypeName] = maybeTypes.getOrElse(typeStateFactory.all)
+
     SMono(pushSubscriptionRepository.updateTypes(mailboxSession.getUser, pushSubscription.id, types.asJava))
       .`then`(SMono.just(PushSubscriptionUpdateSuccess(pushSubscription.id)))
+  }
 
   private def updateExpires(pushSubscription: PushSubscription, inputExpires: PushSubscriptionExpiredTime, mailboxSession: MailboxSession): SMono[PushSubscriptionUpdateResult] =
     SMono(pushSubscriptionRepository.updateExpireTime(mailboxSession.getUser, pushSubscription.id, inputExpires.value))

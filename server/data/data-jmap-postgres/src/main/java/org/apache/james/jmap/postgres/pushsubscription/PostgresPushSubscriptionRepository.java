@@ -68,7 +68,8 @@ public class PostgresPushSubscriptionRepository implements PushSubscriptionRepos
         return validateCreationRequest(request)
             .then(Mono.defer(() -> {
                 PushSubscription pushSubscription = PushSubscription.from(request,
-                    evaluateExpiresTime(OptionConverters.toJava(request.expires().map(PushSubscriptionExpiredTime::value)), clock));
+                    evaluateExpiresTime(OptionConverters.toJava(request.expires().map(PushSubscriptionExpiredTime::value)), clock),
+                    typeStateFactory);
 
                 return pushSubscriptionDAO.save(username, pushSubscription)
                     .thenReturn(pushSubscription);

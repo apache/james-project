@@ -291,7 +291,7 @@ class MemoryUserDeletionIntegrationTest {
                 new PushSubscriptionServerURL(new URI("http://whatever/toto").toURL()),
                 Option.empty(),
                 Option.empty(),
-                PushSubscriptionCreationRequest.noTypes()));
+                Option.apply(PushSubscriptionCreationRequest.noTypes())));
 
         String taskId = webAdminApi
             .queryParam("action", "deleteData")
