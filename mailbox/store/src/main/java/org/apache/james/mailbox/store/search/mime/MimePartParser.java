@@ -129,8 +129,12 @@ public class MimePartParser {
             Optional.ofNullable(descriptor.getSubType())
                 .map(SubType::of)
                 .ifPresent(currentlyBuildMimePart::addSubType);
-            currentlyBuildMimePart.addContentDisposition(descriptor.getContentDispositionType())
-                .addFileName(descriptor.getContentDispositionFilename());
+            currentlyBuildMimePart.addContentDisposition(descriptor.getContentDispositionType());
+
+            Optional.ofNullable(descriptor.getContentDispositionFilename())
+                .or(() -> Optional.ofNullable(descriptor.getContentTypeParameters().get("name")))
+                .ifPresent(currentlyBuildMimePart::addFileName);
+
             extractCharset(descriptor);
         } catch (Exception e) {
             LOGGER.warn("Failed to extract mime body part description", e);

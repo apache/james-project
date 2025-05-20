@@ -1,0 +1,43 @@
+MIME-Version: 1.0
+Subject: test send mail with attachment filename search
+From: Bob <bob@linagora.com>
+To: "alice@gmail.com" <alice@gmail.com>
+Reply-To: bob@linagora.com
+Message-ID: <Mime4j.7.2182050b7626964a.196e6b48459@linagora.com>
+User-Agent: Twake-Mail/0.15.3 Mozilla/5.0 (Macintosh; Intel Mac OS X
+ 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0
+ Safari/537.36
+Content-Type: multipart/mixed;
+ boundary="-=Part.9.facdaad4d7d1e26d.196e6b48470.15f465553d6bace6=-"
+
+---=Part.9.facdaad4d7d1e26d.196e6b48470.15f465553d6bace6=-
+Content-Type: multipart/alternative;
+ boundary="-=Part.8.8fd856f88f8fdedd.196e6b48470.d48dd74354571387=-"
+
+---=Part.8.8fd856f88f8fdedd.196e6b48470.d48dd74354571387=-
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Accept-Language: fr-FR, en-US, vi-VN, ru-RU, ar-TN, it-IT, de-DE
+Content-Language: vi-VN
+
+body
+
+
+---=Part.8.8fd856f88f8fdedd.196e6b48470.d48dd74354571387=-
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Accept-Language: fr-FR, en-US, vi-VN, ru-RU, ar-TN, it-IT, de-DE
+Content-Language: vi-VN
+
+<div>body<br><br></div>
+---=Part.8.8fd856f88f8fdedd.196e6b48470.d48dd74354571387=---
+
+---=Part.9.facdaad4d7d1e26d.196e6b48470.15f465553d6bace6=-
+Content-Type: text/plain; name="=?US-ASCII?Q?filename.txt?=";
+ charset=windows-1252
+Content-Disposition: attachment
+Content-Transfer-Encoding: base64
+
+d2hhdGV2ZXIgY29udGVudCA1OTUzNjI0NzY0Cg==
+
+---=Part.9.facdaad4d7d1e26d.196e6b48470.15f465553d6bace6=---

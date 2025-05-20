@@ -250,6 +250,41 @@ class IndexableMessageTest {
         assertThat(indexableMessage.getAttachments()).isNotEmpty();
     }
 
+    @Test
+    void attachmentsFilenameShouldFallbackToContentTypeWhenFilenameIsMissingInContentDisposition() throws Exception {
+        //Given
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
+        when(mailboxMessage.getMessageId())
+            .thenReturn(InMemoryMessageId.of(42));
+        when(mailboxMessage.getFullContent())
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/attachments-filename-in-content-type.eml"));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
+
+        // When
+        IndexableMessage indexableMessage = IndexableMessage.builder()
+            .message(mailboxMessage)
+            .extractor(new DefaultTextExtractor())
+            .zoneId(ZoneId.of("Europe/Paris"))
+            .indexAttachments(IndexAttachments.YES)
+            .indexHeaders(IndexHeaders.YES)
+            .build()
+            .block();
+
+        // Then
+        assertThat(indexableMessage.getAttachments().getFirst().fileName()).isEqualTo(Optional.of("1.txt"));
+        assertThat(indexableMessage.getAttachments().getFirst().fileExtension()).isEqualTo(Optional.of("txt"));
+        assertThat(indexableMessage.getAttachments().get(1).fileName()).isEqualTo(Optional.of("2.txt"));
+        assertThat(indexableMessage.getAttachments().get(1).fileExtension()).isEqualTo(Optional.of("txt"));
+    }
+
     @SuppressWarnings("checkstyle:LocalVariableName")
     @Test
     void otherAttachmentsShouldBeenIndexedWhenOneOfThemCannotBeParsed() throws Exception {
