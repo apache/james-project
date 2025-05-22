@@ -34,8 +34,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -87,6 +89,7 @@ public class AuthCmdHandler
     private static final Response AUTH_READY_PASSWORD_LOGIN = new SMTPResponse(SMTPRetCode.AUTH_READY, "UGFzc3dvcmQ6").immutable(); // base64 encoded "Password:
     private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, "Authentication Failed").immutable();
     private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, "Unrecognized Authentication Type").immutable();
+    public static final ProtocolSession.AttachmentKey<MaybeSender> TRUE_SENDER_KEY = ProtocolSession.AttachmentKey.of("trueSender", MaybeSender.class);
 
     private abstract static class AbstractSMTPLineHandler implements LineHandler<SMTPSession> {
 
@@ -575,8 +578,8 @@ public class AuthCmdHandler
 
     @Override
     public HookResult doMailParameter(SMTPSession session, String paramName, String paramValue) {
-        // Ignore the AUTH command.
-        // TODO we should at least check for correct syntax and put the result in session
+        MaybeSender trueSender = MaybeSender.getMailSender(paramValue);
+        session.setAttachment(TRUE_SENDER_KEY, trueSender, ProtocolSession.State.Transaction);
         return HookResult.DECLINED;
     }
 

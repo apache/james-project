@@ -19,6 +19,8 @@
 
 package org.apache.james.smtpserver;
 
+import static org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler.TRUE_SENDER_KEY;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +28,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.mail.MessagingException;
 
@@ -52,6 +55,9 @@ import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.server.core.MimeMessageInputStreamSource;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,11 +166,15 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
         List<MailAddress> recipientCollection = session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction).orElse(ImmutableList.of());
         MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
 
-        return MailImpl.builder()
+        MailImpl.Builder builder = MailImpl.builder()
             .name(mailName)
             .sender(sender)
-            .addRecipients(recipientCollection)
-            .build();
+            .addRecipients(recipientCollection);
+
+        Optional<MaybeSender> trueSender = session.getAttachment(TRUE_SENDER_KEY, State.Transaction);
+        trueSender.ifPresent(s -> builder.addAttribute(new Attribute(Mail.TRUE_SENDER, AttributeValue.of(s.asString()))));
+
+        return builder.build();
     }
 
     protected Response processExtensions(SMTPSession session, Mail mail, MimeMessageInputStreamSource mmiss) {
