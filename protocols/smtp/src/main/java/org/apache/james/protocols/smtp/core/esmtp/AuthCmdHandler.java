@@ -89,7 +89,7 @@ public class AuthCmdHandler
     private static final Response AUTH_READY_PASSWORD_LOGIN = new SMTPResponse(SMTPRetCode.AUTH_READY, "UGFzc3dvcmQ6").immutable(); // base64 encoded "Password:
     private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, "Authentication Failed").immutable();
     private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, "Unrecognized Authentication Type").immutable();
-    public static final ProtocolSession.AttachmentKey<MaybeSender> TRUE_SENDER_KEY = ProtocolSession.AttachmentKey.of("trueSender", MaybeSender.class);
+    public static final ProtocolSession.AttachmentKey<Username> TRUE_SENDER_KEY = ProtocolSession.AttachmentKey.of("trueSender", Username.class);
 
     private abstract static class AbstractSMTPLineHandler implements LineHandler<SMTPSession> {
 
@@ -578,7 +578,15 @@ public class AuthCmdHandler
 
     @Override
     public HookResult doMailParameter(SMTPSession session, String paramName, String paramValue) {
-        MaybeSender trueSender = MaybeSender.getMailSender(paramValue);
+        if (Optional.ofNullable(session.getUsername()).map(username -> !username.asString().equals(paramValue)).orElse(false)) {
+            LOGGER.warn("A connected user {} attempted to use a distinct MAIL FROM AUTH {}", session.getUsername(), paramName);
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.deny())
+                .smtpReturnCode(SMTPRetCode.TRANSACTION_FAILED)
+                .smtpDescription("Sender address rejected: not owned by user")
+                .build();
+        }
+        Username trueSender = Username.of(paramValue);
         session.setAttachment(TRUE_SENDER_KEY, trueSender, ProtocolSession.State.Transaction);
         return HookResult.DECLINED;
     }

@@ -34,6 +34,7 @@ import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
+import org.apache.james.core.Username;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
@@ -171,7 +172,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
             .sender(sender)
             .addRecipients(recipientCollection);
 
-        Optional<MaybeSender> trueSender = session.getAttachment(TRUE_SENDER_KEY, State.Connection)
+        Optional<Username> trueSender = session.getAttachment(TRUE_SENDER_KEY, State.Connection)
             .or(() -> session.getAttachment(TRUE_SENDER_KEY, State.Transaction));
         trueSender.ifPresent(s -> builder.addAttribute(new Attribute(Mail.TRUE_SENDER, AttributeValue.of(s.asString()))));
 

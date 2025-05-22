@@ -18,10 +18,13 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler.TRUE_SENDER_KEY;
+
 import java.util.Optional;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
 import org.apache.james.jwt.OidcJwtTokenVerifier;
 import org.apache.james.jwt.introspection.IntrospectionEndpoint;
@@ -29,6 +32,7 @@ import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.protocols.api.OIDCSASLParser;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -93,6 +97,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
     private HookResult doAuthWithDelegation(SMTPSession session, Username authenticatedUser, Username associatedUser) {
         try {
             if (Authorizator.AuthorizationState.ALLOWED.equals(authorizator.user(authenticatedUser).canLoginAs(associatedUser))) {
+                session.setAttachment(TRUE_SENDER_KEY, authenticatedUser, ProtocolSession.State.Connection);
                 return saslSuccess(session, associatedUser);
             }
         } catch (MailboxException e) {

@@ -21,23 +21,16 @@ package org.apache.james.smtpserver;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.james.smtpserver.SMTPServerTestSystem.BOB;
 import static org.apache.james.smtpserver.SMTPServerTestSystem.PASSWORD;
-import static org.apache.mailet.DsnParameters.Notify.DELAY;
-import static org.apache.mailet.DsnParameters.Notify.FAILURE;
-import static org.apache.mailet.DsnParameters.Notify.SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Base64;
-import java.util.EnumSet;
 
 import org.apache.commons.net.smtp.SMTPClient;
-import org.apache.james.core.MailAddress;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
-import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
-import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,15 +67,14 @@ class SmtpAuthTestTest {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        authenticate(smtpProtocol);
 
         smtpProtocol.sendCommand("EHLO localhost");
-        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> AUTH=other@localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@other.tld> AUTH=other@other.tld");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
-        smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
+        smtpProtocol.sendShortMessageData("From: bob@other.tld\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
         assertThat(testSystem.queue.getLastMail().attributesMap().get(Mail.TRUE_SENDER).getValue().getValue())
-            .isEqualTo("other@localhost");
+            .isEqualTo("other@other.tld");
     }
 
     @Test
@@ -94,15 +86,66 @@ class SmtpAuthTestTest {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@other.tld> AUTH=<>");
+        smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
+        smtpProtocol.sendShortMessageData("From: bob@other.tld\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
+
+        assertThat(testSystem.queue.getLastMail().attributesMap().get(Mail.TRUE_SENDER).getValue().getValue())
+            .isEqualTo("<>");
+    }
+
+    @Test
+    void shouldTolerateNoopMailFromAuthParameter() throws Exception {
+        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
+        testSystem.smtpServer.init();
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
         authenticate(smtpProtocol);
 
         smtpProtocol.sendCommand("EHLO localhost");
-        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> AUTH=<>");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> AUTH=bob@localhost");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
         smtpProtocol.sendShortMessageData("From: bob@localhost\r\n\r\nSubject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
         assertThat(testSystem.queue.getLastMail().attributesMap().get(Mail.TRUE_SENDER).getValue().getValue())
-            .isEqualTo("<>");
+            .isEqualTo("bob@localhost");
+    }
+
+    @Test
+    void shouldRejectNullSpoofingAttempts() throws Exception {
+        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
+        testSystem.smtpServer.init();
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        authenticate(smtpProtocol);
+
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> AUTH=<>");
+        assertThat(smtpProtocol.getReplyCode()).isEqualTo(554);
+    }
+
+    @Test
+    void shouldRejectSpoofingAttempts() throws Exception {
+        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
+        testSystem.smtpServer.init();
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        authenticate(smtpProtocol);
+
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> AUTH=other@localhost");
+        assertThat(smtpProtocol.getReplyCode()).isEqualTo(554);
     }
 
 }
