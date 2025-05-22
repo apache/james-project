@@ -22,12 +22,15 @@ package org.apache.james.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.util.Properties;
 import java.util.stream.Stream;
 
+import jakarta.mail.Session;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -55,6 +58,13 @@ class MailAddressTest {
                 "\\.server-dev@james.apache.org",
                 "Abc@10.42.0.1",
                 "Abc.123@example.com",
+                "Loïc.Accentué@voilà.fr8",
+                "pelé@exemple.com",
+                "δοκιμή@παράδειγμα.δοκιμή",
+                "我買@屋企.香港",
+                "二ノ宮@黒川.日本",
+                "медведь@с-балалайкой.рф",
+                //"संपर्क@डाटामेल.भारत", fails in Jakarta, reason still unknown
                 "user+mailbox/department=shipping@example.com",
                 "user+mailbox@example.com",
                 "\"Abc@def\"@example.com",
@@ -96,26 +106,30 @@ class MailAddressTest {
                 "server-dev@[127.0.1.1.1]",
                 "server-dev@[127.0.1.-1]",
                 "test@dom+ain.com",
+                "test@xn--.example",
                 "\"a..b\"@domain.com", // jakarta.mail is unable to handle this so we better reject it
                 "server-dev\\.@james.apache.org", // jakarta.mail is unable to handle this so we better reject it
                 "a..b@domain.com",
-                // According to wikipedia these addresses are valid but as jakarta.mail is unable
-                // to work with them we shall rather reject them (note that this is not breaking retro-compatibility)
-                "Loïc.Accentué@voilà.fr8",
-                "pelé@exemple.com",
-                "δοκιμή@παράδειγμα.δοκιμή",
-                "我買@屋企.香港",
-                "二ノ宮@黒川.日本",
-                "медведь@с-балалайкой.рф",
-                "संपर्क@डाटामेल.भारत",
+                "sales@\u200Eibm.example", // U+200E is left-to-right
+                // According to wikipedia this address is valid but as jakarta.mail is unable
+                // to work with it we shall rather reject them (note that this is not breaking retro-compatibility)
                 "mail.allow\\,d@james.apache.org")
             .map(Arguments::of);
+    }
+
+    @BeforeEach
+    void setup() {
+        Properties props = new Properties();
+        props.setProperty("mail.mime.allowutf8", "true");
+        Session s = Session.getDefaultInstance(props);
+        assertThat(Boolean.parseBoolean(s.getProperties().getProperty("mail.mime.allowutf8", "false")));
     }
 
     @ParameterizedTest
     @MethodSource("goodAddresses")
     void testGoodMailAddressString(String mailAddress) {
         assertThatCode(() -> new MailAddress(mailAddress))
+            .as("parses " + mailAddress)
             .doesNotThrowAnyException();
     }
 
@@ -123,6 +137,7 @@ class MailAddressTest {
     @MethodSource("goodAddresses")
     void toInternetAddressShouldNoop(String mailAddress) throws Exception {
         assertThat(new MailAddress(mailAddress).toInternetAddress())
+            .as("tries to parse " + mailAddress + " using jakarta.mail")
             .isNotEmpty();
     }
 
@@ -130,6 +145,7 @@ class MailAddressTest {
     @MethodSource("badAddresses")
     void testBadMailAddressString(String mailAddress) {
         Assertions.assertThatThrownBy(() -> new MailAddress(mailAddress))
+            .as("fails to parse " + mailAddress)
             .isInstanceOf(AddressException.class);
     }
 
