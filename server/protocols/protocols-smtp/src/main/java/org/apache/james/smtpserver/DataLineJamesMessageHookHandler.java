@@ -171,7 +171,8 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
             .sender(sender)
             .addRecipients(recipientCollection);
 
-        Optional<MaybeSender> trueSender = session.getAttachment(TRUE_SENDER_KEY, State.Transaction);
+        Optional<MaybeSender> trueSender = session.getAttachment(TRUE_SENDER_KEY, State.Connection)
+            .or(() -> session.getAttachment(TRUE_SENDER_KEY, State.Transaction));
         trueSender.ifPresent(s -> builder.addAttribute(new Attribute(Mail.TRUE_SENDER, AttributeValue.of(s.asString()))));
 
         return builder.build();
