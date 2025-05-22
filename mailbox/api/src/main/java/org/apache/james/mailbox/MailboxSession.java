@@ -144,6 +144,10 @@ public class MailboxSession {
         return loggedInUser;
     }
 
+    public boolean isDelegated() {
+        return loggedInUser.map(user -> !userName.equals(user)).orElse(false);
+    }
+
     /**
      * Gets acceptable localisation for this user in preference order.<br>
      * When localising a phrase, each <code>Locale</code> should be tried in
