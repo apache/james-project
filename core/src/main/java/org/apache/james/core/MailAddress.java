@@ -19,6 +19,7 @@
 
 package org.apache.james.core;
 
+import java.net.IDN;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -418,7 +419,7 @@ public class MailAddress implements java.io.Serializable {
         try {
             return Optional.of(new InternetAddress(toString()));
         } catch (AddressException ae) {
-            LOGGER.warn("A valid address '{}' as per James criterial fails to parse as a jakarta.mail InternetAdrress", asString());
+            LOGGER.warn("A valid address '{}' as per James criteria fails to parse as a jakarta.mail InternetAdrress", asString());
             return Optional.empty();
         }
     }
@@ -549,15 +550,15 @@ public class MailAddress implements java.io.Serializable {
                 //End of local-part
                 break;
             } else {
-                //<c> ::= any one of the 128 ASCII characters, but not any
-                //    <special> or <SP>
+                //<c> ::= any printable ASCII character, or any non-ASCII
+                //    unicode codepoint, but not <special> or <SP>
                 //<special> ::= "<" | ">" | "(" | ")" | "[" | "]" | "\" | "."
                 //    | "," | ";" | ":" | "@"  """ | the control
                 //    characters (ASCII codes 0 through 31 inclusive and
                 //    127)
                 //<SP> ::= the space character (ASCII code 32)
                 char c = address.charAt(pos);
-                if (c <= 31 || c >= 127 || c == ' ') {
+                if (c <= 31 || c == 127 || c == ' ') {
                     throw new AddressException("Invalid character in local-part (user account) at position " +
                             (pos + 1) + " in '" + address + "'", address, pos + 1);
                 }
@@ -688,6 +689,7 @@ public class MailAddress implements java.io.Serializable {
         // in practice though, we should relax this as domain names can start
         // with digits as well as letters.  So only check that doesn't start
         // or end with hyphen.
+        boolean unicode = false;
         while (true) {
             if (pos >= address.length()) {
                 break;
@@ -700,6 +702,11 @@ public class MailAddress implements java.io.Serializable {
                 resultSB.append(ch);
                 pos++;
                 continue;
+            } else if (ch >= 0x0080) {
+                resultSB.append(ch);
+                pos++;
+                unicode = true;
+                continue;
             }
             if (ch == '.') {
                 break;
@@ -707,6 +714,19 @@ public class MailAddress implements java.io.Serializable {
             throw new AddressException("Invalid character at " + pos + " in '" + address + "'", address, pos);
         }
         String result = resultSB.toString();
+        if (unicode) {
+            try {
+                result = IDN.toASCII(result, IDN.ALLOW_UNASSIGNED);
+            } catch (IllegalArgumentException e) {
+                throw new AddressException("Domain invalid according to IDNA", address);
+            }
+        }
+        if (result.startsWith("xn--") || result.contains(".xn--")) {
+            result = IDN.toUnicode(result);
+            if (result.startsWith("xn--") || result.contains(".xn--")) {
+                throw new AddressException("Domain invalid according to IDNA", address);
+            }
+        }
         if (result.startsWith("-") || result.endsWith("-")) {
             throw new AddressException("Domain name cannot begin or end with a hyphen \"-\" at position " +
                     (pos + 1) + " in '" + address + "'", address, pos + 1);
