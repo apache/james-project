@@ -108,6 +108,10 @@ public class SendMailHandler implements JamesMessageHook {
                                 .map(Throwing.function(MimeMessage::getMessageID))
                                 .orElse(""),
                             "sender", mail.getMaybeSender().asString(),
+                            "authenticatedUser", mail.getAttribute(Mail.TRUE_SENDER).map(attribute -> attribute.getValue().getValue().toString())
+                                .orElseGet(() -> Optional.ofNullable(session.getUsername())
+                                    .map(Username::asString)
+                                    .orElse("")),
                             "size", Long.toString(mail.getMessageSize()),
                             "recipients", StringUtils.join(mail.getRecipients()),
                             "holdFor", holdFor.value().toString())))
@@ -133,6 +137,10 @@ public class SendMailHandler implements JamesMessageHook {
                             "mimeMessageId", Optional.ofNullable(mail.getMessage())
                                 .map(Throwing.function(MimeMessage::getMessageID))
                                 .orElse(""),
+                            "authenticatedUser", mail.getAttribute(Mail.TRUE_SENDER).map(attribute -> attribute.getValue().getValue().toString())
+                                .orElseGet(() -> Optional.ofNullable(session.getUsername())
+                                    .map(Username::asString)
+                                    .orElse("")),
                             "sender", mail.getMaybeSender().asString(),
                             "size", Long.toString(mail.getMessageSize()),
                             "recipients", StringUtils.join(mail.getRecipients()))))
