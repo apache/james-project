@@ -47,7 +47,7 @@ public class UserStartables implements Startable {
     private final ExtensionConfiguration extensionConfiguration;
 
     @Inject
-    public UserStartables(GuiceGenericLoader guiceLoader, ExtensionConfiguration extensionConfiguration) {
+    public UserStartables(GuiceLoader guiceLoader, ExtensionConfiguration extensionConfiguration) {
         this.guiceLoader = guiceLoader;
         this.extensionConfiguration = extensionConfiguration;
     }
