@@ -19,10 +19,9 @@
 
 package org.apache.james.protocols.api;
 
-import static java.nio.charset.StandardCharsets.US_ASCII;
-
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -217,7 +216,7 @@ public class ProtocolSessionImpl implements ProtocolSession {
      */
     @Override
     public Charset getCharset() {
-        return US_ASCII;
+        return StandardCharsets.UTF_8;
     }
 
     /**
