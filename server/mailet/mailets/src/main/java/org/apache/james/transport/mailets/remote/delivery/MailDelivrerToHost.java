@@ -70,7 +70,8 @@ public class MailDelivrerToHost {
     public static final String STARTTLS = "STARTTLS";
     public static final String MT_PRIORITY = "MT-PRIORITY";
     public static final String MAIL_PRIORITY_ATTRIBUTE_NAME = "MAIL_PRIORITY";
-    private static final List<String> supportedSmtpExtensionsList = List.of(MT_PRIORITY, STARTTLS);
+    public static final String TRUE_SENDER_ATTRIBUTE_NAME = "org.apache.james.TrueSender";
+    private static final List<String> supportedSmtpExtensionsList = List.of(MT_PRIORITY, STARTTLS, "AUTH");
     private static final List<String> supportedMailAttributesList = List.of(MAIL_PRIORITY_ATTRIBUTE_NAME, REQUIRE_TLS);
 
     private final RemoteDeliveryConfiguration configuration;
@@ -256,6 +257,8 @@ public class MailDelivrerToHost {
                     case MAIL_PRIORITY_ATTRIBUTE_NAME ->
                         smtpMessage.setMailExtension(MT_PRIORITY + "=" + attribute.getValue().value() +
                             existingMessageExtensions);
+                    case TRUE_SENDER_ATTRIBUTE_NAME ->
+                        smtpMessage.setMailExtension("AUTH=" + attribute.getValue().value());
                     case REQUIRE_TLS -> {
                         if (isRequireTlsAttribute(mail)) {
                             smtpMessage.setMailExtension(REQUIRE_TLS + existingMessageExtensions);

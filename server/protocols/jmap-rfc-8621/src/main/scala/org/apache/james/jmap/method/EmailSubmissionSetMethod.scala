@@ -291,6 +291,9 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
           .addAttribute(new Attribute(MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(mailboxSession.getUser.asString())))
           .build()
         mailImpl.setMessageNoCopy(message)
+        if (mailboxSession.isDelegated) {
+           mailImpl.setAttribute(new Attribute(Mail.TRUE_SENDER, AttributeValue.of(mailboxSession.getLoggedInUser.get().asString())))
+        }
         mailImpl
       }
       _ <- enqueue(mail, delay, mailboxSession)
