@@ -31,6 +31,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import com.google.common.base.CharMatcher;
 import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
@@ -59,6 +60,7 @@ import com.google.common.collect.ImmutableList;
 
 public class CriterionConverter {
 
+    public static final CharMatcher QUERY_STRING_CONTROL_CHAR = CharMatcher.anyOf("()\"~-|*");
     private final Map<Class<?>, Function<Criterion, Query>> criterionConverterMap;
     private final Map<Class<?>, BiFunction<String, HeaderOperator, Query>> headerOperatorConverterMap;
     private final String textFuzzinessSearchValue;
@@ -224,7 +226,7 @@ public class CriterionConverter {
     private Query convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
         switch (textCriterion.getType()) {
         case BODY:
-            if (useQueryStringQuery) {
+            if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(textCriterion.getOperator().getValue())) {
                 return new SimpleQueryStringQuery.Builder()
                     .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY))
                     .query(textCriterion.getOperator().getValue())
@@ -249,7 +251,7 @@ public class CriterionConverter {
                     .toQuery();
             }
         case FULL:
-            if (useQueryStringQuery) {
+            if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(textCriterion.getOperator().getValue())) {
                 return new SimpleQueryStringQuery.Builder()
                     .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY, JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
                     .query(textCriterion.getOperator().getValue())
@@ -493,7 +495,7 @@ public class CriterionConverter {
     }
 
     private Query convertSubject(SearchQuery.SubjectCriterion headerCriterion) {
-        if (useQueryStringQuery) {
+        if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(headerCriterion.getSubject())) {
             return new QueryStringQuery.Builder()
                 .fields(ImmutableList.of(JsonMessageConstants.SUBJECT))
                 .query(headerCriterion.getSubject())
