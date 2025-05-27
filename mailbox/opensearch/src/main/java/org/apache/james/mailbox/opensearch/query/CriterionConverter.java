@@ -31,7 +31,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import com.google.common.base.CharMatcher;
 import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
@@ -56,6 +55,7 @@ import org.opensearch.client.opensearch._types.query_dsl.SimpleQueryStringQuery;
 import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 
 public class CriterionConverter {
