@@ -252,10 +252,18 @@ public class CriterionConverter {
             }
         case FULL:
             if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(textCriterion.getOperator().getValue())) {
-                return new SimpleQueryStringQuery.Builder()
-                    .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY, JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
-                    .query(textCriterion.getOperator().getValue())
-                    .build().toQuery();
+                return new BoolQuery.Builder()
+                    .should(new SimpleQueryStringQuery.Builder()
+                        .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY, JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
+                        .query(textCriterion.getOperator().getValue())
+                        .build().toQuery())
+                    .should(new TermQuery.Builder()
+                        .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
+                        .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                        .build()
+                        .toQuery())
+                    .build()
+                    .toQuery();
             } else {
                 return new BoolQuery.Builder()
                     .should(new MatchQuery.Builder()
@@ -279,15 +287,28 @@ public class CriterionConverter {
                         .operator(Operator.And)
                         .build()
                         .toQuery())
+                    .should(new TermQuery.Builder()
+                        .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
+                        .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                        .build()
+                        .toQuery())
                     .build()
                     .toQuery();
             }
         case ATTACHMENTS:
             if (useQueryStringQuery) {
-                return new SimpleQueryStringQuery.Builder()
-                    .fields(ImmutableList.of(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
-                    .query(textCriterion.getOperator().getValue())
-                    .build().toQuery();
+                return new BoolQuery.Builder()
+                    .should(new SimpleQueryStringQuery.Builder()
+                        .fields(ImmutableList.of(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
+                        .query(textCriterion.getOperator().getValue())
+                        .build().toQuery())
+                    .should(new TermQuery.Builder()
+                        .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
+                        .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
+                        .build()
+                        .toQuery())
+                    .build()
+                    .toQuery();
             } else {
                 return new BoolQuery.Builder()
                     .should(new MatchQuery.Builder()
@@ -295,6 +316,11 @@ public class CriterionConverter {
                         .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                         .fuzziness(textFuzzinessSearchValue)
                         .operator(Operator.And)
+                        .build()
+                        .toQuery())
+                    .should(new TermQuery.Builder()
+                        .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
+                        .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                         .build()
                         .toQuery())
                     .build()
@@ -307,6 +333,11 @@ public class CriterionConverter {
                     .query(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .fuzziness(textFuzzinessSearchValue)
                     .operator(Operator.And)
+                    .build()
+                    .toQuery())
+                .should(new TermQuery.Builder()
+                    .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
+                    .value(new FieldValue.Builder().stringValue(textCriterion.getOperator().getValue()).build())
                     .build()
                     .toQuery())
                 .build()

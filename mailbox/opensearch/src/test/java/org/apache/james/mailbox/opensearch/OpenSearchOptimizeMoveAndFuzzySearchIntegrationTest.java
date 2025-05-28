@@ -30,6 +30,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mime4j.dom.Message;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 
@@ -87,5 +88,11 @@ class OpenSearchOptimizeMoveAndFuzzySearchIntegrationTest extends OpenSearchInte
             .containsExactly(composedMessageId.getUid());
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("boyd")), session)).toStream())
             .containsExactly(composedMessageId.getUid());
+    }
+
+    @Disabled("Fuzzyness makes the results wider")
+    @Override
+    void shouldMatchFileExtension() {
+
     }
 }
