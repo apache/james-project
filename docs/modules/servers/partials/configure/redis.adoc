@@ -53,7 +53,7 @@ However, if your machine has only 1 CPU core or your Redis usage is not intensiv
 
 == TLS/SSL
 
-To enable ssl mode, set `redis.ssl.enalbed` to true. The keyword `rediss` must be used in redisURL. For example:
+To enable ssl mode, set `redis.ssl.enabled` to true. The keyword `rediss` must be used in redisURL. For example:
 ....
 redisURL=rediss://123@localhost:6379?verifyPeer=NONE
 ....
@@ -72,9 +72,9 @@ Once ssl mode is enabled, the following properties can be specified:
 | The password of the p12 file. Defaults to empty.
 |===
 
-Query paras in `redisURL` could be used to specify some configs for Lettuce (Redis client lib used by James)
+Query params in `redisURL` could be used to specify some configs for Lettuce (Redis client lib used by James)
 
-One of those query paras is `verifyPeer`. By default, Lettuce verifies the certificate against the validity and the common name (Name validation not supported on Java 1.6, only available on Java 1.7 and higher) of the Redis host you are connecting to. This behavior can be turned off by `verifyPeer=NONE`
+One of those query params is `verifyPeer`. By default, Lettuce verifies the certificate against the validity and the common name (Name validation not supported on Java 1.6, only available on Java 1.7 and higher) of the Redis host you are connecting to. This behavior can be turned off by `verifyPeer=NONE`
 
 For more details about query paras supported in `redisURL` as well as other Lettuce support for TLS/SSL, consult this link:
 https://github.com/redis/lettuce/wiki/SSL-Connections
