@@ -72,7 +72,7 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .then()
-            .doOnSuccess(any -> auditTrail(session, selected))
+            .doOnSuccess(any -> auditTrail(session, mailboxPath))
             .onErrorResume(MailboxNotFoundException.class, e -> {
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
                 return ReactorUtils.logAsMono(() -> LOGGER.debug("Delete failed for mailbox {} as it doesn't exist", mailboxPath, e));
@@ -107,14 +107,14 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
             .addToContext("mailbox", request.getMailboxName());
     }
 
-    private void auditTrail(ImapSession session, SelectedMailbox selected) {
+    private void auditTrail(ImapSession session, MailboxPath mailboxPath) {
         AuditTrail.entry()
             .username(() -> session.getUserName().asString())
             .sessionId(() -> session.sessionId().asString())
             .protocol("IMAP")
             .action("DELETE")
             .parameters(() -> ImmutableMap.of("loggedInUser", session.getMailboxSession().getLoggedInUser().map(Username::asString).orElse(""),
-                "mailboxId", selected.getMailboxId().serialize()))
+                "mailboxPath", mailboxPath.asString()))
             .log(String.format("IMAP DELETE succeeded."));
     }
 }
