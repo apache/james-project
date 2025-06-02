@@ -21,7 +21,7 @@ package org.apache.james.backends.redis
 
 import io.lettuce.core.cluster.{ClusterClientOptions, RedisClusterClient}
 import io.lettuce.core.resource.{ClientResources, ThreadFactoryProvider}
-import io.lettuce.core.{AbstractRedisClient, ClientOptions, RedisClient, SslOptions, TimeoutOptions}
+import io.lettuce.core.{AbstractRedisClient, ClientOptions, RedisClient, RedisURI, SslOptions, TimeoutOptions}
 import jakarta.annotation.PreDestroy
 import jakarta.inject.{Inject, Singleton}
 import org.apache.james.filesystem.api.FileSystem
@@ -42,22 +42,11 @@ class RedisClientFactory @Singleton() @Inject()
     case sentinelRedisConfiguration: SentinelRedisConfiguration => createSentinelClient(sentinelRedisConfiguration)
   }
 
-  private def createStandaloneClient(standaloneRedisConfiguration: StandaloneRedisConfiguration): RedisClient = {
-    val resourceBuilder: ClientResources.Builder = ClientResources.builder()
-      .threadFactoryProvider(threadFactoryProvider)
-    standaloneRedisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
-    standaloneRedisConfiguration.workerThreads.foreach(value => resourceBuilder.computationThreadPoolSize(value))
-    val redisClient = RedisClient.create(resourceBuilder.build(), standaloneRedisConfiguration.redisURI)
-    redisClient.setOptions(createClientOptions(standaloneRedisConfiguration.useSSL, standaloneRedisConfiguration.mayBeSSLConfiguration))
-    redisClient
-  }
+  private def createStandaloneClient(standaloneRedisConfiguration: StandaloneRedisConfiguration): RedisClient =
+    createRedisClient(standaloneRedisConfiguration, Some(standaloneRedisConfiguration.redisURI))
 
   private def createClusterClient(clusterRedisConfiguration: ClusterRedisConfiguration): RedisClusterClient = {
-    val resourceBuilder: ClientResources.Builder = ClientResources.builder()
-      .threadFactoryProvider(threadFactoryProvider)
-    clusterRedisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
-    clusterRedisConfiguration.workerThreads.foreach(value => resourceBuilder.computationThreadPoolSize(value))
-    val redisClient = RedisClusterClient.create(resourceBuilder.build(),
+    val redisClient = RedisClusterClient.create(createClientResources(clusterRedisConfiguration),
       clusterRedisConfiguration.redisURI.value.asJava)
     redisClient.setOptions(ClusterClientOptions.builder(
         createClientOptions(clusterRedisConfiguration.useSSL, clusterRedisConfiguration.mayBeSSLConfiguration))
@@ -65,24 +54,25 @@ class RedisClientFactory @Singleton() @Inject()
     redisClient
   }
 
-  private def createMasterReplicaClient(masterReplicaRedisConfiguration: MasterReplicaRedisConfiguration): RedisClient = {
-    val resourceBuilder: ClientResources.Builder = ClientResources.builder()
-      .threadFactoryProvider(threadFactoryProvider)
-    masterReplicaRedisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
-    masterReplicaRedisConfiguration.workerThreads.foreach(value => resourceBuilder.computationThreadPoolSize(value))
-    val redisClient = RedisClient.create(resourceBuilder.build())
-    redisClient.setOptions(createClientOptions(masterReplicaRedisConfiguration.useSSL, masterReplicaRedisConfiguration.mayBeSSLConfiguration))
+  private def createMasterReplicaClient(masterReplicaRedisConfiguration: MasterReplicaRedisConfiguration): RedisClient =
+    createRedisClient(masterReplicaRedisConfiguration, maybeRedisUri = None)
+
+  private def createSentinelClient(sentinelRedisConfiguration: SentinelRedisConfiguration): RedisClient =
+    createRedisClient(sentinelRedisConfiguration, Some(sentinelRedisConfiguration.redisURI))
+
+  private def createRedisClient(redisConfiguration: RedisConfiguration, maybeRedisUri: Option[RedisURI]): RedisClient = {
+    val redisClient = maybeRedisUri.map(redisUri => RedisClient.create(createClientResources(redisConfiguration), redisUri))
+      .getOrElse(RedisClient.create(createClientResources(redisConfiguration)))
+    redisClient.setOptions(createClientOptions(redisConfiguration.useSSL, redisConfiguration.mayBeSSLConfiguration))
     redisClient
   }
 
-  private def createSentinelClient(sentinelRedisConfiguration: SentinelRedisConfiguration): RedisClient = {
+  private def createClientResources(redisConfiguration: RedisConfiguration): ClientResources = {
     val resourceBuilder: ClientResources.Builder = ClientResources.builder()
       .threadFactoryProvider(threadFactoryProvider)
-    sentinelRedisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
-    sentinelRedisConfiguration.workerThreads.foreach(value => resourceBuilder.computationThreadPoolSize(value))
-    val redisClient = RedisClient.create(resourceBuilder.build(), sentinelRedisConfiguration.redisURI)
-    redisClient.setOptions(createClientOptions(sentinelRedisConfiguration.useSSL, sentinelRedisConfiguration.mayBeSSLConfiguration))
-    redisClient
+    redisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
+    redisConfiguration.workerThreads.foreach(value => resourceBuilder.computationThreadPoolSize(value))
+    resourceBuilder.build()
   }
 
   private def createClientOptions(useSSL: Boolean, mayBeSSLConfiguration: Option[SSLConfiguration]): ClientOptions = {
