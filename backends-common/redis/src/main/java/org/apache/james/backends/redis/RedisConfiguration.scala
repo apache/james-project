@@ -27,7 +27,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 import io.lettuce.core.{ReadFrom, RedisCredentials, RedisCredentialsProvider, RedisURI}
 import org.apache.commons.configuration2.Configuration
-import org.apache.james.backends.redis.RedisConfiguration.{CLUSTER_TOPOLOGY, KEY_STORE_FILE_PATH_DEFAULT_VALUE, KEY_STORE_PASSWORD_DEFAULT_VALUE, MASTER_REPLICA_TOPOLOGY, REDIS_IGNORE_CERTIFICATE_CHECK, REDIS_IGNORE_CERTIFICATE_CHECK_DEFAULT_VALUE, REDIS_KEY_STORE_FILE_PATH_PROPERTY_NAME, REDIS_KEY_STORE_PASSWORD_PROPERTY_NAME, REDIS_SENTINEL_PASSWORD, REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE, SENTINEL_TOPOLOGY, STANDALONE_TOPOLOGY}
+import org.apache.james.backends.redis.RedisConfiguration.{CLUSTER_TOPOLOGY, KEY_STORE_FILE_PATH_DEFAULT_VALUE, KEY_STORE_PASSWORD_DEFAULT_VALUE, MASTER_REPLICA_TOPOLOGY, REDIS_IGNORE_CERTIFICATE_CHECK, REDIS_IGNORE_CERTIFICATE_CHECK_DEFAULT_VALUE, REDIS_KEY_STORE_FILE_PATH_PROPERTY_NAME, REDIS_KEY_STORE_PASSWORD_PROPERTY_NAME, REDIS_SENTINEL_PASSWORD, SENTINEL_TOPOLOGY, STANDALONE_TOPOLOGY}
 import org.apache.james.backends.redis.RedisUris.{REDIS_URL_PROPERTY_NAME, RedisUris}
 import org.apache.james.filesystem.api.FileSystem
 import org.slf4j.{Logger, LoggerFactory}
@@ -57,6 +57,8 @@ object RedisConfiguration {
   def redisWorkerThreadsFrom(config: Configuration): Option[Int] = Option(config.getInteger("redis.workerThreads", null)).map(Integer2int)
 
   def redisReadFrom(config: Configuration): ReadFrom = Option(config.getString(REDIS_READ_FROM_PROPERTY_NAME, null)).map(ReadFrom.valueOf).getOrElse(REDIS_READ_FROM_DEFAULT_VALUE)
+
+  def redisUseSsl(config: Configuration): Boolean = config.getBoolean(REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE)
 
   def from(config: Configuration): RedisConfiguration = {
     val redisConfiguration: RedisConfiguration = config.getString("redis.topology", STANDALONE_TOPOLOGY) match {
@@ -109,7 +111,7 @@ trait RedisConfiguration {
 object StandaloneRedisConfiguration {
   def from(config: Configuration): StandaloneRedisConfiguration =
     from(config.getString(REDIS_URL_PROPERTY_NAME),
-      config.getBoolean(REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE),
+      RedisConfiguration.redisUseSsl(config),
       SSLConfiguration.from(config),
       RedisConfiguration.redisIoThreadsFrom(config),
       RedisConfiguration.redisWorkerThreadsFrom(config))
@@ -140,7 +142,7 @@ object MasterReplicaRedisConfiguration {
     }
 
     from(redisUris,
-      config.getBoolean(REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE),
+      RedisConfiguration.redisUseSsl(config),
       SSLConfiguration.from(config),
       RedisConfiguration.redisReadFrom(config),
       RedisConfiguration.redisIoThreadsFrom(config),
@@ -187,7 +189,7 @@ case class MasterReplicaRedisConfiguration(redisURI: RedisUris, useSSL: Boolean,
 object ClusterRedisConfiguration {
   def from(config: Configuration): ClusterRedisConfiguration =
     from(config.getStringArray(REDIS_URL_PROPERTY_NAME),
-      config.getBoolean(REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE),
+      RedisConfiguration.redisUseSsl(config),
       SSLConfiguration.from(config),
       RedisConfiguration.redisIoThreadsFrom(config),
       RedisConfiguration.redisWorkerThreadsFrom(config),
@@ -224,7 +226,7 @@ case class ClusterRedisConfiguration(redisURI: RedisUris, useSSL: Boolean, mayBe
 object SentinelRedisConfiguration {
   def from(config: Configuration): SentinelRedisConfiguration = from(
     config.getStringArray(REDIS_URL_PROPERTY_NAME).mkString(","),
-    config.getBoolean(REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE),
+    RedisConfiguration.redisUseSsl(config),
     SSLConfiguration.from(config),
     RedisConfiguration.redisReadFrom(config),
     Option(config.getString(REDIS_SENTINEL_PASSWORD, null)),
@@ -263,7 +265,7 @@ case class SentinelRedisConfiguration(redisURI: RedisURI, useSSL: Boolean, mayBe
 
 object SSLConfiguration {
   def from(config: Configuration): Option[SSLConfiguration] = {
-    if (config.getBoolean(REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE)) {
+    if (RedisConfiguration.redisUseSsl(config)) {
       val ignoreCertificateCheck = config.getBoolean(REDIS_IGNORE_CERTIFICATE_CHECK, REDIS_IGNORE_CERTIFICATE_CHECK_DEFAULT_VALUE)
       val maybeKeyStore = {
         if (ignoreCertificateCheck) {
