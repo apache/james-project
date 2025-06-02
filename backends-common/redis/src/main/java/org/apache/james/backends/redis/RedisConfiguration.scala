@@ -27,7 +27,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 import io.lettuce.core.{ReadFrom, RedisCredentials, RedisCredentialsProvider, RedisURI}
 import org.apache.commons.configuration2.Configuration
-import org.apache.james.backends.redis.RedisConfiguration.{CLUSTER_TOPOLOGY, KEY_STORE_FILE_PATH_DEFAULT_VALUE, KEY_STORE_PASSWORD_DEFAULT_VALUE, MASTER_REPLICA_TOPOLOGY, REDIS_IGNORE_CERTIFICATE_CHECK, REDIS_IGNORE_CERTIFICATE_CHECK_DEFAULT_VALUE, REDIS_KEY_STORE_FILE_PATH_PROPERTY_NAME, REDIS_KEY_STORE_PASSWORD_PROPERTY_NAME, REDIS_READ_FROM_DEFAULT_VALUE, REDIS_READ_FROM_PROPERTY_NAME, REDIS_SENTINEL_PASSWORD, REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE, SENTINEL_TOPOLOGY, STANDALONE_TOPOLOGY}
+import org.apache.james.backends.redis.RedisConfiguration.{CLUSTER_TOPOLOGY, KEY_STORE_FILE_PATH_DEFAULT_VALUE, KEY_STORE_PASSWORD_DEFAULT_VALUE, MASTER_REPLICA_TOPOLOGY, REDIS_IGNORE_CERTIFICATE_CHECK, REDIS_IGNORE_CERTIFICATE_CHECK_DEFAULT_VALUE, REDIS_KEY_STORE_FILE_PATH_PROPERTY_NAME, REDIS_KEY_STORE_PASSWORD_PROPERTY_NAME, REDIS_SENTINEL_PASSWORD, REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE, SENTINEL_TOPOLOGY, STANDALONE_TOPOLOGY}
 import org.apache.james.backends.redis.RedisUris.{REDIS_URL_PROPERTY_NAME, RedisUris}
 import org.apache.james.filesystem.api.FileSystem
 import org.slf4j.{Logger, LoggerFactory}
@@ -55,6 +55,8 @@ object RedisConfiguration {
   def redisIoThreadsFrom(config: Configuration): Option[Int] = Option(config.getInteger("redis.ioThreads", null)).map(Integer2int)
 
   def redisWorkerThreadsFrom(config: Configuration): Option[Int] = Option(config.getInteger("redis.workerThreads", null)).map(Integer2int)
+
+  def redisReadFrom(config: Configuration): ReadFrom = Option(config.getString(REDIS_READ_FROM_PROPERTY_NAME, null)).map(ReadFrom.valueOf).getOrElse(REDIS_READ_FROM_DEFAULT_VALUE)
 
   def from(config: Configuration): RedisConfiguration = {
     val redisConfiguration: RedisConfiguration = config.getString("redis.topology", STANDALONE_TOPOLOGY) match {
@@ -139,7 +141,7 @@ object MasterReplicaRedisConfiguration {
     from(redisUris,
       config.getBoolean(REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE),
       SSLConfiguration.from(config),
-      Option(config.getString("redis.readFrom", null)).map(ReadFrom.valueOf).getOrElse(ReadFrom.MASTER),
+      RedisConfiguration.redisReadFrom(config),
       RedisConfiguration.redisIoThreadsFrom(config),
       RedisConfiguration.redisWorkerThreadsFrom(config))
   }
@@ -185,29 +187,33 @@ object ClusterRedisConfiguration {
       config.getBoolean(REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE),
       SSLConfiguration.from(config),
       RedisConfiguration.redisIoThreadsFrom(config),
-      RedisConfiguration.redisWorkerThreadsFrom(config))
+      RedisConfiguration.redisWorkerThreadsFrom(config),
+      RedisConfiguration.redisReadFrom(config))
 
   def from(redisUris: Array[String],
            ioThreads: Option[Int],
-           workerThreads: Option[Int]): ClusterRedisConfiguration =
-    from(redisUris, useSSL = false, Option.empty, ioThreads, workerThreads)
+           workerThreads: Option[Int],
+           readFrom: ReadFrom): ClusterRedisConfiguration =
+    from(redisUris, useSSL = false, Option.empty, ioThreads, workerThreads, readFrom)
 
   def from(redisUris: Array[String],
            useSSL: Boolean,
            mayBeSSLConfiguration: Option[SSLConfiguration],
            ioThreads: Option[Int] = None,
-           workerThreads: Option[Int] = None): ClusterRedisConfiguration = {
+           workerThreads: Option[Int] = None,
+           readFrom: ReadFrom): ClusterRedisConfiguration = {
     Preconditions.checkArgument(redisUris != null && redisUris.length > 0)
-    ClusterRedisConfiguration(RedisUris.from(redisUris), useSSL, mayBeSSLConfiguration, ioThreads, workerThreads)
+    ClusterRedisConfiguration(RedisUris.from(redisUris), useSSL, mayBeSSLConfiguration, ioThreads, workerThreads, readFrom)
   }
 }
 
-case class ClusterRedisConfiguration(redisURI: RedisUris, useSSL: Boolean, mayBeSSLConfiguration: Option[SSLConfiguration], ioThreads: Option[Int], workerThreads: Option[Int]) extends RedisConfiguration {
+case class ClusterRedisConfiguration(redisURI: RedisUris, useSSL: Boolean, mayBeSSLConfiguration: Option[SSLConfiguration], ioThreads: Option[Int], workerThreads: Option[Int], readFrom: ReadFrom) extends RedisConfiguration {
   override def asString: String = MoreObjects.toStringHelper(this)
     .add("topology", CLUSTER_TOPOLOGY)
     .add("redisURI", redisURI.value.map(_.toString).mkString(";"))
     .add("redis.ioThreads", ioThreads)
     .add("redis.workerThreads", workerThreads)
+    .add("readFrom", readFrom)
     .toString
 }
 
@@ -216,7 +222,7 @@ object SentinelRedisConfiguration {
     config.getStringArray(REDIS_URL_PROPERTY_NAME).mkString(","),
     config.getBoolean(REDIS_USE_SSL, REDIS_USE_SSL_DEFAULT_VALUE),
     SSLConfiguration.from(config),
-    Option(config.getString(REDIS_READ_FROM_PROPERTY_NAME, null)).map(ReadFrom.valueOf).getOrElse(REDIS_READ_FROM_DEFAULT_VALUE),
+    RedisConfiguration.redisReadFrom(config),
     Option(config.getString(REDIS_SENTINEL_PASSWORD, null)),
     RedisConfiguration.redisIoThreadsFrom(config),
     RedisConfiguration.redisWorkerThreadsFrom(config))

@@ -52,6 +52,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 
+import io.lettuce.core.ReadFrom;
 import scala.jdk.javaapi.OptionConverters;
 
 public class RedisClusterExtension implements GuiceModuleTestExtension {
@@ -67,7 +68,8 @@ public class RedisClusterExtension implements GuiceModuleTestExtension {
                     .map(URI::toString)
                     .toArray(String[]::new),
                 OptionConverters.toScala(Optional.empty()),
-                OptionConverters.toScala(Optional.empty()));
+                OptionConverters.toScala(Optional.empty()),
+                ReadFrom.MASTER);
         }
 
         public void pauseOne() {

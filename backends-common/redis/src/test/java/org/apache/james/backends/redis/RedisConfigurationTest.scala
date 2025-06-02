@@ -46,9 +46,21 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
     config.addProperty("redis.topology", "cluster")
     config.addProperty("redis.ioThreads", 16)
     config.addProperty("redis.workerThreads", 32)
+    config.addProperty("redis.readFrom", "any")
 
     val redisConfig = RedisConfiguration.from(config)
-    redisConfig shouldEqual ClusterRedisConfiguration(RedisUris.liftOrThrow(List(RedisURI.create("redis://localhost:6379"), RedisURI.create("redis://localhost:6380"))), useSSL = false, mayBeSSLConfiguration = None, Some(16), Some(32))
+    redisConfig shouldEqual ClusterRedisConfiguration(RedisUris.liftOrThrow(List(RedisURI.create("redis://localhost:6379"), RedisURI.create("redis://localhost:6380"))), useSSL = false, mayBeSSLConfiguration = None, Some(16), Some(32), ReadFrom.ANY)
+  }
+
+  it should "use default values for missing config values when cluster mode" in {
+    val config = new PropertiesConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+    config.addProperty("redisURL", "redis://localhost:6379,redis://localhost:6380")
+    config.addProperty("redis.topology", "cluster")
+
+    val redisConfig = RedisConfiguration.from(config)
+    redisConfig shouldEqual ClusterRedisConfiguration(RedisUris.liftOrThrow(List(RedisURI.create("redis://localhost:6379"), RedisURI.create("redis://localhost:6380"))), useSSL = false, mayBeSSLConfiguration = None,
+      ioThreads = None, workerThreads = None, ReadFrom.MASTER)
   }
 
   it should "use default values for missing config values" in {
