@@ -83,7 +83,11 @@ class RedisClientFactory @Singleton() @Inject()
   }
 
   private def createSentinelClient(sentinelRedisConfiguration: SentinelRedisConfiguration): RedisClient = {
-    val redisClient = RedisClient.create
+    val resourceBuilder: ClientResources.Builder = ClientResources.builder()
+      .threadFactoryProvider(threadFactoryProvider)
+    sentinelRedisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
+    sentinelRedisConfiguration.workerThreads.foreach(value => resourceBuilder.computationThreadPoolSize(value))
+    val redisClient = RedisClient.create(resourceBuilder.build(), sentinelRedisConfiguration.redisURI)
     redisClient.setOptions(createClientOptions(sentinelRedisConfiguration.useSSL, sentinelRedisConfiguration.mayBeSSLConfiguration))
     redisClient
   }
