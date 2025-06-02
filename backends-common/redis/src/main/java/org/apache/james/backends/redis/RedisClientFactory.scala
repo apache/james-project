@@ -19,8 +19,6 @@
 
 package org.apache.james.backends.redis
 
-import java.time.Duration
-
 import io.lettuce.core.cluster.{ClusterClientOptions, RedisClusterClient}
 import io.lettuce.core.resource.{ClientResources, ThreadFactoryProvider}
 import io.lettuce.core.{AbstractRedisClient, ClientOptions, RedisClient, SslOptions, TimeoutOptions}
@@ -44,8 +42,7 @@ class RedisClientFactory @Singleton() @Inject()
     case sentinelRedisConfiguration: SentinelRedisConfiguration => createSentinelClient(sentinelRedisConfiguration)
   }
 
-  private def createStandaloneClient(standaloneRedisConfiguration: StandaloneRedisConfiguration, maybeTimeout: Option[Duration] = None): RedisClient = {
-    maybeTimeout.foreach(timeout => standaloneRedisConfiguration.redisURI.setTimeout(timeout))
+  private def createStandaloneClient(standaloneRedisConfiguration: StandaloneRedisConfiguration): RedisClient = {
     val resourceBuilder: ClientResources.Builder = ClientResources.builder()
       .threadFactoryProvider(threadFactoryProvider)
     standaloneRedisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
@@ -55,17 +52,13 @@ class RedisClientFactory @Singleton() @Inject()
     redisClient
   }
 
-  private def createClusterClient(clusterRedisConfiguration: ClusterRedisConfiguration, maybeTimeout: Option[Duration] = None): RedisClusterClient = {
+  private def createClusterClient(clusterRedisConfiguration: ClusterRedisConfiguration): RedisClusterClient = {
     val resourceBuilder: ClientResources.Builder = ClientResources.builder()
       .threadFactoryProvider(threadFactoryProvider)
     clusterRedisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
     clusterRedisConfiguration.workerThreads.foreach(value => resourceBuilder.computationThreadPoolSize(value))
     val redisClient = RedisClusterClient.create(resourceBuilder.build(),
-      clusterRedisConfiguration.redisURI.value
-        .map(rURI => {
-          maybeTimeout.foreach(timeout => rURI.setTimeout(timeout))
-          rURI
-        }).asJava)
+      clusterRedisConfiguration.redisURI.value.asJava)
     redisClient.setOptions(ClusterClientOptions.builder(
         createClientOptions(clusterRedisConfiguration.useSSL, clusterRedisConfiguration.mayBeSSLConfiguration))
       .build())
