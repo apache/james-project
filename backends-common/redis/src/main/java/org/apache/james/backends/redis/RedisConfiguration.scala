@@ -126,8 +126,9 @@ case class StandaloneRedisConfiguration(redisURI: RedisURI, useSSL: Boolean, may
   override def asString: String = MoreObjects.toStringHelper(this)
     .add("topology", STANDALONE_TOPOLOGY)
     .add("redisURI", redisURI.toString)
-    .add("redis.ioThreads", ioThreads)
-    .add("redis.workerThreads", workerThreads)
+    .add("ioThreads", ioThreads)
+    .add("workerThreads", workerThreads)
+    .add("useSSL", useSSL)
     .toString
 }
 
@@ -176,8 +177,10 @@ case class MasterReplicaRedisConfiguration(redisURI: RedisUris, useSSL: Boolean,
   override def asString: String = MoreObjects.toStringHelper(this)
     .add("topology", MASTER_REPLICA_TOPOLOGY)
     .add("redisURI", redisURI.value.map(_.toString).mkString(";"))
-    .add("redis.ioThreads", ioThreads)
-    .add("redis.workerThreads", workerThreads)
+    .add("ioThreads", ioThreads)
+    .add("workerThreads", workerThreads)
+    .add("useSSL", useSSL)
+    .add("readFrom", readFrom)
     .toString
 }
 
@@ -211,8 +214,9 @@ case class ClusterRedisConfiguration(redisURI: RedisUris, useSSL: Boolean, mayBe
   override def asString: String = MoreObjects.toStringHelper(this)
     .add("topology", CLUSTER_TOPOLOGY)
     .add("redisURI", redisURI.value.map(_.toString).mkString(";"))
-    .add("redis.ioThreads", ioThreads)
-    .add("redis.workerThreads", workerThreads)
+    .add("ioThreads", ioThreads)
+    .add("workerThreads", workerThreads)
+    .add("useSSL", useSSL)
     .add("readFrom", readFrom)
     .toString
 }
@@ -250,8 +254,10 @@ case class SentinelRedisConfiguration(redisURI: RedisURI, useSSL: Boolean, mayBe
   override def asString: String = MoreObjects.toStringHelper(this)
     .add("topology", SENTINEL_TOPOLOGY)
     .add("redisURI", redisURI.toString)
-    .add("redis.ioThreads", ioThreads)
-    .add("redis.workerThreads", workerThreads)
+    .add("ioThreads", ioThreads)
+    .add("workerThreads", workerThreads)
+    .add("useSSL", useSSL)
+    .add("readFrom", readFrom)
     .toString
 }
 
