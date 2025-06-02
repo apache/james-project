@@ -73,7 +73,11 @@ class RedisClientFactory @Singleton() @Inject()
   }
 
   private def createMasterReplicaClient(masterReplicaRedisConfiguration: MasterReplicaRedisConfiguration): RedisClient = {
-    val redisClient = RedisClient.create
+    val resourceBuilder: ClientResources.Builder = ClientResources.builder()
+      .threadFactoryProvider(threadFactoryProvider)
+    masterReplicaRedisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
+    masterReplicaRedisConfiguration.workerThreads.foreach(value => resourceBuilder.computationThreadPoolSize(value))
+    val redisClient = RedisClient.create(resourceBuilder.build())
     redisClient.setOptions(createClientOptions(masterReplicaRedisConfiguration.useSSL, masterReplicaRedisConfiguration.mayBeSSLConfiguration))
     redisClient
   }
