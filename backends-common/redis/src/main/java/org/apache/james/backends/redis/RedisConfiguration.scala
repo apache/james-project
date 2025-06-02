@@ -97,6 +97,10 @@ trait RedisConfiguration {
 
   def workerThreads: Option[Int]
 
+  def useSSL: Boolean
+
+  def mayBeSSLConfiguration: Option[SSLConfiguration]
+
   def asString: String
 }
 
