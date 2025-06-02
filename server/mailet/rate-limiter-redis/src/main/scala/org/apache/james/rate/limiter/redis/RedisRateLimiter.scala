@@ -24,7 +24,7 @@ import java.time.Duration
 import com.google.common.collect.ImmutableList
 import com.google.inject.{AbstractModule, Provides, Scopes}
 import es.moki.ratelimitj.core.limiter.request.{AbstractRequestRateLimiterFactory, ReactiveRequestRateLimiter, RequestLimitRule}
-import es.moki.ratelimitj.redis.request.{RedisClusterRateLimiterFactory, RedisSlidingWindowRequestRateLimiter, RedisRateLimiterFactory => RedisSingleInstanceRateLimitjFactory}
+import es.moki.ratelimitj.redis.request.{RedisSlidingWindowRequestRateLimiter, RedisRateLimiterFactory => RedisSingleInstanceRateLimitjFactory}
 import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.{AbstractRedisClient, RedisClient}
 import jakarta.inject.Inject
@@ -55,8 +55,8 @@ class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisConfiguration, 
   private val rateLimitjFactory: AbstractRequestRateLimiterFactory[RedisSlidingWindowRequestRateLimiter] = redisConfiguration match {
     case _: StandaloneRedisConfiguration => new RedisSingleInstanceRateLimitjFactory(rawRedisClient.asInstanceOf[RedisClient])
 
-    case _: ClusterRedisConfiguration =>
-      new RedisClusterRateLimiterFactory(rawRedisClient.asInstanceOf[RedisClusterClient])
+    case clusterRedisConfiguration: ClusterRedisConfiguration =>
+      new RedisClusterRateLimiterFactory(rawRedisClient.asInstanceOf[RedisClusterClient], clusterRedisConfiguration.readFrom)
 
     case masterReplicaRedisConfiguration: MasterReplicaRedisConfiguration => new RedisMasterReplicaRateLimiterFactory(
       rawRedisClient.asInstanceOf[RedisClient],
