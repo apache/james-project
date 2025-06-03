@@ -2832,6 +2832,7 @@ to be configured.
 Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
 
  - [Listing groups](#Listing_groups)
+ - [Deleting all groups](#Deleting_all_groups)
  - [Listing members of a group](#Listing_members_of_a_group)
  - [Adding a group member](#Adding_a_group_member)
  - [Removing a group member](#Removing_a_group_member)
@@ -2851,6 +2852,18 @@ Will return the groups as a list of JSON Strings representing mail addresses. Fo
 Response codes:
 
  - 200: Success
+
+### Deleting all groups
+
+```
+curl -XDELETE http://ip:port/address/groups
+```
+
+Will delete all groups.
+
+Response codes:
+
+- 204: Success
 
 ### Listing members of a group
 
