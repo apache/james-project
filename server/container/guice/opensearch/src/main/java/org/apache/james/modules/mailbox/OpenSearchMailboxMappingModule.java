@@ -17,10 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.opensearch;
+package org.apache.james.modules.mailbox;
 
-import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+import org.apache.james.mailbox.opensearch.DefaultMailboxMappingFactory;
+import org.apache.james.mailbox.opensearch.MailboxMappingFactory;
 
-public interface MailboxMappingFactory {
-    TypeMapping getMappingContent();
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
+
+public class OpenSearchMailboxMappingModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        bind(DefaultMailboxMappingFactory.class).in(Scopes.SINGLETON);
+        bind(MailboxMappingFactory.class).to(DefaultMailboxMappingFactory.class);
+    }
 }

@@ -44,6 +44,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.opensearch.DefaultMailboxMappingFactory;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
@@ -116,7 +117,7 @@ public class OpenSearchSearchHighlighterTest implements SearchHighLighterContrac
         IndexName indexName = new IndexName(UUID.randomUUID().toString());
         MailboxIndexCreationUtil.prepareClient(
             client, readAliasName, writeAliasName, indexName,
-            openSearch.getDockerOpenSearch().configuration());
+            openSearch.getDockerOpenSearch().configuration(), new DefaultMailboxMappingFactory());
 
         MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
         OpenSearchMailboxConfiguration openSearchMailboxConfiguration = OpenSearchMailboxConfiguration.builder()

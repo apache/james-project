@@ -45,6 +45,7 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.modules.mailbox.OpenSearchClientModule;
 import org.apache.james.modules.mailbox.OpenSearchDisabledModule;
+import org.apache.james.modules.mailbox.OpenSearchMailboxMappingModule;
 import org.apache.james.modules.mailbox.OpenSearchMailboxModule;
 import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.quota.search.QuotaSearcher;
@@ -160,6 +161,7 @@ public class SearchModuleChooser {
         return switch (searchConfiguration.getImplementation()) {
             case OpenSearch -> ImmutableList.of(
                 new OpenSearchClientModule(),
+                new OpenSearchMailboxMappingModule(),
                 new OpenSearchMailboxModule(),
                 new ReIndexingModule(),
                 new OpenSearchHighlightModule());
