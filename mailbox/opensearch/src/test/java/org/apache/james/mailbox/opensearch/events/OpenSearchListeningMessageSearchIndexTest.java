@@ -77,7 +77,7 @@ import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
 import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
 import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
-import org.apache.james.mailbox.opensearch.query.CriterionConverter;
+import org.apache.james.mailbox.opensearch.query.DefaultCriterionConverter;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
 import org.apache.james.mailbox.store.FakeAuthenticator;
@@ -219,7 +219,7 @@ class OpenSearchListeningMessageSearchIndexTest {
             openSearch.getDockerOpenSearch().configuration());
 
         openSearchSearcher = new OpenSearchSearcher(client,
-            new QueryConverter(new CriterionConverter()),
+            new QueryConverter(new DefaultCriterionConverter()),
             OpenSearchSearcher.DEFAULT_SEARCH_SIZE,
             MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
             new MailboxIdRoutingKeyFactory());
