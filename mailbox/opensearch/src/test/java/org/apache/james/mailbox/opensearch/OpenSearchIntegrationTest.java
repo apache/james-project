@@ -50,7 +50,7 @@ import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
-import org.apache.james.mailbox.opensearch.query.CriterionConverter;
+import org.apache.james.mailbox.opensearch.query.DefaultCriterionConverter;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
@@ -92,7 +92,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
             .await();
     static final int SEARCH_SIZE = 1;
-    private final QueryConverter queryConverter = new QueryConverter(new CriterionConverter());
+    private final QueryConverter queryConverter = new QueryConverter(new DefaultCriterionConverter(openSearchMailboxConfiguration()));
 
     @RegisterExtension
     static TikaExtension tika = new TikaExtension();
@@ -159,7 +159,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 ImmutableSet.of(),
                 new OpenSearchIndexer(client,
                     writeAliasName),
-                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter(openSearchMailboxConfiguration())), SEARCH_SIZE,
+                new OpenSearchSearcher(client, queryConverter, SEARCH_SIZE,
                     readAliasName, routingKeyFactory),
                 new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory,

@@ -38,7 +38,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
-import org.apache.james.mailbox.opensearch.query.CriterionConverter;
+import org.apache.james.mailbox.opensearch.query.DefaultCriterionConverter;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
@@ -58,7 +58,7 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
         .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
         .await();
 
-    private final QueryConverter queryConverter = new QueryConverter(new CriterionConverter());
+    private final QueryConverter queryConverter = new QueryConverter(new DefaultCriterionConverter());
     private ReactorOpenSearchClient client;
 
     @RegisterExtension

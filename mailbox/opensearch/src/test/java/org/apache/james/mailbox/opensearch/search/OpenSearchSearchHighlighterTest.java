@@ -52,7 +52,7 @@ import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
 import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
-import org.apache.james.mailbox.opensearch.query.CriterionConverter;
+import org.apache.james.mailbox.opensearch.query.DefaultCriterionConverter;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
 import org.apache.james.mailbox.searchhighligt.SearchHighLighterContract;
 import org.apache.james.mailbox.searchhighligt.SearchHighlighter;
@@ -126,7 +126,7 @@ public class OpenSearchSearchHighlighterTest implements SearchHighLighterContrac
             .build();
         final MessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
 
-        OpenSearchSearcher openSearchSearcher = new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter(openSearchMailboxConfiguration)), SEARCH_SIZE,
+        OpenSearchSearcher openSearchSearcher = new OpenSearchSearcher(client, new QueryConverter(new DefaultCriterionConverter(openSearchMailboxConfiguration)), SEARCH_SIZE,
             readAliasName, routingKeyFactory);
 
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()

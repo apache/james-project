@@ -21,6 +21,8 @@ package org.apache.james.modules.mailbox;
 
 import org.apache.james.mailbox.opensearch.DefaultMailboxMappingFactory;
 import org.apache.james.mailbox.opensearch.MailboxMappingFactory;
+import org.apache.james.mailbox.opensearch.query.CriterionConverter;
+import org.apache.james.mailbox.opensearch.query.DefaultCriterionConverter;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -30,5 +32,8 @@ public class OpenSearchMailboxMappingModule extends AbstractModule {
     protected void configure() {
         bind(DefaultMailboxMappingFactory.class).in(Scopes.SINGLETON);
         bind(MailboxMappingFactory.class).to(DefaultMailboxMappingFactory.class);
+
+        bind(DefaultCriterionConverter.class).in(Scopes.SINGLETON);
+        bind(CriterionConverter.class).to(DefaultCriterionConverter.class);
     }
 }
