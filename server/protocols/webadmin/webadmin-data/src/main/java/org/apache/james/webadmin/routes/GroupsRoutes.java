@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -45,6 +46,7 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -83,6 +85,7 @@ public class GroupsRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.get(ROOT_PATH, this::listGroups, jsonTransformer);
+        service.delete(ROOT_PATH, this::deleteGroups, jsonTransformer);
         service.get(GROUP_ADDRESS_PATH, this::listGroupMembers, jsonTransformer);
         service.put(GROUP_ADDRESS_PATH, (request, response) -> halt(HttpStatus.BAD_REQUEST_400));
         service.put(USER_IN_GROUP_ADDRESS_PATH, this::addToGroup);
@@ -92,6 +95,17 @@ public class GroupsRoutes implements Routes {
 
     public List<MappingSource> listGroups(Request request, Response response) throws RecipientRewriteTableException {
         return recipientRewriteTable.getSourcesForType(Mapping.Type.Group).collect(ImmutableList.toImmutableList());
+    }
+
+    public HaltException deleteGroups(Request request, Response response) throws RecipientRewriteTableException {
+        recipientRewriteTable.getSourcesForType(Mapping.Type.Group)
+            .flatMap(Throwing.function(source -> recipientRewriteTable.getStoredMappings(source)
+                .select(Mapping.Type.Group)
+                .asStream()
+                .map(mapping -> Pair.of(source, mapping))))
+            .forEach(Throwing.consumer(pair -> recipientRewriteTable.removeMapping(pair.getLeft(), pair.getRight())));
+
+        return halt(HttpStatus.NO_CONTENT_204);
     }
 
     public HaltException addToGroup(Request request, Response response) {

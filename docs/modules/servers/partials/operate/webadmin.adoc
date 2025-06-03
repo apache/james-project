@@ -2962,6 +2962,19 @@ Response codes:
 
 * 200: Success
 
+==== Deleting all groups
+
+
+....
+curl -XDELETE http://ip:port/address/groups
+....
+
+Will delete all groups.
+
+Response codes:
+
+* 204: Success
+
 ==== Listing members of a group
 
 ....

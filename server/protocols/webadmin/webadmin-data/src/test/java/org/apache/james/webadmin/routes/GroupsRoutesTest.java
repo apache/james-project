@@ -179,6 +179,29 @@ class GroupsRoutesTest {
         }
 
         @Test
+        void shouldReturnEmptyWhenAllGroupsDeleted() {
+            given()
+                .put(GROUP2 + SEPARATOR + USER_A);
+
+            given()
+                .put(GROUP1 + SEPARATOR + USER_A);
+
+            given().delete();
+
+            List<String> addresses =
+                when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+            assertThat(addresses).isEmpty();
+        }
+
+        @Test
         void putShouldBeIdempotent() {
             with()
                 .put(GROUP1 + SEPARATOR + USER_A);
