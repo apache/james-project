@@ -37,6 +37,7 @@ import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
+import org.apache.james.mailbox.opensearch.MailboxMappingFactory;
 import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
 import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
 import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
@@ -63,14 +64,17 @@ public class OpenSearchMailboxModule extends AbstractModule {
         private final OpenSearchConfiguration configuration;
         private final OpenSearchMailboxConfiguration mailboxConfiguration;
         private final ReactorOpenSearchClient client;
+        private final MailboxMappingFactory mailboxMappingFactory;
 
         @Inject
         MailboxIndexCreator(OpenSearchConfiguration configuration,
                             OpenSearchMailboxConfiguration mailboxConfiguration,
-                            ReactorOpenSearchClient client) {
+                            ReactorOpenSearchClient client,
+                            MailboxMappingFactory mailboxMappingFactory) {
             this.configuration = configuration;
             this.mailboxConfiguration = mailboxConfiguration;
             this.client = client;
+            this.mailboxMappingFactory = mailboxMappingFactory;
         }
 
         void createIndex() {
@@ -78,7 +82,8 @@ public class OpenSearchMailboxModule extends AbstractModule {
                 mailboxConfiguration.getReadAliasMailboxName(),
                 mailboxConfiguration.getWriteAliasMailboxName(),
                 mailboxConfiguration.getIndexMailboxName(),
-                configuration);
+                configuration,
+                mailboxMappingFactory);
         }
     }
 
