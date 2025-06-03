@@ -3397,6 +3397,48 @@ Response codes:
 - 200: OK
 - 400: Invalid parameter value
 
+### Listing sources for a mapping
+
+This endpoint allows receiving all mappings pointing to a corresponding user.
+
+```
+curl -XGET http://ip:port/mappings/sources/{userAddress}?type={type}
+```
+
+Return all mappings of a user where:
+
+ - `userAddress`: is the selected user
+ - `type`: Type of the mapping. One of `group`, `forward`, `address`, `alias`. Compulsory.
+
+Response body:
+
+```
+["group1@domain.tld","group2@domain.tld"]
+```
+
+Response codes:
+
+ - 200: OK
+ - 400: Invalid parameter value
+
+### Deleting sources for a mapping
+
+This endpoint allows deleting all mappings pointing to a corresponding user.
+
+```
+curl -XDELETE http://ip:port/mappings/sources/{userAddress}?type={type}
+```
+
+Deletes all mappings of a user where:
+
+ - `userAddress`: is the selected user
+ - `type`: Type of the mapping. One of `group`, `forward`, `address`, `alias`. Compulsory.
+
+Response codes:
+
+ - 204: OK
+ - 400: Invalid parameter value
+
 ## Administrating mail repositories
 
  - [Create a mail repository](#Create_a_mail_repository)

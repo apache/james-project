@@ -19,7 +19,12 @@
 
 package org.apache.james.webadmin.routes;
 
+import static spark.Spark.halt;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -39,7 +44,9 @@ import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.github.fge.lambdas.Throwing;
 
+import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -48,7 +55,9 @@ public class MappingRoutes implements Routes {
 
     static final String BASE_PATH = "/mappings";
     static final String USER_MAPPING_PATH = "/mappings/user/";
+    static final String SOURCE_MAPPING_PATH = "/mappings/sources/";
     static final String USER = "user";
+    static final String SOURCE = "source";
 
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<Map<MappingSource, Mappings>> jsonExtractor;
@@ -72,6 +81,8 @@ public class MappingRoutes implements Routes {
         service.get(BASE_PATH, this::getMappings, jsonTransformer);
         service.put(BASE_PATH, this::addMappings);
         service.get(USER_MAPPING_PATH + ":" + USER, this::getUserMappings, jsonTransformer);
+        service.get(SOURCE_MAPPING_PATH + ":" + SOURCE, this::getMappingSources, jsonTransformer);
+        service.delete(SOURCE_MAPPING_PATH + ":" + SOURCE, this::deleteMappingSources, jsonTransformer);
     }
 
     private Map<MappingSource, Mappings> getMappings(Request request, Response response) {
@@ -115,5 +126,33 @@ public class MappingRoutes implements Routes {
     private Mappings getUserMappings(Request request, Response response) throws RecipientRewriteTableException {
         Username username = Username.of(request.params(USER).toLowerCase());
         return recipientRewriteTable.getStoredMappings(MappingSource.fromUser(username));
+    }
+
+    private List<String> getMappingSources(Request request, Response response) {
+        Mapping mapping = Mapping.of(extractType(request), request.params(SOURCE));
+
+        return recipientRewriteTable.listSourcesReactive(mapping)
+            .map(MappingSource::asMailAddressString)
+            .collectList()
+            .block();
+    }
+
+    private HaltException deleteMappingSources(Request request, Response response) {
+        Mapping mapping = Mapping.of(extractType(request), request.params(SOURCE));
+
+        recipientRewriteTable.listSourcesReactive(mapping)
+            .collectList()
+            .block()
+            .forEach(Throwing.consumer(source -> recipientRewriteTable.removeMapping(source, mapping)));
+
+        return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    private static Mapping.Type extractType(Request request) {
+        return Optional.ofNullable(request.queryParams("type")).map(name -> Arrays.stream(Mapping.Type.values())
+                .filter(v -> v.name().equalsIgnoreCase(name))
+                .findAny()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid 'type' query parameter: " + name)))
+            .orElseThrow(() -> new IllegalArgumentException("On reversed resolution 'type' is compulsory"));
     }
 }
