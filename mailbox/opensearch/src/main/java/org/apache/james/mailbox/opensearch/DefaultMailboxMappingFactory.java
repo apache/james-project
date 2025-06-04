@@ -25,6 +25,7 @@ import static org.apache.james.backends.opensearch.IndexCreationFactory.KEYWORD;
 import static org.apache.james.backends.opensearch.IndexCreationFactory.RAW;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
 import org.opensearch.client.opensearch._types.mapping.BooleanProperty;
@@ -38,6 +39,7 @@ import org.opensearch.client.opensearch._types.mapping.Property;
 import org.opensearch.client.opensearch._types.mapping.RoutingField;
 import org.opensearch.client.opensearch._types.mapping.TextProperty;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+import org.opensearch.client.opensearch.indices.IndexSettings;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -289,5 +291,10 @@ public class DefaultMailboxMappingFactory implements MailboxMappingFactory {
                     .build())
                 .build())
             .build();
+    }
+
+    @Override
+    public Optional<IndexSettings> getIndexSettings() {
+        return Optional.empty();
     }
 }

@@ -19,8 +19,13 @@
 
 package org.apache.james.mailbox.opensearch;
 
+import java.util.Optional;
+
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+import org.opensearch.client.opensearch.indices.IndexSettings;
 
 public interface MailboxMappingFactory {
     TypeMapping getMappingContent();
+
+    Optional<IndexSettings> getIndexSettings();
 }
