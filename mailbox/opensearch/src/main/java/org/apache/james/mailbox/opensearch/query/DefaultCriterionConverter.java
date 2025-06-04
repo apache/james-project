@@ -58,10 +58,10 @@ import com.google.common.collect.ImmutableList;
 
 public class DefaultCriterionConverter implements CriterionConverter {
     public static final CharMatcher QUERY_STRING_CONTROL_CHAR = CharMatcher.anyOf("()\"~-|*");
-    private final Map<Class<?>, Function<SearchQuery.Criterion, Query>> criterionConverterMap;
-    private final Map<Class<?>, BiFunction<String, SearchQuery.HeaderOperator, Query>> headerOperatorConverterMap;
-    private final String textFuzzinessSearchValue;
-    private final boolean useQueryStringQuery;
+    protected final Map<Class<?>, Function<SearchQuery.Criterion, Query>> criterionConverterMap;
+    protected final Map<Class<?>, BiFunction<String, SearchQuery.HeaderOperator, Query>> headerOperatorConverterMap;
+    protected final String textFuzzinessSearchValue;
+    protected final boolean useQueryStringQuery;
 
     @Inject
     public DefaultCriterionConverter(OpenSearchMailboxConfiguration openSearchMailboxConfiguration) {
@@ -85,14 +85,14 @@ public class DefaultCriterionConverter implements CriterionConverter {
         registerHeaderOperatorConverters();
     }
 
-    private String evaluateFuzzinessValue(boolean textFuzzinessSearchEnable) {
+    protected String evaluateFuzzinessValue(boolean textFuzzinessSearchEnable) {
         if (textFuzzinessSearchEnable) {
             return "AUTO";
         }
         return "0";
     }
 
-    private void registerCriterionConverters() {
+    protected void registerCriterionConverters() {
         registerCriterionConverter(SearchQuery.FlagCriterion.class, this::convertFlag);
         registerCriterionConverter(SearchQuery.UidCriterion.class, this::convertUid);
         registerCriterionConverter(SearchQuery.MessageIdCriterion.class, this::convertMessageId);
@@ -123,11 +123,11 @@ public class DefaultCriterionConverter implements CriterionConverter {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends SearchQuery.Criterion> void registerCriterionConverter(Class<T> type, Function<T, Query> f) {
+    protected <T extends SearchQuery.Criterion> void registerCriterionConverter(Class<T> type, Function<T, Query> f) {
         criterionConverterMap.put(type, (Function<SearchQuery.Criterion, Query>) f);
     }
 
-    private void registerHeaderOperatorConverters() {
+    protected void registerHeaderOperatorConverters() {
         registerHeaderOperatorConverter(
             SearchQuery.ExistsOperator.class,
             (headerName, operator) -> new NestedQuery.Builder()
@@ -172,15 +172,16 @@ public class DefaultCriterionConverter implements CriterionConverter {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends SearchQuery.HeaderOperator> void registerHeaderOperatorConverter(Class<T> type, BiFunction<String, T, Query> f) {
+    protected <T extends SearchQuery.HeaderOperator> void registerHeaderOperatorConverter(Class<T> type, BiFunction<String, T, Query> f) {
         headerOperatorConverterMap.put(type, (BiFunction<String, SearchQuery.HeaderOperator, Query>) f);
     }
 
+    @Override
     public Query convertCriterion(SearchQuery.Criterion criterion) {
         return criterionConverterMap.get(criterion.getClass()).apply(criterion);
     }
 
-    private Query convertAttachmentCriterion(SearchQuery.AttachmentCriterion criterion) {
+    protected Query convertAttachmentCriterion(SearchQuery.AttachmentCriterion criterion) {
         return new TermQuery.Builder()
             .field(JsonMessageConstants.HAS_ATTACHMENT)
             .value(new FieldValue.Builder().booleanValue(criterion.getOperator().isSet()).build())
@@ -188,7 +189,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
             .toQuery();
     }
 
-    private Query convertMimeMessageIDCriterion(SearchQuery.MimeMessageIDCriterion criterion) {
+    protected Query convertMimeMessageIDCriterion(SearchQuery.MimeMessageIDCriterion criterion) {
         return new TermQuery.Builder()
             .field(JsonMessageConstants.MIME_MESSAGE_ID)
             .value(new FieldValue.Builder().stringValue(criterion.getMessageID()).build())
@@ -196,7 +197,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
             .toQuery();
     }
 
-    private Query convertThreadIdCriterion(SearchQuery.ThreadIdCriterion criterion) {
+    protected Query convertThreadIdCriterion(SearchQuery.ThreadIdCriterion criterion) {
         return new TermQuery.Builder()
             .field(JsonMessageConstants.THREAD_ID)
             .value(new FieldValue.Builder().stringValue(criterion.getThreadId().serialize()).build())
@@ -204,7 +205,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
             .toQuery();
     }
 
-    private Query convertCustomFlagCriterion(SearchQuery.CustomFlagCriterion criterion) {
+    protected Query convertCustomFlagCriterion(SearchQuery.CustomFlagCriterion criterion) {
         Query termQuery = new TermQuery.Builder()
             .field(JsonMessageConstants.USER_FLAGS)
             .value(new FieldValue.Builder().stringValue(criterion.getFlag()).build())
@@ -220,7 +221,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
         }
     }
 
-    private Query convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
+    protected Query convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
         switch (textCriterion.getType()) {
             case BODY:
                 if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(textCriterion.getOperator().getValue())) {
@@ -344,7 +345,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
         }
     }
 
-    private Query dateRangeFilter(String field, SearchQuery.DateOperator dateOperator) {
+    protected Query dateRangeFilter(String field, SearchQuery.DateOperator dateOperator) {
         return new BoolQuery.Builder()
             .filter(convertDateOperator(field,
                 dateOperator.getType(),
@@ -360,12 +361,12 @@ public class DefaultCriterionConverter implements CriterionConverter {
             .toQuery();
     }
 
-    private Query convertConjunction(SearchQuery.ConjunctionCriterion criterion) {
+    protected Query convertConjunction(SearchQuery.ConjunctionCriterion criterion) {
         return convertToBoolQuery(criterion.getCriteria().stream().map(this::convertCriterion),
             convertConjunctionType(criterion.getType()));
     }
 
-    private BiFunction<BoolQuery.Builder, Query, BoolQuery.Builder> convertConjunctionType(SearchQuery.Conjunction type) {
+    protected BiFunction<BoolQuery.Builder, Query, BoolQuery.Builder> convertConjunctionType(SearchQuery.Conjunction type) {
         switch (type) {
             case AND:
                 return BoolQuery.Builder::must;
@@ -379,13 +380,13 @@ public class DefaultCriterionConverter implements CriterionConverter {
     }
 
     @SuppressWarnings("ReturnValueIgnored")
-    private Query convertToBoolQuery(Stream<Query> stream, BiFunction<BoolQuery.Builder, Query, BoolQuery.Builder> addCriterionToBoolQuery) {
+    protected Query convertToBoolQuery(Stream<Query> stream, BiFunction<BoolQuery.Builder, Query, BoolQuery.Builder> addCriterionToBoolQuery) {
         BoolQuery.Builder builder = new BoolQuery.Builder();
         stream.forEach(query -> addCriterionToBoolQuery.apply(builder, query));
         return builder.build().toQuery();
     }
 
-    private Query convertFlag(SearchQuery.FlagCriterion flagCriterion) {
+    protected Query convertFlag(SearchQuery.FlagCriterion flagCriterion) {
         SearchQuery.BooleanOperator operator = flagCriterion.getOperator();
         Flags.Flag flag = flagCriterion.getFlag();
         if (flag.equals(Flags.Flag.DELETED)) {
@@ -451,7 +452,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
         throw new RuntimeException("Unknown flag used in Flag search criterion");
     }
 
-    private Query createNumericFilter(String fieldName, SearchQuery.NumericOperator operator) {
+    protected Query createNumericFilter(String fieldName, SearchQuery.NumericOperator operator) {
         switch (operator.getType()) {
             case EQUALS:
                 return new BoolQuery.Builder()
@@ -486,7 +487,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
         }
     }
 
-    private Query convertUid(SearchQuery.UidCriterion uidCriterion) {
+    protected Query convertUid(SearchQuery.UidCriterion uidCriterion) {
         if (uidCriterion.getOperator().getRange().length == 0) {
             return new BoolQuery.Builder().build().toQuery();
         }
@@ -498,7 +499,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
             .toQuery();
     }
 
-    private Query convertMessageId(SearchQuery.MessageIdCriterion messageIdCriterion) {
+    protected Query convertMessageId(SearchQuery.MessageIdCriterion messageIdCriterion) {
         return new TermQuery.Builder()
             .field(JsonMessageConstants.MESSAGE_ID)
             .value(new FieldValue.Builder().stringValue(messageIdCriterion.getMessageId().serialize()).build())
@@ -506,7 +507,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
             .toQuery();
     }
 
-    private Query uidRangeFilter(SearchQuery.UidRange numericRange) {
+    protected Query uidRangeFilter(SearchQuery.UidRange numericRange) {
         return new RangeQuery.Builder()
             .field(JsonMessageConstants.UID)
             .lte(JsonData.of(numericRange.getHighValue().asLong()))
@@ -515,14 +516,14 @@ public class DefaultCriterionConverter implements CriterionConverter {
             .toQuery();
     }
 
-    private Query convertHeader(SearchQuery.HeaderCriterion headerCriterion) {
+    protected Query convertHeader(SearchQuery.HeaderCriterion headerCriterion) {
         return headerOperatorConverterMap.get(headerCriterion.getOperator().getClass())
             .apply(
                 headerCriterion.getHeaderName().toLowerCase(Locale.US),
                 headerCriterion.getOperator());
     }
 
-    private Query convertSubject(SearchQuery.SubjectCriterion headerCriterion) {
+    protected Query convertSubject(SearchQuery.SubjectCriterion headerCriterion) {
         if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(headerCriterion.getSubject())) {
             return new QueryStringQuery.Builder()
                 .fields(ImmutableList.of(JsonMessageConstants.SUBJECT))
@@ -542,7 +543,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
         }
     }
 
-    private Query manageAddressFields(String headerName, String value) {
+    protected Query manageAddressFields(String headerName, String value) {
         return new BoolQuery.Builder()
             .should(new MatchQuery.Builder()
                 .field(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME)
@@ -568,7 +569,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
             .toQuery();
     }
 
-    private String getFieldNameFromHeaderName(String headerName) {
+    protected String getFieldNameFromHeaderName(String headerName) {
         switch (headerName.toLowerCase(Locale.US)) {
             case HeaderCollection.TO:
                 return JsonMessageConstants.TO;
@@ -583,7 +584,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
         }
     }
 
-    private Query convertDateOperator(String field, SearchQuery.DateComparator dateComparator, String lowDateString, String upDateString) {
+    protected Query convertDateOperator(String field, SearchQuery.DateComparator dateComparator, String lowDateString, String upDateString) {
         switch (dateComparator) {
             case BEFORE:
                 return new RangeQuery.Builder()
