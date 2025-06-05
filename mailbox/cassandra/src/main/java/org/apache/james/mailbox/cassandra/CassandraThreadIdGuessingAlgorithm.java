@@ -48,6 +48,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorithm {
+    private static final boolean DISABLE_THREADS = Boolean.valueOf(System.getProperty("james.mailbox.threads.disable", "false"));
+
     private final MailboxManager mailboxManager;
     private final CassandraThreadDAO threadDAO;
     private final CassandraThreadLookupDAO threadLookupDAO;
@@ -82,6 +84,10 @@ public class CassandraThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgor
 
     @Override
     public Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session) {
+        if (DISABLE_THREADS) {
+            return Flux.just(threadId.getBaseMessageId());
+        }
+
         SearchQuery searchQuery = SearchQuery.builder()
             .andCriteria(SearchQuery.threadId(threadId))
             .sorts(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival, SearchQuery.Sort.Order.NATURAL))
