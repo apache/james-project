@@ -44,6 +44,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorithm {
+    private static final boolean DISABLE_THREADS = Boolean.valueOf(System.getProperty("james.mailbox.threads.disable", "false"));
+
     private final PostgresThreadDAO.Factory threadDAOFactory;
 
     @Inject
@@ -76,6 +78,10 @@ public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgori
 
     @Override
     public Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session) {
+        if (DISABLE_THREADS) {
+            return Flux.just(threadId.getBaseMessageId());
+        }
+
         PostgresThreadDAO threadDAO = threadDAOFactory.create(session.getUser().getDomainPart());
         return threadDAO.findMessageIds(threadId, session.getUser())
             .switchIfEmpty(Flux.error(new ThreadNotFoundException(threadId)));
