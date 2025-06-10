@@ -50,7 +50,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class DKIMSignTest {
+class EncapsulatedDKIMSignTest {
     private static final String PKCS1_PEM_FILE = "classpath://test-dkim-pkcs1.pem";
     private static final String PKCS8_PEM_FILE = "classpath://test-dkim-pkcs8.pem";
     private static final FakeMailContext FAKE_MAIL_CONTEXT = FakeMailContext.defaultContext();
@@ -68,7 +68,7 @@ class DKIMSignTest {
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
-        Mailet mailet = new DKIMSign(fileSystem);
+        Mailet mailet = new EncapsulatedDKIMSign(fileSystem);
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -106,7 +106,7 @@ class DKIMSignTest {
     private List<SignatureRecord> verify(ByteArrayOutputStream rawMessage,
                                          MockPublicKeyRecordRetriever mockPublicKeyRecordRetriever)
             throws MessagingException, FailException {
-        List<SignatureRecord> signs = new DKIMVerifier(mockPublicKeyRecordRetriever)
+        List<SignatureRecord> signs = new EncapsulatedDKIMVerifier(mockPublicKeyRecordRetriever)
             .verifyUsingCRLF(MimeMessageUtil.mimeMessageFromStream(
                 new ByteArrayInputStream(rawMessage.toByteArray())));
         assertThat(signs).hasSize(1);
@@ -120,7 +120,7 @@ class DKIMSignTest {
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
-        Mailet mailet = new DKIMSign(fileSystem);
+        Mailet mailet = new EncapsulatedDKIMSign(fileSystem);
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -167,7 +167,7 @@ class DKIMSignTest {
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
-        Mailet mailet = new DKIMSign(fileSystem);
+        Mailet mailet = new EncapsulatedDKIMSign(fileSystem);
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -221,7 +221,7 @@ class DKIMSignTest {
         mm.addRecipient(RecipientType.TO, new InternetAddress("io@bago.org"));
         mm.setText("An 8bit encoded body with €uro symbol.", "ISO-8859-15");
 
-        Mailet mailet = new DKIMSign(fileSystem);
+        Mailet mailet = new EncapsulatedDKIMSign(fileSystem);
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -285,7 +285,7 @@ class DKIMSignTest {
             .mimeMessage(mm)
             .build();
 
-        Mailet mailet = new DKIMSign(fileSystem);
+        Mailet mailet = new EncapsulatedDKIMSign(fileSystem);
         mailet.init(mci);
 
         Mailet m7bit = new ConvertTo7Bit();
@@ -334,7 +334,7 @@ class DKIMSignTest {
             .mimeMessage(mm)
             .build();
 
-        Mailet mailet = new DKIMSign(fileSystem);
+        Mailet mailet = new EncapsulatedDKIMSign(fileSystem);
         mailet.init(mci);
 
         Mailet m7bit = new ConvertTo7Bit();

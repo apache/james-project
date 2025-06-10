@@ -102,7 +102,7 @@ import com.github.fge.lambdas.Throwing;
  * so will compute the hash using converted newlines. If you don't want this
  * behaviour then set forceCRLF attribute to false.
  */
-public class DKIMSign extends GenericMailet {
+public class EncapsulatedDKIMSign extends GenericMailet {
 
     private final FileSystem fileSystem;
     private String signatureTemplate;
@@ -110,7 +110,7 @@ public class DKIMSign extends GenericMailet {
     private boolean forceCRLF;
 
     @Inject
-    public DKIMSign(FileSystem fileSystem) {
+    public EncapsulatedDKIMSign(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }
 

@@ -33,10 +33,10 @@ import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
 import org.apache.james.server.core.MimeMessageInputStream;
 
-public class DKIMVerifier {
+public class EncapsulatedDKIMVerifier {
     private final org.apache.james.jdkim.DKIMVerifier originalVerifier;
 
-    public DKIMVerifier(PublicKeyRecordRetriever publicKeyRecordRetriever) {
+    public EncapsulatedDKIMVerifier(PublicKeyRecordRetriever publicKeyRecordRetriever) {
         this.originalVerifier = new org.apache.james.jdkim.DKIMVerifier(publicKeyRecordRetriever);
     }
 
