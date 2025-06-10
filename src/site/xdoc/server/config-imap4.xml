@@ -212,11 +212,11 @@
     </subsection>
 
     <pre><code>
-&lt;imapservers&gt;
+&lt;imapserver&gt;
         &lt;partialBodyFetchCacheEnabled&gt;true&lt;/partialBodyFetchCacheEnabled&gt;
         &lt;partialBodyFetchCacheDuration&gt;2min&lt;/partialBodyFetchCacheDuration&gt;
         &lt;partialBodyFetchCacheSize&gt;500 MiB&lt;/partialBodyFetchCacheSize&gt;
-&lt;/imapservers&gt;
+&lt;/imapserver&gt;
     </code></pre>
 </section>
 

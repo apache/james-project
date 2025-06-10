@@ -222,9 +222,9 @@ being configurable.
 Example:
 
 ....
-<imapservers>
+<imapserver>
   <partialBodyFetchCacheEnabled>true</partialBodyFetchCacheEnabled>
   <partialBodyFetchCacheDuration>2min</partialBodyFetchCacheDuration>
   <partialBodyFetchCacheSize>500 MiB</partialBodyFetchCacheSize>
-</imapservers>
+</imapserver>
 ....

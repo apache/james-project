@@ -57,7 +57,8 @@ public class DefaultProcessor implements ImapProcessor {
                                                        QuotaManager quotaManager,
                                                        QuotaRootResolver quotaRootResolver,
                                                        MailboxCounterCorrector mailboxCounterCorrector,
-                                                       MetricFactory metricFactory) {
+                                                       MetricFactory metricFactory,
+                                                       FetchProcessor.LocalCacheConfiguration localCacheConfiguration) {
         PathConverter.Factory pathConverterFactory = PathConverter.Factory.DEFAULT;
 
         ImmutableList.Builder<AbstractProcessor> builder = ImmutableList.builder();
@@ -91,7 +92,7 @@ public class DefaultProcessor implements ImapProcessor {
         builder.add(new SearchProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new SelectProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory, pathConverterFactory, mailboxCounterCorrector));
         builder.add(new NamespaceProcessor(mailboxManager, statusResponseFactory, metricFactory, new NamespaceSupplier.Default()));
-        builder.add(new FetchProcessor(mailboxManager, statusResponseFactory, metricFactory, FetchProcessor.LocalCacheConfiguration.DEFAULT));
+        builder.add(new FetchProcessor(mailboxManager, statusResponseFactory, metricFactory, localCacheConfiguration));
         builder.add(new StartTLSProcessor(statusResponseFactory));
         builder.add(new UnselectProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new CompressProcessor(statusResponseFactory));
