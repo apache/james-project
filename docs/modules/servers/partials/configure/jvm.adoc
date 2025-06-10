@@ -90,6 +90,18 @@ To enable blob hierarchy compatible with MinIO add in `jvm.properties`:
 james.s3.minio.compatibility.mode=true
 ----
 
+== Disable S3 checksum backward compatibility
+
+By default, James enables backward compatibility for S3 SDK checksum mechanisms to support S3 compatible object storages which rely on MD5 checksum. This can be disabled for native AWS S3 that does not need to rely on the MD5 checksum.
+
+Optional. Boolean. Defaults to true.
+
+Ex in `jvm.properties`
+----
+james.s3.sdk.checksum.backward.compatibility=false
+----
+To disable S3 checksum backward compatibility.
+
 == JMAP Quota draft compatibility
 
 Some JMAP clients depend on the JMAP Quota draft specifications. The property `james.jmap.quota.draft.compatibility` allows
