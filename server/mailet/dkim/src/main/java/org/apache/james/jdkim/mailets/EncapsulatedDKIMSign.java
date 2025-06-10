@@ -23,7 +23,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -42,10 +41,7 @@ import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jdkim.DKIMSigner;
-import org.apache.james.jdkim.api.BodyHasher;
-import org.apache.james.jdkim.api.Headers;
-import org.apache.james.jdkim.api.SignatureRecord;
-import org.apache.james.jdkim.exceptions.PermFailException;
+import org.apache.james.jdkim.exceptions.FailException;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -136,10 +132,10 @@ public class EncapsulatedDKIMSign extends GenericMailet {
         try {
             char[] passphrase = privateKeyPassword.map(String::toCharArray).orElse(null);
             InputStream pem = getInitParameterAsOptional("privateKey")
-                .map(String::getBytes)
-                .map(ByteArrayInputStream::new)
-                .map(byteArrayInputStream -> (InputStream) byteArrayInputStream)
-                .orElseGet(Throwing.supplier(() -> fileSystem.getResource(getInitParameter("privateKeyFilepath"))).sneakyThrow());
+                    .map(String::getBytes)
+                    .map(ByteArrayInputStream::new)
+                    .map(byteArrayInputStream -> (InputStream) byteArrayInputStream)
+                    .orElseGet(Throwing.supplier(() -> fileSystem.getResource(getInitParameter("privateKeyFilepath"))).sneakyThrow());
 
             privateKey = extractPrivateKey(pem, passphrase);
         } catch (NoSuchAlgorithmException e) {
@@ -153,51 +149,36 @@ public class EncapsulatedDKIMSign extends GenericMailet {
 
     public void service(Mail mail) throws MessagingException {
         DKIMSigner signer = new DKIMSigner(getSignatureTemplate(), getPrivateKey());
-        SignatureRecord signRecord = signer
-                .newSignatureRecordTemplate(getSignatureTemplate());
-        try {
-            BodyHasher bhj = signer.newBodyHasher(signRecord);
-            MimeMessage message = mail.getMessage();
-            Headers headers = new MimeMessageHeaders(message);
-            try {
-                OutputStream os = new HeaderSkippingOutputStream(bhj.getOutputStream());
-                if (forceCRLF) {
-                    os = new CRLFOutputStream(os);
-                }
-                try (MimeMessageInputStream stream = new MimeMessageInputStream(message)) {
-                    stream.transferTo(os);
-                }
-            } catch (IOException e) {
-                throw new MessagingException("Exception calculating bodyhash: " + e.getMessage(), e);
-            } finally {
-                try {
-                    bhj.getOutputStream().close();
-                } catch (IOException e) {
-                    throw new MessagingException("Exception calculating bodyhash: " + e.getMessage(), e);
-                }
-            }
-            String signatureHeader = signer.sign(headers, bhj);
+        MimeMessage message = mail.getMessage();
+
+        try (MimeMessageInputStream stream = new MimeMessageInputStream(message)) {
+            String signatureHeader = forceCRLF ?
+                    signer.sign(new CRLFInputStream(stream)) :
+                    signer.sign(stream);
+
             // Unfortunately JavaMail does not give us a method to add headers
             // on top.
             // message.addHeaderLine(signatureHeader);
-            prependHeader(message, signatureHeader);
-        } catch (PermFailException e) {
-            throw new MessagingException("PermFail while signing: " + e.getMessage(), e);
-        }
 
+            prependHeader(message, signatureHeader);
+        } catch (IOException e) {
+            throw new MessagingException("Exception calculating bodyhash: " + e.getMessage(), e);
+        } catch (FailException e) {
+            throw new RuntimeException("Fail while signing: " + e.getMessage(), e);
+        }
     }
 
     private void prependHeader(MimeMessage message, String signatureHeader)
             throws MessagingException {
         List<String> prevHeader = Collections.list(message.getAllHeaderLines());
         Collections.list(message.getAllHeaders())
-            .stream()
-            .map(Header::getName)
-            .forEach(Throwing.consumer(message::removeHeader).sneakyThrow());
+                .stream()
+                .map(Header::getName)
+                .forEach(Throwing.consumer(message::removeHeader).sneakyThrow());
 
         message.addHeaderLine(signatureHeader);
         prevHeader
-            .forEach(Throwing.consumer(message::addHeaderLine).sneakyThrow());
+                .forEach(Throwing.consumer(message::addHeaderLine).sneakyThrow());
     }
 
     private PrivateKey extractPrivateKey(InputStream rawKey, char[] passphrase) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {

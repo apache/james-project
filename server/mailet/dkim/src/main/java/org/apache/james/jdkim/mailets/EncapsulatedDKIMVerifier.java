@@ -20,14 +20,11 @@
 package org.apache.james.jdkim.mailets;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
-import org.apache.james.jdkim.api.BodyHasher;
-import org.apache.james.jdkim.api.Headers;
 import org.apache.james.jdkim.api.PublicKeyRecordRetriever;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
@@ -45,31 +42,13 @@ public class EncapsulatedDKIMVerifier {
     }
 
     public List<SignatureRecord> verify(MimeMessage message, boolean forceCRLF) throws MessagingException, FailException {
-        Headers headers = new MimeMessageHeaders(message);
-        BodyHasher bh = originalVerifier.newBodyHasher(headers);
-        try {
-            if (bh != null) {
-                OutputStream os = new HeaderSkippingOutputStream(bh
-                    .getOutputStream());
-                if (forceCRLF) {
-                    os = new CRLFOutputStream(os);
-                }
-                new MimeMessageInputStream(message).transferTo(os);
-            }
-
+        try (var stream = new MimeMessageInputStream(message)) {
+            return forceCRLF ?
+                    originalVerifier.verify(new CRLFInputStream(stream)) :
+                    originalVerifier.verify(stream);
         } catch (IOException e) {
             throw new MessagingException("Exception calculating bodyhash: "
                     + e.getMessage(), e);
-        } finally {
-            try {
-                if (bh != null) {
-                    bh.getOutputStream().close();
-                }
-            } catch (IOException e) {
-                throw new MessagingException("Exception calculating bodyhash: "
-                        + e.getMessage(), e);
-            }
         }
-        return originalVerifier.verify(bh);
     }
 }
