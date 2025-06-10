@@ -91,7 +91,7 @@ public class DefaultProcessor implements ImapProcessor {
         builder.add(new SearchProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new SelectProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory, pathConverterFactory, mailboxCounterCorrector));
         builder.add(new NamespaceProcessor(mailboxManager, statusResponseFactory, metricFactory, new NamespaceSupplier.Default()));
-        builder.add(new FetchProcessor(mailboxManager, statusResponseFactory, metricFactory));
+        builder.add(new FetchProcessor(mailboxManager, statusResponseFactory, metricFactory, FetchProcessor.LocalCacheConfiguration.DEFAULT));
         builder.add(new StartTLSProcessor(statusResponseFactory));
         builder.add(new UnselectProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new CompressProcessor(statusResponseFactory));
