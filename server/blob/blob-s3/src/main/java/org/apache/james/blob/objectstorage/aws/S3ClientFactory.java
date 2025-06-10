@@ -45,9 +45,13 @@ import com.google.common.collect.ImmutableList;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
+import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.http.TlsTrustManagersProvider;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
+import software.amazon.awssdk.services.s3.LegacyMd5Plugin;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.S3AsyncClientBuilder;
 import software.amazon.awssdk.services.s3.S3Configuration;
 
 @Singleton
@@ -72,6 +76,7 @@ public class S3ClientFactory implements Startable, Closeable {
     public static final String S3_METRICS_ENABLED_PROPERTY_KEY = "james.s3.metrics.enabled";
     public static final String S3_METRICS_ENABLED_DEFAULT_VALUE = "true";
     public static final String S3_METRICS_PREFIX = System.getProperty("james.s3.metrics.prefix", DEFAULT_S3_METRICS_PREFIX);
+    public static final boolean S3_CHECKSUM_BACKWARD_COMPATIBILITY_ENABLED = Boolean.parseBoolean(System.getProperty("james.s3.sdk.checksum.backward.compatibility", "true"));
 
     private final S3AsyncClient s3Client;
 
@@ -86,7 +91,11 @@ public class S3ClientFactory implements Startable, Closeable {
             .pathStyleAccessEnabled(true)
             .build();
 
-        s3Client = S3AsyncClient.builder()
+        s3Client = createS3AsyncClient(configuration, jamesS3MetricPublisherProvider, authConfiguration, pathStyleAccess);
+    }
+
+    private S3AsyncClient createS3AsyncClient(S3BlobStoreConfiguration configuration, Provider<JamesS3MetricPublisher> jamesS3MetricPublisherProvider, AwsS3AuthConfiguration authConfiguration, S3Configuration pathStyleAccess) {
+        S3AsyncClientBuilder s3AsyncClientBuilder = S3AsyncClient.builder()
             .credentialsProvider(StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(authConfiguration.getAccessKeyId(), authConfiguration.getSecretKey())))
             .httpClientBuilder(httpClientBuilder(configuration))
@@ -98,8 +107,16 @@ public class S3ClientFactory implements Startable, Closeable {
                 if (s3MetricsEnabled) {
                     builder.addMetricPublisher(jamesS3MetricPublisherProvider.get());
                 }
-            })
-            .build();
+            });
+
+        if (S3_CHECKSUM_BACKWARD_COMPATIBILITY_ENABLED) {
+            s3AsyncClientBuilder
+                .addPlugin(LegacyMd5Plugin.create())
+                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
+                .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
+        }
+
+        return s3AsyncClientBuilder.build();
     }
 
     private NettyNioAsyncHttpClient.Builder httpClientBuilder(S3BlobStoreConfiguration configuration) {
