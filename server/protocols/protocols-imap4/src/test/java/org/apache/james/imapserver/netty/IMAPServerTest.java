@@ -355,7 +355,7 @@ class IMAPServerTest {
             assertThat(testIMAPClient
                 .select("INBOX")
                 .readFirstMessageInMailbox("BODY[]<8.12>"))
-                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {12}\r\nvalue\r\n\r\nBOD)\r\n");
+                .contains("* 1 FETCH (BODY[]<8> {12}\r\nvalue\r\n\r\nBOD)\r\n");
         }
 
         @Test
