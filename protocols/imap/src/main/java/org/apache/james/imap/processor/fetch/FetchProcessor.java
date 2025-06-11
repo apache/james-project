@@ -110,7 +110,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         void saveForLater(MessageResult messageResult, FetchGroup fetchGroup);
     }
 
-    public static class DefaultLocalMessageCache implements LocalMessageCache{
+    public static class DefaultLocalMessageCache implements LocalMessageCache {
         public static final ReferenceQueue<LocalCacheEntry> REFERENCE_QUEUE = new ReferenceQueue<>();
         public static final AtomicLong TOTAL_SIZE = new AtomicLong(0);
         private final ImapSession imapSession;
@@ -136,14 +136,14 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         private Optional<LocalCacheEntry> retrieveCachedEntry() {
             Optional maybeMessage = Optional.ofNullable(imapSession.getAttribute(CACHE_KEY));
 
-            Optional<LocalCacheEntry> CacheContent = maybeMessage.filter(SoftReference.class::isInstance)
+            Optional<LocalCacheEntry> cacheContent = maybeMessage.filter(SoftReference.class::isInstance)
                 .flatMap(ref -> {
                     SoftReference softReference = (SoftReference) ref;
                     return Optional.ofNullable(softReference.get());
                 })
                 .filter(LocalCacheEntry.class::isInstance)
                 .map(LocalCacheEntry.class::cast);
-            return CacheContent;
+            return cacheContent;
         }
 
         @Override
