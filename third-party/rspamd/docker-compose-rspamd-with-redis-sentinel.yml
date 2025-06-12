@@ -102,7 +102,7 @@ services:
       redis-master:
           condition: service_healthy
     container_name: rspamd
-    image: rspamd/rspamd:3.9.1
+    image: rspamd/rspamd:3.12.0
     environment:
       - RSPAMD_PASSWORD=admin
     volumes:

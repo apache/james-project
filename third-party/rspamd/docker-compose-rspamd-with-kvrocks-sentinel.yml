@@ -103,7 +103,7 @@ services:
       kvrocks-master:
           condition: service_healthy
     container_name: rspamd
-    image: rspamd/rspamd:3.11.1 # Rspamd version >= 3.10 is needed to fix the Redis read-only issue when Rspamd gets bayes statistics too.
+    image: rspamd/rspamd:3.12.0
     environment:
       - RSPAMD_PASSWORD=admin
     volumes:
