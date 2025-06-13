@@ -31,6 +31,7 @@ import org.apache.james.imap.api.DefaultConnectionCheckFactory;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
+import org.apache.james.imap.processor.fetch.FetchProcessor;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -87,7 +88,8 @@ public class IMAPHealthCheckTest {
                 null,
                 memoryIntegrationResources.getQuotaManager(),
                 memoryIntegrationResources.getQuotaRootResolver(),
-                metricFactory),
+                metricFactory,
+                FetchProcessor.LocalCacheConfiguration.DEFAULT),
             new RecordingMetricFactory(),
             new NoopGaugeRegistry(),
             new DefaultConnectionCheckFactory());

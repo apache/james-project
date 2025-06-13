@@ -201,6 +201,23 @@
     <subsection name="Mail user agents auto-configuration">
         <p>Check this example on <a href="https://github.com/apache/james-project/tree/master/examples/imap-autoconf">Mail user agents auto-configuration</a>.</p>
     </subsection>
+
+    <subsection name="Local cache for partial Fetch">
+        <p>Because some clients uses partial fetch in order to emulate retriable download of individual body parts
+            we offer a way for James to cache in the IMAP session the latest partially fetched message. This is done using
+            a weak reference, a total size dedicated to the cache as well as a time to leave cache cleanup, all of this
+            being configurable.</p>
+
+        <p>Example:</p>
+    </subsection>
+
+    <pre><code>
+&lt;imapserver&gt;
+        &lt;partialBodyFetchCacheEnabled&gt;true&lt;/partialBodyFetchCacheEnabled&gt;
+        &lt;partialBodyFetchCacheDuration&gt;2min&lt;/partialBodyFetchCacheDuration&gt;
+        &lt;partialBodyFetchCacheSize&gt;500 MiB&lt;/partialBodyFetchCacheSize&gt;
+&lt;/imapserver&gt;
+    </code></pre>
 </section>
 
 </body>

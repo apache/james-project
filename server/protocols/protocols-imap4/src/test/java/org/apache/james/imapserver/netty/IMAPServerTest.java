@@ -81,6 +81,7 @@ import org.apache.james.imap.api.ConnectionCheck;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.base.AbstractProcessor;
+import org.apache.james.imap.processor.fetch.FetchProcessor;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.jwt.OidcTokenFixture;
 import org.apache.james.mailbox.MailboxSession;
@@ -160,7 +161,8 @@ class IMAPServerTest {
     private InMemoryMailboxManager mailboxManager;
 
     private IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config,
-                                        InMemoryIntegrationResources inMemoryIntegrationResources) throws Exception {
+                                        InMemoryIntegrationResources inMemoryIntegrationResources,
+                                        FetchProcessor.LocalCacheConfiguration localCacheConfiguration) throws Exception {
         memoryIntegrationResources = inMemoryIntegrationResources;
 
         RecordingMetricFactory metricFactory = new RecordingMetricFactory();
@@ -178,7 +180,8 @@ class IMAPServerTest {
                 null,
                 memoryIntegrationResources.getQuotaManager(),
                 memoryIntegrationResources.getQuotaRootResolver(),
-                metricFactory),
+                metricFactory,
+                localCacheConfiguration),
             new ImapMetrics(metricFactory),
             new NoopGaugeRegistry(), connectionChecks);
 
@@ -191,7 +194,7 @@ class IMAPServerTest {
         return imapServer;
     }
 
-    private IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
+    private IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config, FetchProcessor.LocalCacheConfiguration localCacheConfiguration) throws Exception {
         authenticator = new FakeAuthenticator();
         authenticator.addUser(USER, USER_PASS);
         authenticator.addUser(USER2, USER_PASS);
@@ -208,11 +211,19 @@ class IMAPServerTest {
             .storeQuotaManager()
             .build();
 
-        return createImapServer(config, memoryIntegrationResources);
+        return createImapServer(config, memoryIntegrationResources, localCacheConfiguration);
+    }
+
+    private IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
+        return createImapServer(config, FetchProcessor.LocalCacheConfiguration.DEFAULT);
+    }
+
+    private IMAPServer createImapServer(String configurationFile, FetchProcessor.LocalCacheConfiguration localCacheConfiguration) throws Exception {
+        return createImapServer(ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream(configurationFile)), localCacheConfiguration);
     }
 
     private IMAPServer createImapServer(String configurationFile) throws Exception {
-        return createImapServer(ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream(configurationFile)));
+        return createImapServer(configurationFile, FetchProcessor.LocalCacheConfiguration.DEFAULT);
     }
 
     private Set<ConnectionCheck> defaultConnectionChecks() {
@@ -285,7 +296,7 @@ class IMAPServerTest {
 
         @BeforeEach
         void beforeEach() throws Exception {
-            imapServer = createImapServer("imapServer.xml");
+            imapServer = createImapServer("imapServer.xml", FetchProcessor.LocalCacheConfiguration.DEFAULT);
             port = imapServer.getListenAddresses().get(0).getPort();
         }
 
@@ -340,6 +351,11 @@ class IMAPServerTest {
                 .select("INBOX")
                 .readFirstMessageInMailbox("BODY[]<8.12>"))
                 .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {12}\r\nvalue\r\n\r\nBOD)\r\n");
+
+            assertThat(testIMAPClient
+                .select("INBOX")
+                .readFirstMessageInMailbox("BODY[]<8.12>"))
+                .contains("* 1 FETCH (BODY[]<8> {12}\r\nvalue\r\n\r\nBOD)\r\n");
         }
 
         @Test
@@ -1313,7 +1329,7 @@ class IMAPServerTest {
             config.addProperty("auth.oidc.oidcConfigurationURL", "https://example.com/jwks");
             config.addProperty("auth.oidc.scope", "email");
 
-            imapServer = createImapServer(config, integrationResources);
+            imapServer = createImapServer(config, integrationResources, FetchProcessor.LocalCacheConfiguration.DEFAULT);
             port = imapServer.getListenAddresses().get(0).getPort();
         }
 

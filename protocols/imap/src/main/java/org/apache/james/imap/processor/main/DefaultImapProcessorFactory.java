@@ -27,6 +27,7 @@ import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.imap.processor.DefaultProcessor;
 import org.apache.james.imap.processor.base.UnknownRequestProcessor;
+import org.apache.james.imap.processor.fetch.FetchProcessor;
 import org.apache.james.mailbox.MailboxCounterCorrector;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
@@ -38,18 +39,23 @@ public class DefaultImapProcessorFactory {
 
     public static ImapProcessor createDefaultProcessor(MailboxManager mailboxManager, EventBus eventBus, SubscriptionManager subscriptionManager, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,
             MetricFactory metricFactory) {
-        return createXListSupportingProcessor(mailboxManager, eventBus, subscriptionManager, new DefaultMailboxTyper(), quotaManager, quotaRootResolver, metricFactory);
+        return createXListSupportingProcessor(mailboxManager, eventBus, subscriptionManager, new DefaultMailboxTyper(), quotaManager, quotaRootResolver, metricFactory,
+            FetchProcessor.LocalCacheConfiguration.DEFAULT);
     }
 
     public static ImapProcessor createXListSupportingProcessor(MailboxManager mailboxManager,
                                                                EventBus eventBus, SubscriptionManager subscriptionManager,
-                                                               MailboxTyper mailboxTyper, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MetricFactory metricFactory) {
+                                                               MailboxTyper mailboxTyper, QuotaManager quotaManager,
+                                                               QuotaRootResolver quotaRootResolver, MetricFactory metricFactory,
+                                                               FetchProcessor.LocalCacheConfiguration localCacheConfiguration) {
 
         StatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         UnknownRequestProcessor unknownRequestImapProcessor = new UnknownRequestProcessor(statusResponseFactory);
 
         return DefaultProcessor.createDefaultProcessor(unknownRequestImapProcessor, mailboxManager,
-            eventBus, subscriptionManager, statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver, MailboxCounterCorrector.DEFAULT, metricFactory);
+            eventBus, subscriptionManager, statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver,
+            MailboxCounterCorrector.DEFAULT, metricFactory,
+            localCacheConfiguration);
     }
 
 }
