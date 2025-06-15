@@ -89,9 +89,11 @@
                       <ul>
                           <li><strong>alg</strong> (header) - the signing algorithm, which must correspond
                               to the key type, e.g. <code>RS256</code> for RSA or <code>ES256</code> for EC.</li>
+                          <li><strong>kid</strong> (header, optional) - identifies the key used
+                              to sign and verify the JWT. This is the JWK thumbprint of the key (as defined in RFC 7638).</li>
                           <li><strong>sub</strong> - the address of the user, e.g. <code>admin@example.com</code>.</li>
                           <li><strong>admin</strong> - must be true (boolean literal, not string) to access admin operations.</li>
-                          <li><strong>exp</strong> - the token expiration time, as the number of seconds (not milliseconds)
+                          <li><strong>exp</strong> - (optional) the token expiration time, as the number of seconds (not milliseconds)
                               since the epoch, a.k.a "unix time". If this claim is omitted, the token never expires.</li>
                       </ul>
                       For example, a token might have the header <code>{"alg":"ES256","typ":"JWT"}</code>

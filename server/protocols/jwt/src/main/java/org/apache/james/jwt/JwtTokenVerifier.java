@@ -18,8 +18,9 @@
  ****************************************************************/
 package org.apache.james.jwt;
 
-import java.security.PublicKey;
+import java.security.Key;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -31,10 +32,13 @@ import com.google.common.collect.ImmutableList;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.CompressionCodecResolver;
 import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SigningKeyResolver;
+import io.jsonwebtoken.SigningKeyResolverAdapter;
 import io.jsonwebtoken.impl.compression.DefaultCompressionCodecResolver;
 
 public class JwtTokenVerifier {
@@ -67,12 +71,27 @@ public class JwtTokenVerifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenVerifier.class);
 
+    private final JwtParser kidJwtParser;
     private final List<JwtParser> jwtParsers;
 
     public JwtTokenVerifier(PublicKeyProvider pubKeyProvider) {
+        // one parser that performs key lookup by kid
+        this.kidJwtParser = toImmutableJwtParser(new SigningKeyResolverAdapter() {
+            @Override
+            public Key resolveSigningKey(JwsHeader h, Claims claims) {
+                String kid = Objects.requireNonNull((String)h.get("kid"));
+                return pubKeyProvider.get(kid).orElse(null);
+            }
+        });
+        // a list of parsers, one for each of the provider's keys
         this.jwtParsers = pubKeyProvider.get()
             .stream()
-            .map(this::toImmutableJwtParser)
+            .map(k -> toImmutableJwtParser(new SigningKeyResolverAdapter() {
+                @Override
+                public Key resolveSigningKey(JwsHeader h, Claims claims) {
+                    return k;
+                }
+            }))
             .collect(ImmutableList.toImmutableList());
     }
 
@@ -82,9 +101,17 @@ public class JwtTokenVerifier {
     }
 
     public <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType) {
-        return jwtParsers.stream()
-            .flatMap(parser -> verifyAndExtractClaim(token, claimName, returnType, parser).stream())
-            .findFirst();
+        try {
+            // if the token contains a kid, verify only with the corresponding key (or fail)
+            return verifyAndExtractClaim(token, claimName, returnType, kidJwtParser);
+        } catch (IllegalArgumentException iae) { // parser throws IAE when no key is given
+            return Optional.empty(); // kid exists but no corresponding key was found - fail
+        } catch (NullPointerException npe) { // our own key locator throws NPE when there is no kid
+            // if token does not specify kid, fallback to trying all keys
+            return jwtParsers.stream()
+                .flatMap(parser -> verifyAndExtractClaim(token, claimName, returnType, parser).stream())
+                .findFirst();
+        }
     }
 
     private <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType, JwtParser parser) {
@@ -114,9 +141,9 @@ public class JwtTokenVerifier {
         }
     }
 
-    private JwtParser toImmutableJwtParser(PublicKey publicKey) {
+    private JwtParser toImmutableJwtParser(SigningKeyResolver keyLocator) {
         return Jwts.parserBuilder()
-            .setSigningKey(publicKey)
+            .setSigningKeyResolver(keyLocator)
             .setCompressionCodecResolver(CONFIGURED_COMPRESSION_CODEC_RESOLVER)
             .build();
     }

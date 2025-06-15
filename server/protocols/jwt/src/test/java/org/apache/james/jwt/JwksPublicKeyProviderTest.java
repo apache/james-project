@@ -29,7 +29,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.List;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -93,18 +92,17 @@ class JwksPublicKeyProviderTest {
 
     @Test
     void getShouldSuccessWhenKeyProvided() {
-        PublicKeyProvider testee = JwksPublicKeyProvider.of(getJwksURL(), "wu-9VZEr0gHF986PYPVzvU-5IP1q26EzzQVK_sjG29Q");
-        List<PublicKey> publicKeys = testee.get();
+        PublicKeyProvider testee = JwksPublicKeyProvider.of(getJwksURL());
+        PublicKey publicKey = testee.get("wu-9VZEr0gHF986PYPVzvU-5IP1q26EzzQVK_sjG29Q").get();
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(publicKeys).hasSize(1);
-            softly.assertThat(publicKeys.get(0)).isInstanceOf(RSAPublicKey.class);
+            softly.assertThat(publicKey).isInstanceOf(RSAPublicKey.class);
         });
     }
 
     @Test
     void getShouldReturnEmptyWhenKeyNotProvided() {
-        PublicKeyProvider testee = JwksPublicKeyProvider.of(getJwksURL(), "notfound");
-        assertThat(testee.get()).isEmpty();
+        PublicKeyProvider testee = JwksPublicKeyProvider.of(getJwksURL());
+        assertThat(testee.get("notfound")).isEmpty();
     }
 
     @Test
@@ -114,8 +112,8 @@ class JwksPublicKeyProviderTest {
             .respond(HttpResponse.response().withStatusCode(200)
                 .withBody("invalid body", StandardCharsets.UTF_8));
 
-        PublicKeyProvider testee = JwksPublicKeyProvider.of(new URI(String.format("http://127.0.0.1:%s/invalid", mockServer.getLocalPort())).toURL(),
-            "wu-9VZEr0gHF986PYPVzvU-5IP1q26EzzQVK_sjG29Q");
+        PublicKeyProvider testee = JwksPublicKeyProvider.of(
+            new URI(String.format("http://127.0.0.1:%s/invalid", mockServer.getLocalPort())).toURL());
         assertThatThrownBy(testee::get)
             .isInstanceOf(MissingOrInvalidKeyException.class);
     }
