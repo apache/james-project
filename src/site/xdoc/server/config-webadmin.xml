@@ -29,7 +29,7 @@
 
     <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/webadmin.properties">webadmin.properties</a> in GIT to get some examples and hints.</p>
 
-    <p>Use this configuration to define the WebAdmin's responding host and port.</p>
+    <p>The following settings are available in webadmin.properties to configure the WebAdmin HTTP server:</p>
 
     <dl>
         <dt><strong>enabled</strong></dt>
@@ -43,9 +43,11 @@
         <dt><strong>cors.origin</strong></dt>
         <dd>Specify ths CORS origin (default: null)</dd>
         <dt><strong>jwt.enable</strong></dt>
-        <dd>Allow JSON Web Token (default: false)</dd>
+        <dd>Require JWT (JSON Web Token) authentication (default: false)</dd>
+        <dt><strong>jwt.publickeypem.url</strong></dt>
+        <dd>Specify the public key used to verify JWT tokens. Must be a url pointing to a PEM file, e.g. file://conf/jwt.public.pem.</dd>
         <dt><strong>https.enable</strong></dt>
-        <dd>Use https (default: false)</dd>
+        <dd>Use HTTPS (default: false)</dd>
         <dt><strong>https.keystore</strong></dt>
         <dd>Specify a keystore file for https (default: null)</dd>
         <dt><strong>https.password</strong></dt>
@@ -63,10 +65,58 @@
         <dd>Minimum threads used by the underlying Jetty server. Optional.</dd>
     </dl>
 
-      <subsection name="Reverse-proxy set up">
+      <subsection name="Reverse Proxy Setup">
           <p>WebAdmin adds the value of <code>X-Real-IP</code> header as part of the logging MDC.</p>
 
           <p>This allows for reverse proxies to cary other the IP address of the client down to the JMAP server for diagnostic purpose.</p>
+      </subsection>
+
+      <subsection name="Authentication">
+          <p>By default, the <code>jwt.enable</code> setting is set to false, i.e. there is no
+             authentication at all, and anyone can access the WebAdmin api with no restrictions.
+             Administrators are highly encouraged to either enable JWT or disable the webadmin interface altogether,
+             to prevent abuse of the server and unrestricted access to user data.
+          </p>
+
+          <p>To configure JWT:
+              <ul>
+                  <li>Generate a pair of authentication keys, using standard algorithms such as RSA or EC.
+                      For example, to generate EC keys using openssl:
+                      <br /><code>openssl ecparam -name prime256v1 -genkey -noout -out jwt.private.pem</code>
+                      <br /><code>openssl ec -in jwt.private.pem -pubout -out jwt.public.pem</code>
+                  </li>
+                  <li>Prepare the JWT header and payload claims:
+                      <ul>
+                          <li><strong>alg</strong> (header) - the signing algorithm, which must correspond
+                              to the key type, e.g. <code>RS256</code> for RSA or <code>ES256</code> for EC.</li>
+                          <li><strong>sub</strong> - the address of the user, e.g. <code>admin@example.com</code>.</li>
+                          <li><strong>admin</strong> - must be true (boolean literal, not string) to access admin operations.</li>
+                          <li><strong>exp</strong> - the token expiration time, as the number of seconds (not milliseconds)
+                              since the epoch, a.k.a "unix time". If this claim is omitted, the token never expires.</li>
+                      </ul>
+                      For example, a token might have the header <code>{"alg":"ES256","typ":"JWT"}</code>
+                      and payload <code>{"sub":"admin@example.com","admin":true,"exp":946684800}</code>.
+                      Additional standard or James-specific claims may be supported in the future to allow finer-grained access control.
+                  </li>
+                  <li>Encode and sign the JWT data using the private key and encode the final token. There are
+                      various tools and tutorials on how to do this. Do note that if you sign it using openssl
+                      and EC, you may need to convert the signature from the ASN.1 format to the padded raw
+                      numeric values required in the JWT.
+                  </li>
+                  <li>Save the private key somewhere safe with restrictive permissions. The server does not need it
+                      to verify token signatures, but you will need it to generate new tokens in the future.</li>
+                  <li>Save the public key somewhere where the server can read it, such as in the James conf folder.</li>
+                  <li>Set <code>jwt.enable</code> to true.</li>
+                  <li>Set <code>jwt.publickeypem.url</code> to the url of the public key PEM file, e.g. <code>file://conf/jwt.public.pem</code></li>
+                  <li>set <code>https.enable</code> and configure the other related https.* options to enable HTTPS,
+                      so that the token will not be intercepted and used by an attacker.</li>
+              </ul>
+          </p>
+
+          <p>
+              To use the token, send it with every HTTP request using a standard Authorization Bearer header:
+              <br /><code>Authorization: Bearer &lt;the signed token&gt;</code>
+          </p>
       </subsection>
   </section>
 
