@@ -47,7 +47,19 @@ class JwtTokenVerifierTest {
             "NZ3DUR3lfBFbvYGQyFyib+e4MY1yWkj3sumMl1wdUB4lKLHLIRv9X1xCqvbSHEtq\n" +
             "zoZF4vgBYx0VmuJslwIDAQAB\n" +
             "-----END PUBLIC KEY-----";
-    
+
+    public static final String PRIVATE_PEM_KEY_EC = // use to generate tokens for future tests
+            "-----BEGIN EC PRIVATE KEY-----\n" +
+            "MHcCAQEEIL3oeBhM7D1DttaWfGUOsurEuFG1XcN1JDLijqTOcTuqoAoGCCqGSM49\n" +
+            "AwEHoUQDQgAE35E+lPVu46nAdTySey4ilUxO76RGG62SxqAdZb8B57t1ShzKC8U8\n" +
+            "qG+azeT9edpTao7dSRmgK3V83GAPAI88Ag==\n" +
+            "-----END EC PRIVATE KEY-----\n";
+    public static final String PUBLIC_PEM_KEY_EC =
+            "-----BEGIN PUBLIC KEY-----\n" +
+            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE35E+lPVu46nAdTySey4ilUxO76RG\n" +
+            "G62SxqAdZb8B57t1ShzKC8U8qG+azeT9edpTao7dSRmgK3V83GAPAI88Ag==\n" +
+            "-----END PUBLIC KEY-----\n";
+
     private static final String VALID_TOKEN_WITHOUT_ADMIN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.T04BTk" +
             "LXkJj24coSZkK13RfG25lpvmSl2MJ7N10KpBk9_-95EGYZdog-BDAn3PJzqVw52z-Bwjh4VOj1-j7cURu0cT4jXehhUrlCxS4n7QHZD" +
             "N_bsEYGu7KzjWTpTsUiHe-rN7izXVFxDGG1TGwlmBCBnPW-EFCf9ylUsJi0r2BKNdaaPRfMIrHptH1zJBkkUziWpBN1RNLjmvlAUf49" +
@@ -59,17 +71,32 @@ class JwtTokenVerifierTest {
         "4H0a6L87BYppxVW701zaZ6dNxRMvHnjLBBWnPsC2B0rkkr2hEL2zfz7sb-iNGV-J4ICx97t8-TfQ5rz3VOX0FwdusPL_rJtmlGEGRivPkR6_aBe1" +
         "kQnvMlwpqF_3ox58EUqYJk6lK_6rjKEV3Xfre31IMpuQUy6c7TKc95sL2-13cknelTierBEmZ00RzTtv9SHIEfzZTfaUK2Wm0PvnQjmU2nIdEvU" +
         "EqE-jrM3yYXcQzoO-YTQnEhdl-iqbCfmEpYkl2Bx3eIq7gRxxnr7BPsX6HrCB0w";
+
     private static final String VALID_TOKEN_ADMIN_FALSE = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBvcGVu" +
         "LXBhYXMub3JnIiwiYWRtaW4iOmZhbHNlLCJpYXQiOjE0ODkwNDA4Njd9.reQc3DiVvbQHF08oW1qOUyDJyv3tfzDNk8jhVZequiCdOI9vXnRlOe" +
         "-yDYktd4WT8MYhqY7MgS-wR0vO9jZFv8ZCgd_MkKCvCO0HmMjP5iQPZ0kqGkgWUH7X123tfR38MfbCVAdPDba-K3MfkogV1xvDhlkPScFr_6MxE" +
         "xtedOK2JnQZn7t9sUzSrcyjWverm7gZkPptkIVoS8TsEeMMME5vFXe_nqkEG69q3kuBUm_33tbR5oNS0ZGZKlG9r41lHBjyf9J1xN4UYV8n866d" +
         "a7RPPCzshIWUtO0q9T2umWTnp-6OnOdBCkndrZmRR6pPxsD5YL0_77Wq8KT_5__fGA";
+
+    private static final String VALID_TOKEN_NO_EXPIRATION = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW" +
+        "1wbGUuY29tIiwiYWRtaW4iOnRydWV9.YSIWBGBcNv0-9ztJI2toAY5c6lgUo445l4C4smDlwVxIqe7N3lmgpwvq1BPI7NQFtNrJ6M2ZzMTK" +
+        "DUr1SlV0fQ";
+
+    private static final String VALID_TOKEN_EXPIRED = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUu" +
+        "Y29tIiwiYWRtaW4iOnRydWUsImV4cCI6OTQ2Njg0ODAwfQ.j12z_REiEdMAgmZT4_XTZ-bsn8Yh-61f2ibraLU-7Pp9JTKPsmr63Ah5c5Zn" +
+        "gnqVwBKE6wuNPNnIh3E3GqA5Yg";
+
+    private static final String VALID_TOKEN_NOT_EXPIRED = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1w" +
+        "bGUuY29tIiwiYWRtaW4iOnRydWUsImV4cCI6NDA3MDkwODgwMH0.BNa7bF8twlRycfz_8K8IPLd-0kNPAIe1DozKtibX6JR1PIpaHlRJT1U" +
+        "NdNc7Xw-qFJrLt8aepNN7Bu7C-EjKJQ";
+
     // Generated on https://jwt.io/
     private static final String TOKEN_NONE_ALGORITHM = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwi" +
         "bmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.2XijNOVI9LXP9nWf-oj2SEWWNlcwmxzlQNGK1WdaWcQ";
     private static final String TOKEN_NONE_ALGORITHM_NO_SIGNATURE = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwi" +
         "bmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.";
     private JwtTokenVerifier sut;
+    private JwtTokenVerifier sutEc;
 
     @BeforeAll
     static void init() {
@@ -80,6 +107,9 @@ class JwtTokenVerifierTest {
     void setup() {
         DefaultPublicKeyProvider pubKeyProvider = new DefaultPublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY)), new PublicKeyReader());
         sut = new JwtTokenVerifier(pubKeyProvider);
+
+        pubKeyProvider = new DefaultPublicKeyProvider(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY_EC)), new PublicKeyReader());
+        sutEc = new JwtTokenVerifier(pubKeyProvider);
     }
 
     @Test
@@ -216,6 +246,27 @@ class JwtTokenVerifierTest {
     @Test
     void hasAttributeShouldThrowIfClaimInvalid() throws Exception {
         boolean authorized = sut.hasAttribute("admin", true, VALID_TOKEN_ADMIN_FALSE);
+
+        assertThat(authorized).isFalse();
+    }
+
+    @Test
+    void verifyShouldWorkIfNoExpiration() {
+        boolean authorized = sutEc.verifyAndExtractLogin(VALID_TOKEN_NO_EXPIRATION).isPresent();
+
+        assertThat(authorized).isTrue();
+    }
+
+    @Test
+    void verifyShouldWorkIfNotExpired() {
+        boolean authorized = sutEc.verifyAndExtractLogin(VALID_TOKEN_NOT_EXPIRED).isPresent();
+
+        assertThat(authorized).isTrue();
+    }
+
+    @Test
+    void verifyShouldFailIfExpired() {
+        boolean authorized = sutEc.verifyAndExtractLogin(VALID_TOKEN_EXPIRED).isPresent();
 
         assertThat(authorized).isFalse();
     }
