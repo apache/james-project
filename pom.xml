@@ -678,7 +678,7 @@
         <io.micrometer.core.version>1.15.1</io.micrometer.core.version>
         <io.micrometer.tracing.version>1.5.1</io.micrometer.tracing.version>
 
-        <bouncycastle.version>1.78.1</bouncycastle.version>
+        <bouncycastle.version>1.81</bouncycastle.version>
 
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.14</scala.version>
