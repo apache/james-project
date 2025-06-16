@@ -687,7 +687,7 @@
         <ical4j.version>4.1.0</ical4j.version>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
         <javacrumbs.json-unit.version>3.2.7</javacrumbs.json-unit.version>
-        <fastutil-core.version>8.5.12</fastutil-core.version>
+        <fastutil-core.version>8.5.15</fastutil-core.version>
     </properties>
 
     <dependencyManagement>
