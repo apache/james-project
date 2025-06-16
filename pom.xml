@@ -648,7 +648,7 @@
         <cucumber.version>7.23.0</cucumber.version>
 
         <jackson.version>2.19.1</jackson.version>
-        <jackson.databind.version>2.17.1</jackson.databind.version>
+        <jackson.databind.version>2.19.1</jackson.databind.version>
         <feign.version>13.6</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
         <jjwt.version>0.11.5</jjwt.version>
