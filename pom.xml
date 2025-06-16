@@ -683,7 +683,7 @@
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.14</scala.version>
         <doclint>none</doclint>
-        <mockito.version>5.10.0</mockito.version>
+        <mockito.version>5.18.0</mockito.version>
         <ical4j.version>4.1.1</ical4j.version>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
         <javacrumbs.json-unit.version>4.1.1</javacrumbs.json-unit.version>
