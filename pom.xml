@@ -653,7 +653,7 @@
         <feign-form.version>3.8.0</feign-form.version>
         <jjwt.version>0.11.5</jjwt.version>
         <metrics.version>4.2.32</metrics.version>
-        <testcontainers.version>1.19.8</testcontainers.version>
+        <testcontainers.version>1.21.1</testcontainers.version>
         <es-reporter.version>6.0.0-RC3</es-reporter.version>
         <guava.version>33.4.8-jre</guava.version>
 
