@@ -631,7 +631,7 @@
         <jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
         <jsieve.version>0.8</jsieve.version>
         <spring.version>6.1.4</spring.version>
-        <activmq-artemis.version>2.32.0</activmq-artemis.version>
+        <activmq-artemis.version>2.41.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.5</apache-jspf-resolver.version>
         <angus-mail.version>2.0.2</angus-mail.version>
         <angus-activation.version>2.0.1</angus-activation.version>
