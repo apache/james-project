@@ -630,7 +630,7 @@
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
         <jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
         <jsieve.version>0.8</jsieve.version>
-        <spring.version>6.1.4</spring.version>
+        <spring.version>6.2.8</spring.version>
         <activmq-artemis.version>2.41.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.5</apache-jspf-resolver.version>
         <angus-mail.version>2.0.3</angus-mail.version>
