@@ -2233,7 +2233,7 @@
             <dependency>
                 <groupId>com.github.dpaukov</groupId>
                 <artifactId>combinatoricslib3</artifactId>
-                <version>3.3.3</version>
+                <version>3.4.0</version>
             </dependency>
             <dependency>
                 <groupId>com.github.fge</groupId>
