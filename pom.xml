@@ -628,7 +628,7 @@
         <log4j2.version>2.23.1</log4j2.version>
         <jakarta.inject-api.version>2.0.1</jakarta.inject-api.version>
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
-        <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
+        <jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
         <jsieve.version>0.8</jsieve.version>
         <spring.version>6.1.4</spring.version>
         <activmq-artemis.version>2.32.0</activmq-artemis.version>
