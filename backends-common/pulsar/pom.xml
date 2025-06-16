@@ -93,13 +93,13 @@
         <dependency>
             <groupId>com.dimafeng</groupId>
             <artifactId>testcontainers-scala-pulsar_${scala.base}</artifactId>
-            <version>0.40.10</version>
+            <version>0.43.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.dimafeng</groupId>
             <artifactId>testcontainers-scala-scalatest_${scala.base}</artifactId>
-            <version>0.40.10</version>
+            <version>0.43.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
