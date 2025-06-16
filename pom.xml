@@ -634,7 +634,7 @@
         <activmq-artemis.version>2.41.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.5</apache-jspf-resolver.version>
         <angus-mail.version>2.0.2</angus-mail.version>
-        <angus-activation.version>2.0.1</angus-activation.version>
+        <angus-activation.version>2.0.2</angus-activation.version>
         <jakarta.activation-api.version>2.1.3</jakarta.activation-api.version>
         <slf4j.version>2.0.13</slf4j.version>
 
