@@ -2404,7 +2404,7 @@
             <dependency>
                 <groupId>eu.timepit</groupId>
                 <artifactId>refined_${scala.base}</artifactId>
-                <version>0.11.2</version>
+                <version>0.11.3</version>
             </dependency>
             <dependency>
                 <groupId>io.circe</groupId>
