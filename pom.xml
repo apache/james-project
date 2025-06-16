@@ -2243,7 +2243,7 @@
             <dependency>
                 <groupId>com.github.spullara.mustache.java</groupId>
                 <artifactId>compiler</artifactId>
-                <version>0.9.10</version>
+                <version>0.9.14</version>
             </dependency>
             <dependency>
                 <groupId>com.github.stefanbirkner</groupId>
