@@ -638,7 +638,7 @@
         <jakarta.activation-api.version>2.1.2</jakarta.activation-api.version>
         <slf4j.version>2.0.13</slf4j.version>
 
-        <circe.version>0.14.9</circe.version>
+        <circe.version>0.14.14</circe.version>
         <dnsjava.version>3.6.3</dnsjava.version>
         <junit.jupiter.version>5.10.2</junit.jupiter.version>
         <junit.platform.version>1.10.2</junit.platform.version>
