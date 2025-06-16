@@ -30,6 +30,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Optional;
 
 import org.apache.james.jwt.introspection.IntrospectionEndpoint;
@@ -43,10 +48,8 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import io.jsonwebtoken.CompressionCodecs;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.impl.compression.DefaultCompressionCodecResolver;
+import io.jsonwebtoken.io.Decoders;
 import reactor.core.publisher.Mono;
 
 class OidcJwtTokenVerifierTest {
@@ -93,12 +96,18 @@ class OidcJwtTokenVerifierTest {
         });
     }
 
+    private static PrivateKey toPrivateKey(String base64Key) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] keyBytes = Decoders.BASE64.decode(base64Key.replace("\n", ""));
+        KeyFactory kf = KeyFactory.getInstance("RSA"); // or "EC" or whatever
+        return kf.generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
+    }
+
     @Test
-    void shouldRejectZippedJWTByDefault() {
+    void shouldRejectZippedJWTByDefault() throws NoSuchAlgorithmException, InvalidKeySpecException {
         String jws = Jwts.builder()
             .claim("kid", "a".repeat(100))
-            .compressWith(CompressionCodecs.DEFLATE)
-            .signWith(SignatureAlgorithm.HS256, OidcTokenFixture.PRIVATE_KEY_BASE64.replace("\n", ""))
+            .compressWith(Jwts.ZIP.DEF)
+            .signWith(toPrivateKey(OidcTokenFixture.PRIVATE_KEY_BASE64), Jwts.SIG.RS256)
             .compact();
 
         assertThatThrownBy(() -> OidcJwtTokenVerifier.verifySignatureAndExtractClaim(jws, getJwksURL(), "kid"))
@@ -107,17 +116,21 @@ class OidcJwtTokenVerifierTest {
     }
 
     @Test
-    void shouldAcceptZippedJWTWhenConfigured() {
+    void shouldAcceptZippedJWTWhenConfigured() throws NoSuchAlgorithmException, InvalidKeySpecException {
         String jws = Jwts.builder()
             .claim("kid", "a".repeat(100))
-            .compressWith(CompressionCodecs.DEFLATE)
-            .signWith(SignatureAlgorithm.HS256, OidcTokenFixture.PRIVATE_KEY_BASE64.replace("\n", ""))
+            .compressWith(Jwts.ZIP.DEF)
+            .signWith(toPrivateKey(OidcTokenFixture.PRIVATE_KEY_BASE64), Jwts.SIG.RS256)
             .compact();
 
-        JwtTokenVerifier.CONFIGURED_COMPRESSION_CODEC_RESOLVER = new DefaultCompressionCodecResolver();
-
-        assertThatCode(() -> OidcJwtTokenVerifier.verifySignatureAndExtractClaim(jws, getJwksURL(), "kid"))
-            .doesNotThrowAnyException();
+        boolean prev = JwtTokenVerifier.allowZipJWT;
+        JwtTokenVerifier.allowZipJWT = true;
+        try {
+            assertThatCode(() -> OidcJwtTokenVerifier.verifySignatureAndExtractClaim(jws, getJwksURL(), "kid"))
+                .doesNotThrowAnyException();
+        } finally {
+            JwtTokenVerifier.allowZipJWT = prev;
+        }
     }
 
     @Test
@@ -131,7 +144,6 @@ class OidcJwtTokenVerifierTest {
         assertThat(OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "not_found"))
             .isEmpty();
     }
-
 
     @Test
     void verifyAndClaimShouldReturnEmptyWhenInvalidToken() {
