@@ -33,7 +33,7 @@
     <name>Apache James :: Server :: Mailet :: Integration Testing</name>
 
     <properties>
-        <xmlunit.version>2.10.0</xmlunit.version>
+        <xmlunit.version>2.10.2</xmlunit.version>
     </properties>
 
     <dependencies>
