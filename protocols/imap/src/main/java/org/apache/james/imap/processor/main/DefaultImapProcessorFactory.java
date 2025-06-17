@@ -58,4 +58,18 @@ public class DefaultImapProcessorFactory {
             localCacheConfiguration);
     }
 
+    public static ImapProcessor createXListSupportingProcessor(MailboxManager mailboxManager,
+                                                               EventBus eventBus, SubscriptionManager subscriptionManager,
+                                                               MailboxTyper mailboxTyper, QuotaManager quotaManager,
+                                                               QuotaRootResolver quotaRootResolver, MetricFactory metricFactory) {
+
+        StatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
+        UnknownRequestProcessor unknownRequestImapProcessor = new UnknownRequestProcessor(statusResponseFactory);
+
+        return DefaultProcessor.createDefaultProcessor(unknownRequestImapProcessor, mailboxManager,
+            eventBus, subscriptionManager, statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver,
+            MailboxCounterCorrector.DEFAULT, metricFactory,
+            FetchProcessor.LocalCacheConfiguration.DEFAULT);
+    }
+
 }
