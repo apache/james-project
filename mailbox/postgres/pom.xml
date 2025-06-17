@@ -30,7 +30,7 @@
     <name>Apache James :: Mailbox :: Postgres</name>
 
     <properties>
-        <uuid-creator.version>5.3.7</uuid-creator.version>
+        <uuid-creator.version>6.1.1</uuid-creator.version>
     </properties>
 
     <dependencies>
