@@ -3120,7 +3120,7 @@
                 <plugin>
                     <groupId>io.github.evis</groupId>
                     <artifactId>scalafix-maven-plugin_2.13</artifactId>
-                    <version>0.1.10_0.11.0</version>
+                    <version>0.1.10_0.14.2</version>
                     <configuration>
                         <config>${basedir}/.scalafix.conf</config>
                         <mode>CHECK</mode>
