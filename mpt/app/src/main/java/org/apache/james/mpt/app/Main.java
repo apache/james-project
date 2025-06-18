@@ -76,7 +76,7 @@ public class Main {
             try {
                 Port port = new Port(Integer.parseInt(cmd.getOptionValue(PORT_OPTION)));    
                 String host = cmd.getOptionValue(HOST_OPTION, "localhost");
-                String shabang = cmd.getOptionValue(SHABANG_OPTION, null);
+                String shabang = cmd.getOptionValue(SHABANG_OPTION, "");
                 RunScript runner = new RunScript(file, port, host, shabang, verbose);
                 runner.run();
                 
