@@ -28,6 +28,8 @@ import java.util.List;
 import org.apache.james.core.Domain;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class QuotaClauseTest {
@@ -53,6 +55,10 @@ public class QuotaClauseTest {
     @Test
     public void andShouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaClause.And.class)
+            .withPrefabValues(
+                ImmutableList.class,
+                ImmutableList.of(QuotaClause.moreThan(_50), QuotaClause.moreThan(_75)),
+                ImmutableList.of(QuotaClause.moreThan(new QuotaBoundary(0.4)), QuotaClause.lessThan(new QuotaBoundary(0.9))))
             .verify();
     }
 

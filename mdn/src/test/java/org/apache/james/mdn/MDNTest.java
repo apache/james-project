@@ -33,6 +33,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.Error;
 import org.apache.james.mdn.fields.ExtensionField;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
@@ -50,6 +51,8 @@ import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MDNTest {
@@ -66,6 +69,14 @@ class MDNTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MDN.class)
+            .withPrefabValues(
+                ImmutableList.class,
+                ImmutableList.of(
+                    new org.apache.james.mdn.fields.Error(Text.fromRawText("error 1")),
+                    ExtensionField.builder().fieldName("name1").rawValue("value1").build()),
+                ImmutableList.of(
+                    new Error(Text.fromRawText("error 2")),
+                    ExtensionField.builder().fieldName("name2").rawValue("value2").build()))
             .verify();
     }
 
