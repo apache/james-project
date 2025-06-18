@@ -2253,7 +2253,7 @@
             <dependency>
                 <groupId>com.google.crypto.tink</groupId>
                 <artifactId>apps-webpush</artifactId>
-                <version>${tink.version}</version>
+                <version>1.12.2</version>
                 <exclusions>
                     <!-- https://cwe.mitre.org/data/definitions/502.html -->
                     <exclusion>
