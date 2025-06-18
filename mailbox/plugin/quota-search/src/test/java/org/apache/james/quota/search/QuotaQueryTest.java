@@ -26,6 +26,8 @@ import org.apache.james.core.Domain;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class QuotaQueryTest {
@@ -33,6 +35,10 @@ public class QuotaQueryTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaQuery.class)
+            .withPrefabValues(
+                ImmutableList.class,
+                ImmutableList.of(QuotaClause.moreThan(_50), QuotaClause.moreThan(_75)),
+                ImmutableList.of(QuotaClause.moreThan(new QuotaBoundary(0.4)), QuotaClause.lessThan(new QuotaBoundary(0.9))))
             .verify();
     }
 
