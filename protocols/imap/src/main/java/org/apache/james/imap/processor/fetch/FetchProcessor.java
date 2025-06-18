@@ -23,16 +23,23 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 import static org.apache.james.mailbox.model.FetchGroup.FULL_CONTENT;
 import static org.apache.james.util.ReactorUtils.logOnError;
 
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.SoftReference;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.configuration2.Configuration;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -55,12 +62,15 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.AuditTrail;
+import org.apache.james.util.DurationParser;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
+import org.apache.james.util.SizeFormat;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
@@ -77,6 +87,88 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
+    public static final String CACHE_KEY = "message-saved-for-later";
+
+    public record LocalCacheConfiguration(Duration ttl, long sizeInBytes, boolean enabled) {
+        public static final LocalCacheConfiguration DEFAULT = new LocalCacheConfiguration(Duration.ofMinutes(2), 500 * 1024 * 1024, false);
+
+        public static LocalCacheConfiguration from(Configuration configuration) {
+            return new LocalCacheConfiguration(
+                DurationParser.parse(configuration.getString("partialBodyFetchCacheDuration", "2m"), ChronoUnit.MINUTES),
+                SizeFormat.parseAsByteCount(configuration.getString("partialBodyFetchCacheSize", "500 MiB")),
+                configuration.getBoolean("partialBodyFetchCacheEnabled", false));
+        }
+    }
+
+    record LocalCacheEntry(FetchGroup fetchGroup, MessageResult message) {
+
+    }
+
+    interface LocalMessageCache {
+        Optional<MessageResult> lookupInCache(MailboxId mailboxId, MessageUid uid, FetchGroup fetchGroup);
+
+        void saveForLater(MessageResult messageResult, FetchGroup fetchGroup);
+    }
+
+    public static class DefaultLocalMessageCache implements LocalMessageCache {
+        public static final ReferenceQueue<LocalCacheEntry> REFERENCE_QUEUE = new ReferenceQueue<>();
+        public static final AtomicLong TOTAL_SIZE = new AtomicLong(0);
+        private final ImapSession imapSession;
+        private final LocalCacheConfiguration configuration;
+
+        DefaultLocalMessageCache(ImapSession imapSession, LocalCacheConfiguration configuration) {
+            this.imapSession = imapSession;
+            this.configuration = configuration;
+        }
+
+        @Override
+        public Optional<MessageResult> lookupInCache(MailboxId mailboxId, MessageUid uid, FetchGroup fetchGroup) {
+            if (!configuration.enabled()) {
+                return Optional.empty();
+            }
+            return retrieveCachedEntry()
+                .filter(entry -> entry.fetchGroup().equals(fetchGroup))
+                .filter(entry -> entry.message().getMailboxId().equals(mailboxId))
+                .filter(entry -> entry.message().getUid().equals(uid))
+                .map(LocalCacheEntry::message);
+        }
+
+        private Optional<LocalCacheEntry> retrieveCachedEntry() {
+            Optional maybeMessage = Optional.ofNullable(imapSession.getAttribute(CACHE_KEY));
+
+            Optional<LocalCacheEntry> cacheContent = maybeMessage.filter(SoftReference.class::isInstance)
+                .flatMap(ref -> {
+                    SoftReference softReference = (SoftReference) ref;
+                    return Optional.ofNullable(softReference.get());
+                })
+                .filter(LocalCacheEntry.class::isInstance)
+                .map(LocalCacheEntry.class::cast);
+            return cacheContent;
+        }
+
+        @Override
+        public void saveForLater(MessageResult messageResult, FetchGroup fetchGroup) {
+            if (!configuration.enabled()) {
+                return;
+            }
+            if (TOTAL_SIZE.get() <= configuration.sizeInBytes()) {
+                SoftReference<LocalCacheEntry> ref = new SoftReference<>(new LocalCacheEntry(fetchGroup, messageResult), REFERENCE_QUEUE);
+                TOTAL_SIZE.addAndGet(messageResult.getSize());
+                imapSession.setAttribute(CACHE_KEY, ref);
+                imapSession.schedule(() -> {
+                    retrieveCachedEntry().ifPresent(entry -> TOTAL_SIZE.addAndGet(-1 * entry.message().getSize()));
+                    imapSession.setAttribute(CACHE_KEY, null);
+                }, configuration.ttl());
+
+                Reference<? extends LocalCacheEntry> referenceFromQueue;
+                while ((referenceFromQueue = REFERENCE_QUEUE.poll()) != null) {
+                    Optional.ofNullable(referenceFromQueue.get())
+                        .ifPresent(entry -> TOTAL_SIZE.addAndGet(-1 * entry.message().getSize()));
+                }
+            }
+        }
+    }
+
     static class FetchSubscriber implements Subscriber<FetchResponse> {
         private final AtomicReference<Subscription> subscription = new AtomicReference<>();
         private final Sinks.One<Void> sink = Sinks.one();
@@ -142,10 +234,13 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FetchProcessor.class);
 
+    private final LocalCacheConfiguration localCacheConfiguration;
+
     @Inject
     public FetchProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-                          MetricFactory metricFactory) {
+                          MetricFactory metricFactory, LocalCacheConfiguration localCacheConfiguration) {
         super(FetchRequest.class, mailboxManager, factory, metricFactory);
+        this.localCacheConfiguration = localCacheConfiguration;
     }
 
     @Override
@@ -253,12 +348,26 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 .then();
         } else {
             FetchSubscriber fetchSubscriber = new FetchSubscriber(imapSession, responder);
-            Flux.fromIterable(consolidate(selected, ranges, fetch))
-                .doOnNext(range -> auditTrail(mailbox, mailboxSession, resultToFetch, range))
-                .concatMap(range -> Flux.from(mailbox.getMessagesReactive(range, resultToFetch, mailboxSession)))
-                .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
-                .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, selected, result))
-                .subscribe(fetchSubscriber);
+
+            boolean singleMessage = ranges.size() == 1 && ranges.getFirst().getUidFrom().equals(ranges.getFirst().getUidTo());
+            boolean shouldCache = fetch.getBodyElements().stream().anyMatch(bodyFetchElement -> bodyFetchElement.getNumberOfOctets() != null);
+            if (singleMessage && shouldCache) {
+                DefaultLocalMessageCache localMessageCache = new DefaultLocalMessageCache(imapSession, localCacheConfiguration);
+                localMessageCache.lookupInCache(mailbox.getId(), ranges.getFirst().getUidFrom(), resultToFetch)
+                    .map(Flux::just)
+                    .orElseGet(() -> Flux.from(mailbox.getMessagesReactive(ranges.getFirst(), resultToFetch, mailboxSession))
+                        .doOnNext(message -> localMessageCache.saveForLater(message, resultToFetch)))
+                    .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
+                    .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, selected, result))
+                    .subscribe(fetchSubscriber);
+            } else {
+                Flux.fromIterable(consolidate(selected, ranges, fetch))
+                    .doOnNext(range -> auditTrail(mailbox, mailboxSession, resultToFetch, range))
+                    .concatMap(range -> Flux.from(mailbox.getMessagesReactive(range, resultToFetch, mailboxSession)))
+                    .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
+                    .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, selected, result))
+                    .subscribe(fetchSubscriber);
+            }
 
             return fetchSubscriber.completionMono();
         }

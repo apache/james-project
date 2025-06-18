@@ -24,6 +24,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.ProtocolConfigurationSanitizer;
@@ -65,6 +66,7 @@ import org.apache.james.imap.processor.SelectProcessor;
 import org.apache.james.imap.processor.StatusProcessor;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.base.UnknownRequestProcessor;
+import org.apache.james.imap.processor.fetch.FetchProcessor;
 import org.apache.james.imapserver.netty.IMAPHealthCheck;
 import org.apache.james.imapserver.netty.IMAPServerFactory;
 import org.apache.james.lifecycle.api.ConfigurationSanitizer;
@@ -219,6 +221,10 @@ public class IMAPServerModule extends AbstractModule {
             });
     }
 
+    @Provides
+    FetchProcessor.LocalCacheConfiguration provideFetchLocalCacheConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
+            return FetchProcessor.LocalCacheConfiguration.from(configurationProvider.getConfiguration("imapserver"));
+    }
 
     private void configureEnable(EnableProcessor enableProcessor, ImmutableMap<Class, ImapProcessor> processorMap) {
         processorMap.values().stream()
