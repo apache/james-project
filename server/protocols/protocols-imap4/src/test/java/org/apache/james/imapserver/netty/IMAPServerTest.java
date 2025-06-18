@@ -2138,7 +2138,7 @@ class IMAPServerTest {
                 .createMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             connection = TcpClient.create()
-                .secure(ssl -> ssl.sslContext(SslContextBuilder.forClient().trustManager(new BlindTrustManager())))
+                .secure(Throwing.consumer(ssl -> ssl.sslContext(SslContextBuilder.forClient().trustManager(new BlindTrustManager()).build())))
                 .remoteAddress(() -> new InetSocketAddress(LOCALHOST_IP, port))
                 .connectNow();
             responses = new ConcurrentLinkedDeque<>();
