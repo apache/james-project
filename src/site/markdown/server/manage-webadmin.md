@@ -4,13 +4,13 @@ Web administration for JAMES
 The web administration supports for now the CRUD operations on the domains, the users, their mailboxes and their quotas,
  managing mail repositories, performing cassandra migrations, and much more, as described in the following sections.
 
-**WARNING**: This API allow authentication only via the use of JWT. If not configured with JWT, an administrator should ensure an attacker can not use this API.
+**WARNING**: This API supports authentication only via the use of JWT. If JWT is disabled (the default), an administrator should ensure an attacker cannot use this API.
 
-By the way, some endpoints are not filtered by authentication. Those endpoints are not related to data stored in James, for example: Swagger documentation & James health checks.
+By the way, some endpoints are not filtered by authentication. Those endpoints are not related to data stored in James, such as Swagger documentation and James health checks.
 
-Please also note **webadmin** is only enabled with **Guice**. You can not use it when using James with **Spring**, as the required injections are not implemented.
+Please also note **webadmin** is only enabled with **Guice**. You cannot use it when using James with **Spring**, as the required injections are not implemented.
 
-In case of any error, the system will return an error message which is json format like this:
+In case of any error, the response will contain a JSON error message in the following format:
 
 ```
 {

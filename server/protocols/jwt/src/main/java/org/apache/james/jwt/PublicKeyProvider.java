@@ -21,7 +21,11 @@ package org.apache.james.jwt;
 
 import java.security.PublicKey;
 import java.util.List;
+import java.util.Optional;
 
 public interface PublicKeyProvider {
+
     List<PublicKey> get() throws MissingOrInvalidKeyException;
+
+    Optional<PublicKey> get(String kid) throws MissingOrInvalidKeyException;
 }

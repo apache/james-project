@@ -26,40 +26,14 @@ import org.apache.james.jwt.introspection.IntrospectionEndpoint;
 import org.apache.james.jwt.introspection.TokenIntrospectionResponse;
 import org.reactivestreams.Publisher;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Header;
-import io.jsonwebtoken.Jwt;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
 import reactor.core.publisher.Mono;
 
 public class OidcJwtTokenVerifier {
     public static final CheckTokenClient CHECK_TOKEN_CLIENT = new DefaultCheckTokenClient();
 
     public static Optional<String> verifySignatureAndExtractClaim(String jwtToken, URL jwksURL, String claimName) {
-        Optional<String> unverifiedClaim = getClaimWithoutSignatureVerification(jwtToken, "kid");
-        PublicKeyProvider jwksPublicKeyProvider = unverifiedClaim
-            .map(kidValue -> JwksPublicKeyProvider.of(jwksURL, kidValue))
-            .orElse(JwksPublicKeyProvider.of(jwksURL));
-        return new JwtTokenVerifier(jwksPublicKeyProvider).verifyAndExtractClaim(jwtToken, claimName, String.class);
-    }
-
-    public static <T> Optional<T> getClaimWithoutSignatureVerification(String token, String claimName) {
-        int signatureIndex = token.lastIndexOf('.');
-        if (signatureIndex <= 0) {
-            return Optional.empty();
-        }
-        String nonSignedToken = token.substring(0, signatureIndex + 1);
-        try {
-            Jwt<Header, Claims> headerClaims = Jwts.parserBuilder().build().parseClaimsJwt(nonSignedToken);
-            T claim = (T) headerClaims.getHeader().get(claimName);
-            if (claim == null) {
-                return Optional.empty();
-            }
-            return Optional.of(claim);
-        } catch (JwtException e) {
-            return Optional.empty();
-        }
+        return new JwtTokenVerifier(JwksPublicKeyProvider.of(jwksURL))
+            .verifyAndExtractClaim(jwtToken, claimName, String.class);
     }
 
     public static Publisher<String> verifyWithIntrospection(String jwtToken, URL jwksURL, String claimName, IntrospectionEndpoint introspectionEndpoint) {

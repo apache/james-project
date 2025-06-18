@@ -63,4 +63,38 @@ class DefaultPublicKeyProviderTest {
 
         assertThat(sut.get()).isEmpty();
     }
+
+    private static void testKid(String exptected, String pem) {
+        JwtConfiguration configWithPEMKey = new JwtConfiguration(ImmutableList.of(pem));
+        PublicKeyProvider sut = new DefaultPublicKeyProvider(configWithPEMKey, new PublicKeyReader());
+        String kid = DefaultPublicKeyProvider.computeKid(sut.get().get(0));
+        assertThat(kid).isEqualTo(exptected);
+    }
+
+    @Test
+    void computeKidShouldComputeJWKThumbprintCorrectly() {
+        testKid("2iUdFiYTvwSzAzJuMRwvr70CLKKmYdbfDz0TpNQs0tc", PUBLIC_PEM_KEY);
+
+        String pemRSA = "-----BEGIN PUBLIC KEY-----\n" +
+            "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0vx7agoebGcQSuuPiLJX\n" +
+            "ZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tS\n" +
+            "oc/BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ/2W+5JsGY4Hc5n9yBXArwl93lqt\n" +
+            "7/RN5w6Cf0h4QyQ5v+65YGjQR0/FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0\n" +
+            "zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt+bFTWhAI4vMQFh6WeZu0f\n" +
+            "M4lFd2NcRwr3XPksINHaQ+G/xBniIqbw0Ls1jF44+csFCur+kEgU8awapJzKnqDK\n" +
+            "gwIDAQAB\n" +
+            "-----END PUBLIC KEY-----";
+        testKid("NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs", pemRSA);
+
+        String pemEc = "-----BEGIN PUBLIC KEY-----\n" +
+            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7d1Se1rTIqVTXszA8gIHagLlqPH8\n" +
+            "a98VUCRHWaWW8S3J+WnwJsJVy/4qgZx6yFoJN7zAOIBcseO95zVrbet4gg==\n" +
+            "-----END PUBLIC KEY-----\n";
+        testKid("WdX4yCEsy0Xx48ZfI_4DV0RPhFMdydNFqqwEqiAFAc8", pemEc);
+
+        String pemEd = "-----BEGIN PUBLIC KEY-----\n" +
+            "MCowBQYDK2VwAyEA11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo=\n" +
+            "-----END PUBLIC KEY-----";
+        testKid("kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k", pemEd);
+    }
 }
