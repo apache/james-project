@@ -29,10 +29,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 
+import org.apache.james.jmap.mailet.filter.JMAPFiltering;
+import org.apache.james.mailets.configuration.MailetConfiguration;
+import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.AddDeliveredToHeader;
+import org.apache.james.transport.mailets.LocalDelivery;
+import org.apache.james.transport.mailets.RecipientRewriteTable;
+import org.apache.james.transport.mailets.RemoteDelivery;
+import org.apache.james.transport.mailets.ToProcessor;
+import org.apache.james.transport.mailets.VacationMailet;
+import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.RecipientIsLocal;
+import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
@@ -43,7 +54,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
 class AddDeliveredToHeaderTest {
-    public static final String RECIPIENT2 = "rené@" + DEFAULT_DOMAIN;
+    private static final String POSTMASTER = "postmaster@" + DEFAULT_DOMAIN;
+    public static final String RECIPIENT2_UTF8 = "rené@" + DEFAULT_DOMAIN;
+    public static final String RECIPIENT2 = "rene@" + DEFAULT_DOMAIN;
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
     @RegisterExtension
@@ -53,7 +66,11 @@ class AddDeliveredToHeaderTest {
 
     @BeforeEach
     void setup(@TempDir File temporaryFolder) throws Exception {
-        jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
+        jamesServer = TemporaryJamesServer.builder()
+            .withMailetContainer(TemporaryJamesServer.defaultMailetContainerConfiguration()
+                .postmaster(POSTMASTER)
+                .putProcessor(transport()))
+            .build(temporaryFolder);
         jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -84,24 +101,59 @@ class AddDeliveredToHeaderTest {
 
     @Test
     void receivedMessagesShouldContainDeliveredToHeadersI8N() throws Exception {
-        String message = "FROM: " + RECIPIENT2 + "\r\n" +
+        jamesServer.getProbe(DataProbeImpl.class).addUserAliasMapping("rené", "james.org", RECIPIENT2);
+        String message = "FROM: " + RECIPIENT2_UTF8 + "\r\n" +
             "subject: testé\r\n" +
             "Content-Type: text/plain; charset=UTF-8\r\n" +
             "Content-Encoding: 8bit\r\n" +
             "\r\n" +
-            "contenté\r\n" +
-            ".\r\n";
+            "contenté\r\n";
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(FROM, PASSWORD)
-            .sendMessageWithHeaders(FROM, RECIPIENT2, message);
+            .sendMessageWithHeaders(FROM, RECIPIENT2_UTF8, message);
+
+        Thread.sleep(1000);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT2, PASSWORD)
             .select(TestIMAPClient.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(testIMAPClient.readFirstMessageHeaders())
-            .contains("René")
+
+        assertThat(testIMAPClient.readFirstMessage())
+            .contains(RECIPIENT2_UTF8)
             .contains("testé")
             .contains("contenté");
+    }
+
+    private ProcessorConfiguration.Builder transport() {
+        return ProcessorConfiguration.transport()
+            .enableJmx(false)
+            .addMailet(MailetConfiguration.builder()
+                .matcher(All.class)
+                .mailet(RecipientRewriteTable.class))
+            .addMailet(MailetConfiguration.builder()
+                .matcher(RecipientIsLocal.class)
+                .mailet(VacationMailet.class))
+            .addMailet(MailetConfiguration.builder()
+                .matcher(RecipientIsLocal.class)
+                .mailet(JMAPFiltering.class))
+            .addMailet(MailetConfiguration.builder()
+                .matcher(RecipientIsLocal.class)
+                .mailet(LocalDelivery.class))
+            .addMailet(MailetConfiguration.builder()
+                .matcher(SMTPAuthSuccessful.class)
+                .mailet(RemoteDelivery.class)
+                .addProperty("outgoingQueue", "outgoing")
+                .addProperty("delayTime", "5000, 100000, 500000")
+                .addProperty("maxRetries", "3")
+                .addProperty("maxDnsProblemRetries", "0")
+                .addProperty("deliveryThreads", "10")
+                .addProperty("sendpartial", "true")
+                .addProperty("bounceProcessor", "bounces"))
+            .addMailet(MailetConfiguration.BCC_STRIPPER)
+            .addMailet(MailetConfiguration.builder()
+                .matcher(All.class)
+                .mailet(ToProcessor.class)
+                .addProperty("processor", "error"));
     }
 }
