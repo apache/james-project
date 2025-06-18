@@ -19,10 +19,13 @@
 
 package org.apache.james.util;
 
+import static org.apache.james.util.Port.MAX_PORT_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.Range;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -31,6 +34,10 @@ class PortTest {
     @Test
     void portShouldRespectBeanContract() {
         EqualsVerifier.forClass(Port.class)
+            .withPrefabValues(
+                Range.class,
+                Range.closed(1, MAX_PORT_VALUE),
+                Range.closed(0, 10))
             .verify();
     }
 
@@ -53,12 +60,12 @@ class PortTest {
 
     @Test
     void assertValidShouldAcceptMaxValue() {
-        Port.assertValid(Port.MAX_PORT_VALUE);
+        Port.assertValid(MAX_PORT_VALUE);
     }
 
     @Test
     void assertValidShouldThrowOnTooBigValue() {
-        assertThatThrownBy(() -> Port.assertValid(Port.MAX_PORT_VALUE + 1))
+        assertThatThrownBy(() -> Port.assertValid(MAX_PORT_VALUE + 1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -82,20 +89,20 @@ class PortTest {
 
     @Test
     void isValidShouldReturnTrueWhenMaxValue() {
-        assertThat(Port.isValid(Port.MAX_PORT_VALUE))
+        assertThat(Port.isValid(MAX_PORT_VALUE))
             .isTrue();
     }
 
     @Test
     void isValidShouldReturnFalseWhenAboveMaxValue() {
-        assertThat(Port.isValid(Port.MAX_PORT_VALUE + 1))
+        assertThat(Port.isValid(MAX_PORT_VALUE + 1))
             .isFalse();
     }
 
     @Test
     void generateValidUnprivilegedPortShouldReturnAValidPort() {
         assertThat(Port.generateValidUnprivilegedPort())
-            .isBetween(Port.PRIVILEGED_PORT_BOUND, Port.MAX_PORT_VALUE);
+            .isBetween(Port.PRIVILEGED_PORT_BOUND, MAX_PORT_VALUE);
     }
 
 }
