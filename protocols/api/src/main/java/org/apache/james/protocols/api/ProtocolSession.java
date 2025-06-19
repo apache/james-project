@@ -21,6 +21,7 @@ package org.apache.james.protocols.api;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -252,4 +253,12 @@ public interface ProtocolSession extends CommandDetectionSession {
      * Pop the last command handler 
      */
     void popLineHandler();
+
+    default void schedule(Runnable runnable, Duration waitDelay) {
+        throw new RuntimeException("Not supported");
+    }
+
+    default void close() {
+        throw new RuntimeException("Not supported");
+    }
 }
