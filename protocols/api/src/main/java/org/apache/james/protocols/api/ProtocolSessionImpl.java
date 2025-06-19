@@ -23,6 +23,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -237,4 +238,13 @@ public class ProtocolSessionImpl implements ProtocolSession {
         transport.pushLineHandler(overrideCommandHandler, this);
     }
 
+    @Override
+    public void schedule(Runnable runnable, Duration waitDelay) {
+        transport.schedule(runnable, waitDelay);
+    }
+
+    @Override
+    public void close() {
+        transport.writeResponse(Response.DISCONNECT, this);
+    }
 }
