@@ -369,6 +369,24 @@ These hooks are designed to support the SMTP service extension, REQUIRETLS, and 
 </smtpserver>
 ....
 
+== MaxConnectionLifespanHandler
+
+[source,xml]
+....
+<smtpserver enabled="true">
+ <handlerchain>
+        <handler class="org.apache.james.smtpserver.netty.MaxConnectionLifespanHandler">
+            <duration>5m</duration>
+        </handler>
+        <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+    </handlerchain>
+</smtpserver>
+....
+
+will close SMTP connections after 5 minutes.
+
+This is useful for instance to force re-authentication and enforce password changes.
+
 == DKIM checks hooks
 
 Hook for verifying DKIM signatures of incoming mails.

@@ -20,6 +20,7 @@
 package org.apache.james.protocols.api;
 
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.Optional;
 
 import javax.net.ssl.SSLSession;
@@ -97,4 +98,8 @@ public interface ProtocolTransport {
      * Return <code>true</code> if the channel is readable
      */
     boolean isReadable();
+
+    default void schedule(Runnable runnable, Duration waitDelay) {
+        throw new RuntimeException("Not supported");
+    }
 }
