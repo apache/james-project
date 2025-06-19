@@ -58,7 +58,6 @@ public record QuotaThresholdChangedEventDTO(@JsonProperty("type") String type,
     }
 
     @Override
-    @JsonIgnore
     public String getType() {
         return type;
     }
