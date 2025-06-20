@@ -40,7 +40,7 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 Once everything is set up, you just have to run the jar with :
 
 ```bash
-$ java -javaagent:james-server-jpa-smtp-app.lib/openjpa-3.2.0.jar \
+$ java -javaagent:james-server-jpa-smtp-app.lib/openjpa-4.1.1.jar \
   -Dworking.directory=. \
   -Djdk.tls.ephemeralDHKeySize=2048 \
   -Dlogback.configurationFile=conf/logback.xml \
