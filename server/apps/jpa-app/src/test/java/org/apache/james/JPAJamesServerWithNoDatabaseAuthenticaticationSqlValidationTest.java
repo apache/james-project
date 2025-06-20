@@ -23,7 +23,7 @@ import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.
 
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JPAJamesServerWithNoDatabaseAuthenticaticationSqlValidationTest extends JPAJamesServerWithSqlValidationTest {
+class JPAJamesServerWithNoDatabaseAuthenticaticationSqlValidationTest implements JamesServerConcreteContract {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<JPAJamesConfiguration>(tmpDir ->
         JPAJamesConfiguration.builder()
