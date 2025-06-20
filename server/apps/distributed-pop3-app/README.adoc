@@ -20,7 +20,7 @@ Third party compulsory dependencies:
 [source]
 ----
 $ docker run -d --network james -p 9042:9042 --name=cassandra cassandra:4.1.5
-$ docker run -d --network james -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.13.3-management
+$ docker run -d --network james -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:4.1.1-management
 $ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 ghcr.io/scality/cloudserver:8cbe2c066b3505b26d339dc67315d1041b8c7f3a
 ----
 
