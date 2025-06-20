@@ -297,6 +297,10 @@ class OpenSearchConfigurationTest {
     @Test
     void elasticSearchConfigurationShouldRespectBeanContract() {
         EqualsVerifier.forClass(OpenSearchConfiguration.class)
+            .withPrefabValues(
+                ImmutableList.class,
+                ImmutableList.of(Host.from("myHost", OpenSearchConfiguration.DEFAULT_PORT)),
+                ImmutableList.of(Host.from("myHost2", 9201)))
             .verify();
     }
 

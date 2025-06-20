@@ -25,7 +25,7 @@ Once everything is set up, you just have to run the jar with:
 
 [source]
 ----
-$ java -javaagent:james-server-jpa-app.lib/openjpa-3.1.2.jar \
+$ java -javaagent:james-server-jpa-app.lib/openjpa-4.1.1.jar \
   -Dworking.directory=. \
   -Djdk.tls.ephemeralDHKeySize=2048 \
   -Dlogback.configurationFile=conf/logback.xml \
@@ -109,7 +109,7 @@ This can be done with the following command:
 
 ....
 java \
-   -javaagent:james-server-jpa-app.lib/openjpa-3.2.0.jar \
+   -javaagent:james-server-jpa-app.lib/openjpa-4.1.1.jar \
    -Dworking.directory=. \
    -Djdk.tls.ephemeralDHKeySize=2048 \
    -Dlogback.configurationFile=conf/logback.xml \

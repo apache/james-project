@@ -33,6 +33,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.client.opensearch._types.analysis.Analyzer;
 import org.opensearch.client.opensearch._types.analysis.CustomAnalyzer;
 import org.opensearch.client.opensearch._types.analysis.NGramTokenFilter;
+import org.opensearch.client.opensearch._types.analysis.NGramTokenizer;
 import org.opensearch.client.opensearch._types.analysis.PatternTokenizer;
 import org.opensearch.client.opensearch._types.analysis.TokenFilter;
 import org.opensearch.client.opensearch._types.analysis.TokenFilterDefinition;
@@ -186,8 +187,9 @@ class IndexCreationFactoryTest {
                 .customTokenizers(new IndexCreationCustomTokenizer("custom_tokenizer",
                     new Tokenizer.Builder()
                         .definition(new TokenizerDefinition.Builder()
-                            .pattern(new PatternTokenizer.Builder()
-                                .pattern("[ .,!?]")
+                            .ngram(new NGramTokenizer.Builder()
+                                .minGram(3)
+                                .maxGram(-4)
                                 .build())
                             .build())
                         .build()))

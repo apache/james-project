@@ -124,6 +124,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbytools</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.angus</groupId>
             <artifactId>jakarta.mail</artifactId>
         </dependency>
@@ -169,7 +174,7 @@
                     <dependency>
                         <groupId>org.apache.xbean</groupId>
                         <artifactId>xbean-asm9-shaded</artifactId>
-                        <version>4.23</version>
+                        <version>4.27</version>
                     </dependency>
                 </dependencies>
                 <executions>

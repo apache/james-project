@@ -48,6 +48,14 @@ class MDNReportTest {
     @Test
     void shouldMatchBeanContact() {
         EqualsVerifier.forClass(MDNReport.class)
+            .withPrefabValues(
+                ImmutableList.class,
+                ImmutableList.of(
+                    new Error(Text.fromRawText("error 1")),
+                    ExtensionField.builder().fieldName("name1").rawValue("value1").build()),
+                ImmutableList.of(
+                    new Error(Text.fromRawText("error 2")),
+                    ExtensionField.builder().fieldName("name2").rawValue("value2").build()))
             .verify();
     }
 

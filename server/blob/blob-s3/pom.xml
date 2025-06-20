@@ -33,7 +33,7 @@
     <name>Apache James :: Server :: Blob :: S3</name>
 
     <properties>
-        <s3-sdk.version>2.31.59</s3-sdk.version>
+        <s3-sdk.version>2.31.63</s3-sdk.version>
     </properties>
 
     <dependencies>
