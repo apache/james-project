@@ -34,6 +34,8 @@ import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -51,8 +53,10 @@ import com.google.common.annotations.VisibleForTesting;
  * behaviour then set forceCRLF attribute to false.
  */
 public class DKIMVerify extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DKIMVerify.class);
 
     public static final AttributeName DKIM_AUTH_RESULT = AttributeName.of("jDKIM.AUTHRESULT");
+    public static final AttributeName DKIM_AUTH_RESULT_BOOLEAN = AttributeName.of("jDKIM.AUTHRESULT.FLAG");
 
     @VisibleForTesting
     DKIMVerifier verifier;
@@ -76,6 +80,7 @@ public class DKIMVerify extends GenericMailet {
             if (res == null || res.isEmpty()) {
                 // neutral
                 mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of("neutral (no signatures)")));
+                LOGGER.info("DKIM signature neutral (no signatures)");
             } else {
                 // pass
                 StringBuilder msg = new StringBuilder();
@@ -87,13 +92,18 @@ public class DKIMVerify extends GenericMailet {
                     msg.append(")");
                 }
                 mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of(msg.toString())));
+                mail.setAttribute(new Attribute(DKIM_AUTH_RESULT_BOOLEAN, AttributeValue.of(true)));
+                LOGGER.info("DKIM signature {}", msg);
             }
         } catch (FailException e) {
             // fail
             String relatedRecordIdentity = Optional.ofNullable(e.getRelatedRecordIdentity())
                 .map(value -> "identity" + value + ":")
                 .orElse("");
-            mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of("fail (" + relatedRecordIdentity + e.getMessage() + ")")));
+            String msg = "fail (" + relatedRecordIdentity + e.getMessage() + ")";
+            mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of(msg)));
+            mail.setAttribute(new Attribute(DKIM_AUTH_RESULT_BOOLEAN, AttributeValue.of(false)));
+            LOGGER.info("DKIM signature {}", msg);
         }
     }
 }
