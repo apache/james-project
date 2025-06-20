@@ -250,7 +250,7 @@
 
       <p>If you change a JPA Entity class, your will need to run 'mvn package'
           or add the following option to the VM argument of your run configuration
-          '-javaagent:my_home_folder/.m2/repository/org/apache/openjpa/openjpa/3.1.0/openjpa-3.1.0.jar'
+          '-javaagent:my_home_folder/.m2/repository/org/apache/openjpa/openjpa/4.1.1/openjpa-4.1.1.jar'
       </p>
 
     </subsection>
