@@ -49,7 +49,7 @@ public class HelpVersionCommandTest {
         int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor), "help");
         assertThat(exitCode).isEqualTo(0);
         assertThat(outputStreamCaptor.toString()).contains("help");
-        assertThat(outputStreamCaptor.toString()).contains("Displays help information about the specified command");
+        assertThat(outputStreamCaptor.toString()).contains("Display help information about the specified command");
     }
 
 }
