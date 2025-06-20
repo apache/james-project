@@ -55,6 +55,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbytools</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa</artifactId>
             <version>${apache.openjpa.version}</version>
