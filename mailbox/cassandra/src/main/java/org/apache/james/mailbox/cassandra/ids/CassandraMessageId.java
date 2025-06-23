@@ -46,6 +46,10 @@ public class CassandraMessageId implements MessageId {
         }
     }
 
+    public static CassandraMessageId of(UUID uuid) {
+        return new CassandraMessageId(uuid);
+    }
+
     private final UUID uuid;
 
     private CassandraMessageId(UUID uuid) {

@@ -39,6 +39,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.cassandra.mail.ThreadTablePartitionKey;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.ThreadIdGuessingAlgorithmContract;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
@@ -68,7 +69,8 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
     protected ThreadIdGuessingAlgorithm initThreadIdGuessingAlgorithm(CombinationManagerTestSystem testingData) {
         CassandraThreadDAO threadDAO = new CassandraThreadDAO(cassandraCluster.getCassandraCluster().getConf());
         threadLookupDAO = new CassandraThreadLookupDAO(cassandraCluster.getCassandraCluster().getConf());
-        return new CassandraThreadIdGuessingAlgorithm(testingData.getMailboxManager(), threadDAO, threadLookupDAO);
+
+        return new CassandraThreadIdGuessingAlgorithm(testingData.getMessageIdManager(), threadDAO, threadLookupDAO);
     }
 
     @Override
@@ -94,7 +96,7 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
             Optional.of(new MimeMessageId("someInReplyTo")),
             Optional.of(List.of(new MimeMessageId("someReferences"), new MimeMessageId("Message-ID1"))));
 
-        assertThat(threadLookupDAO.selectOneRow(newBasedMessageId).block())
+        assertThat(threadLookupDAO.selectOneRow(ThreadId.fromBaseMessageId(newBasedMessageId), newBasedMessageId).block())
             .isEqualTo(new ThreadTablePartitionKey(username, hashMimeMessagesIds(mimeMessageIds)));
     }
 }

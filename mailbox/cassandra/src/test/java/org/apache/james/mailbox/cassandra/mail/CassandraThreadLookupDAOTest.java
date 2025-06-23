@@ -20,8 +20,9 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.apache.james.mailbox.cassandra.mail.CassandraThreadDAOTest.hashMimeMessagesIds;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -29,6 +30,8 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraThreadDataDefinition;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +47,7 @@ class CassandraThreadLookupDAOTest {
     private CassandraThreadLookupDAO testee;
     private CassandraMessageId messageId1;
     private CassandraMessageId messageId2;
+    private CassandraMessageId messageId3;
     private MimeMessageId mimeMessageId1;
     private MimeMessageId mimeMessageId2;
     private MimeMessageId mimeMessageId3;
@@ -56,6 +60,7 @@ class CassandraThreadLookupDAOTest {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         messageId1 = messageIdFactory.generate();
         messageId2 = messageIdFactory.generate();
+        messageId3 = messageIdFactory.generate();
 
         mimeMessageId1 = new MimeMessageId("MimeMessageID1");
         mimeMessageId2 = new MimeMessageId("MimeMessageID2");
@@ -65,45 +70,57 @@ class CassandraThreadLookupDAOTest {
 
     @Test
     void insertShouldSuccess() {
-        testee.insert(messageId1, ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
+        testee.insert(messageId1, ThreadId.fromBaseMessageId(messageId1), ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
 
-        assertThat(testee.selectOneRow(messageId1).block())
+        assertThat(testee.selectOneRow(ThreadId.fromBaseMessageId(messageId1), messageId1).block())
             .isEqualTo(new ThreadTablePartitionKey(ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))));
     }
 
     @Test
     void selectShouldReturnNullWhenMessageIdNonExist() {
-        assertThat(testee.selectOneRow(messageId1).block())
+        assertThat(testee.selectOneRow(ThreadId.fromBaseMessageId(messageId1), messageId1).block())
             .isNull();
     }
 
     @Test
     void selectShouldReturnOnlyRelatedDataByThatMessageId() {
-        testee.insert(messageId1, ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
-        testee.insert(messageId2, BOB, hashMimeMessagesIds(Set.of(mimeMessageId3, mimeMessageId4))).block();
+        testee.insert(messageId1, ThreadId.fromBaseMessageId(messageId1), ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
+        testee.insert(messageId2, ThreadId.fromBaseMessageId(messageId2), BOB, hashMimeMessagesIds(Set.of(mimeMessageId3, mimeMessageId4))).block();
 
-        assertThat(testee.selectOneRow(messageId1).block())
+        assertThat(testee.selectOneRow(ThreadId.fromBaseMessageId(messageId1), messageId1).block())
             .isEqualTo(new ThreadTablePartitionKey(ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))));
     }
 
     @Test
+    void selectAllShouldReturnThreadContent() {
+        testee.insert(messageId1, ThreadId.fromBaseMessageId(messageId1), ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
+        testee.insert(messageId2, ThreadId.fromBaseMessageId(messageId2), BOB, hashMimeMessagesIds(Set.of(mimeMessageId3, mimeMessageId4))).block();
+        testee.insert(messageId3, ThreadId.fromBaseMessageId(messageId1), BOB, hashMimeMessagesIds(Set.of(mimeMessageId3, mimeMessageId4))).block();
+
+        List<MessageId> block = testee.selectAll(ThreadId.fromBaseMessageId(messageId1)).collectList().block();
+        assertThat(block)
+            .containsOnly(messageId1, messageId3)
+            .doesNotContain(messageId2);
+    }
+
+    @Test
     void deletedEntriesShouldNotBeReturned() {
-        testee.insert(messageId1, ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
+        testee.insert(messageId1, ThreadId.fromBaseMessageId(messageId1), ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
 
-        testee.deleteOneRow(messageId1).block();
+        testee.deleteOneRow(ThreadId.fromBaseMessageId(messageId1), messageId1).block();
 
-        assertThat(testee.selectOneRow(messageId1).block())
+        assertThat(testee.selectOneRow(ThreadId.fromBaseMessageId(messageId1), messageId1).block())
             .isNull();
     }
 
     @Test
     void deleteByNonExistMessageIdShouldDeleteNothing() {
-        testee.insert(messageId1, ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
+        testee.insert(messageId1, ThreadId.fromBaseMessageId(messageId1), ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
 
-        testee.deleteOneRow(messageId2).block();
+        testee.deleteOneRow(ThreadId.fromBaseMessageId(messageId2), messageId2).block();
 
         // message1's data should remain
-        assertThat(testee.selectOneRow(messageId1).block())
+        assertThat(testee.selectOneRow(ThreadId.fromBaseMessageId(messageId1), messageId1).block())
             .isEqualTo(new ThreadTablePartitionKey(ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))));
     }
 
