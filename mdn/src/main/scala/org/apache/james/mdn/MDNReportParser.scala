@@ -28,8 +28,8 @@ import org.apache.james.mdn.fields._
 import org.apache.james.mdn.modifier.DispositionModifier
 import org.apache.james.mdn.sending.mode.DispositionSendingMode
 import org.parboiled2._
+import org.parboiled2.support.hlist.HNil
 import org.slf4j.LoggerFactory
-import shapeless.HNil
 
 import scala.util.{Failure, Try}
 
