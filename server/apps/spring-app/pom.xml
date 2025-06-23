@@ -808,7 +808,7 @@
                         <phase>package</phase>
                         <configuration>
 
-                            <tasks>
+                            <target>
                                 <!-- this is only needed because windows freak out on long cmd lines, so we strip of the absolute path
                                     from the lib dir to make windows happy again
                                 -->
@@ -827,7 +827,7 @@
                                 -->
                                 <replace file="${project.build.directory}/appassembler/bin/james-cli.bat" token="%BASEDIR%\lib" value="..\lib" />
                                 <replace file="${project.build.directory}/appassembler/bin/james-cli.sh" token="setenv" value="setenv.sh" />
-                            </tasks>
+                            </target>
 
                         </configuration>
                     </execution>
