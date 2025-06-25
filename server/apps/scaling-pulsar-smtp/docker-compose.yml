@@ -60,7 +60,7 @@ services:
       - REMOTE_MANAGEMENT_DISABLE=1
 
   postgres:
-    image: postgres:16.3
+    image: postgres:16.9
     ports:
       - "5432:5432"
     environment:

@@ -68,7 +68,7 @@ Firstly, create your own user network on Docker for the James environment:
 
 You need a running *Postgresql* in docker which connects to *james* network. To achieve this run:
 
-    $ docker run -d --network james --name=postgres --env 'POSTGRES_DB=james' --env 'POSTGRES_USER=james' --env 'POSTGRES_PASSWORD=secret1' postgres:16.0
+    $ docker run -d --network james --name=postgres --env 'POSTGRES_DB=james' --env 'POSTGRES_USER=james' --env 'POSTGRES_PASSWORD=secret1' postgres:16.9
 
 To run this container :
 
