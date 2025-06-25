@@ -38,35 +38,28 @@ import com.google.common.collect.ImmutableList;
 public class JwksPublicKeyProvider implements PublicKeyProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(JwksPublicKeyProvider.class);
 
-    public static JwksPublicKeyProvider of(URL jwksURL, String kid) {
-        return new JwksPublicKeyProvider(jwksURL, Optional.of(kid));
-    }
-
     public static JwksPublicKeyProvider of(URL jwksURL) {
-        return new JwksPublicKeyProvider(jwksURL, Optional.empty());
+        return new JwksPublicKeyProvider(jwksURL);
     }
 
     private final UrlJwkProvider jwkProvider;
-    private final Optional<String> kid;
 
-    private JwksPublicKeyProvider(URL jwksURL, Optional<String> kid) {
+    private JwksPublicKeyProvider(URL jwksURL) {
         Preconditions.checkNotNull(jwksURL);
-        Preconditions.checkNotNull(kid);
         this.jwkProvider = new UrlJwkProvider(jwksURL);
-        this.kid = kid;
     }
 
     @Override
     public List<PublicKey> get() throws MissingOrInvalidKeyException {
-        return kid.map(this::get)
-            .orElse(getAllFromProvider());
+        return getAllFromProvider();
     }
 
-    public List<PublicKey> get(String kid) throws MissingOrInvalidKeyException {
+    @Override
+    public Optional<PublicKey> get(String kid) throws MissingOrInvalidKeyException {
         try {
-            return ImmutableList.of(jwkProvider.get(kid).getPublicKey());
+            return Optional.of(jwkProvider.get(kid).getPublicKey());
         } catch (SigningKeyNotFoundException notFoundException) {
-            return ImmutableList.of();
+            return Optional.empty();
         } catch (JwkException e) {
             LOGGER.error("Can't get publicKeys has kid = {} from jwksURL.", kid, e);
             throw new MissingOrInvalidKeyException();

@@ -20,6 +20,7 @@ package org.apache.james.jwt;
 
 import java.security.PublicKey;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 
@@ -43,6 +44,14 @@ public class DefaultPublicKeyProvider implements PublicKeyProvider {
             throw new MissingOrInvalidKeyException();
         }
         return keys;
+    }
+
+    @Override
+    public Optional<PublicKey> get(String kid) throws MissingOrInvalidKeyException {
+        // TODO: pick a simple or standard way of calculating a unique kid for each public key
+        // that can be calculated by the user when generating the JWT
+        // and calculated or looked up here for comparison.
+        return Optional.empty();
     }
 
 }
