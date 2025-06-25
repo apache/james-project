@@ -19,43 +19,27 @@
 
 package org.apache.james.mailbox.store;
 
-import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
-import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import jakarta.mail.Flags;
-
 import org.apache.james.core.Username;
-import org.apache.james.events.EventBus;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ThreadNotFoundException;
-import org.apache.james.mailbox.model.ByteContent;
-import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.store.event.EventFactory;
-import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.RawField;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,43 +55,42 @@ import reactor.core.publisher.Flux;
 public abstract class ThreadIdGuessingAlgorithmContract {
     public static final Username USER = Username.of("quan");
 
-    protected EventBus eventBus;
-    protected MessageId.Factory messageIdFactory;
     protected ThreadIdGuessingAlgorithm testee;
     protected MessageId newBasedMessageId;
     protected MessageId otherBasedMessageId;
     protected MailboxSession mailboxSession;
-    private MailboxManager mailboxManager;
     private MessageManager inbox;
-    private MessageMapper messageMapper;
-    private CombinationManagerTestSystem testingData;
-    private Mailbox mailbox;
 
-    protected abstract CombinationManagerTestSystem createTestingData();
+    protected abstract CombinationManagerTestSystem createTestingSystem();
 
     protected abstract ThreadIdGuessingAlgorithm initThreadIdGuessingAlgorithm(CombinationManagerTestSystem testingData);
-
-    protected abstract MessageMapper createMessageMapper(MailboxSession mailboxSession);
 
     protected abstract MessageId initNewBasedMessageId();
 
     protected abstract MessageId initOtherBasedMessageId();
 
-    protected abstract void saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject);
+    private void overrideThreadIdGuessingAlgorithm(StoreMailboxManager manager, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+        try {
+            Field field = StoreMailboxManager.class.getDeclaredField("threadIdGuessingAlgorithm");
+            field.setAccessible(true);
+            field.set(manager, threadIdGuessingAlgorithm);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to override threadIdGuessingAlgorithm", e);
+        }
+    }
 
     @BeforeEach
     void setUp() throws Exception {
-        testingData = createTestingData();
-        testee = initThreadIdGuessingAlgorithm(testingData);
+        CombinationManagerTestSystem testingSystem = createTestingSystem();
+        testee = initThreadIdGuessingAlgorithm(testingSystem);
+        // Use reflection to set the actual testee threadIdGuessingAlgorithm in StoreMailboxManager, which was NaiveThreadIdGuessingAlgorithm because of circular dependency
+        overrideThreadIdGuessingAlgorithm((StoreMailboxManager) testingSystem.getMailboxManager(), testee);
+
         newBasedMessageId = initNewBasedMessageId();
         otherBasedMessageId = initOtherBasedMessageId();
-
-        mailboxManager = testingData.getMailboxManager();
-        mailboxSession = mailboxManager.createSystemSession(USER);
-        mailboxManager.createMailbox(MailboxPath.inbox(USER), mailboxSession);
-        messageMapper = createMessageMapper(mailboxSession);
-        inbox = mailboxManager.getMailbox(MailboxPath.inbox(USER), mailboxSession);
-        mailbox = inbox.getMailboxEntity();
+        mailboxSession = testingSystem.getMailboxManager().createSystemSession(USER);
+        testingSystem.getMailboxManager().createMailbox(MailboxPath.inbox(USER), mailboxSession);
+        inbox = testingSystem.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
     }
 
     @Test
@@ -150,11 +133,6 @@ public abstract class ThreadIdGuessingAlgorithmContract {
             .addField(new RawField("References", "references2"))
             .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
 
-        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
-            Optional.of(new MimeMessageId("someInReplyTo")),
-            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
-        saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test")));
-
         // add new related mails
         ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
 
@@ -175,18 +153,13 @@ public abstract class ThreadIdGuessingAlgorithmContract {
     @MethodSource
     void givenOldMailWhenAddNewMailsWithRelatedSubjectButHaveNonIdenticalMessageIDThenGuessingThreadIdShouldBasedOnGeneratedMessageId(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject) throws Exception {
         // given old mail
-        MessageManager.AppendResult message = inbox.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+        inbox.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
             .setSubject("Test")
             .setMessageId("Message-ID")
             .setField(new RawField("In-Reply-To", "someInReplyTo"))
             .addField(new RawField("References", "references1"))
             .addField(new RawField("References", "references2"))
             .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
-
-        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
-            Optional.of(new MimeMessageId("someInReplyTo")),
-            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
-        saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test")));
 
         // add mails related to old message by subject but have non same identical Message-ID
         ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
@@ -208,18 +181,13 @@ public abstract class ThreadIdGuessingAlgorithmContract {
     @MethodSource
     void givenOldMailWhenAddNewMailsWithNonRelatedSubjectButHaveSameIdenticalMessageIDThenGuessingThreadIdShouldBasedOnGeneratedMessageId(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject) throws Exception {
         // given old mail
-        MessageManager.AppendResult message = inbox.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+        inbox.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
             .setSubject("Test")
             .setMessageId("Message-ID")
             .setField(new RawField("In-Reply-To", "someInReplyTo"))
             .addField(new RawField("References", "references1"))
             .addField(new RawField("References", "references2"))
             .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
-
-        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
-            Optional.of(new MimeMessageId("someInReplyTo")),
-            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
-        saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test")));
 
         // add mails related to old message by having identical Message-ID but non related subject
         ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
@@ -241,18 +209,13 @@ public abstract class ThreadIdGuessingAlgorithmContract {
     @MethodSource
     void givenOldMailWhenAddNonRelatedMailsThenGuessingThreadIdShouldBasedOnGeneratedMessageId(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject) throws Exception {
         // given old mail
-        MessageManager.AppendResult message = inbox.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+        inbox.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
             .setSubject("Test")
             .setMessageId("Message-ID")
             .setField(new RawField("In-Reply-To", "someInReplyTo"))
             .addField(new RawField("References", "references1"))
             .addField(new RawField("References", "references2"))
             .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
-
-        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
-            Optional.of(new MimeMessageId("someInReplyTo")),
-            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
-        saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test")));
 
         // add mails non related to old message by both subject and identical Message-ID
         ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
@@ -262,19 +225,17 @@ public abstract class ThreadIdGuessingAlgorithmContract {
     }
 
     @Test
-    void givenThreeMailsInAThreadThenGetThreadShouldReturnAListWithThreeMessageIdsSortedByArrivalDate() throws MailboxException {
-        MailboxMessage message1 = createMessage(mailbox, ThreadId.fromBaseMessageId(newBasedMessageId));
-        MailboxMessage message2 = createMessage(mailbox, ThreadId.fromBaseMessageId(newBasedMessageId));
-        MailboxMessage message3 = createMessage(mailbox, ThreadId.fromBaseMessageId(newBasedMessageId));
+    void givenThreeMailsInAThreadThenGetThreadShouldReturnAListWithThreeMessageIdsSortedByArrivalDate() throws Exception {
+        MessageManager.AppendResult message1 = appendMessage(inbox, new Subject(newBasedMessageId.serialize()));
+        MessageManager.AppendResult message2 = appendMessage(inbox, new Subject(newBasedMessageId.serialize()));
+        MessageManager.AppendResult message3 = appendMessage(inbox, new Subject(newBasedMessageId.serialize()));
 
-        appendMessageThenDispatchAddedEvent(mailbox, message1);
-        appendMessageThenDispatchAddedEvent(mailbox, message2);
-        appendMessageThenDispatchAddedEvent(mailbox, message3);
-
-        Flux<MessageId> messageIds = testee.getMessageIdsInThread(ThreadId.fromBaseMessageId(newBasedMessageId), mailboxSession);
+        Flux<MessageId> messageIds = testee.getMessageIdsInThread(message1.getThreadId(), mailboxSession);
 
         assertThat(messageIds.collectList().block())
-            .isEqualTo(ImmutableList.of(message1.getMessageId(), message2.getMessageId(), message3.getMessageId()));
+            .isEqualTo(ImmutableList.of(message1.getId().getMessageId(),
+                message2.getId().getMessageId(),
+                message3.getId().getMessageId()));
     }
 
     @Test
@@ -285,63 +246,40 @@ public abstract class ThreadIdGuessingAlgorithmContract {
     }
 
     @Test
-    void givenAMailInAThreadThenGetThreadShouldReturnAListWithOnlyOneMessageIdInThatThread() throws MailboxException {
-        MailboxMessage message1 = createMessage(mailbox, ThreadId.fromBaseMessageId(newBasedMessageId));
+    void givenAMailInAThreadThenGetThreadShouldReturnAListWithOnlyOneMessageIdInThatThread() throws Exception {
+        MessageManager.AppendResult message1 = appendMessage(inbox, new Subject(newBasedMessageId.serialize()));
 
-        appendMessageThenDispatchAddedEvent(mailbox, message1);
-
-        Flux<MessageId> messageIds = testee.getMessageIdsInThread(ThreadId.fromBaseMessageId(newBasedMessageId), mailboxSession);
+        Flux<MessageId> messageIds = testee.getMessageIdsInThread(message1.getThreadId(), mailboxSession);
 
         assertThat(messageIds.collectList().block())
-            .containsOnly(message1.getMessageId());
+            .containsOnly(message1.getId().getMessageId());
     }
 
     @Test
-    void givenTwoDistinctThreadsThenGetThreadShouldNotReturnUnrelatedMails() throws MailboxException {
+    void givenTwoDistinctThreadsThenGetThreadShouldNotReturnUnrelatedMails() throws Exception {
         // given message1 and message2 in thread1, message3 in thread2
-        ThreadId threadId1 = ThreadId.fromBaseMessageId(newBasedMessageId);
-        ThreadId threadId2 = ThreadId.fromBaseMessageId(otherBasedMessageId);
-        MailboxMessage message1 = createMessage(mailbox, threadId1);
-        MailboxMessage message2 = createMessage(mailbox, threadId1);
-        MailboxMessage message3 = createMessage(mailbox, threadId2);
-
-        appendMessageThenDispatchAddedEvent(mailbox, message1);
-        appendMessageThenDispatchAddedEvent(mailbox, message2);
-        appendMessageThenDispatchAddedEvent(mailbox, message3);
+        Subject subject1 = new Subject(newBasedMessageId.serialize());
+        Subject subject2 = new Subject(otherBasedMessageId.serialize());
+        MessageManager.AppendResult message1 = appendMessage(inbox, subject1);
+        MessageManager.AppendResult message2 = appendMessage(inbox, subject1);
+        MessageManager.AppendResult message3 = appendMessage(inbox, subject2);
 
         // then get thread2 should not return unrelated message1 and message2
-        Flux<MessageId> messageIds = testee.getMessageIdsInThread(ThreadId.fromBaseMessageId(otherBasedMessageId), mailboxSession);
+        Flux<MessageId> messageIds = testee.getMessageIdsInThread(message3.getThreadId(), mailboxSession);
 
         assertThat(messageIds.collectList().block())
-            .doesNotContain(message1.getMessageId(), message2.getMessageId());
+            .doesNotContain(message1.getId().getMessageId(), message2.getId().getMessageId())
+            .containsOnly(message3.getId().getMessageId());
     }
 
-    private SimpleMailboxMessage createMessage(Mailbox mailbox, ThreadId threadId) {
-        MessageId messageId = messageIdFactory.generate();
-        String content = "Some content";
-        int bodyStart = 12;
-        return new SimpleMailboxMessage(messageId,
-            threadId,
-            new Date(),
-            content.length(),
-            bodyStart,
-            new ByteContent(content.getBytes()),
-            new Flags(),
-            new PropertyBuilder().build(),
-            mailbox.getMailboxId());
-    }
-
-    private void appendMessageThenDispatchAddedEvent(Mailbox mailbox, MailboxMessage mailboxMessage) throws MailboxException {
-        MessageMetaData messageMetaData = messageMapper.add(mailbox, mailboxMessage);
-        eventBus.dispatch(EventFactory.added()
-                .randomEventId()
-                .mailboxSession(mailboxSession)
-                .mailbox(mailbox)
-                .addMetaData(messageMetaData)
-                .isDelivery(!IS_DELIVERY)
-                .isAppended(IS_APPENDED)
-                .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId())).block();
+    protected MessageManager.AppendResult appendMessage(MessageManager mailbox, Subject subject) throws Exception {
+        return mailbox.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+            .setSubject(subject.getValue())
+            .setMessageId("Message-ID")
+            .setField(new RawField("In-Reply-To", "someInReplyTo"))
+            .addField(new RawField("References", "references1"))
+            .addField(new RawField("References", "references2"))
+            .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
     }
 
     protected Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {
