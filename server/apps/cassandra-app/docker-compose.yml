@@ -39,7 +39,7 @@ services:
       - DISABLE_SECURITY_PLUGIN=true
 
   cassandra:
-    image: cassandra:4.1.5
+    image: cassandra:4.1.9
     ports:
       - "9042:9042"
     healthcheck:
