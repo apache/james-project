@@ -48,7 +48,7 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 You need to have a Cassandra and an OpenSearch instance running. You can either install the servers or launch them via docker:
 
 ```bash
-$ docker run -d -p 9042:9042 --name=cassandra cassandra:4.1.5
+$ docker run -d -p 9042:9042 --name=cassandra cassandra:4.1.9
 $ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.19.2
 ```
 

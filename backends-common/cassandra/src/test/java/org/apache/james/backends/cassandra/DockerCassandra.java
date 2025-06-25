@@ -181,7 +181,7 @@ public class DockerCassandra {
             new ImageFromDockerfile(imageName,deleteImageAfterUsage)
                 .withDockerfileFromBuilder(builder ->
                     additionalSteps.applyStep(builder
-                        .from("cassandra:4.1.5")
+                        .from("cassandra:4.1.9")
                         .env("CASSANDRA_CONFIG", "/etc/cassandra")
                         .run(memorySettingCommand
                             + "&& echo \"-Dcassandra.skip_wait_for_gossip_to_settle=0\" >> " + JVM_OPTIONS

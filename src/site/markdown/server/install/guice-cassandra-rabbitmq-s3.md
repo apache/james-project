@@ -47,7 +47,7 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 You need to have a Cassandra, OpenSearch, S3 and RabbitMQ instance running. You can either install the servers or launch them via docker:
 
 ```bash
-$ docker run -d -p 9042:9042 --name=cassandra cassandra:4.1.5
+$ docker run -d -p 9042:9042 --name=cassandra cassandra:4.1.9
 $ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.19.2
 $ docker run -d -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.13.3-management
 $ docker run -d --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 ghcr.io/scality/cloudserver:8cbe2c066b3505b26d339dc67315d1041b8c7f3a
