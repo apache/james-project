@@ -66,7 +66,7 @@ services:
       - kvrocks_replica2_data:/var/lib/kvrocks
 
   sentinel-1:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: sentinel-1
     depends_on:
       kvrocks-master:
@@ -77,7 +77,7 @@ services:
       - ./sample-configuration/kvrocks/sentinel/sentinel-node/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
 
   sentinel-2:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: sentinel-2
     depends_on:
       kvrocks-master:
@@ -88,7 +88,7 @@ services:
       - ./sample-configuration/kvrocks/sentinel/sentinel-node/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
 
   sentinel-3:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: sentinel-3
     depends_on:
       kvrocks-master:

@@ -92,7 +92,7 @@ services:
       - james
 
   redis:
-    image: redis:7.2.5
+    image: redis:8.0.2
     networks:
       - james
 

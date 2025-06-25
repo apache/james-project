@@ -30,7 +30,7 @@ services:
       - "8000:8000"
 
   redis:
-    image: redis:7.2.5
+    image: redis:8.0.2
     command:
       - "--loglevel"
       - "debug"
