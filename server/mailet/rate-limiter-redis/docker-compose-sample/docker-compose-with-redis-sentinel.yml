@@ -2,7 +2,7 @@ version: '3'
 
 services:
   redis-master:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: redis-master
     restart: always
     ports:
@@ -20,7 +20,7 @@ services:
       - emaily-net
 
   redis-replica-1:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: redis-replica-1
     depends_on:
       redis-master:
@@ -35,7 +35,7 @@ services:
       - emaily-net
 
   redis-replica-2:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: redis-replica-2
     depends_on:
       redis-master:
@@ -50,7 +50,7 @@ services:
       - emaily-net
 
   sentinel-1:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: sentinel-1
     depends_on:
       redis-master:
@@ -65,7 +65,7 @@ services:
       - emaily-net
 
   sentinel-2:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: sentinel-2
     depends_on:
       redis-master:
@@ -80,7 +80,7 @@ services:
       - emaily-net
 
   sentinel-3:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: sentinel-3
     depends_on:
       redis-master:

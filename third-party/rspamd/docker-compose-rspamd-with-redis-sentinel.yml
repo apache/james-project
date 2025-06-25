@@ -30,7 +30,7 @@ services:
       - "8000:8000"
 
   redis-master:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: redis-master
     command: sh /usr/local/etc/redis/docker-entrypoint.sh
     volumes:
@@ -43,7 +43,7 @@ services:
       retries: 5
 
   redis-replica-1:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: redis-replica-1
     depends_on:
       redis-master:
@@ -54,7 +54,7 @@ services:
       - ./sample-configuration/redis/replica/docker-entrypoint-replica.sh:/usr/local/etc/redis/docker-entrypoint.sh
 
   redis-replica-2:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: redis-replica-2
     depends_on:
       redis-master:
@@ -65,7 +65,7 @@ services:
       - ./sample-configuration/redis/replica/docker-entrypoint-replica.sh:/usr/local/etc/redis/docker-entrypoint.sh
 
   sentinel-1:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: sentinel-1
     depends_on:
       redis-master:
@@ -76,7 +76,7 @@ services:
       - ./sample-configuration/redis/sentinel/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
 
   sentinel-2:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: sentinel-2
     depends_on:
       redis-master:
@@ -87,7 +87,7 @@ services:
       - ./sample-configuration/redis/sentinel/docker-entrypoint-sentinel.sh:/usr/local/etc/redis/docker-entrypoint.sh
 
   sentinel-3:
-    image: redis:7.2.5
+    image: redis:8.0.2
     container_name: sentinel-3
     depends_on:
       redis-master:
