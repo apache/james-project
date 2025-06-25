@@ -135,7 +135,7 @@ You can handle attachment text extraction before indexing in OpenSearch. This ma
 
 Run tika connect to *james* network:
 
-    $ docker run -d --network james --name tika apache/tika:2.9.2.1
+    $ docker run -d --network james --name tika apache/tika:3.2.0.0
 
 Run James:
 
