@@ -61,7 +61,7 @@ You need a running *rabbitmq* in docker which connects to *james* network. To ac
 
 You need a running *Zenko Cloudserver* objectstorage in docker which connects to *james* network. To achieve this run:
 
-    $ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 ghcr.io/scality/cloudserver:8cbe2c066b3505b26d339dc67315d1041b8c7f3a
+    $ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 ghcr.io/scality/cloudserver:c1ba296859690c1cbbec609aaae430f6b04b4745
 
 You need a running *OpenSearch* in docker which connects to *james* network. To achieve this run:
 
