@@ -69,7 +69,7 @@ You may skip this part if you already have a running Cassandra on your network.
 3.2. Deploy OpenSearch (optional)
 You may skip this part if you already have a running OpenSearch on your network.
 
-<i>$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.14.0</i>
+<i>$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.19.2</i>
 
 Step 4: Configure
 #################

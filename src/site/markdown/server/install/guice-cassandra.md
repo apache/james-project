@@ -49,7 +49,7 @@ You need to have a Cassandra and an OpenSearch instance running. You can either 
 
 ```bash
 $ docker run -d -p 9042:9042 --name=cassandra cassandra:4.1.5
-$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.14.0
+$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.19.2
 ```
 
 Once everything is set up, you just have to run the jar with:
