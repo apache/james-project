@@ -39,6 +39,29 @@ to get some examples and hints.
 | cors.origin
 | Specify ths CORS origin (default: null)
 
+| password
+| Uses a configured static value for authentication. It relies on the Password header.
+It supports several passwords, configured as a coma separated list.
+
+....
+password=secretA,secretB,secretC
+....
+
+Will allow request with
+
+....
+Password: secretA
+Password: secretB
+....
+
+But deny
+
+....
+Password: secretD
+....
+
+As well as request without the password header.
+
 | jwt.enable
 | Allow JSON Web Token as an authentication mechanism (default: false)
 
