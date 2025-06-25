@@ -30,7 +30,7 @@ services:
       - "8000:8000"
 
   kvrocks-master:
-    image: apache/kvrocks:2.11.1
+    image: apache/kvrocks:2.12.1
     container_name: kvrocks-master
     volumes:
       - ./sample-configuration/kvrocks/sentinel/master-node/kvrocks.conf:/var/lib/kvrocks/kvrocks.conf
@@ -42,7 +42,7 @@ services:
       retries: 5
 
   kvrocks-replica-1:
-    image: apache/kvrocks:2.11.1
+    image: apache/kvrocks:2.12.1
     container_name: kvrocks-replica-1
     depends_on:
       kvrocks-master:
@@ -54,7 +54,7 @@ services:
       - kvrocks_replica1_data:/var/lib/kvrocks
 
   kvrocks-replica-2:
-    image: apache/kvrocks:2.11.1
+    image: apache/kvrocks:2.12.1
     container_name: kvrocks-replica-2
     depends_on:
       kvrocks-master:
