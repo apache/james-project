@@ -31,7 +31,7 @@ For now, dependencies supported are:
 
 [source]
 ----
-$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.8.0
+$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.19.2
 ----
 
 * Zenko Cloudserver or AWS S3

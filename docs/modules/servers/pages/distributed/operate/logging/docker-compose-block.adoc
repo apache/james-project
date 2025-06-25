@@ -28,7 +28,7 @@ services:
       - "8080:8000"
 
   opensearch:
-    image: opensearchproject/opensearch:2.14.0
+    image: opensearchproject/opensearch:2.19.2
     ports:
       - "9200:9200"
     environment:

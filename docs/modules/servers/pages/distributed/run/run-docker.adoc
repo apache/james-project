@@ -65,7 +65,7 @@ You need a running *Zenko Cloudserver* objectstorage in docker which connects to
 
 You need a running *OpenSearch* in docker which connects to *james* network. To achieve this run:
 
-$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.1.0
+$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.19.2
 
 If you want to use all the JMAP search capabilities, you may also need to start Tika container which connects to *james* network:
 
