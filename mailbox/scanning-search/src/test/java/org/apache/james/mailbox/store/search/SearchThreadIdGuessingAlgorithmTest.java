@@ -19,35 +19,19 @@
 
 package org.apache.james.mailbox.store.search;
 
-import java.util.Optional;
-import java.util.Set;
-
-import org.apache.james.core.Username;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryCombinationManagerTestSystem;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.ThreadIdGuessingAlgorithmContract;
-import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.SearchThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
-import org.apache.james.mailbox.store.mail.model.MimeMessageId;
-import org.apache.james.mailbox.store.mail.model.Subject;
 
 public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
-    private InMemoryMailboxManager mailboxManager;
-
     @Override
-    protected CombinationManagerTestSystem createTestingData() {
+    protected CombinationManagerTestSystem createTestingSystem() {
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
-
-        mailboxManager = resources.getMailboxManager();
-        eventBus = resources.getEventBus();
-        messageIdFactory = resources.getMessageIdFactory();
 
         return new InMemoryCombinationManagerTestSystem(
             resources.getMailboxManager(),
@@ -60,11 +44,6 @@ public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorit
     }
 
     @Override
-    protected MessageMapper createMessageMapper(MailboxSession mailboxSession) {
-        return mailboxManager.getMapperFactory().createMessageMapper(mailboxSession);
-    }
-
-    @Override
     protected MessageId initNewBasedMessageId() {
         return InMemoryMessageId.of(100);
     }
@@ -74,7 +53,4 @@ public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorit
         return InMemoryMessageId.of(1000);
     }
 
-    @Override
-    protected void saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-    }
 }
