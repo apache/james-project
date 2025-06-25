@@ -30,7 +30,7 @@ services:
       - "8000:8000"
 
   kvrocks:
-    image: apache/kvrocks:2.11.1
+    image: apache/kvrocks:2.12.1
     healthcheck:
       test: [ "CMD", "redis-cli", "ping", "|", "grep", "PONG" ]
       interval: 10s

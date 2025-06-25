@@ -39,7 +39,7 @@ import io.lettuce.core.api.sync.RedisCommands;
 
 public class DockerKvrocks {
     public static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("apache/kvrocks")
-        .withTag("2.11.1");
+        .withTag("2.12.1");
     public static final int DEFAULT_PORT = 6666;
 
     private final GenericContainer<?> container;
