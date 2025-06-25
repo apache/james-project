@@ -62,7 +62,7 @@ services:
       - james
 
   tika:
-    image: apache/tika:2.9.2.1
+    image: apache/tika:3.2.0.0
     networks:
       - james
 
