@@ -118,6 +118,14 @@ S: \* LIST \(\\HasNoChildren\) \".\" \"#user.boby.Sent\"
 }
 S: a13 OK LIST completed.
 
+C: a13b LIST "" "#user.diana.*"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: a13b OK LIST completed.
+
+C: a13c LIST "" "#user.diana.sharedMailbox"
+S: \* LIST \(\\HasNoChildren\) \".\" \"#user.diana.sharedMailbox\"
+S: a13c OK LIST completed.
+
 C: b01 SUBSCRIBE INBOX
 S: b01 OK SUBSCRIBE completed.
 C: b02 SUBSCRIBE #user.diana.sharedMailbox
@@ -164,6 +172,10 @@ S: b09 OK LSUB completed.
 C: b10 LSUB "" "#user.diana.*"
 S: \* LSUB \(\) \".\" \"#user.diana.sharedMailbox\"
 S: b10 OK LSUB completed.
+
+C: b10b LSUB "" "#user.diana.sharedMailbox"
+S: \* LSUB \(\) \".\" \"#user.diana.sharedMailbox\"
+S: b10b OK LSUB completed.
 
 C: b11 LSUB "#user" "diana.*"
 S: \* LSUB \(\) \".\" \"#user.diana.sharedMailbox\"
