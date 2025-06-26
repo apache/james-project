@@ -15,6 +15,7 @@
 **** xref:distributed/architecture/implemented-standards.adoc[]
 **** xref:distributed/architecture/consistency-model.adoc[]
 **** xref:distributed/architecture/specialized-instances.adoc[]
+**** xref:distributed/architecture/data-tiering.adoc[]
 *** xref:distributed/run/index.adoc[Run]
 **** xref:distributed/run/run-java.adoc[Run with Java]
 **** xref:distributed/run/run-docker.adoc[Run with Docker]
