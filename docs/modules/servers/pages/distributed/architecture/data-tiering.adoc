@@ -1,0 +1,67 @@
+= Distributed James Server &mdash; Data tiering
+:navtitle: Data tiering
+
+Data tiering is the practice of storing data across different types of storage media based on its access
+frequency and performance needs, placing frequently used ("hot") data on fast storage and infrequently
+used ("cold") data on slower, cheaper storage.
+
+Using data tiering for your application optimizes performance and reduces costs by keeping frequently accessed
+data on fast storage and moving infrequently accessed data to cheaper, slower storage.
+
+Data tiering strategies do complement well data deduplication strategies.
+
+The Distributed James server transparently allow for data tiering by:
+
+ - Expiration of the data in the metadata database that is easily accessible from the object store
+
+This can be set up for mail headers. In `blob.properties`:
+
+....
+cache.cassandra.ttl=60d
+....
+
+This can also be set up for mail previews: In `jvm.properties`
+
+....
+james.jmap.preview.ttl=60d
+....
+
+For clearing the JMAP resynchronisation log: In `cassandra.properties`
+
+....
+email.change.ttl=60d
+mailbox.change.ttl=60d
+....
+
+And for the de-referencing attachments objects from the object store, that will be then be eligible for being
+garbage-collected: In `jvm.properties`
+
+....
+james.jmap.attachment.ttl=60d
+....
+
+Please note that Cassandra still retain metadata about the emails past this 60 day delay but this is minimal compared to
+the post-reception footprint.
+
+ - Tiering in the underlying object store.
+
+For instance:
+
+....
+aws s3api put-bucket-lifecycle-configuration --bucket nom-du-bucket --lifecycle-configuration '{
+"Rules": [
+  {
+    "ID": "MoveToGlacierAfterOneYear",
+      "Filter": {
+      "Prefix": ""
+    },
+    "Status": "Enabled",
+    "Transitions": [
+      {
+        "Days": 365,
+        "StorageClass": "GLACIER"
+      }
+    ]
+  }
+]}'
+....

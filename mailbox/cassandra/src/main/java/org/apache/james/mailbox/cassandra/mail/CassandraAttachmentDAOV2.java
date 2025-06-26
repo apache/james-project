@@ -33,7 +33,9 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Tabl
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.TYPE;
 
+import java.time.Duration;
 import java.util.Objects;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -45,16 +47,21 @@ import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.StringBackedAttachmentId;
+import org.apache.james.util.DurationParser;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.querybuilder.insert.RegularInsert;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentDAOV2 {
+    private static final Optional<Duration> TTL = Optional.ofNullable(System.getProperty("james.jmap.attachment.ttl", null))
+        .map(DurationParser::parse);
+
     public static class DAOAttachment {
         private final MessageId messageId;
         private final AttachmentId attachmentId;
@@ -171,14 +178,17 @@ public class CassandraAttachmentDAOV2 {
     }
 
     private PreparedStatement prepareInsert() {
+        RegularInsert insert = insertInto(TABLE_NAME)
+            .value(ID_AS_UUID, bindMarker(ID_AS_UUID))
+            .value(ID, bindMarker(ID))
+            .value(BLOB_ID, bindMarker(BLOB_ID))
+            .value(TYPE, bindMarker(TYPE))
+            .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
+            .value(SIZE, bindMarker(SIZE));
+
         return session.prepare(
-            insertInto(TABLE_NAME)
-                .value(ID_AS_UUID, bindMarker(ID_AS_UUID))
-                .value(ID, bindMarker(ID))
-                .value(BLOB_ID, bindMarker(BLOB_ID))
-                .value(TYPE, bindMarker(TYPE))
-                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-                .value(SIZE, bindMarker(SIZE))
+            TTL.map(ttl -> insert.usingTtl((int) ttl.toSeconds()))
+                .orElse(insert)
                 .build());
     }
 
