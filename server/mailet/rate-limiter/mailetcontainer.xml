@@ -101,7 +101,7 @@
         </processor>
 
         <processor state="relay" enableJmx="true">
-            <mailet matcher="All" class="GlobalRateLimit">
+            <mailet match="All" class="GlobalRateLimit">
                 <keyPrefix>myPrefix</keyPrefix>
                 <duration>1h</duration>
                 <precision>1h</precision>
@@ -111,7 +111,7 @@
                 <totalSize>2000M</totalSize>
                 <exceededProcessor>tooMuchMails</exceededProcessor>
             </mailet>
-            <mailet matcher="All" class="PerSenderRateLimit">
+            <mailet match="All" class="PerSenderRateLimit">
                 <keyPrefix>myPrefix</keyPrefix>
                 <duration>1h</duration>
                 <precision>1h</precision>
@@ -121,7 +121,7 @@
                 <totalSize>200M</totalSize>
                 <exceededProcessor>tooMuchMails</exceededProcessor>
             </mailet>
-            <mailet matcher="All" class="PerRecipientRateLimit">
+            <mailet match="All" class="PerRecipientRateLimit">
                 <keyPrefix>myPrefix</keyPrefix>
                 <duration>1h</duration>
                 <precision>1h</precision>
