@@ -101,7 +101,7 @@
         </processor>
 
         <processor state="relay" enableJmx="true">
-            <mailet matcher="All" class="PerSenderRateLimit">
+            <mailet match="All" class="PerSenderRateLimit">
                 <keyPrefix>myPrefix</keyPrefix>
                 <duration>1h</duration>
                 <precision>1h</precision>
