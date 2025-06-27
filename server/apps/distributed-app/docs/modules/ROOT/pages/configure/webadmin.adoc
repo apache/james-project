@@ -4,9 +4,9 @@
 The web administration supports for now the CRUD operations on the domains, the users, their mailboxes and their quotas,
 managing mail repositories, performing cassandra migrations, and much more, as described in the following sections.
 
-*WARNING*: This API allows authentication only via the use of JWT. If not
-configured with JWT, an administrator should ensure an attacker can not
-use this API.
+*WARNING*: This API supports authentication via a static password or JWT. If no
+authentication mechanism is configured, an administrator should ensure an attacker
+can not use this API.
 
 By the way, some endpoints are not filtered by authentication. Those endpoints are not related to data stored in James,
 for example: Swagger documentation & James health checks.
@@ -34,6 +34,29 @@ to get some examples and hints.
 
 | cors.origin
 | Specify ths CORS origin (default: null)
+
+| password
+| Uses a configured static value for authentication. It relies on the `Password` header.
+It supports several passwords, configured as a comma-separated list.
+
+....
+password=secretA,secretB,secretC
+....
+
+This allows requests with:
+
+....
+Password: secretA
+Password: secretB
+....
+
+But denies:
+
+....
+Password: secretD
+....
+
+Requests without the `Password` header are denied as well.
 
 | jwt.enable
 | Allow JSON Web Token as an authentication mechanism (default: false)
