@@ -30,6 +30,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSA
 import static org.apache.james.mailbox.cassandra.table.CassandraThreadLookupTable.MIME_MESSAGE_IDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraThreadLookupTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraThreadTable.USERNAME;
+import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.THREAD_ID;
 
 import java.util.Set;
 
@@ -39,6 +40,7 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
@@ -48,6 +50,7 @@ import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraThreadLookupDAO {
@@ -56,6 +59,7 @@ public class CassandraThreadLookupDAO {
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement insert;
     private final PreparedStatement select;
+    private final PreparedStatement selectAll;
     private final PreparedStatement delete;
 
     @Inject
@@ -64,35 +68,54 @@ public class CassandraThreadLookupDAO {
 
         insert = session.prepare(insertInto(TABLE_NAME)
             .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
+            .value(THREAD_ID, bindMarker(THREAD_ID))
             .value(USERNAME, bindMarker(USERNAME))
             .value(MIME_MESSAGE_IDS, bindMarker(MIME_MESSAGE_IDS))
             .build());
 
         select = session.prepare(selectFrom(TABLE_NAME)
             .columns(USERNAME, MIME_MESSAGE_IDS)
-            .where(column(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID)))
+            .where(column(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID)),
+                column(THREAD_ID).isEqualTo(bindMarker(THREAD_ID)))
+            .build());
+
+        selectAll = session.prepare(selectFrom(TABLE_NAME)
+            .columns(MESSAGE_ID)
+            .where(column(THREAD_ID).isEqualTo(bindMarker(THREAD_ID)))
             .build());
 
         delete = session.prepare(deleteFrom(TABLE_NAME)
-            .where(column(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID)))
+            .where(column(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID)),
+                column(THREAD_ID).isEqualTo(bindMarker(THREAD_ID)))
             .build());
     }
 
-    public Mono<Void> insert(MessageId messageId, Username username, Set<Integer> hashMimeMessageIds) {
+    public Mono<Void> insert(MessageId messageId, ThreadId threadId, Username username, Set<Integer> hashMimeMessageIds) {
         return executor.executeVoid(insert.bind()
             .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID)
+            .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID)
             .set(USERNAME, username.asString(), TypeCodecs.TEXT)
             .set(MIME_MESSAGE_IDS, hashMimeMessageIds, SET_OF_INTS_CODEC));
     }
 
-    public Mono<ThreadTablePartitionKey> selectOneRow(MessageId messageId) {
+    public Flux<MessageId> selectAll(ThreadId threadId) {
+        return executor.executeRows(
+                selectAll.bind()
+                    .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID))
+            .map(row -> CassandraMessageId.of(row.get(MESSAGE_ID, TypeCodecs.TIMEUUID)));
+    }
+
+    public Mono<ThreadTablePartitionKey> selectOneRow(ThreadId threadId, MessageId messageId) {
         return executor.executeSingleRow(
-                select.bind().set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID))
+                select.bind()
+                    .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID)
+                    .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID))
             .map(this::readRow);
     }
 
-    public Mono<Void> deleteOneRow(MessageId messageId) {
+    public Mono<Void> deleteOneRow(ThreadId threadId, MessageId messageId) {
         return executor.executeVoid(delete.bind()
+            .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID)
             .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID));
     }
 

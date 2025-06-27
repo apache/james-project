@@ -47,7 +47,8 @@ public interface CassandraThreadDataDefinition {
         .table(CassandraThreadLookupTable.TABLE_NAME)
         .comment("Thread table lookup by messageId, using for deletion thread data")
         .statement(statement -> types -> statement
-            .withPartitionKey(MESSAGE_ID, TIMEUUID)
+            .withPartitionKey(THREAD_ID, TIMEUUID)
+            .withClusteringColumn(MESSAGE_ID, TIMEUUID)
             .withColumn(USERNAME, TEXT)
             .withColumn(MIME_MESSAGE_IDS, frozenSetOf(INT)))
         .build();

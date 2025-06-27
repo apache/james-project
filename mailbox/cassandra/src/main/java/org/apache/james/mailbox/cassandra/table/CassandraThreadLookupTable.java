@@ -22,7 +22,7 @@ package org.apache.james.mailbox.cassandra.table;
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 
 public interface CassandraThreadLookupTable {
-    String TABLE_NAME = "thread_lookup_2";
+    String TABLE_NAME = "thread_lookup_3";
 
     CqlIdentifier MIME_MESSAGE_IDS = CqlIdentifier.fromCql("mimeMessageIds");
 }
