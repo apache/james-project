@@ -76,6 +76,16 @@
             <artifactId>commons-configuration2</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>5.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+            <version>5.3.4</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-to-slf4j</artifactId>
             <version>${log4j2.version}</version>
@@ -87,12 +97,12 @@
         <dependency>
             <groupId>org.opensearch.client</groupId>
             <artifactId>opensearch-java</artifactId>
-            <version>2.25.0</version>
+            <version>3.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.opensearch.client</groupId>
             <artifactId>opensearch-rest-client</artifactId>
-            <version>2.19.2</version>
+            <version>3.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
