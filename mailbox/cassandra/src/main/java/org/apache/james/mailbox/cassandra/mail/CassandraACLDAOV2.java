@@ -30,7 +30,6 @@ import jakarta.inject.Inject;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.cassandra.table.CassandraACLV2Table;
 import org.apache.james.mailbox.model.MailboxACL;
 
@@ -101,13 +100,13 @@ public class CassandraACLDAOV2 {
     public Mono<Void> delete(CassandraId cassandraId) {
         return executor.executeVoid(
             delete.bind()
-                .setUuid(CassandraACLTable.ID, cassandraId.asUuid()));
+                .setUuid(CassandraACLV2Table.ID, cassandraId.asUuid()));
     }
 
     public Mono<MailboxACL> getACL(CassandraId cassandraId) {
         return executor.executeRows(
                 read.bind()
-                    .set(CassandraACLTable.ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
+                    .set(CassandraACLV2Table.ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
             .map(Throwing.function(row -> {
                 MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.deserialize(row.getString(CassandraACLV2Table.KEY));
                 MailboxACL.Rfc4314Rights rights = row.getSet(CassandraACLV2Table.RIGHTS, String.class)
