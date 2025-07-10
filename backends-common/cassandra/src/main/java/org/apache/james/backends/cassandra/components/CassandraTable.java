@@ -24,6 +24,8 @@ import java.util.function.Function;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
@@ -33,6 +35,8 @@ import com.google.common.base.MoreObjects;
 import reactor.core.publisher.Mono;
 
 public class CassandraTable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraTable.class);
+
     public enum InitializationStatus {
         ALREADY_DONE,
         PARTIAL,
@@ -63,6 +67,8 @@ public class CassandraTable {
         if (keyspaceMetadata.getTable(name).isPresent()) {
             return Mono.just(InitializationStatus.ALREADY_DONE);
         }
+
+        LOGGER.info("Creating table {}", name);
 
         return Mono.from(session.executeReactive(createStatement.apply(typesProvider).build()
             .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(session))))

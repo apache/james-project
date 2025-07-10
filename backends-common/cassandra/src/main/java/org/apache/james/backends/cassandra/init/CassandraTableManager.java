@@ -23,6 +23,7 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 
@@ -30,6 +31,8 @@ import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraTable.InitializationStatus;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
@@ -40,6 +43,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class CassandraTableManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraTableManager.class);
 
     private final CqlSession session;
     private final CassandraDataDefinition module;
@@ -52,6 +56,11 @@ public class CassandraTableManager {
 
     public InitializationStatus initializeTables(CassandraTypesProvider typesProvider) {
         KeyspaceMetadata keyspaceMetadata = session.getMetadata().getKeyspaces().get(session.getKeyspace().get());
+
+        LOGGER.info("Enforcing the existance of the following tables: {}", module.moduleTables()
+            .stream()
+            .map(CassandraTable::getName)
+            .collect(Collectors.joining(", ")));
 
         return Flux.fromIterable(module.moduleTables())
             .flatMap(table -> table.initialize(keyspaceMetadata, session, typesProvider), DEFAULT_CONCURRENCY)
