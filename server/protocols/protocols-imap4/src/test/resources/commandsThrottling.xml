@@ -1,0 +1,14 @@
+<perSessionCommandThrottling>
+    <select>
+        <thresholdCount>25</thresholdCount>
+        <additionalDelayPerOperation>2ms</additionalDelayPerOperation>
+        <observationPeriod>10m</observationPeriod>
+        <maxDelay>1s</maxDelay>
+    </select>
+    <append>
+        <thresholdCount>5</thresholdCount>
+        <additionalDelayPerOperation>10ms</additionalDelayPerOperation>
+        <observationPeriod>5m</observationPeriod>
+        <maxDelay>2s</maxDelay>
+    </append>
+</perSessionCommandThrottling>
