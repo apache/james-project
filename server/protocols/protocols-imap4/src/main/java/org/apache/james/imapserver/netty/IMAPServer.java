@@ -343,7 +343,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                     literalSizeLimit, maxLineLength));
 
                 throttlerConfiguration.map(IMAPCommandsThrottler::new)
-                    .ifPresent(handler -> pipeline.addLast("commendThrottler", handler));
+                    .ifPresent(handler -> pipeline.addLast("commandThrottler", handler));
 
                 pipeline.addLast(CORE_HANDLER, createCoreHandler());
             }
