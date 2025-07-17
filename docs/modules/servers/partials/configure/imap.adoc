@@ -161,11 +161,11 @@ It uses the Keycloak OIDC provider, but usage of similar technologies is definit
 
 == Traffic Shaping
 
-James ships optional link:https://netty.io/4.0/api/io/netty/handler/traffic/ChannelTrafficShapingHandler.html[Netty built in Traffic Shaping] that can be optionally configured.
+James ships an optional link:https://netty.io/4.0/api/io/netty/handler/traffic/ChannelTrafficShapingHandler.html[Netty built in Traffic Shaping] that can be optionally configured.
 
 This enables both:
  - Record per channel bandwidth consumption
- - Allows defining per channel bandwidth limit, which helps at fairness and maintaining a good quality of service.
+ - Allows defining per channel bandwidth limit, which helps at fairness and maintaining a good quality of service in terms of incoming/outgoing bandwidth.
 
 Example:
 
@@ -184,6 +184,44 @@ Example:
 Those tags maps to the corresponding Netty argument.
 
 If omitted no traffic handle is added to the channel pipeline.
+
+== IMAP command throttler
+
+James ships an optional IMAP command throttler aimed at slowing down lower-quality clients that generate a high
+volume of requests. It allows per command granularity and is applied at the scope of an IMAP session.
+
+The user can declare the list of commands on which throttling needs to be tracked and for each:
+
+ - `thresholdCount`: below this number of occurrence, no throttling is applied. Integer.
+ - `additionalDelayPerOperation`: delay to be applied when exceeding the threshold. The delay is cumulative and thus
+ would always increase. Duration.
+ - `observationPeriod`: the count of observed commands is reset after this period thus stopping delays. Duration.
+ - `maxDelay`: maximum value the client will be delayed for.
+
+Sample configuration:
+
+....
+<imapserver>
+  <!-- ... -->
+  <perSessionCommandThrottling>
+    <select>
+      <thresholdCount>25</thresholdCount>
+      <additionalDelayPerOperation>2ms</additionalDelayPerOperation>
+      <observationPeriod>10m</observationPeriod>
+      <maxDelay>1s</maxDelay>
+    </select>
+    <append>
+      <thresholdCount>5</thresholdCount>
+      <additionalDelayPerOperation>10ms</additionalDelayPerOperation>
+      <observationPeriod>5m</observationPeriod>
+      <maxDelay>2s</maxDelay>
+    </append>
+  </perSessionCommandThrottling>
+</imapserver>
+....
+
+Note that commands are delayed prior the execution and thus are not subject to the IMAP upper concurrency limit until
+they are executed.
 
 == Extending IMAP
 
