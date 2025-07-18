@@ -22,7 +22,6 @@ package org.apache.james.backends.opensearch;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
-import org.opensearch.client.RestClient;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch.cluster.HealthRequest;
 import org.opensearch.client.opensearch.cluster.HealthResponse;
@@ -58,11 +57,9 @@ import reactor.core.scheduler.Schedulers;
 
 public class ReactorOpenSearchClient implements AutoCloseable {
     private final OpenSearchAsyncClient client;
-    private final RestClient lowLevelRestClient;
 
-    public ReactorOpenSearchClient(OpenSearchAsyncClient client, RestClient lowLevelRestClient) {
+    public ReactorOpenSearchClient(OpenSearchAsyncClient client) {
         this.client = client;
-        this.lowLevelRestClient = lowLevelRestClient;
     }
 
     public Mono<BulkResponse> bulk(BulkRequest bulkRequest) throws IOException {
@@ -79,10 +76,6 @@ public class ReactorOpenSearchClient implements AutoCloseable {
 
     public Mono<DeleteByQueryResponse> deleteByQuery(DeleteByQueryRequest deleteRequest) throws IOException {
         return toReactor(client.deleteByQuery(deleteRequest));
-    }
-
-    public RestClient getLowLevelClient() {
-        return lowLevelRestClient;
     }
 
     public <T> Mono<IndexResponse> index(IndexRequest<T> indexRequest) throws IOException {
@@ -127,7 +120,7 @@ public class ReactorOpenSearchClient implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        lowLevelRestClient.close();
+        client._transport().close();
     }
 
     private static <T> Mono<T> toReactor(CompletableFuture<T> async) {

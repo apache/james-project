@@ -264,8 +264,8 @@ public class IndexCreationFactory {
 
         private IndexSettings generateSetting() {
             return new IndexSettings.Builder()
-                .numberOfShards(Integer.toString(nbShards))
-                .numberOfReplicas(Integer.toString(nbReplica))
+                .numberOfShards(nbShards)
+                .numberOfReplicas(nbReplica)
                 .analysis(new IndexSettingsAnalysis.Builder()
                     .normalizer(CASE_INSENSITIVE, new Normalizer.Builder()
                         .custom(generateNormalizer())
