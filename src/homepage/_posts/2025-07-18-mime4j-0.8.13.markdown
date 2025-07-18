@@ -1,0 +1,25 @@
+---
+layout: post
+title:  "Apache James MIME4J 0.8.13"
+date:   2025-07-18  03:16:30 +0200
+categories: james update
+---
+
+The Apache James developers are pleased to announce the 0.8.13 release of the MIME4J library.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+The full changes included in this release can be seen in the [CHANGELOG][CHANGELOG].
+
+This release adds the following features:
+
+ - MIME4J-332 Improve handling of "sectioned" field names
+ - MIME4J-331 Add support for RFC-6532 Internationalized Email Headers, and test it. (#114)
+ - MIME4J-330 Fix MimeStreamParser bug: part body stream ends with CR
+
+
+The Apache James PMC would like to thanks all contributors who made this release possible!
+
+[CHANGELOG]: https://github.com/apache/james-mime4j/blob/master/CHANGELOG.md
+[tracker]: https://issues.apache.org/jira/browse/MIME4J
+[download]: https://james.apache.org/download.cgi#Apache_Mime4J
