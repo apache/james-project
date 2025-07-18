@@ -54,6 +54,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
 
     // TODO: this should be configurable
     private static final int MAX_FAILURES = 3;
+    public static final String PROTOCOL_NAME = "IMAP";
     private ImapConfiguration imapConfiguration;
 
     private final PathConverter.Factory pathConverterFactory;
@@ -87,6 +88,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                 try {
                     final MailboxSession mailboxSession = getMailboxManager().authenticate(authenticationAttempt.getAuthenticationId(),
                         authenticationAttempt.getPassword())
+                        .forProtocol(PROTOCOL_NAME)
                         .withoutDelegation();
                     session.authenticated();
                     session.setMailboxSession(mailboxSession);
@@ -94,7 +96,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                     AuditTrail.entry()
                         .username(() -> mailboxSession.getUser().asString())
                         .sessionId(() -> session.sessionId().asString())
-                        .protocol("IMAP")
+                        .protocol(PROTOCOL_NAME)
                         .action("AUTH")
                         .log("IMAP Authentication succeeded.");
                     okComplete(request, responder);
@@ -103,7 +105,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                     authFailure = true;
                     AuditTrail.entry()
                         .username(() -> authenticationAttempt.getAuthenticationId().asString())
-                        .protocol("IMAP")
+                        .protocol(PROTOCOL_NAME)
                         .action("AUTH")
                         .log("IMAP Authentication failed because of bad credentials.");
                 }
@@ -127,6 +129,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         Username otherUser = authenticationAttempt.getDelegateUserName().orElseThrow();
         doAuthWithDelegation(() -> getMailboxManager()
                 .authenticate(givenUser, authenticationAttempt.getPassword())
+                .forProtocol(PROTOCOL_NAME)
                 .as(otherUser),
             session,
             request, responder,
@@ -146,7 +149,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                     .map(Username::asString)
                     .orElse(""))
                 .sessionId(() -> session.sessionId().asString())
-                .protocol("IMAP")
+                .protocol(PROTOCOL_NAME)
                 .action("AUTH")
                 .remoteIP(() -> Optional.ofNullable(session.getRemoteAddress()))
                 .parameters(() -> ImmutableMap.of("delegatorUser", mailboxSession.getUser().asString()))
@@ -156,7 +159,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         } catch (BadCredentialsException e) {
             AuditTrail.entry()
                 .username(authenticateUser::asString)
-                .protocol("IMAP")
+                .protocol(PROTOCOL_NAME)
                 .action("AUTH")
                 .remoteIP(() -> Optional.ofNullable(session.getRemoteAddress()))
                 .parameters(() -> ImmutableMap.of("delegatorUser", delegatorUser.asString()))
@@ -169,7 +172,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
             LOGGER.info("Delegate forbidden", e);
             AuditTrail.entry()
                 .username(authenticateUser::asString)
-                .protocol("IMAP")
+                .protocol(PROTOCOL_NAME)
                 .action("AUTH")
                 .parameters(() -> ImmutableMap.of("delegatorUser", delegatorUser.asString()))
                 .log("IMAP Authentication with delegation failed because of non existing delegation.");

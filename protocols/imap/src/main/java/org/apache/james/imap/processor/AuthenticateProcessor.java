@@ -68,6 +68,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     private static final String AUTH_TYPE_XOAUTH2 = "XOAUTH2";
     private static final List<Capability> OAUTH_CAPABILITIES = ImmutableList.of(Capability.of("AUTH=" + AUTH_TYPE_OAUTHBEARER), Capability.of("AUTH=" + AUTH_TYPE_XOAUTH2));
     public static final Capability SASL_CAPABILITY = Capability.of("SASL-IR");
+    public static final String PROTOCOL_NAME = "SMTP";
 
     @Inject
     public AuthenticateProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
@@ -218,6 +219,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 if (!associatedUser.equals(authenticatedUser)) {
                     doAuthWithDelegation(() -> getMailboxManager()
                             .authenticate(authenticatedUser)
+                            .forProtocol(PROTOCOL_NAME)
                             .as(associatedUser),
                         session, request, responder, authenticatedUser, associatedUser);
                 } else {

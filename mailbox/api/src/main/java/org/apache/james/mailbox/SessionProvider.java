@@ -26,6 +26,10 @@ import org.apache.james.mailbox.exception.MailboxException;
 
 public interface SessionProvider {
     interface AuthorizationStep {
+        default AuthorizationStep forProtocol(String protocolName) {
+            return this;
+        }
+
         MailboxSession as(Username other) throws MailboxException;
 
         MailboxSession withoutDelegation() throws MailboxException;
