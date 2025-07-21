@@ -53,10 +53,6 @@ public class ArgumentParser {
         this.validatePutSize = validatePutSize;
     }
 
-    public String getAdvertisedCapabilities() {
-        return core.getAdvertisedCapabilities();
-    }
-
     public String capability(Session session, String args) {
         if (!args.trim().isEmpty()) {
             return "NO \"Too many arguments: " + args + "\"";

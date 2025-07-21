@@ -129,8 +129,8 @@ public class ManageSieveProcessor {
         return "NO unknown " + command + " command";
     }
 
-    public String getAdvertisedCapabilities() {
-        return argumentParser.getAdvertisedCapabilities();
+    public String getAdvertisedCapabilities(Session session) {
+        return argumentParser.capability(session, "") + "\r\n";
     }
 
 }
