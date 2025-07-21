@@ -21,12 +21,14 @@ package org.apache.james.managesieveserver.netty;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
+import java.util.Optional;
 
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.transcode.NotEnoughDataException;
 import org.apache.james.managesieve.util.SettableSession;
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.protocols.netty.Encryption;
 import org.slf4j.Logger;
@@ -51,12 +53,14 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
     private final ManageSieveProcessor manageSieveProcessor;
     private final Encryption secure;
     private final int maxLineLength;
+    private final Optional<OidcSASLConfiguration> oidcConfiguration;
 
     public ManageSieveChannelUpstreamHandler(
-        ManageSieveProcessor manageSieveProcessor, Encryption secure, int maxLineLength) {
+        ManageSieveProcessor manageSieveProcessor, Encryption secure, int maxLineLength, Optional<OidcSASLConfiguration> oidcConfiguration) {
         this.manageSieveProcessor = manageSieveProcessor;
         this.secure = secure;
         this.maxLineLength = maxLineLength;
+        this.oidcConfiguration = oidcConfiguration;
     }
 
     private boolean isSSL() {
@@ -146,13 +150,14 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
             LOGGER.info("Connection established from {}", address.getAddress().getHostAddress());
 
             Session session = new SettableSession();
+            session.setOidcSASLConfiguration(this.oidcConfiguration);
             if (isSSL()) {
                 session.setSslEnabled(true);
             }
             ctx.channel().attr(NettyConstants.SESSION_ATTRIBUTE_KEY).set(session);
             ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).set(new ChannelManageSieveResponseWriter(ctx.channel()));
             super.channelActive(ctx);
-            ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get().write(manageSieveProcessor.getAdvertisedCapabilities() + "OK\r\n");
+            ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get().write(manageSieveProcessor.getAdvertisedCapabilities(session));
         }
     }
 

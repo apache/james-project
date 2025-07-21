@@ -20,9 +20,12 @@
 
 package org.apache.james.managesieve.util;
 
+import java.util.Optional;
+
 import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.commands.Authenticate;
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 
 public class SettableSession implements Session {
 
@@ -30,6 +33,7 @@ public class SettableSession implements Session {
     private State state;
     private Authenticate.SupportedMechanism choosedAuthenticationMechanism;
     private boolean sslEnabled;
+    private Optional<OidcSASLConfiguration> oidcSASLConfiguration = Optional.empty();
 
     public SettableSession() {
         this.state = State.UNAUTHENTICATED;
@@ -79,5 +83,15 @@ public class SettableSession implements Session {
     @Override
     public boolean isSslEnabled() {
         return sslEnabled;
+    }
+
+    @Override
+    public Optional<OidcSASLConfiguration> getOidcSASLConfiguration() {
+        return this.oidcSASLConfiguration;
+    }
+
+    @Override
+    public void setOidcSASLConfiguration(Optional<OidcSASLConfiguration> configuration) {
+        this.oidcSASLConfiguration = configuration;
     }
 }

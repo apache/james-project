@@ -30,7 +30,7 @@ import org.apache.james.managesieve.api.UnknownSaslMechanism;
 public interface Authenticate {
 
     enum SupportedMechanism {
-        PLAIN;
+        PLAIN, XOAUTH2;
 
         public static SupportedMechanism retrieveMechanism(String serializedData) throws UnknownSaslMechanism {
             for (SupportedMechanism supportedMechanism : SupportedMechanism.values()) {

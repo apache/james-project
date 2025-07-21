@@ -20,8 +20,11 @@
 
 package org.apache.james.managesieve.api;
 
+import java.util.Optional;
+
 import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.commands.Authenticate;
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 
 public interface Session {
 
@@ -51,4 +54,7 @@ public interface Session {
 
     boolean isSslEnabled();
 
+    Optional<OidcSASLConfiguration> getOidcSASLConfiguration();
+
+    void setOidcSASLConfiguration(Optional<OidcSASLConfiguration> configuration);
 }
