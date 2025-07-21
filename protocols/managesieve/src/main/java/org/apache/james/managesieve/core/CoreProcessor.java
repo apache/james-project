@@ -22,7 +22,6 @@ package org.apache.james.managesieve.core;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,6 @@ import org.apache.james.user.api.UsersRepository;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class CoreProcessor implements CoreCommands {
@@ -84,11 +82,6 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-    public String getAdvertisedCapabilities() {
-        return convertCapabilityMapToString(capabilitiesBase) + "\r\n";
-    }
-
-    @Override
     public String capability(Session session) {
         return convertCapabilityMapToString(computeCapabilityMap(session)) + "\r\nOK";
     }
@@ -106,6 +99,10 @@ public class CoreProcessor implements CoreCommands {
         if (session.isAuthenticated()) {
             capabilities.put(Capabilities.OWNER, session.getUser().asString());
         }
+        session.getOidcSASLConfiguration().ifPresent(oidcConfiguration -> {
+            this.authenticationProcessorMap.putIfAbsent(SupportedMechanism.XOAUTH2, new XOAUTH2AuthenticationProcessor(oidcConfiguration));
+        });
+        capabilities.put(Capabilities.SASL, constructSaslSupportedAuthenticationMechanisms());
         return capabilities;
     }
 
@@ -218,6 +215,9 @@ public class CoreProcessor implements CoreCommands {
             }
             String unquotedMechanism = ParserUtils.unquoteFirst(mechanism);
             SupportedMechanism supportedMechanism = SupportedMechanism.retrieveMechanism(unquotedMechanism);
+            if (!this.authenticationProcessorMap.containsKey(supportedMechanism)) {
+                throw new UnknownSaslMechanism("SASL mechanism disabled: " + unquotedMechanism);
+            }
 
             session.setChoosedAuthenticationMechanism(supportedMechanism);
             session.setState(Session.State.AUTHENTICATION_IN_PROGRESS);
@@ -328,7 +328,6 @@ public class CoreProcessor implements CoreCommands {
         Map<Capabilities, String> capabilitiesBase = new HashMap<>();
         capabilitiesBase.put(Capabilities.IMPLEMENTATION, IMPLEMENTATION_DESCRIPTION);
         capabilitiesBase.put(Capabilities.VERSION, MANAGE_SIEVE_VERSION);
-        capabilitiesBase.put(Capabilities.SASL, constructSaslSupportedAuthenticationMechanisms());
         capabilitiesBase.put(Capabilities.STARTTLS, null);
         if (!extensions.isEmpty()) {
             capabilitiesBase.put(Capabilities.SIEVE, extensions);
@@ -337,10 +336,12 @@ public class CoreProcessor implements CoreCommands {
     }
 
     private String constructSaslSupportedAuthenticationMechanisms() {
-        return Joiner.on(' ')
-            .join(Lists.transform(
-                Arrays.asList(SupportedMechanism.values()),
-                Enum::toString));
+        return Joiner.on(' ').join(this.authenticationProcessorMap
+            .keySet()
+            .stream()
+            .map(Enum::toString)
+            .iterator()
+        );
     }
 
     private String sanitizeString(String message) {
