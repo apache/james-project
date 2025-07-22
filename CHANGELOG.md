@@ -12,7 +12,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - API change: CassandraModule and all associated Cassandra*Module were renamed to CassandraDataDefinition and Cassandra*DataDefinition respectively.
  - API change : Mailet API has been cleaned up and no longer exposes the mailet config, exposing only the mailet's name instead.
  - API change : GenericMailet can have its config bound by constructor and this is the preferred way to initialize your mailets. `init` is still called but will eventually be removed in a later release. 
- 
+ - JAMES-2586: A performant Postgres based implementation of Apache James. Usable in a standalone context but can scale as well with components like RabbitMQ, OpenSearch and S3.
+
 ### Removals
 
  - JAMES-3946 WhiteList manager removals (#2299)
@@ -40,6 +41,10 @@ Please use RFC-8621 implementation rather than this outdated draft.
 - [UPGRADE] Logback 1.5.12 -> 1.5.15 (#2581)
 - Bump commons-io to 2.17.0
 - [S3 Metrics] Allow to customize S3 metrics prefix
+- Upgrade jdkim library to 0.5
+- JAMES-4104 [webadmin] Migrate from unmaintained SparkJava to active fork
+
+The project also bumped dependencies to their latest version as of June 2025.
 
 ### New Features
 
@@ -82,6 +87,7 @@ Please use RFC-8621 implementation rather than this outdated draft.
 - JAMES-4069 Healthcheck for IMAP (#2401)
 - JAMES-4068 Have several health checks in one rest calls (#2399)
 - JAMES-3824 SMTP Extension for Message Transfer Priorities
+- JAMES-4100 JMAP SearchSnippet/get implementation
 
 ### Improvements
  
@@ -247,6 +253,28 @@ Please use RFC-8621 implementation rather than this outdated draft.
  - JAMES-4052 Add optional user property to OpenSearch index (#2363)
  - JAMES-4052 Add quota details in quota indexed for enhanced dashboarding (#2361)
  - [IMPROVEMENT] JMAP use search index relevance as default sort
+ - [ENHANCEMENT] Log cassandra table informations
+ - [ENHANCEMENT] Add a simpler password mechanism to webadmin (#2759)
+ - JAMES-3754 Relax Id command parsing (#2758)
+ - [ENAHNCEMENT] Implement a MaxConnectionLifespanHandler SMTP handler
+ - [ENHANCEMENT] DKIMVerify outputs logs and machine readable attributes
+ - [ENHANCEMENT] Include filename in search snippet
+ - JAMES-4135 Add the possibility to add custom IndexSettings to MailboxMappingFactory
+ - JAMES-4316 Allow deleting all groups + management by mspping source
+ - JAMES-3693 Redis clustering enhancements
+ - JAMES-4057 Match attachment against file extensions (#2731)
+ - JAMES-3539 Types field in push subscription should accept null value (#2723) and WebPushClient should accept more flexible 20x codes from Push server
+ - JAMES-5431 add SanitizeMimeMessageId mailet  (#2718)
+ - JAMES-4131 Configure a fallback bucket for S3 (#2719)
+ - JAMES-2182 IMAP processors should catch InsufficientRightsException
+ - [FIX] DSNBounce should add Auto-Submitted: auto-replied header (#2717)
+ - JAMES-3819 Give tools to enforce RFC-8461 MTA-STS (#2697)
+ - [ENHANCEMENT] JMAP MDC: make the original IP header configurable
+ - [JAMES-4119] Core data migration tool from JPA to Postgres
+ - JAMES-4115 FileMailRepository: drop cacheKey & refactor (#2662)
+ - JAMES-4117 JMAP - Email/set create - support blobId in htmlBody + textBody properties (#2661)
+ - JAMES-3962 JMAP Email/set: move `EmailHeader[]` from `bodyValues` to `htmlBody`/`textBody` (#2659)
+ - JAMES-3788 Allow configuring if Proxy or SSL frames should be handled… (#2634)
 
 ### Performance
 
@@ -278,11 +306,18 @@ Please use RFC-8621 implementation rather than this outdated draft.
  - [PERF] Avoid triggering quota updates on message move
  - [PERF] Leverage grouped events in order to reduce RabbitMQ chatter and aggregate JMAP changes
  - Mertics for Websocket usage
-
+ - JAMES-3516 Rely on Cassandra for Thread lookups (#2750)
+ - Improve IMAP partial body fetch (#2740)
+ - [ENHANCEMENT] Allow setting a preview for TTL
+ - [ENHANCEMENT] Document data tiering for Apache James distributed server
 
 ### Build
 
  - Publish build scans to develocity.apache.org
+
+### Removal
+
+ - [DROP] Remove Linshare third party connector (#2613
 
 ## [Unreleased 3.8.x]
 
