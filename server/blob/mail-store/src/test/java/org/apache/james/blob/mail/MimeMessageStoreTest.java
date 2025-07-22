@@ -23,6 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import jakarta.mail.internet.MimeMessage;
@@ -34,6 +38,11 @@ import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.server.core.MailHeaders;
+import org.apache.james.server.core.MimeMessageInputStream;
+import org.apache.james.server.core.MimeMessageInputStreamSource;
+import org.apache.james.server.core.MimeMessageSource;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.james.util.MimeMessageUtil;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,6 +109,31 @@ class MimeMessageStoreTest {
 
         assertThatThrownBy(() -> testee.read(parts).block())
             .isInstanceOf(ObjectNotFoundException.class);
+    }
+
+    @Test
+    void shouldSupportStoringMimeMessageWrapperWithLFInHeaders() {
+        MimeMessageSource mimeMessageSource =new MimeMessageSource() {
+            private byte[] bytes = "h1: v1\nh2: v2\r\n\r\nkrd2\r\nuhwevre\r\n".getBytes(StandardCharsets.UTF_8);
+
+            @Override
+            public String getSourceId() {
+                return "ABC";
+            }
+
+            @Override
+            public InputStream getInputStream() {
+                return new ByteArrayInputStream(bytes);
+            }
+
+            @Override
+            public long getMessageSize() {
+                return bytes.length;
+            }
+        };
+        MimeMessage message = new MimeMessageWrapper(mimeMessageSource);
+
+        assertThatCode(() -> testee.save(message).block()).doesNotThrowAnyException();
     }
 
     @Test
