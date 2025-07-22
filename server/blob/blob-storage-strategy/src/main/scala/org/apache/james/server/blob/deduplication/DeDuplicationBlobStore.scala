@@ -19,22 +19,26 @@
 
 package org.apache.james.server.blob.deduplication
 
+import java.io.InputStream
+import java.util.Locale
+import java.util.concurrent.Callable
+
 import com.google.common.base.Preconditions
-import com.google.common.hash.{HashCode, Hashing, HashingInputStream}
+import com.google.common.hash.{Hashing, HashingInputStream}
 import com.google.common.io.{BaseEncoding, ByteSource, FileBackedOutputStream}
 import jakarta.inject.{Inject, Named}
+import org.apache.commons.codec.digest.Blake3
 import org.apache.commons.io.IOUtils
 import org.apache.james.blob.api.BlobStore.BlobIdProvider
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
-import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore.THREAD_SWITCH_THRESHOLD
+import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore.HashAlgorithms.{BLAKE3, HashAlgorithm, SHA256}
+import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore.{HashAlgorithms, THREAD_SWITCH_THRESHOLD}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.{Flux, Mono}
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.util.function.Tuples
 
-import java.io.InputStream
-import java.util.concurrent.Callable
 import scala.compat.java8.FunctionConverters._
 
 object DeDuplicationBlobStore {
@@ -58,6 +62,18 @@ object DeDuplicationBlobStore {
     case _ =>
       throw new IllegalArgumentException("Unknown encoding type: " + encodingType)
   }
+
+  object HashAlgorithms extends Enumeration {
+    type HashAlgorithm = Value
+
+    val SHA256, BLAKE3 = Value
+
+    def from(value: String): HashAlgorithm = value.toLowerCase(Locale.US) match {
+      case "sha256" => SHA256
+      case "blake3" => BLAKE3
+      case _ => throw new IllegalArgumentException("Unsupported hashing algorithm: " + value)
+    }
+  }
 }
 
 class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
@@ -67,6 +83,11 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   private val HASH_BLOB_ID_ENCODING_TYPE_PROPERTY = "james.blob.id.hash.encoding"
   private val HASH_BLOB_ID_ENCODING_DEFAULT = BaseEncoding.base64Url
   private val baseEncoding = Option(System.getProperty(HASH_BLOB_ID_ENCODING_TYPE_PROPERTY)).map(DeDuplicationBlobStore.baseEncodingFrom).getOrElse(HASH_BLOB_ID_ENCODING_DEFAULT)
+  private val HASH_ALGORITHM_PROPERTY = "james.deduplicating.blobstore.hash.algorithm"
+  private lazy val hashAlgorithm: HashAlgorithm = Option(System.getProperty(HASH_ALGORITHM_PROPERTY))
+    .map(HashAlgorithms.from)
+    .getOrElse(SHA256)
+  private lazy val BLAKE3_OUTPUT_BYTES_SIZE = 16
 
   override def save(bucketName: BucketName, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     save(bucketName, data, withBlobIdFromArray, storagePolicy)
@@ -101,17 +122,29 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   }
 
   private def withBlobId: BlobIdProvider[InputStream] = data => {
-    val hashingInputStream = new HashingInputStream(Hashing.sha256, data)
-    val ressourceSupplier: Callable[FileBackedOutputStream] = () => new FileBackedOutputStream(DeDuplicationBlobStore.FILE_THRESHOLD)
-    val sourceSupplier: FileBackedOutputStream => Mono[(BlobId, InputStream)] =
-      (fileBackedOutputStream: FileBackedOutputStream) =>
-        SMono.fromCallable(() => {
-          IOUtils.copy(hashingInputStream, fileBackedOutputStream)
-          (blobIdFactory.of(base64(hashingInputStream.hash)), fileBackedOutputStream.asByteSource.openStream())
-        }).asJava()
+    val resourceSupplier: Callable[FileBackedOutputStream] = () => new FileBackedOutputStream(DeDuplicationBlobStore.FILE_THRESHOLD)
+    val sourceSupplier: FileBackedOutputStream => Mono[(BlobId, InputStream)] = hashAlgorithm match {
+      case SHA256 =>
+        val hashingInputStream = new HashingInputStream(Hashing.sha256, data)
+        (fileBackedOutputStream: FileBackedOutputStream) =>
+          SMono.fromCallable(() => {
+              IOUtils.copy(hashingInputStream, fileBackedOutputStream)
+              (blobIdFactory.of(base64(hashingInputStream.hash.asBytes())), fileBackedOutputStream.asByteSource.openStream())
+            })
+            .asJava()
+
+      case BLAKE3 =>
+        (fileBackedOutputStream: FileBackedOutputStream) =>
+          SMono.fromCallable(() => {
+              IOUtils.copy(data, fileBackedOutputStream)
+              val blake3HashOutput: Array[Byte] = Blake3.initHash.update(fileBackedOutputStream.asByteSource().read()).doFinalize(BLAKE3_OUTPUT_BYTES_SIZE)
+              (blobIdFactory.of(base64(blake3HashOutput)), fileBackedOutputStream.asByteSource.openStream())
+            })
+            .asJava()
+    }
 
     Mono.using[(BlobId, InputStream),FileBackedOutputStream](
-      ressourceSupplier,
+      resourceSupplier,
       sourceSupplier.asJava,
       ((fileBackedOutputStream: FileBackedOutputStream) => fileBackedOutputStream.reset()).asJava,
       DeDuplicationBlobStore.LAZY_RESOURCE_CLEANUP)
@@ -120,30 +153,42 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   }
 
   private def withBlobIdFromByteSource: BlobIdProvider[ByteSource] =
-    data => Mono.fromCallable(() => data.hash(Hashing.sha256()))
+    data => hashByteSource(data)
       .subscribeOn(Schedulers.boundedElastic())
       .map(base64)
       .map(blobIdFactory.of)
       .map(blobId => Tuples.of(blobId, data))
 
+  private def hashByteSource(data: ByteSource): Mono[Array[Byte]] =
+    Mono.fromCallable(() => hashAlgorithm match {
+      case SHA256 =>
+        data.hash(Hashing.sha256()).asBytes()
+      case BLAKE3 =>
+        Blake3.initHash.update(data.read()).doFinalize(BLAKE3_OUTPUT_BYTES_SIZE)
+    })
+
   private def withBlobIdFromArray: BlobIdProvider[Array[Byte]] = data => {
     if (data.length < THREAD_SWITCH_THRESHOLD) {
-      val code = Hashing.sha256.hashBytes(data)
-      val blobId = blobIdFactory.of(base64(code))
+      val blobId = blobIdFactory.of(base64(hashBytes(data)))
       Mono.just(Tuples.of(blobId, data))
     } else {
       SMono.fromCallable(() => {
-        val code = Hashing.sha256.hashBytes(data)
-        val blobId = blobIdFactory.of(base64(code))
+        val blobId = blobIdFactory.of(base64(hashBytes(data)))
         Tuples.of(blobId, data)
       })
     }
   }
 
-  private def base64(hashCode: HashCode) = {
-    val bytes = hashCode.asBytes
+  private def hashBytes(data: Array[Byte]): Array[Byte] =
+    hashAlgorithm match {
+      case SHA256 =>
+        Hashing.sha256.hashBytes(data).asBytes()
+      case BLAKE3 =>
+        Blake3.initHash.update(data).doFinalize(BLAKE3_OUTPUT_BYTES_SIZE)
+    }
+
+  private def base64(bytes: Array[Byte]): String =
     baseEncoding.encode(bytes)
-  }
 
   override def save(bucketName: BucketName,
                     data: InputStream,

@@ -57,11 +57,13 @@ public interface DeduplicationBlobStoreContract {
     @BeforeEach
     default void beforeEach() {
         System.clearProperty("james.blob.id.hash.encoding");
+        System.clearProperty("james.deduplicating.blobstore.hash.algorithm");
     }
 
     @AfterEach
     default void afterEach() {
         System.clearProperty("james.blob.id.hash.encoding");
+        System.clearProperty("james.deduplicating.blobstore.hash.algorithm");
     }
 
     @Test
@@ -97,6 +99,19 @@ public interface DeduplicationBlobStoreContract {
 
     @ParameterizedTest
     @MethodSource("storagePolicies")
+    default void saveShouldReturnBlobIdWhenBlake3HashingAlgorithm(BlobStore.StoragePolicy storagePolicy) {
+        System.setProperty("james.deduplicating.blobstore.hash.algorithm", "blake3");
+
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
+
+        BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy)).block();
+
+        assertThat(blobId).isEqualTo(blobIdFactory().parse("wg7yZXXjLIohYzL4OfBBEg=="));
+    }
+
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
     default void saveShouldReturnBlobIdOfInputStream(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
@@ -106,5 +121,16 @@ public interface DeduplicationBlobStoreContract {
         // and thus might be duplicated in the store. No data can be lost since no api allows for externally deterministic blob id construction
         // before this change.
         assertThat(blobId).isEqualTo(blobIdFactory().of("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
+    }
+
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void saveShouldReturnBlobIdOfInputStreamWhenBlake3HashingAlgorithm(BlobStore.StoragePolicy storagePolicy) {
+        System.setProperty("james.deduplicating.blobstore.hash.algorithm", "blake3");
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
+
+        BlobId blobId = Mono.from(store.save(defaultBucketName, new ByteArrayInputStream(SHORT_BYTEARRAY), storagePolicy)).block();
+        assertThat(blobId).isEqualTo(blobIdFactory().of("wg7yZXXjLIohYzL4OfBBEg=="));
     }
 }

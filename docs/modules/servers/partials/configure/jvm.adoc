@@ -212,6 +212,18 @@ james.deduplicating.blobstore.thread.switch.threshold=32768
 james.deduplicating.blobstore.file.threshold=10240
 ----
 
+== Change hashing algorithm of deduplication blob store
+
+The property `james.deduplicating.blobstore.hash.algorithm` allows to change the hashing algorithm.
+The support value are: `sha256`, `blake3`.
+
+Ex in `jvm.properties`
+----
+james.deduplicating.blobstore.hash.algorithm=sha256
+----
+
+Optional. String. By default, the deduplication blob store uses SHA-256 as the hashing algorithm.
+
 == Allow users to have rights for shares of different domain
 
 Typically, preventing users to obtain rights for shares of another domain is a useful security layer.
