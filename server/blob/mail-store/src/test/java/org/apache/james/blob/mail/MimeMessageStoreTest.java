@@ -108,7 +108,7 @@ class MimeMessageStoreTest {
 
     @Test
     void shouldSupportStoringMimeMessageWrapperWithLFInHeaders() {
-        MimeMessageSource mimeMessageSource =new MimeMessageSource() {
+        MimeMessageSource mimeMessageSource = new MimeMessageSource() {
             private byte[] bytes = "h1: v1\nh2: v2\r\n\r\nkrd2\r\nuhwevre\r\n".getBytes(StandardCharsets.UTF_8);
 
             @Override
