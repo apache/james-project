@@ -92,8 +92,6 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
-        checkContentSize(content);
-
         return Mono.fromCallable(() -> {
                 try {
                     return content.read();
@@ -101,17 +99,19 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
                     throw new ObjectStoreIOException("IOException occured", e);
                 }
             })
+            .map(bytes -> checkContentSize(content, bytes))
             .flatMap(bytes -> save(bucketName, blobId, bytes));
     }
 
-    private static void checkContentSize(ByteSource content) {
-        try (InputStream stream = content.openStream()) {
+    private static byte[] checkContentSize(ByteSource content, byte[] bytes) {
+        try {
             long preComputedSize = content.size();
-            long realSize = IOUtils.consume(stream);
+            long realSize = bytes.length;
             Preconditions.checkArgument(content.size() == realSize,
                 "Difference in size between the pre-computed content can cause other blob stores to fail thus we need to test for alignment. Expecting " + realSize + " but pre-computed size was " + preComputedSize);
+            return bytes;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ObjectStoreIOException("IOException occured", e);
         }
     }
 
