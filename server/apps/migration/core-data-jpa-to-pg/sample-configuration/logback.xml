@@ -29,9 +29,14 @@
                         <immediateFlush>false</immediateFlush>
                 </encoder>
         </appender>
-        <root level="WARN">
+
+        <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
                 <appender-ref ref="CONSOLE" />
                 <appender-ref ref="LOG_FILE" />
+        </appender>
+
+        <root level="WARN">
+                <appender-ref ref="ASYNC" />
         </root>
 
         <logger name="org.apache.james" level="INFO" />
