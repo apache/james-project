@@ -132,6 +132,30 @@ public class VacationMailetTest {
     }
 
     @Test
+    public void activateVacationShouldSendNotificationAsUserWhenUseUserAsMailFrom() throws Exception {
+        when(vacationService.retrieveVacation(AccountId.fromString(USERNAME)))
+            .thenReturn(Mono.just(VACATION));
+        when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
+        when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
+        when(vacationService.isNotificationRegistered(ACCOUNT_ID, recipientId)).thenReturn(Mono.just(false));
+
+
+        testee.init(FakeMailetConfig.builder()
+            .mailetName("vacation")
+            .mailetContext(mailetContext)
+            .setProperty("useUserAsMailFrom", "true")
+            .build());
+
+        testee.service(mail);
+
+        verify(mailetContext).sendMail(eq(originalRecipient), eq(ImmutableList.of(originalSender)), any());
+        verify(vacationService).retrieveVacation(AccountId.fromString(USERNAME));
+        verify(vacationService).isNotificationRegistered(ACCOUNT_ID, recipientId);
+        verify(vacationService).registerNotification(ACCOUNT_ID, recipientId, Optional.of(DATE_TIME_2018));
+        verifyNoMoreInteractions(mailetContext, vacationService);
+    }
+
+    @Test
     public void shouldSendNotificationWhenBrokenReplyTo() throws Exception {
         when(vacationService.retrieveVacation(AccountId.fromString(USERNAME)))
             .thenReturn(Mono.just(VACATION));

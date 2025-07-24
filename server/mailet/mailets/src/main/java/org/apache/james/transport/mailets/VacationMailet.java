@@ -44,6 +44,7 @@ import org.apache.james.vacation.api.VacationService;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.base.MailetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +62,7 @@ public class VacationMailet extends GenericMailet {
     private final ZonedDateTimeProvider zonedDateTimeProvider;
     private final AutomaticallySentMailDetector automaticallySentMailDetector;
     private final MimeMessageBodyGenerator mimeMessageBodyGenerator;
+    private boolean useUserAsMailFrom = false;
 
     @Inject
     public VacationMailet(VacationService vacationService, ZonedDateTimeProvider zonedDateTimeProvider,
@@ -93,6 +95,11 @@ public class VacationMailet extends GenericMailet {
         } catch (Exception e) {
             LOGGER.warn("Can not process vacation for one or more recipients in {}", mail.getRecipients(), e);
         }
+    }
+
+    @Override
+    public void init() throws MessagingException {
+        useUserAsMailFrom = MailetUtil.getInitParameter(getMailetConfig(), "useUserAsMailFrom").orElse(false);
     }
 
     private static Address[] getReplyTo(Mail mail) throws MessagingException {
@@ -168,7 +175,7 @@ public class VacationMailet extends GenericMailet {
                 .vacation(vacation)
                 .build(mimeMessageBodyGenerator);
 
-            sendNotification(vacationReply);
+            sendNotification(vacationReply, recipient);
 
             vacationService.registerNotification(AccountId.fromString(recipient.toString()),
                 RecipientId.fromMailAddress(processedMail.getMaybeSender().get()),
@@ -179,9 +186,16 @@ public class VacationMailet extends GenericMailet {
         }
     }
 
-    private void sendNotification(VacationReply vacationReply) throws MessagingException {
-        getMailetContext().sendMail(MailAddress.nullSender(),
+    private void sendNotification(VacationReply vacationReply, MailAddress recipient) throws MessagingException {
+        getMailetContext().sendMail(getSender(recipient),
             vacationReply.getRecipients(),
             vacationReply.getMimeMessage());
+    }
+
+    private MailAddress getSender(MailAddress recipient) {
+        if (!useUserAsMailFrom) {
+            return MailAddress.nullSender();
+        }
+        return recipient;
     }
 }
