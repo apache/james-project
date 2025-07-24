@@ -105,7 +105,7 @@ public class MimeMessageStore {
                             @Override
                             public long size() throws IOException {
                                 try {
-                                    return message.getSize() + headerBytes.length - countingInputStream.getCount();
+                                    return Math.max(0, message.getSize() + headerBytes.length - countingInputStream.getCount());
                                 } catch (MessagingException e) {
                                     throw new IOException("Failed accessing body size", e);
                                 }
