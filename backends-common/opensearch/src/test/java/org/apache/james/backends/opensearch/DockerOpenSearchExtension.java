@@ -62,12 +62,12 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
                 .pollInterval(2, TimeUnit.SECONDS)
                 .ignoreExceptions()
                 .until(() -> {
-                    openSearch.flushIndices();
                     ReactorOpenSearchClient client = client(openSearch);
                     new DeleteByQueryPerformer(client, aliasName)
                         .perform(new MatchAllQuery.Builder().build().toQuery())
                         .block();
                     SearchRequest searchRequest = new SearchRequest.Builder()
+                        .index(aliasName.getValue())
                         .query(new MatchAllQuery.Builder().build().toQuery())
                         .build();
                     openSearch.flushIndices();
