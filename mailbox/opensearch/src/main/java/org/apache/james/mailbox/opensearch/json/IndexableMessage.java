@@ -138,8 +138,9 @@ public class IndexableMessage {
                     Optional<String> bodyText = parsingResult.locateFirstTextBody().map(SearchUtil::removeGreaterThanCharactersAtBeginningOfLine);
                     Optional<String> bodyHtml = parsingResult.locateFirstHtmlBody();
 
-                    boolean hasAttachment = MessageAttachmentMetadata.hasNonInlinedAttachment(message.getAttachments());
                     List<MimePart> attachments = setFlattenedAttachments(parsingResult, indexAttachments);
+                    boolean hasAttachment = attachments.stream()
+                        .anyMatch(mimePart -> !mimePart.isInlinedWithCid());
 
                     HeaderCollection headerCollection = parsingResult.getHeaderCollection();
                     ZonedDateTime internalDate = getSanitizedInternalDate(message, zoneId);

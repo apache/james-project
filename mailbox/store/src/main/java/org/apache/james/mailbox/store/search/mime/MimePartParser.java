@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.Optional;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ContentType.MediaType;
 import org.apache.james.mailbox.model.ContentType.SubType;
 import org.apache.james.mime4j.MimeException;
@@ -130,6 +131,7 @@ public class MimePartParser {
                 .map(SubType::of)
                 .ifPresent(currentlyBuildMimePart::addSubType);
             currentlyBuildMimePart.addContentDisposition(descriptor.getContentDispositionType());
+            Optional.ofNullable(descriptor.getContentId()).flatMap(v -> Cid.parser().relaxed().unwrap().parse(v)).ifPresent(currentlyBuildMimePart::addCid);
 
             Optional.ofNullable(descriptor.getContentDispositionFilename())
                 .or(() -> Optional.ofNullable(descriptor.getContentTypeParameters().get("name")))

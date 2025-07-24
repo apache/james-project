@@ -32,6 +32,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.ContentType.MediaType;
 import org.apache.james.mailbox.model.ContentType.SubType;
@@ -58,6 +59,7 @@ public class MimePart {
         private Optional<String> fileExtension;
         private Optional<String> contentDisposition;
         private Optional<Charset> charset;
+        private Optional<Cid> cid;
         private Predicate<ContentType> shouldCaryOverContent;
 
         private Builder(Predicate<ContentType> shouldCaryOverContent) {
@@ -71,6 +73,7 @@ public class MimePart {
             this.fileExtension = Optional.empty();
             this.contentDisposition = Optional.empty();
             this.charset = Optional.empty();
+            this.cid = Optional.empty();
         }
 
         @Override
@@ -133,6 +136,12 @@ public class MimePart {
         }
 
         @Override
+        public MimePartContainerBuilder addCid(Cid cid) {
+            this.cid = Optional.ofNullable(cid);
+            return this;
+        }
+
+        @Override
         public ParsedMimePart build() {
             final Optional<ContentType> contentType = computeContentType();
             return new ParsedMimePart(
@@ -145,7 +154,7 @@ public class MimePart {
                 fileName,
                 fileExtension,
                 contentDisposition,
-                children);
+                cid, children);
         }
     }
 
@@ -159,12 +168,13 @@ public class MimePart {
         private final Optional<String> fileName;
         private final Optional<String> fileExtension;
         private final Optional<String> contentDisposition;
+        private final Optional<Cid> cid;
         private final List<ParsedMimePart> attachments;
 
         public ParsedMimePart(HeaderCollection headerCollection, Optional<InputStream> bodyContent, Optional<Charset> charset,
                               Optional<MediaType> mediaType,
                               Optional<SubType> subType, Optional<ContentType> contentType, Optional<String> fileName, Optional<String> fileExtension,
-                              Optional<String> contentDisposition, List<ParsedMimePart> attachments) {
+                              Optional<String> contentDisposition, Optional<Cid> cid, List<ParsedMimePart> attachments) {
             this.headerCollection = headerCollection;
             this.mediaType = mediaType;
             this.subType = subType;
@@ -172,6 +182,7 @@ public class MimePart {
             this.fileName = fileName;
             this.fileExtension = fileExtension;
             this.contentDisposition = contentDisposition;
+            this.cid = cid;
             this.attachments = attachments;
             this.charset = charset;
 
@@ -190,7 +201,7 @@ public class MimePart {
                         return Mono.just(Optional.empty());
                     })
                     .map(text -> new MimePart(headerCollection, text.flatMap(ParsedContent::getTextualContent),
-                        mediaType, subType, fileName, fileExtension, contentDisposition, attachments)));
+                        mediaType, subType, fileName, fileExtension, contentDisposition, cid, attachments)));
         }
 
         private Mono<ParsedContent> extractText(TextExtractor textExtractor) {
@@ -232,19 +243,25 @@ public class MimePart {
     private final Optional<String> fileName;
     private final Optional<String> fileExtension;
     private final Optional<String> contentDisposition;
+    private final Optional<Cid> cid;
     private final List<MimePart> attachments;
 
     private MimePart(HeaderCollection headerCollection, Optional<String> bodyTextContent, Optional<MediaType> mediaType,
-                    Optional<SubType> subType, Optional<String> fileName, Optional<String> fileExtension,
-                    Optional<String> contentDisposition, List<MimePart> attachments) {
+                     Optional<SubType> subType, Optional<String> fileName, Optional<String> fileExtension,
+                     Optional<String> contentDisposition, Optional<Cid> cid, List<MimePart> attachments) {
         this.headerCollection = headerCollection;
         this.mediaType = mediaType;
         this.subType = subType;
         this.fileName = fileName;
         this.fileExtension = fileExtension;
         this.contentDisposition = contentDisposition;
+        this.cid = cid;
         this.attachments = attachments;
         this.bodyTextContent = bodyTextContent;
+    }
+
+    public boolean isInlinedWithCid() {
+        return contentDisposition.map("inline"::equalsIgnoreCase).orElse(false) && cid.isPresent();
     }
 
     public List<MimePart> getAttachments() {
