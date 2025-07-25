@@ -27,10 +27,10 @@ The default is *localhost*.
 * *<maxPings>*: the maximum number of connection retries during startup.
 If the value is *0* no startup test will be done.
 The default is *6*.
-* *<pingIntervalMilli>*: the interval (in milliseconds)
+* *<pingIntervalMilli>*: the duration e.g. `30s`, `30000ms` (default in the millisecond unit if the unit is not specified)
 between each connection retry during startup.
 The default is *30000* (30 seconds).
-* *<socketTimeoutMilli>*: the interval (in milliseconds)
+* *<socketTimeout>*: the duration e.g. `5s`, `5000ms` (default in the millisecond unit if the unit is not specified)
 for the socket timeout when scanning a message.
 The default is *5000* (5 seconds).
 * *<streamBufferSize>*: the BufferedOutputStream buffer size to use
