@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.opensearch.IndexBody;
 import org.apache.james.mailbox.opensearch.IndexHeaders;
