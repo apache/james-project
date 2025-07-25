@@ -30,6 +30,9 @@ The default is *6*.
 * *<pingIntervalMilli>*: the interval (in milliseconds)
 between each connection retry during startup.
 The default is *30000* (30 seconds).
+* *<socketTimeoutMilli>*: the interval (in milliseconds)
+for the socket timeout when scanning a message.
+The default is *5000* (5 seconds).
 * *<streamBufferSize>*: the BufferedOutputStream buffer size to use
 writing to the *stream connection*. The default is *8192*.
 

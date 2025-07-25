@@ -193,6 +193,8 @@ public class ClamAVScan extends GenericMailet {
 
     private static final int DEFAULT_PING_INTERVAL_MILLI = 10000;
 
+    private static final int DEFAULT_SOCKET_TIMEOUT_MILLI = 5000;
+
     private static final int DEFAULT_STREAM_BUFFER_SIZE = 8192;
 
     private static final String FOUND_STRING = "FOUND";
@@ -225,6 +227,11 @@ public class ClamAVScan extends GenericMailet {
      * Holds value of property pingIntervalMilli.
      */
     private int pingIntervalMilli;
+
+    /**
+     * Holds value of property socketTimeoutMilli.
+     */
+    private int socketTimeoutMilli;
 
     /**
      * Holds value of property streamBufferSize.
@@ -387,6 +394,12 @@ public class ClamAVScan extends GenericMailet {
         if (isDebug()) {
             LOGGER.debug("pingIntervalMilli: {}", getPingIntervalMilli());
         }
+    }
+
+    protected void initSocketTimeoutMilli() {
+        this.socketTimeoutMilli = Optional.ofNullable(getInitParameter("socketTimeoutMilli"))
+            .map(Integer::parseInt)
+            .orElse(DEFAULT_SOCKET_TIMEOUT_MILLI);
     }
 
     /**
@@ -553,6 +566,7 @@ public class ClamAVScan extends GenericMailet {
             initPort();
             initMaxPings();
             initPingIntervalMilli();
+            initSocketTimeoutMilli();
             initStreamBufferSize();
 
             // If "maxPings is > ping the CLAMD server to check if it is up
@@ -733,7 +747,7 @@ public class ClamAVScan extends GenericMailet {
         try (Socket socket = getClamdSocket();
         OutputStream clamAVOutputStream = new BufferedOutputStream(socket.getOutputStream(), getStreamBufferSize());
         InputStream clamAvInputStream = socket.getInputStream()) {
-            socket.setSoTimeout(2000);
+            socket.setSoTimeout(socketTimeoutMilli);
             clamAVOutputStream.write("zINSTREAM\0".getBytes());
             clamAVOutputStream.flush();
 
