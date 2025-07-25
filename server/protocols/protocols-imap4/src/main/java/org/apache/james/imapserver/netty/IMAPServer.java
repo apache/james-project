@@ -177,6 +177,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private Optional<TrafficShapingConfiguration> trafficShaping = Optional.empty();
     private Optional<ConnectionLimitUpstreamHandler> connectionLimitUpstreamHandler = Optional.empty();
     private Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler = Optional.empty();
+    private Optional<IMAPCommandsThrottler.ThrottlerConfiguration> throttlerConfiguration = Optional.empty();
     private boolean ignoreIDLEUponProcessing;
     private Duration heartbeatInterval;
     private ReactiveThrottler reactiveThrottler;
@@ -221,6 +222,10 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         if (configuration.getKeys("trafficShaping").hasNext()) {
             trafficShaping = Optional.ofNullable(configuration.configurationAt("trafficShaping"))
                 .map(TrafficShapingConfiguration::from);
+        }
+        if (configuration.getKeys("perSessionCommandThrottling").hasNext()) {
+            throttlerConfiguration = Optional.ofNullable(configuration.configurationAt("perSessionCommandThrottling"))
+                .map(IMAPCommandsThrottler.ThrottlerConfiguration::from);
         }
     }
 
@@ -336,6 +341,9 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
                 pipeline.addLast(REQUEST_DECODER, new ImapRequestFrameDecoder(decoder, inMemorySizeLimit,
                     literalSizeLimit, maxLineLength));
+
+                throttlerConfiguration.map(IMAPCommandsThrottler::new)
+                    .ifPresent(handler -> pipeline.addLast("commandThrottler", handler));
 
                 pipeline.addLast(CORE_HANDLER, createCoreHandler());
             }
