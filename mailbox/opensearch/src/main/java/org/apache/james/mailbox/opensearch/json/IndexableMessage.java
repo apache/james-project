@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.opensearch.IndexBody;
 import org.apache.james.mailbox.opensearch.IndexHeaders;
@@ -138,8 +137,9 @@ public class IndexableMessage {
                     Optional<String> bodyText = parsingResult.locateFirstTextBody().map(SearchUtil::removeGreaterThanCharactersAtBeginningOfLine);
                     Optional<String> bodyHtml = parsingResult.locateFirstHtmlBody();
 
-                    boolean hasAttachment = MessageAttachmentMetadata.hasNonInlinedAttachment(message.getAttachments());
                     List<MimePart> attachments = setFlattenedAttachments(parsingResult, indexAttachments);
+                    boolean hasAttachment = attachments.stream()
+                        .anyMatch(mimePart -> !mimePart.isInlinedWithCid() && mimePart.getContentDisposition().isPresent());
 
                     HeaderCollection headerCollection = parsingResult.getHeaderCollection();
                     ZonedDateTime internalDate = getSanitizedInternalDate(message, zoneId);

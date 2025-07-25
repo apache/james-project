@@ -37,10 +37,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.model.AttachmentMetadata;
-import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
@@ -90,21 +87,11 @@ class IndexableMessageTest {
         when(mailboxMessage.getMessageId())
             .thenReturn(messageId);
         when(mailboxMessage.getFullContent())
-            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"));
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml"));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
             .thenReturn(MESSAGE_UID);
-        when(mailboxMessage.getAttachments())
-            .thenReturn(ImmutableList.of(MessageAttachmentMetadata.builder()
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(messageId)
-                    .attachmentId(StringBackedAttachmentId.from("1"))
-                    .type("text/plain")
-                    .size(36)
-                    .build())
-                .isInline(false)
-                .build()));
 
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()

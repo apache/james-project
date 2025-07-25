@@ -152,6 +152,6 @@
   "isDraft": false,
   "isFlagged": false,
   "isRecent": false,
-  "hasAttachment": false,
+  "hasAttachment": true,
   "isUnread": true
 }

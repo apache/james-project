@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store.search.mime;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
+import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ContentType.MediaType;
 import org.apache.james.mailbox.model.ContentType.SubType;
 import org.apache.james.mime4j.stream.Field;
@@ -81,6 +82,12 @@ public class RootMimePartContainerBuilder implements MimePartContainerBuilder {
 
     @Override
     public MimePartContainerBuilder addContentDisposition(String contentDisposition) {
+        LOGGER.warn("Trying to add content disposition to the Root MimePart container");
+        return this;
+    }
+
+    @Override
+    public MimePartContainerBuilder addCid(Cid cid) {
         LOGGER.warn("Trying to add content disposition to the Root MimePart container");
         return this;
     }

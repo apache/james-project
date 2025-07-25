@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store.search.mime;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
+import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ContentType.MediaType;
 import org.apache.james.mailbox.model.ContentType.SubType;
 import org.apache.james.mime4j.stream.Field;
@@ -45,5 +46,7 @@ public interface MimePartContainerBuilder {
     MimePartContainerBuilder addSubType(SubType subType);
 
     MimePartContainerBuilder addContentDisposition(String contentDisposition);
+
+    MimePartContainerBuilder addCid(Cid cid);
 
 }

@@ -25,7 +25,7 @@
         "address": "bob@domain.tld",
         "domain":"domain"
     }],
-    "hasAttachment": false,
+    "hasAttachment": true,
     "headers": [{
         "name": "date",
         "value": "Wed, 26 Jan 2022 12:21:37 +0100"

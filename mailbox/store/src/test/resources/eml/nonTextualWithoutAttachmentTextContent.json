@@ -19,7 +19,7 @@
     "address":"btellier@linagora.com",
     "domain":"linagora"
   }],
-  "hasAttachment":false,
+  "hasAttachment":true,
   "headers": [{
     "name": "return-path",
     "value": "<btellier@linagora.com>"
