@@ -12,7 +12,7 @@
   "cc":[],
   "date":"2015-06-07T00:00:00+0200",
   "from":[{"name":null,"address":"Drew Fossum","domain":null}],
-  "hasAttachment":false,
+  "hasAttachment":true,
   "headers":[
     {"name":"return-path","value":"<firstname1.surname1@upn.integration-open-paas.org>"},
     {"name":"received","value":"from 10.2.0.0 (EHLO 617) ([10.2.0.0])          by smtp.upn.integration-open-paas.org (JAMES SMTP Server ) with ESMTP ID -489272706          for <firstname1.surname1@upn.integration-open-paas.org>;          Sat, 28 Nov 2020 10:49:24 +0000 (GMT)"},

@@ -15,7 +15,7 @@
   "cc":[],
   "date":"2015-06-07T00:00:00+0200",
   "from":[{"name":"Benoit TELLIER","address":"btellier@linagora.com","domain":"linagora"}],
-  "hasAttachment":false,
+  "hasAttachment":true,
   "headers":[
     {"name":"mime-version","value":"1.0"},
     {"name":"subject","value":"Test"},

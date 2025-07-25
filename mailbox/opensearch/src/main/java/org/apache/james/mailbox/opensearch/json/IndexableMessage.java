@@ -139,7 +139,7 @@ public class IndexableMessage {
 
                     List<MimePart> attachments = setFlattenedAttachments(parsingResult, indexAttachments);
                     boolean hasAttachment = attachments.stream()
-                        .anyMatch(mimePart -> !mimePart.isInlinedWithCid());
+                        .anyMatch(mimePart -> !mimePart.isInlinedWithCid() && mimePart.getContentDisposition().isPresent());
 
                     HeaderCollection headerCollection = parsingResult.getHeaderCollection();
                     ZonedDateTime internalDate = getSanitizedInternalDate(message, zoneId);
