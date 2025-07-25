@@ -99,7 +99,20 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
                     throw new ObjectStoreIOException("IOException occured", e);
                 }
             })
+            .map(bytes -> checkContentSize(content, bytes))
             .flatMap(bytes -> save(bucketName, blobId, bytes));
+    }
+
+    private static byte[] checkContentSize(ByteSource content, byte[] bytes) {
+        try {
+            long preComputedSize = content.size();
+            long realSize = bytes.length;
+            Preconditions.checkArgument(content.size() == realSize,
+                "Difference in size between the pre-computed content can cause other blob stores to fail thus we need to test for alignment. Expecting " + realSize + " but pre-computed size was " + preComputedSize);
+            return bytes;
+        } catch (IOException e) {
+            throw new ObjectStoreIOException("IOException occured", e);
+        }
     }
 
     @Override
