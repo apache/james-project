@@ -35,6 +35,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -44,6 +45,7 @@ import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.util.AuditTrail;
+import org.apache.james.util.DurationParser;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -193,6 +195,8 @@ public class ClamAVScan extends GenericMailet {
 
     private static final int DEFAULT_PING_INTERVAL_MILLI = 10000;
 
+    private static final int DEFAULT_SOCKET_TIMEOUT_MILLI = 5000;
+
     private static final int DEFAULT_STREAM_BUFFER_SIZE = 8192;
 
     private static final String FOUND_STRING = "FOUND";
@@ -225,6 +229,11 @@ public class ClamAVScan extends GenericMailet {
      * Holds value of property pingIntervalMilli.
      */
     private int pingIntervalMilli;
+
+    /**
+     * Holds value of property socketTimeout.
+     */
+    private int socketTimeoutMilli;
 
     /**
      * Holds value of property streamBufferSize.
@@ -382,11 +391,19 @@ public class ClamAVScan extends GenericMailet {
      * Initializer for property pingIntervalMilli.
      */
     protected void initPingIntervalMilli() {
-        String pingIntervalMilliParam = getInitParameter("pingIntervalMilli");
-        setPingIntervalMilli((pingIntervalMilliParam == null) ? DEFAULT_PING_INTERVAL_MILLI : Integer.parseInt(pingIntervalMilliParam));
+        setPingIntervalMilli(Optional.ofNullable(getInitParameter("pingIntervalMilli"))
+            .map(string -> (int) DurationParser.parse(string, ChronoUnit.MILLIS).toMillis())
+            .orElse(DEFAULT_PING_INTERVAL_MILLI));
+
         if (isDebug()) {
             LOGGER.debug("pingIntervalMilli: {}", getPingIntervalMilli());
         }
+    }
+
+    protected void initSocketTimeout() {
+        this.socketTimeoutMilli = Optional.ofNullable(getInitParameter("socketTimeout"))
+            .map(string -> (int) DurationParser.parse(string, ChronoUnit.MILLIS).toMillis())
+            .orElse(DEFAULT_SOCKET_TIMEOUT_MILLI);
     }
 
     /**
@@ -553,6 +570,7 @@ public class ClamAVScan extends GenericMailet {
             initPort();
             initMaxPings();
             initPingIntervalMilli();
+            initSocketTimeout();
             initStreamBufferSize();
 
             // If "maxPings is > ping the CLAMD server to check if it is up
@@ -733,7 +751,7 @@ public class ClamAVScan extends GenericMailet {
         try (Socket socket = getClamdSocket();
         OutputStream clamAVOutputStream = new BufferedOutputStream(socket.getOutputStream(), getStreamBufferSize());
         InputStream clamAvInputStream = socket.getInputStream()) {
-            socket.setSoTimeout(2000);
+            socket.setSoTimeout(socketTimeoutMilli);
             clamAVOutputStream.write("zINSTREAM\0".getBytes());
             clamAVOutputStream.flush();
 
