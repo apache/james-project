@@ -215,6 +215,20 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         }
     }
 
+    protected long loadHeadersCounting() throws MessagingException {
+        if (source != null) {
+            try (InputStream in = source.getInputStream();
+                 CountingInputStream countingInputStream = new CountingInputStream(in)) {
+                headers = createInternetHeaders(countingInputStream);
+                return countingInputStream.getCount();
+            } catch (IOException ioe) {
+                throw new MessagingException("Unable to parse headers from stream: " + ioe.getMessage(), ioe);
+            }
+        } else {
+            throw new MessagingException("loadHeaders called for a message with no source, contentStream or stream");
+        }
+    }
+
     /**
      * Load the complete MimeMessage from the internal source.
      * 
@@ -361,12 +375,8 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         if (source != null && !bodyModified) {
             try {
                 long fullSize = source.getMessageSize();
-                if (headers == null) {
-                    loadHeaders();
-                }
-                // 2 == CRLF
-                return Math.max(0, (int) (fullSize - initialHeaderSize - HEADER_BODY_SEPARATOR_SIZE));
-
+                long l = loadHeadersCounting();
+                return Math.max(0, (int) (fullSize - l));
             } catch (IOException e) {
                 throw new MessagingException("Unable to calculate message size");
             }

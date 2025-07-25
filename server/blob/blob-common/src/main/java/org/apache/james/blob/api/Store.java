@@ -92,8 +92,7 @@ public interface Store<T, I> {
         @Override
         public Mono<I> save(T t) {
             Preconditions.checkNotNull(t);
-            return Mono.fromCallable(() -> encoder.encode(t))
-                .flatMapMany(Flux::fromStream)
+            return Flux.fromStream(encoder.encode(t))
                 .flatMapSequential(this::saveEntry)
                 .collectMap(Tuple2::getT1, Tuple2::getT2)
                 .map(idFactory::generate);

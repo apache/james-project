@@ -26,6 +26,7 @@ import static org.apache.james.blob.mail.MimeMessagePartsId.HEADER_BLOB_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.SequenceInputStream;
 import java.util.Map;
 import java.util.UUID;
@@ -35,6 +36,7 @@ import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobType;
@@ -49,7 +51,6 @@ import org.apache.james.server.core.MimeMessageWrapper;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
-import com.google.common.io.CountingInputStream;
 
 import reactor.core.publisher.Mono;
 
@@ -82,38 +83,46 @@ public class MimeMessageStore {
         @Override
         public Stream<Pair<BlobType, Store.Impl.ValueToSave>> encode(MimeMessage message) {
             Preconditions.checkNotNull(message);
-            try {
-                MimeMessageInputStream stream = new MimeMessageInputStream(message);
-                CountingInputStream countingInputStream = new CountingInputStream(stream);
-                MailHeaders mailHeaders = new MailHeaders(countingInputStream);
-                byte[] headerBytes = mailHeaders.toByteArray();
-                return Stream.of(
-                    Pair.of(HEADER_BLOB_TYPE, (bucketName, blobStore) -> Mono.from(blobStore.save(bucketName, headerBytes, SIZE_BASED))),
-                    Pair.of(BODY_BLOB_TYPE, (bucketName, blobStore) ->
-                        Mono.from(blobStore.save(bucketName, new ByteSource() {
-                            @Override
-                            public InputStream openStream() throws IOException {
-                                try {
-                                    MimeMessageInputStream stream = new MimeMessageInputStream(message);
-                                    new MailHeaders(stream);
-                                    return stream;
-                                } catch (MessagingException e) {
-                                    throw new IOException("Failed to generate body stream", e);
-                                }
-                            }
 
-                            @Override
-                            public long size() throws IOException {
-                                try {
-                                    return Math.max(0, message.getSize() + headerBytes.length - countingInputStream.getCount());
-                                } catch (MessagingException e) {
-                                    throw new IOException("Failed accessing body size", e);
-                                }
+            return Stream.of(
+                Pair.of(HEADER_BLOB_TYPE, (bucketName, blobStore) -> {
+                    try {
+                        MimeMessageInputStream stream = new MimeMessageInputStream(message);
+                        MailHeaders mailHeaders = new MailHeaders(stream);
+                        return Mono.from(blobStore.save(bucketName, mailHeaders.toByteArray(), SIZE_BASED));
+                    } catch (MessagingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }),
+                Pair.of(BODY_BLOB_TYPE, (bucketName, blobStore) ->
+                    Mono.from(blobStore.save(bucketName, new ByteSource() {
+                        @Override
+                        public InputStream openStream() throws IOException {
+                            try {
+                                MimeMessageInputStream stream = new MimeMessageInputStream(message);
+                                new MailHeaders(stream);
+                                return stream;
+                            } catch (MessagingException e) {
+                                throw new IOException("Failed to generate body stream", e);
                             }
-                        }, LOW_COST))));
-            } catch (MessagingException e) {
-                throw new RuntimeException(e);
-            }
+                        }
+
+                        @Override
+                        public long size() throws IOException {
+                            try {
+                                int size = message.getSize();
+                                if (size < 0) {
+                                    // Size is unknown: we need to compute it
+                                    CountingOutputStream countingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream());
+                                    openStream().transferTo(countingOutputStream);
+                                    return countingOutputStream.getCount();
+                                }
+                                return size;
+                            } catch (MessagingException e) {
+                                throw new IOException("Failed accessing body size", e);
+                            }
+                        }
+                    }, LOW_COST))));
         }
     }
 
