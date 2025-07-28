@@ -26,6 +26,7 @@ import static org.apache.james.blob.mail.MimeMessagePartsId.HEADER_BLOB_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.SequenceInputStream;
 import java.util.Map;
 import java.util.UUID;
@@ -35,6 +36,7 @@ import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobType;
@@ -81,6 +83,7 @@ public class MimeMessageStore {
         @Override
         public Stream<Pair<BlobType, Store.Impl.ValueToSave>> encode(MimeMessage message) {
             Preconditions.checkNotNull(message);
+
             return Stream.of(
                 Pair.of(HEADER_BLOB_TYPE, (bucketName, blobStore) -> {
                     try {
@@ -107,7 +110,14 @@ public class MimeMessageStore {
                         @Override
                         public long size() throws IOException {
                             try {
-                                return message.getSize();
+                                int size = message.getSize();
+                                if (size < 0) {
+                                    // Size is unknown: we need to compute it
+                                    CountingOutputStream countingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream());
+                                    openStream().transferTo(countingOutputStream);
+                                    return countingOutputStream.getCount();
+                                }
+                                return size;
                             } catch (MessagingException e) {
                                 throw new IOException("Failed accessing body size", e);
                             }
