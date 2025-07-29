@@ -9,7 +9,7 @@ asciidoc:
     # Third party versions James is built, shipped and tested against.
     # Bump them together with the docker-compose files of server/apps/*.
     java-version: '21@'
-    cassandra-version: '4.1.9@'
+    cassandra-version: '5.0.9@'
     opensearch-version: '2.19.2@'
     rabbitmq-version: '4.1.1@'
     postgresql-version: '16.9@'
