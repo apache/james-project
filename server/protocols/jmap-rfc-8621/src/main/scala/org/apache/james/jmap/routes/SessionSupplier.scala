@@ -43,7 +43,7 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory], configuration
   def generate(username: Username, delegatedUsers: Set[Username], urlPrefixes: UrlPrefixes): Either[IllegalArgumentException, Session] = {
     val urlEndpointResolver: JmapUrlEndpointResolver = new JmapUrlEndpointResolver(urlPrefixes)
     val capabilities: Set[Capability] = capabilityFactories
-      .map(cf => cf.create(urlPrefixes))
+      .map(cf => cf.create(urlPrefixes, username))
       .filter(capability => !configuration.disabledCapabilities.contains(capability.identifier()))
 
     for {
