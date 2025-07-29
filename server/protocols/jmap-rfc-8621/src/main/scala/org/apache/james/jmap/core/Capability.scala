@@ -36,7 +36,9 @@ import org.apache.james.jmap.core.SubmissionCapabilityFactory.maximumDelays
 import org.apache.james.jmap.core.UnsignedInt.{UnsignedInt, UnsignedIntConstraint}
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.util.Size
+import org.reactivestreams.Publisher
 import play.api.libs.json.{JsObject, Json}
+import reactor.core.scala.publisher.SMono
 import reactor.netty.http.server.HttpServerRequest
 
 import scala.util.{Failure, Success, Try}
@@ -100,6 +102,9 @@ final case class UrlPrefixes(httpUrlPrefix: URI, webSocketURLPrefix: URI)
 
 trait CapabilityFactory {
   def create(urlPrefixes: UrlPrefixes, username: Username): Capability
+
+  def createReactive(urlPrefixes: UrlPrefixes, username: Username): Publisher[Capability] =
+    SMono.fromCallable(() => create(urlPrefixes, username))
 
   def id(): CapabilityIdentifier
 }

@@ -66,12 +66,11 @@ class SessionRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: 
       .flatMap(mailboxSession => getDelegatedUsers(mailboxSession)
         .collectSeq()
         .map(seq => Pair.of(mailboxSession.getUser, seq)))
-      .handle[Session] {
-        case (baseUserAndDelegatedUsers, sink) => sessionSupplier.generate(
+      .flatMap { baseUserAndDelegatedUsers =>
+        sessionSupplier.generate(
           username = baseUserAndDelegatedUsers.getLeft,
           delegatedUsers = baseUserAndDelegatedUsers.getRight.toSet,
           urlPrefixes = UrlPrefixes.from(jmapRfc8621Configuration, request))
-          .fold(sink.error, session => sink.next(session))
       }
       .flatMap(session => sendRespond(session, response))
       .onErrorResume(throwable => SMono.fromPublisher(errorHandling(throwable, response)))
