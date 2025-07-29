@@ -137,7 +137,7 @@ public class DockerCassandra {
 
     @SuppressWarnings("resource")
     public DockerCassandra() {
-        this("cassandra_4_1_5-" + buildSpecificImageDiscriminator(),
+        this("cassandra_5_0_4-" + buildSpecificImageDiscriminator(),
             getFixedBuildId().isEmpty(),
             AdditionalDockerFileStep.IDENTITY);
     }
@@ -181,7 +181,7 @@ public class DockerCassandra {
             new ImageFromDockerfile(imageName,deleteImageAfterUsage)
                 .withDockerfileFromBuilder(builder ->
                     additionalSteps.applyStep(builder
-                        .from("cassandra:4.1.9")
+                        .from("cassandra:5.0.4")
                         .env("CASSANDRA_CONFIG", "/etc/cassandra")
                         .run(memorySettingCommand
                             + "&& echo \"-Dcassandra.skip_wait_for_gossip_to_settle=0\" >> " + JVM_OPTIONS
