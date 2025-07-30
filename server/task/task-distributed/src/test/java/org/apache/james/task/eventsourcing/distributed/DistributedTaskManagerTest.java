@@ -667,14 +667,14 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             this.pause = pause;
 
             // Some task requires cassandra query execution upon their creation
-            Mono.from(session.executeReactive("SELECT dateof(now()) FROM system.local ;"))
+            Mono.from(session.executeReactive("SELECT toTimestamp(now()) FROM system.local ;"))
                 .block();
         }
 
         @Override
         public Result run() throws InterruptedException {
             // Task often execute Cassandra logic
-            Mono.from(session.executeReactive("SELECT dateof(now()) FROM system.local ;"))
+            Mono.from(session.executeReactive("SELECT toTimestamp(now()) FROM system.local ;"))
                 .block();
 
             if (pause) {
@@ -692,7 +692,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         @Override
         public Optional<TaskExecutionDetails.AdditionalInformation> details() {
             // Some task requires cassandra query execution upon detail generation
-            Mono.from(session.executeReactive("SELECT dateof(now()) FROM system.local ;"))
+            Mono.from(session.executeReactive("SELECT toTimestamp(now()) FROM system.local ;"))
                 .block();
 
             return Optional.empty();
