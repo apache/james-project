@@ -23,12 +23,15 @@ package org.apache.james.managesieveserver.netty;
 import static org.apache.james.protocols.netty.HandlerConstants.CONNECTION_LIMIT_HANDLER;
 import static org.apache.james.protocols.netty.HandlerConstants.CONNECTION_LIMIT_PER_IP_HANDLER;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
+import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
@@ -55,11 +58,13 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     static final String FRAMER = "framer";
     static final String CORE_HANDLER = "coreHandler";
     static final String CHUNK_WRITE_HANDLER = "chunkWriteHandler";
+    static final String OIDC_PATH = "oidc";
 
     private final int maxLineLength;
     private final ManageSieveProcessor manageSieveProcessor;
     private Optional<ConnectionLimitUpstreamHandler> connectionLimitUpstreamHandler = Optional.empty();
     private Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler = Optional.empty();
+    private Optional<OidcSASLConfiguration> oidcConfiguration;
 
     public ManageSieveServer(int maxLineLength, ManageSieveProcessor manageSieveProcessor) {
         this.maxLineLength = maxLineLength;
@@ -77,6 +82,16 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
 
         connectionLimitUpstreamHandler = ConnectionLimitUpstreamHandler.forCount(connectionLimit);
         connectionPerIpLimitUpstreamHandler = ConnectionPerIpLimitUpstreamHandler.forCount(connPerIP);
+
+        if (config.immutableChildConfigurationsAt(OIDC_PATH).isEmpty()) {
+            this.oidcConfiguration = Optional.empty();
+        } else {
+            try {
+                this.oidcConfiguration = Optional.of(OidcSASLConfiguration.parse(config.configurationAt(OIDC_PATH)));
+            } catch (MalformedURLException | NullPointerException | URISyntaxException exception) {
+                throw new ConfigurationException("Failed to parse OIDC configuration", exception);
+            }
+        }
     }
 
     @Override
@@ -86,7 +101,7 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
 
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
-        return new ManageSieveChannelUpstreamHandler(manageSieveProcessor, getEncryption(), maxLineLength);
+        return new ManageSieveChannelUpstreamHandler(manageSieveProcessor, getEncryption(), maxLineLength, this.oidcConfiguration);
     }
 
     @Override
