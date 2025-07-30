@@ -44,26 +44,21 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory], configuration
   def generate(username: Username, delegatedUsers: Set[Username], urlPrefixes: UrlPrefixes): SMono[Session] = {
     val urlEndpointResolver: JmapUrlEndpointResolver = new JmapUrlEndpointResolver(urlPrefixes)
 
-    evaluateCapabilities(username, urlPrefixes)
-      .flatMap { capabilities =>
-        accounts(username, capabilities) match {
-          case Left(e) => SMono.error(e)
-          case Right(account) =>
-            delegatedAccounts(delegatedUsers, capabilities) match {
-              case Left(e) => SMono.error(e)
-              case Right(delegatedAccounts) =>
-                SMono.fromCallable(() => Session(
-                  Capabilities(capabilities),
-                  List(account) ++ delegatedAccounts,
-                  primaryAccounts(account.accountId, capabilities),
-                  username,
-                  apiUrl = urlEndpointResolver.apiUrl,
-                  downloadUrl = urlEndpointResolver.downloadUrl,
-                  uploadUrl = urlEndpointResolver.uploadUrl,
-                  eventSourceUrl = urlEndpointResolver.eventSourceUrl))
-            }
-        }
-      }
+    for {
+      capabilities <- evaluateCapabilities(username, urlPrefixes)
+      account <- SMono.fromTry(accounts(username, capabilities).toTry)
+      delegatedAccounts <- SMono.fromTry(delegatedAccounts(delegatedUsers, capabilities).toTry)
+    } yield {
+      Session(
+        Capabilities(capabilities),
+        List(account) ++ delegatedAccounts,
+        primaryAccounts(account.accountId, capabilities),
+        username,
+        apiUrl = urlEndpointResolver.apiUrl,
+        downloadUrl = urlEndpointResolver.downloadUrl,
+        uploadUrl = urlEndpointResolver.uploadUrl,
+        eventSourceUrl = urlEndpointResolver.eventSourceUrl)
+    }
   }
 
   private def evaluateCapabilities(username: Username, urlPrefixes: UrlPrefixes): SMono[Set[Capability]] =
