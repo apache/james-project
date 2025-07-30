@@ -35,6 +35,7 @@ import jakarta.inject.{Inject, Named}
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.EventBus
 import org.apache.james.jmap.api.model.Size.Size
@@ -184,7 +185,7 @@ case class CustomCapabilityProperties() extends CapabilityProperties {
 case class CustomCapability(properties: CustomCapabilityProperties = CustomCapabilityProperties(), identifier: CapabilityIdentifier = CUSTOM) extends Capability
 
 case object CustomCapabilityFactory extends CapabilityFactory {
-  override def create(urlPrefixes: UrlPrefixes): Capability = CustomCapability()
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = CustomCapability()
 
   override def id(): CapabilityIdentifier = CUSTOM
 }

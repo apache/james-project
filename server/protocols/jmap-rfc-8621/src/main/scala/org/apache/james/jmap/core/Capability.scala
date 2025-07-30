@@ -28,6 +28,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.string.Uri
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_DELEGATION, JAMES_IDENTITY_SORTORDER, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_MDN, JMAP_QUOTA, JMAP_VACATION_RESPONSE, JMAP_WEBSOCKET}
 import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
@@ -35,7 +36,9 @@ import org.apache.james.jmap.core.SubmissionCapabilityFactory.maximumDelays
 import org.apache.james.jmap.core.UnsignedInt.{UnsignedInt, UnsignedIntConstraint}
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.util.Size
+import org.reactivestreams.Publisher
 import play.api.libs.json.{JsObject, Json}
+import reactor.core.scala.publisher.SMono
 import reactor.netty.http.server.HttpServerRequest
 
 import scala.util.{Failure, Success, Try}
@@ -98,7 +101,10 @@ object UrlPrefixes {
 final case class UrlPrefixes(httpUrlPrefix: URI, webSocketURLPrefix: URI)
 
 trait CapabilityFactory {
-  def create(urlPrefixes: UrlPrefixes): Capability
+  def create(urlPrefixes: UrlPrefixes, username: Username): Capability
+
+  def createReactive(urlPrefixes: UrlPrefixes, username: Username): Publisher[Capability] =
+    SMono.fromCallable(() => create(urlPrefixes, username))
 
   def id(): CapabilityIdentifier
 }
@@ -109,7 +115,7 @@ final case class CoreCapability(properties: CoreCapabilityProperties,
 final case class CoreCapabilityFactory(configration: JmapRfc8621Configuration) extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JMAP_CORE
 
-  override def create(urlPrefixes: UrlPrefixes): Capability = CoreCapability(CoreCapabilityProperties(
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = CoreCapability(CoreCapabilityProperties(
     configration.maxUploadSize,
     MaxConcurrentUpload(4L),
     MaxSizeRequest(10_000_000L), // See MaxSizeRequest.DEFAULT compile-time refinement only works with literals
@@ -125,7 +131,7 @@ case class WebSocketCapability(properties: WebSocketCapabilityProperties, identi
 case object WebSocketCapabilityFactory extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JMAP_WEBSOCKET
 
-  override def create(urlPrefixes: UrlPrefixes): Capability = WebSocketCapability(
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = WebSocketCapability(
     WebSocketCapabilityProperties(SupportsPush(true), new URI(urlPrefixes.webSocketURLPrefix.toString + "/jmap/ws")))
 }
 
@@ -188,7 +194,7 @@ case object SubmissionCapabilityFactory {
 final case class SubmissionCapabilityFactory(clock: Clock, supportsDelaySends: Boolean) extends CapabilityFactory {
   override def id(): CapabilityIdentifier = EMAIL_SUBMISSION
 
-  override def create(urlPrefixes: UrlPrefixes): Capability =
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability =
     if (supportsDelaySends) {
       advertiseDelaySendSupport
     } else {
@@ -227,7 +233,7 @@ final case class MailCapability(properties: MailCapabilityProperties,
 case class MailCapabilityFactory(configuration: JmapRfc8621Configuration) extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JMAP_MAIL
 
-  override def create(urlPrefixes: UrlPrefixes): Capability = MailCapability(MailCapabilityProperties(
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = MailCapability(MailCapabilityProperties(
     MaxMailboxesPerEmail(Some(10_000_000L)),
     MaxMailboxDepth(None),
     MaxSizeMailboxName(200L),
@@ -287,7 +293,7 @@ final case class QuotaCapability(properties: QuotaCapabilityProperties = QuotaCa
 case object QuotaCapabilityFactory extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JAMES_QUOTA
 
-  override def create(urlPrefixes: UrlPrefixes): Capability = QuotaCapability()
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = QuotaCapability()
 }
 
 final case class IdentitySortOrderCapabilityProperties() extends CapabilityProperties {
@@ -300,7 +306,7 @@ final case class IdentitySortOrderCapability(properties: IdentitySortOrderCapabi
 case object IdentitySortOrderCapabilityFactory extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JAMES_IDENTITY_SORTORDER
 
-  override def create(urlPrefixes: UrlPrefixes): Capability = IdentitySortOrderCapability()
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = IdentitySortOrderCapability()
 }
 
 final case class DelegationCapabilityProperties() extends CapabilityProperties {
@@ -313,7 +319,7 @@ final case class DelegationCapability(properties: DelegationCapabilityProperties
 case object DelegationCapabilityFactory extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JAMES_DELEGATION
 
-  override def create(urlPrefixes: UrlPrefixes): Capability = DelegationCapability()
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = DelegationCapability()
 }
 
 final case class SharesCapabilityProperties() extends CapabilityProperties {
@@ -323,7 +329,7 @@ final case class SharesCapabilityProperties() extends CapabilityProperties {
 case object SharesCapabilityFactory extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JAMES_SHARES
 
-  override def create(urlPrefixes: UrlPrefixes): Capability = SharesCapability()
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = SharesCapability()
 }
 
 final case class SharesCapability(properties: SharesCapabilityProperties = SharesCapabilityProperties(),
@@ -336,7 +342,7 @@ final case class MDNCapabilityProperties() extends CapabilityProperties {
 case object MDNCapabilityFactory extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JMAP_MDN
 
-  override def create(urlPrefixes: UrlPrefixes): Capability = MDNCapability()
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = MDNCapability()
 }
 
 final case class MDNCapability(properties: MDNCapabilityProperties = MDNCapabilityProperties(),
@@ -349,7 +355,7 @@ final case class VacationResponseCapabilityProperties() extends CapabilityProper
 case object VacationResponseCapabilityFactory extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JMAP_VACATION_RESPONSE
 
-  override def create(urlPrefixes: UrlPrefixes): Capability = VacationResponseCapability()
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = VacationResponseCapability()
 }
 
 final case class VacationResponseCapability(properties: VacationResponseCapabilityProperties = VacationResponseCapabilityProperties(),
@@ -365,5 +371,5 @@ final case class JmapQuotaCapabilityProperties() extends CapabilityProperties {
 case object JmapQuotaCapabilityFactory extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JMAP_QUOTA
 
-  override def create(urlPrefixes: UrlPrefixes): Capability = JmapQuotaCapability()
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = JmapQuotaCapability()
 }
