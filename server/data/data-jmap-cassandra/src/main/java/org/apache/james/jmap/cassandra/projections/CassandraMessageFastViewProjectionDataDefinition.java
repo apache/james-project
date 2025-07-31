@@ -34,8 +34,7 @@ public interface CassandraMessageFastViewProjectionDataDefinition {
     CassandraDataDefinition MODULE = CassandraDataDefinition.table(TABLE_NAME)
         .comment("Storing the JMAP projections for MessageFastView, an aggregation of JMAP properties expected to be fast to fetch.")
         .options(options -> options
-            .withCaching(true, rows(DEFAULT_CACHED_ROW_PER_PARTITION))
-            .withLZ4Compression(8, 1.0))
+            .withCaching(true, rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> types -> statement
             .withPartitionKey(MESSAGE_ID, DataTypes.UUID)
             .withColumn(PREVIEW, DataTypes.TEXT)
