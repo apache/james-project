@@ -170,12 +170,8 @@ public class DockerCassandra {
             }
         });
 
-        String memorySettingCommand = Optional.ofNullable(System.getenv("CI"))
-            .map(Boolean::parseBoolean)
-            .filter(Boolean.TRUE::equals)
-            .map(ci -> "echo \"\" ")
-            .orElse("echo \"-Xms" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS
-                + "&& echo \"-Xmx" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS);
+        String memorySettingCommand = "echo \"-Xms" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS
+                + "&& echo \"-Xmx" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS;
 
         cassandraContainer = new GenericContainer<>(
             new ImageFromDockerfile(imageName,deleteImageAfterUsage)
