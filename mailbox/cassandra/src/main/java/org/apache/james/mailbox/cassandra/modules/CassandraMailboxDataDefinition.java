@@ -40,8 +40,7 @@ public interface CassandraMailboxDataDefinition {
         .table(CassandraMailboxTable.TABLE_NAME)
         .comment("Holds the mailboxes information.")
         .options(options -> options
-            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
-            .withLZ4Compression(8, 1))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> types -> statement
             .withPartitionKey(CassandraMailboxTable.ID, TIMEUUID)
             .withColumn(CassandraMailboxTable.MAILBOX_BASE, types.getDefinedUserType(CassandraMailboxTable.MAILBOX_BASE.asCql(true)))

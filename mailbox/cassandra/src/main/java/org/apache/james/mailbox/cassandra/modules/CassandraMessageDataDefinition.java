@@ -74,7 +74,6 @@ public interface CassandraMessageDataDefinition {
         .comment("Holds mailbox and flags for each message, lookup by message ID")
         .options(options -> options
             .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
-            .withLZ4Compression(8, 1)
             .withCaching(true, rows(CACHED_IMAP_UID_ROWS)))
         .statement(statement -> types -> statement
             .withPartitionKey(CassandraMessageIds.MESSAGE_ID, TIMEUUID)
