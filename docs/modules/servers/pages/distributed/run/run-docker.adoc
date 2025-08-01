@@ -53,7 +53,7 @@ Firstly, create your own user network on Docker for the James environment:
 
 You need a running *cassandra* in docker which connects to *james* network. To achieve this run:
 
-    $ docker run -d --network james --name=cassandra cassandra:4.1.9
+    $ docker run -d --network james --name=cassandra cassandra:5.0.4
 
 You need a running *rabbitmq* in docker which connects to *james* network. To achieve this run:
 
