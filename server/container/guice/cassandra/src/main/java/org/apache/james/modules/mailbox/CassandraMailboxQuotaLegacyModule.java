@@ -24,6 +24,9 @@ import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaDataDefinition;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV1;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV2;
+import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManagerV1;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManagerV2;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
@@ -40,6 +43,9 @@ import com.google.inject.name.Names;
 public class CassandraMailboxQuotaLegacyModule extends AbstractModule {
     @Override
     protected void configure() {
+        bind(CassandraGlobalMaxQuotaDao.class).in(Scopes.SINGLETON);
+        bind(CassandraPerDomainMaxQuotaDao.class).in(Scopes.SINGLETON);
+        bind(CassandraPerUserMaxQuotaDao.class).in(Scopes.SINGLETON);
         bind(CassandraCurrentQuotaManagerV1.class).in(Scopes.SINGLETON);
         bind(CassandraCurrentQuotaManagerV2.class).in(Scopes.SINGLETON);
         bind(CurrentQuotaManager.class).to(CassandraCurrentQuotaManagerV1.class);
