@@ -3158,6 +3158,32 @@
                     <version>1.13.0</version>
                 </plugin>
                 <plugin>
+                    <groupId>com.gradle</groupId>
+                    <artifactId>develocity-maven-extension</artifactId>
+                    <configuration>
+                        <develocity>
+                            <plugins>
+                                <plugin>
+                                    <groupId>org.apache.maven.plugins</groupId>
+                                    <artifactId>maven-compiler-plugin</artifactId>
+                                    <executions>
+                                        <execution>
+                                            <id>default-compile</id>
+                                            <inputs>
+                                                <properties>
+                                                    <property>
+                                                        <name>moduleVersion</name>
+                                                    </property>
+                                                </properties>
+                                            </inputs>
+                                        </execution>
+                                    </executions>
+                                </plugin>
+                            </plugins>
+                        </develocity>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <groupId>org.scalatest</groupId>
                     <artifactId>scalatest-maven-plugin</artifactId>
                     <version>2.2.0</version>
@@ -3993,35 +4019,11 @@
                 <pluginManagement>
                     <plugins>
                         <plugin>
-                            <groupId>io.github.git-commit-id</groupId>
-                            <artifactId>git-commit-id-maven-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>get-the-git-infos</id>
-                                    <phase>none</phase>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-checkstyle-plugin</artifactId>
                             <executions>
                                 <execution>
                                     <id>check-style</id>
-                                    <phase>none</phase>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-compiler-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>default-compile</id>
-                                    <phase>none</phase>
-                                </execution>
-                                <execution>
-                                    <id>default-testCompile</id>
                                     <phase>none</phase>
                                 </execution>
                             </executions>
@@ -4043,87 +4045,10 @@
                         </plugin>
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-jar-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>build-test-jars</id>
-                                    <phase>none</phase>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-project-info-reports-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <phase>none</phase>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-remote-resources-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>process</id>
-                                    <phase>none</phase>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-resources-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>default-resources</id>
-                                    <phase>none</phase>
-                                </execution>
-                                <execution>
-                                    <id>default-testResources</id>
-                                    <phase>none</phase>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-site-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>attach-descriptor</id>
-                                    <phase>none</phase>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-source-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>attach-sources</id>
-                                    <phase>none</phase>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-surefire-plugin</artifactId>
                             <configuration>
                                 <rerunFailingTestsCount>2</rerunFailingTestsCount>
                             </configuration>
-                        </plugin>
-                        <plugin>
-                            <groupId>net.alchim31.maven</groupId>
-                            <artifactId>scala-maven-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>scala-compile-first</id>
-                                    <phase>none</phase>
-                                </execution>
-                                <execution>
-                                    <id>scala-test-compile</id>
-                                    <phase>none</phase>
-                                </execution>
-                            </executions>
                         </plugin>
                         <plugin>
                             <groupId>com.github.ekryd.sortpom</groupId>
@@ -4131,6 +4056,16 @@
                             <executions>
                                 <execution>
                                     <id>strict-pom-ordering</id>
+                                    <phase>none</phase>
+                                </execution>
+                            </executions>
+                        </plugin>
+                        <plugin>
+                            <groupId>io.github.evis</groupId>
+                            <artifactId>scalafix-maven-plugin_2.13</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>scala-check-style</id>
                                     <phase>none</phase>
                                 </execution>
                             </executions>
