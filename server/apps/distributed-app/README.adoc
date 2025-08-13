@@ -17,7 +17,7 @@ Third party compulsory dependencies:
 
 [source]
 ----
-$ docker run -d --network james -p 9042:9042 --name=cassandra cassandra:4.1.9
+$ docker run -d --network james -p 9042:9042 --name=cassandra cassandra:5.0.4
 $ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' --env 'DISABLE_SECURITY_PLUGIN=true' --env 'DISABLE_INSTALL_DEMO_CONFIG=true' opensearchproject/opensearch:2.19.2
 $ docker run -d --network james -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:4.1.1-management
 $ docker run -d --network james -p 8000:8000 --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 ghcr.io/scality/cloudserver:c1ba296859690c1cbbec609aaae430f6b04b4745
