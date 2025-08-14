@@ -25,9 +25,19 @@ import java.util.Base64;
 import com.google.common.collect.ImmutableList;
 
 public class OIDCSASLHelper {
-    public static String generateOauthBearer(String username, String token) {
+    // See the XOAUTH2 specification athttps://developers.google.com/workspace/gmail/imap/xoauth2-protocol
+    // for details.
+    public static String generateEncodedXOauth2InitialClientResponse(String username, String token) {
         return Base64.getEncoder().encodeToString(String.join("" + OIDCSASLParser.SASL_SEPARATOR,
                 ImmutableList.of("user=" + username, "auth=Bearer " + token, "", ""))
+            .getBytes(StandardCharsets.US_ASCII));
+    }
+
+    // See the OAUTHBEARER specification at https://datatracker.ietf.org/doc/html/rfc5801#section-4
+    // for details.
+    public static String generateEncodedOauthbearerInitialClientResponse(String username, String token) {
+        return Base64.getEncoder().encodeToString(String.join("" + OIDCSASLParser.SASL_SEPARATOR,
+                ImmutableList.of("n,a=" + username, "auth=Bearer " + token, "", ""))
             .getBytes(StandardCharsets.US_ASCII));
     }
 }
