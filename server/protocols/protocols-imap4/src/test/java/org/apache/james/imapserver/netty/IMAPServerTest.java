@@ -1343,7 +1343,7 @@ class IMAPServerTest {
 
         @Test
         void oauthShouldSuccessWhenValidToken() throws Exception {
-            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN);
             IMAPSClient client = imapsClient(port);
             client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
             assertThat(client.getReplyString()).contains("OK AUTHENTICATE completed.");
@@ -1384,9 +1384,9 @@ class IMAPServerTest {
 
         @Test
         void oauthShouldSupportOAUTH2Type() throws Exception {
-            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            String xoauth2 = OIDCSASLHelper.generateEncodedXOauth2InitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN);
             IMAPSClient client = imapsClient(port);
-            client.sendCommand("AUTHENTICATE XOAUTH2 " + oauthBearer);
+            client.sendCommand("AUTHENTICATE XOAUTH2 " + xoauth2);
             assertThat(client.getReplyString()).contains("OK AUTHENTICATE completed.");
         }
 
@@ -1405,7 +1405,7 @@ class IMAPServerTest {
 
         @Test
         void shouldNotOauthWhenAuthIsReady() throws Exception {
-            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN);
             IMAPSClient client = imapsClient(port);
             client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
             client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
@@ -1414,7 +1414,7 @@ class IMAPServerTest {
 
         @Test
         void appendShouldSuccessWhenAuthenticated() throws Exception {
-            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN);
             IMAPSClient imapsClient = imapsClient(port);
             imapsClient.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
             imapsClient.create("INBOX");
@@ -1451,7 +1451,7 @@ class IMAPServerTest {
 
             int port = imapServer.getListenAddresses().get(0).getPort();
 
-            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN);
             IMAPSClient client = imapsClient(port);
             client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
             assertThat(client.getReplyString()).contains("NO AUTHENTICATE failed.");
@@ -1478,7 +1478,7 @@ class IMAPServerTest {
 
             int port = imapServer.getListenAddresses().get(0).getPort();
 
-            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN);
             IMAPSClient client = imapsClient(port);
             client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
             assertThat(client.getReplyString()).contains("OK AUTHENTICATE completed.");
@@ -1503,7 +1503,7 @@ class IMAPServerTest {
 
             int port = imapServer.getListenAddresses().get(0).getPort();
 
-            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN);
             IMAPSClient client = imapsClient(port);
             client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
             assertThat(client.getReplyString()).contains("NO AUTHENTICATE processing failed.");
@@ -1530,7 +1530,7 @@ class IMAPServerTest {
 
             int port = imapServer.getListenAddresses().get(0).getPort();
 
-            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN);
             IMAPSClient client = imapsClient(port);
             client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
             assertThat(client.getReplyString()).contains("OK AUTHENTICATE completed.");
@@ -1556,7 +1556,7 @@ class IMAPServerTest {
 
             int port = imapServer.getListenAddresses().get(0).getPort();
 
-            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.VALID_TOKEN);
+            String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER.asString(), OidcTokenFixture.VALID_TOKEN);
             IMAPSClient client = imapsClient(port);
             client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
             assertThat(client.getReplyString()).contains("NO AUTHENTICATE processing failed.");
@@ -1564,7 +1564,7 @@ class IMAPServerTest {
 
         @Test
         void oauthShouldImpersonateFailWhenNOTDelegated() throws Exception {
-            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER3.asString(), OidcTokenFixture.VALID_TOKEN);
+            String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER3.asString(), OidcTokenFixture.VALID_TOKEN);
             IMAPSClient client = imapsClient(port);
             client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
             assertThat(client.getReplyString()).contains("NO AUTHENTICATE");
@@ -1572,7 +1572,7 @@ class IMAPServerTest {
 
         @Test
         void oauthShouldImpersonateSuccessWhenDelegated() throws Exception {
-            String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER2.asString(), OidcTokenFixture.VALID_TOKEN);
+            String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER2.asString(), OidcTokenFixture.VALID_TOKEN);
             IMAPSClient client = imapsClient(port);
             client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
             assertThat(client.getReplyString()).contains("OK AUTHENTICATE completed.");
@@ -1588,7 +1588,7 @@ class IMAPServerTest {
 
             // USER1 authenticate and impersonate as USER2
             try (TestIMAPClient client = new TestIMAPClient(imapsClient(port))) {
-                String oauthBearer = OIDCSASLHelper.generateOauthBearer(USER2.asString(), OidcTokenFixture.VALID_TOKEN);
+                String oauthBearer = OIDCSASLHelper.generateEncodedOauthbearerInitialClientResponse(USER2.asString(), OidcTokenFixture.VALID_TOKEN);
                 String authenticateResponse = client.sendCommand("AUTHENTICATE OAUTHBEARER " + oauthBearer);
                 assertThat(authenticateResponse).contains("OK AUTHENTICATE completed.");
 
