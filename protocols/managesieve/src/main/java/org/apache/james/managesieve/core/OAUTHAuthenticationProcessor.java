@@ -45,7 +45,7 @@ public class OAUTHAuthenticationProcessor implements AuthenticationProcessor {
 
     @Override
     public String initialServerResponse(Session session) {
-        return "+ \"\"";
+        return "\"\"\r\nOK";
     }
 
     @Override
