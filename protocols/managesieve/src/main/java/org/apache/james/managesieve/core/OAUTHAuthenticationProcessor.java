@@ -35,11 +35,11 @@ import org.apache.james.protocols.api.OidcSASLConfiguration;
 
 import reactor.core.publisher.Mono;
 
-public class XOAUTH2AuthenticationProcessor implements AuthenticationProcessor {
+public class OAUTHAuthenticationProcessor implements AuthenticationProcessor {
 
     private final OidcSASLConfiguration oidcConfiguration;
 
-    public XOAUTH2AuthenticationProcessor(OidcSASLConfiguration oidcConfiguration) {
+    public OAUTHAuthenticationProcessor(OidcSASLConfiguration oidcConfiguration) {
         this.oidcConfiguration = oidcConfiguration;
     }
 
@@ -107,4 +107,3 @@ public class XOAUTH2AuthenticationProcessor implements AuthenticationProcessor {
             .map(Username::of);
     }
 }
-
