@@ -3436,6 +3436,71 @@
                                         </execution>
                                     </executions>
                                 </plugin>
+                                <plugin>
+                                    <groupId>org.jacoco</groupId>
+                                    <artifactId>jacoco-maven-plugin</artifactId>
+                                    <skipIfTrue>
+                                        <property>skip</property>
+                                    </skipIfTrue>
+                                    <executions>
+                                        <execution>
+                                            <id>jacoco-report</id>
+                                            <inputs>
+                                                <properties>
+                                                    <property>
+                                                        <name>dataFileExcludes</name>
+                                                    </property>
+                                                    <property>
+                                                        <name>dataFileExcludes</name>
+                                                    </property>
+                                                    <property>
+                                                        <name>dataFileIncludes</name>
+                                                    </property>
+                                                    <property>
+                                                        <name>excludes</name>
+                                                    </property>
+                                                    <property>
+                                                        <name>footer</name>
+                                                    </property>
+                                                    <property>
+                                                        <name>includeCurrentProject</name>
+                                                    </property>
+                                                    <property>
+                                                        <name>includes</name>
+                                                    </property>
+                                                    <property>
+                                                        <name>outputEncoding</name>
+                                                    </property>
+                                                    <property>
+                                                        <name>sourceEncoding</name>
+                                                    </property>
+                                                    <property>
+                                                        <name>title</name>
+                                                    </property>
+                                                </properties>
+                                                <ignoredProperties>
+                                                    <ignore>project</ignore>
+                                                    <ignore>reactorProjects</ignore>
+                                                    <!--
+                                                     we should not be ignoring this since formats changes the content of the output
+                                                      but it contains a list of enum see https://github.com/jacoco/jacoco/blob/562a7299399b8321dfcf8eeb21ea4bfc27556fdc/jacoco-maven-plugin/src/org/jacoco/maven/AbstractReportMojo.java
+                                                     and that's not storable in the cache key
+                                                     no sure how this should be handled ?
+                                                     -->
+                                                    <ignore>formats</ignore>
+                                                </ignoredProperties>
+                                            </inputs>
+                                            <outputs>
+                                                <cacheableBecause>Test coverage reports depend on test execution and don't affect final build product.</cacheableBecause>
+                                                <directories>
+                                                    <directory>
+                                                        <name>outputDirectory</name>
+                                                    </directory>
+                                                </directories>
+                                            </outputs>
+                                        </execution>
+                                    </executions>
+                                </plugin>
                             </plugins>
                         </develocity>
                     </configuration>
