@@ -100,7 +100,8 @@ public class CoreProcessor implements CoreCommands {
             capabilities.put(Capabilities.OWNER, session.getUser().asString());
         }
         session.getOidcSASLConfiguration().ifPresent(oidcConfiguration -> {
-            this.authenticationProcessorMap.putIfAbsent(SupportedMechanism.XOAUTH2, new XOAUTH2AuthenticationProcessor(oidcConfiguration));
+            this.authenticationProcessorMap.putIfAbsent(SupportedMechanism.XOAUTH2, new OAUTHAuthenticationProcessor(oidcConfiguration));
+            this.authenticationProcessorMap.putIfAbsent(SupportedMechanism.OAUTHBEARER, new OAUTHAuthenticationProcessor(oidcConfiguration));
         });
         capabilities.put(Capabilities.SASL, constructSaslSupportedAuthenticationMechanisms());
         return capabilities;
