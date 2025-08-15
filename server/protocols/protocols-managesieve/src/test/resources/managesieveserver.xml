@@ -1,0 +1,9 @@
+<managesieveserver enabled="true">
+    <jmxName>managesieveserver</jmxName>
+    <bind>0.0.0.0:4190</bind>
+
+    <connectionBacklog>200</connectionBacklog>
+    <connectiontimeout>360</connectiontimeout>
+    <connectionLimit>0</connectionLimit>
+    <connectionLimitPerIP>0</connectionLimitPerIP>
+</managesieveserver>
