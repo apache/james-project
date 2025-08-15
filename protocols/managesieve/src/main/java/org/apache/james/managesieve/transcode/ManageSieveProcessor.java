@@ -86,17 +86,24 @@ public class ManageSieveProcessor {
 
     private String matchCommandWithImplementation(Session session, String arguments, String command) throws SessionTerminatedException {
         if (session.getState() == Session.State.AUTHENTICATION_IN_PROGRESS) {
-            return argumentParser.authenticate(session, arguments);
+            return argumentParser.authenticate(session, command);
         }
         if (command.equalsIgnoreCase(AUTHENTICATE)) {
             if (StringUtils.countMatches(arguments, "\"") == 4) {
-                argumentParser.chooseMechanism(session, arguments);
+                String result = argumentParser.chooseMechanism(session, arguments);
+                if (session.getState() != Session.State.AUTHENTICATION_IN_PROGRESS) {
+                    return result;
+                }
                 int bracket1 = arguments.indexOf('\"');
                 int bracket2 = arguments.indexOf('\"', bracket1 + 1);
                 int bracket3 = arguments.indexOf('\"', bracket2 + 1);
                 int bracket4 = arguments.indexOf('\"', bracket3 + 1);
 
-                return argumentParser.authenticate(session, arguments.substring(bracket3 + 1, bracket4));
+                return argumentParser.authenticate(session, arguments.substring(bracket3, bracket4 + 1));
+            } else if (arguments.split(" ").length != 1) {
+                // The client send additional arguments but didn't quote them. It probably thinks that it does not need
+                // to send more, but the server expects more. Reject this authentication now to solve this conflict.
+                return "NO \"unquoted argument found\"";
             }
             return argumentParser.chooseMechanism(session, arguments);
         } else if (command.equalsIgnoreCase(CAPABILITY)) {
