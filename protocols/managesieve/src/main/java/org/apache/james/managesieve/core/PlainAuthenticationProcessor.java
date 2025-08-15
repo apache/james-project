@@ -50,7 +50,7 @@ public class PlainAuthenticationProcessor implements AuthenticationProcessor {
 
     @Override
     public String initialServerResponse(Session session) {
-        return "+ \"\"";
+        return "\"\"\r\nOK";
     }
 
 
