@@ -3196,6 +3196,10 @@
                                                             <ignoreEmptyDirectories>true</ignoreEmptyDirectories>
                                                         </normalization>
                                                     </fileSet>
+                                                    <fileSet>
+                                                        <name>classpathElements</name>
+                                                        <normalization>COMPILE_CLASSPATH</normalization>
+                                                    </fileSet>
                                                 </fileSets>
                                                 <properties>
                                                     <property>
@@ -3320,6 +3324,10 @@
                                                             <ignoreLineEndings>true</ignoreLineEndings>
                                                             <ignoreEmptyDirectories>true</ignoreEmptyDirectories>
                                                         </normalization>
+                                                    </fileSet>
+                                                    <fileSet>
+                                                        <name>classpathElements</name>
+                                                        <normalization>COMPILE_CLASSPATH</normalization>
                                                     </fileSet>
                                                 </fileSets>
                                                 <properties>
