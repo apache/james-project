@@ -33,9 +33,11 @@ public class OIDCSASLParser {
     public static final char SASL_SEPARATOR = 1;
     public static final String PREFIX_TOKEN = "Bearer ";
     public static final String TOKEN_PART_PREFIX = "auth=";
-    public static final String USER_PART_PREFIX = "user=";
+    public static final String XOAUTH2_USER_PART_PREFIX = "user=";
+    public static final String OAUTHBEARER_USER_PART_PREFIX = "a=";
     public static final int TOKEN_PART_INDEX = TOKEN_PART_PREFIX.length();
-    public static final int USER_PART_INDEX = USER_PART_PREFIX.length();
+    public static final int XOAUTH2_USER_PART_INDEX = XOAUTH2_USER_PART_PREFIX.length();
+    public static final int OAUTHBEARER_USER_PART_INDEX = OAUTHBEARER_USER_PART_PREFIX.length();
 
     public static class OIDCInitialResponse {
         private final String associatedUser;
@@ -74,8 +76,11 @@ public class OIDCSASLParser {
                 if (stringToken.startsWith(TOKEN_PART_PREFIX)) {
                     tokenPart = StringUtils.replace(stringToken.substring(TOKEN_PART_INDEX), PREFIX_TOKEN, "");
                     tokenPartCounter++;
-                } else if (stringToken.startsWith(USER_PART_PREFIX)) {
-                    userPart = stringToken.substring(USER_PART_INDEX);
+                } else if (stringToken.startsWith(XOAUTH2_USER_PART_PREFIX)) {
+                    userPart = stringToken.substring(XOAUTH2_USER_PART_INDEX);
+                    userPartCounter++;
+                } else if (stringToken.startsWith(OAUTHBEARER_USER_PART_PREFIX)) {
+                    userPart = stringToken.substring(OAUTHBEARER_USER_PART_INDEX);
                     userPartCounter++;
                 }
             }
