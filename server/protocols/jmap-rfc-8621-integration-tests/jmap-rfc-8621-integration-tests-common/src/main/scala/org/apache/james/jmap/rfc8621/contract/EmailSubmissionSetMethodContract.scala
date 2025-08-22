@@ -27,7 +27,7 @@ import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.builder.ResponseSpecBuilder
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.apache.http.HttpStatus.SC_OK
+import org.apache.http.HttpStatus.{SC_CREATED, SC_OK}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
@@ -43,6 +43,7 @@ import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Test}
+import play.api.libs.json.{JsString, Json}
 
 trait EmailSubmissionSetMethodContract {
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
@@ -2245,5 +2246,162 @@ trait EmailSubmissionSetMethodContract {
                     |    ]
                     |  ]
                     |}""".stripMargin)
+  }
+
+  @Test
+  def emailSubmissionSetShouldSetCorrectlyHasAttachmentPropertyOnMessageInSentMailbox(server: GuiceJamesServer): Unit = {
+    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val draftId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
+    val bobInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val bobSentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.SENT))
+
+    val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .contentType("text/plain")
+      .body(payload)
+    .when
+      .post(s"/upload/$ACCOUNT_ID")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    val requestBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "e1526":{
+         |          "mailboxIds": {"${draftId.serialize}": true},
+         |          "to": [{"email": "${BOB.asString}"}],
+         |          "from": [{"email": "${BOB.asString}"}],
+         |          "subject": "World domination",
+         |          "attachments": [
+         |            {
+         |              "blobId": "$blobId",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "attachment",
+         |              "language": ["fr", "en"],
+         |              "location": "http://125.26.23.36/content"
+         |            }
+         |          ]
+         |        }
+         |      }
+         |     }, "c0"],
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "create": {
+         |         "k1490": {
+         |           "emailId": "#e1526",
+         |           "envelope": {
+         |             "mailFrom": {"email": "${BOB.asString}"},
+         |             "rcptTo": [{"email": "${BOB.asString}"}]
+         |           }
+         |         }
+         |      },
+         |      "onSuccessUpdateEmail": {
+         |         "#k1490": {
+         |           "mailboxIds/${bobSentId.serialize}": true,
+         |           "mailboxIds/${draftId.serialize}": null,
+         |           "keywords/$$seen": true,
+         |           "keywords/$$draft": null
+         |         }
+         |       }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestBob)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+
+    val requestQueryMailBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "filter": {"inMailbox": "${bobSentId.serialize}"}
+         |    },
+         |    "c0"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val responseBob = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(requestQueryMailBob)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(responseBob)
+        .inPath("methodResponses[0][1].ids")
+        .isArray
+        .hasSize(1)
+    }
+
+    val requestReadMailBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "filter": {"inMailbox": "${bobSentId.serialize}"}
+         |    },
+         |    "c0"],
+         |    [
+         |      "Email/get",
+         |      {
+         |        "accountId": "$ACCOUNT_ID",
+         |        "#ids": {
+         |          "resultOf": "c0",
+         |          "name": "Email/query",
+         |          "path": "/ids/*"
+         |        },
+         |        "properties": [
+         |          "id",
+         |          "hasAttachment"
+         |        ]
+         |      }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestReadMailBob)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[1][1].list[0].id")
+      .inPath(s"methodResponses[1][1].list")
+      .isEqualTo(
+        s"""[{
+           |  "hasAttachment": true
+           |}]""".stripMargin)
   }
 }
