@@ -19,11 +19,16 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.domainlist.api.DomainList;
@@ -43,6 +48,23 @@ public class RemoteDeliveryConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDeliveryConfiguration.class);
 
+    // TrustManager qui accepte tout
+    TrustManager[] trustAllCerts = new TrustManager[] {
+        new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+
+            }
+
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+
+            }
+        }
+    };
+
     public static final String USE_PRIORITY = "usePriority";
     public static final String MAX_DNS_PROBLEM_RETRIES = "maxDnsProblemRetries";
     public static final String HELO_NAME = "heloName";
@@ -56,6 +78,7 @@ public class RemoteDeliveryConfiguration {
     public static final String SSL_ENABLE = "sslEnable";
     public static final String START_TLS = "startTLS";
     public static final String VERIFY_SERVER_IDENTITY = "verifyServerIdentity";
+    public static final String SSL_TRUST_ALL_CERTS = "sslTrustAllCerts";
     public static final String BOUNCE_PROCESSOR = "bounceProcessor";
     public static final String SENDPARTIAL = "sendpartial";
     public static final String TIMEOUT = "timeout";
@@ -78,6 +101,7 @@ public class RemoteDeliveryConfiguration {
     private final boolean startTLS;
     private final boolean isSSLEnable;
     private final boolean verifyServerIdentity;
+    private final boolean sslTrustAllCerts;
     private final boolean isBindUsed;
     private final boolean sendPartial;
     private final boolean loadBalancing;
@@ -101,6 +125,7 @@ public class RemoteDeliveryConfiguration {
         startTLS = MailetUtil.getInitParameter(mailetConfig, START_TLS).orElse(false);
         isSSLEnable = MailetUtil.getInitParameter(mailetConfig, SSL_ENABLE).orElse(false);
         verifyServerIdentity = MailetUtil.getInitParameter(mailetConfig, VERIFY_SERVER_IDENTITY).orElse(true);
+        sslTrustAllCerts = MailetUtil.getInitParameter(mailetConfig, SSL_TRUST_ALL_CERTS).orElse(false);
         usePriority = MailetUtil.getInitParameter(mailetConfig, USE_PRIORITY).orElse(false);
         sendPartial = MailetUtil.getInitParameter(mailetConfig, SENDPARTIAL).orElse(false);
         loadBalancing = MailetUtil.getInitParameter(mailetConfig, LOAD_BALANCING).orElse(true);
@@ -246,6 +271,15 @@ public class RemoteDeliveryConfiguration {
         props.put("mail." + protocol + ".localhost", heloNameProvider.getHeloName());
         props.put("mail." + protocol + ".starttls.enable", String.valueOf(startTLS));
         props.put("mail." + protocol + ".ssl.checkserveridentity", String.valueOf(verifyServerIdentity));
+        if (sslTrustAllCerts) {
+            try {
+                SSLContext sc = SSLContext.getInstance("TLS");
+                sc.init(null, trustAllCerts, new java.security.SecureRandom());
+                props.put("mail." + protocol + ".ssl.socketFactory", sc.getSocketFactory());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
         if (isBindUsed()) {
             props.put("mail." + protocol + ".localaddress", bindAddress);
         }
@@ -348,4 +382,7 @@ public class RemoteDeliveryConfiguration {
         return loadBalancing;
     }
 
+    public boolean isSslTrustAllCerts() {
+        return sslTrustAllCerts;
+    }
 }
