@@ -47,7 +47,7 @@ class SmtpUtf8AnnounceTest {
     @Test
     void ehloShouldAnnounceSmtpUtf8() throws Exception {
         testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-authAnnounceAlways.xml")));
+            ClassLoader.getSystemResourceAsStream("smtpserver-utf8.xml")));
         testSystem.smtpServer.init();
 
         SMTPClient smtpProtocol = new SMTPClient();
