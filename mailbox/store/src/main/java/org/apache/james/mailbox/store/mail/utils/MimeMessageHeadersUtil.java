@@ -25,27 +25,39 @@ import java.util.Optional;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.dom.Header;
 import org.apache.james.mime4j.dom.field.UnstructuredField;
 import org.apache.james.mime4j.field.UnstructuredFieldImpl;
 import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.stream.Field;
+import org.apache.james.mime4j.util.MimeUtil;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 public class MimeMessageHeadersUtil {
-    public static Optional<MimeMessageId> parseMimeMessageId(HeaderImpl headers) {
+    private static final Splitter SPLITTER = Splitter.on(' ').omitEmptyStrings().trimResults();
+
+    public static Optional<MimeMessageId> parseMimeMessageId(Header headers) {
         return Optional.ofNullable(headers.getField("Message-ID")).map(field -> new MimeMessageId(field.getBody()));
     }
 
-    public static Optional<MimeMessageId> parseInReplyTo(HeaderImpl headers) {
-        return Optional.ofNullable(headers.getField("In-Reply-To")).map(field -> new MimeMessageId(field.getBody()));
+    public static Optional<MimeMessageId> parseInReplyTo(Header headers) {
+        return Optional.ofNullable(headers.getField("In-Reply-To"))
+            .map(Field::getBody)
+            .map(MimeUtil::unfold)
+            .map(String::trim)
+            .map(MimeMessageId::new);
     }
 
-    public static Optional<List<MimeMessageId>> parseReferences(HeaderImpl headers) {
+    public static Optional<List<MimeMessageId>> parseReferences(Header headers) {
         List<Field> mimeMessageIdFields = headers.getFields("References");
         if (!mimeMessageIdFields.isEmpty()) {
             List<MimeMessageId> mimeMessageIdList = mimeMessageIdFields.stream()
-                .map(mimeMessageIdField -> new MimeMessageId(mimeMessageIdField.getBody()))
+                .map(Field::getBody)
+                .map(MimeUtil::unfold)
+                .flatMap(SPLITTER::splitToStream)
+                .map(MimeMessageId::new)
                 .collect(ImmutableList.toImmutableList());
             return Optional.of(mimeMessageIdList);
         }
