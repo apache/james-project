@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 
 class MimeMessageHeadersUtilTest {
     @Test
-    void test() throws Exception {
+    void parseInReplyToShouldHandleHeaderWithCRLFLineBreaks() throws Exception {
         Header header = parse("References:\r\n" +
             " <CANKoxfUNSvbjBuUaQSQiFavvDH-OvVig772-dKMrAbsisoZa1A@mail.gmail.com>\r\n" +
             " <Mime4j.70b.9be3d6cb7586c526.198e07cfc57@linagora.com>\r\n" +
@@ -45,7 +45,7 @@ class MimeMessageHeadersUtilTest {
     }
 
     @Test
-    void test2() throws Exception {
+    void parseReferencesShouldHandleHeaderWithCRLFLineBreaks() throws Exception {
         Header header = parse("References:\r\n" +
             " <CANKoxfUNSvbjBuUaQSQiFavvDH-OvVig772-dKMrAbsisoZa1A@mail.gmail.com>\r\n" +
             " <Mime4j.70b.9be3d6cb7586c526.198e07cfc57@linagora.com>\r\n" +
