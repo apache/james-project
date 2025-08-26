@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
+import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mime4j.dom.Header;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
@@ -57,6 +58,15 @@ class MimeMessageHeadersUtilTest {
                 new MimeMessageId("<Mime4j.70b.9be3d6cb7586c526.198e07cfc57@linagora.com>"));
     }
 
+    @Test
+    void parseSubjectShouldHandleHeaderWithCRLFLineBreaks() throws Exception {
+        Header header = parse("Subject:\r\n"
+            + " This is a\r\n"
+            + " multi-line subject header\r\n").getHeader();
+
+        assertThat(MimeMessageHeadersUtil.parseSubject(header))
+            .contains(new Subject("This is a multi-line subject header"));
+    }
 
     private Message parse(String s) throws IOException {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();

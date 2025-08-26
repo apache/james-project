@@ -28,7 +28,6 @@ import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Header;
 import org.apache.james.mime4j.dom.field.UnstructuredField;
 import org.apache.james.mime4j.field.UnstructuredFieldImpl;
-import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.MimeUtil;
 
@@ -64,7 +63,7 @@ public class MimeMessageHeadersUtil {
         return Optional.empty();
     }
 
-    public static Optional<Subject> parseSubject(HeaderImpl headers) {
+    public static Optional<Subject> parseSubject(Header headers) {
         return Optional.ofNullable(headers.getField("Subject"))
             .map(field -> {
                 if (!(field instanceof UnstructuredField)) {
@@ -72,6 +71,6 @@ public class MimeMessageHeadersUtil {
                 }
                 return (UnstructuredField) field;
             })
-            .map(unstructuredField -> new Subject(unstructuredField.getValue()));
+            .map(unstructuredField -> new Subject(unstructuredField.getValue().trim()));
     }
 }
