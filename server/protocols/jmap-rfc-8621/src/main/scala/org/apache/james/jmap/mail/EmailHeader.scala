@@ -39,7 +39,15 @@ object EmailHeader {
 }
 
 object RawHeaderValue {
-  def from(field: Field): RawHeaderValue = RawHeaderValue(new String(field.getRaw.toByteArray, US_ASCII).substring(field.getName.length + 1))
+  def from(field: Field): RawHeaderValue = {
+    val rawValue: String =
+      Option(field.getRaw)
+        .map(raw => new String(raw.toByteArray, US_ASCII))
+        .map(_.substring(field.getName.length + 1))
+        .getOrElse(field.getBody)
+
+    RawHeaderValue(rawValue)
+  }
 }
 
 object TextHeaderValue {
