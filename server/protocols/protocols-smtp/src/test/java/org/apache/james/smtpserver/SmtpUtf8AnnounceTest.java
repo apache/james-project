@@ -37,6 +37,9 @@ class SmtpUtf8AnnounceTest {
     @BeforeEach
     void setUp() throws Exception {
         testSystem.preSetUp();
+        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
+            ClassLoader.getSystemResourceAsStream("smtpserver-utf8.xml")));
+        testSystem.smtpServer.init();
     }
 
     @AfterEach
@@ -46,10 +49,6 @@ class SmtpUtf8AnnounceTest {
 
     @Test
     void ehloShouldAnnounceSmtpUtf8() throws Exception {
-        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-utf8.xml")));
-        testSystem.smtpServer.init();
-
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
@@ -64,10 +63,6 @@ class SmtpUtf8AnnounceTest {
 
     @Test
     void trivialEmailWithSmtpUtf8ShouldBeReceived() throws Exception {
-        testSystem.smtpServer.configure(FileConfigurationProvider.getConfig(
-            ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
-        testSystem.smtpServer.init();
-
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());

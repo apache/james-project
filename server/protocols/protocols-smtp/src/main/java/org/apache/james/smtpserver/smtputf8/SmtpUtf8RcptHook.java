@@ -19,8 +19,13 @@
 
 package org.apache.james.smtpserver.smtputf8;
 
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
+import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.mailet.Experimental;
 
@@ -31,5 +36,15 @@ public class SmtpUtf8RcptHook implements RcptHook {
     @Override
     public Set<String> supportedParameters() {
         return ImmutableSet.of("SMTPUTF8");
+    }
+
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+        return HookResult.DECLINED;
+    }
+
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt, Map<String, String> parameters) {
+        return HookResult.DECLINED;
     }
 }

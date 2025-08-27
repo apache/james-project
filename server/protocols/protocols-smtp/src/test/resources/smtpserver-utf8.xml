@@ -42,7 +42,6 @@
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
         <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
         <handlerchain>
-            <handler class="org.apache.james.smtpserver.smtputf8.SmtpUtf8EhloHook"/>
             <handler class="org.apache.james.smtpserver.smtputf8.SmtpUtf8MailHook"/>
             <handler class="org.apache.james.smtpserver.smtputf8.SmtpUtf8RcptHook"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>

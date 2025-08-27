@@ -19,13 +19,18 @@
 
 package org.apache.james.smtpserver.smtputf8;
 
+import java.util.List;
+
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.core.esmtp.EhloExtension;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
 import org.apache.mailet.Experimental;
 
+import com.google.common.collect.ImmutableList;
+
 @Experimental
-public class SmtpUtf8MailHook implements MailParametersHook {
+public class SmtpUtf8MailHook implements MailParametersHook, EhloExtension {
     @Override
     public HookResult doMailParameter(SMTPSession session, String paramName, String paramValue) {
         return HookResult.DECLINED;
@@ -34,5 +39,10 @@ public class SmtpUtf8MailHook implements MailParametersHook {
     @Override
     public String[] getMailParamNames() {
         return new String[]{"SMTPUTF8"};
+    }
+
+    @Override
+    public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
+        return ImmutableList.of("SMTPUTF8");
     }
 }
