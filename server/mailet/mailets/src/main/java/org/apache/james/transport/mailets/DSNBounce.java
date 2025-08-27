@@ -429,7 +429,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
             .orElse(getInitParameters().getAttachmentType());
     }
 
-    private MimeBodyPart createTextMsg(Mail originalMail) throws MessagingException {
+    protected MimeBodyPart createTextMsg(Mail originalMail) throws MessagingException {
         StringBuilder builder = new StringBuilder();
 
         builder.append(bounceMessage()).append(LINE_BREAK);
