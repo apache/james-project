@@ -27,6 +27,7 @@ import jakarta.inject.Inject;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.util.streams.Limit;
 
 import com.google.common.base.Preconditions;
@@ -114,7 +115,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, MessageId messageId) {
-        return Mono.fromRunnable(() -> entries.put(mailboxId, messageId, new Entry(mailboxId, messageId, sentAt, receivedAt)));
+    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, MessageId messageId, ThreadId threadId) {
+        return Mono.fromRunnable(() -> entries.put(mailboxId, messageId, new Entry(mailboxId, messageId, sentAt, receivedAt, threadId)));
     }
 }
