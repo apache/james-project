@@ -43,32 +43,32 @@ public class PostgresEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit) {
+    public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         return emailQueryViewDAO.listMailboxContentSortedBySentAt(PostgresMailboxId.class.cast(mailboxId), limit);
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit) {
+    public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         return emailQueryViewDAO.listMailboxContentSortedByReceivedAt(PostgresMailboxId.class.cast(mailboxId), limit);
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         return emailQueryViewDAO.listMailboxContentSinceAfterSortedBySentAt(PostgresMailboxId.class.cast(mailboxId), since, limit);
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         return emailQueryViewDAO.listMailboxContentSinceAfterSortedByReceivedAt(PostgresMailboxId.class.cast(mailboxId), since, limit);
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         return emailQueryViewDAO.listMailboxContentBeforeSortedByReceivedAt(PostgresMailboxId.class.cast(mailboxId), since, limit);
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         return emailQueryViewDAO.listMailboxContentSinceSentAt(PostgresMailboxId.class.cast(mailboxId), since, limit);
     }
 
