@@ -228,6 +228,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
                     return new SimpleQueryStringQuery.Builder()
                         .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY))
                         .query(textCriterion.getOperator().getValue())
+                        .defaultOperator(Operator.And)
                         .build().toQuery();
                 } else {
                     return new BoolQuery.Builder()
@@ -254,6 +255,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
                         .should(new SimpleQueryStringQuery.Builder()
                             .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY, JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
                             .query(textCriterion.getOperator().getValue())
+                            .defaultOperator(Operator.And)
                             .build().toQuery())
                         .should(new TermQuery.Builder()
                             .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
@@ -299,6 +301,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
                         .should(new SimpleQueryStringQuery.Builder()
                             .fields(ImmutableList.of(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
                             .query(textCriterion.getOperator().getValue())
+                            .defaultOperator(Operator.And)
                             .build().toQuery())
                         .should(new TermQuery.Builder()
                             .field(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILE_EXTENSION)
