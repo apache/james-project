@@ -46,6 +46,7 @@ public interface PostgresEmailQueryViewDataDefinition {
         Field<UUID> MESSAGE_ID = PostgresMessageDataDefinition.MESSAGE_ID;
         Field<OffsetDateTime> RECEIVED_AT = DSL.field("received_at", SQLDataType.TIMESTAMPWITHTIMEZONE.notNull());
         Field<OffsetDateTime> SENT_AT = DSL.field("sent_at", SQLDataType.TIMESTAMPWITHTIMEZONE.notNull());
+        Field<UUID> THREAD_ID = PostgresMessageDataDefinition.MessageToMailboxTable.THREAD_ID;
 
         Name PK_CONSTRAINT_NAME = DSL.name("email_query_view_pkey");
 
@@ -55,6 +56,7 @@ public interface PostgresEmailQueryViewDataDefinition {
                 .column(MESSAGE_ID)
                 .column(RECEIVED_AT)
                 .column(SENT_AT)
+                .column(THREAD_ID)
                 .constraint(DSL.constraint(PK_CONSTRAINT_NAME).primaryKey(MAILBOX_ID, MESSAGE_ID))))
             .supportsRowLevelSecurity()
             .build();
