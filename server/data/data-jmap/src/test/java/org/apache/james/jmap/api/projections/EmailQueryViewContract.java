@@ -27,6 +27,7 @@ import java.time.ZonedDateTime;
 
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.util.streams.Limit;
 import org.junit.jupiter.api.Test;
 
@@ -51,6 +52,8 @@ public interface EmailQueryViewContract {
 
     MessageId messageId4();
 
+    ThreadId threadId();
+
     @Test
     default void listMailboxContentShouldReturnEmptyByDefault() {
         assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12)).collectList().block())
@@ -59,9 +62,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentShouldBeOrderedBySentAt() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId()).block();
 
         assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12)).collectList().block())
             .containsExactly(messageId2(), messageId3(), messageId1());
@@ -69,9 +72,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentShouldApplyLimit() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId()).block();
 
         assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(2)).collectList().block())
             .containsExactly(messageId2(), messageId3());
@@ -79,9 +82,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceReceivedAtShouldExcludeTooOldItems() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_3, Limit.limit(12)).collectList().block())
             .containsExactly(messageId3(), messageId2());
@@ -89,9 +92,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceReceivedAtShouldReturnEmptyWhenNoneMatch() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_7, Limit.limit(12)).collectList().block())
             .isEmpty();
@@ -99,9 +102,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceReceivedAtAtShouldApplyLimit() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_1, Limit.limit(2)).collectList().block())
             .containsExactly(messageId3(), messageId2());
@@ -109,9 +112,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceSentdAtShouldExcludeTooOldItems() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_2, Limit.limit(12)).collectList().block())
             .containsExactly(messageId3(), messageId2());
@@ -119,9 +122,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceSentAtAtShouldApplyLimit() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_1, Limit.limit(2)).collectList().block())
             .containsExactly(messageId3(), messageId2());
@@ -129,9 +132,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceSentAtShouldReturnEmptyWhenNoneMatch() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_7, Limit.limit(12)).collectList().block())
             .isEmpty();
@@ -139,9 +142,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentShouldNotReturnClearedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId()).block();
 
         testee().delete(mailboxId1()).block();
 
@@ -151,9 +154,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentShouldNotReturnDeletedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId()).block();
 
         testee().delete(mailboxId1(), messageId2()).block();
 
@@ -163,9 +166,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceReceivedAtShouldNotReturnClearedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         testee().delete(mailboxId1()).block();
 
@@ -175,9 +178,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceSentAtShouldNotReturnClearedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         testee().delete(mailboxId1()).block();
 
@@ -187,8 +190,8 @@ public interface EmailQueryViewContract {
 
     @Test
     default void saveShouldBeIdempotent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
 
         assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12)).collectList().block())
             .containsExactly(messageId1());
@@ -196,8 +199,8 @@ public interface EmailQueryViewContract {
 
     @Test
     default void datesCanBeDuplicated() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId2()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId2(), threadId()).block();
 
         assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12)).collectList().block())
             .containsExactlyInAnyOrder(messageId1(), messageId2());
@@ -205,9 +208,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceReceivedAtShouldNotReturnDeletedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         testee().delete(mailboxId1(), messageId2()).block();
 
@@ -217,9 +220,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceSentAtShouldNotReturnDeletedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         testee().delete(mailboxId1(), messageId2()).block();
 
@@ -229,9 +232,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSortedByReceivedAtShouldBeSortedByReceivedAt() {
-        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         assertThat(testee().listMailboxContentSortedByReceivedAt(mailboxId1(), Limit.limit(12)).collectList().block())
             .containsExactly(messageId3(), messageId1(), messageId2());
@@ -239,9 +242,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceSortedByReceivedAtShouldBeSortedByReceivedAt() {
-        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         assertThat(testee().listMailboxContentSinceAfterSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12)).collectList().block())
             .containsExactly(messageId3(), messageId1());
@@ -249,9 +252,9 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentBeforeSortedByReceivedAtShouldBeSortedByReceivedAt() {
-        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
 
         assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12)).collectList().block())
             .containsExactly(messageId1(), messageId2());
