@@ -26,6 +26,7 @@ import jakarta.inject.Inject;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.util.streams.Limit;
@@ -82,7 +83,7 @@ public class PostgresEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, MessageId messageId) {
-        return emailQueryViewDAO.save(PostgresMailboxId.class.cast(mailboxId), sentAt, receivedAt, PostgresMessageId.class.cast(messageId));
+    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, MessageId messageId, ThreadId threadId) {
+        return emailQueryViewDAO.save(PostgresMailboxId.class.cast(mailboxId), sentAt, receivedAt, PostgresMessageId.class.cast(messageId), threadId);
     }
 }

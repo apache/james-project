@@ -185,7 +185,7 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
         return Mono.fromCallable(() -> parseMessage(messageResult))
             .map(header -> date(header).orElse(messageResult.getInternalDate()))
             .map(date -> ZonedDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC))
-            .flatMap(sentAt -> viewManager.getEmailQueryView(username).save(mailboxId, sentAt, receivedAt, messageResult.getMessageId()))
+            .flatMap(sentAt -> viewManager.getEmailQueryView(username).save(mailboxId, sentAt, receivedAt, messageResult.getMessageId(), messageResult.getThreadId()))
             .then();
     }
 
