@@ -31,6 +31,7 @@ import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQu
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.SENT_AT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.TABLE_NAME_RECEIVED_AT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.TABLE_NAME_SENT_AT;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.THREAD_ID;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -45,6 +46,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.util.streams.Limit;
 
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -128,6 +130,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
             .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
             .value(SENT_AT, bindMarker(SENT_AT))
+            .value(THREAD_ID, bindMarker(THREAD_ID))
             .build());
 
         insertReceivedAt = session.prepare(insertInto(TABLE_NAME_RECEIVED_AT)
@@ -135,6 +138,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
             .value(RECEIVED_AT, bindMarker(RECEIVED_AT))
             .value(SENT_AT, bindMarker(SENT_AT))
+            .value(THREAD_ID, bindMarker(THREAD_ID))
             .build());
 
         deleteLookupRecord = session.prepare(deleteFrom(DATE_LOOKUP_TABLE)
@@ -174,7 +178,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit) {
+    public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
         CassandraId cassandraId = (CassandraId) mailboxId;
@@ -185,7 +189,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit) {
+    public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
         CassandraId cassandraId = (CassandraId) mailboxId;
@@ -196,7 +200,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
         CassandraId cassandraId = (CassandraId) mailboxId;
@@ -216,7 +220,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
         CassandraId cassandraId = (CassandraId) mailboxId;
@@ -229,7 +233,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
         CassandraId cassandraId = (CassandraId) mailboxId;
@@ -242,7 +246,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
         CassandraId cassandraId = (CassandraId) mailboxId;
@@ -297,7 +301,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, MessageId messageId) {
+    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, MessageId messageId, ThreadId threadId) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
         CassandraId cassandraId = (CassandraId) mailboxId;
 
@@ -310,12 +314,14 @@ public class CassandraEmailQueryView implements EmailQueryView {
                 executor.executeVoid(insertSentAt.bind()
                     .setUuid(MESSAGE_ID, cassandraMessageId.get())
                     .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-                    .setInstant(SENT_AT, sentAt.toInstant())),
+                    .setInstant(SENT_AT, sentAt.toInstant())
+                    .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())),
                 executor.executeVoid(insertReceivedAt.bind()
                     .setUuid(MESSAGE_ID, cassandraMessageId.get())
                     .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
                     .setInstant(RECEIVED_AT, receivedAt.toInstant())
-                    .setInstant(SENT_AT, sentAt.toInstant())))
+                    .setInstant(SENT_AT, sentAt.toInstant())
+                    .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())))
                 .then());
     }
 }
