@@ -41,6 +41,7 @@ public class PostgresEmailQueryViewManagerRLSTest {
     public static final ThreadId THREAD_ID_1 = ThreadId.fromBaseMessageId(MESSAGE_ID_FACTORY.generate());
     private static final ZonedDateTime DATE_1 = ZonedDateTime.parse("2010-10-30T15:12:00Z");
     private static final ZonedDateTime DATE_2 = ZonedDateTime.parse("2010-10-30T16:12:00Z");
+    private static final boolean NO_COLLAPSE_THREAD = false;
 
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresEmailQueryViewDataDefinition.MODULE);
@@ -58,7 +59,7 @@ public class PostgresEmailQueryViewManagerRLSTest {
 
         emailQueryViewManager.getEmailQueryView(username).save(MAILBOX_ID_1, DATE_1, DATE_2, MESSAGE_ID_1, THREAD_ID_1).block();
 
-        assertThat(emailQueryViewManager.getEmailQueryView(username).listMailboxContentSortedByReceivedAt(MAILBOX_ID_1, Limit.limit(1)).collectList().block())
+        assertThat(emailQueryViewManager.getEmailQueryView(username).listMailboxContentSortedByReceivedAt(MAILBOX_ID_1, Limit.limit(1), NO_COLLAPSE_THREAD).collectList().block())
             .isNotEmpty();
     }
 
@@ -69,7 +70,7 @@ public class PostgresEmailQueryViewManagerRLSTest {
 
         emailQueryViewManager.getEmailQueryView(username).save(MAILBOX_ID_1, DATE_1, DATE_2, MESSAGE_ID_1, THREAD_ID_1).block();
 
-        assertThat(emailQueryViewManager.getEmailQueryView(username2).listMailboxContentSortedByReceivedAt(MAILBOX_ID_1, Limit.limit(1)).collectList().block())
+        assertThat(emailQueryViewManager.getEmailQueryView(username2).listMailboxContentSortedByReceivedAt(MAILBOX_ID_1, Limit.limit(1), NO_COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 }
