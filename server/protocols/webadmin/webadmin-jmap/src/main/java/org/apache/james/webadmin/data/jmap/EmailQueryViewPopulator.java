@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
@@ -152,15 +153,16 @@ public class EmailQueryViewPopulator {
         return Mono.fromCallable(() -> {
             MailboxId mailboxId = messageResult.getMailboxId();
             MessageId messageId = messageResult.getMessageId();
+            ThreadId threadId = messageResult.getThreadId();
             ZonedDateTime receivedAt = ZonedDateTime.ofInstant(messageResult.getInternalDate().toInstant(), ZoneOffset.UTC);
             Message mime4JMessage = parseMessage(messageResult);
             Date sentAtDate = Optional.ofNullable(mime4JMessage.getDate()).orElse(messageResult.getInternalDate());
             ZonedDateTime sentAt = ZonedDateTime.ofInstant(sentAtDate.toInstant(), ZoneOffset.UTC);
             mime4JMessage.dispose();
 
-            return new EmailQueryView.Entry(mailboxId, messageId, sentAt, receivedAt);
+            return new EmailQueryView.Entry(mailboxId, messageId, sentAt, receivedAt, threadId);
         })
-            .flatMap(entry -> emailQueryView.save(entry.getMailboxId(), entry.getSentAt(), entry.getReceivedAt(), entry.getMessageId()))
+            .flatMap(entry -> emailQueryView.save(entry.getMailboxId(), entry.getSentAt(), entry.getReceivedAt(), entry.getMessageId(), entry.getThreadId()))
             .thenReturn(Result.COMPLETED)
             .doOnSuccess(any -> progress.incrementProcessedMessageCount())
             .onErrorResume(e -> {

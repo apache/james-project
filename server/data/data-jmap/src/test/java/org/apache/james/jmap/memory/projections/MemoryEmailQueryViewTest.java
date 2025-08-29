@@ -25,6 +25,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.junit.jupiter.api.BeforeEach;
 
 public class MemoryEmailQueryViewTest implements EmailQueryViewContract {
@@ -64,4 +65,11 @@ public class MemoryEmailQueryViewTest implements EmailQueryViewContract {
     public MessageId messageId4() {
         return TestMessageId.of(4);
     }
+
+    @Override
+    public ThreadId threadId() {
+        return ThreadId.fromBaseMessageId(TestMessageId.of(1));
+    }
+
+
 }
