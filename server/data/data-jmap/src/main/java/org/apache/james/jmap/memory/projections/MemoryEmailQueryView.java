@@ -47,7 +47,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit) {
+    public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
         return Flux.fromIterable(entries.row(mailboxId).values())
@@ -57,7 +57,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
         return Flux.fromIterable(entries.row(mailboxId).values())
@@ -68,7 +68,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
         return Flux.fromIterable(entries.row(mailboxId).values())
@@ -79,7 +79,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit) {
+    public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         return Flux.fromIterable(entries.row(mailboxId).values())
             .sort(Comparator.comparing(Entry::getReceivedAt).reversed())
             .map(Entry::getMessageId)
@@ -87,7 +87,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         return Flux.fromIterable(entries.row(mailboxId).values())
             .filter(e -> e.getReceivedAt().isAfter(since) || e.getReceivedAt().isEqual(since))
             .sort(Comparator.comparing(Entry::getReceivedAt).reversed())
@@ -96,7 +96,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime before, Limit limit) {
+    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime before, Limit limit, boolean collapseThreads) {
         return Flux.fromIterable(entries.row(mailboxId).values())
             .filter(e -> e.getReceivedAt().isBefore(before) || e.getReceivedAt().isEqual(before))
             .sort(Comparator.comparing(Entry::getReceivedAt).reversed())
