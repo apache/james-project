@@ -93,7 +93,7 @@ javax *mail.smtp.starttls.enable* property. Depending on how strict your securit
 *mail.smtp.starttls.required* as well. Be aware that configuring trust will then be required.
 You can also use other javax properties for StartTLS, but their property prefix must be *mail.smtp.ssl.* in this case. 
 
-James enables server identity verification by default. In certain rare edge cases you might disable it via the *verifyServerIdentity* parameter,
+James enables server identity verification by default. In certain rare edge cases you might disable it via the *verifyServerIdentity* and *sslTrustAllCerts* parameters,
 or use the *mail.smtps.ssl.checkserveridentity* and *mail.smtp.ssl.checkserveridentity* javax properties for fine control.
 
 Read https://eclipse-ee4j.github.io/angus-mail/docs/api/org.eclipse.angus.mail/org/eclipse/angus/mail/smtp/package-summary.html[*org.eclipse.angus.mail.smtp*]
