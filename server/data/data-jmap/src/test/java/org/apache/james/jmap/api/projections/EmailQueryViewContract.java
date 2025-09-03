@@ -32,7 +32,7 @@ import org.apache.james.util.streams.Limit;
 import org.junit.jupiter.api.Test;
 
 public interface EmailQueryViewContract {
-    boolean NO_COLLAPSE_THREAD = false;
+    boolean COLLAPSE_THREAD = true;
     ZonedDateTime DATE_1 = ZonedDateTime.parse("2010-10-30T15:12:00Z");
     ZonedDateTime DATE_2 = ZonedDateTime.parse("2010-10-30T16:12:00Z");
     ZonedDateTime DATE_3 = ZonedDateTime.parse("2010-10-30T17:12:00Z");
@@ -53,211 +53,215 @@ public interface EmailQueryViewContract {
 
     MessageId messageId4();
 
-    ThreadId threadId();
+    ThreadId threadId1();
+    
+    ThreadId threadId2();
+    
+    ThreadId threadId3();
 
     @Test
     default void listMailboxContentShouldReturnEmptyByDefault() {
-        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
     @Test
     default void listMailboxContentShouldBeOrderedBySentAt() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId2(), messageId3(), messageId1());
     }
 
     @Test
     default void listMailboxContentShouldApplyLimit() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(2), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(2), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId2(), messageId3());
     }
 
     @Test
     default void listMailboxContentSinceReceivedAtShouldExcludeTooOldItems() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_3, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_3, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId3(), messageId2());
     }
 
     @Test
     default void listMailboxContentSinceReceivedAtShouldReturnEmptyWhenNoneMatch() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_7, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_7, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
     @Test
     default void listMailboxContentSinceReceivedAtAtShouldApplyLimit() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_1, Limit.limit(2), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_1, Limit.limit(2), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId3(), messageId2());
     }
 
     @Test
     default void listMailboxContentSinceSentdAtShouldExcludeTooOldItems() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_2, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_2, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId3(), messageId2());
     }
 
     @Test
     default void listMailboxContentSinceSentAtAtShouldApplyLimit() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_1, Limit.limit(2), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_1, Limit.limit(2), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId3(), messageId2());
     }
 
     @Test
     default void listMailboxContentSinceSentAtShouldReturnEmptyWhenNoneMatch() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_7, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_7, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
     @Test
     default void listMailboxContentShouldNotReturnClearedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId1()).block();
 
         testee().delete(mailboxId1()).block();
 
-        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
     @Test
     default void listMailboxContentShouldNotReturnDeletedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId1()).block();
 
         testee().delete(mailboxId1(), messageId2()).block();
 
-        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId3(), messageId1());
     }
 
     @Test
     default void listMailboxContentSinceReceivedAtShouldNotReturnClearedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
         testee().delete(mailboxId1()).block();
 
-        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_4, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_4, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
     @Test
     default void listMailboxContentSinceSentAtShouldNotReturnClearedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
         testee().delete(mailboxId1()).block();
 
-        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_4, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_4, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
     @Test
     default void saveShouldBeIdempotent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId1());
     }
 
     @Test
     default void datesCanBeDuplicated() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId2(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId2(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactlyInAnyOrder(messageId1(), messageId2());
     }
 
     @Test
     default void listMailboxContentSinceReceivedAtShouldNotReturnDeletedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
         testee().delete(mailboxId1(), messageId2()).block();
 
-        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_3, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_3, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId3());
     }
 
     @Test
     default void listMailboxContentSinceSentAtShouldNotReturnDeletedContent() {
-        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
         testee().delete(mailboxId1(), messageId2()).block();
 
-        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_3, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_3, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId3());
     }
 
     @Test
     default void listMailboxContentSortedByReceivedAtShouldBeSortedByReceivedAt() {
-        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSortedByReceivedAt(mailboxId1(), Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSortedByReceivedAt(mailboxId1(), Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId3(), messageId1(), messageId2());
     }
 
     @Test
     default void listMailboxContentSinceSortedByReceivedAtShouldBeSortedByReceivedAt() {
-        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentSinceAfterSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId3(), messageId1());
     }
 
     @Test
     default void listMailboxContentBeforeSortedByReceivedAtShouldBeSortedByReceivedAt() {
-        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId()).block();
-        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId()).block();
-        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId()).block();
+        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
 
-        assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
             .containsExactly(messageId1(), messageId2());
     }
 
@@ -273,19 +277,146 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentShouldThrowOnUndefinedLimit() {
-        assertThatThrownBy(() -> testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.unlimited(), NO_COLLAPSE_THREAD).blockLast())
+        assertThatThrownBy(() -> testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.unlimited(), !COLLAPSE_THREAD).blockLast())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     default void listMailboxContentSinceSentAtShouldThrowOnUndefinedLimit() {
-        assertThatThrownBy(() -> testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_3, Limit.unlimited(), NO_COLLAPSE_THREAD).blockLast())
+        assertThatThrownBy(() -> testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_3, Limit.unlimited(), !COLLAPSE_THREAD).blockLast())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     default void listMailboxContentSinceReceivedAtShouldThrowOnUndefinedLimit() {
-        assertThatThrownBy(() -> testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_3, Limit.unlimited(), NO_COLLAPSE_THREAD).blockLast())
+        assertThatThrownBy(() -> testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_3, Limit.unlimited(), !COLLAPSE_THREAD).blockLast())
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+
+    @Test
+    default void listMailboxContentSortedBySentAtShouldReturnLatestMessageOfThreadWhenCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId2());
+    }
+
+    @Test
+    default void listMailboxContentSortedBySentAtShouldApplyLimitWithCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId2()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_6, messageId3(), threadId3()).block();
+        testee().save(mailboxId1(), DATE_4, DATE_5, messageId4(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(2), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId4(), messageId3());
+    }
+
+    @Test
+    default void listMailboxContentSinceReceivedAtShouldReturnLatestMessageOfThreadWhenCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_3, Limit.limit(12), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId3());
+    }
+
+    @Test
+    default void listMailboxContentSinceReceivedAtShouldApplyLimitWithCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId2()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId3()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_4, DATE_5, messageId4(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_1, Limit.limit(2), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId3(), messageId2());
+    }
+
+    @Test
+    default void listMailboxContentSinceSentdAtShouldReturnLatestMessageOfThreadWhenCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_2, Limit.limit(12), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId3());
+    }
+
+    @Test
+    default void listMailboxContentSinceSentAtShouldApplyLimitWithCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId2()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId3()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_4, DATE_5, messageId4(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentSinceSentAt(mailboxId1(), DATE_1, Limit.limit(2), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId3(), messageId2());
+    }
+
+    @Test
+    default void listMailboxContentSortedByReceivedAtShouldReturnLatestMessageOfThreadWhenCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentSortedByReceivedAt(mailboxId1(), Limit.limit(12), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId3());
+    }
+
+    @Test
+    default void listMailboxContentSortedByReceivedAtShouldApplyLimitWithCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId2()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId3()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_4, DATE_5, messageId4(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentSortedByReceivedAt(mailboxId1(), Limit.limit(2), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId3(), messageId2());
+    }
+
+    @Test
+    default void listMailboxContentSinceSortedByReceivedAtShouldReturnLatestMessageOfThreadWhenCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentSinceAfterSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId3());
+    }
+
+    @Test
+    default void listMailboxContentSinceSortedByReceivedAtShouldApplyLimitWithCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId2()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId3()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_4, DATE_5, messageId4(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentSinceAfterSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(2), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId3(), messageId2());
+    }
+
+    @Test
+    default void listMailboxContentBeforeSortedByReceivedAtShouldReturnLatestMessageOfThreadWhenCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId1());
+    }
+
+    @Test
+    default void listMailboxContentBeforeSortedByReceivedAtShouldApplyLimitWithCollapseThreads() {
+        testee().save(mailboxId1(), DATE_1, DATE_2, messageId1(), threadId2()).block();
+        testee().save(mailboxId1(), DATE_3, DATE_4, messageId2(), threadId1()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3(), threadId3()).block();
+        testee().save(mailboxId1(), DATE_4, DATE_5, messageId4(), threadId1()).block();
+
+        assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_5, Limit.limit(2), COLLAPSE_THREAD).collectList().block())
+            .containsExactly(messageId4(), messageId1());
     }
 }

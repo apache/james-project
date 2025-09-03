@@ -21,6 +21,7 @@ package org.apache.james.jmap.memory.projections;
 
 import java.time.ZonedDateTime;
 import java.util.Comparator;
+import java.util.function.Function;
 
 import jakarta.inject.Inject;
 
@@ -52,7 +53,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
 
         Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values());
 
-        return maybeCollapseThreads(baseEntries, collapseThreads)
+        return maybeCollapseThreads(Entry::getSentAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getSentAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
@@ -65,7 +66,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
         Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values())
             .filter(e -> e.getSentAt().isAfter(since) || e.getSentAt().isEqual(since));
 
-        return maybeCollapseThreads(baseEntries, collapseThreads)
+        return maybeCollapseThreads(Entry::getSentAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getSentAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
@@ -78,7 +79,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
         Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values())
             .filter(e -> e.getReceivedAt().isAfter(since) || e.getReceivedAt().isEqual(since));
 
-        return maybeCollapseThreads(baseEntries, collapseThreads)
+        return maybeCollapseThreads(Entry::getSentAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getSentAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
@@ -88,7 +89,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values());
 
-        return maybeCollapseThreads(baseEntries, collapseThreads)
+        return maybeCollapseThreads(Entry::getReceivedAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getReceivedAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
@@ -99,7 +100,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
         Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values())
             .filter(e -> e.getReceivedAt().isAfter(since) || e.getReceivedAt().isEqual(since));
 
-        return maybeCollapseThreads(baseEntries, collapseThreads)
+        return maybeCollapseThreads(Entry::getReceivedAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getReceivedAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
@@ -110,19 +111,21 @@ public class MemoryEmailQueryView implements EmailQueryView {
         Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values())
             .filter(e -> e.getReceivedAt().isBefore(before) || e.getReceivedAt().isEqual(before));
 
-        return maybeCollapseThreads(baseEntries, collapseThreads)
+        return maybeCollapseThreads(Entry::getReceivedAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getReceivedAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
     }
 
-    private Flux<Entry> maybeCollapseThreads(Flux<Entry> entries, boolean collapseThreads) {
-        if (collapseThreads) {
-            return entries.groupBy(Entry::getThreadId)
-                .flatMap(group -> group.reduce((e1, e2) ->
-                    e1.getReceivedAt().isAfter(e2.getReceivedAt()) ? e1 : e2));
-        }
-        return entries;
+    private Function<Flux<Entry>, Flux<Entry>> maybeCollapseThreads(Function<Entry, ZonedDateTime> dateExtractor, boolean collapseThreads) {
+        return entries -> {
+            if (collapseThreads) {
+                return entries.groupBy(Entry::getThreadId)
+                    .flatMap(group -> group.reduce((e1, e2) ->
+                        dateExtractor.apply(e1).isAfter(dateExtractor.apply(e2)) ? e1 : e2));
+            }
+            return entries;
+        };
     }
 
     @Override
