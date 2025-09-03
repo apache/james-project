@@ -81,7 +81,17 @@ public class CassandraEmailQueryViewTest implements EmailQueryViewContract {
     }
 
     @Override
-    public ThreadId threadId() {
+    public ThreadId threadId1() {
         return THREAD_ID;
+    }
+
+    @Override
+    public ThreadId threadId2() {
+        return ThreadId.fromBaseMessageId(MESSAGE_ID_FACTORY.generate());
+    }
+
+    @Override
+    public ThreadId threadId3() {
+        return ThreadId.fromBaseMessageId(MESSAGE_ID_FACTORY.generate());
     }
 }
