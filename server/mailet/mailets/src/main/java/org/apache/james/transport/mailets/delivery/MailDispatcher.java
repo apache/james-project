@@ -32,6 +32,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.exception.OverQuotaException;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -192,6 +193,8 @@ public class MailDispatcher {
                                         .map(Throwing.function(MimeMessage::getMessageID))
                                         .orElse(""),
                                     "sender", mail.getMaybeSender().asString(),
+                                    "mailbxId", success.getMailboxId().serialize(),
+                                    "uid", Long.toString(success.getUid().asLong()),
                                     "recipient", recipient.asString())))
                                 .log("Local delivered mail.")))
                             .then(Mono.<MailAddress>empty());
@@ -208,11 +211,11 @@ public class MailDispatcher {
             .block();
     }
 
-    private Mono<Void> storeMailWithRetry(Mail mail, MailAddress recipient) {
+    private Mono<ComposedMessageId> storeMailWithRetry(Mail mail, MailAddress recipient) {
         Username username = computeUsername(recipient);
         AtomicInteger remainRetries = new AtomicInteger(retries.orElse(0));
 
-        Mono<Void> operation = Mono.from(mailStore.storeMail(recipient, mail))
+        Mono<ComposedMessageId> operation = Mono.from(mailStore.storeMail(recipient, mail))
             .doOnError(OverQuotaException.class, e -> LOGGER.info("Could not store mail due to quota error for user {}", username.asString()))
             .doOnError(e -> !(e instanceof OverQuotaException), error -> LOGGER.warn("Error While storing mail. This error will be retried for {} more times.", remainRetries.getAndDecrement(), error));
 
@@ -221,8 +224,7 @@ public class MailDispatcher {
                 .retryWhen(Retry.backoff(count, FIRST_BACKOFF)
                     .maxBackoff(MAX_BACKOFF)
                     .filter(e -> !(e instanceof OverQuotaException))
-                    .scheduler(Schedulers.parallel()))
-                .then())
+                    .scheduler(Schedulers.parallel())))
             .orElse(operation);
     }
 

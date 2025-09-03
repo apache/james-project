@@ -23,6 +23,7 @@ import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -91,7 +92,7 @@ public class SimpleMailStore implements MailStore {
     }
 
     @Override
-    public Mono<Void> storeMail(MailAddress recipient, Mail mail) {
+    public Mono<ComposedMessageId> storeMail(MailAddress recipient, Mail mail) {
         Username username = computeUsername(recipient);
         StorageDirective storageDirective = StorageDirective.fromMail(computeUsername(recipient), mail)
             .withDefaultFolder(folder);
@@ -102,8 +103,7 @@ public class SimpleMailStore implements MailStore {
                     metric.increment();
                     LOGGER.info("Local delivered mail {} with messageId {} successfully from {} to {} in folder {} with composedMessageId {}",
                         mail.getName(), getMessageId(mail), mail.getMaybeSender().asString(), recipient.asPrettyString(), storageDirective.getTargetFolders().get(), ids);
-                })
-                .then();
+                });
         } catch (MessagingException e) {
             throw new RuntimeException("Could not retrieve mail message content", e);
         }
