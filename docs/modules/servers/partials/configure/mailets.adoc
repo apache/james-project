@@ -81,6 +81,8 @@ include::partial$ReplaceContent.adoc[]
 
 include::partial$Resend.adoc[]
 
+include::partial$SetMimeHeader.adoc[]
+
 include::partial$SetMailAttribute.adoc[]
 
 include::partial$SetMimeHeader.adoc[]

@@ -35,7 +35,7 @@ import com.google.common.base.Strings;
  * <p>Sample configuration:</p>
  *
  * <pre><code>
- * &lt;mailet match="All" class="AddHeader"&gt;
+ * &lt;mailet match="All" class="SetMimeHeader"&gt;
  *   &lt;name&gt;X-MailetHeader&lt;/name&gt;
  *   &lt;value&gt;TheHeaderValue&lt;/value&gt;
  * &lt;/mailet&gt;

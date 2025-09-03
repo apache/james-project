@@ -1,12 +1,12 @@
-=== SetMailAttribute
+=== SetMimeHeader
 
 Adds a specified header and value to the message.
 
 Sample configuration:
 
 ....
-<mailet match="All" class="AddHeader">
-  <name>X-MailetHeader</name>
-  <value>TheHeaderValue</value>
+<mailet match="All" class="SetMimeHeader">
+  <name>X-CUSTOM-HEADER</nam>
+  <value>whatever</value>
 </mailet>
 ....
