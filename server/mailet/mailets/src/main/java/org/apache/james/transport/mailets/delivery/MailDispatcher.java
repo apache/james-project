@@ -193,7 +193,7 @@ public class MailDispatcher {
                                         .map(Throwing.function(MimeMessage::getMessageID))
                                         .orElse(""),
                                     "sender", mail.getMaybeSender().asString(),
-                                    "mailbxId", success.getMailboxId().serialize(),
+                                    "mailboxId", success.getMailboxId().serialize(),
                                     "uid", Long.toString(success.getUid().asLong()),
                                     "recipient", recipient.asString())))
                                 .log("Local delivered mail.")))
