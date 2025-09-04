@@ -66,9 +66,8 @@ services:
 
   redis:
     container_name: redis.example.com
-    image: bitnami/redis:7.0.4-debian-11-r25
-    environment:
-      - REDIS_PASSWORD=secret1
+    image: redis:8.2.1-bookworm
+    command: ["redis-server", "--requirepass", "secret1"]
     networks:
       - james
     ports:
