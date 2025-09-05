@@ -25,6 +25,7 @@ import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewD
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.RECEIVED_AT;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.SENT_AT;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.TABLE_NAME;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.THREAD_ID;
 
 import java.time.ZonedDateTime;
 
@@ -33,6 +34,7 @@ import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.util.streams.Limit;
@@ -131,12 +133,13 @@ public class PostgresEmailQueryViewDAO {
             .where(MAILBOX_ID.eq(mailboxId.asUuid()))));
     }
 
-    public Mono<Void> save(PostgresMailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, PostgresMessageId messageId) {
+    public Mono<Void> save(PostgresMailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, PostgresMessageId messageId, ThreadId threadId) {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
             .set(MAILBOX_ID, mailboxId.asUuid())
             .set(MESSAGE_ID, messageId.asUuid())
             .set(SENT_AT, sentAt.toOffsetDateTime())
             .set(RECEIVED_AT, receivedAt.toOffsetDateTime())
+            .set(THREAD_ID, ((PostgresMessageId) threadId.getBaseMessageId()).asUuid())
             .onConflictOnConstraint(PK_CONSTRAINT_NAME)
             .doNothing()));
     }
