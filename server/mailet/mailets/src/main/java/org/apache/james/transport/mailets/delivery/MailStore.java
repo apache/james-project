@@ -20,9 +20,10 @@
 package org.apache.james.transport.mailets.delivery;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.mailet.Mail;
 import org.reactivestreams.Publisher;
 
 public interface MailStore {
-    Publisher<Void> storeMail(MailAddress recipient, Mail mail);
+    Publisher<ComposedMessageId> storeMail(MailAddress recipient, Mail mail);
 }
