@@ -124,7 +124,7 @@
         </dependency>
         <dependency>
             <groupId>io.github.hakky54</groupId>
-            <artifactId>sslcontext-kickstart-for-pem</artifactId>
+            <artifactId>ayza-for-pem</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

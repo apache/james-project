@@ -103,7 +103,7 @@ public class LegacyJavaEncryptionFactory implements Encryption.Factory {
         }
     }
 
-    // CF https://github.com/Hakky54/sslcontext-kickstart#loading-trust-material-with-trustmanager-and-ocsp-options
+    // CF https://github.com/Hakky54/ayza#loading-trust-material-with-trustmanager-and-ocsp-options
     private Optional<TrustStoreTrustOptions<? extends CertPathTrustManagerParameters>> clientAuthTrustOptions(SslConfig sslConfig) throws NoSuchAlgorithmException {
         if (!sslConfig.ocspCRLChecksEnabled()) {
             return Optional.empty();
