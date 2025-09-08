@@ -32,6 +32,47 @@ else
 	echo "Not OK"
 fi
 
+XOAUTH2_INITIAL_CLIENT_RESPONSE=`echo -n -e "user=james-user@localhost\x01auth=Bearer ${ACCESS_TOKEN}\x01\x01" | base64 -w 0`
+OAUTHBEARER_INITIAL_CLIENT_RESPONSE=`echo -n -e "n,a=james-user@localhost\x01auth=Bearer ${ACCESS_TOKEN}\x01\x01" | base64 -w 0`
+
+set +x
+MANAGESIEVE_XOAUTH2_RESPONSE=`(echo "AUTHENTICATE \"XOAUTH2\" \"${XOAUTH2_INITIAL_CLIENT_RESPONSE}\""; echo "CAPABILITY"; echo "LOGOUT"; sleep 3) | telnet localhost 4190`
+if echo $MANAGESIEVE_XOAUTH2_RESPONSE | grep "\"OWNER\" \"james-user@localhost\"" > /dev/null; then
+	echo "Success: Managesieve XOAUTH2 login"
+else
+	echo "Error: Managesieve XOAUTH2 login"
+fi
+if echo $MANAGESIEVE_XOAUTH2_RESPONSE | grep "OK channel is closing" > /dev/null; then
+	echo "Success: Managesieve XOAUTH2 logout"
+else
+	echo "Error: Managesieve XOAUTH2 logout"
+fi
+
+IMAP_XOAUTH2_RESPONSE=`(echo "a AUTHENTICATE XOAUTH2 ${XOAUTH2_INITIAL_CLIENT_RESPONSE}"; echo "c LOGOUT"; sleep 3) | telnet localhost 143`
+if echo $IMAP_XOAUTH2_RESPONSE | grep "a OK AUTHENTICATE completed" > /dev/null; then
+	echo "Success: IMAP XOAUTH2 login"
+else
+	echo "Error: IMAP XOAUTH2 login"
+fi
+if echo $IMAP_XOAUTH2_RESPONSE | grep "c OK LOGOUT completed" > /dev/null; then
+	echo "Success: IMAP XOAUTH2 logout"
+else
+	echo "Error: IMAP XOAUTH2 logout"
+fi
+
+SMTP_XOAUTH2_RESPONSE=`(echo "AUTH XOAUTH2 ${XOAUTH2_INITIAL_CLIENT_RESPONSE}"; echo "QUIT"; sleep 3) | telnet localhost 587`
+if echo $SMTP_XOAUTH2_RESPONSE | grep "235 Authentication successful" > /dev/null; then
+	echo "Success: SMTP XOAUTH2 login"
+else
+	echo "Error: SMTP XOAUTH2 login"
+fi
+if echo $SMTP_XOAUTH2_RESPONSE | grep "221 2.0.0 james.local Service closing transmission channel" > /dev/null; then
+	echo "Success: SMTP XOAUTH2 logout"
+else
+	echo "Error: SMTP XOAUTH2 logout"
+fi
+set -x
+
 # Logout
 
 curl --location 'http://sso.example.com:8080/auth/realms/oidc/protocol/openid-connect/logout' \

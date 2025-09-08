@@ -190,3 +190,34 @@ We would use Thunderbird version 91.4.1 as a mail client (above versions should 
 
 A remark here is that if you generate a new client_secret for `james-thunderbird` client in Keycloak, you have to modify
 it accordingly in `OAuth2Providers.jsm`.
+
+### IMAP on the CLI
+
+You can test logging into IMAP on the CLI by connecting with `telnet localhost 143`. Here are some commands that can be tried:
+
+- `a AUTHENTICATE XOAUTH2 <initial response>` (unauthenticated state)
+- `b AUTHENTICATE OAUTHBEARER <initial response>` (unauthenticated state)
+- `c LOGOUT` (any state)
+
+You can get the initial response from the [test script](./test.sh).
+
+### ManageSieve on the CLI
+
+You can test logging into IMAP on the CLI by connecting with `telnet localhost 4190`. Here are some commands that can be tried:
+
+- `AUTHENTICATE "XOAUTH2" "<initial response>"` (unauthenticated state)
+- `AUTHENTICATE "OAUTHBEARER" "<initial response>"` (unauthenticated state)
+- `CAPABILITY` (any state)
+- `LOGOUT` (any state)
+
+You can get the initial response from the [test script](./test.sh).
+
+### SMTP on the CLI
+
+You can test logging into IMAP on the CLI by connecting with `telnet localhost 587`. Here are some commands that can be tried:
+
+- `AUTH XOAUTH2 <initial response>` (unauthenticated state)
+- `AUTH OAUTHBEARER <initial response>` (unauthenticated state)
+- `QUIT` (any state)
+
+You can get the initial response from the [test script](./test.sh).
