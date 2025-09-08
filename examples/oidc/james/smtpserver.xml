@@ -4,13 +4,6 @@
         <jmxName>smtpserver</jmxName>
         <bind>0.0.0.0:587</bind>
         <connectionBacklog>200</connectionBacklog>
-        <tls socketTLS="false" startTLS="false">
-            <keystore>file://conf/keystore</keystore>
-            <keystoreType>PKCS12</keystoreType>
-            <secret>james72laBalle</secret>
-            <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
-            <algorithm>SunX509</algorithm>
-        </tls>
         <connectiontimeout>360</connectiontimeout>
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
@@ -18,12 +11,12 @@
             <announce>forUnauthorizedAddresses</announce>
             <plainAuthEnabled>true</plainAuthEnabled>
             <oidc>
-                <oidcConfigurationURL>http://keycloak:8080/auth/realms/oidc/.well-known/openid-configuration</oidcConfigurationURL>
-                <jwksURL>http://keycloak:8080/auth/realms/oidc/protocol/openid-connect/certs</jwksURL>
+                <oidcConfigurationURL>http://sso.example.com:8080/auth/realms/oidc/.well-known/openid-configuration</oidcConfigurationURL>
+                <jwksURL>http://sso.example.com:8080/auth/realms/oidc/protocol/openid-connect/certs</jwksURL>
                 <claim>email</claim>
                 <scope>openid profile email</scope>
                 <introspection>
-                    <url>http://keycloak:8080/auth/realms/oidc/protocol/openid-connect/token/introspect</url>
+                    <url>http://sso.example.com:8080/auth/realms/oidc/protocol/openid-connect/token/introspect</url>
                     <auth>Basic amFtZXMtdGh1bmRlcmJpcmQ6WHc5aHQxdmVUdTBUazVzTU15MDNQZHpZM0FpRnZzc3c=</auth>
                 </introspection>
             </oidc>
@@ -39,5 +32,3 @@
         </handlerchain>
     </smtpserver>
 </smtpservers>
-
-
