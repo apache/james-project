@@ -29,8 +29,12 @@ services:
       - ./james/jmap.properties:/root/conf/jmap.properties
       - ./james/imapserver.xml:/root/conf/imapserver.xml
       - ./james/smtpserver.xml:/root/conf/smtpserver.xml
+      - ./james/managesieveserver.xml:/root/conf/managesieveserver.xml
     ports:
       - "8000:8000"
+      - "143:143"
+      - "587:587"
+      - "4190:4190"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://james:8000/domains"]
 
