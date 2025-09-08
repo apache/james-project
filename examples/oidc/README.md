@@ -6,12 +6,10 @@ This is example of an OIDC setup with James.
 
 The API Gateway for example is [Apisix](https://apisix.apache.org/), we can use Apisix for websocket gateway, horizontal scaling, etc...
 
-This [docker-compose](docker-compose.yml) will start the following services:
+This [docker compose](./compose.yaml) will start the following services:
 
 - apisix: The image `linagora/apisix:3.2.0-debian-javaplugin` was created by Linagora. It based on `apisix:3.2.0-debian`, it already contain apisix plugin for 
   SLO (Single Logout) and rewrite the `X-User` header. 
-  - Dockerfile: [here](https://github.com/linagora/tmail-backend/blob/master/demo/apisix/Dockerfile)
-  - Project `tmail-apisix-plugin-runner`: [here](https://github.com/linagora/tmail-backend/tree/master/demo/apisix/tmail-apisix-plugin-runner)
   - Apisix being the OIDC gateway against James by exposing two endpoints:
       - `POST /jmap` for JMAP requests against James with normal authentication
       - `POST /oidc/jmap` for JMAP request against James with a JWT token issued by the LemonLDAP
@@ -161,21 +159,21 @@ Use websocket with endpoint `ws://apisix.example.com:9080/oidc/jmap/ws` and the 
 
 We would use Thunderbird version 91.4.1 as a mail client (above versions should work).
 * Open `/thunderbird/omni.ja` in your host, find and modify `OAuth2Providers.jsm`:
-  * Add James hostname in kHostnames: `["localhost", ["james.local", "email"]],`
+  * Add James hostname in kHostnames: `["localhost", ["james.example.com", "email"]],`
   * Register using `james-thunderbird` Keycloak client in kIssuers:
   ```
   [
-    "james.local",
+    "james.example.com",
     [
       "james-thunderbird", //client_id from keycloak
       "Xw9ht1veTu0Tk5sMMy03PdzY3AiFvssw", // client_secret from keycloak
-      "http://keycloak.local:8080/auth/realms/oidc/protocol/openid-connect/auth",
-      "http://keycloak.local:8080/auth/realms/oidc/protocol/openid-connect/token",
+      "http://sso.example.com:8080/auth/realms/oidc/protocol/openid-connect/auth",
+      "http://sso.example.com:8080/auth/realms/oidc/protocol/openid-connect/token",
     ],
   ] 
   ```
 
-* Adding a line `127.0.0.1 keycloak.local` to your `/etc/hosts` so Thunderbird can resolve the address of keycloak.
+* Adding a line `127.0.0.1 sso.example.com` to your `/etc/hosts` so Thunderbird can resolve the address of keycloak.
 * Run Thunderbird, configure it using `james-user@localhost` account against these IMAP/SMTP settings:
   * IMAP: server: localhost, port: 143, connection security: No, authentication method: OAUTH2
     ![](_media/imap-setting.png)
