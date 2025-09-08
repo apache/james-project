@@ -161,7 +161,8 @@ public class Rule {
             CONTAINS("contains"),
             NOT_CONTAINS("not-contains"),
             EXACTLY_EQUALS("exactly-equals"),
-            NOT_EXACTLY_EQUALS("not-exactly-equals");
+            NOT_EXACTLY_EQUALS("not-exactly-equals"),
+            START_WITH("start-with");
             
             public static Optional<Comparator> find(String comparatorName) {
                 return Arrays.stream(values())
