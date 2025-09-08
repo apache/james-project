@@ -219,7 +219,7 @@ upstreams:
   -
     id: jmap_upstream
     nodes:
-      "james:80": 1
+      "james.example.com:80": 1
     type: roundrobin
 
 plugin_configs:
