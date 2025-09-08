@@ -94,18 +94,23 @@ public interface ContentMatcher {
     ContentMatcher STRING_NOT_CONTAINS_MATCHER = negate(STRING_CONTAINS_MATCHER);
     ContentMatcher STRING_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.equals(content, valueToMatch));
     ContentMatcher STRING_NOT_EXACTLY_EQUALS_MATCHER = negate(STRING_EXACTLY_EQUALS_MATCHER);
+    ContentMatcher STRING_START_WITH_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> content.startsWith(valueToMatch));
 
     ContentMatcher ADDRESS_CONTAINS_MATCHER = (contents, valueToMatch) -> contents
         .map(ContentMatcher::asAddressHeader)
         .anyMatch(addressHeader -> StringUtils.containsIgnoreCase(addressHeader.fullAddress, valueToMatch));
     ContentMatcher ADDRESS_NOT_CONTAINS_MATCHER = negate(ADDRESS_CONTAINS_MATCHER);
     ContentMatcher ADDRESS_NOT_EXACTLY_EQUALS_MATCHER = negate(new ExactAddressContentMatcher());
+    ContentMatcher ADDRESS_START_WITH_MATCHER = (contents, valueToMatch) -> contents
+        .map(ContentMatcher::asAddressHeader)
+        .anyMatch(addressHeader -> addressHeader.fullAddress.startsWith(valueToMatch));
 
     Map<Rule.Condition.Comparator, ContentMatcher> HEADER_ADDRESS_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
         .put(Rule.Condition.Comparator.CONTAINS, ADDRESS_CONTAINS_MATCHER)
         .put(Rule.Condition.Comparator.NOT_CONTAINS, ADDRESS_NOT_CONTAINS_MATCHER)
         .put(Rule.Condition.Comparator.EXACTLY_EQUALS, new ExactAddressContentMatcher())
         .put(Rule.Condition.Comparator.NOT_EXACTLY_EQUALS, ADDRESS_NOT_EXACTLY_EQUALS_MATCHER)
+        .put(Rule.Condition.Comparator.START_WITH, ADDRESS_START_WITH_MATCHER)
         .build();
 
     Map<Rule.Condition.Comparator, ContentMatcher> CONTENT_STRING_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
@@ -113,6 +118,7 @@ public interface ContentMatcher {
         .put(Rule.Condition.Comparator.NOT_CONTAINS, STRING_NOT_CONTAINS_MATCHER)
         .put(Rule.Condition.Comparator.EXACTLY_EQUALS, STRING_EXACTLY_EQUALS_MATCHER)
         .put(Rule.Condition.Comparator.NOT_EXACTLY_EQUALS, STRING_NOT_EXACTLY_EQUALS_MATCHER)
+        .put(Rule.Condition.Comparator.START_WITH, STRING_START_WITH_MATCHER)
         .build();
 
     Map<Rule.Condition.Field, Map<Rule.Condition.Comparator, ContentMatcher>> CONTENT_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Field, Map<Rule.Condition.Comparator, ContentMatcher>>builder()
