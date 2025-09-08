@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<managesieveservers>
+    <managesieveserver enabled="true">
+        <jmxName>managesieveserver</jmxName>
+        <bind>0.0.0.0:4190</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <connectiontimeout>360</connectiontimeout>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <oidc>
+            <oidcConfigurationURL>http://sso.example.com:8080/auth/realms/oidc/.well-known/openid-configuration</oidcConfigurationURL>
+            <jwksURL>http://sso.example.com:8080/auth/realms/oidc/protocol/openid-connect/certs</jwksURL>
+            <claim>email</claim>
+            <scope>openid profile email</scope>
+            <introspection>
+                <url>http://sso.example.com:8080/auth/realms/oidc/protocol/openid-connect/token/introspect</url>
+                <auth>Basic amFtZXMtdGh1bmRlcmJpcmQ6WHc5aHQxdmVUdTBUazVzTU15MDNQZHpZM0FpRnZzc3c=</auth>
+            </introspection>
+        </oidc>
+    </managesieveserver>
+</managesieveservers>
