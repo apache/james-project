@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   apisix:
     container_name: apisix.example.com
@@ -8,11 +6,11 @@ services:
       - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml
       - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml
     environment:
-      - X_USER_SECRET=xusersecret123
+      X_USER_SECRET: xusersecret123
     networks:
       - james
     ports:
-      - "9080:9080/tcp"
+      - "127.0.0.1:9080:9080"
 
   james:
     depends_on:
@@ -20,10 +18,9 @@ services:
     networks:
       - james
     image: apache/james:memory-latest
-    container_name: james
-    hostname: james.local
-    command:
-      - --generate-keystore
+    container_name: james.example.com
+    hostname: james.example.com
+    command: [--generate-keystore]
     volumes:
       - ./james/usersrepository.xml:/root/conf/usersrepository.xml
       - ./james/jmap.properties:/root/conf/jmap.properties
@@ -31,14 +28,14 @@ services:
       - ./james/smtpserver.xml:/root/conf/smtpserver.xml
       - ./james/managesieveserver.xml:/root/conf/managesieveserver.xml
     ports:
-      - "8000:8000"
-      - "143:143"
-      - "587:587"
-      - "4190:4190"
+      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:143:143"
+      - "127.0.0.1:587:587"
+      - "127.0.0.1:4190:4190"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://james:8000/domains"]
 
-  sso.example.com:
+  sso:
     depends_on:
       - ldap
     image: quay.io/keycloak/keycloak:16.1.0
@@ -46,25 +43,25 @@ services:
     volumes:
       - ./keycloak/realm-oidc.json:/tmp/realm-oidc.json
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
-      - KEYCLOAK_USER=admin
-      - KEYCLOAK_PASSWORD=admin
-      - KEYCLOAK_IMPORT=/tmp/realm-oidc.json
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      KEYCLOAK_IMPORT: /tmp/realm-oidc.json
     networks:
       - james
 
   ldap:
-    container_name: ldap
+    container_name: ldap.example.com
     image: osixia/openldap:1.5.0
     ports:
-      - "389:389"
-      - "636:636"
+      - "127.0.0.1:389:389"
+      - "127.0.0.1:636:636"
     command: [--copy-service]
     volumes:
       - ./ldap/populate.ldif:/container/service/slapd/assets/config/bootstrap/ldif/data.ldif
     environment:
-      - LDAP_DOMAIN=localhost
+      LDAP_DOMAIN: localhost
     networks:
       - james
 
@@ -75,7 +72,7 @@ services:
     networks:
       - james
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
 
 networks:
   james:

@@ -1,8 +1,10 @@
 #!/bin/sh
 
-set -eux
+# You need to start the compose project before running this script!
 
-docker-compose up -d
+set -eu
+# Uncomment the following line to print more information.
+# set -x
 
 GET_TOKEN_RESPONSE=`curl --location 'http://sso.example.com:8080/auth/realms/oidc/protocol/openid-connect/token' \
                                   --header 'Content-Type: application/x-www-form-urlencoded' \
@@ -14,7 +16,9 @@ GET_TOKEN_RESPONSE=`curl --location 'http://sso.example.com:8080/auth/realms/oid
                                   --data-urlencode 'password=secret' 2>/dev/null`
 
 ACCESS_TOKEN=`echo $GET_TOKEN_RESPONSE 2>/dev/null |perl -pe 's/^.*"access_token"\s*:\s*"(.*?)".*$/$1/'`
+echo "Access token: $ACCESS_TOKEN"
 REFRESH_TOKEN=`echo $GET_TOKEN_RESPONSE 2>/dev/null |perl -pe 's/^.*"refresh_token"\s*:\s*"(.*?)".*$/$1/'`
+echo "Refresh token: $REFRESH_TOKEN"
 
 echo "Got an access_token"
 if curl -H "Authorization: Bearer $ACCESS_TOKEN" http://sso.example.com:8080/auth/realms/oidc/protocol/openid-connect/userinfo 2>/dev/null| grep james-user >/dev/null; then
@@ -23,8 +27,7 @@ else
 	echo "ACCESS_TOKEN VERIFICATION FAILED"
 fi
 
-echo -n "Trying James: "
-
+echo -n "Trying James:"
 APISIX_JMAP_ENDPOINT=apisix.example.com:9080/oidc/jmap/session
 if curl -v -H 'Accept: application/json; jmapVersion=rfc-8621' -H "Authorization: Bearer $ACCESS_TOKEN" $APISIX_JMAP_ENDPOINT 2>/dev/null | grep uploadUrl >/dev/null; then
 	echo "OK"
@@ -33,45 +36,45 @@ else
 fi
 
 XOAUTH2_INITIAL_CLIENT_RESPONSE=`echo -n -e "user=james-user@localhost\x01auth=Bearer ${ACCESS_TOKEN}\x01\x01" | base64 -w 0`
+echo "XOAUTH2: $XOAUTH2_INITIAL_CLIENT_RESPONSE"
 OAUTHBEARER_INITIAL_CLIENT_RESPONSE=`echo -n -e "n,a=james-user@localhost\x01auth=Bearer ${ACCESS_TOKEN}\x01\x01" | base64 -w 0`
+echo "OAUTHBEARER: $OAUTHBEARER_INITIAL_CLIENT_RESPONSE"
 
-set +x
-MANAGESIEVE_XOAUTH2_RESPONSE=`(echo "AUTHENTICATE \"XOAUTH2\" \"${XOAUTH2_INITIAL_CLIENT_RESPONSE}\""; echo "CAPABILITY"; echo "LOGOUT"; sleep 3) | telnet localhost 4190`
-if echo $MANAGESIEVE_XOAUTH2_RESPONSE | grep "\"OWNER\" \"james-user@localhost\"" > /dev/null; then
+MANAGESIEVE_XOAUTH2_RESPONSE=`(echo "AUTHENTICATE \"XOAUTH2\" \"${XOAUTH2_INITIAL_CLIENT_RESPONSE}\""; echo "CAPABILITY"; echo "LOGOUT"; sleep 3) | telnet 127.0.0.1 4190`
+if echo "$MANAGESIEVE_XOAUTH2_RESPONSE" | grep "\"OWNER\" \"james-user@localhost\"" > /dev/null; then
 	echo "Success: Managesieve XOAUTH2 login"
 else
 	echo "Error: Managesieve XOAUTH2 login"
 fi
-if echo $MANAGESIEVE_XOAUTH2_RESPONSE | grep "OK channel is closing" > /dev/null; then
+if echo "$MANAGESIEVE_XOAUTH2_RESPONSE" | grep "OK channel is closing" > /dev/null; then
 	echo "Success: Managesieve XOAUTH2 logout"
 else
 	echo "Error: Managesieve XOAUTH2 logout"
 fi
 
-IMAP_XOAUTH2_RESPONSE=`(echo "a AUTHENTICATE XOAUTH2 ${XOAUTH2_INITIAL_CLIENT_RESPONSE}"; echo "c LOGOUT"; sleep 3) | telnet localhost 143`
-if echo $IMAP_XOAUTH2_RESPONSE | grep "a OK AUTHENTICATE completed" > /dev/null; then
+IMAP_XOAUTH2_RESPONSE=`(echo "a AUTHENTICATE XOAUTH2 ${XOAUTH2_INITIAL_CLIENT_RESPONSE}"; echo "c LOGOUT"; sleep 3) | telnet 127.0.0.1 143`
+if echo "$IMAP_XOAUTH2_RESPONSE" | grep "a OK AUTHENTICATE completed" > /dev/null; then
 	echo "Success: IMAP XOAUTH2 login"
 else
 	echo "Error: IMAP XOAUTH2 login"
 fi
-if echo $IMAP_XOAUTH2_RESPONSE | grep "c OK LOGOUT completed" > /dev/null; then
+if echo "$IMAP_XOAUTH2_RESPONSE" | grep "c OK LOGOUT completed" > /dev/null; then
 	echo "Success: IMAP XOAUTH2 logout"
 else
 	echo "Error: IMAP XOAUTH2 logout"
 fi
 
-SMTP_XOAUTH2_RESPONSE=`(echo "AUTH XOAUTH2 ${XOAUTH2_INITIAL_CLIENT_RESPONSE}"; echo "QUIT"; sleep 3) | telnet localhost 587`
-if echo $SMTP_XOAUTH2_RESPONSE | grep "235 Authentication successful" > /dev/null; then
+SMTP_XOAUTH2_RESPONSE=`(echo "AUTH XOAUTH2 ${XOAUTH2_INITIAL_CLIENT_RESPONSE}"; echo "QUIT"; sleep 3) | telnet 127.0.0.1 587`
+if echo "$SMTP_XOAUTH2_RESPONSE" | grep "235 Authentication successful" > /dev/null; then
 	echo "Success: SMTP XOAUTH2 login"
 else
 	echo "Error: SMTP XOAUTH2 login"
 fi
-if echo $SMTP_XOAUTH2_RESPONSE | grep "221 2.0.0 james.local Service closing transmission channel" > /dev/null; then
+if echo "$SMTP_XOAUTH2_RESPONSE" | grep "221 2.0.0 james.example.com Service closing transmission channel" > /dev/null; then
 	echo "Success: SMTP XOAUTH2 logout"
 else
 	echo "Error: SMTP XOAUTH2 logout"
 fi
-set -x
 
 # Logout
 
