@@ -27,6 +27,8 @@ services:
     volumes:
       - ./james/usersrepository.xml:/root/conf/usersrepository.xml
       - ./james/jmap.properties:/root/conf/jmap.properties
+      - ./james/imapserver.xml:/root/conf/imapserver.xml
+      - ./james/smtpserver.xml:/root/conf/smtpserver.xml
     ports:
       - "8000:8000"
     healthcheck:
@@ -46,9 +48,7 @@ services:
       - KEYCLOAK_PASSWORD=admin
       - KEYCLOAK_IMPORT=/tmp/realm-oidc.json
     networks:
-      james:
-        aliases:
-          - keycloak
+      - james
 
   ldap:
     container_name: ldap
