@@ -45,9 +45,8 @@
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
         <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
-        <handlerchain>
+        <handlerchain coreHandlersPackage="org.apache.james.smtpserver.NoAuthCmdHandlerLoader">
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
-            <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
         </handlerchain>
     </smtpserver>
     <smtpserver enabled="true">
