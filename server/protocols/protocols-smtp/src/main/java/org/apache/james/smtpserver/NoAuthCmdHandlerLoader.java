@@ -34,7 +34,6 @@ import org.apache.james.protocols.smtp.core.ReceivedDataLineFilter;
 import org.apache.james.protocols.smtp.core.RsetCmdHandler;
 import org.apache.james.protocols.smtp.core.UnknownCmdHandler;
 import org.apache.james.protocols.smtp.core.VrfyCmdHandler;
-import org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler;
 import org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler;
 import org.apache.james.protocols.smtp.core.esmtp.MailSizeEsmtpExtension;
 import org.apache.james.protocols.smtp.core.esmtp.StartTlsCmdHandler;
