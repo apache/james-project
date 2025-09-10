@@ -21,6 +21,7 @@ package org.apache.james.jmap.api.filtering;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_1;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_3;
+import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_CC;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_FROM;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_RECIPIENT;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_SUBJECT;
@@ -130,10 +131,10 @@ public interface FilteringManagementContract {
     default void allFieldsAndComparatorShouldWellBeStored() {
         FilteringManagement testee = instantiateFilteringManagement();
 
-        Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1)).block();
+        Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_CC, RULE_1)).block();
 
         assertThat(Mono.from(testee.listRulesForUser(USERNAME)).block())
-            .isEqualTo(new Rules(ImmutableList.of(RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1), new Version(0)));
+            .isEqualTo(new Rules(ImmutableList.of(RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_CC, RULE_1), new Version(0)));
     }
 
     @Test

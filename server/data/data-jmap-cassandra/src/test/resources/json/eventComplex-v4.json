@@ -4,6 +4,33 @@
   "aggregateId":"FilteringRule/bart",
   "rules":[
     {
+      "id":"id-cc",
+      "name":"a name",
+      "conditionGroup": {
+        "conditionCombiner": "AND",
+        "conditions": [
+          {
+            "field": "cc",
+            "comparator": "start-with",
+            "value": "A value to match 5"
+          }
+        ]
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["id-01"]
+        },
+        "important":true,
+        "keyworkds":["abc"],
+        "reject":true,
+        "seen":true,
+        "forwardTo": {
+          "addresses": ["abc@example.com"],
+          "keepACopy": true
+        }
+      }
+    },
+    {
       "id":"id-from",
       "name":"a name",
       "conditionGroup": {

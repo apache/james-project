@@ -101,6 +101,16 @@ public interface RuleFixture {
             "A value to match 4"))
         .build();
 
+    Rule RULE_CC = Rule.builder()
+        .id(Rule.Id.of("id-cc"))
+        .name(NAME)
+        .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
+        .conditionGroup(Rule.Condition.of(
+            Rule.Condition.Field.CC,
+            Rule.Condition.Comparator.START_WITH,
+            "A value to match 5"))
+        .build();
+
     Rule RULE_TO_2 = Rule.builder()
         .id(Rule.Id.of("id-to"))
         .name(NAME)
@@ -139,5 +149,15 @@ public interface RuleFixture {
             Rule.Condition.Field.FROM,
             Rule.Condition.Comparator.CONTAINS,
             "A value to match 4"))
+        .build();
+
+    Rule RULE_CC_2 = Rule.builder()
+        .id(Rule.Id.of("id-cc"))
+        .name(NAME)
+        .action(ACTION_2)
+        .conditionGroup(Rule.Condition.of(
+            Rule.Condition.Field.CC,
+            Rule.Condition.Comparator.START_WITH,
+            "A value to match 5"))
         .build();
 }
