@@ -644,7 +644,7 @@
         <junit.platform.version>1.13.1</junit.platform.version>
         <junit.vintage.version>5.13.1</junit.vintage.version>
         <concurrent.version>1.3.4</concurrent.version>
-        <netty.version>4.1.118.Final</netty.version>
+        <netty.version>4.1.126.Final</netty.version>
         <cucumber.version>7.23.0</cucumber.version>
 
         <jackson.version>2.19.1</jackson.version>
