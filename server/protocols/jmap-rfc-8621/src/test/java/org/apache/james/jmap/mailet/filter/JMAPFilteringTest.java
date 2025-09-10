@@ -24,6 +24,7 @@ import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.CONT
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.EXACTLY_EQUALS;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.NOT_CONTAINS;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.NOT_EXACTLY_EQUALS;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.START_WITH;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.CC;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.FROM;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.RECIPIENT;
@@ -1128,5 +1129,57 @@ class JMAPFilteringTest {
         testSystem.getJmapFiltering().service(mail);
 
         assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME).isEmpty()).isTrue();
+    }
+
+    @Test
+    void startWithAddressMailMatched(JMAPFilteringTestSystem testSystem) throws Exception {
+        testSystem.defineRulesForRecipient1(
+            Rule.Condition.of(FROM, START_WITH, USER_1_ADDRESS.substring(0, 2))
+        );
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+            .addFrom(USER_1_FULL_ADDRESS));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME)).isNotEmpty();
+    }
+
+    @Test
+    void startWithAddressMailNotMatched(JMAPFilteringTestSystem testSystem) throws Exception {
+        testSystem.defineRulesForRecipient1(
+            Rule.Condition.of(FROM, START_WITH, "abcdef")
+        );
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+            .addFrom(USER_1_FULL_ADDRESS));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME)).isEmpty();
+    }
+
+    @Test
+    void startWithSubjectMatched(JMAPFilteringTestSystem testSystem) throws Exception {
+        testSystem.defineRulesForRecipient1(
+            Rule.Condition.of(SUBJECT, START_WITH, SCRAMBLED_SUBJECT.substring(0, 2))
+        );
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+            .addHeader(SUBJECT.asString(), SCRAMBLED_SUBJECT));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME)).isNotEmpty();
+    }
+
+    @Test
+    void startWithSubjectNotMatched(JMAPFilteringTestSystem testSystem) throws Exception {
+        testSystem.defineRulesForRecipient1(
+            Rule.Condition.of(SUBJECT, START_WITH, "abcdef")
+        );
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+            .addHeader(SUBJECT.asString(), SCRAMBLED_SUBJECT));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME)).isEmpty();
     }
 }
