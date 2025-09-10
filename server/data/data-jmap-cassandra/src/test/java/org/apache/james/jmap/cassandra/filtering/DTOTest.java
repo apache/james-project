@@ -25,6 +25,8 @@ import static org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModul
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_1;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_4;
+import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_CC;
+import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_CC_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_FROM;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_FROM_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_RECIPIENT;
@@ -75,7 +77,7 @@ class DTOTest {
     static final RuleSetDefined COMPLEX_RULE =  new RuleSetDefined(
                     new FilteringAggregateId(Username.of("Bart")),
                     EventId.first(),
-                    ImmutableList.of(RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO));
+                    ImmutableList.of(RULE_CC, RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO));
     static final IncrementalRuleChange INCREMENT =  new IncrementalRuleChange(
                     new FilteringAggregateId(Username.of("Bart")),
                     EventId.first(),
@@ -91,7 +93,7 @@ class DTOTest {
     static final RuleSetDefined COMPLEX_RULE_2 =  new RuleSetDefined(
         new FilteringAggregateId(Username.of("Bart")),
         EventId.first(),
-        ImmutableList.of(RULE_FROM_2, RULE_RECIPIENT_2, RULE_SUBJECT_2, RULE_TO_2));
+        ImmutableList.of(RULE_CC_2, RULE_FROM_2, RULE_RECIPIENT_2, RULE_SUBJECT_2, RULE_TO_2));
     static final IncrementalRuleChange INCREMENT_2 =  new IncrementalRuleChange(
         new FilteringAggregateId(Username.of("Bart")),
         EventId.first(),

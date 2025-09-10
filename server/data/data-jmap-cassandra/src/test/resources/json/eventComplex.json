@@ -4,6 +4,20 @@
   "aggregateId":"FilteringRule/bart",
   "rules":[
     {
+      "id":"id-cc",
+      "name":"a name",
+      "condition": {
+        "field": "cc",
+        "comparator": "start-with",
+        "value": "A value to match 5"
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["mbx1"]
+        }
+      }
+    },
+    {
       "id":"id-from",
       "name":"a name",
       "condition": {
