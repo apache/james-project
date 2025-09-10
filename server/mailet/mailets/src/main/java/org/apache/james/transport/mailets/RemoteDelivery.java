@@ -148,7 +148,7 @@ import com.google.common.collect.ImmutableMap;
  * javax <i>mail.smtp.starttls.enable</i> property. Depending on how strict your security policy is, you might consider
  * <i>mail.smtp.starttls.required</i> as well. Be aware that configuring trust will then be required.
  * You can also use other javax properties for StartTLS, but their property prefix must be <i>mail.smtp.ssl.</i> in this case.<br/>
- * James enables server identity verification by default. In certain rare edge cases you might disable it via the <b>verifyServerIdentity</b> parameter,
+ * James enables server identity verification by default. In certain rare edge cases you might disable it via the <b>verifyServerIdentity</b> and <b>sslTrustAllCerts</b> parameters,
  * or use the <i>mail.smtps.ssl.checkserveridentity</i> and <i>mail.smtp.ssl.checkserveridentity</i> javax properties for fine control.<br/>
  * Read <a href="https://eclipse-ee4j.github.io/angus-mail/docs/api/org.eclipse.angus.mail/org/eclipse/angus/mail/smtp/package-summary.html"><code>org.eclipse.angus.mail.smtp</code></a>
  * for full information.
