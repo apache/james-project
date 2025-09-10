@@ -1147,7 +1147,10 @@ class JMAPFilteringTest {
     @Test
     void startWithAddressMailNotMatched(JMAPFilteringTestSystem testSystem) throws Exception {
         testSystem.defineRulesForRecipient1(
-            Rule.Condition.of(FROM, START_WITH, "abcdef")
+            // start-with a random text
+            Rule.Condition.of(FROM, START_WITH, "abcdef"),
+            // start-with behaves differently from contains
+            Rule.Condition.of(FROM, START_WITH, USER_1_ADDRESS.substring(2, 5))
         );
 
         FakeMail mail = testSystem.asMail(mimeMessageBuilder()
@@ -1173,7 +1176,10 @@ class JMAPFilteringTest {
     @Test
     void startWithSubjectNotMatched(JMAPFilteringTestSystem testSystem) throws Exception {
         testSystem.defineRulesForRecipient1(
-            Rule.Condition.of(SUBJECT, START_WITH, "abcdef")
+            // start-with a random text
+            Rule.Condition.of(SUBJECT, START_WITH, "abcdef"),
+            // start-with behaves differently from contains
+            Rule.Condition.of(SUBJECT, START_WITH, SCRAMBLED_SUBJECT.substring(2, 5))
         );
 
         FakeMail mail = testSystem.asMail(mimeMessageBuilder()
