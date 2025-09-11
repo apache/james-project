@@ -38,6 +38,10 @@ import jakarta.mail.MessagingException;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.MimeMessageUtil;
@@ -52,7 +56,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.reactivestreams.Publisher;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ArrayListMultimap;
 
 import reactor.core.publisher.Mono;
@@ -514,13 +517,14 @@ class MailDispatcherTest {
         }
 
         @Override
-        public Publisher<Void> storeMail(MailAddress recipient, Mail mail) {
-            return Mono.fromRunnable(Throwing.runnable(() -> {
+        public Publisher<ComposedMessageId> storeMail(MailAddress recipient, Mail mail) {
+            return Mono.fromCallable(() -> {
                 String[] header = mail.getMessage().getHeader(headerName);
                 if (header != null) {
                     headerValues.put(recipient, header);
                 }
-            }));
+                return new ComposedMessageId(TestId.of(34), TestMessageId.of(4), MessageUid.of(5));
+            });
         }
 
         public Collection<String[]> getHeaderValues(MailAddress recipient) {
