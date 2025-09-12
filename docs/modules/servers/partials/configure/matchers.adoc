@@ -63,6 +63,8 @@ include::partial$RecipientCountExceeds.adoc[]
 
 include::partial$RecipientDomainIs.adoc[]
 
+include::partial$RecipientHasMXRecord.adoc[]
+
 include::partial$RecipientIs.adoc[]
 
 include::partial$RecipientIsLocal.adoc[]
@@ -80,6 +82,8 @@ include::partial$RemoteDeliveryFailedWithSMTPCode.adoc[]
 include::partial$SenderDomainIs.adoc[]
 
 include::partial$SenderHostIs.adoc[]
+
+include::partial$SenderHasMXRecord.adoc[]
 
 include::partial$SenderIs.adoc[]
 
