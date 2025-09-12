@@ -150,17 +150,15 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 }
             }
             List<Name> systemSearchPath = ResolverConfig.getCurrentConfig().searchPath();
-            if (systemSearchPath != null && systemSearchPath.size() > 0) {
+            if (systemSearchPath != null && !systemSearchPath.isEmpty()) {
                 sPaths.addAll(systemSearchPath);
             }
             if (LOGGER.isInfoEnabled()) {
                 for (Name searchPath : sPaths) {
-                    LOGGER.info("Adding autodiscovered search path " + searchPath);
+                    LOGGER.info("Adding autodiscovered search path {}", searchPath);
                 }
             }
         }
-
-        // singleIPPerMX = configuration.getBoolean( "singleIPperMX", false );
 
         setAsDNSJavaDefault = configuration.getBoolean("setAsDNSJavaDefault", true);
 
@@ -195,7 +193,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     }
 
     @PostConstruct
-    public void init() throws Exception {
+    public void init() throws UnknownHostException {
         LOGGER.debug("DNSService init...");
 
         // If no DNS servers were configured, default to local host
@@ -212,16 +210,11 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         if (LOGGER.isInfoEnabled()) {
             for (String aServersArray : serversArray) {
-                LOGGER.info("DNS Server is: " + aServersArray);
+                LOGGER.info("DNS Server is: {}", aServersArray);
             }
         }
 
-        try {
-            resolver = new ExtendedResolver(serversArray);
-        } catch (UnknownHostException uhe) {
-            LOGGER.error("DNS service could not be initialized.  The DNS servers specified are not recognized hosts.", uhe);
-            throw uhe;
-        }
+        resolver = new ExtendedResolver(serversArray);
 
         cache = new Cache(DClass.IN);
         cache.setMaxEntries(maxCacheSize);
@@ -257,15 +250,6 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     }
 
     /**
-     * Return the list of DNS servers in use by this service
-     *
-     * @return an array of DNS server names
-     */
-    public Name[] getSearchPaths() {
-        return searchPaths;
-    }
-
-    /**
      * Return a prioritized unmodifiable list of MX records obtained from the
      * server.
      *
@@ -274,7 +258,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * @throws TemporaryResolutionException get thrown on temporary problems
      */
     private List<String> findMXRecordsRaw(String hostname) throws TemporaryResolutionException {
-        Record[] answers = lookup(hostname, Type.MX, "MX");
+        Record[] answers = lookup(hostname, Type.MX);
         List<String> servers = new ArrayList<>();
         if (answers == null) {
             return servers;
@@ -338,7 +322,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         } finally {
             // If we found no results, we'll add the original domain name if
             // it's a valid DNS entry
-            if (servers.size() == 0) {
+            if (servers.isEmpty()) {
                 LOGGER.info("Couldn't resolve MX records for domain {}.", hostname);
                 try {
                     getByName(hostname);
@@ -361,12 +345,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      *
      * @param namestr  the name of the host to be looked up
      * @param type     the type of record desired
-     * @param typeDesc the description of the record type, for debugging purpose
      */
-    protected Record[] lookup(String namestr, int type, String typeDesc) throws TemporaryResolutionException {
-        // Name name = null;
+    protected Record[] lookup(String namestr, int type) throws TemporaryResolutionException {
         try {
-            // name = Name.fromString(namestr, Name.root);
             Lookup l = new Lookup(namestr, type);
 
             l.setCache(cache);
@@ -375,30 +356,26 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             l.setSearchPath(searchPaths);
             Record[] r = l.run();
 
-            try {
-                if (l.getResult() == Lookup.TRY_AGAIN) {
-                    throw new TemporaryResolutionException("DNSService is temporary not reachable");
-                } else {
-                    return r;
-                }
-            } catch (IllegalStateException ise) {
-                // This is okay, because it mimics the original behaviour
-                // TODO find out if it's a bug in DNSJava
-                LOGGER.warn("Error determining result ", ise);
+            if (l.getResult() == Lookup.TRY_AGAIN) {
                 throw new TemporaryResolutionException("DNSService is temporary not reachable");
+            } else {
+                return r;
             }
 
-            // return rawDNSLookup(name, false, type, typeDesc);
         } catch (TextParseException tpe) {
             // TODO: Figure out how to handle this correctly.
             LOGGER.error("Couldn't parse name {}", namestr, tpe);
             return null;
+        } catch (IllegalStateException ise) {
+            // This is okay, because it mimics the original behaviour
+            // TODO find out if it's a bug in DNSJava
+            throw new TemporaryResolutionException("DNSService is temporary not reachable", ise);
         }
     }
 
-    protected Record[] lookupNoException(String namestr, int type, String typeDesc) {
+    protected Record[] lookupNoException(String namestr, int type) {
         try {
-            return lookup(namestr, type, typeDesc);
+            return lookup(namestr, type);
         } catch (TemporaryResolutionException e) {
             return null;
         }
@@ -445,7 +422,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
             return org.xbill.DNS.Address.getByAddress(name);
         } catch (UnknownHostException e) {
-            Record[] records = lookupNoException(name, Type.A, "A");
+            Record[] records = lookupNoException(name, Type.A);
 
             if (records != null && records.length >= 1) {
                 ARecord a = (ARecord) records[0];
@@ -471,7 +448,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             InetAddress addr = org.xbill.DNS.Address.getByAddress(name);
             return ImmutableList.of(addr);
         } catch (UnknownHostException e) {
-            Record[] records = lookupNoException(name, Type.A, "A");
+            Record[] records = lookupNoException(name, Type.A);
 
             if (records != null && records.length >= 1) {
                 InetAddress[] addrs = new InetAddress[records.length];
@@ -492,12 +469,12 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     public Collection<String> findTXTRecords(String hostname) {
         TimeMetric timeMetric = metricFactory.timer("findTXTRecords");
         List<String> txtR = new ArrayList<>();
-        Record[] records = lookupNoException(hostname, Type.TXT, "TXT");
+        Record[] records = lookupNoException(hostname, Type.TXT);
 
         try {
             if (records != null) {
-                for (Record record : records) {
-                    TXTRecord txt = (TXTRecord) record;
+                for (Record dnsRecord : records) {
+                    TXTRecord txt = (TXTRecord) dnsRecord;
                     txtR.add(txt.rdataToString());
                 }
 
@@ -513,7 +490,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         TimeMetric timeMetric = metricFactory.timer("getHostName");
         String result;
         Name name = ReverseMap.fromAddress(addr);
-        Record[] records = lookupNoException(name.toString(), Type.PTR, "PTR");
+        Record[] records = lookupNoException(name.toString(), Type.PTR);
 
         try {
             if (records == null) {
