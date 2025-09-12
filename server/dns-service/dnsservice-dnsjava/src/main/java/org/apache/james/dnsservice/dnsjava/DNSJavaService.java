@@ -274,7 +274,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * @throws TemporaryResolutionException get thrown on temporary problems
      */
     private List<String> findMXRecordsRaw(String hostname) throws TemporaryResolutionException {
-        Record[] answers = lookup(hostname, Type.MX, "MX");
+        Record[] answers = lookup(hostname, Type.MX);
         List<String> servers = new ArrayList<>();
         if (answers == null) {
             return servers;
@@ -361,9 +361,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      *
      * @param namestr  the name of the host to be looked up
      * @param type     the type of record desired
-     * @param typeDesc the description of the record type, for debugging purpose
      */
-    protected Record[] lookup(String namestr, int type, String typeDesc) throws TemporaryResolutionException {
+    protected Record[] lookup(String namestr, int type) throws TemporaryResolutionException {
         // Name name = null;
         try {
             // name = Name.fromString(namestr, Name.root);
@@ -396,9 +395,9 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         }
     }
 
-    protected Record[] lookupNoException(String namestr, int type, String typeDesc) {
+    protected Record[] lookupNoException(String namestr, int type) {
         try {
-            return lookup(namestr, type, typeDesc);
+            return lookup(namestr, type);
         } catch (TemporaryResolutionException e) {
             return null;
         }
@@ -445,7 +444,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
             return org.xbill.DNS.Address.getByAddress(name);
         } catch (UnknownHostException e) {
-            Record[] records = lookupNoException(name, Type.A, "A");
+            Record[] records = lookupNoException(name, Type.A);
 
             if (records != null && records.length >= 1) {
                 ARecord a = (ARecord) records[0];
@@ -471,7 +470,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             InetAddress addr = org.xbill.DNS.Address.getByAddress(name);
             return ImmutableList.of(addr);
         } catch (UnknownHostException e) {
-            Record[] records = lookupNoException(name, Type.A, "A");
+            Record[] records = lookupNoException(name, Type.A);
 
             if (records != null && records.length >= 1) {
                 InetAddress[] addrs = new InetAddress[records.length];
@@ -492,7 +491,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     public Collection<String> findTXTRecords(String hostname) {
         TimeMetric timeMetric = metricFactory.timer("findTXTRecords");
         List<String> txtR = new ArrayList<>();
-        Record[] records = lookupNoException(hostname, Type.TXT, "TXT");
+        Record[] records = lookupNoException(hostname, Type.TXT);
 
         try {
             if (records != null) {
@@ -513,7 +512,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         TimeMetric timeMetric = metricFactory.timer("getHostName");
         String result;
         Name name = ReverseMap.fromAddress(addr);
-        Record[] records = lookupNoException(name.toString(), Type.PTR, "PTR");
+        Record[] records = lookupNoException(name.toString(), Type.PTR);
 
         try {
             if (records == null) {
