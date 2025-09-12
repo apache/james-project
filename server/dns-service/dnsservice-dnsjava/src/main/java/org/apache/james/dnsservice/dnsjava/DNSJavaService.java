@@ -160,8 +160,6 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             }
         }
 
-        // singleIPPerMX = configuration.getBoolean( "singleIPperMX", false );
-
         setAsDNSJavaDefault = configuration.getBoolean("setAsDNSJavaDefault", true);
 
         // Get the DNS servers that this service will use for lookups
@@ -363,9 +361,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * @param type     the type of record desired
      */
     protected Record[] lookup(String namestr, int type) throws TemporaryResolutionException {
-        // Name name = null;
         try {
-            // name = Name.fromString(namestr, Name.root);
             Lookup l = new Lookup(namestr, type);
 
             l.setCache(cache);
@@ -387,7 +383,6 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 throw new TemporaryResolutionException("DNSService is temporary not reachable");
             }
 
-            // return rawDNSLookup(name, false, type, typeDesc);
         } catch (TextParseException tpe) {
             // TODO: Figure out how to handle this correctly.
             LOGGER.error("Couldn't parse name {}", namestr, tpe);
