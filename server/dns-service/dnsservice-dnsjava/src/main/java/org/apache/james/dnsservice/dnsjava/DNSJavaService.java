@@ -155,7 +155,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             }
             if (LOGGER.isInfoEnabled()) {
                 for (Name searchPath : sPaths) {
-                    LOGGER.info("Adding autodiscovered search path " + searchPath);
+                    LOGGER.info("Adding autodiscovered search path {}", searchPath);
                 }
             }
         }
@@ -210,7 +210,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         if (LOGGER.isInfoEnabled()) {
             for (String aServersArray : serversArray) {
-                LOGGER.info("DNS Server is: " + aServersArray);
+                LOGGER.info("DNS Server is: {}", aServersArray);
             }
         }
 
