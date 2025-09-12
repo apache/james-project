@@ -255,15 +255,6 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     }
 
     /**
-     * Return the list of DNS servers in use by this service
-     *
-     * @return an array of DNS server names
-     */
-    public Name[] getSearchPaths() {
-        return searchPaths;
-    }
-
-    /**
      * Return a prioritized unmodifiable list of MX records obtained from the
      * server.
      *
