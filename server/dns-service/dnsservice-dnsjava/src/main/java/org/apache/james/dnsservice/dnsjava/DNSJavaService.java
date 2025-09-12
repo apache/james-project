@@ -193,7 +193,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     }
 
     @PostConstruct
-    public void init() throws Exception {
+    public void init() throws UnknownHostException {
         LOGGER.debug("DNSService init...");
 
         // If no DNS servers were configured, default to local host
