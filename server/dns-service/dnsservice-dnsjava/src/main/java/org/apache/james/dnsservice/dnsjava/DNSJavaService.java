@@ -356,23 +356,21 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             l.setSearchPath(searchPaths);
             Record[] r = l.run();
 
-            try {
-                if (l.getResult() == Lookup.TRY_AGAIN) {
-                    throw new TemporaryResolutionException("DNSService is temporary not reachable");
-                } else {
-                    return r;
-                }
-            } catch (IllegalStateException ise) {
-                // This is okay, because it mimics the original behaviour
-                // TODO find out if it's a bug in DNSJava
-                LOGGER.warn("Error determining result ", ise);
+            if (l.getResult() == Lookup.TRY_AGAIN) {
                 throw new TemporaryResolutionException("DNSService is temporary not reachable");
+            } else {
+                return r;
             }
 
         } catch (TextParseException tpe) {
             // TODO: Figure out how to handle this correctly.
             LOGGER.error("Couldn't parse name {}", namestr, tpe);
             return null;
+        } catch (IllegalStateException ise) {
+            // This is okay, because it mimics the original behaviour
+            // TODO find out if it's a bug in DNSJava
+            LOGGER.warn("Error determining result ", ise);
+            throw new TemporaryResolutionException("DNSService is temporary not reachable");
         }
     }
 
