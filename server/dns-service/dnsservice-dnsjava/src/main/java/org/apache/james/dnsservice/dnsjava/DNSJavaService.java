@@ -474,8 +474,8 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
         try {
             if (records != null) {
-                for (Record record : records) {
-                    TXTRecord txt = (TXTRecord) record;
+                for (Record dnsRecord : records) {
+                    TXTRecord txt = (TXTRecord) dnsRecord;
                     txtR.add(txt.rdataToString());
                 }
 
