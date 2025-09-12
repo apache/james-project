@@ -214,12 +214,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
             }
         }
 
-        try {
-            resolver = new ExtendedResolver(serversArray);
-        } catch (UnknownHostException uhe) {
-            LOGGER.error("DNS service could not be initialized.  The DNS servers specified are not recognized hosts.", uhe);
-            throw uhe;
-        }
+        resolver = new ExtendedResolver(serversArray);
 
         cache = new Cache(DClass.IN);
         cache.setMaxEntries(maxCacheSize);
