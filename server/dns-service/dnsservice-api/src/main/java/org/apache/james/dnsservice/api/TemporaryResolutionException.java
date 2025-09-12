@@ -32,4 +32,8 @@ public class TemporaryResolutionException extends IOException {
     public TemporaryResolutionException(String message) {
         super(message);
     }
+
+    public TemporaryResolutionException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
