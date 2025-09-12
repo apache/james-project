@@ -150,7 +150,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
                 }
             }
             List<Name> systemSearchPath = ResolverConfig.getCurrentConfig().searchPath();
-            if (systemSearchPath != null && systemSearchPath.size() > 0) {
+            if (systemSearchPath != null && !systemSearchPath.isEmpty()) {
                 sPaths.addAll(systemSearchPath);
             }
             if (LOGGER.isInfoEnabled()) {
@@ -322,7 +322,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         } finally {
             // If we found no results, we'll add the original domain name if
             // it's a valid DNS entry
-            if (servers.size() == 0) {
+            if (servers.isEmpty()) {
                 LOGGER.info("Couldn't resolve MX records for domain {}.", hostname);
                 try {
                     getByName(hostname);
