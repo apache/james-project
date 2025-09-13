@@ -40,10 +40,7 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-data-jmap</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-memory</artifactId>
