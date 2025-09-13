@@ -1521,6 +1521,10 @@ Since this is a somewhat expensive operation, the task is throttled to one user
 per second. You may speed it up via `usersPerSecond=10` for example. But keep
 in mind that a high rate might overwhelm your database or blob store.
 
+The following options are also supported:
+ - `user` query parameter: target a specific user and not all users
+ - `useSavedDate` query parameter: list all the mails of the mailbox and uses saved date (see RFC-8514) instead of internal date.
+
 *Scanning search only:* (unsupported for Lucene and OpenSearch search implementations) +
 Some mail clients can add an `Expires` header (RFC 4021) to their messages.
 Instead of specifying an absolute age, you may choose to delete only such

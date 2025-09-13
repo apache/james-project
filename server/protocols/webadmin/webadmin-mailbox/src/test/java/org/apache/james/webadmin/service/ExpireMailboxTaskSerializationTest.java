@@ -19,17 +19,20 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.util.Optional;
 
 import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ExpireMailboxTaskSerializationTest {
+class ExpireMailboxTaskSerializationTest {
     private ExpireMailboxService expireMailboxService;
 
     @BeforeEach
@@ -40,16 +43,44 @@ public class ExpireMailboxTaskSerializationTest {
     @Test
     void shouldMatchJsonSerializationContractWithOlderThan() throws Exception {
         JsonSerializationVerifier.dtoModule(ExpireMailboxDTO.module(expireMailboxService))
-            .bean(new ExpireMailboxTask(expireMailboxService, new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX, false, Optional.of("90d"))))
-            .json(ClassLoaderUtils.getSystemResourceAsString("json/expireMailbox.age.task.json"))
+            .bean(new ExpireMailboxTask(expireMailboxService, new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX,
+                Optional.of(false), Optional.empty(), false, Optional.of("90d"))))
+            .json(ClassLoaderUtils.getSystemResourceAsString("json/expireMailbox.age.task.v2.json"))
             .verify();
     }
 
     @Test
     void shouldMatchJsonSerializationContractWithExpiresHeader() throws Exception {
         JsonSerializationVerifier.dtoModule(ExpireMailboxDTO.module(expireMailboxService))
-            .bean(new ExpireMailboxTask(expireMailboxService, new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX, true, Optional.empty())))
-            .json(ClassLoaderUtils.getSystemResourceAsString("json/expireMailbox.header.task.json"))
+            .bean(new ExpireMailboxTask(expireMailboxService, new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX,
+                Optional.of(true), Optional.of("bob"), true, Optional.empty())))
+            .json(ClassLoaderUtils.getSystemResourceAsString("json/expireMailbox.header.task.v2.json"))
             .verify();
+    }
+
+    @Test
+    void shouldDeserializeLegacyWhenHeader() throws Exception {
+        ExpireMailboxTask actual = JsonGenericSerializer
+            .forModules(ExpireMailboxDTO.module(expireMailboxService))
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/expireMailbox.age.task.json"));
+
+        assertThat(actual)
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(new ExpireMailboxTask(expireMailboxService, new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX,
+                Optional.empty(), Optional.empty(), false, Optional.of("90d"))));
+    }
+
+    @Test
+    void shouldDeserializeLegacy() throws Exception {
+        ExpireMailboxTask actual = JsonGenericSerializer
+            .forModules(ExpireMailboxDTO.module(expireMailboxService))
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/expireMailbox.header.task.json"));
+
+        assertThat(actual)
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(new ExpireMailboxTask(expireMailboxService, new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX,
+                Optional.empty(), Optional.empty(), true, Optional.empty())));
     }
 }

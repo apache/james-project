@@ -1,0 +1,10 @@
+{
+  "runningOptions": {
+    "usersPerSecond": 1,
+    "mailbox": "INBOX",
+    "byExpiresHeader": false,
+    "olderThan": "90d",
+    "useSavedDate":false
+  },
+  "type": "ExpireMailboxTask"
+}

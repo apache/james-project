@@ -19,25 +19,53 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
-public class ExpireMailboxTaskAdditionalInformationDTOTest {
+class ExpireMailboxTaskAdditionalInformationDTOTest {
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
     
+    private static final ExpireMailboxTask.AdditionalInformation LEGACY_DOMAIN_OBJECT = new ExpireMailboxTask.AdditionalInformation(
+        INSTANT, new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX,  Optional.empty(), Optional.empty(), false, Optional.of("90d")), 5, 2, 10, 234);
     private static final ExpireMailboxTask.AdditionalInformation DOMAIN_OBJECT = new ExpireMailboxTask.AdditionalInformation(
-        INSTANT, new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX, false, Optional.of("90d")), 5, 2, 10, 234);
+        INSTANT, new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX,  Optional.of(true), Optional.of("user"), false, Optional.of("90d")), 5, 2, 10, 234);
+    private static final ExpireMailboxTask.AdditionalInformation DOMAIN_OBJECT_2 = new ExpireMailboxTask.AdditionalInformation(
+        INSTANT, new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX,  Optional.of(false), Optional.empty(), true, Optional.of("90d")), 5, 2, 10, 234);
 
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {
         JsonSerializationVerifier.dtoModule(ExpireMailboxAdditionalInformationDTO.module())
             .bean(DOMAIN_OBJECT)
-            .json(ClassLoaderUtils.getSystemResourceAsString("json/expireMailbox.additionalInformation.json"))
+            .json(ClassLoaderUtils.getSystemResourceAsString("json/expireMailbox.additionalInformation.v2.json"))
             .verify();
+    }
+    
+    @Test
+    void shouldMatchJsonSerializationContract2() throws Exception {
+        JsonSerializationVerifier.dtoModule(ExpireMailboxAdditionalInformationDTO.module())
+            .bean(DOMAIN_OBJECT_2)
+            .json(ClassLoaderUtils.getSystemResourceAsString("json/expireMailbox.additionalInformation.v2.1.json"))
+            .verify();
+    }
+
+    @Test
+    void shouldDeserializeLegacy() throws Exception {
+        ExpireMailboxTask.AdditionalInformation actual = JsonGenericSerializer
+            .forModules(ExpireMailboxAdditionalInformationDTO.module())
+            .withoutNestedType()
+            .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/expireMailbox.additionalInformation.json"));
+
+        assertThat(actual)
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(LEGACY_DOMAIN_OBJECT);
     }
 }
