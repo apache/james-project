@@ -21,7 +21,6 @@ package org.apache.james.webadmin.service;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Date;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
@@ -110,7 +109,7 @@ public class ExpireMailboxTask implements AsyncSafeTask {
 
     @Override
     public Publisher<Result> runAsync() {
-        return expireMailboxService.expireMailboxes(context, runningOptions, new Date());
+        return expireMailboxService.expireMailboxes(context, runningOptions);
     }
 
     @Override

@@ -26,6 +26,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
+import java.time.Clock;
 import java.util.Date;
 
 import org.apache.james.core.Username;
@@ -61,7 +62,9 @@ import io.restassured.RestAssured;
 class MessageRoutesExpireTest {
     private static final DomainList NO_DOMAIN_LIST = null;
     private static final Username USERNAME = Username.of("benwa");
+    private static final Username USERNAME_2 = Username.of("benwa2");
     private static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
+    private static final MailboxPath INBOX_2 = MailboxPath.inbox(USERNAME_2);
 
     private WebAdminServer webAdminServer;
     private InMemoryMailboxManager mailboxManager;
@@ -82,9 +85,10 @@ class MessageRoutesExpireTest {
                 new MessagesRoutes(taskManager,
                     new InMemoryMessageId.Factory(),
                     null,
-                    new ExpireMailboxService(usersRepository, mailboxManager),
+                    new ExpireMailboxService(usersRepository, mailboxManager, Clock.systemUTC()),
                     jsonTransformer,
-                    ImmutableSet.of()))
+                    ImmutableSet.of(),
+                    usersRepository))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer).build();
@@ -173,6 +177,18 @@ class MessageRoutesExpireTest {
                     .body("details", is("'usersPerSecond' must be strictly positive"));
             }
 
+            @Test
+            void expireMailboxShouldFailWithNonExistingUser() {
+                when()
+                    .delete("/messages?byExpiresHeader&user=notfound")
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("user does not exist"));
+            }
+
         }
 
         @Nested
@@ -215,6 +231,201 @@ class MessageRoutesExpireTest {
 
                 String taskId = when()
                     .delete("/messages?olderThan=1s")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("type", Matchers.is("ExpireMailboxTask"))
+                    .body("status", is("completed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("additionalInformation.type", is("ExpireMailboxTask"))
+                    .body("additionalInformation.runningOptions.usersPerSecond", is(RunningOptions.DEFAULT.getUsersPerSecond()))
+                    .body("additionalInformation.runningOptions.byExpiresHeader", is(false))
+                    .body("additionalInformation.runningOptions.olderThan", is("1s"))
+                    .body("additionalInformation.mailboxesExpired", is(1))
+                    .body("additionalInformation.mailboxesFailed", is(0))
+                    .body("additionalInformation.mailboxesProcessed", is(1))
+                    .body("additionalInformation.messagesDeleted", is(1));
+            }
+
+            @Test
+            void expireMailboxShouldNotRemoveMailsWhenNotExpired() throws Exception {
+                usersRepository.addUser(USERNAME, "secret");
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                mailboxManager.createMailbox(INBOX, systemSession).get();
+                mailboxManager.getMailbox(INBOX, systemSession).appendMessage(
+                    MessageManager.AppendCommand.builder()
+                        .build("header: value\r\n\r\nbody"),
+                    systemSession).getId();
+
+                String taskId = when()
+                    .delete("/messages?olderThan=1s")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("type", Matchers.is("ExpireMailboxTask"))
+                    .body("status", is("completed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("additionalInformation.type", is("ExpireMailboxTask"))
+                    .body("additionalInformation.runningOptions.usersPerSecond", is(RunningOptions.DEFAULT.getUsersPerSecond()))
+                    .body("additionalInformation.runningOptions.byExpiresHeader", is(false))
+                    .body("additionalInformation.runningOptions.olderThan", is("1s"))
+                    .body("additionalInformation.mailboxesExpired", is(0))
+                    .body("additionalInformation.mailboxesFailed", is(0))
+                    .body("additionalInformation.mailboxesProcessed", is(1))
+                    .body("additionalInformation.messagesDeleted", is(0));
+            }
+
+            @Test
+            void expireMailboxShouldIgnoreOldInternalDateWhenUseSavedDate() throws Exception {
+                usersRepository.addUser(USERNAME, "secret");
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                mailboxManager.createMailbox(INBOX, systemSession).get();
+                mailboxManager.getMailbox(INBOX, systemSession).appendMessage(
+                    MessageManager.AppendCommand.builder()
+                        .withInternalDate(new Date(System.currentTimeMillis() - 60000))
+                        .build("header: value\r\n\r\nbody"),
+                    systemSession).getId();
+
+                String taskId = given()
+                    .queryParam("olderThan", "5s")
+                    .queryParam("useSavedDate")
+                    .delete("/messages")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("type", Matchers.is("ExpireMailboxTask"))
+                    .body("status", is("completed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("additionalInformation.type", is("ExpireMailboxTask"))
+                    .body("additionalInformation.runningOptions.usersPerSecond", is(RunningOptions.DEFAULT.getUsersPerSecond()))
+                    .body("additionalInformation.runningOptions.byExpiresHeader", is(false))
+                    .body("additionalInformation.runningOptions.olderThan", is("5s"))
+                    .body("additionalInformation.mailboxesExpired", is(0))
+                    .body("additionalInformation.mailboxesFailed", is(0))
+                    .body("additionalInformation.mailboxesProcessed", is(1))
+                    .body("additionalInformation.messagesDeleted", is(0));
+            }
+
+            @Test
+            void expireMailboxShouldCleanOldEnoughSavedDate() throws Exception {
+                usersRepository.addUser(USERNAME, "secret");
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                mailboxManager.createMailbox(INBOX, systemSession).get();
+                mailboxManager.getMailbox(INBOX, systemSession).appendMessage(
+                    MessageManager.AppendCommand.builder()
+                        .build("header: value\r\n\r\nbody"),
+                    systemSession).getId();
+
+                Thread.sleep(2000);
+
+                String taskId = given()
+                    .queryParam("olderThan", "1s")
+                    .queryParam("useSavedDate")
+                    .delete("/messages")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("type", Matchers.is("ExpireMailboxTask"))
+                    .body("status", is("completed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("additionalInformation.type", is("ExpireMailboxTask"))
+                    .body("additionalInformation.runningOptions.usersPerSecond", is(RunningOptions.DEFAULT.getUsersPerSecond()))
+                    .body("additionalInformation.runningOptions.byExpiresHeader", is(false))
+                    .body("additionalInformation.runningOptions.olderThan", is("1s"))
+                    .body("additionalInformation.mailboxesExpired", is(1))
+                    .body("additionalInformation.mailboxesFailed", is(0))
+                    .body("additionalInformation.mailboxesProcessed", is(1))
+                    .body("additionalInformation.messagesDeleted", is(1));
+            }
+
+            @Test
+            void expireMailboxShouldProcessAllUsers() throws Exception {
+                usersRepository.addUser(USERNAME, "secret");
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                mailboxManager.createMailbox(INBOX, systemSession).get();
+                mailboxManager.getMailbox(INBOX, systemSession).appendMessage(
+                    MessageManager.AppendCommand.builder()
+                        .withInternalDate(new Date(System.currentTimeMillis() - 5000))
+                        .build("header: value\r\n\r\nbody"),
+                    systemSession).getId();
+
+                usersRepository.addUser(USERNAME_2, "secret");
+                MailboxSession systemSession2 = mailboxManager.createSystemSession(USERNAME_2);
+                mailboxManager.createMailbox(INBOX_2, systemSession2).get();
+                mailboxManager.getMailbox(INBOX_2, systemSession2).appendMessage(
+                    MessageManager.AppendCommand.builder()
+                        .withInternalDate(new Date(System.currentTimeMillis() - 5000))
+                        .build("header: value\r\n\r\nbody"),
+                    systemSession2).getId();
+
+                String taskId = when()
+                    .delete("/messages?olderThan=1s")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("type", Matchers.is("ExpireMailboxTask"))
+                    .body("status", is("completed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("additionalInformation.type", is("ExpireMailboxTask"))
+                    .body("additionalInformation.runningOptions.usersPerSecond", is(RunningOptions.DEFAULT.getUsersPerSecond()))
+                    .body("additionalInformation.runningOptions.byExpiresHeader", is(false))
+                    .body("additionalInformation.runningOptions.olderThan", is("1s"))
+                    .body("additionalInformation.mailboxesExpired", is(2))
+                    .body("additionalInformation.mailboxesFailed", is(0))
+                    .body("additionalInformation.mailboxesProcessed", is(2))
+                    .body("additionalInformation.messagesDeleted", is(2));
+            }
+
+            @Test
+            void expireMailboxShouldBeLimitedToUserParameterWhenSupplied() throws Exception {
+                usersRepository.addUser(USERNAME, "secret");
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                mailboxManager.createMailbox(INBOX, systemSession).get();
+                mailboxManager.getMailbox(INBOX, systemSession).appendMessage(
+                    MessageManager.AppendCommand.builder()
+                        .withInternalDate(new Date(System.currentTimeMillis() - 5000))
+                        .build("header: value\r\n\r\nbody"),
+                    systemSession).getId();
+
+                usersRepository.addUser(USERNAME_2, "secret");
+                MailboxSession systemSession2 = mailboxManager.createSystemSession(USERNAME_2);
+                mailboxManager.createMailbox(INBOX_2, systemSession2).get();
+                mailboxManager.getMailbox(INBOX_2, systemSession2).appendMessage(
+                    MessageManager.AppendCommand.builder()
+                        .withInternalDate(new Date(System.currentTimeMillis() - 5000))
+                        .build("header: value\r\n\r\nbody"),
+                    systemSession2).getId();
+
+                String taskId = given()
+                    .queryParam("olderThan", "1s")
+                    .queryParam("user", USERNAME.asString())
+                    .delete("/messages")
+
                     .jsonPath()
                     .get("taskId");
 

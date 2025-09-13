@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Date;
@@ -58,7 +59,7 @@ import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
 
-public class ExpireMailboxServiceTest {
+class ExpireMailboxServiceTest {
 
     private static class FailingSearchIndex implements MessageSearchIndex {
 
@@ -100,7 +101,8 @@ public class ExpireMailboxServiceTest {
         }
     }
     
-    private static final ExpireMailboxService.RunningOptions OLDER_THAN_1S = new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX, false, Optional.of("1s"));
+    private static final ExpireMailboxService.RunningOptions OLDER_THAN_1S = new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX,
+        Optional.of(false), Optional.empty(),false, Optional.of("1s"));
 
     private final Username alice = Username.of("alice@example.org");
     private final MailboxPath aliceInbox = MailboxPath.inbox(alice);
@@ -133,7 +135,7 @@ public class ExpireMailboxServiceTest {
         mailboxManager = resources.getMailboxManager();
         aliceSession = mailboxManager.createSystemSession(alice);
         
-        testee = new ExpireMailboxService(usersRepository, mailboxManager);
+        testee = new ExpireMailboxService(usersRepository, mailboxManager, Clock.systemUTC());
     }
     
     private static Date asDate(ZonedDateTime dateTime) {
@@ -161,8 +163,7 @@ public class ExpireMailboxServiceTest {
         when(usersRepository.listReactive()).thenReturn(Flux.error(new UsersRepositoryException("it is broken")));
 
         ExpireMailboxService.Context context = new ExpireMailboxService.Context();
-        Date now = new Date();
-        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S, now).block();
+        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S).block();
 
         assertThat(result).isEqualTo(Task.Result.PARTIAL);
         assertThat(context.getInboxesExpired()).isEqualTo(0);
@@ -178,8 +179,7 @@ public class ExpireMailboxServiceTest {
         // intentionally no mailbox creation
         
         ExpireMailboxService.Context context = new ExpireMailboxService.Context();
-        Date now = new Date();
-        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S, now).block();
+        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.getInboxesExpired()).isEqualTo(0);
@@ -195,8 +195,7 @@ public class ExpireMailboxServiceTest {
         mailboxManager.createMailbox(aliceInbox, aliceSession);
 
         ExpireMailboxService.Context context = new ExpireMailboxService.Context();
-        Date now = new Date();
-        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S, now).block();
+        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S).block();
         
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.getInboxesExpired()).isEqualTo(0);
@@ -217,8 +216,7 @@ public class ExpireMailboxServiceTest {
         searchIndex.generateFailures(1);
         
         ExpireMailboxService.Context context = new ExpireMailboxService.Context();
-        Date now = new Date();
-        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S, now).block();
+        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S).block();
 
         assertThat(result).isEqualTo(Task.Result.PARTIAL);
         assertThat(context.getInboxesExpired()).isEqualTo(0);
@@ -236,8 +234,7 @@ public class ExpireMailboxServiceTest {
         appendMessage(aliceManager, aliceSession, ZonedDateTime.now().minusSeconds(5));
 
         ExpireMailboxService.Context context = new ExpireMailboxService.Context();
-        Date now = new Date();
-        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S, now).block();
+        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.getInboxesExpired()).isEqualTo(1);
@@ -256,20 +253,19 @@ public class ExpireMailboxServiceTest {
         MessageManager aliceManager = mailboxManager.getMailbox(aliceInbox, aliceSession);
 
         ZonedDateTime created = ZonedDateTime.now();
-        ZonedDateTime expires = created.plusSeconds(5); 
-        ZonedDateTime now = expires.plusSeconds(10);
+        ZonedDateTime expires = created.minusSeconds(5);
 
         appendMessage(aliceManager, aliceSession, Message.Builder.of()
             .setSubject("test")
             .setBody("whatever", StandardCharsets.UTF_8)
             .setDate(asDate(created))
             .setField(Fields.date("Expires", asDate(expires), TimeZone.getTimeZone(expires.getZone())))
-            .build()
-        );
+            .build());
 
         ExpireMailboxService.Context context = new ExpireMailboxService.Context();
-        ExpireMailboxService.RunningOptions options = new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX, true, Optional.empty());
-        Task.Result result = testee.expireMailboxes(context, options, asDate(now)).block();
+        ExpireMailboxService.RunningOptions options = new ExpireMailboxService.RunningOptions(1, MailboxConstants.INBOX,
+            Optional.of(false), Optional.empty(), true, Optional.empty());
+        Task.Result result = testee.expireMailboxes(context, options).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.getInboxesExpired()).isEqualTo(1);
@@ -291,9 +287,9 @@ public class ExpireMailboxServiceTest {
         appendMessage(aliceManager, aliceSession, ZonedDateTime.now().minusSeconds(5));
 
         ExpireMailboxService.Context context = new ExpireMailboxService.Context();
-        ExpireMailboxService.RunningOptions options = new ExpireMailboxService.RunningOptions(1, mailboxName, false, Optional.of("1s"));
-        Date now = new Date();
-        Task.Result result = testee.expireMailboxes(context, options, now).block();
+        ExpireMailboxService.RunningOptions options = new ExpireMailboxService.RunningOptions(1, mailboxName,
+            Optional.of(false), Optional.empty(), false, Optional.of("1s"));
+        Task.Result result = testee.expireMailboxes(context, options).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.getInboxesExpired()).isEqualTo(1);
@@ -309,9 +305,9 @@ public class ExpireMailboxServiceTest {
         when(usersRepository.listReactive()).thenReturn(Flux.just(alice));
 
         ExpireMailboxService.Context context = new ExpireMailboxService.Context();
-        ExpireMailboxService.RunningOptions options = new ExpireMailboxService.RunningOptions(1, "NoSuchMailbox", false, Optional.of("1s"));
-        Date now = new Date();
-        Task.Result result = testee.expireMailboxes(context, options, now).block();
+        ExpireMailboxService.RunningOptions options = new ExpireMailboxService.RunningOptions(1, "NoSuchMailbox",
+            Optional.of(false), Optional.empty(), false, Optional.of("1s"));
+        Task.Result result = testee.expireMailboxes(context, options).block();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
         assertThat(context.getInboxesExpired()).isEqualTo(0);
@@ -339,8 +335,7 @@ public class ExpireMailboxServiceTest {
         searchIndex.generateFailures(1);
         
         ExpireMailboxService.Context context = new ExpireMailboxService.Context();
-        Date now = new Date();
-        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S, now).block();
+        Task.Result result = testee.expireMailboxes(context, OLDER_THAN_1S).block();
 
         assertThat(result).isEqualTo(Task.Result.PARTIAL);
         assertThat(context.getInboxesExpired()).isEqualTo(1);

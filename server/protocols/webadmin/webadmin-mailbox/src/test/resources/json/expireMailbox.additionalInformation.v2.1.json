@@ -1,0 +1,15 @@
+{
+  "mailboxesExpired": 5,
+  "mailboxesFailed": 2,
+  "mailboxesProcessed": 10,
+  "messagesDeleted": 234,
+  "runningOptions": {
+    "usersPerSecond": 1,
+    "mailbox": "INBOX",
+    "byExpiresHeader": true,
+    "useSavedDate": false,
+    "olderThan": "90d"
+  },
+  "timestamp": "2007-12-03T10:15:30Z",
+  "type": "ExpireMailboxTask"
+}
