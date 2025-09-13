@@ -328,8 +328,11 @@ public class ExpireMailboxService {
         if (uids.isEmpty()) {
             return Mono.just(0);
         } else {
-            return Mono.from(mgr.deleteReactive(uids, session))
-                .thenReturn(uids.size());
+            return Flux.fromIterable(uids)
+                .window(128)
+                .flatMap(Flux::collectList)
+                .concatMap(u -> mgr.deleteReactive(u, session).thenReturn(u.size()))
+                .reduce(Integer::sum);
         }
     }
 
