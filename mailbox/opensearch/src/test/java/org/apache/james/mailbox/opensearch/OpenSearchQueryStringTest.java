@@ -165,6 +165,19 @@ class OpenSearchQueryStringTest {
             .containsOnly(expectedId.getUid());
     }
 
+    @Test
+    void queryStringShouldBeLenient() throws Exception {
+        ComposedMessageId expectedId = addMessage(session, inboxPath, "Lucas love avocado banana smoothie").block();
+        addMessage(session, inboxPath, "Avocado grows in Mexico").block();
+
+        awaitForOpenSearch(QueryBuilders.matchAll().build().toQuery(), 2L);
+
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.bodyContains("love --avocado"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).collectList().block())
+            .containsOnly(expectedId.getUid());
+    }
+
 
     private Mono<ComposedMessageId> addMessage(MailboxSession session, MailboxPath mailboxPath, String message) throws Exception {
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
