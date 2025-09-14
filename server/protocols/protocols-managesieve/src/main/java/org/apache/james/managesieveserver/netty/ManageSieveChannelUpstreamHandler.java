@@ -27,6 +27,7 @@ import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.transcode.NotEnoughDataException;
 import org.apache.james.managesieve.util.SettableSession;
+import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.protocols.netty.Encryption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,8 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.TooLongFrameException;
+import io.netty.handler.codec.haproxy.HAProxyMessage;
+import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
 
 @ChannelHandler.Sharable
 public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdapter {
@@ -64,6 +67,10 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ChannelManageSieveResponseWriter attachment = ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get();
         try (Closeable closeable = ManageSieveMDCContext.from(ctx)) {
+            if (msg instanceof HAProxyMessage) {
+                handleHAProxyMessage(ctx, (HAProxyMessage) msg);
+                return;
+            }
             String request = attachment.cumulate((String) msg);
             if (request.isEmpty() || request.startsWith("\r\n")) {
                 return;
@@ -84,6 +91,25 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
             }
         } catch (NotEnoughDataException ex) {
             // Do nothing will keep the cumulation
+        }
+    }
+
+    private void handleHAProxyMessage(ChannelHandlerContext ctx, HAProxyMessage haproxyMsg) throws Exception {
+        try {
+            if (haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP4) || haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP6)) {
+                ProxyInformation proxyInformation = new ProxyInformation(
+                    new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort()),
+                    new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort()));
+                ctx.channel().attr(NettyConstants.PROXY_INFO).set(proxyInformation);
+
+                LOGGER.info("Connection from {} runs through {} proxy", haproxyMsg.sourceAddress(), haproxyMsg.destinationAddress());
+            } else {
+                throw new IllegalArgumentException("Only TCP4/TCP6 are supported when using PROXY protocol.");
+            }
+
+            super.channelReadComplete(ctx);
+        } finally {
+            haproxyMsg.release();
         }
     }
 
