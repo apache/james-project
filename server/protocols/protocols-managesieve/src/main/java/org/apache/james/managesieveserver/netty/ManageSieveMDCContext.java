@@ -26,19 +26,30 @@ import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.Session;
+import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.util.MDCBuilder;
 
 import io.netty.channel.ChannelHandlerContext;
 
 public class ManageSieveMDCContext {
     public static Closeable from(ChannelHandlerContext ctx) {
-        return MDCBuilder.create()
+        MDCBuilder builder = MDCBuilder.create()
             .addToContext(from(ctx.channel().attr(NettyConstants.SESSION_ATTRIBUTE_KEY).get()))
             .addToContext(MDCBuilder.PROTOCOL, "MANAGE-SIEVE")
-            .addToContext(MDCBuilder.IP, retrieveIp(ctx))
-            .addToContext(MDCBuilder.HOST, retrieveHost(ctx))
-            .addToContext(MDCBuilder.SESSION_ID, ctx.channel().id().asShortText())
-            .build();
+            .addToContext(MDCBuilder.SESSION_ID, ctx.channel().id().asShortText());
+        addRemoteInformation(ctx, builder);
+        return builder.build();
+    }
+
+    private static void addRemoteInformation(ChannelHandlerContext ctx, MDCBuilder builder) {
+        Optional<ProxyInformation> proxyInformation = Optional.ofNullable(ctx.channel().attr(NettyConstants.PROXY_INFO).get());
+        if (proxyInformation.isPresent()) {
+            builder.addToContext(MDCBuilder.IP, proxyInformation.get().getSource().getAddress().getHostAddress());
+            builder.addToContext(MDCBuilder.HOST, proxyInformation.get().getSource().getHostName());
+        } else {
+            builder.addToContext(MDCBuilder.IP, retrieveIp(ctx));
+            builder.addToContext(MDCBuilder.HOST, retrieveHost(ctx));
+        }
     }
 
     private static String retrieveIp(ChannelHandlerContext ctx) {

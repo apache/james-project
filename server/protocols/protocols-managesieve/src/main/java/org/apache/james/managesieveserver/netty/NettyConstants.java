@@ -19,6 +19,7 @@
 package org.apache.james.managesieveserver.netty;
 
 import org.apache.james.managesieve.api.Session;
+import org.apache.james.protocols.api.ProxyInformation;
 
 import io.netty.util.AttributeKey;
 
@@ -27,6 +28,6 @@ import io.netty.util.AttributeKey;
  */
 public interface NettyConstants {
     AttributeKey<ChannelManageSieveResponseWriter> RESPONSE_WRITER_ATTRIBUTE_KEY = AttributeKey.valueOf("ResponseWriter");
+    AttributeKey<ProxyInformation> PROXY_INFO = AttributeKey.valueOf("ProxyInfo");
     AttributeKey<Session> SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("Session");
-
 }
