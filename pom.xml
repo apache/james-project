@@ -3502,6 +3502,13 @@
                                     </executions>
                                 </plugin>
                             </plugins>
+                            <normalization>
+                                <runtimeClassPath>
+                                    <ignoredFiles>
+                                        <ignoredFile>git.properties</ignoredFile>
+                                    </ignoredFiles>
+                                </runtimeClassPath>
+                            </normalization>
                         </develocity>
                     </configuration>
                 </plugin>
