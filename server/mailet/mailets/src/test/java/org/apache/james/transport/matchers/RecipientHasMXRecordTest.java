@@ -51,7 +51,7 @@ class RecipientHasMXRecordTest {
     @Test
     void initShouldRejectEmptyConfig() {
         assertThatThrownBy(() -> testee.init(FakeMatcherConfig.builder()
-            .matcherName("SenderHasMXRecord")
+            .matcherName("RecipientHasMXRecord")
             .condition("")
             .build())).isInstanceOf(IllegalArgumentException.class);
     }
@@ -59,7 +59,7 @@ class RecipientHasMXRecordTest {
     @Test
     void initShouldRejectEmptyDomain() {
         assertThatThrownBy(() -> testee.init(FakeMatcherConfig.builder()
-            .matcherName("SenderHasMXRecord")
+            .matcherName("RecipientHasMXRecord")
             .condition("domain.tld,,other.tld")
             .build())).isInstanceOf(IllegalArgumentException.class);
     }
@@ -67,7 +67,7 @@ class RecipientHasMXRecordTest {
     @Test
     void initShouldRejectInvalidDomain() {
         assertThatThrownBy(() -> testee.init(FakeMatcherConfig.builder()
-            .matcherName("SenderHasMXRecord")
+            .matcherName("RecipientHasMXRecord")
             .condition("invalid@com")
             .build())).isInstanceOf(IllegalArgumentException.class);
     }
@@ -75,7 +75,7 @@ class RecipientHasMXRecordTest {
     @Test
     void matchShouldReturnEmptyWhenNoDnsEntry() throws Exception {
         testee.init(FakeMatcherConfig.builder()
-            .matcherName("SenderHasMXRecord")
+            .matcherName("RecipientHasMXRecord")
             .condition("mx.domain.com")
             .build());
         when(dnsService.findMXRecords(anyString())).thenThrow(new TemporaryResolutionException());
@@ -92,7 +92,7 @@ class RecipientHasMXRecordTest {
     @Test
     void matchShouldReturnEmptyWhenWrongDnsEntry() throws Exception {
         testee.init(FakeMatcherConfig.builder()
-            .matcherName("SenderHasMXRecord")
+            .matcherName("RecipientHasMXRecord")
             .condition("mx.domain.com")
             .build());
 
@@ -111,7 +111,7 @@ class RecipientHasMXRecordTest {
     @Test
     void matchShouldReturnEmptyWhenUnrelatedDnsEntry() throws Exception {
         testee.init(FakeMatcherConfig.builder()
-            .matcherName("SenderHasMXRecord")
+            .matcherName("RecipientHasMXRecord")
             .condition("mx.domain.com")
             .build());
 
@@ -130,7 +130,7 @@ class RecipientHasMXRecordTest {
     @Test
     void matchShouldReturnMailRecipientsWhenCorrectMX() throws Exception {
         testee.init(FakeMatcherConfig.builder()
-            .matcherName("SenderHasMXRecord")
+            .matcherName("RecipientHasMXRecord")
             .condition("mx.domain.com")
             .build());
 
@@ -149,7 +149,7 @@ class RecipientHasMXRecordTest {
     @Test
     void matchShouldSupportMultipleMXRecords() throws Exception {
         testee.init(FakeMatcherConfig.builder()
-            .matcherName("SenderHasMXRecord")
+            .matcherName("RecipientHasMXRecord")
             .condition("mx1.domain.com,mx2.domain.com")
             .build());
 
@@ -168,7 +168,7 @@ class RecipientHasMXRecordTest {
     @Test
     void matchShouldFilterRecipients() throws Exception {
         testee.init(FakeMatcherConfig.builder()
-            .matcherName("SenderHasMXRecord")
+            .matcherName("RecipientHasMXRecord")
             .condition("mx1.domain.com")
             .build());
 
