@@ -32,6 +32,7 @@ import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 public interface ContentMatcher {
@@ -135,9 +136,12 @@ public interface ContentMatcher {
     }
 
     static Optional<ContentMatcher> asContentMatcher(Rule.Condition.Field field, Rule.Condition.Comparator comparator) {
-        return Optional
-            .ofNullable(CONTENT_MATCHER_REGISTRY.get(field))
-            .map(matcherRegistry -> matcherRegistry.get(comparator));
+        return Optional.ofNullable(CONTENT_MATCHER_REGISTRY.get(field))
+            .map(matcherRegistry -> matcherRegistry.get(comparator))
+            .or(() -> {
+                Preconditions.checkArgument(field instanceof Rule.Condition.CustomHeaderField);
+                return Optional.of(CONTENT_STRING_MATCHER_REGISTRY.get(comparator));
+            });
     }
 
     static AddressHeader asAddressHeader(String addressAsString) {

@@ -394,7 +394,12 @@ class JMAPFilteringTest {
                     .valueToMatch(USER_4_FULL_ADDRESS)
                     .build(),
                 argumentBuilder().scrambledSubjectToMatch(UNSCRAMBLED_SUBJECT).build(),
-                argumentBuilder().unscrambledSubjectToMatch(UNSCRAMBLED_SUBJECT).build()));
+                argumentBuilder().unscrambledSubjectToMatch(UNSCRAMBLED_SUBJECT).build(),
+                argumentBuilder(new Rule.Condition.CustomHeaderField("X-CUSTOM"))
+                    .description("X-CUSTOM")
+                    .header("X-CUSTOM", "abcdeg")
+                    .valueToMatch("abcdeg")
+                    .build()));
     }
 
     static Stream<Arguments> containsTestSuite() {
@@ -491,6 +496,11 @@ class JMAPFilteringTest {
                     .toRecipient(USER_3_FULL_ADDRESS)
                     .toRecipient(USER_4_FULL_ADDRESS)
                     .valueToMatch("user4@jam").build(),
+                argumentBuilder(new Rule.Condition.CustomHeaderField("X-CUSTOM"))
+                    .description("X-CUSTOM")
+                    .header("X-CUSTOM", "abcdeg")
+                    .valueToMatch("bcde")
+                    .build(),
                 argumentBuilder().scrambledSubjectToMatch("is the subject").build(),
                 argumentBuilder().unscrambledSubjectToMatch("rédéric MART").build()));
     }
@@ -562,6 +572,11 @@ class JMAPFilteringTest {
 
                     .map(FilteringArgumentBuilder::build)),
             Stream.of(
+                argumentBuilder(new Rule.Condition.CustomHeaderField("X-CUSTOM"))
+                    .description("X-CUSTOM")
+                    .header("X-CUSTOM", "abcdeg")
+                    .valueToMatch(SHOULD_NOT_MATCH)
+                    .build(),
                 argumentBuilder().description("multiple to and cc headers")
                     .field(RECIPIENT)
                     .ccRecipient(USER_1_FULL_ADDRESS)
@@ -579,7 +594,7 @@ class JMAPFilteringTest {
                 argumentBuilder().scrambledSubjectShouldNotMatchCaseSensitive().build(),
                 argumentBuilder().unscrambledSubjectToMatch(SHOULD_NOT_MATCH).build(),
                 argumentBuilder().unscrambledSubjectShouldNotMatchCaseSensitive().build()),
-            Stream.of(Rule.Condition.Field.values())
+            Rule.Condition.FixedField.VALUES.stream()
                 .map(field -> argumentBuilder()
                     .description("no header")
                     .field(field)

@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> {
@@ -90,7 +91,12 @@ public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> 
     }
 
     static Optional<HeaderExtractor> asHeaderExtractor(Rule.Condition.Field field) {
-        return Optional.ofNullable(
-            HeaderExtractor.HEADER_EXTRACTOR_REGISTRY.get(field));
+        return Optional.ofNullable(HeaderExtractor.HEADER_EXTRACTOR_REGISTRY.get(field))
+            .or(() -> {
+                Preconditions.checkArgument(field instanceof Rule.Condition.CustomHeaderField);
+                Rule.Condition.CustomHeaderField customHeaderField = (Rule.Condition.CustomHeaderField) field;
+
+                return Optional.of(mail -> StreamUtils.ofNullables(mail.getMessage().getHeader(customHeaderField.headerName())));
+            });
     }
 }
