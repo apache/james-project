@@ -424,3 +424,76 @@ Would allow emails using `apache.org` as a MAIL FROM or from header domain if, a
 valid DKIM signature for the `apache.org` domain.
 
 include::partial$EnforceHeaderLimitationsMessageHook.adoc[]
+
+== SetMailAttributeMessageHook
+
+This class implements an SMTP hook to add attributes on incoming mails.
+
+It allows marking mails from a given SMTP port. Eg if I set up technical accounts for local apps on port 26
+then I can disable rate limiting for this traffic.
+
+Example XML configuration:
+
+....
+<handler class="org.apache.james.smtpserver.SetMailAttributeMessageHook">
+    <name>technicaluser</name>
+    <value>true</value>
+</handler>
+....
+
+== EnforceHeaderLimitationsMessageHook
+
+This class implements an SMTP hook to enforce limitations on the headers of incoming emails.
+
+It allows configuring and enforcing two types of restrictions:
+ - A maximum number of header lines (default: 500).
+ - A maximum total size of headers in bytes (default: 64 KB).
+If any of these thresholds are exceeded, the message is rejected with an SMTP error code:
+ -  `552 Too many header lines` if the number of lines exceeds the limit.
+ -  `552 Header size too large` if the total size exceeds the limit.
+
+Example XML configuration:
+
+....
+<handler class="org.apache.james.smtpserver.EnforceHeaderLimitationsMessageHook">
+    <maxLines>500</maxLines>
+    <maxSize>64KB</maxSize>
+</handler>
+....
+
+== ConfigurationAuthHook
+
+Declarative authentication.
+
+It is possible to open and configure on a dedicated port (eg port 26) to accept application traffic in parallel of user
+traffic. Authentication is then done on the supplied configuration.
+
+Convenient as it allows instantiating James as part of a complex application network with only only declarative configuration
+and no post-deployment actions.
+
+This is helpful for things like service accounts, used by other applications (and it is not desirable to create
+user accounts for those applications)
+
+....
+    <handlerchain coreHandlersPackage="org.apache.james.smtpserver.NoAuthCmdHandlerLoader" enableJmx="false">
+        <handler class="org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler" />
+        <handler class="org.apache.james.smtpserver.ConfigurationAuthHook" >
+            <accounts>
+                <account>
+                    <username>noreply-tdrive@domain.tld</username>
+                    <passwords>
+                        <password>secret123456</password>
+                        <password>here_to_ease_secret_rotation</password>
+                        <password>here_to_give_different_creds_to_each_app</password>
+                    </passwords>
+                </account>
+                <account>
+                    <username>noreply-tchat@domain.tld</username>
+                    <passwords>
+                        <password>secret234567</password>
+                    </passwords>
+                </account>
+            </accounts>
+        </handler>
+    </handlerchain>
+....
