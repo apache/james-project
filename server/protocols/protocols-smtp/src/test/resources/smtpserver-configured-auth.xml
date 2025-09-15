@@ -37,12 +37,16 @@
         <announce>forUnauthorizedAddresses</announce>
         <requireSSL>false</requireSSL>
     </auth>
-    <verifyIdentity>true</verifyIdentity>
+    <verifyIdentity>false</verifyIdentity>
     <maxmessagesize>0</maxmessagesize>
     <addressBracketsEnforcement>true</addressBracketsEnforcement>
     <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
     <handlerchain coreHandlersPackage="org.apache.james.smtpserver.NoAuthCmdHandlerLoader" enableJmx="false">
         <handler class="org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler" />
+        <handler class="org.apache.james.smtpserver.SetMailAttributeMessageHook" >
+            <name>technicaluser</name>
+            <value>true</value>
+        </handler>
         <handler class="org.apache.james.smtpserver.ConfigurationAuthHook" >
             <accounts>
                 <account>

@@ -25,8 +25,10 @@ import java.net.InetSocketAddress;
 import java.util.Base64;
 
 import org.apache.commons.net.smtp.SMTPClient;
+import org.apache.mailet.AttributeName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -79,4 +81,30 @@ class ConfiguredAuthTest {
         assertThat(smtpProtocol.getReplyCode())
             .isEqualTo(535);
     }
+
+    @Test
+    void shouldMarkIncomingEmails() throws Exception {
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = smtpServerTestSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0noreply-tdrive@domain.tld\0secret123456\0").getBytes(UTF_8)));
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
+        smtpProtocol.login("domain.tld");
+
+        smtpProtocol.setSender("noreply-tdrive@domain.tld");
+        smtpProtocol.addRecipient("mail@sample.com");
+        smtpProtocol.sendShortMessageData("From: noreply-tdrive@domain.tld\r\n\r\nSubject: test\r\n\r\nTest body testAuth\r\n.\r\n");
+
+        smtpProtocol.quit();
+
+        // mail was propagated by SMTPServer
+        assertThat(smtpServerTestSystem.queue.getLastMail().getAttribute(AttributeName.of("technicaluser")))
+            .isPresent();
+    }
+
+
 }
