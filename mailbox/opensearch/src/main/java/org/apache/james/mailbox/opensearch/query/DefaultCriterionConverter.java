@@ -47,7 +47,6 @@ import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
 import org.opensearch.client.opensearch._types.query_dsl.NestedQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Operator;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
-import org.opensearch.client.opensearch._types.query_dsl.QueryStringQuery;
 import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
 import org.opensearch.client.opensearch._types.query_dsl.SimpleQueryStringQuery;
 import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
@@ -531,10 +530,11 @@ public class DefaultCriterionConverter implements CriterionConverter {
 
     protected Query convertSubject(SearchQuery.SubjectCriterion headerCriterion) {
         if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(headerCriterion.getSubject())) {
-            return new QueryStringQuery.Builder()
+            return new SimpleQueryStringQuery.Builder()
                 .fields(ImmutableList.of(JsonMessageConstants.SUBJECT))
                 .query(headerCriterion.getSubject())
-                .fuzziness(textFuzzinessSearchValue)
+                .defaultOperator(Operator.And)
+                .lenient(true)
                 .build().toQuery();
         } else {
             return new MatchQuery.Builder()
