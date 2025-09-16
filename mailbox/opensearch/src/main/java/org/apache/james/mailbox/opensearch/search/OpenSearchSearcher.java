@@ -40,9 +40,11 @@ import org.apache.james.mailbox.searchhighligt.SearchHighlighterConfiguration;
 import org.opensearch.client.opensearch._types.SortOptions;
 import org.opensearch.client.opensearch._types.Time;
 import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.search.BuiltinHighlighterType;
 import org.opensearch.client.opensearch.core.search.Highlight;
 import org.opensearch.client.opensearch.core.search.HighlightField;
 import org.opensearch.client.opensearch.core.search.HighlighterEncoder;
+import org.opensearch.client.opensearch.core.search.HighlighterType;
 import org.opensearch.client.opensearch.core.search.Hit;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -81,7 +83,8 @@ public class OpenSearchSearcher {
             .preTags(searchHighlighterConfiguration.preTagFormatter())
             .postTags(searchHighlighterConfiguration.postTagFormatter())
             .fragmentSize(searchHighlighterConfiguration.fragmentSize())
-            .numberOfFragments(1)
+            .numberOfFragments(2)
+            .type(new HighlighterType.Builder().builtin(BuiltinHighlighterType.Plain).build())
             .build();
 
         this.highlightQuery = new Highlight.Builder()
