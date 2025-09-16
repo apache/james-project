@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableList;
 
 public interface RuleFixture {
     String NAME = "a name";
-    Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.CC, Rule.Condition.Comparator.CONTAINS, "something");
+    Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.FixedField.CC, Rule.Condition.Comparator.CONTAINS, "something");
     Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"),
         true,
         true,
@@ -67,7 +67,7 @@ public interface RuleFixture {
         .name(NAME)
         .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
         .conditionGroup(Rule.Condition.of(
-            Rule.Condition.Field.TO,
+            Rule.Condition.FixedField.TO,
             Rule.Condition.Comparator.EXACTLY_EQUALS,
             "A value to match 1"))
         .build();
@@ -77,7 +77,7 @@ public interface RuleFixture {
         .name(NAME)
         .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
         .conditionGroup(Rule.Condition.of(
-            Rule.Condition.Field.SUBJECT,
+            Rule.Condition.FixedField.SUBJECT,
             Rule.Condition.Comparator.NOT_CONTAINS,
             "A value to match 2"))
         .build();
@@ -87,7 +87,7 @@ public interface RuleFixture {
         .name(NAME)
         .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
         .conditionGroup(Rule.Condition.of(
-            Rule.Condition.Field.RECIPIENT,
+            Rule.Condition.FixedField.RECIPIENT,
             Rule.Condition.Comparator.NOT_EXACTLY_EQUALS,
             "A value to match 3"))
         .build();
@@ -97,7 +97,7 @@ public interface RuleFixture {
         .name(NAME)
         .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
         .conditionGroup(Rule.Condition.of(
-            Rule.Condition.Field.FROM,
+            Rule.Condition.FixedField.FROM,
             Rule.Condition.Comparator.CONTAINS,
             "A value to match 4"))
         .build();
@@ -107,7 +107,7 @@ public interface RuleFixture {
         .name(NAME)
         .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
         .conditionGroup(Rule.Condition.of(
-            Rule.Condition.Field.CC,
+            Rule.Condition.FixedField.CC,
             Rule.Condition.Comparator.START_WITH,
             "A value to match 5"))
         .build();
@@ -117,7 +117,7 @@ public interface RuleFixture {
         .name(NAME)
         .action(ACTION_2)
         .conditionGroup(Rule.Condition.of(
-            Rule.Condition.Field.TO,
+            Rule.Condition.FixedField.TO,
             Rule.Condition.Comparator.EXACTLY_EQUALS,
             "A value to match 1"))
         .build();
@@ -127,7 +127,7 @@ public interface RuleFixture {
         .name(NAME)
         .action(ACTION_2)
         .conditionGroup(Rule.Condition.of(
-            Rule.Condition.Field.SUBJECT,
+            Rule.Condition.FixedField.SUBJECT,
             Rule.Condition.Comparator.NOT_CONTAINS,
             "A value to match 2"))
         .build();
@@ -137,7 +137,7 @@ public interface RuleFixture {
         .name(NAME)
         .action(ACTION_2)
         .conditionGroup(Rule.Condition.of(
-            Rule.Condition.Field.RECIPIENT,
+            Rule.Condition.FixedField.RECIPIENT,
             Rule.Condition.Comparator.NOT_EXACTLY_EQUALS,
             "A value to match 3"))
         .build();
@@ -147,7 +147,7 @@ public interface RuleFixture {
         .name(NAME)
         .action(ACTION_2)
         .conditionGroup(Rule.Condition.of(
-            Rule.Condition.Field.FROM,
+            Rule.Condition.FixedField.FROM,
             Rule.Condition.Comparator.CONTAINS,
             "A value to match 4"))
         .build();
@@ -157,7 +157,7 @@ public interface RuleFixture {
         .name(NAME)
         .action(ACTION_2)
         .conditionGroup(Rule.Condition.of(
-            Rule.Condition.Field.CC,
+            Rule.Condition.FixedField.CC,
             Rule.Condition.Comparator.START_WITH,
             "A value to match 5"))
         .build();

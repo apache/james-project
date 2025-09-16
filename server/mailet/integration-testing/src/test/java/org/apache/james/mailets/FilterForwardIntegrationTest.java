@@ -20,7 +20,7 @@
 package org.apache.james.mailets;
 
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.CONTAINS;
-import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.FROM;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.FROM;
 import static org.apache.james.mailets.configuration.CommonProcessors.RRT_ERROR_REPOSITORY;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;

@@ -130,12 +130,6 @@ public class Rule {
     public static class Condition {
 
         public interface Field {
-            Field FROM = new FixedField("from");
-            Field TO = new FixedField("to");
-            Field CC = new FixedField("cc");
-            Field SUBJECT = new FixedField("subject");
-            Field RECIPIENT = new FixedField("recipient");
-            
             static Optional<Field> find(String fieldName) {
                 return FixedField.find(fieldName)
                     .or(() -> CustomHeaderField.find(fieldName));

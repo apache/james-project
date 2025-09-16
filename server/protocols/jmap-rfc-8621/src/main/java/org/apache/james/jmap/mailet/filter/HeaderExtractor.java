@@ -52,11 +52,11 @@ public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> 
     HeaderExtractor FROM_EXTRACTOR = addressExtractor(mail -> mail.getMessage().getHeader(FROM), FROM);
 
     Map<Rule.Condition.Field, HeaderExtractor> HEADER_EXTRACTOR_REGISTRY = ImmutableMap.<Rule.Condition.Field, HeaderExtractor>builder()
-        .put(Rule.Condition.Field.SUBJECT, SUBJECT_EXTRACTOR)
-        .put(Rule.Condition.Field.RECIPIENT, RECIPIENT_EXTRACTOR)
-        .put(Rule.Condition.Field.FROM, FROM_EXTRACTOR)
-        .put(Rule.Condition.Field.CC, CC_EXTRACTOR)
-        .put(Rule.Condition.Field.TO, TO_EXTRACTOR)
+        .put(Rule.Condition.FixedField.SUBJECT, SUBJECT_EXTRACTOR)
+        .put(Rule.Condition.FixedField.RECIPIENT, RECIPIENT_EXTRACTOR)
+        .put(Rule.Condition.FixedField.FROM, FROM_EXTRACTOR)
+        .put(Rule.Condition.FixedField.CC, CC_EXTRACTOR)
+        .put(Rule.Condition.FixedField.TO, TO_EXTRACTOR)
         .build();
 
     boolean STRICT_PARSING = true;

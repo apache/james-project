@@ -123,11 +123,11 @@ public interface ContentMatcher {
         .build();
 
     Map<Rule.Condition.Field, Map<Rule.Condition.Comparator, ContentMatcher>> CONTENT_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Field, Map<Rule.Condition.Comparator, ContentMatcher>>builder()
-        .put(Rule.Condition.Field.SUBJECT, CONTENT_STRING_MATCHER_REGISTRY)
-        .put(Rule.Condition.Field.TO, HEADER_ADDRESS_MATCHER_REGISTRY)
-        .put(Rule.Condition.Field.CC, HEADER_ADDRESS_MATCHER_REGISTRY)
-        .put(Rule.Condition.Field.RECIPIENT, HEADER_ADDRESS_MATCHER_REGISTRY)
-        .put(Rule.Condition.Field.FROM, HEADER_ADDRESS_MATCHER_REGISTRY)
+        .put(Rule.Condition.FixedField.SUBJECT, CONTENT_STRING_MATCHER_REGISTRY)
+        .put(Rule.Condition.FixedField.TO, HEADER_ADDRESS_MATCHER_REGISTRY)
+        .put(Rule.Condition.FixedField.CC, HEADER_ADDRESS_MATCHER_REGISTRY)
+        .put(Rule.Condition.FixedField.RECIPIENT, HEADER_ADDRESS_MATCHER_REGISTRY)
+        .put(Rule.Condition.FixedField.FROM, HEADER_ADDRESS_MATCHER_REGISTRY)
         .build();
 
     static ContentMatcher negate(ContentMatcher contentMatcher) {
