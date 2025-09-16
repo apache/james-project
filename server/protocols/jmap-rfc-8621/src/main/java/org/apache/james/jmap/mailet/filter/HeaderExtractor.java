@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> {
@@ -51,11 +52,11 @@ public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> 
     HeaderExtractor FROM_EXTRACTOR = addressExtractor(mail -> mail.getMessage().getHeader(FROM), FROM);
 
     Map<Rule.Condition.Field, HeaderExtractor> HEADER_EXTRACTOR_REGISTRY = ImmutableMap.<Rule.Condition.Field, HeaderExtractor>builder()
-        .put(Rule.Condition.Field.SUBJECT, SUBJECT_EXTRACTOR)
-        .put(Rule.Condition.Field.RECIPIENT, RECIPIENT_EXTRACTOR)
-        .put(Rule.Condition.Field.FROM, FROM_EXTRACTOR)
-        .put(Rule.Condition.Field.CC, CC_EXTRACTOR)
-        .put(Rule.Condition.Field.TO, TO_EXTRACTOR)
+        .put(Rule.Condition.FixedField.SUBJECT, SUBJECT_EXTRACTOR)
+        .put(Rule.Condition.FixedField.RECIPIENT, RECIPIENT_EXTRACTOR)
+        .put(Rule.Condition.FixedField.FROM, FROM_EXTRACTOR)
+        .put(Rule.Condition.FixedField.CC, CC_EXTRACTOR)
+        .put(Rule.Condition.FixedField.TO, TO_EXTRACTOR)
         .build();
 
     boolean STRICT_PARSING = true;
@@ -90,7 +91,12 @@ public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> 
     }
 
     static Optional<HeaderExtractor> asHeaderExtractor(Rule.Condition.Field field) {
-        return Optional.ofNullable(
-            HeaderExtractor.HEADER_EXTRACTOR_REGISTRY.get(field));
+        return Optional.ofNullable(HeaderExtractor.HEADER_EXTRACTOR_REGISTRY.get(field))
+            .or(() -> {
+                Preconditions.checkArgument(field instanceof Rule.Condition.CustomHeaderField);
+                Rule.Condition.CustomHeaderField customHeaderField = (Rule.Condition.CustomHeaderField) field;
+
+                return Optional.of(mail -> StreamUtils.ofNullables(mail.getMessage().getHeader(customHeaderField.headerName())));
+            });
     }
 }

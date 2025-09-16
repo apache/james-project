@@ -23,7 +23,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.CONTAINS;
-import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.SUBJECT;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.SUBJECT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;

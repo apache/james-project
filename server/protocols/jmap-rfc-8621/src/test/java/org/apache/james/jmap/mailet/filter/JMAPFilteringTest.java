@@ -25,11 +25,11 @@ import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.EXAC
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.NOT_CONTAINS;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.NOT_EXACTLY_EQUALS;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.START_WITH;
-import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.CC;
-import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.FROM;
-import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.RECIPIENT;
-import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.SUBJECT;
-import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.TO;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.CC;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.FROM;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.RECIPIENT;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.SUBJECT;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.TO;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.BOU;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.EMPTY;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULLNAME;
@@ -65,7 +65,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.jmap.api.filtering.Rule;
-import org.apache.james.jmap.api.filtering.Rule.Condition.Field;
 import org.apache.james.jmap.mailet.filter.JMAPFilteringExtension.JMAPFilteringTestSystem;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.util.StreamUtils;
@@ -246,11 +245,11 @@ class JMAPFilteringTest {
     }
 
     public static final ImmutableList<FieldAndHeader> ADDRESS_TESTING_COMBINATION = ImmutableList.of(
-        new FieldAndHeader(Field.FROM, RFC2822Headers.FROM),
-        new FieldAndHeader(Field.TO, RFC2822Headers.TO),
-        new FieldAndHeader(Field.CC, RFC2822Headers.CC),
-        new FieldAndHeader(Field.RECIPIENT, RFC2822Headers.TO),
-        new FieldAndHeader(Field.RECIPIENT, RFC2822Headers.CC));
+        new FieldAndHeader(FROM, RFC2822Headers.FROM),
+        new FieldAndHeader(TO, RFC2822Headers.TO),
+        new FieldAndHeader(CC, RFC2822Headers.CC),
+        new FieldAndHeader(RECIPIENT, RFC2822Headers.TO),
+        new FieldAndHeader(RECIPIENT, RFC2822Headers.CC));
 
     static Stream<Arguments> exactlyEqualsTestSuite() {
         return StreamUtils.flatten(
@@ -394,7 +393,12 @@ class JMAPFilteringTest {
                     .valueToMatch(USER_4_FULL_ADDRESS)
                     .build(),
                 argumentBuilder().scrambledSubjectToMatch(UNSCRAMBLED_SUBJECT).build(),
-                argumentBuilder().unscrambledSubjectToMatch(UNSCRAMBLED_SUBJECT).build()));
+                argumentBuilder().unscrambledSubjectToMatch(UNSCRAMBLED_SUBJECT).build(),
+                argumentBuilder(new Rule.Condition.CustomHeaderField("X-CUSTOM"))
+                    .description("X-CUSTOM")
+                    .header("X-CUSTOM", "abcdeg")
+                    .valueToMatch("abcdeg")
+                    .build()));
     }
 
     static Stream<Arguments> containsTestSuite() {
@@ -491,6 +495,11 @@ class JMAPFilteringTest {
                     .toRecipient(USER_3_FULL_ADDRESS)
                     .toRecipient(USER_4_FULL_ADDRESS)
                     .valueToMatch("user4@jam").build(),
+                argumentBuilder(new Rule.Condition.CustomHeaderField("X-CUSTOM"))
+                    .description("X-CUSTOM")
+                    .header("X-CUSTOM", "abcdeg")
+                    .valueToMatch("bcde")
+                    .build(),
                 argumentBuilder().scrambledSubjectToMatch("is the subject").build(),
                 argumentBuilder().unscrambledSubjectToMatch("rédéric MART").build()));
     }
@@ -562,6 +571,11 @@ class JMAPFilteringTest {
 
                     .map(FilteringArgumentBuilder::build)),
             Stream.of(
+                argumentBuilder(new Rule.Condition.CustomHeaderField("X-CUSTOM"))
+                    .description("X-CUSTOM")
+                    .header("X-CUSTOM", "abcdeg")
+                    .valueToMatch(SHOULD_NOT_MATCH)
+                    .build(),
                 argumentBuilder().description("multiple to and cc headers")
                     .field(RECIPIENT)
                     .ccRecipient(USER_1_FULL_ADDRESS)
@@ -579,7 +593,7 @@ class JMAPFilteringTest {
                 argumentBuilder().scrambledSubjectShouldNotMatchCaseSensitive().build(),
                 argumentBuilder().unscrambledSubjectToMatch(SHOULD_NOT_MATCH).build(),
                 argumentBuilder().unscrambledSubjectShouldNotMatchCaseSensitive().build()),
-            Stream.of(Rule.Condition.Field.values())
+            Rule.Condition.FixedField.VALUES.stream()
                 .map(field -> argumentBuilder()
                     .description("no header")
                     .field(field)

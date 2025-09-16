@@ -13,6 +13,11 @@
             "field": "cc",
             "comparator": "contains",
             "value": "something"
+          },
+          {
+            "field": "header:custom",
+            "comparator": "contains",
+            "value": "another thing"
           }
         ]
       },

@@ -129,31 +129,50 @@ public class Rule {
 
     public static class Condition {
 
-        public enum Field {
-            FROM("from"),
-            TO("to"),
-            CC("cc"),
-            SUBJECT("subject"),
-            RECIPIENT("recipient");
-            
-            public static Optional<Field> find(String fieldName) {
-                return Arrays.stream(values())
-                        .filter(value -> value.fieldName.equalsIgnoreCase(fieldName))
-                        .findAny();
+        public interface Field {
+            static Optional<Field> find(String fieldName) {
+                return FixedField.find(fieldName)
+                    .or(() -> CustomHeaderField.find(fieldName));
             }
             
-            public static Field of(String fieldName) {
+            static Field of(String fieldName) {
                 return find(fieldName).orElseThrow(() -> new IllegalArgumentException("'" + fieldName + "' is not a valid field name"));
             }
             
-            private final String fieldName;
-            
-            Field(String fieldName) {
-                this.fieldName = fieldName;
+            String asString();
+        }
+
+        public record FixedField(String fieldName) implements Field {
+            public static Field FROM = new FixedField("from");
+            public static Field TO = new FixedField("to");
+            public static Field CC = new FixedField("cc");
+            public static Field SUBJECT = new FixedField("subject");
+            public static Field RECIPIENT = new FixedField("recipient");
+            public static final ImmutableList<Field> VALUES = ImmutableList.of(FROM, TO, CC, SUBJECT, RECIPIENT);
+
+            public static Optional<Field> find(String fieldName) {
+                return VALUES.stream()
+                    .filter(value -> value.asString().equalsIgnoreCase(fieldName))
+                    .findAny();
             }
-            
+
             public String asString() {
                 return fieldName;
+            }
+        }
+
+        public record CustomHeaderField(String headerName) implements Field {
+            public static final String PREFIX = "header:";
+
+            public static Optional<Field> find(String fieldName) {
+                if (fieldName.startsWith(PREFIX)) {
+                    return Optional.of(new CustomHeaderField(fieldName.substring(PREFIX.length())));
+                }
+                return Optional.empty();
+            }
+
+            public String asString() {
+                return PREFIX + headerName;
             }
         }
         
