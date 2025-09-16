@@ -50,7 +50,6 @@ public class SetMailAttributeMessageHook implements JamesMessageHook {
 
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
-        System.out.println("Marking");
         mail.setAttribute(new Attribute(AttributeName.of(name), AttributeValue.of(value)));
         return HookResult.DECLINED;
     }
