@@ -71,7 +71,7 @@ class ConfiguredAuthTest {
         "noreply-tdrive@other-domain.tld, secret123456",
         "noreply-tdrive, secret123456"
     })
-    void authShouldBeDeniedWhenMatchingConfiguredValue(String username, String password) throws Exception {
+    void authShouldBeDeniedWhenNotMatchingConfiguredValue(String username, String password) throws Exception {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = smtpServerTestSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
