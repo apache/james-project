@@ -1,0 +1,14 @@
+=== SenderHasMXRecord
+
+Enable to validate that the sender of the email address domain name has a MX record advertised through DNS
+that matches a supplied list of domains.
+
+This is for instance useful when registering dynamically a public email service and ensure correct configuration
+of the domain upon sending and mitigate some identity spoofing attempts on a publicly accessible platform allowing
+dynamic domain registration.
+
+Example:
+
+....
+<mailet match="SenderHasMXRecord=mx.apache.org" class="any-class"/>
+....
