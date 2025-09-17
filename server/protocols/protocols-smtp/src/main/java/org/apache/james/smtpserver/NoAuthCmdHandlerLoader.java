@@ -56,7 +56,6 @@ public class NoAuthCmdHandlerLoader implements HandlersPackage {
             RsetCmdHandler.class.getName(),
             VrfyCmdHandler.class.getName(),
             MailSizeEsmtpExtension.class.getName(),
-            UsersRepositoryAuthHook.class.getName(),
             AuthRequiredToRelayRcptHook.class.getName(),
             SenderAuthIdentifyVerificationHook.class.getName(),
             PostmasterAbuseRcptHook.class.getName(),
