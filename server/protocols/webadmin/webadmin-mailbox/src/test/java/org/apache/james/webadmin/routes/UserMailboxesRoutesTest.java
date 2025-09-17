@@ -42,12 +42,10 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
@@ -56,10 +54,6 @@ import java.util.stream.IntStream;
 
 import jakarta.mail.Flags;
 
-import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
-import org.apache.james.backends.opensearch.OpenSearchIndexer;
-import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
-import org.apache.james.backends.opensearch.WriteAliasName;
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxManager;
@@ -76,6 +70,7 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.FetchGroup;
@@ -90,24 +85,12 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.model.search.MailboxQuery;
-import org.apache.james.mailbox.opensearch.IndexAttachments;
-import org.apache.james.mailbox.opensearch.IndexHeaders;
-import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
-import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
-import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
-import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
-import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
-import org.apache.james.mailbox.opensearch.query.DefaultCriterionConverter;
-import org.apache.james.mailbox.opensearch.query.QueryConverter;
-import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.api.UsersRepository;
@@ -119,6 +102,7 @@ import org.apache.james.webadmin.service.ClearMailboxContentTask;
 import org.apache.james.webadmin.service.ClearMailboxContentTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.UserMailboxesService;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
 import org.apache.mailbox.tools.indexer.UserReindexingTask;
@@ -128,12 +112,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -1488,41 +1472,22 @@ class UserMailboxesRoutesTest {
 
     @Nested
     class UserReIndexing {
-        static final int SEARCH_SIZE = 1;
-
-        @RegisterExtension
-        DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension(
-            new DockerOpenSearchExtension.DeleteAllIndexDocumentsCleanupStrategy(new WriteAliasName("mailboxWriteAlias")));
-
         private InMemoryMailboxManager mailboxManager;
         private ListeningMessageSearchIndex searchIndex;
         MessageIdManager messageIdManager;
 
         @BeforeEach
         void setUp() throws Exception {
-            ReactorOpenSearchClient client = MailboxIndexCreationUtil.prepareDefaultClient(
-                openSearch.getDockerOpenSearch().clientProvider().get(),
-                openSearch.getDockerOpenSearch().configuration());
-
-            InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-            MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
-
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
                 .preProvisionnedFakeAuthenticator()
                 .fakeAuthorizator()
                 .inVmEventBus()
                 .defaultAnnotationLimits()
                 .defaultMessageParser()
-                .listeningSearchIndex(preInstanciationStage -> new OpenSearchListeningMessageSearchIndex(
-                    preInstanciationStage.getMapperFactory(),
-                    ImmutableSet.of(),
-                    new OpenSearchIndexer(client,
-                        MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
-                    new OpenSearchSearcher(client, new QueryConverter(new DefaultCriterionConverter()), SEARCH_SIZE,
-                        MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
-                    new MessageToOpenSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
-                    preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory, OpenSearchMailboxConfiguration.builder().build(), new RecordingMetricFactory(),
-                    ImmutableSet.of()))
+                .listeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
+                    preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new ByteBuffersDirectory(),
+                    new InMemoryMessageId.Factory(),
+                    preInstanciationStage.getSessionProvider(), new DefaultTextExtractor())))
                 .noPreDeletionHooks()
                 .storeQuotaManager()
                 .build();
@@ -2072,9 +2037,7 @@ class UserMailboxesRoutesTest {
 
                 verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxIdCaptor.capture());
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
-                verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture(), any());
                 verify(searchIndex).postReindexing();
-                verifyNoMoreInteractions(searchIndex);
 
                 assertThat(mailboxIdCaptor.getValue()).matches(capturedMailboxId -> capturedMailboxId.equals(mailboxId));
                 assertThat(mailboxCaptor2.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));

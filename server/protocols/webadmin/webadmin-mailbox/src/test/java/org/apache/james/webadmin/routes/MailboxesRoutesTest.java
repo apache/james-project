@@ -31,23 +31,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 
 import jakarta.mail.Flags;
 
-import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
-import org.apache.james.backends.opensearch.OpenSearchIndexer;
-import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
-import org.apache.james.backends.opensearch.WriteAliasName;
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOConverter;
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
@@ -57,6 +51,7 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.FetchGroup;
@@ -66,23 +61,11 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.james.mailbox.opensearch.IndexAttachments;
-import org.apache.james.mailbox.opensearch.IndexHeaders;
-import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
-import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
-import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
-import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
-import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
-import org.apache.james.mailbox.opensearch.query.DefaultCriterionConverter;
-import org.apache.james.mailbox.opensearch.query.QueryConverter;
-import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
@@ -93,6 +76,7 @@ import org.apache.james.webadmin.dto.WebAdminSingleMailboxReindexingTaskAddition
 import org.apache.james.webadmin.service.PreviousReIndexingService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
@@ -101,16 +85,14 @@ import org.apache.mailbox.tools.indexer.SingleMessageReindexingTask;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTaskAdditionalInformationDTO;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -120,53 +102,25 @@ import reactor.core.publisher.Mono;
 class MailboxesRoutesTest {
     static final Username USERNAME = Username.of("benwa@apache.org");
     static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
-    static final int SEARCH_SIZE = 1;
-
-    @RegisterExtension
-    static DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension(
-        new DockerOpenSearchExtension.DeleteAllIndexDocumentsCleanupStrategy(new WriteAliasName("mailboxWriteAlias")));
-
-    static ReactorOpenSearchClient client;
     WebAdminServer webAdminServer;
     ListeningMessageSearchIndex searchIndex;
     InMemoryMailboxManager mailboxManager;
     MessageIdManager messageIdManager;
     MemoryTaskManager taskManager;
 
-    @BeforeAll
-    static void setUpAll() {
-        client = openSearch.getDockerOpenSearch().clientProvider().get();
-        MailboxIndexCreationUtil.prepareDefaultClient(
-            client,
-            openSearch.getDockerOpenSearch().configuration());
-    }
-
-    @AfterAll
-    static void tearDownAll() throws IOException {
-        client.close();
-    }
 
     @BeforeEach
     void beforeEach() {
-        InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
-
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
             .inVmEventBus()
             .defaultAnnotationLimits()
             .defaultMessageParser()
-            .listeningSearchIndex(preInstanciationStage -> new OpenSearchListeningMessageSearchIndex(
-                preInstanciationStage.getMapperFactory(),
-                ImmutableSet.of(),
-                new OpenSearchIndexer(client,
-                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
-                new OpenSearchSearcher(client, new QueryConverter(new DefaultCriterionConverter()), SEARCH_SIZE,
-                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
-                new MessageToOpenSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
-                preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory, OpenSearchMailboxConfiguration.builder().build(), new RecordingMetricFactory(),
-                ImmutableSet.of()))
+            .listeningSearchIndex(Throwing.function(preInstanciationStage -> new LuceneMessageSearchIndex(
+                preInstanciationStage.getMapperFactory(), new InMemoryId.Factory(), new ByteBuffersDirectory(),
+                new InMemoryMessageId.Factory(),
+                preInstanciationStage.getSessionProvider(), new DefaultTextExtractor())))
             .noPreDeletionHooks()
             .storeQuotaManager()
             .build();
@@ -512,6 +466,7 @@ class MailboxesRoutesTest {
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                         systemSession)
                     .getId();
+                searchIndex.postReindexing();
 
                 Flags initialFlags = searchIndex.retrieveIndexedFlags(mailbox, result.getUid()).block();
 
@@ -527,6 +482,7 @@ class MailboxesRoutesTest {
 
                 // We update on the searchIndex level to try to create inconsistencies
                 searchIndex.update(systemSession, mailbox.getMailboxId(), ImmutableList.of(updatedFlags)).block();
+                searchIndex.postReindexing();
 
                 String taskId = with()
                     .post("/mailboxes?task=reIndex&mode=fixOutdated")
@@ -537,9 +493,10 @@ class MailboxesRoutesTest {
                     .basePath(TasksRoutes.BASE)
                 .when()
                     .get(taskId + "/await");
+                searchIndex.postReindexing();
 
                 assertThat(searchIndex.retrieveIndexedFlags(mailbox, result.getUid()).block())
-                    .isEqualTo(initialFlags);
+                    .isEqualTo(new FlagsBuilder().add(initialFlags).add(Flags.Flag.RECENT).build());
             }
 
             @Test
@@ -705,9 +662,7 @@ class MailboxesRoutesTest {
 
                 verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxIdCaptor.capture());
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
-                verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture(), any());
                 verify(searchIndex).postReindexing();
-                verifyNoMoreInteractions(searchIndex);
 
                 assertThat(mailboxIdCaptor.getValue()).matches(capturedMailboxId -> capturedMailboxId.equals(mailboxId));
                 assertThat(mailboxCaptor2.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
@@ -995,6 +950,7 @@ class MailboxesRoutesTest {
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                         systemSession)
                     .getId();
+                searchIndex.postReindexing();
 
                 Flags initialFlags = searchIndex.retrieveIndexedFlags(mailbox, result.getUid()).block();
 
@@ -1010,6 +966,7 @@ class MailboxesRoutesTest {
 
                 // We update on the searchIndex level to try to create inconsistencies
                 searchIndex.update(systemSession, mailbox.getMailboxId(), ImmutableList.of(updatedFlags)).block();
+                searchIndex.postReindexing();
 
                 String taskId = with()
                     .queryParam("task", "reIndex")
@@ -1022,9 +979,10 @@ class MailboxesRoutesTest {
                     .basePath(TasksRoutes.BASE)
                 .when()
                     .get(taskId + "/await");
+                searchIndex.postReindexing();
 
                 assertThat(searchIndex.retrieveIndexedFlags(mailbox, result.getUid()).block())
-                    .isEqualTo(initialFlags);
+                    .isEqualTo(new FlagsBuilder().add(initialFlags).add(Flags.Flag.RECENT).build());
             }
 
             @Test
@@ -1130,9 +1088,7 @@ class MailboxesRoutesTest {
 
                 verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxIdCaptor.capture());
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
-                verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture(), any());
                 verify(searchIndex).postReindexing();
-                verifyNoMoreInteractions(searchIndex);
 
                 assertThat(mailboxIdCaptor.getValue()).matches(capturedMailboxId -> capturedMailboxId.equals(mailboxId));
                 assertThat(mailboxCaptor2.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
@@ -1297,8 +1253,6 @@ class MailboxesRoutesTest {
                 ArgumentCaptor<Mailbox> mailboxCaptor = ArgumentCaptor.forClass(Mailbox.class);
 
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
-                verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture(), any());
-                verifyNoMoreInteractions(searchIndex);
 
                 assertThat(mailboxCaptor.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
                 assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
@@ -1629,9 +1583,7 @@ class MailboxesRoutesTest {
                 ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
                 ArgumentCaptor<Mailbox> mailboxCaptor = ArgumentCaptor.forClass(Mailbox.class);
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
-                verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture(), any());
                 verify(searchIndex).postReindexing();
-                verifyNoMoreInteractions(searchIndex);
 
                 assertThat(mailboxCaptor.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
                 assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
