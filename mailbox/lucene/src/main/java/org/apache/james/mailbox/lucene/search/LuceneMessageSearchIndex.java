@@ -749,11 +749,14 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @Override
     public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage membership) {
-        return indexableDocument.createMessageDocument(membership, session)
-            .flatMap(document -> Mono.fromRunnable(Throwing.runnable(() -> {
-                writer.addDocument(document);
-                writer.addDocument(indexableDocument.createFlagsDocument(membership));
-            })))
+        return Mono.fromCallable(() -> retrieveFlags(mailbox, membership.getUid()))
+            .filter(flags -> !new Flags().equals(flags))
+            .flatMap(any -> Mono.fromRunnable(Throwing.runnable(() -> update(mailbox.getMailboxId(), membership.getUid(), membership.createFlags()))))
+            .switchIfEmpty(Mono.defer(() -> indexableDocument.createMessageDocument(membership, session)
+                .flatMap(document -> Mono.fromRunnable(Throwing.runnable(() -> {
+                    writer.addDocument(document);
+                    writer.addDocument(indexableDocument.createFlagsDocument(membership));
+                })))))
             .then();
     }
 

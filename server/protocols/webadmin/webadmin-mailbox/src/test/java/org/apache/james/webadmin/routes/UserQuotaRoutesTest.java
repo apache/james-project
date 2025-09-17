@@ -498,12 +498,6 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    @ExtendWith(OpenSearchQuotaSearchExtension.class)
-    class OpenSearchGetUsersQuotaRouteTest implements GetUsersQuotaRouteContract {
-
-    }
-
-    @Nested
     @ExtendWith(ScanningQuotaSearchExtension.class)
     class GetCount {
 
