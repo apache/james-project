@@ -101,11 +101,37 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <argLine>-Djava.library.path=
+                        -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
+                        -Xms512m -Xmx2048m</argLine>
                     <forkedProcessTimeoutInSeconds>3600</forkedProcessTimeoutInSeconds>
                     <reuseForks>true</reuseForks>
-                    <forkCount>2</forkCount>
+                    <groups combine.self="override">BasicFeature</groups>
+                    <excludedGroups>unstable</excludedGroups>
+                    <properties>
+                        <includeTags>junit5</includeTags>
+                    </properties>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>unstable-tests</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-plugin</artifactId>
+                            <configuration>
+                                <excludedGroups/>
+                                <groups>unstable</groups>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
 </project>
