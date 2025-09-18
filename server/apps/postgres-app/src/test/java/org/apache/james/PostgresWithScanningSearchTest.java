@@ -20,12 +20,14 @@
 package org.apache.james;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class WithScanningSearchImmutableTest implements JamesServerConcreteContract {
+public class PostgresWithScanningSearchTest {
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     @RegisterExtension
@@ -41,4 +43,9 @@ public class WithScanningSearchImmutableTest implements JamesServerConcreteContr
         .extension(postgresExtension)
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
+
+    @Test
+    void shouldStart(GuiceJamesServer server) {
+        assertThat(server.isStarted()).isTrue();
+    }
 }
