@@ -66,7 +66,7 @@ class ClusterFactoryTest {
 
     void assertThatClusterIsContactable(CqlSession session) {
         try {
-            session.execute("SELECT dateof(now()) FROM system.local ;");
+            session.execute("SELECT toTimestamp(now()) FROM system.local ;");
         } catch (Exception e) {
             throw new AssertionError("expecting cluster can be connected but actually not", e);
         }
