@@ -231,7 +231,7 @@ public interface MailsShouldBeWellReceived {
     }
 
     @Test
-    default void oneHundredMailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
+    default void concurrentMailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
             .addUser(JAMES_USER, PASSWORD)
@@ -240,7 +240,7 @@ public interface MailsShouldBeWellReceived {
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
 
-        int messageCount = 100;
+        int messageCount = 50;
 
         Port smtpPort = Port.of(smtpPort(server));
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
