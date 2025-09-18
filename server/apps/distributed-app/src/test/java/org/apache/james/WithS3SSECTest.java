@@ -20,11 +20,10 @@
 package org.apache.james;
 
 import org.apache.james.blob.objectstorage.aws.sse.S3SSECConfiguration;
-import org.apache.james.jmap.JmapJamesServerContract;
 import org.apache.james.modules.S3SSECBlobStoreExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class WithS3SSECTest implements JmapJamesServerContract, MailsShouldBeWellReceivedConcreteContract {
+public class WithS3SSECTest implements MailsShouldBeWellReceivedConcreteContract {
     static S3SSECConfiguration s3SSECConfiguration = new S3SSECConfiguration.Basic("AES256", "masterPassword", "salt");
 
     @RegisterExtension
