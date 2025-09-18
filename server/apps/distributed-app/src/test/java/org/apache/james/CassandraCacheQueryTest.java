@@ -96,7 +96,7 @@ class CassandraCacheQueryTest {
     }
 
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = WithCacheImmutableTest.baseExtensionBuilder()
+    static JamesServerExtension jamesServerExtension = WithCacheTest.baseExtensionBuilder()
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .overrideServerModule(new TestingSessionModule())
         .build();

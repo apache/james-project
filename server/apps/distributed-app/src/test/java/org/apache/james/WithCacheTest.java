@@ -19,30 +19,23 @@
 
 package org.apache.james;
 
-import org.apache.james.jmap.JmapJamesServerContract;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-
-class WithCacheImmutableTest implements JmapJamesServerContract, JamesServerConcreteContract {
-    @RegisterExtension
-    static JamesServerExtension jamesServerExtension = baseExtensionBuilder()
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
-        .build();
-
+class WithCacheTest implements MailsShouldBeWellReceivedConcreteContract {
     static JamesServerBuilder<CassandraRabbitMQJamesConfiguration> baseExtensionBuilder() {
         return new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
             CassandraRabbitMQJamesConfiguration.builder()
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
                 .blobStore(BlobStoreConfiguration.builder()
-                        .s3()
-                        .enableCache()
-                        .deduplication()
-                        .noCryptoConfig())
+                    .s3()
+                    .enableCache()
+                    .deduplication()
+                    .noCryptoConfig())
                 .searchConfiguration(SearchConfiguration.openSearch())
                 .build())
             .extension(new DockerOpenSearchExtension())
@@ -52,4 +45,9 @@ class WithCacheImmutableTest implements JmapJamesServerContract, JamesServerConc
             .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule()));
     }
+
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = baseExtensionBuilder()
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .build();
 }
