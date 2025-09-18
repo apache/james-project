@@ -22,11 +22,14 @@ package org.apache.james;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.jmap.JmapJamesServerContract;
+import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.modules.ConfigurationProbe;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Tag(BasicFeature.TAG)
 class CassandraJamesServerTest implements JamesServerConcreteContract, JmapJamesServerContract {
     @RegisterExtension
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())

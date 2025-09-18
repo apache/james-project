@@ -34,6 +34,7 @@ import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.TestingSession;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.core.Domain;
+import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -43,6 +44,7 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SpoolerProbe;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -58,6 +60,7 @@ import com.google.inject.multibindings.Multibinder;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+@Tag(BasicFeature.TAG)
 class WithCassandraBlobStoreTest implements MailsShouldBeWellReceivedConcreteContract {
     private static class TestingSessionProbe implements GuiceProbe {
         private final TestingSession testingSession;

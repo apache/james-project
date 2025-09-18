@@ -31,6 +31,7 @@ import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.core.Domain;
 import org.apache.james.data.LdapTestExtension;
 import org.apache.james.data.UsersRepositoryModuleChooser;
+import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -40,9 +41,11 @@ import org.apache.james.utils.SpoolerProbe;
 import org.apache.james.utils.TestIMAPClient;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Tag(BasicFeature.TAG)
 class CassandraLdapJamesServerTest implements JamesServerConcreteContract {
     private static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     private static ConditionFactory calmlyAwait = Awaitility.with()
