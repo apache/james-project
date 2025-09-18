@@ -26,7 +26,7 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class WithEncryptedBlobStoreMutableTest implements MailsShouldBeWellReceivedConcreteContract {
+public class WithEncryptedBlobStoreTest implements MailsShouldBeWellReceivedConcreteContract {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
         CassandraRabbitMQJamesConfiguration.builder()
