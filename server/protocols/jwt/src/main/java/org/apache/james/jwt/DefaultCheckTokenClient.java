@@ -21,6 +21,7 @@ package org.apache.james.jwt;
 
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import org.apache.james.jwt.introspection.IntrospectionEndpoint;
 import org.apache.james.jwt.introspection.TokenIntrospectionException;
@@ -42,11 +43,15 @@ import reactor.netty.resources.ConnectionProvider;
 public class DefaultCheckTokenClient implements CheckTokenClient {
 
     public static final String TOKEN_ATTRIBUTE = "token";
+    public static final int PENDING_ACQUIRE_MAX = Optional.ofNullable(System.getProperty("james.oidc.client.pending.acquire.max"))
+        .map(Integer::valueOf)
+        .orElse(10000);
     private final HttpClient httpClient;
     private final ObjectMapper deserializer;
 
     public DefaultCheckTokenClient() {
         this.httpClient = HttpClient.create(ConnectionProvider.builder(this.getClass().getName())
+                .pendingAcquireMaxCount(PENDING_ACQUIRE_MAX)
                 .build())
             .disableRetry(true)
             .headers(builder -> {
