@@ -29,6 +29,7 @@ import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQu
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.SENT_AT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.TABLE_NAME_RECEIVED_AT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.TABLE_NAME_SENT_AT;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.THREAD_ID;
 
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 
@@ -43,7 +44,8 @@ public interface CassandraEmailQueryViewDataDefinition {
         .statement(statement -> types -> statement
             .withPartitionKey(MAILBOX_ID, DataTypes.UUID)
             .withClusteringColumn(SENT_AT, DataTypes.TIMESTAMP)
-            .withClusteringColumn(MESSAGE_ID, DataTypes.UUID))
+            .withClusteringColumn(MESSAGE_ID, DataTypes.UUID)
+            .withColumn(THREAD_ID, DataTypes.UUID))
 
         .table(TABLE_NAME_RECEIVED_AT)
         .comment("Storing the JMAP projections for list of emails within a mailbox to not rely on OpenSearch for basic Email/query (sorts and filter on receivedAt).")
@@ -54,7 +56,8 @@ public interface CassandraEmailQueryViewDataDefinition {
             .withPartitionKey(MAILBOX_ID, DataTypes.UUID)
             .withClusteringColumn(RECEIVED_AT, DataTypes.TIMESTAMP)
             .withClusteringColumn(MESSAGE_ID, DataTypes.UUID)
-            .withColumn(SENT_AT, DataTypes.TIMESTAMP))
+            .withColumn(SENT_AT, DataTypes.TIMESTAMP)
+            .withColumn(THREAD_ID, DataTypes.UUID))
 
         .table(DATE_LOOKUP_TABLE)
         .comment("Given a MailboxId+MessageId lookup the dates of a message to delete it.")

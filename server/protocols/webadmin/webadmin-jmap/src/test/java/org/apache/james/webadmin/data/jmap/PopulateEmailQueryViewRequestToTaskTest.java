@@ -85,6 +85,8 @@ class PopulateEmailQueryViewRequestToTaskTest {
         }
     }
 
+    private static final boolean NO_COLLAPSE_THREAD = false;
+
     static final String BASE_PATH = "/:username/mailboxes";
 
     static final DomainList NO_DOMAIN_LIST = null;
@@ -265,7 +267,7 @@ class PopulateEmailQueryViewRequestToTaskTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
             .containsOnly(messageId.getMessageId());
     }
 
@@ -287,7 +289,7 @@ class PopulateEmailQueryViewRequestToTaskTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
@@ -315,7 +317,7 @@ class PopulateEmailQueryViewRequestToTaskTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId2 + "/await");
 
-        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
             .containsOnly(messageId.getMessageId());
     }
 }
