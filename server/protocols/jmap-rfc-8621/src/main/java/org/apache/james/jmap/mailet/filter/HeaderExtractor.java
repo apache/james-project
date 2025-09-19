@@ -32,7 +32,6 @@ import org.apache.james.javax.AddressHelper;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.util.StreamUtils;
-import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,15 +40,15 @@ import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
-public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> {
+public interface HeaderExtractor extends ThrowingFunction<FilteringHeaders, Stream<String>> {
     Logger LOGGER = LoggerFactory.getLogger(HeaderExtractor.class);
 
-    HeaderExtractor SUBJECT_EXTRACTOR = mail ->
-        StreamUtils.ofNullables(mail.getMessage().getSubject());
+    HeaderExtractor SUBJECT_EXTRACTOR = filteringHeaders ->
+        StreamUtils.ofNullables(filteringHeaders.getSubject());
     HeaderExtractor CC_EXTRACTOR = recipientExtractor(Message.RecipientType.CC);
     HeaderExtractor TO_EXTRACTOR = recipientExtractor(Message.RecipientType.TO);
     HeaderExtractor RECIPIENT_EXTRACTOR = and(TO_EXTRACTOR, CC_EXTRACTOR);
-    HeaderExtractor FROM_EXTRACTOR = addressExtractor(mail -> mail.getMessage().getHeader(FROM), FROM);
+    HeaderExtractor FROM_EXTRACTOR = addressExtractor(filteringHeaders -> filteringHeaders.getHeader(FROM), FROM);
 
     Map<Rule.Condition.Field, HeaderExtractor> HEADER_EXTRACTOR_REGISTRY = ImmutableMap.<Rule.Condition.Field, HeaderExtractor>builder()
         .put(Rule.Condition.FixedField.SUBJECT, SUBJECT_EXTRACTOR)
@@ -62,23 +61,23 @@ public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> 
     boolean STRICT_PARSING = true;
 
     static HeaderExtractor and(HeaderExtractor headerExtractor1, HeaderExtractor headerExtractor2) {
-        return (Mail mail) -> StreamUtils.flatten(headerExtractor1.apply(mail), headerExtractor2.apply(mail));
+        return (FilteringHeaders filteringHeaders) -> StreamUtils.flatten(headerExtractor1.apply(filteringHeaders), headerExtractor2.apply(filteringHeaders));
     }
 
     static HeaderExtractor recipientExtractor(Message.RecipientType type) {
         String headerName = type.toString();
-        ThrowingFunction<Mail, String[]> addressGetter = mail -> mail.getMessage().getHeader(headerName);
+        ThrowingFunction<FilteringHeaders, String[]> addressGetter = filteringHeaders -> filteringHeaders.getHeader(headerName);
 
         return addressExtractor(addressGetter, headerName);
     }
 
-    static HeaderExtractor addressExtractor(ThrowingFunction<Mail, String[]> addressGetter, String fallbackHeaderName) {
-        return mail -> {
+    static HeaderExtractor addressExtractor(ThrowingFunction<FilteringHeaders, String[]> addressGetter, String fallbackHeaderName) {
+        return filteringHeaders -> {
             try {
-                return toAddressContents(addressGetter.apply(mail));
+                return toAddressContents(addressGetter.apply(filteringHeaders));
             } catch (Exception e) {
                 LOGGER.info("Failed parsing header. Falling back to unparsed header value matching", e);
-                return Stream.of(mail.getMessage().getHeader(fallbackHeaderName))
+                return Stream.of(filteringHeaders.getHeader(fallbackHeaderName))
                     .map(MimeUtil::unscrambleHeaderValue);
             }
         };
@@ -96,7 +95,7 @@ public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> 
                 Preconditions.checkArgument(field instanceof Rule.Condition.CustomHeaderField);
                 Rule.Condition.CustomHeaderField customHeaderField = (Rule.Condition.CustomHeaderField) field;
 
-                return Optional.of(mail -> StreamUtils.ofNullables(mail.getMessage().getHeader(customHeaderField.headerName())));
+                return Optional.of(filteringHeaders -> StreamUtils.ofNullables(filteringHeaders.getHeader(customHeaderField.headerName())));
             });
     }
 }
