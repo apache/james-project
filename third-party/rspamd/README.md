@@ -86,6 +86,11 @@ If true `virusProcessor` and `rejectSpamProcessor` are honnered per user, at the
 </processor>
 ```
 
+`RSpamdScanner` supports addition `rspamdUrl`, `rspamdPassword`, `rspamdTimeout`, `perUserBayes` properties allowing to 
+override content defined in `rspamd.properties`, which allows running several instances on distict Rspamd instance. A 
+possible use case is to use 1 RSpamD cluster on user incoming spam, trained in perUserBayes mode, and another RSpamD 
+cluster configured to check outgoing email for spams with a tolerant threshold and a specifc configuration.
+
 - Declare the webadmin for Rspamd in `webadmin.properties`
 
 ```

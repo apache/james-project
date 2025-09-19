@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
@@ -311,6 +312,47 @@ class RspamdScannerTest {
         mailet.service(mail);
 
         assertThat(mail.getState()).isEqualTo("spam");
+    }
+
+    @Test
+    void shouldSupportCustomRSpamDURL() throws Exception {
+        RspamdHttpClient rspamdHttpClient = mock(RspamdHttpClient.class);
+        when(rspamdHttpClient.checkV2(any(Mail.class))).thenReturn(Mono.just(AnalysisResult.builder()
+                .action(AnalysisResult.Action.REJECT)
+                .score(12.1F)
+                .requiredScore(14F)
+            .build()));
+
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .setProperty("rejectSpamProcessor", "spam")
+            .setProperty("rspamdUrl", "http://imap.failing.com")
+            .setProperty("rspamdPassword", "secret")
+            .setProperty("rspamdTimeout", "20000")
+            .build();
+
+        mailet = new RspamdScanner(rspamdHttpClient, configuration);
+
+        Mail mail = FakeMail.builder()
+            .name("name")
+            .state("initial")
+            .recipient("user1@exemple.com")
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addToRecipient("user1@exemple.com")
+                .addFrom("sender@exemple.com")
+                .setSubject(INIT_SUBJECT)
+                .setText("Please!")
+                .build())
+            .build();
+
+        mailet.init(mailetConfig);
+        try {
+            mailet.service(mail);
+        } catch (Exception e) {
+            // ignore
+        }
+
+        // We overloaded the mock supplied in the constructor
+        verifyNoInteractions(rspamdHttpClient);
     }
 
     @Test
