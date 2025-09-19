@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MessageResult;
 import org.apache.mailet.Mail;
 
 import com.google.common.base.Preconditions;
@@ -37,7 +39,16 @@ class RuleMatcher {
     }
 
     Stream<Rule> findApplicableRules(Mail mail) {
+        FilteringHeaders filteringHeaders = new FilteringHeaders.MailFilteringHeaders(mail);
+
         return filteringRules.stream()
-            .filter(rule -> MailMatcher.from(rule).match(mail));
+            .filter(rule -> MailMatcher.from(rule).match(filteringHeaders));
+    }
+
+    Stream<Rule> findApplicableRules(MessageResult messageResult) throws MailboxException {
+        FilteringHeaders filteringHeaders = new FilteringHeaders.MessageResultFilteringHeaders(messageResult);
+
+        return filteringRules.stream()
+            .filter(rule -> MailMatcher.from(rule).match(filteringHeaders));
     }
 }
