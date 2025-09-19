@@ -348,7 +348,7 @@ class RspamdScannerTest {
         try {
             mailet.service(mail);
         } catch (Exception e) {
-
+            // ignore
         }
 
         // We overloaded the mock supplied in the constructor

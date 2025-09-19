@@ -91,8 +91,7 @@ public class RspamdScanner extends GenericMailet {
                 new URL(url),
                 getInitParameter("rspamdPassword", configuration.getPassword()),
                 getInitParameterAsOptional("rspamdTimeout").map(Integer::parseInt).or(configuration::getTimeout),
-                perUserBayes
-            ))));
+                perUserBayes))));
     }
 
     @Override
