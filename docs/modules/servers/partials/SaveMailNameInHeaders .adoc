@@ -1,0 +1,15 @@
+=== SanitizeMimeMessageId Mailet
+
+Save Mail name into X-JAMES-Mail-Name header.
+
+This allows from mailetcontainer logs to find the mail in user mailbox.
+
+== Configuration
+
+You can configure it simply by adding the following in your `mailetcontainer.xml` file:
+
+....
+<mailet match="All" class="SaveMailNameInHeaders"/>
+....
+
+
