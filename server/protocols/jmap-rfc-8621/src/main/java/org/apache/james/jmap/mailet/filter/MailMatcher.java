@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.james.jmap.api.filtering.Rule;
-import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,10 +45,10 @@ public interface MailMatcher {
         }
 
         @Override
-        public boolean match(Mail mail) {
+        public boolean match(FilteringHeaders filteringHeaders) {
             try {
                 Predicate<MailMatchingCondition> predicate = (MailMatchingCondition mailMatchingCondition) -> {
-                    Stream<String> headerLines = mailMatchingCondition.getHeaderExtractor().apply(mail);
+                    Stream<String> headerLines = mailMatchingCondition.getHeaderExtractor().apply(filteringHeaders);
                     return mailMatchingCondition.getContentMatcher().match(headerLines, mailMatchingCondition.getRuleValue());
                 };
 
@@ -107,5 +106,5 @@ public interface MailMatcher {
             ).collect(ImmutableList.toImmutableList()), rule.getConditionGroup().getConditionCombiner());
     }
 
-    boolean match(Mail mail);
+    boolean match(FilteringHeaders filteringHeaders);
 }
