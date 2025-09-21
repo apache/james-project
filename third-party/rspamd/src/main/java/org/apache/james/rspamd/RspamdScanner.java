@@ -80,11 +80,11 @@ public class RspamdScanner extends GenericMailet {
 
     @Override
     public void init() {
-        rewriteSubject = getBooleanParameter(getInitParameter("rewriteSubject"), false);
+        rewriteSubject = getInitParameter("rewriteSubject", false);
         virusProcessor = getInitParameterAsOptional("virusProcessor");
         rejectSpamProcessor = getInitParameterAsOptional("rejectSpamProcessor");
 
-        perUserBayes = getBooleanParameter("perUserBayes", perUserBayes);
+        perUserBayes = getInitParameter("perUserBayes", configuration.usePerUserBayes());
 
         getInitParameterAsOptional("rspamdUrl")
             .ifPresent(Throwing.consumer(url -> this.rspamdHttpClient = new RspamdHttpClient(new RspamdClientConfiguration(
