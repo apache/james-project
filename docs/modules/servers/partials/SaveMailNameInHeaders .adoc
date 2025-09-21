@@ -1,4 +1,4 @@
-=== SanitizeMimeMessageId Mailet
+=== SaveMailNameInHeaders Mailet
 
 Save Mail name into X-JAMES-Mail-Name header.
 
