@@ -38,7 +38,7 @@ public class SaveMailNameInHeadersTest {
     public void setUp() throws Exception {
         testee = new SaveMailNameInHeaders();
         testee.init(FakeMailetConfig.builder()
-            .mailetName("SanitizeMimeMessageId")
+            .mailetName("SaveMailNameInHeaders")
             .build());
     }
 
