@@ -76,6 +76,7 @@ import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.data.jmap.RunRulesOnMailboxTask;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
@@ -711,6 +712,64 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("type", is(ClearMailboxContentTask.TASK_TYPE.asString()))
             .body("additionalInformation.messagesSuccessCount", is(1))
             .body("additionalInformation.messagesFailCount", is(0))
+            .body("additionalInformation.username", is(USERNAME))
+            .body("additionalInformation.mailboxName", is(MailboxConstants.INBOX));
+    }
+
+    @Test
+    void runRulesOnMailboxShouldComplete(GuiceJamesServer server) throws Exception {
+        server.getProbe(DataProbeImpl.class).addUser(USERNAME, "secret");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
+        MailboxId otherMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "otherMailbox");
+
+        mailboxProbe.appendMessage(
+            USERNAME,
+            MailboxPath.inbox(Username.of(USERNAME)),
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            false,
+            new Flags());
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body("""
+            {
+              "id": "1",
+              "name": "rule 1",
+              "action": {
+                "appendIn": {
+                  "mailboxIds": ["%s"]
+                },
+                "important": false,
+                "keyworkds": [],
+                "reject": false,
+                "seen": false
+              },
+              "conditionGroup": {
+                "conditionCombiner": "AND",
+                "conditions": [
+                  {
+                    "comparator": "contains",
+                    "field": "subject",
+                    "value": "test"
+                  }
+                ]
+              }
+            }""".formatted(otherMailboxId.serialize()))
+            .post("users/" + USERNAME + "/mailboxes/" + MailboxConstants.INBOX + "/messages")
+            .jsonPath()
+            .getString("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is(TaskManager.Status.COMPLETED.getValue()))
+            .body("taskId", is(taskId))
+            .body("type", is(RunRulesOnMailboxTask.TASK_TYPE.asString()))
+            .body("additionalInformation.rulesOnMessagesApplySuccessfully", is(1))
+            .body("additionalInformation.rulesOnMessagesApplyFailed", is(0))
             .body("additionalInformation.username", is(USERNAME))
             .body("additionalInformation.mailboxName", is(MailboxConstants.INBOX));
     }
