@@ -20,6 +20,7 @@
 package org.apache.james.rspamd;
 
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -63,9 +64,10 @@ public class RspamdScanner extends GenericMailet {
     public static final AttributeName FLAG_MAIL = AttributeName.of("org.apache.james.rspamd.flag");
     public static final AttributeName STATUS_MAIL = AttributeName.of("org.apache.james.rspamd.status");
 
-    private final RspamdHttpClient rspamdHttpClient;
     private final RspamdClientConfiguration configuration;
+    private RspamdHttpClient rspamdHttpClient;
     private boolean rewriteSubject;
+    private boolean perUserBayes;
     private Optional<String> virusProcessor;
     private Optional<String> rejectSpamProcessor;
 
@@ -73,18 +75,28 @@ public class RspamdScanner extends GenericMailet {
     public RspamdScanner(RspamdHttpClient rspamdHttpClient, RspamdClientConfiguration configuration) {
         this.rspamdHttpClient = rspamdHttpClient;
         this.configuration = configuration;
+        this.perUserBayes = configuration.usePerUserBayes();
     }
 
     @Override
     public void init() {
-        rewriteSubject = getBooleanParameter(getInitParameter("rewriteSubject"), false);
+        rewriteSubject = getInitParameter("rewriteSubject", false);
         virusProcessor = getInitParameterAsOptional("virusProcessor");
         rejectSpamProcessor = getInitParameterAsOptional("rejectSpamProcessor");
+
+        perUserBayes = getInitParameter("perUserBayes", configuration.usePerUserBayes());
+
+        getInitParameterAsOptional("rspamdUrl")
+            .ifPresent(Throwing.consumer(url -> this.rspamdHttpClient = new RspamdHttpClient(new RspamdClientConfiguration(
+                new URL(url),
+                getInitParameter("rspamdPassword", configuration.getPassword()),
+                getInitParameterAsOptional("rspamdTimeout").map(Integer::parseInt).or(configuration::getTimeout),
+                perUserBayes))));
     }
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        if (configuration.usePerUserBayes()) {
+        if (perUserBayes) {
             scanPerUser(mail);
         } else {
             scanAll(mail);
