@@ -17,38 +17,27 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mailet.filter;
+package org.apache.james.webadmin.data.jmap;
 
-import java.util.List;
-import java.util.stream.Stream;
+import java.time.Instant;
 
-import org.apache.james.jmap.api.filtering.Rule;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MessageResult;
-import org.apache.mailet.Mail;
+import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.core.Username;
+import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.webadmin.validation.MailboxName;
+import org.junit.jupiter.api.Test;
 
-import com.google.common.base.Preconditions;
+public class RunRulesOnMailboxTaskAdditionalInformationDTOTest {
+    private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
 
-public class RuleMatcher {
-    private final List<Rule> filteringRules;
+    private static final RunRulesOnMailboxTask.AdditionalInformation DOMAIN_OBJECT = new RunRulesOnMailboxTask.AdditionalInformation(
+        Username.of("bob@domain.tld"), new MailboxName("mbx1"), INSTANT, 10, 9);
 
-    public RuleMatcher(List<Rule> filteringRules) {
-        Preconditions.checkNotNull(filteringRules);
-
-        this.filteringRules = filteringRules;
-    }
-
-    Stream<Rule> findApplicableRules(Mail mail) {
-        FilteringHeaders filteringHeaders = new FilteringHeaders.MailFilteringHeaders(mail);
-
-        return filteringRules.stream()
-            .filter(rule -> MailMatcher.from(rule).match(filteringHeaders));
-    }
-
-    public Stream<Rule> findApplicableRules(MessageResult messageResult) throws MailboxException {
-        FilteringHeaders filteringHeaders = new FilteringHeaders.MessageResultFilteringHeaders(messageResult);
-
-        return filteringRules.stream()
-            .filter(rule -> MailMatcher.from(rule).match(filteringHeaders));
+    @Test
+    void shouldMatchJsonSerializationContract() throws Exception {
+        JsonSerializationVerifier.dtoModule(RunRulesOnMailboxTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+            .bean(DOMAIN_OBJECT)
+            .json(ClassLoaderUtils.getSystemResourceAsString("json/runRulesOnMailbox.additionalInformation.json"))
+            .verify();
     }
 }
