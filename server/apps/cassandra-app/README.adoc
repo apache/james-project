@@ -26,7 +26,7 @@ Third party compulsory dependencies:
 
 [source]
 ----
-$ docker run -d --network james -p 9042:9042 --name=cassandra cassandra:4.1.9
+$ docker run -d --network james -p 9042:9042 --name=cassandra cassandra:5.0.4
 $ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.19.2
 ----
 
