@@ -78,7 +78,8 @@ public class UserRoutesWithMailboxParamTest {
         SimpleDomainList domainList = new SimpleDomainList();
         domainList.addDomain(DOMAIN);
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
-        mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
+        InMemoryIntegrationResources memoryResources = InMemoryIntegrationResources.defaultResources();
+        mailboxManager = memoryResources.getMailboxManager();
         UserMailboxesService userMailboxService = new UserMailboxesService(mailboxManager, usersRepository);
         MemoryRecipientRewriteTable recipientRewriteTable = new MemoryRecipientRewriteTable();
         recipientRewriteTable.setDomainList(domainList);

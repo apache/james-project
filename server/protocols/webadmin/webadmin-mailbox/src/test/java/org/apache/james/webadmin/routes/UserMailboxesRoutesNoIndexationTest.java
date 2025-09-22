@@ -56,7 +56,8 @@ class UserMailboxesRoutesNoIndexationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        InMemoryMailboxManager mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
+        InMemoryIntegrationResources memoryResources = InMemoryIntegrationResources.defaultResources();
+        InMemoryMailboxManager mailboxManager = memoryResources.getMailboxManager();
         UsersRepository usersRepository = mock(UsersRepository.class);
         when(usersRepository.contains(USERNAME)).thenReturn(true);
 

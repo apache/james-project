@@ -38,6 +38,9 @@ import org.apache.james.webadmin.data.jmap.RecomputeAllFastViewProjectionItemsTa
 import org.apache.james.webadmin.data.jmap.RecomputeAllFastViewTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.data.jmap.RecomputeUserFastViewProjectionItemsTask;
 import org.apache.james.webadmin.data.jmap.RecomputeUserFastViewTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.data.jmap.RunRulesOnMailboxService;
+import org.apache.james.webadmin.data.jmap.RunRulesOnMailboxTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.data.jmap.RunRulesOnMailboxTaskDTO;
 import org.apache.james.webadmin.dto.DTOModuleInjections;
 
 import com.google.inject.AbstractModule;
@@ -74,6 +77,11 @@ public class JmapTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public TaskDTOModule<? extends Task, ? extends TaskDTO> recomputeUserJmapPreviewsTask(MessageFastViewProjectionCorrector corrector) {
         return RecomputeUserFastViewProjectionItemsTask.module(corrector);
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> runRulesOnMailboxTask(RunRulesOnMailboxService runRulesOnMailboxService) {
+        return RunRulesOnMailboxTaskDTO.module(runRulesOnMailboxService);
     }
 
     @ProvidesIntoSet
@@ -118,5 +126,16 @@ public class JmapTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminRecomputeUserJmapPreviewsAdditionalInformation() {
         return RecomputeUserFastViewTaskAdditionalInformationDTO.module();
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> runRulesOnMailboxAdditionalInformation() {
+        return RunRulesOnMailboxTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminRunRulesOnMailboxAdditionalInformation() {
+        return RunRulesOnMailboxTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 }

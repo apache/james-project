@@ -212,5 +212,4 @@ public class UserMailboxesService {
             Minimal, mailboxSession)
             .toStream();
     }
-
 }

@@ -1,0 +1,35 @@
+{
+  "mailboxName": "mbx1",
+  "type": "RunRulesOnMailboxTask",
+  "username": "bob@domain.tld",
+  "rules": [
+    {
+      "action": {
+        "appendIn": {
+          "mailboxIds": ["mbx2"]
+        },
+        "important": false,
+        "keyworkds": [],
+        "reject": false,
+        "seen": false
+      },
+      "conditionGroup": {
+        "conditionCombiner": "AND",
+        "conditions": [
+          {
+            "comparator": "contains",
+            "field": "subject",
+            "value": "plop"
+          },
+          {
+            "comparator": "not-exactly-equals",
+            "field": "from",
+            "value": "bob@example.com"
+          }
+        ]
+      },
+      "id": "1",
+      "name": "rule 1"
+    }
+  ]
+}
