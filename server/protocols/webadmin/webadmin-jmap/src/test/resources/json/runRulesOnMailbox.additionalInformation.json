@@ -1,0 +1,8 @@
+{
+  "mailboxName": "mbx1",
+  "rulesOnMessagesApplyFailed": 9,
+  "rulesOnMessagesApplySuccessfully": 10,
+  "timestamp": "2007-12-03T10:15:30Z",
+  "type": "RunRulesOnMailboxTask",
+  "username": "bob@domain.tld"
+}
