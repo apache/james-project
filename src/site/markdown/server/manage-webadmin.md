@@ -1744,6 +1744,65 @@ the following `additionalInformation`:
 }
 ```
 
+### Running a filtering rule on a mailbox
+
+```
+curl -XPOST http://ip:port/users/{usernameToBeUsed}/mailboxes/{mailboxName}/messages?action=triage \
+-d '{
+    "id": "1",
+    "name": "rule 1",
+    "action": {
+        "appendIn": {
+            "mailboxIds": ["23"]
+        }
+    },
+    "conditionGroup": {
+        "conditionCombiner": "OR",
+        "conditions": [
+            {
+                "comparator": "contains",
+                "field": "subject",
+                "value": "plop"
+            },
+            {
+                "comparator": "exactly-equals",
+                "field": "from",
+                "value": "bob@example.com"
+            }
+        ]
+    }
+}'
+```
+
+Will schedule a task for running a filtering rule passed as payload in ``mailboxName`` mailbox of ``usernameToBeUsed``.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+Resource name `usernameToBeUsed` should be an existing user.
+
+Resource name `mailboxName` should not be empty, nor contain `% *` characters, nor starting with `#`.
+
+Response codes:
+
+* 201: Success. Corresponding task id is returned.
+* 400: Invalid mailbox name
+* 400: Invalid JSON payload
+* 404: Invalid get on user mailboxes. The `username` or `mailboxName` does not exit
+
+The scheduled task will have the following type `RunRulesOnMailboxTask` and
+the following `additionalInformation`:
+
+```
+{
+    "mailboxName": "mbx1",
+    "rulesOnMessagesApplySuccessfully": 9,
+    "rulesOnMessagesApplyFailed": 3,
+    "timestamp": "2024-12-03T10:15:30Z",
+    "type": "RunRulesOnMailboxTask",
+    "username": "bob@domain.tld"
+}
+```
+
 ### Subscribing a user to all of its mailboxes
  
 ```
