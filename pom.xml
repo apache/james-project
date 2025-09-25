@@ -3750,6 +3750,8 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>3.1.1</version>
                     <configuration>
+                        <preparationGoals>clean install -Dmaven.test.skip=true -DskipTests</preparationGoals>
+                        <goals>clean install -Dmaven.test.skip=true -DskipTests</goals>
                         <!-- avoid double buildscan during forked builds -->
                         <arguments>-Dgradle.scan.disabled=true</arguments>
                     </configuration>
