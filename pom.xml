@@ -3752,12 +3752,8 @@
                     <configuration>
                         <useReleaseProfile>false</useReleaseProfile>
                         <goals>deploy</goals>
-                        <arguments>-Papache-release ${arguments}</arguments>
+                        <arguments>-Papache-release -Dgradle.scan.disabled=true -DskipTests ${arguments}</arguments>
                         <waitBeforeTagging>10</waitBeforeTagging>
-
-                        <preparationGoals>clean install -DskipTests</preparationGoals>
-                        <!-- avoid double buildscan during forked builds -->
-                        <arguments>-Dgradle.scan.disabled=true</arguments>
                     </configuration>
                 </plugin>
                 <plugin>
