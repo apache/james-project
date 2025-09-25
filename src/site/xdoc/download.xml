@@ -61,17 +61,6 @@
           [<a href="https://downloads.apache.org/james/server/3.9.0/james-project-3.9.0-source-release.zip.sha512">SHA-512</a>]
           [<a href="https://downloads.apache.org/james/server/3.9.0/james-project-3.9.0-source-release.zip.asc">PGP</a>]</li>
 
-        <p><b>JPA James server</b>:</p>
-
-        <p>This artifact packages the JPA James server, a simple distribution with zero external dependencies
-          (defaults to an embedded Derby database) that can be configured with an external SQL database.</p>
-
-        <li>Binary (ZIP Format) for the JPA James server:
-          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.9.0/james-server-jpa-guice.zip">james-server-jpa-guice.zip</a>
-          [<a href="https://downloads.apache.org/james/server/3.9.0/james-server-jpa-guice.zip.sha512">SHA-512</a>]
-          [<a href="https://downloads.apache.org/james/server/3.9.0/james-server-jpa-guice.zip.asc">PGP</a>]
-        </li>
-
         <p><b>Distributed James server</b>:</p>
 
         <p>This artifact packages the distributed James server, that operates on top of Cassandra, OpenSearch,
@@ -81,6 +70,28 @@
           <a href="https://www.apache.org/dyn/closer.lua/james/server/3.9.0/james-server-distributed-guice.zip">james-server-distributed-guice.zip</a>
           [<a href="https://downloads.apache.org/james/server/3.9.0/james-server-distributed-guice.zip.sha512">SHA-512</a>]
           [<a href="https://downloads.apache.org/james/server/3.9.0/james-server-distributed-guice.zip.asc">PGP</a>]
+        </li>
+
+        <p><b>Postgres backed James server</b>:</p>
+
+        <p>This artifact packages the distributed James server, that operates on top of Cassandra, OpenSearch,
+          RabbitMQ, and S3 API. It is intended for large scale deployments where scalability is required.</p>
+
+        <li>Binary (ZIP Format) for the Distributed James server:
+          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.9.0/james-server-postgres-app.zip">james-server-distributed-guice.zip</a>
+          [<a href="https://downloads.apache.org/james/server/3.9.0/james-server-postgres-app.zip.sha512">SHA-512</a>]
+          [<a href="https://downloads.apache.org/james/server/3.9.0/james-server-postgres-app.zip.asc">PGP</a>]
+        </li>
+
+        <p><b>JPA James server</b> (legacy):</p>
+
+        <p>This artifact packages the JPA James server, a simple distribution with zero external dependencies
+          (defaults to an embedded Derby database) that can be configured with an external SQL database.</p>
+
+        <li>Binary (ZIP Format) for the JPA James server:
+          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.9.0/james-server-jpa-guice.zip">james-server-jpa-guice.zip</a>
+          [<a href="https://downloads.apache.org/james/server/3.9.0/james-server-jpa-guice.zip.sha512">SHA-512</a>]
+          [<a href="https://downloads.apache.org/james/server/3.9.0/james-server-jpa-guice.zip.asc">PGP</a>]
         </li>
 
         <p><b>Spring wiring</b>:</p>
