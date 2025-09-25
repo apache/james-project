@@ -25,6 +25,7 @@ This had been repleaced by the Guice DropList extension.
 Please use RFC-8621 implementation rather than this outdated draft.
 
  - JAMES-4065 drop habeas warrant mark mailet
+ - [DROP] Remove Linshare third party connector (#2613
 
 ### Security
 
@@ -97,14 +98,106 @@ The project also bumped dependencies to their latest version as of June 2025.
 - [ENAHNCEMENT] SMTP: Allow easily disabling authentcation (#2800)
 - JAMES-4140 Implement adaptative, session-scoped, throttling for IMAP … (#2766)
 
+### Fixes
+
+- JAMES-3967 Store mails when relay is exceeded
+- [FIX] LdapRepositoryConfiguration should interoperate with UsersRepositoryImpl (#1855)
+- JAMES-3955 Applicative timeouts before Rabbit timeouts
+- JAMES-3828 ICALAttributeDTO: support missing uid, method and dtstamp fields
+- JAMES-3925 Rework JMAP quota cleanup
+- JAMES-3938 IMAP MOVE should not fail on empty mailbox (#1713)
+- [FIX] PropagateLookupRightListener should not fail on missing mailbox
+- [FIX] VerifySenderIdentity makes sense when auth is not announced (#1693)
+- [FIX] Some S3 like object storage, like MinIO, don't accept underscores in their bucket name
+- JAMES-3914 Sieve actions fails when several recipients
+- [FIX] IMAP APPEND file leak
+- [FIX] Avoid sending bounce when reprocessing (#2139)
+- JAMES-4020 Fully comply with RFC-3501 Section 6.4.5 (#2123)
+- JAMES-4021 Relay for "abc@def"@domain.com
+- [FIX] AbstractValidRcptHandler fix error handling on invalid username (#2122)
+- [FIX] JMAP: Set configurable limits for /get /set objects (#2096)
+- [FIX] Ship mail over web webadmin routes into more apps (#2099)
+- [FIX] Try recover invalid ascii character in filename
+- [FIX] RSpamD should not fail when reporting empty body
+- [FIX] ImapIdleStateHandler should cancel ongoing requests firs
+- [FIX] cancel ongoing processing for inactive channels
+- [FIX] Modified server set identities may not be deletes (#2083)
+- [FIX] Calendar parsing: be less verbose
+- [FIX] Use Netty dns async resolvers
+- [FIX] IMAP LEAK: CLOSE, UNSELECT
+- [FIX] Email/set should allow creating an email with attachment of a destroyed message
+- [FIX] multipart/alternative with attachment had no text value indexed
+- [FIX] Do not double index multipart/alternative
+- [FIX] -openjpa.Multithreaded => -Dopenjpa.Multithreaded
+- [FIX] Avoid forwarding bounces
+- JAMES-4007 Manage IMAP litteral with Leak aware
+- [FIX] Lower log message in MaybeSender
+- [FIX] MailReceptionCheck do not send the mail before we actively listen to the results (#2038)
+- JAMES-4004 [FIX] Allow retries for S3 saves (#2025)
+- [FIX] Apply batch size to prefetch
+- [FIX] Lower log level of SSL handshake exceptions (#1998)
+- [FIX] Apply RFC-5321 syntax validation for EHLO (#1979)
+- [FIX] OpenSearch should normalize base subject (#1910)
+- [FIX] HookResultHook added to marker interfaces
+- JAMES-1717 Notification Registry - handle case Ints.checkedCast throws out of range when expireDate too far (#2051)
+- JAMES-4008 JMAP - Email/set - Should be able to save a draft with invalid email address (#2040)
+- JMAP - EmailSubmission/set - Should not invoke onSuccessDestroyEmail/onSuccessUpdateEmail when not created (#2041)
+- JAMES-3998 Empty password should not lead to worrying error (#2026)
+- JAMES-3995 Add a max number of items for EmailGet full reads (#2024)
+- [FIX] Prevent creation of multiline mailbox names (#1973)
+- [FIX] Preserve internal date on restored messages (#2574)
+- [FIX] Reject non strictly positive POP3 indexes (#2575)
+- [FIX] Cleanup EmailQueryView when populating it.
+- [FIX] POP3 UserCmdHandler should return error response when invalid username input
+- [FIX] FileNameIs matcher: Parsing for long content disposition filename (#2555)
+- [FIX] IMAP login parsing: handle IllegalArgumentException
+- [FIX] RspamD for large moves
+- [FIX] Prevent WebSocket data race (#2550)
+- [FIX] Prevent queue poisoning for spool
+- [FIX] Store add a missing flush
+- [FIX] Avoid NPE on partially written users in Cassandra users repository (#2458)
+- [FIX] DSNBounce should add Auto-Submitted: auto-replied header (#2717)
+- JAMES-3968 Fix mail loss due to RabbitMQ ack failure
+- JAMES-3976 Email/import should accept empty keywords (#1962)
+- [FIX] registrations multimap made fully thread safe (#2291)
+- JAMES-3955 Software timeout before consumer timeout (#2284)
+- JAMES-4015 VacationMailet should sanitize broken Reply-To fields (#2275)
+- JAMES-4037 Fix NPE in IMAP LIST with APPENDLIMIT (#2257)
+- JAMES-4029 Fix infinite loop with Bounce + forward
+- JAMES-4026 Fix inconsistency issue between imap and JMAP RFC-8621
+- [FIX] Filter too big values for Cassandra TTLs (#2156)
+- JAMES-4101 Wrap SMTp startTLS into a NETTY transaction
+- [FIX] Silent verbose SSL logs in SMTP (#2578)
+- [FIX] Silent Eof exception for webadmin (#2577)
+- JAMES-4095 Forbid deleting INBOX in IMAP (#2541)
+- [FIX] DistributedDeletedMessageVaultDeletionCallback: add an applicative timeout before RabbitMQ consumer timeout
+- [FIX] Improve S3 MinIO support with MinIOGenerationAwareBlobId MinIO compatibility
+- [FIX] Support RFC-3848 service types in Received headers (#2536)
+- JAMES-4094 Trigger quota-ratio index update when modifying quota limits (#2538)
+- [FIX] IDLE - prevent data race upon answers on channel writes (#2525)
+- JAMES-3893 Identity routes should not return 500 code when invalid username (#2519)
+- [FIX] Filter out invalid user in LDAP
+- [FIX] Always schedule execution of new IMAP requests to the event loop
+- [FIX] No longer use recursivity in ReactiveThrottler::onRequestDone
+- [FIX] JAMES-4088 Ensure IMAP SELECT EXIST response is up to date (#2507)
+- JAMES-3954 PartialRange might be reversed
+- JAMES-3754 Update IMAP4 ID - return NIL, replace to empty list
+- [FIX] Handle XOAUTH2 for SMTP without initial response (#2428)
+- [FIX] WebSocket should return `Sec-WebSocket-Protocol: jmap` response header
+- James: unset JAVA_TOOL_OPTIONS env variable when running james-cli
+- JAMES-4060: Fix UID FETCH command failing on empty mailbox (#2386)
+- Explicit commit after running reindex (#2381)
+- JAMES-4058 TextCalendarBodyToAttachment screw up text/calendar parts (#2384)
+- JAMES-3754 Relax Id command parsing (#2758)
+- JAMES-2182 IMAP processors should catch InsufficientRightsException
+- JAMES-4115 FileMailRepository: drop cacheKey & refactor (#2662)
+
 ### Improvements
  
  - JAMES-4125 rework mailet api
  - JAMES-4123 Renames CassandraModule to CassandraDataDefinition
  - JAMES-4103 Allow customizing MessageParser
  - JAMES-3967 RelayLimit: add error log
- - JAMES-3967 Store mails when relay is exceeded
- - [FIX] LdapRepositoryConfiguration should interoperate with UsersRepositoryImpl (#1855)
  - JAMES-3539 PushSubscription/get should return expired subscriptions (#1845)
  - [ENHANCEMENT] Allow to trust all certificates with S3 blobstore (#1846)
  - Numerous dependency updates
@@ -114,148 +207,63 @@ The project also bumped dependencies to their latest version as of June 2025.
  - JAMES-3963 Sort From To Cc on display name first (#1811)
  - JAMES-3955 Increase consumer timeout for TaskManagerWorkQueue
  - JAMES-3955 WARNING logs upon closing RABBITMQ channels
- - JAMES-3955 Applicative timeouts before Rabbit timeouts
  - JAMES-3958 DKIM: Be resilient when updating mails with invalid headers (#1783)
  - JAMES-3874 LMTP should handle overQuota exceptions
  - JAMES-3944 Forwards should rewrite MAIL FROM
  - JAMES-3887 MailboxManager::createMailboxReactive should subscribe parent mailboes it creates (#1752)
- - JAMES-3828 ICALAttributeDTO: support missing uid, method and dtstamp fields
  - [IMPROVMENT] Add Cassandra statements to the logs (#1723)
- - JAMES-3925 Rework JMAP quota cleanup
  - JAMES-3926 Move mutualized quota DAOs to backend/cassandra
- - JAMES-3604 Enable to use quorum queues onto DTM work queue (#1708)
- - JAMES-3938 IMAP MOVE should not fail on empty mailbox (#1713)
- - [FIX] VerifySenderIdentity makes sense when auth is not announced (#1693)
- - [FIX] PropagateLookupRightListener should not fail on missing mailbox
- - [FIX] Some S3 like object storage, like MinIO, don't accept underscores in their bucket names
- - JAMES-3914 Sieve actions fails when several recipients
+ - JAMES-3604 Enable to use quorum queues onto DTM work queue (#1708)s
  - JAMES-3911 JPA: Prevent concurrent operations on the same EntityManager
- - [FIX] Avoid sending bounce when reprocessing (#2139)
- - [FIX] IMAP APPEND file leak
- - JAMES-4020 Fully comply with RFC-3501 Section 6.4.5 (#2123)
  - [LOGGING] Aborting JMAP upload is too verbose (#2125)
- - JAMES-4021 Relay for "abc@def"@domain.com
- - [FIX] AbstractValidRcptHandler fix error handling on invalid username (#2122)
- - [UPDATE] MIME4J 0.8.9 -> 0.8.11 (#2120)
- - [FIX] JMAP: Set configurable limits for /get /set objects (#2096)
+ - [UPDATE] MIME4J 0.8.9 -> 0.8.13
  - JAMES-4019 ReactiveThrottler should handle better cancellation (#2104)
  - [ENHANCEMENT] Decrease log level for "NotSslRecordException"
  - JAMES-4018 SMTP RCPT TO should parse parameters once
- - [FIX] Ship mail over web webadmin routes into more apps (#2099)
- - [FIX] Try recover invalid ascii character in filename
- - [FIX] RSpamD should not fail when reporting empty body
  - JAMES-3534 Fixbug - Identity response alway return mayDelete=false when server set identity
- - [FIX] ImapIdleStateHandler should cancel ongoing requests firs
- - [FIX] cancel ongoing processing for inactive channels
- - [FIX] Modified server set identities may not be deletes (#2083)
- - [FIX] Calendar parsing: be less verbose
  - [IMPROVEMENT] Allow Email/set create to override attachment charset
  - JMAP - Delete/destroy should take a set as an input
- - [FIX] -openjpa.Multithreaded => -Dopenjpa.Multithreaded
- - [FIX] Avoid forwarding bounces
- - JAMES-4007 Manage IMAP litteral with Leak aware
- - JAMES-1717 Notification Registry - handle case Ints.checkedCast throws out of range when expireDate too far (#2051)
  - JAMES-4012 Lenient MDN parsing for human readable part (#2057)
- - [FIX] Lower log message in MaybeSender
  - JAMES-4013 Relay MDN/send
  - JAMES-3885 Webadmin route to change of username - support `force` parameter  - do not require old user to exist (#2054)
- - JAMES-4008 JMAP - Email/set - Should be able to save a draft with invalid email address (#2040)
  - JAMES-4009 StripAttachment should explicitly handle duplicates
- - [FIX] MailReceptionCheck do not send the mail before we actively listen to the results (#2038)
- - JMAP - EmailSubmission/set - Should not invoke onSuccessDestroyEmail/onSuccessUpdateEmail when not created (#2041)
  - JAMES-4006 Bouncer should pass DSN to bounce processor
- - JAMES-3998 Empty password should not lead to worrying error (#2026)
- - JAMES-4004 [FIX] Allow retries for S3 saves (#2025)
- - [FIX] Apply batch size to prefetch
- - JAMES-3995 Add a max number of items for EmailGet full reads (#2024)
- - [FIX] Use Netty dns async resolvers
- - [FIX] IMAP LEAK: CLOSE, UNSELECT
- - [FIX] Email/set should allow creating an email with attachment of a destroyed message
- - [FIX] multipart/alternative with attachment had no text value indexed
- - [FIX] Do not double index multipart/alternative
  - JAMES-3775 Pass SSL information to RspamD scanner mailet
  - JAMES-3991 Vacation handling should be case insensitive
- - [FIX] Lower log level of SSL handshake exceptions (#1998)
  - JAMES-3986 AttachmentFileNameIs should be decently tested (#1991)
- - [FIX] Apply RFC-5321 syntax validation for EHLO (#1979)
  - JAMES-3981 Remove double logs upon closed channels
  - [IMPROVEMENT] SPF mailet: add missing private network "192.168.0.0/16" and use correct CIDR for private range "172.16.0.0/12"
  - [ENHANCEMENT] Add Hostname header onto RspamD client
- - [FIX] Prevent creation of multiline mailbox names (#1973)
  - [ENHANCEMENT] Add SSL information into SMTP header
- - JAMES-3976 Email/import should accept empty keywords (#1962)
- - [FIX] OpenSearch should normalize base subject (#1910)
- - JAMES-3968 Fix mail loss due to RabbitMQ ack failure
- - [FIX] HookResultHook added to marker interfaces
  - JAMES-3581 Parsing TypeName should be more lenient while parsing server side data (#2343)
  - JAMES-4048 Record LDAP connection metrics
  - JAMES-4043 Improve literal handling (#2311)
  - JAMES-3994 Adopt Apache Pekko instead of Akka (#2300)
- - [FIX] registrations multimap made fully thread safe (#2291)
- - JAMES-3955 Software timeout before consumer timeout (#2284)
  - [IMPROVEMENT] Configure fastview projection miss threshold (#2276)
- - JAMES-4015 VacationMailet should sanitize broken Reply-To fields (#2275)
  - JAMES-4040 JMAP mailbox role spam => junk (#2261)
  - JAMES-4038 Relax EHLO validation for EMclient (#2262)
- - JAMES-4037 Fix NPE in IMAP LIST with APPENDLIMIT (#2257)
  - JAMES-4037 Resolve MailboxTyper for Spring
  - [METRICS] Expose useful S3 Client Metrics
  - JAMES-3539 Backend should clean expired Push subscriptions
  - [ENHANCEMENT] Metrics for rabbitmq channel pool (#2232)
  - JAMES-4027 Make all queues on Rabbitmq quorum queue when quorum option is enabled
- - JAMES-4029 Fix infinite loop with Bounce + forward
- - JAMES-4026 Fix inconsistency issue between imap and JMAP RFC-8621
- - [FIX] Filter too big values for Cassandra TTLs (#2156)
  - [ENHANCEMENT] Add User-Agent in JMAP logging context (#2604)
- - JAMES-4101 Wrap SMTp startTLS into a NETTY transaction
- - [FIX] Silent verbose SSL logs in SMTP (#2578)
- - [FIX] Silent Eof exception for webadmin (#2577)
  - [devscout] upgrade logback and crowdsec
- - [FIX] Preserve internal date on restored messages (#2574)
- - [FIX] Reject non strictly positive POP3 indexes (#2575)
- - [FIX] Cleanup EmailQueryView when populating it.
- - [FIX] POP3 UserCmdHandler should return error response when invalid username input
- - [FIX] FileNameIs matcher: Parsing for long content disposition filename (#2555)
- - [FIX] IMAP login parsing: handle IllegalArgumentException
- - [FIX] RspamD for large moves
- - [FIX] Prevent WebSocket data race (#2550)
  - JAMES-4096 Rename INBOX (#2549)
  - JAMES-3605 Implement DeletedMessageVaultWorkQueueReconnectionHandler
- - [FIX] DistributedDeletedMessageVaultDeletionCallback: add an applicative timeout before RabbitMQ consumer timeout
- - [FIX] Improve S3 MinIO support with MinIOGenerationAwareBlobId MinIO compatibility
- - JAMES-4095 Forbid deleting INBOX in IMAP (#2541)
- - [FIX] Support RFC-3848 service types in Received headers (#2536)
- - JAMES-4094 Trigger quota-ratio index update when modifying quota limits (#2538)
- - [FIX] IDLE - prevent data race upon answers on channel writes (#2525)
- - JAMES-3893 Identity routes should not return 500 code when invalid username (#2519)
- - [FIX] Filter out invalid user in LDAP
- - [FIX] Always schedule execution of new IMAP requests to the event loop
- - [FIX] No longer use recursivity in ReactiveThrottler::onRequestDone
- - [FIX] JAMES-4088 Ensure IMAP SELECT EXIST response is up to date (#2507)
  - JAMES-2456 Update Tika to version 3.0.0.0
  - JAMES-4087 Allow combining composite matchers
  - [ENHANCEMENT] Ensure the MDC context is carried over upon IMAP parsing errors
  - JAMES-4077 Back memory-app with Lucene
- - JAMES-3754 Update IMAP4 ID - return NIL, replace to empty list
  - [ENHANCEMENT] mailUserAgent in IMAP MDC
- - JAMES-3954 PartialRange might be reversed
- - [FIX] Prevent queue poisoning for spool
- - [FIX] Store add a missing flush
- - [FIX] Avoid NPE on partially written users in Cassandra users repository (#2458)
  - JAMES-4079 Fix RecipientRewriteTable adds duplicate mapping (#2449)
  - James 1409 - Change JPARecipientRewriteTable to store separate record per target address (#2444)
  - JAMES-3552 Better enforcements of JMAP session limits
  - AmqpForwardAttribute: support HA by allowing specifying several hosts (#2430)
- - [FIX] Handle XOAUTH2 for SMTP without initial response (#2428)
- - [FIX] WebSocket should return `Sec-WebSocket-Protocol: jmap` response header
  - AmqpForwardAttribute mailet: ignore errors when creating an exchange that already exists with a different configuration. (#2414)
- - James: unset JAVA_TOOL_OPTIONS env variable when running james-cli
  - JAMES-4050 Allow `%` and `*` characters in mailbox names
- - JAMES-4060: Fix UID FETCH command failing on empty mailbox (#2386)
- - Explicit commit after running reindex (#2381)
  - Improving James shutdown speed (#2380)
  - JAMES-4063 Update SMIMECheckSignature to use Filesystem to load crypto materials and handle multiple certificates
- - JAMES-4058 TextCalendarBodyToAttachment screw up text/calendar parts (#2384)
  - JAMES-4046 Upgrade Lucene to version 9.11.1 (#2373)
  - JAMES-4054 Add X-SMIME-Status in SMIMECheckSignature process (#2366)
  - JAMES-4052 Add optional user property to OpenSearch index (#2363)
@@ -263,7 +271,6 @@ The project also bumped dependencies to their latest version as of June 2025.
  - [IMPROVEMENT] JMAP use search index relevance as default sort
  - [ENHANCEMENT] Log cassandra table informations
  - [ENHANCEMENT] Add a simpler password mechanism to webadmin (#2759)
- - JAMES-3754 Relax Id command parsing (#2758)
  - [ENAHNCEMENT] Implement a MaxConnectionLifespanHandler SMTP handler
  - [ENHANCEMENT] DKIMVerify outputs logs and machine readable attributes
  - [ENHANCEMENT] Include filename in search snippet
@@ -274,12 +281,9 @@ The project also bumped dependencies to their latest version as of June 2025.
  - JAMES-3539 Types field in push subscription should accept null value (#2723) and WebPushClient should accept more flexible 20x codes from Push server
  - JAMES-5431 add SanitizeMimeMessageId mailet  (#2718)
  - JAMES-4131 Configure a fallback bucket for S3 (#2719)
- - JAMES-2182 IMAP processors should catch InsufficientRightsException
- - [FIX] DSNBounce should add Auto-Submitted: auto-replied header (#2717)
  - JAMES-3819 Give tools to enforce RFC-8461 MTA-STS (#2697)
  - [ENHANCEMENT] JMAP MDC: make the original IP header configurable
  - [JAMES-4119] Core data migration tool from JPA to Postgres
- - JAMES-4115 FileMailRepository: drop cacheKey & refactor (#2662)
  - JAMES-4117 JMAP - Email/set create - support blobId in htmlBody + textBody properties (#2661)
  - JAMES-3962 JMAP Email/set: move `EmailHeader[]` from `bodyValues` to `htmlBody`/`textBody` (#2659)
  - JAMES-3788 Allow configuring if Proxy or SSL frames should be handled… (#2634)
@@ -331,10 +335,8 @@ The project also bumped dependencies to their latest version as of June 2025.
 ### Build
 
  - Publish build scans to develocity.apache.org
-
-### Removal
-
- - [DROP] Remove Linshare third party connector (#2613
+ - Introduce a build cache
+ - Faster build time improvments
 
 ## [Unreleased 3.8.x]
 
