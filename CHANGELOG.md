@@ -88,6 +88,14 @@ The project also bumped dependencies to their latest version as of June 2025.
 - JAMES-4068 Have several health checks in one rest calls (#2399)
 - JAMES-3824 SMTP Extension for Message Transfer Priorities
 - JAMES-4100 JMAP SearchSnippet/get implementation
+- [ENHANCEMENT] Smtp technical accounts (#2810)
+- JAMES-4143 Add a custom header Field for JMAP rule matching (#2811)
+- JAMES-4144 RecipientHasMXRecord + SenderHasMXRecord (#2804)
+- feat(managesieve): add support for proxy protocol in managesieve
+- JAMES-4143 Add JMAP StartWith Filter
+- [RemoteDelivery] Add an explicit option to trust all certs (#2788)
+- [ENAHNCEMENT] SMTP: Allow easily disabling authentcation (#2800)
+- JAMES-4140 Implement adaptative, session-scoped, throttling for IMAP … (#2766)
 
 ### Improvements
  
@@ -275,6 +283,9 @@ The project also bumped dependencies to their latest version as of June 2025.
  - JAMES-4117 JMAP - Email/set create - support blobId in htmlBody + textBody properties (#2661)
  - JAMES-3962 JMAP Email/set: move `EmailHeader[]` from `bodyValues` to `htmlBody`/`textBody` (#2659)
  - JAMES-3788 Allow configuring if Proxy or SSL frames should be handled… (#2634)
+ - JAMES-3755 Allow RSpamDScanner to override url settings (#2819)
+ - JAMES-4147 SaveMailNameInHeaders Mailet (#2818)
+ - [ENHANCEMENT] Add useUserAsMailFrom option to VacationMailet (#2776)
 
 ### Performance
 
@@ -310,6 +321,12 @@ The project also bumped dependencies to their latest version as of June 2025.
  - Improve IMAP partial body fetch (#2740)
  - [ENHANCEMENT] Allow setting a preview for TTL
  - [ENHANCEMENT] Document data tiering for Apache James distributed server
+ - JAMES-3516 Fix In-Reply-To, References and Subject parsing for threads (#2790)
+ - [FIX] Prevent NPE when fetching the raw property of a Field
+ - [UPGRADE] Adopt MIME4J 0.8.13 (#2779)
+ - [FIX] EmailSubmission/set fails when underlying mail has LF only headers (#2772)
+ - JAMES-3775 ClamAVScan should be able to configure socket timeout when scanning a message (#2778)
+ - [ENHANCEMENT] Indexing: infer hasAttachment without calling MailboxMe… (#2777)
 
 ### Build
 
