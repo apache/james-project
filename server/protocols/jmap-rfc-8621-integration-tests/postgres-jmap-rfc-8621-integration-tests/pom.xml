@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>jmap-rfc-8621-integration-tests</artifactId>
-        <version>3.9.0-SNAPSHOT</version>
+        <version>3.9.0</version>
     </parent>
     <artifactId>postgres-jmap-rfc-8621-integration-tests</artifactId>
     <name>Apache James :: Server :: JMAP RFC-8621 :: Postgres Integration Testing</name>
@@ -125,7 +125,7 @@
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-surefire-plugin</artifactId>
                             <configuration>
-                                <excludedGroups/>
+                                <excludedGroups />
                                 <groups>unstable</groups>
                             </configuration>
                         </plugin>
