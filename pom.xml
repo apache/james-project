@@ -3750,8 +3750,12 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>3.1.1</version>
                     <configuration>
+                        <useReleaseProfile>false</useReleaseProfile>
+                        <goals>deploy</goals>
+                        <arguments>-Papache-release ${arguments}</arguments>
+                        <waitBeforeTagging>10</waitBeforeTagging>
+
                         <preparationGoals>clean install -DskipTests</preparationGoals>
-                        <goals>clean install -DskipTests</goals>
                         <!-- avoid double buildscan during forked builds -->
                         <arguments>-Dgradle.scan.disabled=true</arguments>
                     </configuration>
