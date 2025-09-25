@@ -1184,52 +1184,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!--        16. examples-->
-        <dependency>
-            <groupId>org.apache.james.examples</groupId>
-            <artifactId>custom-james-assembly</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.examples</groupId>
-            <artifactId>custom-listeners</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.examples</groupId>
-            <artifactId>custom-mailets</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.examples</groupId>
-            <artifactId>custom-smtp-command</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.examples</groupId>
-            <artifactId>custom-smtp-hooks</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.examples</groupId>
-            <artifactId>custom-webadmin-route</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.examples</groupId>
-            <artifactId>metrics-graphite</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.examples</groupId>
-            <artifactId>custom-healthcheck</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james.examples</groupId>
-            <artifactId>custom-imap</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 
     <build>
