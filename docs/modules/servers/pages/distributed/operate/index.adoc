@@ -16,7 +16,10 @@ This section sums up and links upgrade instructions for people willing to upgrad
 
 .Upgrade path
 |===
-| Upgrade from | Recommended upgrade path to 3.7.4
+| Upgrade from | Recommended upgrade path to 3.9.0
+
+| 3.8.0 - 3.8-2
+| Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#390-version[3.9.0 upgrade instructions]
 
 | 3.7.0 - 3.7.4
 | Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#380-version[3.8.0 upgrade instructions]

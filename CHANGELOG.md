@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [unreleased]
 
+## [Unreleased 3.9.x]
+
+No changes yet.
+
+## [3.9.0] - 2025-xx-xx
+
 ### Important changes
 
  - Upgrade javax -> jakarta. See releated upgrade instructions.
