@@ -688,6 +688,7 @@
         <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
         <javacrumbs.json-unit.version>4.1.1</javacrumbs.json-unit.version>
         <fastutil-core.version>8.5.15</fastutil-core.version>
+        <james.baseVersion>${project.version}</james.baseVersion>
     </properties>
 
     <dependencyManagement>
