@@ -560,6 +560,7 @@
         <module>core</module>
         <module>event-bus</module>
         <module>event-sourcing</module>
+        <module>examples</module>
         <module>javax-mail-extension</module>
         <module>json</module>
         <module>mailbox</module>
