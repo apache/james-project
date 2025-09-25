@@ -10,6 +10,10 @@ software documentation. Do not follow this guide blindly!
 
 ## Unreleased
 
+No specific operation to conduct from a 3.9.0 version.
+
+## 3.9.0 version (tagged but not yet released)
+
 Note: this section is in progress. It will be updated during all the development process until the release.
 No changes yet.
 
