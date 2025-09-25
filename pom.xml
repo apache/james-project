@@ -576,7 +576,7 @@
     <scm>
         <connection>scm:git:http://git-wip-us.apache.org/repos/asf/james-project.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/apache/james-project.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>@{project.version}</tag>
         <url>http://git-wip-us.apache.org/repos/asf/james-project.git</url>
     </scm>
 
