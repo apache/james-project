@@ -74,7 +74,7 @@
 
         <p><b>Postgres backed James server</b>:</p>
 
-        <p>This artifact packages the distributed James server, that operates on top of Cassandra, OpenSearch,
+        <p>This artifact packages the distributed James server, that operates on top of Postgres, OpenSearch,
           RabbitMQ, and S3 API. It is intended for large scale deployments where scalability is required.</p>
 
         <li>Binary (ZIP Format) for the Distributed James server:
