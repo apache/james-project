@@ -1081,7 +1081,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cd")))
+                .conditionGroup(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cd"))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
                 .build())).block();
 
@@ -1100,7 +1100,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
+                .conditionGroup(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf"))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
                 .build())).block();
 
@@ -1117,7 +1117,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.OR, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
+                .conditionGroup(Rule.ConditionCombiner.OR, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf"))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
                 .build())).block();
 
@@ -1135,7 +1135,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.OR, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
+                .conditionGroup(Rule.ConditionCombiner.OR, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf"))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
                 .build())).block();
 
