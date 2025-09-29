@@ -13,6 +13,26 @@
             "field": "cc",
             "comparator": "start-with",
             "value": "A value to match 5"
+          },
+          {
+            "field": "sentDate",
+            "comparator": "isOlderThan",
+            "value": "15d"
+          },
+          {
+            "field": "sentDate",
+            "comparator": "isNewerThan",
+            "value": "30d"
+          },
+          {
+            "field": "savedDate",
+            "comparator": "isNewerThan",
+            "value": "45d"
+          },
+          {
+            "field": "internalDate",
+            "comparator": "isNewerThan",
+            "value": "2d"
           }
         ]
       },

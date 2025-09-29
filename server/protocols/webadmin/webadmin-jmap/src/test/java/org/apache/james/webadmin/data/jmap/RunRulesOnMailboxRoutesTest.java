@@ -32,6 +32,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.Date;
 import java.util.Map;
 
 import org.apache.james.core.Username;
@@ -302,6 +305,88 @@ public class RunRulesOnMailboxRoutesTest {
             softly -> {
                 softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
                     .isEqualTo(0);
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(otherMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(1);
+            }
+        );
+    }
+
+    @Test
+    void runRulesShouldApplyDateCrieria() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USERNAME, OTHER_MAILBOX_NAME);
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+        mailboxManager.createMailbox(mailboxPath, systemSession);
+        mailboxManager.createMailbox(otherMailboxPath, systemSession);
+
+        mailboxManager.getMailbox(mailboxPath, systemSession)
+            .appendMessage(MessageManager.AppendCommand.builder()
+                    .withInternalDate(Date.from(Clock.systemUTC().instant().minus(Duration.ofDays(2))))
+                    .build(Message.Builder.of()
+                        .setSubject("plop")
+                        .setFrom("alice@example.com")
+                        .setBody("body", StandardCharsets.UTF_8)),
+                systemSession);
+
+        mailboxManager.getMailbox(mailboxPath, systemSession)
+            .appendMessage(MessageManager.AppendCommand.builder()
+                    .withInternalDate(Date.from(Clock.systemUTC().instant().minus(Duration.ofDays(20))))
+                    .build(Message.Builder.of()
+                        .setSubject("plop")
+                        .setFrom("alice@example.com")
+                        .setBody("body", StandardCharsets.UTF_8)),
+                systemSession);
+
+        MailboxId otherMailboxId = mailboxManager.getMailbox(otherMailboxPath, systemSession).getId();
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body("""
+        {
+          "id": "1",
+          "name": "rule 1",
+          "action": {
+            "appendIn": {
+              "mailboxIds": ["%s"]
+            },
+            "important": false,
+            "keyworkds": [],
+            "reject": false,
+            "seen": false
+          },
+          "conditionGroup": {
+            "conditionCombiner": "AND",
+            "conditions": [
+              {
+                "comparator": "contains",
+                "field": "subject",
+                "value": "plop"
+              },
+              {
+                "comparator": "isOlderThan",
+                "field": "internalDate",
+                "value": "10d"
+              }
+            ]
+          }
+        }""".formatted(otherMailboxId.serialize()))
+            .post(MAILBOX_NAME + "/messages")
+        .then()
+            .statusCode(CREATED_201)
+            .extract()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await");
+
+        SoftAssertions.assertSoftly(
+            softly -> {
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(1);
                 softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(otherMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
                     .isEqualTo(1);
             }
