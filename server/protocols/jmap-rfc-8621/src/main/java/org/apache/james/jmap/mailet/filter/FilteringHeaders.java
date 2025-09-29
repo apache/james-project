@@ -21,15 +21,20 @@ package org.apache.james.jmap.mailet.filter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.TimeZone;
+import java.util.stream.Stream;
 
 import jakarta.mail.MessagingException;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.mailet.Mail;
 
 public interface FilteringHeaders {
@@ -49,13 +54,25 @@ public interface FilteringHeaders {
         public String getSubject() throws MessagingException {
             return mail.getMessage().getSubject();
         }
+
+        @Override
+        public Stream<String> getInternalDate() {
+            throw new NotImplementedException("Not implemented");
+        }
+
+        @Override
+        public Stream<String> getSavedDate() {
+            throw new NotImplementedException("Not implemented");
+        }
     }
 
     class MessageResultFilteringHeaders implements FilteringHeaders {
         private final Headers headers;
+        private final MessageResult messageResult;
 
         public MessageResultFilteringHeaders(MessageResult messageResult) throws MailboxException {
-            this.headers = messageResult.getHeaders();
+            this.messageResult = messageResult;
+            this.headers = this.messageResult.getHeaders();
         }
 
         @Override
@@ -84,9 +101,24 @@ public interface FilteringHeaders {
             }
             return results.toArray(new String[0]);
         }
+
+        @Override
+        public Stream<String> getInternalDate() {
+            return Stream.of(MimeUtil.formatDate(messageResult.getInternalDate(), TimeZone.getDefault()));
+        }
+
+        @Override
+        public Stream<String> getSavedDate() {
+            return Stream.of(messageResult.getSaveDate().map(date -> MimeUtil.formatDate(date, TimeZone.getDefault()))
+                .orElse(MimeUtil.formatDate(new Date(), TimeZone.getDefault())));
+        }
     }
 
     String[] getHeader(String name) throws Exception;
 
     String getSubject() throws Exception;
+
+    Stream<String> getInternalDate();
+
+    Stream<String> getSavedDate();
 }
