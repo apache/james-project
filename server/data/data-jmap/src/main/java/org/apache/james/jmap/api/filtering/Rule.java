@@ -538,6 +538,11 @@ public class Rule {
             return this;
         }
 
+        public Builder conditionGroup(ConditionCombiner combiner, Condition... condition) {
+            this.conditionGroup = Rule.ConditionGroup.of(combiner, condition);
+            return this;
+        }
+
         public Builder conditionGroup(ConditionGroup conditionGroup) {
             this.conditionGroup = conditionGroup;
             return this;
