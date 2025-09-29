@@ -148,7 +148,10 @@ public class Rule {
             public static Field CC = new FixedField("cc");
             public static Field SUBJECT = new FixedField("subject");
             public static Field RECIPIENT = new FixedField("recipient");
-            public static final ImmutableList<Field> VALUES = ImmutableList.of(FROM, TO, CC, SUBJECT, RECIPIENT);
+            public static Field SENT_DATE = new FixedField("sentDate");
+            public static Field SAVED_DATE = new FixedField("savedDate");
+            public static Field INTERNAL_DATE = new FixedField("internalDate");
+            public static final ImmutableList<Field> VALUES = ImmutableList.of(FROM, TO, CC, SUBJECT, RECIPIENT, SENT_DATE, SAVED_DATE, INTERNAL_DATE);
 
             public static Optional<Field> find(String fieldName) {
                 return VALUES.stream()
@@ -178,6 +181,8 @@ public class Rule {
         
         public enum Comparator {
             CONTAINS("contains"),
+            IS_OLDER_THAN("isOlderThan"),
+            IS_NEWER_THAN("isNewerThan"),
             NOT_CONTAINS("not-contains"),
             EXACTLY_EQUALS("exactly-equals"),
             NOT_EXACTLY_EQUALS("not-exactly-equals"),

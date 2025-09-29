@@ -22,12 +22,15 @@ package org.apache.james.jmap.mailet.filter;
 import static org.apache.james.core.builder.MimeMessageBuilder.mimeMessageBuilder;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.CONTAINS;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.EXACTLY_EQUALS;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.IS_NEWER_THAN;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.IS_OLDER_THAN;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.NOT_CONTAINS;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.NOT_EXACTLY_EQUALS;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.START_WITH;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.CC;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.FROM;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.RECIPIENT;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.SENT_DATE;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.SUBJECT;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.FixedField.TO;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.BOU;
@@ -54,6 +57,8 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_4_FU
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
@@ -593,7 +598,7 @@ class JMAPFilteringTest {
                 argumentBuilder().scrambledSubjectShouldNotMatchCaseSensitive().build(),
                 argumentBuilder().unscrambledSubjectToMatch(SHOULD_NOT_MATCH).build(),
                 argumentBuilder().unscrambledSubjectShouldNotMatchCaseSensitive().build()),
-            Rule.Condition.FixedField.VALUES.stream()
+            ImmutableList.of(FROM, TO, CC, SUBJECT, RECIPIENT).stream()
                 .map(field -> argumentBuilder()
                     .description("no header")
                     .field(field)
@@ -1126,6 +1131,64 @@ class JMAPFilteringTest {
 
         assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
             .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+    }
+
+    @Test
+    void shouldSupportSentDateAndIsNewerThan(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.Condition.of(SENT_DATE, IS_NEWER_THAN, "7d"))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
+                .build())).block();
+
+        FakeMail oldMail = testSystem.asMail(mimeMessageBuilder()
+            .addHeader(FROM.asString(), USER_2_ADDRESS)
+            .addHeader(SUBJECT.asString(), "abcdef")
+            .setDate(Clock.systemUTC().instant().minus(Duration.ofDays(10))));
+        FakeMail newMail = testSystem.asMail(mimeMessageBuilder()
+            .addHeader(FROM.asString(), USER_2_ADDRESS)
+            .addHeader(SUBJECT.asString(), "abcdef")
+            .setDate(Clock.systemUTC().instant().minus(Duration.ofDays(5))));
+
+        testSystem.getJmapFiltering().service(oldMail);
+        testSystem.getJmapFiltering().service(newMail);
+
+        assertThatAttribute(newMail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+        assertThat(oldMail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEmpty();
+    }
+
+    @Test
+    void shouldSupportSentDateAndIsOlderThan(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.Condition.of(SENT_DATE, IS_OLDER_THAN, "7d"))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
+                .build())).block();
+
+        FakeMail oldMail = testSystem.asMail(mimeMessageBuilder()
+            .addHeader(FROM.asString(), USER_2_ADDRESS)
+            .addHeader(SUBJECT.asString(), "abcdef")
+            .setDate(Clock.systemUTC().instant().minus(Duration.ofDays(10))));
+        FakeMail newMail = testSystem.asMail(mimeMessageBuilder()
+            .addHeader(FROM.asString(), USER_2_ADDRESS)
+            .addHeader(SUBJECT.asString(), "abcdef")
+            .setDate(Clock.systemUTC().instant().minus(Duration.ofDays(5))));
+
+        testSystem.getJmapFiltering().service(oldMail);
+        testSystem.getJmapFiltering().service(newMail);
+
+        assertThatAttribute(oldMail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+        assertThat(newMail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEmpty();
     }
 
     @Test

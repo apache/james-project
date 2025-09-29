@@ -47,12 +47,16 @@ public interface HeaderExtractor extends ThrowingFunction<FilteringHeaders, Stre
         StreamUtils.ofNullables(filteringHeaders.getSubject());
     HeaderExtractor CC_EXTRACTOR = recipientExtractor(Message.RecipientType.CC);
     HeaderExtractor TO_EXTRACTOR = recipientExtractor(Message.RecipientType.TO);
+    HeaderExtractor SENT_EXTRACTOR = headers -> StreamUtils.ofNullables(headers.getHeader("Date"));
     HeaderExtractor RECIPIENT_EXTRACTOR = and(TO_EXTRACTOR, CC_EXTRACTOR);
     HeaderExtractor FROM_EXTRACTOR = addressExtractor(filteringHeaders -> filteringHeaders.getHeader(FROM), FROM);
 
     Map<Rule.Condition.Field, HeaderExtractor> HEADER_EXTRACTOR_REGISTRY = ImmutableMap.<Rule.Condition.Field, HeaderExtractor>builder()
         .put(Rule.Condition.FixedField.SUBJECT, SUBJECT_EXTRACTOR)
         .put(Rule.Condition.FixedField.RECIPIENT, RECIPIENT_EXTRACTOR)
+        .put(Rule.Condition.FixedField.SENT_DATE, SENT_EXTRACTOR)
+        .put(Rule.Condition.FixedField.SAVED_DATE, FilteringHeaders::getSavedDate)
+        .put(Rule.Condition.FixedField.INTERNAL_DATE, FilteringHeaders::getInternalDate)
         .put(Rule.Condition.FixedField.FROM, FROM_EXTRACTOR)
         .put(Rule.Condition.FixedField.CC, CC_EXTRACTOR)
         .put(Rule.Condition.FixedField.TO, TO_EXTRACTOR)

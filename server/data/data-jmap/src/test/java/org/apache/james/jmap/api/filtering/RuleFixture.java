@@ -112,6 +112,34 @@ public interface RuleFixture {
             "A value to match 5"))
         .build();
 
+    Rule RULE_CC_DATES = Rule.builder()
+        .id(Rule.Id.of("id-cc"))
+        .name(NAME)
+        .action(ACTION_2)
+        .conditionGroup(Rule.ConditionCombiner.AND,
+            Rule.Condition.of(
+                Rule.Condition.FixedField.CC,
+                Rule.Condition.Comparator.START_WITH,
+                "A value to match 5"),
+
+            Rule.Condition.of(
+                Rule.Condition.FixedField.SENT_DATE,
+                Rule.Condition.Comparator.IS_OLDER_THAN,
+                "15d"),
+            Rule.Condition.of(
+                Rule.Condition.FixedField.SENT_DATE,
+                Rule.Condition.Comparator.IS_NEWER_THAN,
+                "30d"),
+            Rule.Condition.of(
+                Rule.Condition.FixedField.SAVED_DATE,
+                Rule.Condition.Comparator.IS_NEWER_THAN,
+                "45d"),
+            Rule.Condition.of(
+                Rule.Condition.FixedField.INTERNAL_DATE,
+                Rule.Condition.Comparator.IS_NEWER_THAN,
+                "2d"))
+        .build();
+
     Rule RULE_TO_2 = Rule.builder()
         .id(Rule.Id.of("id-to"))
         .name(NAME)

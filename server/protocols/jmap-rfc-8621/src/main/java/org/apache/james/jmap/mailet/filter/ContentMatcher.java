@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.mailet.filter;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -28,6 +31,10 @@ import jakarta.mail.internet.InternetAddress;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.field.DateTimeFieldLenientImpl;
+import org.apache.james.mime4j.stream.RawField;
+import org.apache.james.util.DurationParser;
 import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,6 +99,20 @@ public interface ContentMatcher {
     }
 
     ContentMatcher STRING_CONTAINS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.contains(content, valueToMatch));
+    ContentMatcher IS_OLDER_THAN_MATCHER = (contents, valueToMatch) -> {
+        Duration duration = DurationParser.parse(valueToMatch);
+        Instant horizon = Clock.systemUTC().instant().minus(duration);
+        return contents
+            .map(dateField -> DateTimeFieldLenientImpl.PARSER.parse(new RawField("Date", dateField), DecodeMonitor.SILENT).getDate().toInstant())
+            .anyMatch(date -> date.isBefore(horizon));
+    };
+    ContentMatcher IS_NEWER_THAN_MATCHER = (contents, valueToMatch) -> {
+        Duration duration = DurationParser.parse(valueToMatch);
+        Instant horizon = Clock.systemUTC().instant().minus(duration);
+        return contents
+            .map(dateField -> DateTimeFieldLenientImpl.PARSER.parse(new RawField("Date", dateField), DecodeMonitor.SILENT).getDate().toInstant())
+            .anyMatch(date -> date.isAfter(horizon));
+    };
     ContentMatcher STRING_NOT_CONTAINS_MATCHER = negate(STRING_CONTAINS_MATCHER);
     ContentMatcher STRING_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.equals(content, valueToMatch));
     ContentMatcher STRING_NOT_EXACTLY_EQUALS_MATCHER = negate(STRING_EXACTLY_EQUALS_MATCHER);
@@ -105,6 +126,11 @@ public interface ContentMatcher {
     ContentMatcher ADDRESS_START_WITH_MATCHER = (contents, valueToMatch) -> contents
         .map(ContentMatcher::asAddressHeader)
         .anyMatch(addressHeader -> addressHeader.fullAddress.startsWith(valueToMatch));
+
+    Map<Rule.Condition.Comparator, ContentMatcher> DATE_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
+        .put(Rule.Condition.Comparator.IS_NEWER_THAN, IS_NEWER_THAN_MATCHER)
+        .put(Rule.Condition.Comparator.IS_OLDER_THAN, IS_OLDER_THAN_MATCHER)
+        .build();
 
     Map<Rule.Condition.Comparator, ContentMatcher> HEADER_ADDRESS_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
         .put(Rule.Condition.Comparator.CONTAINS, ADDRESS_CONTAINS_MATCHER)
@@ -128,6 +154,9 @@ public interface ContentMatcher {
         .put(Rule.Condition.FixedField.CC, HEADER_ADDRESS_MATCHER_REGISTRY)
         .put(Rule.Condition.FixedField.RECIPIENT, HEADER_ADDRESS_MATCHER_REGISTRY)
         .put(Rule.Condition.FixedField.FROM, HEADER_ADDRESS_MATCHER_REGISTRY)
+        .put(Rule.Condition.FixedField.SENT_DATE, DATE_MATCHER_REGISTRY)
+        .put(Rule.Condition.FixedField.INTERNAL_DATE, DATE_MATCHER_REGISTRY)
+        .put(Rule.Condition.FixedField.SAVED_DATE, DATE_MATCHER_REGISTRY)
         .build();
 
     static ContentMatcher negate(ContentMatcher contentMatcher) {
