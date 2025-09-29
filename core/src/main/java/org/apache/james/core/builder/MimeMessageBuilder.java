@@ -22,8 +22,10 @@ package org.apache.james.core.builder;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -249,6 +251,7 @@ public class MimeMessageBuilder {
     private Optional<String> text = Optional.empty();
     private Optional<String> textContentType = Optional.empty();
     private Optional<String> subject = Optional.empty();
+    private Optional<Instant> date = Optional.empty();
     private Optional<InternetAddress> sender = Optional.empty();
     private Optional<MimeMultipart> content = Optional.empty();
     private ImmutableList.Builder<InternetAddress> from = ImmutableList.builder();
@@ -275,6 +278,11 @@ public class MimeMessageBuilder {
 
     public MimeMessageBuilder setSubject(String subject) {
         this.subject = Optional.ofNullable(subject);
+        return this;
+    }
+
+    public MimeMessageBuilder setDate(Instant instant) {
+        this.date = Optional.ofNullable(instant);
         return this;
     }
 
@@ -402,6 +410,9 @@ public class MimeMessageBuilder {
         }
         if (subject.isPresent()) {
             mimeMessage.setSubject(subject.get());
+        }
+        if (date.isPresent()) {
+            mimeMessage.setSentDate(Date.from(date.get()));
         }
         ImmutableList<InternetAddress> fromAddresses = from.build();
         if (!fromAddresses.isEmpty()) {
