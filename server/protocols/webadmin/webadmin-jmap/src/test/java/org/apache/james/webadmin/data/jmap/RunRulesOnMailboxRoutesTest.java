@@ -37,6 +37,8 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
 
+import jakarta.mail.Flags;
+
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxSession;
@@ -46,8 +48,10 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
@@ -871,6 +875,103 @@ public class RunRulesOnMailboxRoutesTest {
                     .isEqualTo(1);
                 softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(otherMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
                     .isEqualTo(2);
+            }
+        );
+    }
+
+    @Test
+    void runRulesOnMailboxShouldApplyFlagCriteria() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USERNAME, OTHER_MAILBOX_NAME);
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+        mailboxManager.createMailbox(mailboxPath, systemSession);
+        mailboxManager.createMailbox(otherMailboxPath, systemSession);
+
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, systemSession);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(Message.Builder.of()
+                    .setSubject("plop")
+                    .setFrom("alice@example.com")
+                    .setBody("body", StandardCharsets.UTF_8)),
+            systemSession).getId();
+
+        messageManager.setFlags(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(messageId1.getUid()), systemSession);
+        messageManager.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(messageId1.getUid()), systemSession);
+
+        ComposedMessageId messageId2 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(Message.Builder.of()
+                    .setSubject("hello")
+                    .setFrom("alice@example.com")
+                    .setBody("body", StandardCharsets.UTF_8)),
+            systemSession).getId();
+
+        messageManager.setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(messageId2.getUid()), systemSession);
+
+        ComposedMessageId messageId3 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(Message.Builder.of()
+                    .setSubject("hello")
+                    .setFrom("bob@example.com")
+                    .setBody("body", StandardCharsets.UTF_8)),
+            systemSession).getId();
+
+        messageManager.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(messageId3.getUid()), systemSession);
+
+        MailboxId otherMailboxId = mailboxManager.getMailbox(otherMailboxPath, systemSession).getId();
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body("""
+            {
+              "id": "1",
+              "name": "rule 1",
+              "action": {
+                "appendIn": {
+                  "mailboxIds": ["%s"]
+                },
+                "important": false,
+                "keyworkds": [],
+                "reject": false,
+                "seen": false
+              },
+              "conditionGroup": {
+                "conditionCombiner": "AND",
+                "conditions": [
+                  {
+                    "comparator": "isSet",
+                    "field": "flag",
+                    "value": "\\Seen"
+                  },
+                  {
+                    "comparator": "isUnset",
+                    "field": "flag",
+                    "value": "\\Flagged"
+                  }
+                ]
+              }
+            }""".formatted(otherMailboxId.serialize()))
+            .post(MAILBOX_NAME + "/messages")
+        .then()
+            .statusCode(CREATED_201)
+            .extract()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await");
+
+        SoftAssertions.assertSoftly(
+            softly -> {
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(2);
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(otherMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(1);
             }
         );
     }

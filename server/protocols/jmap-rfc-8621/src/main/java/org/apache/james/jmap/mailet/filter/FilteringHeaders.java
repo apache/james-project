@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.stream.Stream;
 
+import jakarta.mail.Flags.Flag;
 import jakarta.mail.MessagingException;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -62,6 +63,11 @@ public interface FilteringHeaders {
 
         @Override
         public Stream<String> getSavedDate() {
+            throw new NotImplementedException("Not implemented");
+        }
+
+        @Override
+        public String getFlag(Flag flag) {
             throw new NotImplementedException("Not implemented");
         }
     }
@@ -112,6 +118,14 @@ public interface FilteringHeaders {
             return Stream.of(messageResult.getSaveDate().map(date -> MimeUtil.formatDate(date, TimeZone.getDefault()))
                 .orElse(MimeUtil.formatDate(new Date(), TimeZone.getDefault())));
         }
+
+        @Override
+        public String getFlag(Flag flag) {
+            if (messageResult.getFlags().contains(flag)) {
+                return flag.toString();
+            }
+            return null;
+        }
     }
 
     String[] getHeader(String name) throws Exception;
@@ -121,4 +135,6 @@ public interface FilteringHeaders {
     Stream<String> getInternalDate();
 
     Stream<String> getSavedDate();
+
+    String getFlag(Flag flag);
 }
