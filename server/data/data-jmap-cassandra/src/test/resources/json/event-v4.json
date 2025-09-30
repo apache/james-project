@@ -25,6 +25,9 @@
         "appendIn": {
           "mailboxIds":["id-01"]
         },
+        "moveTo": {
+          "mailboxName": "Trash"
+        },
         "important":true,
         "keyworkds":["abc"],
         "reject":true,
