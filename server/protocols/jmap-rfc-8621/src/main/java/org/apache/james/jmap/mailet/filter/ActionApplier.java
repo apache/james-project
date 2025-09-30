@@ -39,6 +39,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.AuditTrail;
 import org.apache.mailet.LoopPrevention;
@@ -198,9 +199,14 @@ public class ActionApplier {
     }
 
     private Optional<ImmutableList<String>> computeTargetMailboxes(Rule.Action action) {
-        return Optional.of(action.getAppendInMailboxes().getMailboxIds()
-                .stream()
-                .flatMap(this::asMailboxName)
+        Stream<String> appendInMailboxes = action.getAppendInMailboxes().getMailboxIds()
+            .stream()
+            .flatMap(this::asMailboxName);
+        Stream<String> moveToMailboxes = action.getMoveTo()
+            .map(moveTo -> validateMailboxName(moveTo.getMailboxName()))
+            .orElse(Stream.empty());
+
+        return Optional.of(Stream.concat(appendInMailboxes, moveToMailboxes)
                 .collect(ImmutableList.toImmutableList()))
             .filter(mailboxes -> !mailboxes.isEmpty());
     }
@@ -218,6 +224,22 @@ public class ActionApplier {
             return Stream.empty();
         } catch (Exception e) {
             LOGGER.error("Unexpected failure while resolving mailbox name for {}", mailboxIdString, e);
+            return Stream.empty();
+        }
+    }
+
+    private Stream<String> validateMailboxName(String mailboxName) {
+        try {
+            MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+            MessageManager messageManager = mailboxManager.getMailbox(MailboxPath.forUser(username, mailboxName), mailboxSession);
+            mailboxManager.endProcessingRequest(mailboxSession);
+
+            return Stream.of(messageManager.getMailboxPath().getName());
+        } catch (MailboxNotFoundException e) {
+            LOGGER.info("Mailbox {} does not exist for user {}, but it was mentioned in a JMAP filtering rule", mailboxName, username.asString(), e);
+            return Stream.empty();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected failure while validating mailbox name {} for user {}", mailboxName, username.asString(), e);
             return Stream.empty();
         }
     }
