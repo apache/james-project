@@ -33,6 +33,7 @@ import org.apache.james.jmap.mailet.filter.RuleMatcher;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
@@ -46,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -103,24 +105,37 @@ public class RunRulesOnMailboxService {
             throw new NotImplementedException("Only action on moving messages is supported for now");
         }
 
-        if (action.getAppendInMailboxes().getMailboxIds().isEmpty()) {
+        if (action.getAppendInMailboxes().getMailboxIds().isEmpty() && action.getMoveTo().isEmpty()) {
             throw new IllegalArgumentException("Move action should not be empty");
         }
     }
 
     private Mono<Task.Result> appendInMailboxes(MessageId messageId, Rule.Action action, MailboxSession mailboxSession, RunRulesOnMailboxTask.Context context) {
-        List<MailboxId> mailboxIds = action.getAppendInMailboxes()
+        ImmutableList.Builder<MailboxId> mailboxIdsBuilder = ImmutableList.builder();
+        List<MailboxId> appendInMailboxIds = action.getAppendInMailboxes()
             .getMailboxIds()
             .stream()
             .map(mailboxIdFactory::fromString)
             .toList();
+        mailboxIdsBuilder.addAll(appendInMailboxIds);
 
-        if (mailboxIds.isEmpty()) {
-            return Mono.just(Task.Result.COMPLETED);
-        }
+        return Mono.justOrEmpty(action.getMoveTo())
+            .flatMap(moveTo -> getMailboxId(mailboxSession, MailboxPath.forUser(mailboxSession.getUser(), moveTo.getMailboxName())))
+            .map(moveToMailboxId -> mailboxIdsBuilder.add(moveToMailboxId).build())
+            .switchIfEmpty(Mono.fromCallable(mailboxIdsBuilder::build))
+            .flatMap(mailboxIds -> {
+                if (mailboxIds.isEmpty()) {
+                    return Mono.just(Task.Result.COMPLETED);
+                }
 
-        return Mono.from(messageIdManager.setInMailboxesReactive(messageId, mailboxIds, mailboxSession))
-            .doOnSuccess(next -> context.incrementSuccesses())
-            .then(Mono.just(Task.Result.COMPLETED));
+                return Mono.from(messageIdManager.setInMailboxesReactive(messageId, mailboxIds, mailboxSession))
+                    .doOnSuccess(next -> context.incrementSuccesses())
+                    .then(Mono.just(Task.Result.COMPLETED));
+            });
+    }
+
+    private Mono<MailboxId> getMailboxId(MailboxSession mailboxSession, MailboxPath mailboxPath) {
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
+            .map(MessageManager::getId);
     }
 }

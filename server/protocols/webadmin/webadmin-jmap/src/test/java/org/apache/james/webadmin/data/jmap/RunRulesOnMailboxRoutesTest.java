@@ -72,6 +72,7 @@ public class RunRulesOnMailboxRoutesTest {
     private static final Username USERNAME = Username.of("username");
     private static final String MAILBOX_NAME = "myMailboxName";
     private static final String OTHER_MAILBOX_NAME = "myOtherMailboxName";
+    private static final String MOVE_TO_MAILBOX_NAME = "moveToMailbox";
     private static final String ERROR_TYPE_NOTFOUND = "notFound";
     private static final String ERROR_TYPE_INVALIDARGUMENT = "InvalidArgument";
     private static final String RULE_PAYLOAD = """
@@ -306,6 +307,308 @@ public class RunRulesOnMailboxRoutesTest {
                 softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
                     .isEqualTo(0);
                 softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(otherMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(1);
+            }
+        );
+    }
+
+    @Test
+    void runRulesOnMailboxShouldSupportMoveToMailboxNameWhenMatchingMessage() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USERNAME, OTHER_MAILBOX_NAME);
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+        mailboxManager.createMailbox(mailboxPath, systemSession);
+        mailboxManager.createMailbox(otherMailboxPath, systemSession);
+
+        mailboxManager.getMailbox(mailboxPath, systemSession)
+            .appendMessage(MessageManager.AppendCommand.builder()
+                    .build(Message.Builder.of()
+                        .setSubject("plop")
+                        .setFrom("alice@example.com")
+                        .setBody("body", StandardCharsets.UTF_8)),
+                systemSession);
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body("""
+                {
+                  "id": "1",
+                  "name": "rule 1",
+                  "action": {
+                    "appendIn": {
+                      "mailboxIds": []
+                    },
+                    "moveTo": {
+                      "mailboxName": "%s"
+                    },
+                    "important": false,
+                    "keyworkds": [],
+                    "reject": false,
+                    "seen": false
+                  },
+                  "conditionGroup": {
+                    "conditionCombiner": "OR",
+                    "conditions": [
+                      {
+                        "comparator": "contains",
+                        "field": "subject",
+                        "value": "plop"
+                      },
+                      {
+                        "comparator": "exactly-equals",
+                        "field": "from",
+                        "value": "bob@example.com"
+                      }
+                    ]
+                  }
+                }"""
+                .formatted(OTHER_MAILBOX_NAME))
+            .post(MAILBOX_NAME + "/messages")
+        .then()
+            .statusCode(CREATED_201)
+            .extract()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+            .when()
+            .get(taskId + "/await");
+
+        SoftAssertions.assertSoftly(
+            softly -> {
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(0);
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(otherMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(1);
+            }
+        );
+    }
+
+    @Test
+    void runRulesOnMailboxShouldNotMoveToMailboxNameWhenNonMatchingMessage() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USERNAME, OTHER_MAILBOX_NAME);
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+        mailboxManager.createMailbox(mailboxPath, systemSession);
+        mailboxManager.createMailbox(otherMailboxPath, systemSession);
+
+        mailboxManager.getMailbox(mailboxPath, systemSession)
+            .appendMessage(MessageManager.AppendCommand.builder()
+                    .build(Message.Builder.of()
+                        .setSubject("not match rules")
+                        .setFrom("alice@example.com")
+                        .setBody("body", StandardCharsets.UTF_8)),
+                systemSession);
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body("""
+                {
+                  "id": "1",
+                  "name": "rule 1",
+                  "action": {
+                    "appendIn": {
+                      "mailboxIds": []
+                    },
+                    "moveTo": {
+                      "mailboxName": "%s"
+                    },
+                    "important": false,
+                    "keyworkds": [],
+                    "reject": false,
+                    "seen": false
+                  },
+                  "conditionGroup": {
+                    "conditionCombiner": "OR",
+                    "conditions": [
+                      {
+                        "comparator": "contains",
+                        "field": "subject",
+                        "value": "plop"
+                      },
+                      {
+                        "comparator": "exactly-equals",
+                        "field": "from",
+                        "value": "bob@example.com"
+                      }
+                    ]
+                  }
+                }"""
+                .formatted(OTHER_MAILBOX_NAME))
+            .post(MAILBOX_NAME + "/messages")
+        .then()
+            .statusCode(CREATED_201)
+            .extract()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+            .when()
+            .get(taskId + "/await");
+
+        SoftAssertions.assertSoftly(
+            softly -> {
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(1);
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(otherMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(0);
+            }
+        );
+    }
+
+    @Test
+    void bothMoveToAndAppendInMailboxesShouldWork() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+        MailboxPath appendIdMailboxPath = MailboxPath.forUser(USERNAME, OTHER_MAILBOX_NAME);
+        MailboxPath moveToMailboxPath = MailboxPath.forUser(USERNAME, MOVE_TO_MAILBOX_NAME);
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+        mailboxManager.createMailbox(mailboxPath, systemSession);
+        mailboxManager.createMailbox(appendIdMailboxPath, systemSession);
+        mailboxManager.createMailbox(moveToMailboxPath, systemSession);
+        MailboxId appendIdMailboxId = mailboxManager.getMailbox(appendIdMailboxPath, systemSession).getId();
+
+        mailboxManager.getMailbox(mailboxPath, systemSession)
+            .appendMessage(MessageManager.AppendCommand.builder()
+                    .build(Message.Builder.of()
+                        .setSubject("plop")
+                        .setFrom("alice@example.com")
+                        .setBody("body", StandardCharsets.UTF_8)),
+                systemSession);
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body("""
+                {
+                  "id": "1",
+                  "name": "rule 1",
+                  "action": {
+                    "appendIn": {
+                      "mailboxIds": ["%s"]
+                    },
+                    "moveTo": {
+                      "mailboxName": "%s"
+                    },
+                    "important": false,
+                    "keyworkds": [],
+                    "reject": false,
+                    "seen": false
+                  },
+                  "conditionGroup": {
+                    "conditionCombiner": "OR",
+                    "conditions": [
+                      {
+                        "comparator": "contains",
+                        "field": "subject",
+                        "value": "plop"
+                      },
+                      {
+                        "comparator": "exactly-equals",
+                        "field": "from",
+                        "value": "bob@example.com"
+                      }
+                    ]
+                  }
+                }"""
+                .formatted(appendIdMailboxId.serialize(), MOVE_TO_MAILBOX_NAME))
+            .post(MAILBOX_NAME + "/messages")
+        .then()
+            .statusCode(CREATED_201)
+            .extract()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+            .when()
+            .get(taskId + "/await");
+
+        SoftAssertions.assertSoftly(
+            softly -> {
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(0);
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(appendIdMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(1);
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(moveToMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(1);
+            }
+        );
+    }
+
+    @Test
+    void bothMoveToAndAppendInMailboxesShouldNotDuplicateMessageWhenTheSameTargetMailbox() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+        MailboxPath targetMailboxPath = MailboxPath.forUser(USERNAME, OTHER_MAILBOX_NAME);
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+        mailboxManager.createMailbox(mailboxPath, systemSession);
+        mailboxManager.createMailbox(targetMailboxPath, systemSession);
+        MailboxId targetMailboxId = mailboxManager.getMailbox(targetMailboxPath, systemSession).getId();
+
+        mailboxManager.getMailbox(mailboxPath, systemSession)
+            .appendMessage(MessageManager.AppendCommand.builder()
+                    .build(Message.Builder.of()
+                        .setSubject("plop")
+                        .setFrom("alice@example.com")
+                        .setBody("body", StandardCharsets.UTF_8)),
+                systemSession);
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body("""
+                {
+                  "id": "1",
+                  "name": "rule 1",
+                  "action": {
+                    "appendIn": {
+                      "mailboxIds": ["%s"]
+                    },
+                    "moveTo": {
+                      "mailboxName": "%s"
+                    },
+                    "important": false,
+                    "keyworkds": [],
+                    "reject": false,
+                    "seen": false
+                  },
+                  "conditionGroup": {
+                    "conditionCombiner": "OR",
+                    "conditions": [
+                      {
+                        "comparator": "contains",
+                        "field": "subject",
+                        "value": "plop"
+                      },
+                      {
+                        "comparator": "exactly-equals",
+                        "field": "from",
+                        "value": "bob@example.com"
+                      }
+                    ]
+                  }
+                }"""
+                .formatted(targetMailboxId.serialize(), OTHER_MAILBOX_NAME))
+            .post(MAILBOX_NAME + "/messages")
+        .then()
+            .statusCode(CREATED_201)
+            .extract()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+            .when()
+            .get(taskId + "/await");
+
+        SoftAssertions.assertSoftly(
+            softly -> {
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(0);
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(targetMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
                     .isEqualTo(1);
             }
         );
