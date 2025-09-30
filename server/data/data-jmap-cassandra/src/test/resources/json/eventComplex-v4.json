@@ -40,6 +40,9 @@
         "appendIn": {
           "mailboxIds":["id-01"]
         },
+        "moveTo": {
+          "mailboxName": "Trash"
+        },
         "important":true,
         "keyworkds":["abc"],
         "reject":true,
@@ -66,6 +69,9 @@
       "action": {
         "appendIn": {
           "mailboxIds":["id-01"]
+        },
+        "moveTo": {
+          "mailboxName": "Trash"
         },
         "important":true,
         "keyworkds":["abc"],
@@ -94,6 +100,9 @@
         "appendIn": {
           "mailboxIds":["id-01"]
         },
+        "moveTo": {
+          "mailboxName": "Trash"
+        },
         "important":true,
         "keyworkds":["abc"],
         "reject":true,
@@ -121,6 +130,9 @@
         "appendIn": {
           "mailboxIds":["id-01"]
         },
+        "moveTo": {
+          "mailboxName": "Trash"
+        },
         "important":true,
         "keyworkds":["abc"],
         "reject":true,
@@ -147,6 +159,9 @@
       "action": {
         "appendIn": {
           "mailboxIds":["id-01"]
+        },
+        "moveTo": {
+          "mailboxName": "Trash"
         },
         "important":true,
         "keyworkds":["abc"],
