@@ -17,12 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.DockerOpenSearchExtension;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerConcreteContract;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -43,7 +51,8 @@ class AuthenticatedCassandraJamesServerTest {
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())
             .extension(cassandraExtension)
-            .server(CassandraJamesServerMain::createServer)
+            .extension(new RabbitMQExtension())
+            .server(CassandraRabbitMQJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(DockerCassandra.configurationBuilder(cassandraExtension.getCassandra().getHost())
                     .username(CASSANDRA_USER)
@@ -58,8 +67,9 @@ class AuthenticatedCassandraJamesServerTest {
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())
             .extension(cassandraExtension)
+            .extension(new RabbitMQExtension())
             .disableAutoStart()
-            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
+            .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule()))
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(DockerCassandra.configurationBuilder(cassandraExtension.getCassandra().getHost())

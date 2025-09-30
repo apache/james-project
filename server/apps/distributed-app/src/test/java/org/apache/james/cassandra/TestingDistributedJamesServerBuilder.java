@@ -17,33 +17,27 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.cassandra;
 
-import org.apache.james.mailbox.tika.TikaContainer;
-import org.apache.james.modules.TestTikaModule;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import org.apache.james.CassandraRabbitMQJamesConfiguration;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.SearchConfiguration;
 
-import com.google.inject.Module;
-
-public class TikaExtension implements GuiceModuleTestExtension {
-    private final TikaContainer tika;
-
-    public TikaExtension() {
-        this.tika = new TikaContainer();
+public class TestingDistributedJamesServerBuilder {
+    @FunctionalInterface
+    interface ConfigurationSpecification {
+        CassandraRabbitMQJamesConfiguration.Builder customize(CassandraRabbitMQJamesConfiguration.Builder configuration);
     }
 
-    @Override
-    public void beforeAll(ExtensionContext extensionContext) {
-        tika.start();
+    public static JamesServerBuilder<CassandraRabbitMQJamesConfiguration> forConfiguration(ConfigurationSpecification configurationSpecification) {
+        return new JamesServerBuilder<>(tmpDir ->
+            configurationSpecification.customize(CassandraRabbitMQJamesConfiguration.builder()
+                .workingDirectory(tmpDir)
+                .configurationFromClasspath())
+                .build());
     }
 
-    @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        tika.stop();
-    }
-
-    @Override
-    public Module getModule() {
-        return new TestTikaModule(tika);
+    public static JamesServerBuilder<CassandraRabbitMQJamesConfiguration> withSearchConfiguration(SearchConfiguration searchConfiguration) {
+        return forConfiguration(configuration -> configuration.searchConfiguration(searchConfiguration));
     }
 }

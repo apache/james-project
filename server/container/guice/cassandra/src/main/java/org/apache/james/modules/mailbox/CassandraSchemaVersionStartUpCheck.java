@@ -29,7 +29,7 @@ import com.google.inject.Inject;
 public class CassandraSchemaVersionStartUpCheck implements StartUpCheck {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraSchemaVersionStartUpCheck.class);
-    static final String CHECK_NAME = "CassandraSchemaVersionStartUpCheck";
+    public static final String CHECK_NAME = "CassandraSchemaVersionStartUpCheck";
 
     private final CassandraSchemaVersionManager versionManager;
 
