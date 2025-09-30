@@ -17,18 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.MailsShouldBeWellReceivedConcreteContract;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
 import org.apache.james.modules.EventDeadLettersProbe;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.util.Host;
 import org.apache.james.util.Port;
@@ -41,11 +48,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
-class CassandraWithOpenSearchDisabled implements MailsShouldBeWellReceivedConcreteContract  {
+class CassandraWithOpenSearchDisabled implements MailsShouldBeWellReceivedConcreteContract {
     @RegisterExtension
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearchDisabled())
         .extension(new CassandraExtension())
-        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
+        .extension(new RabbitMQExtension())
+        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(OpenSearchConfiguration.class)
                 .toInstance(OpenSearchConfiguration.builder()

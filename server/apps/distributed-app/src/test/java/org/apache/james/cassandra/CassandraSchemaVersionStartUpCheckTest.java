@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
+package org.apache.james.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,9 +31,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.apache.james.CassandraExtension;
-import org.apache.james.CassandraJamesServerConfiguration;
-import org.apache.james.CassandraJamesServerMain;
-import org.apache.james.DockerOpenSearchExtension;
+import org.apache.james.CassandraRabbitMQJamesConfiguration;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
@@ -42,6 +41,9 @@ import org.apache.james.StartUpChecksPerformer.StartUpChecksException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.modules.mailbox.CassandraSchemaVersionStartUpCheck;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,15 +61,16 @@ class CassandraSchemaVersionStartUpCheckTest {
     private static CassandraSchemaVersionDAO versionDAO = mock(CassandraSchemaVersionDAO.class);
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
-        CassandraJamesServerConfiguration.builder()
+    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+        CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.openSearch())
+            .blobStore(BlobStoreConfiguration.cassandra().deduplication().noCryptoConfig())
+            .searchConfiguration(SearchConfiguration.scanning())
             .build())
-        .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
-        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
+        .extension(new RabbitMQExtension())
+        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(CassandraSchemaVersionDAO.class)
                 .toInstance(versionDAO))
             .overrideWith(binder -> binder.bind(CassandraSchemaVersionManager.class)

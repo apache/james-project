@@ -17,16 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.cassandra;
 
 import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
 import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesConfiguration;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
 import org.apache.james.lifecycle.api.StartUpCheck;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.mailbox.CassandraCacheSessionModule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -73,15 +82,16 @@ class CacheSessionTest {
     }
 
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
-        CassandraJamesServerConfiguration.builder()
+    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+        CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.openSearch())
+            .blobStore(BlobStoreConfiguration.cassandra().deduplication().noCryptoConfig())
+            .searchConfiguration(SearchConfiguration.scanning())
             .build())
-        .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
-        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
+        .extension(new RabbitMQExtension())
+        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .combineWith(new CassandraCacheSessionModule()))
         .overrideServerModule(binder -> Multibinder.newSetBinder(binder, CassandraDataDefinition.class, Names.named(InjectionNames.CACHE))
             .addBinding()

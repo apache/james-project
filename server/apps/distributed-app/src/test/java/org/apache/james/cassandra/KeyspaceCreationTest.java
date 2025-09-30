@@ -17,13 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.DockerOpenSearchExtension;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.cassandra.DockerCassandraSingleton;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.mailbox.KeyspacesConfiguration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -36,7 +43,8 @@ class KeyspaceCreationTest {
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
-            .server(CassandraJamesServerMain::createServer)
+            .extension(new RabbitMQExtension())
+            .server(CassandraRabbitMQJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(DockerCassandraSingleton.singleton.configurationBuilder()
                     .createKeyspace()
@@ -57,7 +65,8 @@ class KeyspaceCreationTest {
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
-            .server(CassandraJamesServerMain::createServer)
+            .extension(new RabbitMQExtension())
+            .server(CassandraRabbitMQJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(KeyspacesConfiguration.class).toInstance(KeyspacesConfiguration.builder()
                 .keyspace("non_existing_keyspace")
                 .cacheKeyspace("cache_non_existing_keyspace")
@@ -84,7 +93,8 @@ class KeyspaceCreationTest {
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
-            .server(CassandraJamesServerMain::createServer)
+            .extension(new RabbitMQExtension())
+            .server(CassandraRabbitMQJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(DockerCassandraSingleton.singleton.configurationBuilder()
                     .createKeyspace()
@@ -111,7 +121,8 @@ class KeyspaceCreationTest {
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
-            .server(CassandraJamesServerMain::createServer)
+            .extension(new RabbitMQExtension())
+            .server(CassandraRabbitMQJamesServerMain::createServer)
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(DockerCassandraSingleton.singleton.configurationBuilder()
                     .build()))

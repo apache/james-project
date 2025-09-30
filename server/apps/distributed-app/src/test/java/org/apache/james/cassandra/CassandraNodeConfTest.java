@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james;
+package org.apache.james.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,8 +26,17 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.DockerCassandraRule;
+import org.apache.james.DockerOpenSearchExtension;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.util.Host;
@@ -45,7 +54,8 @@ class CassandraNodeConfTest {
         return TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())
             .extension(new CassandraExtension())
-            .server(configuration -> CassandraJamesServerMain.createServer(configuration)
+            .extension(new RabbitMQExtension())
+            .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule()))
             .disableAutoStart();
     }
