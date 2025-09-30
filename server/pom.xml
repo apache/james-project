@@ -38,7 +38,6 @@
     <inceptionYear>2002</inceptionYear>
 
     <modules>
-        <module>apps/cassandra-app</module>
         <module>apps/cli</module>
         <module>apps/cli-integration-tests</module>
         <module>apps/distributed-app</module>
