@@ -1,4 +1,0 @@
-#!/bin/bash
-
-unset JAVA_TOOL_OPTIONS
-java -cp /root/resources:/root/classes:/root/libs/* -Dlogback.configurationFile=/root/conf/logback-cli.xml org.apache.james.cli.ServerCmd "$@"
