@@ -43,7 +43,8 @@ public interface RuleFixture {
                 .stream()
                 .map(Throwing.function(MailAddress::new))
                 .collect(ImmutableList.toImmutableList()))
-            .keepACopy()));
+            .keepACopy()),
+        Optional.of(new Rule.Action.MoveTo("Trash")));
     Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).conditionGroup(CONDITION).action(ACTION);
     Rule RULE_1 = RULE_BUILDER.id(Rule.Id.of("1")).build();
     Rule RULE_1_MODIFIED = Rule.builder()

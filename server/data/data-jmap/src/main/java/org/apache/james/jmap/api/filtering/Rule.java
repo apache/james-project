@@ -376,6 +376,39 @@ public class Rule {
             }
         }
 
+        public static class MoveTo {
+            private final String mailboxName;
+
+            public MoveTo(String mailboxName) {
+                this.mailboxName = mailboxName;
+            }
+
+            public String getMailboxName() {
+                return mailboxName;
+            }
+
+            @Override
+            public final boolean equals(Object o) {
+                if (o instanceof MoveTo) {
+                    MoveTo moveTo = (MoveTo) o;
+                    return Objects.equals(mailboxName, moveTo.mailboxName);
+                }
+                return false;
+            }
+
+            @Override
+            public final int hashCode() {
+                return Objects.hash(mailboxName);
+            }
+
+            @Override
+            public String toString() {
+                return MoreObjects.toStringHelper(this)
+                    .add("mailboxName", mailboxName)
+                    .toString();
+            }
+        }
+
         public static class Builder {
             private AppendInMailboxes appendInMailboxes;
             private boolean markAsSeen;
@@ -383,6 +416,7 @@ public class Rule {
             private boolean reject;
             private List<String> withKeywords;
             private Optional<Forward> forward;
+            private Optional<MoveTo> moveTo;
 
             public Builder setAppendInMailboxes(AppendInMailboxes appendInMailboxes) {
                 this.appendInMailboxes = appendInMailboxes;
@@ -419,6 +453,11 @@ public class Rule {
                 return this;
             }
 
+            public Builder setMoveTo(Optional<MoveTo> moveTo) {
+                this.moveTo = moveTo;
+                return this;
+            }
+
             public Action build() {
                 appendInMailboxes = Optional.ofNullable(appendInMailboxes)
                     .orElse(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()));
@@ -426,8 +465,10 @@ public class Rule {
                     .orElse(ImmutableList.of());
                 forward = Optional.ofNullable(forward)
                     .orElse(Optional.empty());
+                moveTo = Optional.ofNullable(moveTo)
+                    .orElse(Optional.empty());
 
-                return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, forward);
+                return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, forward, moveTo);
             }
         }
 
@@ -436,16 +477,18 @@ public class Rule {
         }
 
         public static Action of(AppendInMailboxes appendInMailboxes) {
-            return new Action(appendInMailboxes, false, false, false, ImmutableList.of(), Optional.empty());
+            return new Action(appendInMailboxes, false, false, false, ImmutableList.of(), Optional.empty(),
+                Optional.empty());
         }
 
         public static Action of(AppendInMailboxes appendInMailboxes, boolean markAsSeen, boolean markAsImportant, boolean reject, List<String> withKeywords) {
-            return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, Optional.empty());
+            return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, Optional.empty(), Optional.empty());
         }
 
         public static Action of(AppendInMailboxes appendInMailboxes, boolean markAsSeen, boolean markAsImportant,
-                                boolean reject, List<String> withKeywords, Optional<Forward> forward) {
-            return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, forward);
+                                boolean reject, List<String> withKeywords, Optional<Forward> forward,
+                                Optional<MoveTo> moveTo) {
+            return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, forward, moveTo);
         }
 
         private final AppendInMailboxes appendInMailboxes;
@@ -454,15 +497,18 @@ public class Rule {
         private final boolean reject;
         private final List<String> withKeywords;
         private final Optional<Forward> forward;
+        private final Optional<MoveTo> moveTo;
 
         private Action(AppendInMailboxes appendInMailboxes, boolean markAsSeen, boolean markAsImportant,
-                       boolean reject, List<String> withKeywords, Optional<Forward> forward) {
+                       boolean reject, List<String> withKeywords, Optional<Forward> forward,
+                       Optional<MoveTo> moveTo) {
             this.appendInMailboxes = appendInMailboxes;
             this.markAsSeen = markAsSeen;
             this.markAsImportant = markAsImportant;
             this.reject = reject;
             this.withKeywords = withKeywords;
             this.forward = forward;
+            this.moveTo = moveTo;
         }
         
         public AppendInMailboxes getAppendInMailboxes() {
@@ -489,6 +535,10 @@ public class Rule {
             return forward;
         }
 
+        public Optional<MoveTo> getMoveTo() {
+            return moveTo;
+        }
+
         @Override
         public final boolean equals(Object o) {
             if (o instanceof Action) {
@@ -498,14 +548,15 @@ public class Rule {
                     && Objects.equals(markAsImportant, action.markAsImportant)
                     && Objects.equals(reject, action.reject)
                     && Objects.equals(withKeywords, action.withKeywords)
-                    && Objects.equals(forward, action.forward);
+                    && Objects.equals(forward, action.forward)
+                    && Objects.equals(moveTo, action.moveTo);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(appendInMailboxes, markAsImportant, markAsSeen, reject, withKeywords, forward);
+            return Objects.hash(appendInMailboxes, markAsImportant, markAsSeen, reject, withKeywords, forward, moveTo);
         }
 
         @Override
@@ -517,6 +568,7 @@ public class Rule {
                 .add("reject", reject)
                 .add("withKeywords", withKeywords)
                 .add("forward", forward)
+                .add("moveTo", moveTo)
                 .toString();
         }
     }

@@ -224,13 +224,48 @@ public class RuleDTO {
             }
         }
 
+        public static class MoveToDTO {
+            public static MoveToDTO from(Rule.Action.MoveTo moveTo) {
+                return new MoveToDTO(moveTo.getMailboxName());
+            }
+
+            private final String mailboxName;
+
+            public MoveToDTO(@JsonProperty("mailboxName") String mailboxName) {
+                this.mailboxName = mailboxName;
+            }
+
+            public String getMailboxName() {
+                return mailboxName;
+            }
+
+            public Rule.Action.MoveTo toMoveTo() {
+                return new Rule.Action.MoveTo(mailboxName);
+            }
+
+            @Override
+            public final boolean equals(Object o) {
+                if (o instanceof MoveToDTO) {
+                    MoveToDTO that = (MoveToDTO) o;
+                    return Objects.equals(this.mailboxName, that.mailboxName);
+                }
+                return false;
+            }
+
+            @Override
+            public final int hashCode() {
+                return Objects.hash(mailboxName);
+            }
+        }
+
         public static ActionDTO from(Rule.Action action) {
             return new ActionDTO(AppendInMailboxesDTO.from(action.getAppendInMailboxes()),
                 action.isMarkAsSeen(),
                 action.isMarkAsImportant(),
                 action.isReject(),
                 ImmutableList.copyOf(action.getWithKeywords()),
-                action.getForward().map(ForwardDTO::from));
+                action.getForward().map(ForwardDTO::from),
+                action.getMoveTo().map(MoveToDTO::from));
         }
 
         @JsonCreator
@@ -239,13 +274,15 @@ public class RuleDTO {
                          @JsonProperty("important") boolean important,
                          @JsonProperty("reject") boolean reject,
                          @JsonProperty("keywords") @JsonSetter(nulls = Nulls.AS_EMPTY)  List<String> keyworkds,
-                         @JsonProperty("forwardTo") Optional<ForwardDTO> forwardTo) {
+                         @JsonProperty("forwardTo") Optional<ForwardDTO> forwardTo,
+                         @JsonProperty("moveTo") Optional<MoveToDTO> moveTo) {
             this.appendIn = appendIn;
             this.keyworkds = keyworkds;
             this.seen = seen;
             this.important = important;
             this.reject = reject;
             this.forwardTo = forwardTo;
+            this.moveTo = moveTo;
         }
 
         private final AppendInMailboxesDTO appendIn;
@@ -254,6 +291,7 @@ public class RuleDTO {
         private final boolean reject;
         private final List<String> keyworkds;
         private Optional<ForwardDTO> forwardTo;
+        private Optional<MoveToDTO> moveTo;
 
         public AppendInMailboxesDTO getAppendIn() {
             return appendIn;
@@ -279,13 +317,18 @@ public class RuleDTO {
             return forwardTo;
         }
 
+        public Optional<MoveToDTO> getMoveTo() {
+            return moveTo;
+        }
+
         public Rule.Action toAction() {
             return Rule.Action.of(appendIn.toAppendInMailboxes(),
                 isSeen(),
                 isImportant(),
                 isReject(),
                 getKeyworkds(),
-                forwardTo.map(ForwardDTO::toForward));
+                forwardTo.map(ForwardDTO::toForward),
+                moveTo.map(MoveToDTO::toMoveTo));
         }
 
         @Override
