@@ -26,12 +26,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import jakarta.mail.Flags.Flag;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.jmap.mail.Keyword;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.field.DateTimeFieldLenientImpl;
 import org.apache.james.mime4j.stream.RawField;
@@ -42,6 +42,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+
+import scala.util.Either;
 
 public interface ContentMatcher {
 
@@ -99,27 +101,25 @@ public interface ContentMatcher {
     }
 
     class ParsedFlag {
-        private final Optional<Flag> flag;
+        private final Optional<Keyword> keyword;
 
         private ParsedFlag(String flag) {
-            this.flag = parseFlag(flag);
+            this.keyword = parseFlag(flag);
         }
 
-        private Optional<Flag> parseFlag(String maybeFlag) {
+        private Optional<Keyword> parseFlag(String maybeFlag) {
             if (maybeFlag == null) {
                 return Optional.empty();
             }
 
             String sanitizedFlag = sanitizeFlag(maybeFlag).trim().toUpperCase();
 
-            switch (sanitizedFlag) {
-                case "ANSWERED": return Optional.of(Flag.ANSWERED);
-                case "DELETED":  return Optional.of(Flag.DELETED);
-                case "DRAFT":    return Optional.of(Flag.DRAFT);
-                case "FLAGGED":  return Optional.of(Flag.FLAGGED);
-                case "RECENT":   return Optional.of(Flag.RECENT);
-                case "SEEN":     return Optional.of(Flag.SEEN);
-                default:         return Optional.empty();
+            Either<String, Keyword> result = Keyword.parse(sanitizedFlag);
+
+            if (result.isRight()) {
+                return Optional.of(result.right().get());
+            } else {
+                return Optional.empty();
             }
         }
 
@@ -131,9 +131,9 @@ public interface ContentMatcher {
         }
 
         boolean matches(ParsedFlag otherFlag) {
-            return flag.map(flag1 ->
-                    otherFlag.flag
-                        .map(flag2 -> flag1 == flag2)
+            return keyword.map(keyword1 ->
+                    otherFlag.keyword
+                        .map(keyword2 -> keyword1.getFlagName().equals(keyword2.getFlagName()))
                         .orElse(false))
                 .orElse(false);
         }

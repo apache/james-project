@@ -146,7 +146,11 @@ public interface RuleFixture {
             Rule.Condition.of(
                 Rule.Condition.FixedField.FLAG,
                 Rule.Condition.Comparator.IS_UNSET,
-                "\\Recent"))
+                "\\Recent"),
+            Rule.Condition.of(
+                Rule.Condition.FixedField.FLAG,
+                Rule.Condition.Comparator.IS_SET,
+                "custom"))
         .build();
 
     Rule RULE_TO_2 = Rule.builder()

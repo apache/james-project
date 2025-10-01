@@ -891,7 +891,8 @@ public class RunRulesOnMailboxRoutesTest {
 
         messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-                .withFlags(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build())
+                .withFlags(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN)
+                    .build())
                 .build(Message.Builder.of()
                     .setSubject("plop")
                     .setFrom("alice@example.com")
@@ -900,7 +901,9 @@ public class RunRulesOnMailboxRoutesTest {
 
         messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-                .withFlags(new FlagsBuilder().add(Flags.Flag.ANSWERED).build())
+                .withFlags(new FlagsBuilder().add(Flags.Flag.ANSWERED)
+                    .add("custom")
+                    .build())
                 .build(Message.Builder.of()
                     .setSubject("hello")
                     .setFrom("alice@example.com")
@@ -909,7 +912,9 @@ public class RunRulesOnMailboxRoutesTest {
 
         messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-                .withFlags(new FlagsBuilder().add(Flags.Flag.SEEN).build())
+                .withFlags(new FlagsBuilder().add(Flags.Flag.SEEN)
+                    .add("custom")
+                    .build())
                 .build(Message.Builder.of()
                     .setSubject("hello")
                     .setFrom("bob@example.com")
@@ -945,6 +950,11 @@ public class RunRulesOnMailboxRoutesTest {
                     "comparator": "isUnset",
                     "field": "flag",
                     "value": "Flagged"
+                  },
+                  {
+                    "comparator": "isSet",
+                    "field": "flag",
+                    "value": "custom"
                   }
                 ]
               }

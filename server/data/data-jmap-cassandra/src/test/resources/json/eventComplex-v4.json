@@ -43,6 +43,11 @@
             "field": "flag",
             "comparator": "isUnset",
             "value": "\\Recent"
+          },
+          {
+            "field": "flag",
+            "comparator": "isSet",
+            "value": "custom"
           }
         ]
       },

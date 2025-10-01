@@ -1782,6 +1782,13 @@ Resource name `usernameToBeUsed` should be an existing user.
 
 Resource name `mailboxName` should not be empty, nor contain `% *` characters, nor starting with `#`.
 
+The rule json payload has some extra conditions available compared to the JMAP filtering mailet as some operations would make sense:
+
+- Flags:
+    * fields: flag
+    * comparators: isSet, isUnset
+    * values: system flag ("Seen", "Flagged", etc) or a custom user flag.
+
 Response codes:
 
 * 201: Success. Corresponding task id is returned.
