@@ -267,6 +267,21 @@ public class FilterIntegrationTest {
         }
 
         @Test
+        void moveToShouldCreateMailboxWhenMailboxDoesNotExist() throws Exception {
+            filteringManagementProbe.defineRulesForUser(BOB, asRule(Action.builder()
+                .setMoveTo(Optional.of(new Action.MoveTo("customMailbox")))));
+
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(ALICE.asString(), PASSWORD)
+                .sendMessage(ALICE.asString(), BOB.asString());
+
+            imapClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(BOB, PASSWORD)
+                .select("customMailbox")
+                .awaitMessageCount(Constants.awaitAtMostOneMinute, 1);
+        }
+
+        @Test
         void moveToWithAppendInShouldWork() throws Exception {
             MailboxProbeImpl mailboxProbe = jamesServer.getProbe(MailboxProbeImpl.class);
             MailboxId archiveMailboxId = mailboxProbe.createMailbox("#private", BOB.asString(), DefaultMailboxes.ARCHIVE);
