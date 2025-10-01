@@ -41,6 +41,32 @@ Change list:
  - [JAMES-1409 Change JPARecipientRewriteTable to store separate record per target address](#james-1409-change-jparecipientrewritetable-to-store-separate-record-per-target-address)
  - [JAMES-4118 Cleanup message previews](#james-4118-cleanup-message-previews)
  - [JAMES-4128 Breaking Mailet API changes](#james-4128-breaking-mailet-api-changes)
+ - [JAMES-4142 Cassandra upgrade to version 5](#james-4142-cassandra-upgrade-to-version-5)
+
+### JAMES-4142 Cassandra upgrade to version 5
+
+Date: 01/08/2025
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-4142
+
+A breaking change was introduced in Cassandra 5.0 regarding a compression option that changed name from `chunk_length_kb`
+to `chunk_length_in_kb`, which creates issues with the dedicated java driver for Cassandra.
+
+As such, the compression has been dropped on the following tables at creation:
+
+- CassandraBlobCacheDataDefinition: `blob_cache` table.
+- CassandraMailboxDataDefinition: `mailbox` table.
+- CassandraMessageDataDefinition: `imapUidTable` table.
+- CassandraMessageFastViewProjectionDataDefinition: `message_fast_view_projection` table.
+
+If tables exist already and upgrade is done from Cassandra 4 to 5, nothing to do, the change in compression should be migrated.
+
+If you need are on a new setup and need compression on those tables, you can do this manually for each table via cqlsh with Cassandra,
+like the following command:
+
+```
+ALTER TABLE james_keyspace.mailbox WITH compression = {'class': 'LZ4Compressor', 'chunk_length_in_kb': '8', 'crc_check_chance': '1.0'};
+```
 
 ### JAMES-4128 Breaking Mailet API changes
 Date: 02/04/2025
