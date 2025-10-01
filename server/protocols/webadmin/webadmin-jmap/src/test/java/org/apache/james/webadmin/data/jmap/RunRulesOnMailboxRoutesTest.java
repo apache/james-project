@@ -387,6 +387,79 @@ public class RunRulesOnMailboxRoutesTest {
     }
 
     @Test
+    void runRulesOnMailboxShouldSupportMoveToMailboxWhenMatchingMessageAndTargetMailboxDoesNotExist() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+        MailboxPath moveToMailboxPath = MailboxPath.forUser(USERNAME, MOVE_TO_MAILBOX_NAME);
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+        mailboxManager.createMailbox(mailboxPath, systemSession);
+
+        mailboxManager.getMailbox(mailboxPath, systemSession)
+            .appendMessage(MessageManager.AppendCommand.builder()
+                    .build(Message.Builder.of()
+                        .setSubject("plop")
+                        .setFrom("alice@example.com")
+                        .setBody("body", StandardCharsets.UTF_8)),
+                systemSession);
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body("""
+                {
+                  "id": "1",
+                  "name": "rule 1",
+                  "action": {
+                    "appendIn": {
+                      "mailboxIds": []
+                    },
+                    "moveTo": {
+                      "mailboxName": "%s"
+                    },
+                    "important": false,
+                    "keyworkds": [],
+                    "reject": false,
+                    "seen": false
+                  },
+                  "conditionGroup": {
+                    "conditionCombiner": "OR",
+                    "conditions": [
+                      {
+                        "comparator": "contains",
+                        "field": "subject",
+                        "value": "plop"
+                      },
+                      {
+                        "comparator": "exactly-equals",
+                        "field": "from",
+                        "value": "bob@example.com"
+                      }
+                    ]
+                  }
+                }"""
+                .formatted(MOVE_TO_MAILBOX_NAME))
+            .post(MAILBOX_NAME + "/messages")
+        .then()
+            .statusCode(CREATED_201)
+            .extract()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+            .when()
+            .get(taskId + "/await");
+
+        SoftAssertions.assertSoftly(
+            softly -> {
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(0);
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(moveToMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(1);
+            }
+        );
+    }
+
+    @Test
     void runRulesOnMailboxShouldNotMoveToMailboxNameWhenNonMatchingMessage() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
         MailboxPath otherMailboxPath = MailboxPath.forUser(USERNAME, OTHER_MAILBOX_NAME);
