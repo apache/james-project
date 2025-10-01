@@ -672,7 +672,7 @@
         <lucene.version>10.2.1</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>7.0.0</guice.version>
-        <logback.version>1.5.18</logback.version>
+        <logback.version>1.5.19</logback.version>
         <tink.version>1.17.0</tink.version>
         <lettuce.core.version>6.7.1.RELEASE</lettuce.core.version>
         <io.micrometer.core.version>1.15.1</io.micrometer.core.version>
