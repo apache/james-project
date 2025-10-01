@@ -1,5 +1,6 @@
 <perSessionCommandThrottling>
     <select>
+        <resetOn>APPEND</resetOn>
         <thresholdCount>25</thresholdCount>
         <additionalDelayPerOperation>2ms</additionalDelayPerOperation>
         <observationPeriod>10m</observationPeriod>

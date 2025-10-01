@@ -22,6 +22,7 @@ package org.apache.james.imapserver.netty;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -41,11 +42,11 @@ class IMAPCommandsThrottlerTest {
         void shouldLoad() throws Exception {
             HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("commandsThrottling.xml"));
 
-            var selectEntry = new ThrottlerConfigurationEntry(25, Duration.ofMillis(2), Duration.ofMinutes(10), Duration.ofSeconds(1));
-            var appendEntry = new ThrottlerConfigurationEntry(5, Duration.ofMillis(10), Duration.ofMinutes(5), Duration.ofSeconds(2));
+            var selectEntry = new ThrottlerConfigurationEntry(Optional.of("APPEND"), 25, Duration.ofMillis(2), Duration.ofMinutes(10), Duration.ofSeconds(1));
+            var appendEntry = new ThrottlerConfigurationEntry(Optional.empty(), 5, Duration.ofMillis(10), Duration.ofMinutes(5), Duration.ofSeconds(2));
 
             assertThat(ThrottlerConfiguration.from(config))
-                .isEqualTo(new ThrottlerConfiguration(
+                .isEqualTo(ThrottlerConfiguration.from(
                     ImmutableMap.of(
                         "SELECT", selectEntry,
                         "APPEND", appendEntry)));
@@ -56,28 +57,28 @@ class IMAPCommandsThrottlerTest {
     class DelayTest {
         @Test
         void shouldNotDelayWhenBelowThreshold() {
-            var selectEntry = new ThrottlerConfigurationEntry(25, Duration.ofMillis(2), Duration.ofMinutes(10), Duration.ofSeconds(1));
+            var selectEntry = new ThrottlerConfigurationEntry(Optional.empty(), 25, Duration.ofMillis(2), Duration.ofMinutes(10), Duration.ofSeconds(1));
 
             assertThat(selectEntry.delayMSFor(24)).isZero();
         }
 
         @Test
         void shouldDelayWhenThreshold() {
-            var selectEntry = new ThrottlerConfigurationEntry(25, Duration.ofMillis(2), Duration.ofMinutes(10), Duration.ofSeconds(1));
+            var selectEntry = new ThrottlerConfigurationEntry(Optional.empty(), 25, Duration.ofMillis(2), Duration.ofMinutes(10), Duration.ofSeconds(1));
 
             assertThat(selectEntry.delayMSFor(25)).isEqualTo(50);
         }
 
         @Test
         void shouldAdditionalDelayWhenAboveThreshold() {
-            var selectEntry = new ThrottlerConfigurationEntry(25, Duration.ofMillis(2), Duration.ofMinutes(10), Duration.ofSeconds(1));
+            var selectEntry = new ThrottlerConfigurationEntry(Optional.empty(), 25, Duration.ofMillis(2), Duration.ofMinutes(10), Duration.ofSeconds(1));
 
             assertThat(selectEntry.delayMSFor(26)).isEqualTo(52);
         }
 
         @Test
         void shouldNotExceedMaximumDelay() {
-            var selectEntry = new ThrottlerConfigurationEntry(25, Duration.ofMillis(2), Duration.ofMinutes(10), Duration.ofSeconds(1));
+            var selectEntry = new ThrottlerConfigurationEntry(Optional.empty(), 25, Duration.ofMillis(2), Duration.ofMinutes(10), Duration.ofSeconds(1));
 
             assertThat(selectEntry.delayMSFor(2600)).isEqualTo(1000);
         }
