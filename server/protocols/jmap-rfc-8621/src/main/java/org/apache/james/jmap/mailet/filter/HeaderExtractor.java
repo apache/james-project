@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import jakarta.mail.Flags.Flag;
 import jakarta.mail.Message;
 import jakarta.mail.internet.InternetAddress;
 
@@ -51,12 +50,7 @@ public interface HeaderExtractor extends ThrowingFunction<FilteringHeaders, Stre
     HeaderExtractor SENT_EXTRACTOR = headers -> StreamUtils.ofNullables(headers.getHeader("Date"));
     HeaderExtractor RECIPIENT_EXTRACTOR = and(TO_EXTRACTOR, CC_EXTRACTOR);
     HeaderExtractor FROM_EXTRACTOR = addressExtractor(filteringHeaders -> filteringHeaders.getHeader(FROM), FROM);
-    HeaderExtractor FLAG_ANSWERED_EXTRACTOR = headers -> StreamUtils.ofNullables(headers.getFlag(Flag.ANSWERED));
-    HeaderExtractor FLAG_FLAGGED_EXTRACTOR = headers -> StreamUtils.ofNullables(headers.getFlag(Flag.FLAGGED));
-    HeaderExtractor FLAG_DELETED_EXTRACTOR = headers -> StreamUtils.ofNullables(headers.getFlag(Flag.DELETED));
-    HeaderExtractor FLAG_DRAFT_EXTRACTOR = headers -> StreamUtils.ofNullables(headers.getFlag(Flag.DRAFT));
-    HeaderExtractor FLAG_RECENT_EXTRACTOR = headers -> StreamUtils.ofNullables(headers.getFlag(Flag.RECENT));
-    HeaderExtractor FLAG_SEEN_EXTRACTOR = headers -> StreamUtils.ofNullables(headers.getFlag(Flag.SEEN));
+    HeaderExtractor FLAG_EXTRACTOR = FilteringHeaders::getFlags;
 
     Map<Rule.Condition.Field, HeaderExtractor> HEADER_EXTRACTOR_REGISTRY = ImmutableMap.<Rule.Condition.Field, HeaderExtractor>builder()
         .put(Rule.Condition.FixedField.SUBJECT, SUBJECT_EXTRACTOR)
@@ -67,12 +61,7 @@ public interface HeaderExtractor extends ThrowingFunction<FilteringHeaders, Stre
         .put(Rule.Condition.FixedField.FROM, FROM_EXTRACTOR)
         .put(Rule.Condition.FixedField.CC, CC_EXTRACTOR)
         .put(Rule.Condition.FixedField.TO, TO_EXTRACTOR)
-        .put(Rule.Condition.FixedField.FLAG, FLAG_ANSWERED_EXTRACTOR)
-        .put(Rule.Condition.FixedField.FLAG, FLAG_FLAGGED_EXTRACTOR)
-        .put(Rule.Condition.FixedField.FLAG, FLAG_DELETED_EXTRACTOR)
-        .put(Rule.Condition.FixedField.FLAG, FLAG_DRAFT_EXTRACTOR)
-        .put(Rule.Condition.FixedField.FLAG, FLAG_RECENT_EXTRACTOR)
-        .put(Rule.Condition.FixedField.FLAG, FLAG_SEEN_EXTRACTOR)
+        .put(Rule.Condition.FixedField.FLAG, FLAG_EXTRACTOR)
         .build();
 
     boolean STRICT_PARSING = true;

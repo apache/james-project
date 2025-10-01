@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.stream.Stream;
 
-import jakarta.mail.Flags.Flag;
 import jakarta.mail.MessagingException;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -67,7 +66,7 @@ public interface FilteringHeaders {
         }
 
         @Override
-        public String getFlag(Flag flag) {
+        public Stream<String> getFlags() {
             throw new NotImplementedException("Not implemented");
         }
     }
@@ -120,11 +119,10 @@ public interface FilteringHeaders {
         }
 
         @Override
-        public String getFlag(Flag flag) {
-            if (messageResult.getFlags().contains(flag)) {
-                return flag.toString();
-            }
-            return null;
+        public Stream<String> getFlags() {
+            return Arrays.stream(messageResult.getFlags()
+                .toString()
+                .split(" "));
         }
     }
 
@@ -136,5 +134,5 @@ public interface FilteringHeaders {
 
     Stream<String> getSavedDate();
 
-    String getFlag(Flag flag);
+    Stream<String> getFlags();
 }

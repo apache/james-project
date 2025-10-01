@@ -41,6 +41,7 @@ import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOConverter;
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
@@ -48,10 +49,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
@@ -890,36 +889,32 @@ public class RunRulesOnMailboxRoutesTest {
 
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, systemSession);
 
-        ComposedMessageId messageId1 = messageManager.appendMessage(
+        messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
+                .withFlags(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build())
                 .build(Message.Builder.of()
                     .setSubject("plop")
                     .setFrom("alice@example.com")
                     .setBody("body", StandardCharsets.UTF_8)),
             systemSession).getId();
 
-        messageManager.setFlags(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(messageId1.getUid()), systemSession);
-        messageManager.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(messageId1.getUid()), systemSession);
-
-        ComposedMessageId messageId2 = messageManager.appendMessage(
+        messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
+                .withFlags(new FlagsBuilder().add(Flags.Flag.ANSWERED).build())
                 .build(Message.Builder.of()
                     .setSubject("hello")
                     .setFrom("alice@example.com")
                     .setBody("body", StandardCharsets.UTF_8)),
             systemSession).getId();
 
-        messageManager.setFlags(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(messageId2.getUid()), systemSession);
-
-        ComposedMessageId messageId3 = messageManager.appendMessage(
+        messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
+                .withFlags(new FlagsBuilder().add(Flags.Flag.SEEN).build())
                 .build(Message.Builder.of()
                     .setSubject("hello")
                     .setFrom("bob@example.com")
                     .setBody("body", StandardCharsets.UTF_8)),
             systemSession).getId();
-
-        messageManager.setFlags(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, MessageRange.one(messageId3.getUid()), systemSession);
 
         MailboxId otherMailboxId = mailboxManager.getMailbox(otherMailboxPath, systemSession).getId();
 
@@ -944,12 +939,12 @@ public class RunRulesOnMailboxRoutesTest {
                   {
                     "comparator": "isSet",
                     "field": "flag",
-                    "value": "\\Seen"
+                    "value": "Seen"
                   },
                   {
                     "comparator": "isUnset",
                     "field": "flag",
-                    "value": "\\Flagged"
+                    "value": "Flagged"
                   }
                 ]
               }

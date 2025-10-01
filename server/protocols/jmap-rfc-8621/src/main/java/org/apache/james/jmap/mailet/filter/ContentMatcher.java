@@ -164,7 +164,7 @@ public interface ContentMatcher {
         ParsedFlag flagToMatch = new ParsedFlag(valueToMatch);
         return contents
             .map(ParsedFlag::new)
-            .anyMatch(flag -> !flag.matches(flagToMatch));
+            .noneMatch(flag -> flag.matches(flagToMatch));
     };
     ContentMatcher STRING_NOT_CONTAINS_MATCHER = negate(STRING_CONTAINS_MATCHER);
     ContentMatcher STRING_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.equals(content, valueToMatch));
