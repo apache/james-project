@@ -197,6 +197,8 @@ The user can declare the list of commands on which throttling needs to be tracke
  would always increase. Duration.
  - `observationPeriod`: the count of observed commands is reset after this period thus stopping delays. Duration.
  - `maxDelay`: maximum value the client will be delayed for.
+- `resetOn`: String. Optional default to none. Needs to be a command name. If specified, this command name will reset
+throttling on this specific entry.
 
 Sample configuration:
 
@@ -209,6 +211,7 @@ Sample configuration:
       <additionalDelayPerOperation>2ms</additionalDelayPerOperation>
       <observationPeriod>10m</observationPeriod>
       <maxDelay>1s</maxDelay>
+      <resetOn>APPEND</resetOn> <!-- Helps mitigate delays in Outlook upon sending email: a full refresh is needed for the operation to complete -->
     </select>
     <append>
       <thresholdCount>5</thresholdCount>

@@ -35,10 +35,13 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.processor.IdProcessor;
 import org.apache.james.util.DurationParser;
 import org.apache.james.util.MDCStructuredLogger;
+import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -50,6 +53,7 @@ public class IMAPCommandsThrottler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(IMAPCommandsThrottler.class);
 
     public record ThrottlerConfigurationEntry(
+        Optional<String> resetOn,
         int thresholdCount,
         Duration additionalDelayPerOperation,
         Duration observationPeriod,
@@ -57,6 +61,7 @@ public class IMAPCommandsThrottler extends ChannelInboundHandlerAdapter {
 
         public static ThrottlerConfigurationEntry from(ImmutableHierarchicalConfiguration configuration) {
             return new ThrottlerConfigurationEntry(
+                Optional.ofNullable(configuration.getString("resetOn", null)),
                 Optional.ofNullable(configuration.getString("thresholdCount", null))
                     .map(Integer::parseInt)
                     .orElseThrow(() -> new IllegalArgumentException("thresholdCount in compulsory for ThrottlerConfigurationEntry")),
@@ -80,15 +85,25 @@ public class IMAPCommandsThrottler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    public record ThrottlerConfiguration(Map<String, ThrottlerConfigurationEntry> entryMap) {
+    public record ThrottlerConfiguration(Map<String, ThrottlerConfigurationEntry> entryMap,
+                                         Multimap<String, String> resetTriggers) {
         public static ThrottlerConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) {
-            return new ThrottlerConfiguration(configuration.getNodeModel()
+            return ThrottlerConfiguration.from(configuration.getNodeModel()
                 .getNodeHandler()
                 .getRootNode()
                 .getChildren()
                 .stream()
                 .map(key -> Pair.of(key.getNodeName().toUpperCase(Locale.US), ThrottlerConfigurationEntry.from(configuration.immutableConfigurationAt(key.getNodeName()))))
                 .collect(ImmutableMap.toImmutableMap(Pair::key, Pair::value)));
+        }
+
+        public static ThrottlerConfiguration from(Map<String, ThrottlerConfigurationEntry> entryMap) {
+            return new ThrottlerConfiguration(entryMap,
+                entryMap.entrySet().stream()
+                    .filter(e -> e.getValue().resetOn().isPresent())
+                    .collect(ImmutableListMultimap.toImmutableListMultimap(
+                        e -> e.getValue().resetOn().get().toUpperCase(Locale.US),
+                        e -> e.getKey().toUpperCase(Locale.US))));
         }
     }
 
@@ -101,23 +116,42 @@ public class IMAPCommandsThrottler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof ImapRequest imapRequest) {
+            ImapSession session = (ImapSession) ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY);
             String key = imapRequest.getCommand().getName().toUpperCase(Locale.US);
+
+            resetDelaysIfNeeded(key, session);
+
             Optional.ofNullable(configuration.entryMap().get(key))
-                .ifPresentOrElse(configurationEntry -> throttle(ctx, msg, imapRequest, configurationEntry),
+                .ifPresentOrElse(configurationEntry -> throttle(session, ctx, msg, imapRequest, configurationEntry),
                     () -> ctx.fireChannelRead(msg));
         } else {
             ctx.fireChannelRead(msg);
         }
     }
 
-    private static void throttle(ChannelHandlerContext ctx, Object msg, ImapRequest imapRequest, ThrottlerConfigurationEntry configurationEntry) {
-        ImapSession session = (ImapSession) ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY);
+    private void resetDelaysIfNeeded(String key, ImapSession session) {
+        configuration.resetTriggers.get(key).forEach(keyToReset -> {
+            session.setAttribute("imap-applicative-traffic-shaper-counter-" + keyToReset, new AtomicLong(0));
+            structuredLogger(session).log(logger -> logger.info("Reseting delay for {} upon {} on an IMAP session.", keyToReset, key));
+        });
+    }
 
+    private static StructuredLogger structuredLogger(ImapSession session) {
+        return MDCStructuredLogger.forLogger(LOGGER)
+            .field("sessionId", session.sessionId().asString())
+            .field("username", session.getUserName().asString())
+            .field("userAgent", Optional.ofNullable(session.getAttribute(IdProcessor.USER_AGENT))
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .orElse(""));
+    }
+
+    private static void throttle(ImapSession session, ChannelHandlerContext ctx, Object msg, ImapRequest imapRequest, ThrottlerConfigurationEntry configurationEntry) {
         AtomicLong atomicLong = retrieveAssociatedCounter(imapRequest, session, configurationEntry);
         Duration delay = Duration.ofMillis(configurationEntry.delayMSFor(atomicLong.getAndIncrement()));
 
         if (delay.isPositive()) {
-            logDelay(imapRequest, session, delay);
+            structuredLogger(session).log(logger -> logger.info("Delayed command {} on an IMAP session. Delay {} ms", imapRequest.getCommand().getName(), delay.toMillis()));
 
             Mono.delay(delay)
                 .then(Mono.fromRunnable(() -> ctx.fireChannelRead(msg)))
@@ -139,17 +173,5 @@ public class IMAPCommandsThrottler extends ChannelInboundHandlerAdapter {
                 session.schedule(() -> session.setAttribute(key, new AtomicLong(0)), entry.observationPeriod());
                 return res;
             });
-    }
-
-    private static void logDelay(ImapRequest imapRequest, ImapSession session, Duration delay) {
-        MDCStructuredLogger.forLogger(LOGGER)
-            .field("username", session.getUserName().asString())
-            .field("userAgent", Optional.ofNullable(session.getAttribute(IdProcessor.USER_AGENT))
-                .filter(String.class::isInstance)
-                .map(String.class::cast)
-                .orElse(""))
-            .log(logger -> logger.info("Delayed command {} on an IMAP session. Delay {} ms", 
-                imapRequest.getCommand().getName(),
-                delay.toMillis()));
     }
 }
