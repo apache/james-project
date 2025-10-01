@@ -35,6 +35,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxExistsException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -136,6 +138,12 @@ public class RunRulesOnMailboxService {
 
     private Mono<MailboxId> getMailboxId(MailboxSession mailboxSession, MailboxPath mailboxPath) {
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
-            .map(MessageManager::getId);
+            .map(MessageManager::getId)
+            .onErrorResume(MailboxNotFoundException.class, e -> Mono.from(mailboxManager.createMailboxReactive(mailboxPath, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, mailboxSession))
+                .onErrorResume(MailboxExistsException.class, e2 -> {
+                    LOGGER.info("Mailbox {} created concurrently", mailboxPath.asString());
+                    return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
+                        .map(MessageManager::getId);
+                }));
     }
 }

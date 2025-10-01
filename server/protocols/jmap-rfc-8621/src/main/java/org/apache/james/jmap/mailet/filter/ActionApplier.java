@@ -37,6 +37,8 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -229,19 +231,32 @@ public class ActionApplier {
     }
 
     private Stream<String> validateMailboxName(String mailboxName) {
+        MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         try {
-            MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-            MessageManager messageManager = mailboxManager.getMailbox(MailboxPath.forUser(username, mailboxName), mailboxSession);
-            mailboxManager.endProcessingRequest(mailboxSession);
-
+            MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
             return Stream.of(messageManager.getMailboxPath().getName());
         } catch (MailboxNotFoundException e) {
-            LOGGER.info("Mailbox {} does not exist for user {}, but it was mentioned in a JMAP filtering rule", mailboxName, username.asString(), e);
-            return Stream.empty();
-        } catch (Exception e) {
+            return createMailbox(mailboxName, mailboxPath, mailboxSession);
+        } catch (MailboxException e) {
             LOGGER.error("Unexpected failure while validating mailbox name {} for user {}", mailboxName, username.asString(), e);
             return Stream.empty();
+        } finally {
+            mailboxManager.endProcessingRequest(mailboxSession);
         }
+    }
+
+    private Stream<String> createMailbox(String mailboxName, MailboxPath mailboxPath, MailboxSession mailboxSession) {
+        try {
+            return mailboxManager.createMailbox(mailboxPath, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, mailboxSession)
+                .stream()
+                .map(createdMailbox -> mailboxName);
+        } catch (MailboxExistsException mailboxExistsException) {
+            LOGGER.info("Mailbox {} created by concurrent call", mailboxPath.asString());
+        } catch (MailboxException mailboxException) {
+            LOGGER.error("Failed to provision mailbox {}", mailboxPath.asString(), mailboxException);
+        }
+        return Stream.empty();
     }
 
     private void sendACopy(LoopPrevention.RecordedRecipients recordedRecipients,
