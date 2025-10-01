@@ -27,6 +27,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -37,6 +38,7 @@ public class CassandraEmailQueryViewTest implements EmailQueryViewContract {
     public static final CassandraMessageId MESSAGE_ID_2 = MESSAGE_ID_FACTORY.generate();
     public static final CassandraMessageId MESSAGE_ID_3 = MESSAGE_ID_FACTORY.generate();
     public static final CassandraMessageId MESSAGE_ID_4 = MESSAGE_ID_FACTORY.generate();
+    public static final ThreadId THREAD_ID = ThreadId.fromBaseMessageId(MESSAGE_ID_FACTORY.generate());
 
     @RegisterExtension
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraEmailQueryViewDataDefinition.MODULE);
@@ -76,5 +78,10 @@ public class CassandraEmailQueryViewTest implements EmailQueryViewContract {
     @Override
     public MessageId messageId4() {
         return MESSAGE_ID_4;
+    }
+
+    @Override
+    public ThreadId threadId() {
+        return THREAD_ID;
     }
 }
