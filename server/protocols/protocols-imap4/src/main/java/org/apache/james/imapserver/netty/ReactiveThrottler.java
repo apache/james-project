@@ -128,11 +128,11 @@ public class ReactiveThrottler {
             return one.asMono()
                 .doOnCancel(() -> {
                     cancelled.set(true);
-                    Optional.ofNullable(taskHolder.disposable.get()).ifPresent(Disposable::dispose);
-                    boolean removed = queue.remove(taskHolder);
-                    if (removed) {
-                        concurrentRequests.decrementAndGet();
-                    }
+                    Optional.ofNullable(taskHolder.disposable.get())
+                        .ifPresentOrElse(Disposable::dispose,
+                            // If no Disposable set → task never started,
+                            // but still counted → must release the slot
+                            concurrentRequests::decrementAndGet);
                 });
         } else {
             concurrentRequests.decrementAndGet();
