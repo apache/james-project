@@ -37,12 +37,12 @@
           {
             "field": "flag",
             "comparator": "isSet",
-            "value": "\\Seen"
+            "value": "$seen"
           },
           {
             "field": "flag",
             "comparator": "isUnset",
-            "value": "\\Recent"
+            "value": "$recent"
           },
           {
             "field": "flag",

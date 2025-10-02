@@ -142,11 +142,11 @@ public interface RuleFixture {
             Rule.Condition.of(
                 Rule.Condition.FixedField.FLAG,
                 Rule.Condition.Comparator.IS_SET,
-                "\\Seen"),
+                "$seen"),
             Rule.Condition.of(
                 Rule.Condition.FixedField.FLAG,
                 Rule.Condition.Comparator.IS_UNSET,
-                "\\Recent"),
+                "$recent"),
             Rule.Condition.of(
                 Rule.Condition.FixedField.FLAG,
                 Rule.Condition.Comparator.IS_SET,

@@ -131,11 +131,8 @@ public interface ContentMatcher {
         }
 
         boolean matches(ParsedFlag otherFlag) {
-            return keyword.map(keyword1 ->
-                    otherFlag.keyword
-                        .map(keyword2 -> keyword1.getFlagName().equals(keyword2.getFlagName()))
-                        .orElse(false))
-                .orElse(false);
+            return OptionalUtils.matches(keyword, otherFlag.keyword,
+                (k1, k2) -> k1.getFlagName().equals(k2.getFlagName()));
         }
     }
 
