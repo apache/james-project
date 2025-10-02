@@ -78,6 +78,7 @@ public class ReactiveThrottler {
 
     public ReactiveThrottler(GaugeRegistry gaugeRegistry, int maxConcurrentRequests, int maxQueueSize) {
         gaugeRegistry.register("imap.request.queue.size", () -> Math.max(concurrentRequests.get() - maxConcurrentRequests, 0));
+        gaugeRegistry.register("imap.request.concurrent.count", concurrentRequests::get);
 
         this.maxConcurrentRequests = maxConcurrentRequests;
         this.maxQueueSize = maxQueueSize;
