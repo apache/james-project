@@ -1844,7 +1844,7 @@ The rule json payload has some extra conditions available compared to the JMAP f
 - Flags:
   * field: flag
   * comparators: isSet, isUnset
-  * value: system flag ("Seen", "Flagged", etc) or a custom user flag.
+  * value: system flag ("$seen", "$flagged", etc) or a custom user flag.
 
 - Dates:
   * fields: sentDate, savedDate, internalDate

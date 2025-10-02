@@ -124,7 +124,7 @@ public interface ContentMatcher {
         }
 
         private String sanitizeFlag(String maybeFlag) {
-            if (maybeFlag.startsWith("\\")) {
+            if (maybeFlag.startsWith("\\") || maybeFlag.startsWith("$")) {
                 return maybeFlag.substring(1);
             }
             return maybeFlag;

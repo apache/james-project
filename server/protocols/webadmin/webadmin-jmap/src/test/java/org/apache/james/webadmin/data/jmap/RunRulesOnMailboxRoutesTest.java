@@ -944,12 +944,12 @@ public class RunRulesOnMailboxRoutesTest {
                   {
                     "comparator": "isSet",
                     "field": "flag",
-                    "value": "Seen"
+                    "value": "$seen"
                   },
                   {
                     "comparator": "isUnset",
                     "field": "flag",
-                    "value": "Flagged"
+                    "value": "$flagged"
                   },
                   {
                     "comparator": "isSet",
