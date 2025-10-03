@@ -33,6 +33,21 @@
             "field": "internalDate",
             "comparator": "isNewerThan",
             "value": "2d"
+          },
+          {
+            "field": "flag",
+            "comparator": "isSet",
+            "value": "$seen"
+          },
+          {
+            "field": "flag",
+            "comparator": "isUnset",
+            "value": "$recent"
+          },
+          {
+            "field": "flag",
+            "comparator": "isSet",
+            "value": "custom"
           }
         ]
       },

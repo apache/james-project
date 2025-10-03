@@ -31,6 +31,7 @@ import jakarta.mail.internet.InternetAddress;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.jmap.mail.Keyword;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.field.DateTimeFieldLenientImpl;
 import org.apache.james.mime4j.stream.RawField;
@@ -41,6 +42,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+
+import scala.util.Either;
 
 public interface ContentMatcher {
 
@@ -95,7 +98,42 @@ public interface ContentMatcher {
             return contents.map(ContentMatcher::asAddressHeader)
                 .anyMatch(addressHeaderToMatch::matchesIgnoreCase);
         }
+    }
 
+    class ParsedFlag {
+        private final Optional<Keyword> keyword;
+
+        private ParsedFlag(String flag) {
+            this.keyword = parseFlag(flag);
+        }
+
+        private Optional<Keyword> parseFlag(String maybeFlag) {
+            if (maybeFlag == null) {
+                return Optional.empty();
+            }
+
+            String sanitizedFlag = sanitizeFlag(maybeFlag).trim().toUpperCase();
+
+            Either<String, Keyword> result = Keyword.parse(sanitizedFlag);
+
+            if (result.isRight()) {
+                return Optional.of(result.right().get());
+            } else {
+                return Optional.empty();
+            }
+        }
+
+        private String sanitizeFlag(String maybeFlag) {
+            if (maybeFlag.startsWith("\\") || maybeFlag.startsWith("$")) {
+                return maybeFlag.substring(1);
+            }
+            return maybeFlag;
+        }
+
+        boolean matches(ParsedFlag otherFlag) {
+            return OptionalUtils.matches(keyword, otherFlag.keyword,
+                (k1, k2) -> k1.getFlagName().equals(k2.getFlagName()));
+        }
     }
 
     ContentMatcher STRING_CONTAINS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.contains(content, valueToMatch));
@@ -112,6 +150,18 @@ public interface ContentMatcher {
         return contents
             .map(dateField -> DateTimeFieldLenientImpl.PARSER.parse(new RawField("Date", dateField), DecodeMonitor.SILENT).getDate().toInstant())
             .anyMatch(date -> date.isAfter(horizon));
+    };
+    ContentMatcher FLAG_IS_SET_MATCHER = (contents, valueToMatch) -> {
+        ParsedFlag flagToMatch = new ParsedFlag(valueToMatch);
+        return contents
+            .map(ParsedFlag::new)
+            .anyMatch(flag -> flag.matches(flagToMatch));
+    };
+    ContentMatcher FLAG_IS_UNSET_MATCHER = (contents, valueToMatch) -> {
+        ParsedFlag flagToMatch = new ParsedFlag(valueToMatch);
+        return contents
+            .map(ParsedFlag::new)
+            .noneMatch(flag -> flag.matches(flagToMatch));
     };
     ContentMatcher STRING_NOT_CONTAINS_MATCHER = negate(STRING_CONTAINS_MATCHER);
     ContentMatcher STRING_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.equals(content, valueToMatch));
@@ -130,6 +180,11 @@ public interface ContentMatcher {
     Map<Rule.Condition.Comparator, ContentMatcher> DATE_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
         .put(Rule.Condition.Comparator.IS_NEWER_THAN, IS_NEWER_THAN_MATCHER)
         .put(Rule.Condition.Comparator.IS_OLDER_THAN, IS_OLDER_THAN_MATCHER)
+        .build();
+
+    Map<Rule.Condition.Comparator, ContentMatcher> FLAG_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
+        .put(Rule.Condition.Comparator.IS_SET, FLAG_IS_SET_MATCHER)
+        .put(Rule.Condition.Comparator.IS_UNSET, FLAG_IS_UNSET_MATCHER)
         .build();
 
     Map<Rule.Condition.Comparator, ContentMatcher> HEADER_ADDRESS_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
@@ -157,6 +212,7 @@ public interface ContentMatcher {
         .put(Rule.Condition.FixedField.SENT_DATE, DATE_MATCHER_REGISTRY)
         .put(Rule.Condition.FixedField.INTERNAL_DATE, DATE_MATCHER_REGISTRY)
         .put(Rule.Condition.FixedField.SAVED_DATE, DATE_MATCHER_REGISTRY)
+        .put(Rule.Condition.FixedField.FLAG, FLAG_MATCHER_REGISTRY)
         .build();
 
     static ContentMatcher negate(ContentMatcher contentMatcher) {
