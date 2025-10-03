@@ -167,6 +167,7 @@ public interface ContentMatcher {
     ContentMatcher STRING_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.equals(content, valueToMatch));
     ContentMatcher STRING_NOT_EXACTLY_EQUALS_MATCHER = negate(STRING_EXACTLY_EQUALS_MATCHER);
     ContentMatcher STRING_START_WITH_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> content.startsWith(valueToMatch));
+    ContentMatcher ANY_MATCHER = (contents, valueToMatch) -> contents.anyMatch(StringUtils::isNotBlank);
 
     ContentMatcher ADDRESS_CONTAINS_MATCHER = (contents, valueToMatch) -> contents
         .map(ContentMatcher::asAddressHeader)
@@ -201,6 +202,7 @@ public interface ContentMatcher {
         .put(Rule.Condition.Comparator.EXACTLY_EQUALS, STRING_EXACTLY_EQUALS_MATCHER)
         .put(Rule.Condition.Comparator.NOT_EXACTLY_EQUALS, STRING_NOT_EXACTLY_EQUALS_MATCHER)
         .put(Rule.Condition.Comparator.START_WITH, STRING_START_WITH_MATCHER)
+        .put(Rule.Condition.Comparator.ANY, ANY_MATCHER)
         .build();
 
     Map<Rule.Condition.Field, Map<Rule.Condition.Comparator, ContentMatcher>> CONTENT_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Field, Map<Rule.Condition.Comparator, ContentMatcher>>builder()
