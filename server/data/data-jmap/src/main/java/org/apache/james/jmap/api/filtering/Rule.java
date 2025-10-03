@@ -151,7 +151,8 @@ public class Rule {
             public static Field SENT_DATE = new FixedField("sentDate");
             public static Field SAVED_DATE = new FixedField("savedDate");
             public static Field INTERNAL_DATE = new FixedField("internalDate");
-            public static final ImmutableList<Field> VALUES = ImmutableList.of(FROM, TO, CC, SUBJECT, RECIPIENT, SENT_DATE, SAVED_DATE, INTERNAL_DATE);
+            public static Field FLAG = new FixedField("flag");
+            public static final ImmutableList<Field> VALUES = ImmutableList.of(FROM, TO, CC, SUBJECT, RECIPIENT, SENT_DATE, SAVED_DATE, INTERNAL_DATE, FLAG);
 
             public static Optional<Field> find(String fieldName) {
                 return VALUES.stream()
@@ -186,7 +187,9 @@ public class Rule {
             NOT_CONTAINS("not-contains"),
             EXACTLY_EQUALS("exactly-equals"),
             NOT_EXACTLY_EQUALS("not-exactly-equals"),
-            START_WITH("start-with");
+            START_WITH("start-with"),
+            IS_SET("isSet"),
+            IS_UNSET("isUnset");
             
             public static Optional<Comparator> find(String comparatorName) {
                 return Arrays.stream(values())

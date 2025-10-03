@@ -50,6 +50,7 @@ public interface HeaderExtractor extends ThrowingFunction<FilteringHeaders, Stre
     HeaderExtractor SENT_EXTRACTOR = headers -> StreamUtils.ofNullables(headers.getHeader("Date"));
     HeaderExtractor RECIPIENT_EXTRACTOR = and(TO_EXTRACTOR, CC_EXTRACTOR);
     HeaderExtractor FROM_EXTRACTOR = addressExtractor(filteringHeaders -> filteringHeaders.getHeader(FROM), FROM);
+    HeaderExtractor FLAG_EXTRACTOR = FilteringHeaders::getFlags;
 
     Map<Rule.Condition.Field, HeaderExtractor> HEADER_EXTRACTOR_REGISTRY = ImmutableMap.<Rule.Condition.Field, HeaderExtractor>builder()
         .put(Rule.Condition.FixedField.SUBJECT, SUBJECT_EXTRACTOR)
@@ -60,6 +61,7 @@ public interface HeaderExtractor extends ThrowingFunction<FilteringHeaders, Stre
         .put(Rule.Condition.FixedField.FROM, FROM_EXTRACTOR)
         .put(Rule.Condition.FixedField.CC, CC_EXTRACTOR)
         .put(Rule.Condition.FixedField.TO, TO_EXTRACTOR)
+        .put(Rule.Condition.FixedField.FLAG, FLAG_EXTRACTOR)
         .build();
 
     boolean STRICT_PARSING = true;

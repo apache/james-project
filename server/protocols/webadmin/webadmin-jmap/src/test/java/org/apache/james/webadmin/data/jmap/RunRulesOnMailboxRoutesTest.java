@@ -37,8 +37,11 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
 
+import jakarta.mail.Flags;
+
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOConverter;
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
@@ -871,6 +874,109 @@ public class RunRulesOnMailboxRoutesTest {
                     .isEqualTo(1);
                 softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(otherMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
                     .isEqualTo(2);
+            }
+        );
+    }
+
+    @Test
+    void runRulesOnMailboxShouldApplyFlagCriteria() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USERNAME, OTHER_MAILBOX_NAME);
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+        mailboxManager.createMailbox(mailboxPath, systemSession);
+        mailboxManager.createMailbox(otherMailboxPath, systemSession);
+
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, systemSession);
+
+        messageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withFlags(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN)
+                    .build())
+                .build(Message.Builder.of()
+                    .setSubject("plop")
+                    .setFrom("alice@example.com")
+                    .setBody("body", StandardCharsets.UTF_8)),
+            systemSession).getId();
+
+        messageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withFlags(new FlagsBuilder().add(Flags.Flag.ANSWERED)
+                    .add("custom")
+                    .build())
+                .build(Message.Builder.of()
+                    .setSubject("hello")
+                    .setFrom("alice@example.com")
+                    .setBody("body", StandardCharsets.UTF_8)),
+            systemSession).getId();
+
+        messageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withFlags(new FlagsBuilder().add(Flags.Flag.SEEN)
+                    .add("custom")
+                    .build())
+                .build(Message.Builder.of()
+                    .setSubject("hello")
+                    .setFrom("bob@example.com")
+                    .setBody("body", StandardCharsets.UTF_8)),
+            systemSession).getId();
+
+        MailboxId otherMailboxId = mailboxManager.getMailbox(otherMailboxPath, systemSession).getId();
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body("""
+            {
+              "id": "1",
+              "name": "rule 1",
+              "action": {
+                "appendIn": {
+                  "mailboxIds": ["%s"]
+                },
+                "important": false,
+                "keyworkds": [],
+                "reject": false,
+                "seen": false
+              },
+              "conditionGroup": {
+                "conditionCombiner": "AND",
+                "conditions": [
+                  {
+                    "comparator": "isSet",
+                    "field": "flag",
+                    "value": "$seen"
+                  },
+                  {
+                    "comparator": "isUnset",
+                    "field": "flag",
+                    "value": "$flagged"
+                  },
+                  {
+                    "comparator": "isSet",
+                    "field": "flag",
+                    "value": "custom"
+                  }
+                ]
+              }
+            }""".formatted(otherMailboxId.serialize()))
+            .post(MAILBOX_NAME + "/messages")
+        .then()
+            .statusCode(CREATED_201)
+            .extract()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await");
+
+        SoftAssertions.assertSoftly(
+            softly -> {
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(2);
+                softly.assertThat(Throwing.supplier(() -> mailboxManager.getMailbox(otherMailboxPath, systemSession).getMailboxCounters(systemSession).getCount()).get())
+                    .isEqualTo(1);
             }
         );
     }

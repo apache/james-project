@@ -138,7 +138,19 @@ public interface RuleFixture {
             Rule.Condition.of(
                 Rule.Condition.FixedField.INTERNAL_DATE,
                 Rule.Condition.Comparator.IS_NEWER_THAN,
-                "2d"))
+                "2d"),
+            Rule.Condition.of(
+                Rule.Condition.FixedField.FLAG,
+                Rule.Condition.Comparator.IS_SET,
+                "$seen"),
+            Rule.Condition.of(
+                Rule.Condition.FixedField.FLAG,
+                Rule.Condition.Comparator.IS_UNSET,
+                "$recent"),
+            Rule.Condition.of(
+                Rule.Condition.FixedField.FLAG,
+                Rule.Condition.Comparator.IS_SET,
+                "custom"))
         .build();
 
     Rule RULE_TO_2 = Rule.builder()
