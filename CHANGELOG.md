@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 No changes yet.
 
-## [3.9.0] - 2025-xx-xx
+## [3.9.0] - 2025-10-03
 
 ### Important changes
 
