@@ -52,6 +52,7 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.api.UsersRepository;
@@ -329,7 +330,8 @@ public class RunRulesOnMailboxRoutesTest {
                     .build(Message.Builder.of()
                         .setSubject("plop")
                         .setFrom("alice@example.com")
-                        .setBody("body", StandardCharsets.UTF_8)),
+                        .setBody("body", StandardCharsets.UTF_8)
+                        .addField(new RawField("X-Custom-Header", "value"))),
                 systemSession);
 
         String taskId = given()
@@ -354,14 +356,9 @@ public class RunRulesOnMailboxRoutesTest {
                     "conditionCombiner": "OR",
                     "conditions": [
                       {
-                        "comparator": "contains",
-                        "field": "subject",
-                        "value": "plop"
-                      },
-                      {
-                        "comparator": "exactly-equals",
-                        "field": "from",
-                        "value": "bob@example.com"
+                        "comparator": "any",
+                        "field": "header:X-Custom-Header",
+                        "value": "disregarded"
                       }
                     ]
                   }
