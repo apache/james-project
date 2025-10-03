@@ -189,7 +189,8 @@ public class Rule {
             NOT_EXACTLY_EQUALS("not-exactly-equals"),
             START_WITH("start-with"),
             IS_SET("isSet"),
-            IS_UNSET("isUnset");
+            IS_UNSET("isUnset"),
+            ANY("any");
             
             public static Optional<Comparator> find(String comparatorName) {
                 return Arrays.stream(values())

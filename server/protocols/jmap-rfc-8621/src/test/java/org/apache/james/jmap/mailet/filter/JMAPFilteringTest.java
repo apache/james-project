@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mailet.filter;
 
 import static org.apache.james.core.builder.MimeMessageBuilder.mimeMessageBuilder;
+import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.ANY;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.CONTAINS;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.EXACTLY_EQUALS;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.IS_NEWER_THAN;
@@ -1188,6 +1189,71 @@ class JMAPFilteringTest {
         assertThatAttribute(oldMail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
             .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
         assertThat(newMail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEmpty();
+    }
+
+    @Test
+    void customHeaderShouldSupportAnyComparator(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.Condition.of(Rule.Condition.CustomHeaderField.find("header:X-Github").get(), ANY, "disregarded"))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
+                .build())).block();
+
+        FakeMail matchMail = testSystem.asMail(mimeMessageBuilder()
+            .addHeader(FROM.asString(), USER_2_ADDRESS)
+            .addHeader(SUBJECT.asString(), "subject")
+            .addHeader("X-Github", "I am Github header"));
+
+        testSystem.getJmapFiltering().service(matchMail);
+
+        assertThatAttribute(matchMail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+    }
+
+    @Test
+    void nonExistingCustomHeaderShouldNotMatchAnyComparator(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.Condition.of(Rule.Condition.CustomHeaderField.find("header:X-Github").get(), ANY, "disregarded"))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
+                .build())).block();
+
+        FakeMail nonMatchMail = testSystem.asMail(mimeMessageBuilder()
+            .addHeader(FROM.asString(), USER_2_ADDRESS)
+            .addHeader(SUBJECT.asString(), "subject"));
+
+        testSystem.getJmapFiltering().service(nonMatchMail);
+
+        assertThat(nonMatchMail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEmpty();
+    }
+
+    @Test
+    void emptyCustomHeaderShouldNotMatchAnyComparator(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.Condition.of(Rule.Condition.CustomHeaderField.find("header:X-Github").get(), ANY, "disregarded"))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
+                .build())).block();
+
+        FakeMail nonMatchMail = testSystem.asMail(mimeMessageBuilder()
+            .addHeader(FROM.asString(), USER_2_ADDRESS)
+            .addHeader(SUBJECT.asString(), "subject")
+            .addHeader("X-Github", ""));
+
+        testSystem.getJmapFiltering().service(nonMatchMail);
+
+        assertThat(nonMatchMail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
             .isEmpty();
     }
 

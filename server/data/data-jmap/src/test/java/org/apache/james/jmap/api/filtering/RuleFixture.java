@@ -57,7 +57,8 @@ public interface RuleFixture {
     Rule RULE_3 = RULE_BUILDER.id(Rule.Id.of("3")).build();
     Rule RULE_4 = Rule.builder()
         .conditionGroup(Rule.ConditionCombiner.AND, CONDITION,
-            Rule.Condition.of(new Rule.Condition.CustomHeaderField("custom"), Rule.Condition.Comparator.CONTAINS, "another thing"))
+            Rule.Condition.of(new Rule.Condition.CustomHeaderField("custom"), Rule.Condition.Comparator.CONTAINS, "another thing"),
+            Rule.Condition.of(new Rule.Condition.CustomHeaderField("anotherCustom"), Rule.Condition.Comparator.ANY, "disregard me"))
         .action(ACTION_2)
         .id(Rule.Id.of("1"))
         .name(NAME)
