@@ -64,6 +64,11 @@ public interface FilteringHeaders {
         public Stream<String> getSavedDate() {
             throw new NotImplementedException("Not implemented");
         }
+
+        @Override
+        public Stream<String> getFlags() {
+            throw new NotImplementedException("Not implemented");
+        }
     }
 
     class MessageResultFilteringHeaders implements FilteringHeaders {
@@ -112,6 +117,13 @@ public interface FilteringHeaders {
             return Stream.of(messageResult.getSaveDate().map(date -> MimeUtil.formatDate(date, TimeZone.getDefault()))
                 .orElse(MimeUtil.formatDate(new Date(), TimeZone.getDefault())));
         }
+
+        @Override
+        public Stream<String> getFlags() {
+            return Arrays.stream(messageResult.getFlags()
+                .toString()
+                .split(" "));
+        }
     }
 
     String[] getHeader(String name) throws Exception;
@@ -121,4 +133,6 @@ public interface FilteringHeaders {
     Stream<String> getInternalDate();
 
     Stream<String> getSavedDate();
+
+    Stream<String> getFlags();
 }
