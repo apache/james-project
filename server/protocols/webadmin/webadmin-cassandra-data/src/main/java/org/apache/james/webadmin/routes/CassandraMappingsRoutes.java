@@ -25,6 +25,7 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.CassandraMappingsService;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.JsonTransformer;
 
@@ -57,7 +58,7 @@ public class CassandraMappingsRoutes implements Routes {
     }
 
     public Route performActionOnMappings() {
-        return TaskFromRequestRegistry.of(SOLVE_INCONSISTENCIES, request -> cassandraMappingsService.solveMappingsSourcesInconsistencies())
+        return TaskFromRequestRegistry.of(SOLVE_INCONSISTENCIES, request -> new SingleTaskHandler(cassandraMappingsService.solveMappingsSourcesInconsistencies()))
             .asRoute(taskManager);
     }
 }

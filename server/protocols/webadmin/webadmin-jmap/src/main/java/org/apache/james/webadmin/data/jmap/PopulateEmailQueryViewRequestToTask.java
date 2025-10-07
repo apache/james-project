@@ -24,11 +24,12 @@ import static org.apache.james.webadmin.data.jmap.Constants.POPULATE_EMAIL_QUERY
 import jakarta.inject.Inject;
 
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 
 public class PopulateEmailQueryViewRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
     @Inject
     PopulateEmailQueryViewRequestToTask(EmailQueryViewPopulator populator) {
         super(POPULATE_EMAIL_QUERY_VIEW,
-            request -> new PopulateEmailQueryViewTask(populator, RunningOptionsParser.parse(request)));
+            request -> new SingleTaskHandler(new PopulateEmailQueryViewTask(populator, RunningOptionsParser.parse(request))));
     }
 }

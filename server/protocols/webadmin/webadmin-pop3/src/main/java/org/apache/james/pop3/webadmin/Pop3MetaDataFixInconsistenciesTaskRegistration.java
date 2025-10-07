@@ -28,6 +28,7 @@ import org.apache.james.pop3server.mailbox.task.MetaDataFixInconsistenciesServic
 import org.apache.james.pop3server.mailbox.task.MetaDataFixInconsistenciesTask;
 import org.apache.james.task.Task;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
 import com.google.common.base.Preconditions;
@@ -39,7 +40,7 @@ public class Pop3MetaDataFixInconsistenciesTaskRegistration extends TaskRegistra
 
     @Inject
     public Pop3MetaDataFixInconsistenciesTaskRegistration(MetaDataFixInconsistenciesService fixInconsistenciesService) {
-        super(REGISTRATION_KEY, request -> fixInconsistencies(fixInconsistenciesService, request));
+        super(REGISTRATION_KEY, request -> new SingleTaskHandler(fixInconsistencies(fixInconsistenciesService, request)));
     }
 
     private static Task fixInconsistencies(MetaDataFixInconsistenciesService fixInconsistenciesService, Request request) {

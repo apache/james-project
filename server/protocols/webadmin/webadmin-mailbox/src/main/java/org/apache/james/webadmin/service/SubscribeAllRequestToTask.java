@@ -28,6 +28,7 @@ import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.eclipse.jetty.http.HttpStatus;
@@ -40,7 +41,7 @@ public class SubscribeAllRequestToTask extends TaskFromRequestRegistry.TaskRegis
     @Inject
     SubscribeAllRequestToTask(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, UsersRepository usersRepository) {
         super(TASK_REGISTRATION_KEY,
-            request -> toTask(mailboxManager, subscriptionManager, usersRepository, request));
+            request -> new SingleTaskHandler(toTask(mailboxManager, subscriptionManager, usersRepository, request)));
     }
 
     private static Task toTask(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, UsersRepository usersRepository, Request request) throws UsersRepositoryException {

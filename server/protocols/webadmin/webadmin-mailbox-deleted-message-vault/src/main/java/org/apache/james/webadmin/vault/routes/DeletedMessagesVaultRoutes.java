@@ -41,6 +41,7 @@ import org.apache.james.vault.search.Query;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonExtractException;
@@ -105,14 +106,14 @@ public class DeletedMessagesVaultRoutes implements Routes {
         service.post(USER_PATH, userActions(), jsonTransformer);
         service.delete(ROOT_PATH, deleteWithScope(), jsonTransformer);
 
-        TaskFromRequest deleteTaskFromRequest = this::deleteMessage;
+        TaskFromRequest deleteTaskFromRequest = request -> new SingleTaskHandler(deleteMessage(request));
         service.delete(DELETE_PATH, deleteTaskFromRequest.asRoute(taskManager), jsonTransformer);
     }
 
     private Route userActions() {
         return TaskFromRequestRegistry.builder()
-            .register(EXPORT_REGISTRATION_KEY, this::export)
-            .register(RESTORE_REGISTRATION_KEY, this::restore)
+            .register(EXPORT_REGISTRATION_KEY, request -> new SingleTaskHandler(export(request)))
+            .register(RESTORE_REGISTRATION_KEY, request -> new SingleTaskHandler(restore(request)))
             .buildAsRoute(taskManager);
     }
 
@@ -131,7 +132,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
     private Route deleteWithScope() {
         return TaskFromRequestRegistry.builder()
             .parameterName(SCOPE_QUERY_PARAM)
-            .register(EXPIRED_REGISTRATION_KEY, request -> deletedMessageVault.deleteExpiredMessagesTask())
+            .register(EXPIRED_REGISTRATION_KEY, request -> new SingleTaskHandler(deletedMessageVault.deleteExpiredMessagesTask()))
             .buildAsRoute(taskManager);
     }
 

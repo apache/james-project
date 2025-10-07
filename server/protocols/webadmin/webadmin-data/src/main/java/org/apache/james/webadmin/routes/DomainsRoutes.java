@@ -39,6 +39,7 @@ import org.apache.james.webadmin.service.DeleteUserDataService;
 import org.apache.james.webadmin.service.DeleteUsersDataOfDomainTask;
 import org.apache.james.webadmin.service.DomainAliasService;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
@@ -120,7 +121,7 @@ public class DomainsRoutes implements Routes {
                 Domain domain = checkValidDomain(request.params(DOMAIN_NAME));
                 Preconditions.checkArgument(domainList.containsDomain(domain), "'domainName' parameter should be an existing domain");
 
-                return new DeleteUsersDataOfDomainTask(deleteUserDataService, domain, usersRepository);
+                return new SingleTaskHandler(new DeleteUsersDataOfDomainTask(deleteUserDataService, domain, usersRepository));
             })
             .buildAsRoute(taskManager);
     }

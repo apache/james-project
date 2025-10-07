@@ -43,6 +43,7 @@ import org.apache.james.webadmin.service.UserMailboxesService;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -65,7 +66,7 @@ public class UserMailboxesRoutes implements Routes {
     public static class UserReIndexingTaskRegistration extends TaskRegistration {
         @Inject
         public UserReIndexingTaskRegistration(ReIndexer reIndexer) {
-            super(RE_INDEX, request -> reIndexer.reIndex(getUsernameParam(request), ReindexingRunningOptionsParser.parse(request)));
+            super(RE_INDEX, request -> new SingleTaskHandler(reIndexer.reIndex(getUsernameParam(request), ReindexingRunningOptionsParser.parse(request))));
         }
     }
 
@@ -133,7 +134,7 @@ public class UserMailboxesRoutes implements Routes {
 
         unseenMessageCount();
 
-        TaskFromRequest clearMailboxContentTaskRequest = this::clearMailboxContent;
+        TaskFromRequest clearMailboxContentTaskRequest = request -> new SingleTaskHandler(clearMailboxContent(request));
         service.delete(MESSAGES_PATH, clearMailboxContentTaskRequest.asRoute(taskManager), jsonTransformer);
     }
 

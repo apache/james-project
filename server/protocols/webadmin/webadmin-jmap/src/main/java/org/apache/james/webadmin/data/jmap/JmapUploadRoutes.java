@@ -29,6 +29,7 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.data.jmap.UploadRepositoryCleanupTask.CleanupScope;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.utils.JsonTransformer;
 
 import com.google.common.base.Preconditions;
@@ -57,7 +58,7 @@ public class JmapUploadRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        TaskFromRequest cleanupUploadRepositoryTaskRequest = this::cleanupUploadRepository;
+        TaskFromRequest cleanupUploadRepositoryTaskRequest = request -> new SingleTaskHandler(cleanupUploadRepository(request));
         service.delete(BASE_PATH, cleanupUploadRepositoryTaskRequest.asRoute(taskManager), jsonTransformer);
     }
 

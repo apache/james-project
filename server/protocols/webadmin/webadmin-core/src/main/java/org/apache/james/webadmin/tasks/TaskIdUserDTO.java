@@ -17,27 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.routes;
+package org.apache.james.webadmin.tasks;
 
+import org.apache.james.core.Username;
+import org.apache.james.task.TaskId;
 
-import jakarta.inject.Inject;
+public class TaskIdUserDTO {
+    private final Username username;
+    private final TaskId taskId;
 
-import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenciesService;
-import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenciesService.TargetFlag;
-import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistencyTask;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
-import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
-import org.apache.james.webadmin.tasks.TaskRegistrationKey;
-
-public class SolveMessageDeletedInconsistenciesRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
-    private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("SolveMessageDeletedInconsistencies");
-
-    @Inject
-    public SolveMessageDeletedInconsistenciesRequestToTask(SolveMailboxFlagInconsistenciesService service) {
-        super(REGISTRATION_KEY, request -> new SingleTaskHandler(toTask(service)));
+    public TaskIdUserDTO(Username username, TaskId taskId) {
+        this.username = username;
+        this.taskId = taskId;
     }
 
-    private static SolveMailboxFlagInconsistencyTask toTask(SolveMailboxFlagInconsistenciesService service) {
-        return new SolveMailboxFlagInconsistencyTask(service, TargetFlag.DELETED);
+    public String getUsername() {
+        return username.asString();
+    }
+
+    public String getTaskId() {
+        return taskId.asString();
     }
 }

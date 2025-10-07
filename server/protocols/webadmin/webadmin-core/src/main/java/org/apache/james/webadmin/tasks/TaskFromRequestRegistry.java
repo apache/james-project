@@ -25,7 +25,6 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 
 import com.github.fge.lambdas.Throwing;
@@ -110,8 +109,32 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
         }
 
         @Override
-        public Task fromRequest(Request request) throws Exception {
+        public TaskHandler fromRequest(Request request) throws Exception {
             return taskFromRequest.fromRequest(request);
+        }
+    }
+
+    public static class MultiTaskRegistration implements TaskFromRequest {
+        private final TaskRegistrationKey taskRegistrationKey;
+        private final TaskFromRequest taskFromRequest;
+
+        public MultiTaskRegistration(TaskRegistrationKey taskRegistrationKey, TaskFromRequest taskFromRequest) {
+            this.taskRegistrationKey = taskRegistrationKey;
+            this.taskFromRequest = taskFromRequest;
+        }
+
+        public TaskRegistrationKey registrationKey() {
+            return taskRegistrationKey;
+        }
+
+        @Override
+        public TaskHandler fromRequest(Request request) throws Exception {
+            return taskFromRequest.fromRequest(request);
+        }
+
+        @Override
+        public Route asRoute(TaskManager taskManager) {
+            return new MultiTaskRoute(this, taskManager);
         }
     }
 
@@ -134,10 +157,10 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
     }
 
     @Override
-    public Task fromRequest(Request request) throws Exception {
+    public TaskHandler fromRequest(Request request) throws Exception {
         TaskRegistrationKey registrationKey = parseRegistrationKey(request);
         return Optional.ofNullable(taskGenerators.get(registrationKey))
-            .map(Throwing.<TaskFromRequest, Task>function(taskGenerator -> taskGenerator.fromRequest(request)).sneakyThrow())
+            .map(Throwing.<TaskFromRequest, TaskHandler>function(taskGenerator -> taskGenerator.fromRequest(request)).sneakyThrow())
             .orElseThrow(() -> new IllegalArgumentException("Invalid value supplied for query parameter '" + taskParameterName + "': " + registrationKey.asString()
                 + ". " + supportedValueMessage()));
     }

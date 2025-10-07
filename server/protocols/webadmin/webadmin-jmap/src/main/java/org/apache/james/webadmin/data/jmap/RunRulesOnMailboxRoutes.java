@@ -44,6 +44,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.data.jmap.dto.UserTaskResponse;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -120,7 +121,7 @@ public class RunRulesOnMailboxRoutes implements Routes {
     public Route runRulesOnMailboxRoute() {
         return TaskFromRequestRegistry.builder()
             .parameterName(ACTION_QUERY_PARAM)
-            .register(TRIAGE, this::runRulesOnMailbox)
+            .register(TRIAGE, request -> new TaskHandler.SingleTaskHandler(runRulesOnMailbox(request)))
             .buildAsRoute(taskManager);
     }
 

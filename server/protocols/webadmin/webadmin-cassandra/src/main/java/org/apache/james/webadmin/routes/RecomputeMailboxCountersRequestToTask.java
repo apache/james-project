@@ -27,6 +27,7 @@ import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersServ
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService.Options;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -41,7 +42,7 @@ public class RecomputeMailboxCountersRequestToTask extends TaskFromRequestRegist
     @Inject
     public RecomputeMailboxCountersRequestToTask(RecomputeMailboxCountersService service) {
         super(REGISTRATION_KEY,
-            request -> new RecomputeMailboxCountersTask(service, parseOptions(request)));
+            request -> new SingleTaskHandler(new RecomputeMailboxCountersTask(service, parseOptions(request))));
     }
 
     private static Options parseOptions(Request request) {

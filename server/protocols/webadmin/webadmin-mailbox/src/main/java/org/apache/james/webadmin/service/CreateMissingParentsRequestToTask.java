@@ -24,6 +24,7 @@ import jakarta.inject.Inject;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.task.Task;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
 public class CreateMissingParentsRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
@@ -34,7 +35,7 @@ public class CreateMissingParentsRequestToTask extends TaskFromRequestRegistry.T
     CreateMissingParentsRequestToTask(MailboxManager mailboxManager) {
 
         super(TASK_REGISTRATION_KEY,
-            request -> toTask(mailboxManager));
+            request -> new SingleTaskHandler(toTask(mailboxManager)));
     }
 
     private static Task toTask(MailboxManager mailboxManager) {

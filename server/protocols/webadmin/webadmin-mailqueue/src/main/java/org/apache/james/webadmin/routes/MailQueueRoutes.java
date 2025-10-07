@@ -47,6 +47,7 @@ import org.apache.james.webadmin.dto.MailQueueItemDTO;
 import org.apache.james.webadmin.service.ClearMailQueueTask;
 import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTask;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
@@ -210,7 +211,7 @@ public class MailQueueRoutes implements Routes {
     }
 
     public void deleteMails(Service service) {
-        TaskFromRequest taskFromRequest = this::deleteMails;
+        TaskFromRequest taskFromRequest = request -> new SingleTaskHandler(deleteMails(request));
         service.delete(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS,
                 taskFromRequest.asRoute(taskManager),
                 jsonTransformer);

@@ -25,11 +25,11 @@ import java.time.Instant;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.services.TasksCleanupService;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TasksCleanupTask;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.ParametersExtractor;
@@ -68,11 +68,11 @@ public class TasksCleanupRoutes implements Routes {
             jsonTransformer);
     }
 
-    public Task tasksCleanupTask(Request request) {
+    public SingleTaskHandler tasksCleanupTask(Request request) {
         Duration olderThanDuration = ParametersExtractor.extractDuration(request, "olderThan")
             .orElseThrow(() -> new IllegalArgumentException("missing or invalid `olderThan` parameter"));
         Instant olderThan = clock.instant().minusSeconds(olderThanDuration.toSeconds());
-        return new TasksCleanupTask(tasksCleanupService, olderThan);
+        return new SingleTaskHandler(new TasksCleanupTask(tasksCleanupService, olderThan));
     }
 
 }

@@ -30,6 +30,7 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.MailboxMergingRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -69,7 +70,7 @@ public class CassandraMailboxMergingRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        TaskFromRequest taskFromRequest = this::mergeMailboxes;
+        TaskFromRequest taskFromRequest = request -> new SingleTaskHandler(mergeMailboxes(request));
         service.post(BASE, taskFromRequest.asRoute(taskManager), jsonTransformer);
     }
 

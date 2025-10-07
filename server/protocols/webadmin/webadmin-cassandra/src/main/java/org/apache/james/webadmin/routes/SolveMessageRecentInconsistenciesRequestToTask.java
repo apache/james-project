@@ -26,6 +26,7 @@ import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenc
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenciesService.TargetFlag;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistencyTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
 public class SolveMessageRecentInconsistenciesRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
@@ -33,7 +34,7 @@ public class SolveMessageRecentInconsistenciesRequestToTask extends TaskFromRequ
 
     @Inject
     public SolveMessageRecentInconsistenciesRequestToTask(SolveMailboxFlagInconsistenciesService service) {
-        super(REGISTRATION_KEY, request -> toTask(service));
+        super(REGISTRATION_KEY, request -> new SingleTaskHandler(toTask(service)));
     }
 
     private static SolveMailboxFlagInconsistencyTask toTask(SolveMailboxFlagInconsistenciesService service) {

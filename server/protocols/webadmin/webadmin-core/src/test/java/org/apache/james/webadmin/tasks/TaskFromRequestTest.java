@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +44,7 @@ class TaskFromRequestTest {
         Request request = mock(Request.class);
         Response response = mock(Response.class);
 
-        TaskFromRequest taskFromRequest = any -> TASK;
+        TaskFromRequest taskFromRequest = any -> new SingleTaskHandler(TASK);
         TaskManager taskManager = mock(TaskManager.class);
         when(taskManager.submit(TASK)).thenReturn(TaskId.fromString(UUID_VALUE));
 

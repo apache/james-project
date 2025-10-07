@@ -22,11 +22,12 @@ package org.apache.james.webadmin.data.jmap;
 import jakarta.inject.Inject;
 
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 
 public class RecomputeAllFastViewProjectionItemsRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
     @Inject
     RecomputeAllFastViewProjectionItemsRequestToTask(MessageFastViewProjectionCorrector corrector) {
         super(Constants.TASK_REGISTRATION_KEY,
-            request -> new RecomputeAllFastViewProjectionItemsTask(corrector, RunningOptionsParser.parse(request)));
+            request -> new SingleTaskHandler(new RecomputeAllFastViewProjectionItemsTask(corrector, RunningOptionsParser.parse(request))));
     }
 }

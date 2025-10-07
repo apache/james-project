@@ -31,6 +31,7 @@ import org.apache.james.util.streams.Limit;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.EventDeadLettersService;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -83,7 +84,7 @@ public class EventDeadLettersRoutes implements Routes {
     }
 
     public Route performActionOnAllEvents() {
-        return TaskFromRequestRegistry.of(RE_DELIVER, request -> eventDeadLettersService.redeliverAllEvents(parseRunningOptions(request)))
+        return TaskFromRequestRegistry.of(RE_DELIVER, request -> new SingleTaskHandler(eventDeadLettersService.redeliverAllEvents(parseRunningOptions(request))))
             .asRoute(taskManager);
     }
 
@@ -97,7 +98,7 @@ public class EventDeadLettersRoutes implements Routes {
     }
 
     public Route performActionOnGroupEvents() {
-        return TaskFromRequestRegistry.of(RE_DELIVER, request -> eventDeadLettersService.redeliverGroupEvents(parseGroup(request), parseRunningOptions(request)))
+        return TaskFromRequestRegistry.of(RE_DELIVER, request -> new SingleTaskHandler(eventDeadLettersService.redeliverGroupEvents(parseGroup(request), parseRunningOptions(request))))
             .asRoute(taskManager);
     }
 
@@ -128,7 +129,7 @@ public class EventDeadLettersRoutes implements Routes {
 
     public Route performActionOnSingleEvent() {
         return TaskFromRequestRegistry.of(RE_DELIVER,
-                request -> eventDeadLettersService.redeliverSingleEvent(parseGroup(request), parseInsertionId(request)))
+                request -> new SingleTaskHandler(eventDeadLettersService.redeliverSingleEvent(parseGroup(request), parseInsertionId(request))))
             .asRoute(taskManager);
     }
 

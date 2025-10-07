@@ -31,6 +31,7 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.DeleteUserDataService;
 import org.apache.james.webadmin.service.DeleteUserDataTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.JsonTransformer;
 
@@ -77,7 +78,7 @@ public class DeleteUserDataRoutes implements Routes {
 
                 Optional<StepName> fromStep = Optional.ofNullable(request.queryParams("fromStep")).map(StepName::new);
 
-                return new DeleteUserDataTask(service, username, fromStep);
+                return new SingleTaskHandler(new DeleteUserDataTask(service, username, fromStep));
             })
             .buildAsRoute(taskManager);
     }

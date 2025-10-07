@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.task.Task;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -44,10 +45,10 @@ class TaskFromRequestRegistryTest {
     void setUp() {
         request = mock(Request.class);
         taskFromRequestRegistry = TaskFromRequestRegistry.builder()
-            .register(KEY_1, any -> TASK_1)
-            .register(KEY_2, any -> TASK_2)
+            .register(KEY_1, any -> new SingleTaskHandler(TASK_1))
+            .register(KEY_2, any -> new SingleTaskHandler(TASK_2))
             .build();
-        singleTaskFromRequestRegistry = TaskFromRequestRegistry.of(KEY_1, any -> TASK_1);
+        singleTaskFromRequestRegistry = TaskFromRequestRegistry.of(KEY_1, any -> new SingleTaskHandler(TASK_1));
     }
 
     @Test
@@ -74,7 +75,7 @@ class TaskFromRequestRegistryTest {
     void generateShouldThrowWhenCustomParameterValueIsInvalid() {
         TaskFromRequestRegistry taskFromRequestRegistry = TaskFromRequestRegistry.builder()
             .parameterName("custom")
-            .register(KEY_1, any -> TASK_1)
+            .register(KEY_1, any -> new SingleTaskHandler(TASK_1))
             .build();
 
         when(request.queryParams("custom")).thenReturn("unknown");
@@ -88,7 +89,7 @@ class TaskFromRequestRegistryTest {
     void generateShouldThrowWhenCustomParameterNotSpecified() {
         TaskFromRequestRegistry taskFromRequestRegistry = TaskFromRequestRegistry.builder()
             .parameterName("custom")
-            .register(KEY_1, any -> TASK_1)
+            .register(KEY_1, any -> new SingleTaskHandler(TASK_1))
             .build();
 
         when(request.queryParams("action")).thenReturn("unknown");
@@ -146,7 +147,7 @@ class TaskFromRequestRegistryTest {
     void generateShouldHandleCustomTaskParameter() throws Exception {
         TaskFromRequestRegistry taskFromRequestRegistry = TaskFromRequestRegistry.builder()
             .parameterName("custom")
-            .register(KEY_1, any -> TASK_1)
+            .register(KEY_1, any -> new SingleTaskHandler(TASK_1))
             .build();
 
         when(request.queryParams("custom")).thenReturn("task1");

@@ -46,6 +46,7 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.ClearMailQueueTask;
 import org.apache.james.webadmin.service.RepublishNotprocessedMailsTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -92,7 +93,7 @@ public class RabbitMQMailQueuesRoutes implements Routes {
     public void republishNotProcessedMails(Service service) {
         service.post(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME,
             builder()
-                .register(REPUBLISH_NOT_PROCESSED_MAILS_REGISTRATION_KEY, this::republishNotProcessedMails)
+                .register(REPUBLISH_NOT_PROCESSED_MAILS_REGISTRATION_KEY, request -> new SingleTaskHandler(republishNotProcessedMails(request)))
                 .registrations(extraTasks)
                 .buildAsRoute(taskManager),
             jsonTransformer);

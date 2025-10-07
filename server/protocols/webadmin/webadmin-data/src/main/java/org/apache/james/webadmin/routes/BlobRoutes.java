@@ -37,6 +37,7 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.utils.JsonTransformer;
 
 import com.google.common.base.Preconditions;
@@ -85,7 +86,7 @@ public class BlobRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        TaskFromRequest gcUnreferencedTaskRequest = this::gcUnreferenced;
+        TaskFromRequest gcUnreferencedTaskRequest = request -> new SingleTaskHandler(gcUnreferenced(request));
         service.delete(BASE_PATH, gcUnreferencedTaskRequest.asRoute(taskManager), jsonTransformer);
     }
 

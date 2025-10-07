@@ -38,6 +38,7 @@ import org.apache.james.webadmin.service.ExpireMailboxService;
 import org.apache.james.webadmin.service.ExpireMailboxTask;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
@@ -84,7 +85,7 @@ public class MessagesRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        TaskFromRequest expireMailboxTaskRequest = this::expireMailbox;
+        TaskFromRequest expireMailboxTaskRequest = request -> new SingleTaskHandler(expireMailbox(request));
         service.delete(BASE_PATH, expireMailboxTaskRequest.asRoute(taskManager), jsonTransformer);
         service.post(MESSAGE_PATH, reIndexMessage(), jsonTransformer);
         allMessagesOperations()
@@ -118,7 +119,7 @@ public class MessagesRoutes implements Routes {
     private Route reIndexMessage() {
         return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
-            .register(MailboxesRoutes.RE_INDEX, request -> reIndexer.reIndex(extractMessageId(request)))
+            .register(MailboxesRoutes.RE_INDEX, request -> new SingleTaskHandler(reIndexer.reIndex(extractMessageId(request))))
             .buildAsRoute(taskManager);
     }
 

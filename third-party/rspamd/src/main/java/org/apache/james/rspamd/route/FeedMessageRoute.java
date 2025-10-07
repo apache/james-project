@@ -41,6 +41,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.DurationParser;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
+import org.apache.james.webadmin.tasks.TaskHandler;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.ParametersExtractor;
 
@@ -86,7 +87,7 @@ public class FeedMessageRoute implements Routes {
 
     @Override
     public void define(Service service) {
-        TaskFromRequest feedMessageTaskRequest = this::feedMessageTaskFromRequest;
+        TaskFromRequest feedMessageTaskRequest = request -> new TaskHandler.SingleTaskHandler(feedMessageTaskFromRequest(request));
         service.post(BASE_PATH, feedMessageTaskRequest.asRoute(taskManager), jsonTransformer);
     }
 

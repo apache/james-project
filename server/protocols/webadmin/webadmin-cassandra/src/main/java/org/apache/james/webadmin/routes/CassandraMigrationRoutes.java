@@ -28,6 +28,7 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.CassandraVersionRequest;
 import org.apache.james.webadmin.dto.CassandraVersionResponse;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -72,10 +73,10 @@ public class CassandraMigrationRoutes implements Routes {
 
         service.get(VERSION_BASE_LATEST, (request, response) -> getCassandraLatestVersion(), jsonTransformer);
 
-        TaskFromRequest upgradeToVersionTaskFromRequest = this::upgradeToVersion;
+        TaskFromRequest upgradeToVersionTaskFromRequest = request -> new SingleTaskHandler(upgradeToVersion(request));
         service.post(VERSION_UPGRADE_BASE, upgradeToVersionTaskFromRequest.asRoute(taskManager), jsonTransformer);
 
-        TaskFromRequest upgradeToLatestTaskFromRequest = request -> upgradeToLatest();
+        TaskFromRequest upgradeToLatestTaskFromRequest = request -> new SingleTaskHandler(upgradeToLatest());
         service.post(VERSION_UPGRADE_TO_LATEST_BASE, upgradeToLatestTaskFromRequest.asRoute(taskManager), jsonTransformer);
     }
 

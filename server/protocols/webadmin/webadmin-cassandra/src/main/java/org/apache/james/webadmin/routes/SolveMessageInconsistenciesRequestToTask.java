@@ -24,6 +24,7 @@ import jakarta.inject.Inject;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
 import spark.Request;
@@ -33,7 +34,7 @@ public class SolveMessageInconsistenciesRequestToTask extends TaskFromRequestReg
 
     @Inject
     public SolveMessageInconsistenciesRequestToTask(SolveMessageInconsistenciesService service) {
-        super(REGISTRATION_KEY, request -> toTask(request, service));
+        super(REGISTRATION_KEY, request -> new TaskHandler.SingleTaskHandler(toTask(request, service)));
     }
 
     private static SolveMessageInconsistenciesTask toTask(Request request, SolveMessageInconsistenciesService service) {

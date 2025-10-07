@@ -27,12 +27,13 @@ import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueView;
 import org.apache.james.webadmin.service.BrowseStartUpdateTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
 public class BrowseStartUpdateTaskRegistration extends TaskFromRequestRegistry.TaskRegistration {
     @Inject
     public BrowseStartUpdateTaskRegistration(CassandraMailQueueView.Factory cassandraMailQueueViewFactory) {
         super(TaskRegistrationKey.of("updateBrowseStart"),
-            request -> new BrowseStartUpdateTask(MailQueueName.fromString(request.params(MAIL_QUEUE_NAME)), cassandraMailQueueViewFactory));
+            request -> new SingleTaskHandler(new BrowseStartUpdateTask(MailQueueName.fromString(request.params(MAIL_QUEUE_NAME)), cassandraMailQueueViewFactory)));
     }
 }

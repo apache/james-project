@@ -17,27 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.routes;
+package org.apache.james.webadmin.tasks;
 
+import java.util.List;
 
-import jakarta.inject.Inject;
+import org.apache.james.task.Task;
 
-import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenciesService;
-import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistenciesService.TargetFlag;
-import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxFlagInconsistencyTask;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
-import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
-import org.apache.james.webadmin.tasks.TaskRegistrationKey;
+public interface TaskHandler {
+    record SingleTaskHandler(Task task) implements TaskHandler {
 
-public class SolveMessageDeletedInconsistenciesRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
-    private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("SolveMessageDeletedInconsistencies");
-
-    @Inject
-    public SolveMessageDeletedInconsistenciesRequestToTask(SolveMailboxFlagInconsistenciesService service) {
-        super(REGISTRATION_KEY, request -> new SingleTaskHandler(toTask(service)));
     }
 
-    private static SolveMailboxFlagInconsistencyTask toTask(SolveMailboxFlagInconsistenciesService service) {
-        return new SolveMailboxFlagInconsistencyTask(service, TargetFlag.DELETED);
+    record MultiTaskHandler(List<UserTask> userTasks) implements TaskHandler {
+
     }
 }

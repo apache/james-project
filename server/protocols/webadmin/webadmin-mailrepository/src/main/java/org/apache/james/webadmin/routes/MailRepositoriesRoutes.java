@@ -58,6 +58,7 @@ import org.apache.james.webadmin.service.ReprocessingOneMailTask;
 import org.apache.james.webadmin.service.ReprocessingService;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
@@ -315,7 +316,7 @@ public class MailRepositoriesRoutes implements Routes {
         TaskFromRequest taskFromRequest = request -> {
             MailRepositoryPath path = getRepositoryPath(request);
             try {
-                return repositoryStoreService.createClearMailRepositoryTask(path);
+                return new SingleTaskHandler(repositoryStoreService.createClearMailRepositoryTask(path));
             } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
@@ -330,7 +331,7 @@ public class MailRepositoriesRoutes implements Routes {
 
     public void defineReprocessAll() {
         service.patch(MAIL_REPOSITORIES + "/:encodedPath/mails",
-            TaskFromRequestRegistry.of(REPROCESS_ACTION, this::reprocessAll)
+            TaskFromRequestRegistry.of(REPROCESS_ACTION, request -> new SingleTaskHandler(reprocessAll(request)))
                 .asRoute(taskManager),
             jsonTransformer);
     }
@@ -353,7 +354,7 @@ public class MailRepositoriesRoutes implements Routes {
 
     public void defineReprocessOne() {
         service.patch(MAIL_REPOSITORIES + "/:encodedPath/mails/:key",
-            TaskFromRequestRegistry.of(REPROCESS_ACTION, this::reprocessOne)
+            TaskFromRequestRegistry.of(REPROCESS_ACTION, request -> new SingleTaskHandler(reprocessOne(request)))
                 .asRoute(taskManager),
             jsonTransformer);
     }

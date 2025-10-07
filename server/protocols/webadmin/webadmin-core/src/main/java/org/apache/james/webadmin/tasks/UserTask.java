@@ -17,23 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.data.jmap;
+package org.apache.james.webadmin.tasks;
 
-import static org.apache.james.webadmin.data.jmap.Constants.POPULATE_FILTERING_PROJECTION;
+import org.apache.james.core.Username;
+import org.apache.james.task.Task;
 
-import jakarta.inject.Inject;
+public record UserTask(Username username, Task task) {
 
-import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
-import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
-
-public class PopulateFilteringProjectionRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
-    @Inject
-    PopulateFilteringProjectionRequestToTask(EventSourcingFilteringManagement.NoReadProjection noReadProjection,
-                                             EventSourcingFilteringManagement.ReadProjection readProjection,
-                                             UsersRepository usersRepository) {
-        super(POPULATE_FILTERING_PROJECTION,
-            request -> new SingleTaskHandler(new PopulateFilteringProjectionTask(noReadProjection, readProjection, usersRepository)));
-    }
 }

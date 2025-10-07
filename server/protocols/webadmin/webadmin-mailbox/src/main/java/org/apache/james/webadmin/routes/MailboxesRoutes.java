@@ -40,6 +40,7 @@ import org.apache.james.webadmin.service.PreviousReIndexingService;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -55,7 +56,7 @@ public class MailboxesRoutes implements Routes {
     public static class ReIndexAllMailboxesTaskRegistration extends TaskRegistration {
         @Inject
         public ReIndexAllMailboxesTaskRegistration(ReIndexer reIndexer, PreviousReIndexingService previousReIndexingService, MailboxId.Factory mailboxIdFactory) {
-            super(RE_INDEX, wrap(request -> reIndexAll(previousReIndexingService, reIndexer, request)));
+            super(RE_INDEX, wrap(request -> new SingleTaskHandler(reIndexAll(previousReIndexingService, reIndexer, request))));
         }
 
         private static Task reIndexAll(PreviousReIndexingService previousReIndexingService, ReIndexer reIndexer, Request request) throws MailboxException {
@@ -111,7 +112,7 @@ public class MailboxesRoutes implements Routes {
         }
 
         private static TaskFromRequest toTask(ReIndexer reIndexer, MailboxId.Factory mailboxIdFactory) {
-            return wrap(request -> reIndexer.reIndex(extractMailboxId(mailboxIdFactory, request), ReindexingRunningOptionsParser.parse(request)));
+            return wrap(request -> new SingleTaskHandler(reIndexer.reIndex(extractMailboxId(mailboxIdFactory, request), ReindexingRunningOptionsParser.parse(request))));
         }
     }
 
@@ -122,9 +123,9 @@ public class MailboxesRoutes implements Routes {
         }
 
         public static TaskFromRequest toTask(ReIndexer reIndexer, MailboxId.Factory mailboxIdFactory) {
-            return wrap(request -> reIndexer.reIndex(
+            return wrap(request -> new SingleTaskHandler(reIndexer.reIndex(
                 extractMailboxId(mailboxIdFactory, request),
-                extractUid(request)));
+                extractUid(request))));
         }
 
         private static MessageUid extractUid(Request request) {

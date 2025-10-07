@@ -50,6 +50,7 @@ import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 import org.apache.james.webadmin.service.UserQuotaService;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
@@ -82,7 +83,7 @@ public class UserQuotaRoutes implements Routes {
 
         @Inject
         public RecomputeCurrentQuotasRequestToTask(RecomputeCurrentQuotasService service) {
-            super(RECOMPUTE_CURRENT_QUOTAS, request -> new RecomputeCurrentQuotasTask(service,parseRunningOptions(request)));
+            super(RECOMPUTE_CURRENT_QUOTAS, request -> new SingleTaskHandler(new RecomputeCurrentQuotasTask(service,parseRunningOptions(request))));
         }
 
         private static RunningOptions parseRunningOptions(Request request) {

@@ -31,6 +31,7 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.UsernameChangeService;
 import org.apache.james.webadmin.service.UsernameChangeTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.JsonTransformer;
 
@@ -79,7 +80,7 @@ public class UsernameChangeRoutes implements Routes {
 
             Optional<StepName> fromStep = Optional.ofNullable(request.queryParams("fromStep")).map(StepName::new);
 
-            return new UsernameChangeTask(service, oldUser, newUser, fromStep);
+            return new SingleTaskHandler(new UsernameChangeTask(service, oldUser, newUser, fromStep));
         }).asRoute(taskManager);
     }
 }

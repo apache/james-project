@@ -26,6 +26,7 @@ import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -37,7 +38,7 @@ public class RecomputeUserFastViewProjectionItemsRequestToTask extends TaskFromR
                                                       UsersRepository usersRepository) {
 
         super(Constants.TASK_REGISTRATION_KEY,
-            request -> toTask(corrector, usersRepository, request));
+            request -> new SingleTaskHandler(toTask(corrector, usersRepository, request)));
     }
 
     private static Task toTask(MessageFastViewProjectionCorrector corrector, UsersRepository usersRepository, Request request) throws UsersRepositoryException {
