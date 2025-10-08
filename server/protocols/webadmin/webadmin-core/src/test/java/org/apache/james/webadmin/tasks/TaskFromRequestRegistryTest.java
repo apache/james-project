@@ -139,7 +139,8 @@ class TaskFromRequestRegistryTest {
     void generateShouldCreateCorrespondingTask() throws Exception {
         when(request.queryParams("action")).thenReturn("task1");
 
-        assertThat(singleTaskFromRequestRegistry.fromRequest(request))
+        SingleTaskHandler result = (SingleTaskHandler) taskFromRequestRegistry.fromRequest(request);
+        assertThat(result.task())
             .isSameAs(TASK_1);
     }
 
@@ -152,7 +153,8 @@ class TaskFromRequestRegistryTest {
 
         when(request.queryParams("custom")).thenReturn("task1");
 
-        assertThat(taskFromRequestRegistry.fromRequest(request))
+        SingleTaskHandler result = (SingleTaskHandler) taskFromRequestRegistry.fromRequest(request);
+        assertThat(result.task())
             .isSameAs(TASK_1);
     }
 }

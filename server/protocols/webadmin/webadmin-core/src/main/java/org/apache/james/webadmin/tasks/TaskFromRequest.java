@@ -21,8 +21,10 @@ package org.apache.james.webadmin.tasks;
 
 import static org.eclipse.jetty.http.HttpHeader.LOCATION;
 
-import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.james.core.Username;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.routes.TasksRoutes;
@@ -64,13 +66,12 @@ public interface TaskFromRequest {
         }
 
         @Override
-        public List<TaskIdUserDTO> handle(Request request, Response response) throws Exception {
+        public Map<Username, TaskId> handle(Request request, Response response) throws Exception {
             MultiTaskHandler task = (MultiTaskHandler) taskFromRequest.fromRequest(request);
             response.status(HttpStatus.CREATED_201);
             return task.userTasks()
                 .stream()
-                .map(userTask -> new TaskIdUserDTO(userTask.username(), taskManager.submit(userTask.task())))
-                .toList();
+                .collect(Collectors.toMap(UserTask::username, userTask -> taskManager.submit(userTask.task())));
         }
     }
 
