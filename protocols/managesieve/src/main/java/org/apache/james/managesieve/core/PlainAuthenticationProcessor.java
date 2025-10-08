@@ -72,11 +72,11 @@ public class PlainAuthenticationProcessor implements AuthenticationProcessor {
     private Username authenticateWithSeparator(Session session, String suppliedClientData, char c) throws SyntaxException, AuthenticationException {
         Iterator<String> it = Splitter.on(c).omitEmptyStrings().split(suppliedClientData).iterator();
         if (!it.hasNext()) {
-            throw new SyntaxException("You must supply a username for the authentication mechanism. Formal syntax : <NULL>username<NULL>password");
+            throw new SyntaxException("You must supply a username for the authentication mechanism. Formal syntax: <NULL>username<NULL>password");
         }
         Username userName = Username.of(it.next());
         if (!it.hasNext()) {
-            throw new SyntaxException("You must supply a password for the authentication mechanism. Formal syntax : <NULL>username<NULL>password");
+            throw new SyntaxException("You must supply a password for the authentication mechanism. Formal syntax: <NULL>username<NULL>password");
         }
         String password = it.next();
         session.setUser(userName);
@@ -85,7 +85,7 @@ public class PlainAuthenticationProcessor implements AuthenticationProcessor {
             if (user != null && user.verifyPassword(password)) {
                 return user.getUserName();
             } else {
-                return null;
+                throw new AuthenticationException("Verification of credentials failed");
             }
         } catch (UsersRepositoryException e) {
             throw new AuthenticationException(e.getMessage());

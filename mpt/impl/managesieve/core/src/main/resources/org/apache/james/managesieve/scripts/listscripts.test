@@ -21,8 +21,9 @@ C: LISTSCRIPTS
 S: NO
 
 C: AUTHENTICATE "PLAIN"
-S: \+ ""
-C:  user password
+S: ""
+S: OK
+C: "user password"
 S: OK
 
 C: LISTSCRIPTS

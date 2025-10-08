@@ -27,8 +27,9 @@ C: RENAMESCRIPT "foo" "bar"
 S: NO
 
 C: AUTHENTICATE "PLAIN"
-S: \+ ""
-C:  user password
+S: ""
+S: OK
+C: "user password"
 S: OK
 
 C: PUTSCRIPT "mysievescript" {99+}
@@ -75,5 +76,3 @@ S: OK
 
 C: RENAMESCRIPT "mysievescript" "mysievescriptbis"
 S: NO \(ALREADYEXISTS\) "A script with that name already exists"
-
-

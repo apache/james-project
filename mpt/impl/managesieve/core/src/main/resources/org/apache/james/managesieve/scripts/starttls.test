@@ -24,8 +24,9 @@ C: STARTTLS
 S: NO You can't enable two time SSL encryption
 
 C: AUTHENTICATE "PLAIN"
-S: \+ ""
-C:  user password
+S: ""
+S: OK
+C: "user password"
 S: OK
 
 C: STARTTLS
