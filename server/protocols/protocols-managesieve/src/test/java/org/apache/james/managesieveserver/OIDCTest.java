@@ -132,7 +132,7 @@ public class OIDCTest {
             this.client.sendCommand("\"*\"");
             ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
             Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
-            Assertions.assertThat(authenticationResponse.explanation()).get().isEqualTo("authentication aborted");
+            Assertions.assertThat(authenticationResponse.explanation()).get().isEqualTo("Authentication failed with: authentication aborted by client");
         }
 
         @Test
@@ -171,7 +171,7 @@ public class OIDCTest {
             this.client.sendCommand("\"*\"");
             ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
             Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
-            Assertions.assertThat(authenticationResponse.explanation()).get().isEqualTo("authentication aborted");
+            Assertions.assertThat(authenticationResponse.explanation()).get().isEqualTo("Authentication failed with: authentication aborted by client");
         }
 
         @Test
