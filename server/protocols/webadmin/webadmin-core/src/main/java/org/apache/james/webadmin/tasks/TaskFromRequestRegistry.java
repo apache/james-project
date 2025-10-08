@@ -95,15 +95,20 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
         }
     }
 
-    public static class TaskRegistration implements TaskFromRequest {
+    public interface TaskRegistration extends TaskFromRequest {
+        TaskRegistrationKey registrationKey();
+    }
+
+    public static class SingleTaskRegistration implements TaskRegistration {
         private final TaskRegistrationKey taskRegistrationKey;
         private final TaskFromRequest taskFromRequest;
 
-        public TaskRegistration(TaskRegistrationKey taskRegistrationKey, TaskFromRequest taskFromRequest) {
+        public SingleTaskRegistration(TaskRegistrationKey taskRegistrationKey, TaskFromRequest taskFromRequest) {
             this.taskRegistrationKey = taskRegistrationKey;
             this.taskFromRequest = taskFromRequest;
         }
 
+        @Override
         public TaskRegistrationKey registrationKey() {
             return taskRegistrationKey;
         }
@@ -114,7 +119,7 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
         }
     }
 
-    public static class MultiTaskRegistration implements TaskFromRequest {
+    public static class MultiTaskRegistration implements TaskRegistration {
         private final TaskRegistrationKey taskRegistrationKey;
         private final TaskFromRequest taskFromRequest;
 
@@ -123,6 +128,7 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
             this.taskFromRequest = taskFromRequest;
         }
 
+        @Override
         public TaskRegistrationKey registrationKey() {
             return taskRegistrationKey;
         }

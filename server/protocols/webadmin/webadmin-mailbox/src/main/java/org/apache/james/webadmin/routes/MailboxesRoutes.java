@@ -39,6 +39,7 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.PreviousReIndexingService;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.SingleTaskRegistration;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
@@ -53,7 +54,7 @@ import spark.Route;
 import spark.Service;
 
 public class MailboxesRoutes implements Routes {
-    public static class ReIndexAllMailboxesTaskRegistration extends TaskRegistration {
+    public static class ReIndexAllMailboxesTaskRegistration extends SingleTaskRegistration {
         @Inject
         public ReIndexAllMailboxesTaskRegistration(ReIndexer reIndexer, PreviousReIndexingService previousReIndexingService, MailboxId.Factory mailboxIdFactory) {
             super(RE_INDEX, wrap(request -> new SingleTaskHandler(reIndexAll(previousReIndexingService, reIndexer, request))));
@@ -105,7 +106,7 @@ public class MailboxesRoutes implements Routes {
         }
     }
 
-    public static class ReIndexOneMailboxTaskRegistration extends TaskRegistration {
+    public static class ReIndexOneMailboxTaskRegistration extends SingleTaskRegistration {
         @Inject
         public ReIndexOneMailboxTaskRegistration(ReIndexer reIndexer, MailboxId.Factory mailboxIdFactory) {
             super(RE_INDEX, toTask(reIndexer, mailboxIdFactory));
@@ -116,7 +117,7 @@ public class MailboxesRoutes implements Routes {
         }
     }
 
-    public static class ReIndexOneMailTaskRegistration extends TaskRegistration {
+    public static class ReIndexOneMailTaskRegistration extends SingleTaskRegistration {
         @Inject
         public ReIndexOneMailTaskRegistration(ReIndexer reIndexer, MailboxId.Factory mailboxIdFactory) {
             super(RE_INDEX, toTask(reIndexer, mailboxIdFactory));

@@ -34,7 +34,7 @@ public class Pop3FixInconsistenciesWebAdminModule extends AbstractModule {
     protected void configure() {
         install(new Pop3FixInconsistenciesTaskSerializationModule());
 
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(ALL_MAILBOXES_TASKS))
+        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(ALL_MAILBOXES_TASKS))
             .addBinding()
             .to(Pop3MetaDataFixInconsistenciesTaskRegistration.class);
     }

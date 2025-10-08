@@ -37,7 +37,7 @@ public class MailboxesExportRoutesModule extends AbstractModule {
         install(new WebadminMailboxExportTaskSerializationModule());
 
         bind(ExportService.class).in(Scopes.SINGLETON);
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
+        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
             .addBinding().to(MailboxesExportRequestToTask.class);
     }
 }

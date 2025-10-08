@@ -29,7 +29,7 @@ import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
-public class SolveMessageRecentInconsistenciesRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+public class SolveMessageRecentInconsistenciesRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
     private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("SolveMessageRecentInconsistencies");
 
     @Inject

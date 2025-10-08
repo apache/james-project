@@ -33,6 +33,6 @@ public class RabbitMailQueueRoutesModule extends AbstractModule {
         install(new RabbitMailQueueTaskSerializationModule());
 
         Multibinder.newSetBinder(binder(), Routes.class).addBinding().to(RabbitMQMailQueuesRoutes.class);
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named("RabbitMQMailQueuesRoutes"));
+        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named("RabbitMQMailQueuesRoutes"));
     }
 }

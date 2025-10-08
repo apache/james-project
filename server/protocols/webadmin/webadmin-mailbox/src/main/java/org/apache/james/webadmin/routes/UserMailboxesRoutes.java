@@ -42,6 +42,7 @@ import org.apache.james.webadmin.service.ClearMailboxContentTask;
 import org.apache.james.webadmin.service.UserMailboxesService;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.SingleTaskRegistration;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -63,7 +64,7 @@ public class UserMailboxesRoutes implements Routes {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserMailboxesRoutes.class);
     public static final String USER_MAILBOXES_OPERATIONS_INJECTION_KEY = "userMailboxesOperations";
 
-    public static class UserReIndexingTaskRegistration extends TaskRegistration {
+    public static class UserReIndexingTaskRegistration extends SingleTaskRegistration {
         @Inject
         public UserReIndexingTaskRegistration(ReIndexer reIndexer) {
             super(RE_INDEX, request -> new SingleTaskHandler(reIndexer.reIndex(getUsernameParam(request), ReindexingRunningOptionsParser.parse(request))));

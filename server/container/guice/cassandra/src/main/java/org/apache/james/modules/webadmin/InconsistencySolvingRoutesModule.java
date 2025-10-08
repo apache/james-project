@@ -62,8 +62,8 @@ public class InconsistencySolvingRoutesModule extends AbstractModule {
             bind(RecomputeMailboxCountersService.class).in(Scopes.SINGLETON);
             bind(SolveMailboxInconsistenciesService.class).in(Scopes.SINGLETON);
 
-            Multibinder<TaskFromRequestRegistry.TaskRegistration> multiBinder = Multibinder.newSetBinder(binder(),
-                TaskFromRequestRegistry.TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS));
+            Multibinder<TaskFromRequestRegistry.SingleTaskRegistration> multiBinder = Multibinder.newSetBinder(binder(),
+                TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS));
 
             multiBinder.addBinding().to(SolveMailboxInconsistenciesRequestToTask.class);
             multiBinder.addBinding().to(RecomputeMailboxCountersRequestToTask.class);
@@ -77,8 +77,8 @@ public class InconsistencySolvingRoutesModule extends AbstractModule {
         protected void configure() {
             bind(SolveMessageInconsistenciesService.class).in(Scopes.SINGLETON);
 
-            Multibinder<TaskFromRequestRegistry.TaskRegistration> multiBinder = Multibinder.newSetBinder(binder(),
-                TaskFromRequestRegistry.TaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_TASKS));
+            Multibinder<TaskFromRequestRegistry.SingleTaskRegistration> multiBinder = Multibinder.newSetBinder(binder(),
+                TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_TASKS));
 
             multiBinder.addBinding().to(SolveMessageInconsistenciesRequestToTask.class);
         }

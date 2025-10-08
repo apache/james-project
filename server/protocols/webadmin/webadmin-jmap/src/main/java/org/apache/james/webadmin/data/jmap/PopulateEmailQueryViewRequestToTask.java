@@ -26,7 +26,7 @@ import jakarta.inject.Inject;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 
-public class PopulateEmailQueryViewRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+public class PopulateEmailQueryViewRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
     @Inject
     PopulateEmailQueryViewRequestToTask(EmailQueryViewPopulator populator) {
         super(POPULATE_EMAIL_QUERY_VIEW,

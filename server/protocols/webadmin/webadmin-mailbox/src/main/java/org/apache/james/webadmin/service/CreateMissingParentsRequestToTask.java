@@ -27,7 +27,7 @@ import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
-public class CreateMissingParentsRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+public class CreateMissingParentsRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
 
     public static final TaskRegistrationKey TASK_REGISTRATION_KEY = TaskRegistrationKey.of("createMissingParents");
 

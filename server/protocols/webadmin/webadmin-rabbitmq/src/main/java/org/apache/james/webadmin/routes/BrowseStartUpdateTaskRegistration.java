@@ -30,7 +30,7 @@ import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
-public class BrowseStartUpdateTaskRegistration extends TaskFromRequestRegistry.TaskRegistration {
+public class BrowseStartUpdateTaskRegistration extends TaskFromRequestRegistry.SingleTaskRegistration {
     @Inject
     public BrowseStartUpdateTaskRegistration(CassandraMailQueueView.Factory cassandraMailQueueViewFactory) {
         super(TaskRegistrationKey.of("updateBrowseStart"),

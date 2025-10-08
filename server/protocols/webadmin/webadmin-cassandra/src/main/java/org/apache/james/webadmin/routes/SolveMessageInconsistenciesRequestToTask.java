@@ -29,7 +29,7 @@ import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
 import spark.Request;
 
-public class SolveMessageInconsistenciesRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+public class SolveMessageInconsistenciesRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
     private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("SolveInconsistencies");
 
     @Inject

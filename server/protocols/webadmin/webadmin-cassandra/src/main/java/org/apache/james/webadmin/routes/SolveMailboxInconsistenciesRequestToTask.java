@@ -29,7 +29,7 @@ import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
 import com.google.common.base.Preconditions;
 
-public class SolveMailboxInconsistenciesRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+public class SolveMailboxInconsistenciesRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
     private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("SolveInconsistencies");
 
     @Inject

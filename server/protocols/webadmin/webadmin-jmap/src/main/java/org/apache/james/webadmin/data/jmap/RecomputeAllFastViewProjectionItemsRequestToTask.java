@@ -24,7 +24,7 @@ import jakarta.inject.Inject;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 
-public class RecomputeAllFastViewProjectionItemsRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+public class RecomputeAllFastViewProjectionItemsRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
     @Inject
     RecomputeAllFastViewProjectionItemsRequestToTask(MessageFastViewProjectionCorrector corrector) {
         super(Constants.TASK_REGISTRATION_KEY,

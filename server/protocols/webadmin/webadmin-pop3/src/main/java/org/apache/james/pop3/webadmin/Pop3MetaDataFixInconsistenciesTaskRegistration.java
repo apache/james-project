@@ -27,7 +27,7 @@ import org.apache.james.pop3server.mailbox.task.MetaDataFixInconsistenciesServic
 import org.apache.james.pop3server.mailbox.task.MetaDataFixInconsistenciesService.RunningOptions;
 import org.apache.james.pop3server.mailbox.task.MetaDataFixInconsistenciesTask;
 import org.apache.james.task.Task;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.SingleTaskRegistration;
 import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
@@ -35,7 +35,7 @@ import com.google.common.base.Preconditions;
 
 import spark.Request;
 
-public class Pop3MetaDataFixInconsistenciesTaskRegistration extends TaskRegistration {
+public class Pop3MetaDataFixInconsistenciesTaskRegistration extends SingleTaskRegistration {
     private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("fixPop3Inconsistencies");
 
     @Inject

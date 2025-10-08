@@ -40,7 +40,7 @@ import com.google.inject.name.Names;
 public class BrowseStartTaskModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named("RabbitMQMailQueuesRoutes"))
+        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named("RabbitMQMailQueuesRoutes"))
             .addBinding()
             .to(BrowseStartUpdateTaskRegistration.class);
     }

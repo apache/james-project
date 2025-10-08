@@ -32,7 +32,7 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import spark.Request;
 
-public class RecomputeUserFastViewProjectionItemsRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+public class RecomputeUserFastViewProjectionItemsRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
     @Inject
     RecomputeUserFastViewProjectionItemsRequestToTask(MessageFastViewProjectionCorrector corrector,
                                                       UsersRepository usersRepository) {

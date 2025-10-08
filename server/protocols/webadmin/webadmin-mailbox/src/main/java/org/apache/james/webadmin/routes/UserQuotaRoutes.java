@@ -74,7 +74,7 @@ public class UserQuotaRoutes implements Routes {
 
     public static final String USER_QUOTAS_OPERATIONS_INJECTION_KEY = "userQuotasOperations";
 
-    public static class RecomputeCurrentQuotasRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+    public static class RecomputeCurrentQuotasRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
         private static final String USERS_PER_SECOND = "usersPerSecond";
         private static final String QUOTA_COMPONENT = "quotaComponent";
         private static final ImmutableMap<String, QuotaComponent> QUOTA_COMPONENT_MAP = ImmutableMap.of(QuotaComponent.MAILBOX.getValue(), QuotaComponent.MAILBOX,

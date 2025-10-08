@@ -33,7 +33,7 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import spark.Request;
 
-public class MailboxesExportRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+public class MailboxesExportRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
 
     public static final TaskRegistrationKey TASK_REGISTRATION_KEY = TaskRegistrationKey.of("export");
 

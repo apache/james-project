@@ -38,16 +38,16 @@ public class JmapTasksModule extends AbstractModule {
     protected void configure() {
         install(new JmapTaskSerializationModule());
 
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
+        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
             .addBinding().to(RecomputeAllFastViewProjectionItemsRequestToTask.class);
 
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
+        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
             .addBinding().to(PopulateEmailQueryViewRequestToTask.class);
 
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
+        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
             .addBinding().to(PopulateFilteringProjectionRequestToTask.class);
 
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
+        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
             .addBinding().to(RecomputeUserFastViewProjectionItemsRequestToTask.class);
 
         Multibinder<Routes> routesMultiBinder = Multibinder.newSetBinder(binder(), Routes.class);

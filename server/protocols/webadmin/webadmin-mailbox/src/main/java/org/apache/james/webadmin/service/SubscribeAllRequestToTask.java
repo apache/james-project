@@ -35,7 +35,7 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import spark.Request;
 
-public class SubscribeAllRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+public class SubscribeAllRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
     public static final TaskRegistrationKey TASK_REGISTRATION_KEY = TaskRegistrationKey.of("subscribeAll");
 
     @Inject

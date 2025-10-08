@@ -26,7 +26,7 @@ import static org.apache.james.webadmin.routes.UserMailboxesRoutes.USER_MAILBOXE
 
 import org.apache.james.webadmin.routes.MailboxesRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes.UserReIndexingTaskRegistration;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.SingleTaskRegistration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -35,19 +35,19 @@ import com.google.inject.name.Names;
 public class ReIndexingModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
+        Multibinder.newSetBinder(binder(), SingleTaskRegistration.class, Names.named(USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
             .addBinding()
             .to(UserReIndexingTaskRegistration.class);
 
-        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ALL_MAILBOXES_TASKS))
+        Multibinder.newSetBinder(binder(), SingleTaskRegistration.class, Names.named(ALL_MAILBOXES_TASKS))
             .addBinding()
             .to(MailboxesRoutes.ReIndexAllMailboxesTaskRegistration.class);
 
-        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ONE_MAILBOX_TASKS))
+        Multibinder.newSetBinder(binder(), SingleTaskRegistration.class, Names.named(ONE_MAILBOX_TASKS))
             .addBinding()
             .to(MailboxesRoutes.ReIndexOneMailboxTaskRegistration.class);
 
-        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ONE_MAIL_TASKS))
+        Multibinder.newSetBinder(binder(), SingleTaskRegistration.class, Names.named(ONE_MAIL_TASKS))
             .addBinding()
             .to(MailboxesRoutes.ReIndexOneMailTaskRegistration.class);
     }

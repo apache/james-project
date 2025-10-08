@@ -35,7 +35,7 @@ import com.google.common.base.Preconditions;
 
 import spark.Request;
 
-public class RecomputeMailboxCountersRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+public class RecomputeMailboxCountersRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
     private static final TaskRegistrationKey REGISTRATION_KEY = TaskRegistrationKey.of("RecomputeMailboxCounters");
     private static final String TRUST_PARAM = "trustMessageProjection";
 

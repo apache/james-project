@@ -32,7 +32,7 @@ public class InconsistencyQuotasSolvingRoutesModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(USER_QUOTAS_OPERATIONS_INJECTION_KEY))
+        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(USER_QUOTAS_OPERATIONS_INJECTION_KEY))
             .addBinding()
             .to(UserQuotaRoutes.RecomputeCurrentQuotasRequestToTask.class);
     }

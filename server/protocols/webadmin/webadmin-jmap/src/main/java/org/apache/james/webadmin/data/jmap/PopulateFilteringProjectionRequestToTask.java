@@ -28,7 +28,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskHandler.SingleTaskHandler;
 
-public class PopulateFilteringProjectionRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+public class PopulateFilteringProjectionRequestToTask extends TaskFromRequestRegistry.SingleTaskRegistration {
     @Inject
     PopulateFilteringProjectionRequestToTask(EventSourcingFilteringManagement.NoReadProjection noReadProjection,
                                              EventSourcingFilteringManagement.ReadProjection readProjection,
