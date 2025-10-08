@@ -22,10 +22,10 @@ package org.apache.james.managesieve.transcode;
 
 import jakarta.inject.Inject;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.james.managesieve.api.ManageSieveException;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
+import org.apache.james.managesieve.util.ParserUtils;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
 
 public class ManageSieveProcessor {
@@ -54,6 +54,17 @@ public class ManageSieveProcessor {
     }
 
     public String handleRequest(Session session, String request) throws ManageSieveException, SieveRepositoryException {
+        if (request.endsWith("\n")) {
+            request = request.substring(0, request.length() - 1);
+        }
+        if (request.endsWith("\r")) {
+            request = request.substring(0, request.length() - 1);
+        }
+
+        if (session.getState() == Session.State.AUTHENTICATION_IN_PROGRESS) {
+            return matchCommandWithImplementation(session, request.trim(), AUTHENTICATE) + "\r\n";
+        }
+
         int firstWordEndIndex = request.indexOf(' ');
         String arguments = parseArguments(request, firstWordEndIndex);
         String command = parseCommand(request, firstWordEndIndex);
@@ -67,12 +78,6 @@ public class ManageSieveProcessor {
         } else {
             command = request;
         }
-        if (command.endsWith("\n")) {
-            command = command.substring(0, command.length() - 1);
-        }
-        if (command.endsWith("\r")) {
-            command = command.substring(0, command.length() - 1);
-        }
         return command;
     }
 
@@ -85,27 +90,35 @@ public class ManageSieveProcessor {
     }
 
     private String matchCommandWithImplementation(Session session, String arguments, String command) throws SessionTerminatedException {
-        if (session.getState() == Session.State.AUTHENTICATION_IN_PROGRESS) {
-            return argumentParser.authenticate(session, command);
-        }
         if (command.equalsIgnoreCase(AUTHENTICATE)) {
-            if (StringUtils.countMatches(arguments, "\"") == 4) {
-                String result = argumentParser.chooseMechanism(session, arguments);
+            // The RFC forbids the AUTHENTICATE command if the session is already authenticated.
+            if (session.isAuthenticated()) {
+                return "NO \"already authenticated\"";
+            }
+
+            // If no authentication is in progress, the authentication mechanism needs to be chosen.
+            if (session.getState() != Session.State.AUTHENTICATION_IN_PROGRESS) {
+                String mechanism = ParserUtils.unquoteFirst(arguments);
+                String result = argumentParser.chooseMechanism(session, mechanism);
+                // If the authentication is not in progress, return the result (error) because choosing the mechanism has failed.
                 if (session.getState() != Session.State.AUTHENTICATION_IN_PROGRESS) {
                     return result;
                 }
-                int bracket1 = arguments.indexOf('\"');
-                int bracket2 = arguments.indexOf('\"', bracket1 + 1);
-                int bracket3 = arguments.indexOf('\"', bracket2 + 1);
-                int bracket4 = arguments.indexOf('\"', bracket3 + 1);
 
-                return argumentParser.authenticate(session, arguments.substring(bracket3, bracket4 + 1));
-            } else if (arguments.split(" ").length != 1) {
-                // The client send additional arguments but didn't quote them. It probably thinks that it does not need
-                // to send more, but the server expects more. Reject this authentication now to solve this conflict.
-                return "NO \"unquoted argument found\"";
+                // Skips the whole mechanism, the closing quote, and the space if present.
+                // If the request is well-formatted, the arguments are now empty or contain the client's initial response.
+                arguments = arguments.substring(arguments.indexOf(mechanism) + mechanism.length() + 1);
+                if (arguments.startsWith(" ")) {
+                    arguments = arguments.substring(1);
+                }
+                // If there are is no initial client response left, return the result (initial server response).
+                if (arguments.isEmpty()) {
+                    return result;
+                }
             }
-            return argumentParser.chooseMechanism(session, arguments);
+
+            // The authentication is in progress, the mechanism has been chosen, and the arguments contain an initial client response.
+            return argumentParser.authenticate(session, ParserUtils.unquoteFirst(arguments));
         } else if (command.equalsIgnoreCase(CAPABILITY)) {
             return argumentParser.capability(session, arguments);
         } else if (command.equalsIgnoreCase(CHECKSCRIPT)) {

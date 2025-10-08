@@ -57,7 +57,7 @@ public class AuthenticateTest {
 
     @Test
     void plainLoginWithWrongPasswordShouldNotSucceed() throws IOException {
-        String initialClientResponse = ("\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD + "wrong");
+        String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD + "wrong";
         this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
@@ -65,7 +65,7 @@ public class AuthenticateTest {
 
     @Test
     void plainLoginWithNotExistingUserShouldNotSucceed() throws IOException {
-        String initialClientResponse = ("\0" + ManageSieveServerTestSystem.USERNAME.asString() + "not-existing" + "\0" + "pwd");
+        String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "not-existing" + "\0" + "pwd";
         this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
@@ -73,7 +73,7 @@ public class AuthenticateTest {
 
     @Test
     void plainLoginWithoutPasswordShouldNotSucceed() throws IOException {
-        String initialClientResponse = ("\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0");
+        String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0";
         this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
@@ -81,11 +81,11 @@ public class AuthenticateTest {
 
     // The SASL PLAIN standard (https://datatracker.ietf.org/doc/html/rfc4616) defines the following message:
     // message = [authzid] UTF8NUL authcid UTF8NUL passwd
-    // The current code is more lenient.
+    // The current code is more lenient and accepts the message without the first null byte.
     @Disabled
     @Test
     void plainLoginWithMalformedMessageShouldNotSucceed() throws IOException {
-        String initialClientResponse = (ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD);
+        String initialClientResponse = ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD;
         this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
@@ -93,7 +93,7 @@ public class AuthenticateTest {
 
     @Test
     void plainLoginWithoutMechanismQuotesShouldNotSucceed() throws IOException {
-        String initialClientResponse = ("\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD);
+        String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD;
         this.client.sendCommand("AUTHENTICATE PLAIN \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
@@ -101,7 +101,7 @@ public class AuthenticateTest {
 
     @Test
     void plainLoginWithoutInitialResponseQuotesShouldNotSucceed() throws IOException {
-        String initialClientResponse = ("\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD);
+        String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD;
         this.client.sendCommand("AUTHENTICATE \"PLAIN\" " + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)));
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
@@ -114,7 +114,7 @@ public class AuthenticateTest {
         Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
         Assertions.assertThat(continuationResponse.responseLines()).containsExactly("\"\"");
 
-        String initialClientResponse = ("\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD);
+        String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD;
         this.client.sendCommand("\"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
@@ -130,12 +130,12 @@ public class AuthenticateTest {
         this.client.sendCommand("\"*\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
-        Assertions.assertThat(authenticationResponse.explanation()).get().isEqualTo("authentication aborted");
+        Assertions.assertThat(authenticationResponse.explanation()).get().isEqualTo("Authentication failed with: authentication aborted by client");
     }
 
     @Test
     void doubleAuthenticationShouldFail() throws IOException {
-        String initialClientResponse = ("\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD);
+        String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD;
         String command = "AUTHENTICATE \"PLAIN\" \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"";
 
         this.client.sendCommand(command);
@@ -212,7 +212,7 @@ public class AuthenticateTest {
     }
 
     void authenticatePlain() throws IOException {
-        String initialClientResponse = ("\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD);
+        String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD;
         this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
