@@ -34,8 +34,9 @@ C:
 S: NO
 
 C: AUTHENTICATE "PLAIN"
-S: \+ ""
-C:  user password
+S: ""
+S: OK
+C: "user password"
 S: OK
 
 C: CHECKSCRIPT {99+}
@@ -51,4 +52,3 @@ C: #comment
 C: InvalidSieveCommand
 C:
 S: NO "Syntax Error: org.apache.jsieve.parser.generated.ParseException: Encountered "<EOF>" at line 2, column 21.
-
