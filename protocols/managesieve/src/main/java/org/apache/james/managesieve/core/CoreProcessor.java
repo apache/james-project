@@ -210,25 +210,26 @@ public class CoreProcessor implements CoreCommands {
 
     @Override
     public String chooseMechanism(Session session, String mechanism) {
-        if (session.isAuthenticated()) {
-            return "NO \"already authenticated\"";
-        }
         try {
             if (Strings.isNullOrEmpty(mechanism)) {
-                return "NO ManageSieve syntax is incorrect : You must specify a SASL mechanism as an argument of AUTHENTICATE command";
+                throw new SyntaxException("quoted SASL mechanism must be supplied");
             }
-            String unquotedMechanism = ParserUtils.unquoteFirst(mechanism);
-            SupportedMechanism supportedMechanism = SupportedMechanism.retrieveMechanism(unquotedMechanism);
+
+            SupportedMechanism supportedMechanism = SupportedMechanism.retrieveMechanism(mechanism);
             if (!this.authenticationProcessorMap.containsKey(supportedMechanism)) {
-                throw new UnknownSaslMechanism("SASL mechanism disabled: " + unquotedMechanism);
+                throw new UnknownSaslMechanism("SASL mechanism disabled: " + mechanism);
             }
 
             session.setChoosedAuthenticationMechanism(supportedMechanism);
             session.setState(Session.State.AUTHENTICATION_IN_PROGRESS);
             AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(supportedMechanism);
             return authenticationProcessor.initialServerResponse(session);
-        } catch (UnknownSaslMechanism unknownSaslMechanism) {
-            return "NO " + unknownSaslMechanism.getMessage();
+        } catch (UnknownSaslMechanism e) {
+            resetSession(session);
+            return "NO \"" + e.getMessage() + "\"";
+        } catch (SyntaxException e) {
+            resetSession(session);
+            return "NO \"ManageSieve syntax is incorrect: " + e.getMessage() + "\"";
         }
     }
 
@@ -237,39 +238,44 @@ public class CoreProcessor implements CoreCommands {
         try {
             SupportedMechanism currentAuthenticationMechanism = session.getChoosedAuthenticationMechanism();
             AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(currentAuthenticationMechanism);
-            String unquotedSuppliedData = ParserUtils.unquoteFirst(suppliedData);
-            if (unquotedSuppliedData == null) {
-                return "NO \"authentication failed\"";
+            if (Strings.isNullOrEmpty(suppliedData)) {
+                throw new SyntaxException("quoted authentication data must be supplied");
             }
-            if (unquotedSuppliedData.equals("*")) {
-                return "NO \"authentication aborted\"";
+            if (suppliedData.equals("*")) {
+                throw new AuthenticationException("authentication aborted by client");
             }
-            Username authenticatedUsername = authenticationProcessor.isAuthenticationSuccesfull(session, unquotedSuppliedData);
+            Username authenticatedUsername = authenticationProcessor.isAuthenticationSuccesfull(session, suppliedData);
             if (authenticatedUsername != null) {
                 session.setUser(authenticatedUsername);
                 session.setState(Session.State.AUTHENTICATED);
                 return "OK";
             } else {
-                session.setState(Session.State.UNAUTHENTICATED);
-                session.setUser(null);
-                return "NO authentication failed";
+                resetSession(session);
+                return "NO \"authentication failed\"";
             }
         } catch (AuthenticationException e) {
-            return "NO Authentication failed with: " + e.getMessage();
+            resetSession(session);
+            return "NO \"Authentication failed with: " + e.getMessage() + "\"";
         } catch (SyntaxException e) {
-            return "NO ManageSieve syntax is incorrect : " + e.getMessage();
+            resetSession(session);
+            return "NO \"ManageSieve syntax is incorrect: " + e.getMessage() + "\"";
         }
     }
 
     @Override
     public String unauthenticate(Session session) {
         if (session.isAuthenticated()) {
-            session.setState(Session.State.UNAUTHENTICATED);
-            session.setUser(null);
+            resetSession(session);
             return "OK";
         } else {
             return "NO UNAUTHENTICATE command must be issued in authenticated state";
         }
+    }
+
+    private static void resetSession(Session session) {
+        session.setState(Session.State.UNAUTHENTICATED);
+        session.setUser(null);
+        session.setChoosedAuthenticationMechanism(null);
     }
 
     @Override
