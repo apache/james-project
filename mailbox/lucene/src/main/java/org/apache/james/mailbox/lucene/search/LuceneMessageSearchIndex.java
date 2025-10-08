@@ -238,7 +238,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         try {
             this.writer = new IndexWriter(this.directory, createConfig(LenientImapSearchAnalyzer.INSTANCE, dropIndexOnStart));
         } catch (IndexFormatTooOldException e) {
-            throw new RuntimeException("Old lucene index version detected, automatic migration is not supported. See https://github.com/james/james-project/blob/master/upgrade-instructions.md#james-4046-refactor-and-update-apache-james-mailbox-lucene for details", e);
+            throw new RuntimeException("Old lucene index version detected, automatic migration is not supported. See https://github.com/apache/james-project/blob/master/upgrade-instructions.md#james-4046-refactor-and-update-apache-james-mailbox-lucene for details", e);
         }
     }
 
