@@ -171,6 +171,12 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
                 + ". " + supportedValueMessage()));
     }
 
+    @Override
+    public Route asRoute(TaskManager taskManager) {
+        return new MultiTaskRoute(this, taskManager); //temporary, to test...
+        // TODO: need something to differentiate a normal task route from a multi one... need the request? or need a dedicated TaskFromRequestRegistry?
+    }
+
     private TaskRegistrationKey parseRegistrationKey(Request request) {
         return Optional.ofNullable(request.queryParams(taskParameterName))
             .map(this::validateParameter)

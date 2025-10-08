@@ -23,6 +23,7 @@ import static org.apache.james.webadmin.tasks.TaskFromRequestRegistry.SingleTask
 
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.MessagesRoutes;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.MultiTaskRegistration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -35,5 +36,6 @@ public class MessagesRoutesModule extends AbstractModule {
         routesMultibinder.addBinding().to(MessagesRoutes.class);
 
         Multibinder.newSetBinder(binder(), SingleTaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_TASKS));
+        Multibinder.newSetBinder(binder(), MultiTaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_MULTI_TASKS));
     }
 }

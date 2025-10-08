@@ -61,20 +61,25 @@ public class MessagesRoutes implements Routes {
     private final ExpireMailboxService expireMailboxService;
     private final JsonTransformer jsonTransformer;
     private final Set<TaskFromRequestRegistry.TaskRegistration> allMessagesTaskRegistration;
+    private final Set<TaskFromRequestRegistry.TaskRegistration> allMessagesMultiTaskRegistration;
     private final UsersRepository usersRepository;
 
     public static final String ALL_MESSAGES_TASKS = "allMessagesTasks";
+    public static final String ALL_MESSAGES_MULTI_TASKS = "allMessagesMultiTasks";
 
     @Inject
     MessagesRoutes(TaskManager taskManager, MessageId.Factory messageIdFactory, MessageIdReIndexer reIndexer,
                    ExpireMailboxService expireMailboxService, JsonTransformer jsonTransformer,
-                   @Named(ALL_MESSAGES_TASKS) Set<TaskFromRequestRegistry.TaskRegistration> allMessagesTaskRegistration, UsersRepository usersRepository) {
+                   @Named(ALL_MESSAGES_TASKS) Set<TaskFromRequestRegistry.TaskRegistration> allMessagesTaskRegistration,
+                   @Named(ALL_MESSAGES_MULTI_TASKS) Set<TaskFromRequestRegistry.TaskRegistration> allMessagesMultiTaskRegistration,
+                   UsersRepository usersRepository) {
         this.taskManager = taskManager;
         this.messageIdFactory = messageIdFactory;
         this.reIndexer = reIndexer;
         this.expireMailboxService = expireMailboxService;
         this.jsonTransformer = jsonTransformer;
         this.allMessagesTaskRegistration = allMessagesTaskRegistration;
+        this.allMessagesMultiTaskRegistration = allMessagesMultiTaskRegistration;
         this.usersRepository = usersRepository;
     }
 
@@ -89,6 +94,8 @@ public class MessagesRoutes implements Routes {
         service.delete(BASE_PATH, expireMailboxTaskRequest.asRoute(taskManager), jsonTransformer);
         service.post(MESSAGE_PATH, reIndexMessage(), jsonTransformer);
         allMessagesOperations()
+            .ifPresent(route -> service.post(BASE_PATH, route, jsonTransformer));
+        allMessagesMultiTaskOperations()
             .ifPresent(route -> service.post(BASE_PATH, route, jsonTransformer));
     }
 
@@ -140,6 +147,13 @@ public class MessagesRoutes implements Routes {
         return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
             .registrations(allMessagesTaskRegistration)
+            .buildAsRouteOptional(taskManager);
+    }
+
+    private Optional<Route> allMessagesMultiTaskOperations() {
+        return TaskFromRequestRegistry.builder()
+            .parameterName(TASK_PARAMETER)
+            .registrations(allMessagesMultiTaskRegistration)
             .buildAsRouteOptional(taskManager);
     }
 }
