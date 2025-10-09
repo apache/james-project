@@ -33,7 +33,6 @@ import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.Version;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
@@ -50,7 +49,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -100,7 +98,7 @@ public class RunRulesOnAllUsersMailboxToTask extends TaskFromRequestRegistry.Mul
 
     private static List<UserTask> runRulesOnAllUsersMailbox(UsersRepository usersRepository, MailboxManager mailboxManager, RunRulesOnMailboxService runRulesOnMailboxService, MailboxName mailboxName, Rules rules) {
         return Flux.from(usersRepository.listReactive())
-            .filter(Throwing.predicate(username -> mailboxForUserExists(mailboxManager, username, mailboxName)))
+            .filterWhen(username -> mailboxForUserExists(mailboxManager, username, mailboxName))
             .map(username -> runRulesOnUserMailbox(runRulesOnMailboxService, username, mailboxName, rules))
             .collectList()
             .block();
@@ -126,12 +124,9 @@ public class RunRulesOnAllUsersMailboxToTask extends TaskFromRequestRegistry.Mul
         }
     }
 
-    private static boolean mailboxForUserExists(MailboxManager mailboxManager, Username username, MailboxName mailboxName) throws MailboxNameException {
+    private static Mono<Boolean> mailboxForUserExists(MailboxManager mailboxManager, Username username, MailboxName mailboxName) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString())
-            .assertAcceptable(mailboxSession.getPathDelimiter());
-        boolean result = Boolean.TRUE.equals(Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession)).block());
-        mailboxManager.endProcessingRequest(mailboxSession);
-        return result;
+        MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString());
+        return Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession));
     }
 }
