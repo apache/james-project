@@ -79,9 +79,18 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
             return build().asRoute(taskManager);
         }
 
+        public Route buildAsMultiRoute(TaskManager taskManager) {
+            return build().asMultiRoute(taskManager);
+        }
+
         public Optional<Route> buildAsRouteOptional(TaskManager taskManager) {
             return buildAsOptional()
                 .map(registry -> registry.asRoute(taskManager));
+        }
+
+        public Optional<Route> buildAsMultiRouteOptional(TaskManager taskManager) {
+            return buildAsOptional()
+                .map(registry -> registry.asMultiRoute(taskManager));
         }
 
         Optional<TaskFromRequestRegistry> buildAsOptional() {
@@ -171,10 +180,8 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
                 + ". " + supportedValueMessage()));
     }
 
-    @Override
-    public Route asRoute(TaskManager taskManager) {
-        return new MultiTaskRoute(this, taskManager); //temporary, to test...
-        // TODO: need something to differentiate a normal task route from a multi one... need the request? or need a dedicated TaskFromRequestRegistry?
+    public Route asMultiRoute(TaskManager taskManager) {
+        return new MultiTaskRoute(this, taskManager);
     }
 
     private TaskRegistrationKey parseRegistrationKey(Request request) {

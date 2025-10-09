@@ -154,6 +154,6 @@ public class MessagesRoutes implements Routes {
         return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
             .registrations(allMessagesMultiTaskRegistration)
-            .buildAsRouteOptional(taskManager);
+            .buildAsMultiRouteOptional(taskManager);
     }
 }

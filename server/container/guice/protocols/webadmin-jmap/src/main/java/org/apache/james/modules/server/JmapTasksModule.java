@@ -52,7 +52,7 @@ public class JmapTasksModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
             .addBinding().to(RecomputeUserFastViewProjectionItemsRequestToTask.class);
 
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.MultiTaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_MULTI_TASKS))
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_MULTI_TASKS))
             .addBinding().to(RunRulesOnAllUsersMailboxToTask.class);
 
         Multibinder<Routes> routesMultiBinder = Multibinder.newSetBinder(binder(), Routes.class);

@@ -129,7 +129,7 @@ public class RunRulesOnAllUsersMailboxToTaskTest {
             service.post(BASE_PATH,
                 TaskFromRequestRegistry.builder()
                     .registrations(new RunRulesOnAllUsersMailboxToTask(usersRepository, mailboxManager, runRulesOnMailboxService))
-                    .buildAsRoute(taskManager),
+                    .buildAsMultiRoute(taskManager),
                 new JsonTransformer());
         }
     }
@@ -358,7 +358,7 @@ public class RunRulesOnAllUsersMailboxToTaskTest {
             .getMap(".");
 
         results
-            .forEach( (username, taskId) ->
+            .forEach((username, taskId) ->
                 given()
                     .basePath(TasksRoutes.BASE)
                 .when()

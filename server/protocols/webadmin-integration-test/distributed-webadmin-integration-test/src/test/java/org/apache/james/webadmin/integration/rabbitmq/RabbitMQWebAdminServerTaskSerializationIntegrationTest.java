@@ -25,6 +25,7 @@ import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes.MESSAGE_PATH_PARAM;
 import static org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes.USERS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -32,6 +33,7 @@ import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import jakarta.mail.Flags;
@@ -118,6 +120,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
 
     private static final String DOMAIN = "domain";
     private static final String USERNAME = "username@" + DOMAIN;
+    private static final String USERNAME_2 = "username2@" + DOMAIN;
 
     private DataProbe dataProbe;
     private MailboxProbe mailboxProbe;
@@ -772,6 +775,69 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.rulesOnMessagesApplyFailed", is(0))
             .body("additionalInformation.username", is(USERNAME))
             .body("additionalInformation.mailboxName", is(MailboxConstants.INBOX));
+    }
+
+    @Test
+    void runRulesOnAllUsersMailboxShouldComplete(GuiceJamesServer server) throws Exception {
+        server.getProbe(DataProbeImpl.class).addUser(USERNAME, "secret");
+        server.getProbe(DataProbeImpl.class).addUser(USERNAME_2, "secret");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "otherMailbox");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME_2, MailboxConstants.INBOX);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME_2, "otherMailbox");
+
+        mailboxProbe.appendMessage(
+            USERNAME,
+            MailboxPath.inbox(Username.of(USERNAME)),
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            false,
+            new Flags());
+
+        mailboxProbe.appendMessage(
+            USERNAME_2,
+            MailboxPath.inbox(Username.of(USERNAME_2)),
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            false,
+            new Flags());
+
+        Map<String, String> map = given()
+            .queryParams("action", "triage", "mailboxName", MailboxConstants.INBOX)
+            .body("""
+            {
+              "id": "1",
+              "name": "rule 1",
+              "action": {
+                "appendIn": {
+                  "mailboxIds": []
+                },
+                "moveTo": {
+                  "mailboxName": "otherMailbox"
+                },
+                "important": false,
+                "keyworkds": [],
+                "reject": false,
+                "seen": false
+              },
+              "conditionGroup": {
+                "conditionCombiner": "AND",
+                "conditions": [
+                  {
+                    "comparator": "contains",
+                    "field": "subject",
+                    "value": "test"
+                  }
+                ]
+              }
+            }""")
+            .post("/messages").prettyPeek()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(map)
+            .satisfies(result -> assertThat(map).hasSize(2)
+                .containsOnlyKeys(USERNAME, USERNAME_2));
     }
 
     @Test
