@@ -29,7 +29,7 @@ import org.apache.james.webadmin.dto.DTOModuleInjections;
 import org.apache.james.webadmin.routes.BrowseStartUpdateTaskRegistration;
 import org.apache.james.webadmin.service.BrowseStartUpdateTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.BrowseStartUpdateTaskDTO;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -40,7 +40,7 @@ import com.google.inject.name.Names;
 public class BrowseStartTaskModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named("RabbitMQMailQueuesRoutes"))
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named("RabbitMQMailQueuesRoutes"))
             .addBinding()
             .to(BrowseStartUpdateTaskRegistration.class);
     }

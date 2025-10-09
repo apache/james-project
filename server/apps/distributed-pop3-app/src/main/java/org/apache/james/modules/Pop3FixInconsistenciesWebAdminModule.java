@@ -22,7 +22,7 @@ package org.apache.james.modules;
 import static org.apache.james.webadmin.routes.MailboxesRoutes.ALL_MAILBOXES_TASKS;
 
 import org.apache.james.pop3.webadmin.Pop3MetaDataFixInconsistenciesTaskRegistration;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -34,7 +34,7 @@ public class Pop3FixInconsistenciesWebAdminModule extends AbstractModule {
     protected void configure() {
         install(new Pop3FixInconsistenciesTaskSerializationModule());
 
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(ALL_MAILBOXES_TASKS))
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ALL_MAILBOXES_TASKS))
             .addBinding()
             .to(Pop3MetaDataFixInconsistenciesTaskRegistration.class);
     }

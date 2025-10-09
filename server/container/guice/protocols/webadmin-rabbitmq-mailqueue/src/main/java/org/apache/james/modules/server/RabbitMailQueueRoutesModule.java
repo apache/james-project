@@ -21,7 +21,7 @@ package org.apache.james.modules.server;
 
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.RabbitMQMailQueuesRoutes;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -33,6 +33,6 @@ public class RabbitMailQueueRoutesModule extends AbstractModule {
         install(new RabbitMailQueueTaskSerializationModule());
 
         Multibinder.newSetBinder(binder(), Routes.class).addBinding().to(RabbitMQMailQueuesRoutes.class);
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named("RabbitMQMailQueuesRoutes"));
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named("RabbitMQMailQueuesRoutes"));
     }
 }

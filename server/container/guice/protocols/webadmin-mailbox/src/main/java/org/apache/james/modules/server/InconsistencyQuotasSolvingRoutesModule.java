@@ -22,7 +22,7 @@ package org.apache.james.modules.server;
 import static org.apache.james.webadmin.routes.UserQuotaRoutes.USER_QUOTAS_OPERATIONS_INJECTION_KEY;
 
 import org.apache.james.webadmin.routes.UserQuotaRoutes;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -32,7 +32,7 @@ public class InconsistencyQuotasSolvingRoutesModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(USER_QUOTAS_OPERATIONS_INJECTION_KEY))
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(USER_QUOTAS_OPERATIONS_INJECTION_KEY))
             .addBinding()
             .to(UserQuotaRoutes.RecomputeCurrentQuotasRequestToTask.class);
     }

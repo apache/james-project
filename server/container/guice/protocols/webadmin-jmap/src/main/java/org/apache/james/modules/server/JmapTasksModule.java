@@ -29,7 +29,7 @@ import org.apache.james.webadmin.data.jmap.RunRulesOnMailboxRoutes;
 import org.apache.james.webadmin.routes.MailboxesRoutes;
 import org.apache.james.webadmin.routes.MessagesRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -40,16 +40,16 @@ public class JmapTasksModule extends AbstractModule {
     protected void configure() {
         install(new JmapTaskSerializationModule());
 
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
             .addBinding().to(RecomputeAllFastViewProjectionItemsRequestToTask.class);
 
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
             .addBinding().to(PopulateEmailQueryViewRequestToTask.class);
 
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
             .addBinding().to(PopulateFilteringProjectionRequestToTask.class);
 
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
             .addBinding().to(RecomputeUserFastViewProjectionItemsRequestToTask.class);
 
         Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.MultiTaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_MULTI_TASKS))

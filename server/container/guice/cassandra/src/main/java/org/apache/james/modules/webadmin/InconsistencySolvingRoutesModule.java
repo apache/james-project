@@ -35,7 +35,7 @@ import org.apache.james.webadmin.routes.SolveMessageDeletedInconsistenciesReques
 import org.apache.james.webadmin.routes.SolveMessageInconsistenciesRequestToTask;
 import org.apache.james.webadmin.routes.SolveMessageRecentInconsistenciesRequestToTask;
 import org.apache.james.webadmin.service.CassandraMappingsService;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -62,8 +62,8 @@ public class InconsistencySolvingRoutesModule extends AbstractModule {
             bind(RecomputeMailboxCountersService.class).in(Scopes.SINGLETON);
             bind(SolveMailboxInconsistenciesService.class).in(Scopes.SINGLETON);
 
-            Multibinder<TaskFromRequestRegistry.SingleTaskRegistration> multiBinder = Multibinder.newSetBinder(binder(),
-                TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS));
+            Multibinder<TaskRegistration> multiBinder = Multibinder.newSetBinder(binder(),
+                TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS));
 
             multiBinder.addBinding().to(SolveMailboxInconsistenciesRequestToTask.class);
             multiBinder.addBinding().to(RecomputeMailboxCountersRequestToTask.class);
@@ -77,8 +77,8 @@ public class InconsistencySolvingRoutesModule extends AbstractModule {
         protected void configure() {
             bind(SolveMessageInconsistenciesService.class).in(Scopes.SINGLETON);
 
-            Multibinder<TaskFromRequestRegistry.SingleTaskRegistration> multiBinder = Multibinder.newSetBinder(binder(),
-                TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_TASKS));
+            Multibinder<TaskRegistration> multiBinder = Multibinder.newSetBinder(binder(),
+                TaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_TASKS));
 
             multiBinder.addBinding().to(SolveMessageInconsistenciesRequestToTask.class);
         }

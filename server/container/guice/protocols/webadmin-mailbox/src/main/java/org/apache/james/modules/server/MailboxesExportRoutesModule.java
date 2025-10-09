@@ -22,7 +22,7 @@ package org.apache.james.modules.server;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.service.ExportService;
 import org.apache.james.webadmin.service.MailboxesExportRequestToTask;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -37,7 +37,7 @@ public class MailboxesExportRoutesModule extends AbstractModule {
         install(new WebadminMailboxExportTaskSerializationModule());
 
         bind(ExportService.class).in(Scopes.SINGLETON);
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.SingleTaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
             .addBinding().to(MailboxesExportRequestToTask.class);
     }
 }

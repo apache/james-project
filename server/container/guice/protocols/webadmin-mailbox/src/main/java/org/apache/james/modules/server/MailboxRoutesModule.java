@@ -42,7 +42,7 @@ import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserQuotaRoutes;
 import org.apache.james.webadmin.service.CreateMissingParentsRequestToTask;
 import org.apache.james.webadmin.service.SubscribeAllRequestToTask;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.SingleTaskRegistration;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 
 import com.google.inject.AbstractModule;
@@ -67,12 +67,12 @@ public class MailboxRoutesModule extends AbstractModule {
         Multibinder<JsonTransformerModule> jsonTransformerModuleMultibinder = Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
         jsonTransformerModuleMultibinder.addBinding().to(QuotaModule.class);
 
-        Multibinder<SingleTaskRegistration> userBoundTasks = Multibinder.newSetBinder(binder(), SingleTaskRegistration.class,
+        Multibinder<TaskRegistration> userBoundTasks = Multibinder.newSetBinder(binder(), TaskRegistration.class,
             Names.named(USER_MAILBOXES_OPERATIONS_INJECTION_KEY));
-        Multibinder<SingleTaskRegistration> allMailboxesTasks = Multibinder.newSetBinder(binder(), SingleTaskRegistration.class, Names.named(ALL_MAILBOXES_TASKS));
-        Multibinder.newSetBinder(binder(), SingleTaskRegistration.class, Names.named(ONE_MAILBOX_TASKS));
-        Multibinder.newSetBinder(binder(), SingleTaskRegistration.class, Names.named(ONE_MAIL_TASKS));
-        Multibinder.newSetBinder(binder(), SingleTaskRegistration.class, Names.named(USER_QUOTAS_OPERATIONS_INJECTION_KEY));
+        Multibinder<TaskRegistration> allMailboxesTasks = Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ALL_MAILBOXES_TASKS));
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ONE_MAILBOX_TASKS));
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ONE_MAIL_TASKS));
+        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(USER_QUOTAS_OPERATIONS_INJECTION_KEY));
 
         Multibinder.newSetBinder(binder(), RecomputeSingleComponentCurrentQuotasService.class)
             .addBinding()
