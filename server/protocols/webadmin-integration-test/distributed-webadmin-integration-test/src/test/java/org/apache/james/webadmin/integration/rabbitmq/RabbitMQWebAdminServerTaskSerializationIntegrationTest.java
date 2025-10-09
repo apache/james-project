@@ -831,7 +831,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
                 ]
               }
             }""")
-            .post("/messages").prettyPeek()
+            .post("/messages")
             .jsonPath()
             .getMap(".");
 
