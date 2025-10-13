@@ -31,7 +31,7 @@ public class RunRulesOnMailboxTaskAdditionalInformationDTOTest {
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
 
     private static final RunRulesOnMailboxTask.AdditionalInformation DOMAIN_OBJECT = new RunRulesOnMailboxTask.AdditionalInformation(
-        Username.of("bob@domain.tld"), new MailboxName("mbx1"), INSTANT, 10, 9);
+        Username.of("bob@domain.tld"), new MailboxName("mbx1"), INSTANT, 10, 9, false);
 
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {

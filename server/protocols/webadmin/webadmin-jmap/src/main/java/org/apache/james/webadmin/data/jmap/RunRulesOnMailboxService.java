@@ -22,6 +22,8 @@ package org.apache.james.webadmin.data.jmap;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 
 import jakarta.inject.Inject;
 
@@ -49,23 +51,39 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SynchronousSink;
 
 public class RunRulesOnMailboxService {
+    public static class TooManyAppliedActionsException extends RuntimeException {
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RunRulesOnMailboxService.class);
+    private static final int MAX_ACTIONS_PER_MAILBOX = Optional.ofNullable(System.getProperty("james.rules.triage.max.actions.per.mailbox"))
+        .map(Integer::valueOf)
+        .orElse(50000);
 
     private final MailboxManager mailboxManager;
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageIdManager messageIdManager;
+    private final int maxActionsPerMailbox;
 
     @Inject
     public RunRulesOnMailboxService(MailboxManager mailboxManager, MailboxId.Factory mailboxIdFactory, MessageIdManager messageIdManager) {
+        this(mailboxManager, mailboxIdFactory, messageIdManager, MAX_ACTIONS_PER_MAILBOX);
+    }
+
+    @VisibleForTesting
+    public RunRulesOnMailboxService(MailboxManager mailboxManager, MailboxId.Factory mailboxIdFactory, MessageIdManager messageIdManager,
+                                    int maxActionsPerMailbox) {
         this.mailboxManager = mailboxManager;
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdManager = messageIdManager;
+        this.maxActionsPerMailbox = maxActionsPerMailbox;
     }
 
     public Mono<Task.Result> runRulesOnMailbox(Username username, MailboxName mailboxName, Rules rules, RunRulesOnMailboxTask.Context context) {
@@ -75,6 +93,11 @@ public class RunRulesOnMailboxService {
         return Mono.from(mailboxManager.getMailboxReactive(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession))
             .flatMapMany(messageManager -> Flux.from(messageManager.getMessagesReactive(MessageRange.all(), FetchGroup.HEADERS, mailboxSession))
                 .flatMap(Throwing.function(messageResult -> runRulesOnMessage(ruleMatcher, messageResult, mailboxSession, context)), DEFAULT_CONCURRENCY))
+            .onErrorResume(TooManyAppliedActionsException.class, e -> {
+                LOGGER.info("Maximum number of actions exceeded for mailbox {} of user {}", mailboxName.asString(), username);
+                context.setMaximumAppliedActionExceeded();
+                return Mono.just(Task.Result.PARTIAL);
+            })
             .onErrorResume(e -> {
                 LOGGER.error("Error when applying rules to mailbox. Mailbox {} for user {}", mailboxName.asString(), username, e);
                 context.incrementFails();
@@ -88,7 +111,18 @@ public class RunRulesOnMailboxService {
     private Flux<Task.Result> runRulesOnMessage(RuleMatcher ruleMatcher, MessageResult messageResult, MailboxSession mailboxSession, RunRulesOnMailboxTask.Context context) throws MailboxException {
         return Flux.fromStream(ruleMatcher.findApplicableRules(messageResult))
             .map(Rule::getAction)
+            .handle(applyMaxActionsLimit(context))
             .concatMap(action -> applyActionOnMessage(messageResult, action, mailboxSession, context));
+    }
+
+    private BiConsumer<Rule.Action, SynchronousSink<Rule.Action>> applyMaxActionsLimit(RunRulesOnMailboxTask.Context context) {
+        return (action, sink) -> {
+            if (context.snapshot().getRulesOnMessagesApplySuccessfully() >= maxActionsPerMailbox) {
+                sink.error(new TooManyAppliedActionsException());
+            } else {
+                sink.next(action);
+            }
+        };
     }
 
     private Mono<Task.Result> applyActionOnMessage(MessageResult messageResult, Rule.Action action, MailboxSession mailboxSession, RunRulesOnMailboxTask.Context context) {
@@ -131,7 +165,7 @@ public class RunRulesOnMailboxService {
                 }
 
                 return Mono.from(messageIdManager.setInMailboxesReactive(messageId, mailboxIds, mailboxSession))
-                    .doOnSuccess(next -> context.incrementSuccesses())
+                    .then(Mono.fromRunnable(context::incrementSuccesses))
                     .then(Mono.just(Task.Result.COMPLETED));
             });
     }

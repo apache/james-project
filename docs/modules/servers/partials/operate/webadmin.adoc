@@ -1866,11 +1866,15 @@ the following `additionalInformation`:
     "mailboxName": "mbx1",
     "rulesOnMessagesApplySuccessfully": 9,
     "rulesOnMessagesApplyFailed": 3,
+    "maximumAppliedActionExceeded": false,
     "timestamp": "2024-12-03T10:15:30Z",
     "type": "RunRulesOnMailboxTask",
     "username": "bob@domain.tld"
 }
 ....
+
+Note: you can configure the maximum number of actions applied per mailbox by setting the JVM property `james.rules.triage.max.actions.per.mailbox`. The default value is 50000.
+This limit may help avoid the tombstone threshold issue on Cassandra backends when too many messages are moved or deleted at once.
 
 === Subscribing a user to all of its mailboxes
 
