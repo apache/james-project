@@ -1864,6 +1864,7 @@ the following `additionalInformation`:
 ....
 {
     "mailboxName": "mbx1",
+    "processedMessagesCount": 15,
     "rulesOnMessagesApplySuccessfully": 9,
     "rulesOnMessagesApplyFailed": 3,
     "maximumAppliedActionExceeded": false,

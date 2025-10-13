@@ -41,11 +41,13 @@ public class RunRulesOnMailboxTask implements Task {
             private final long rulesOnMessagesApplySuccessfully;
             private final long rulesOnMessagesApplyFailed;
             private final boolean maximumAppliedActionExceeded;
+            private final long processedMessagesCount;
 
-            private Snapshot(long rulesOnMessagesApplySuccessfully, long rulesOnMessagesApplyFailed, boolean maximumAppliedActionExceeded) {
+            private Snapshot(long rulesOnMessagesApplySuccessfully, long rulesOnMessagesApplyFailed, boolean maximumAppliedActionExceeded, long processedMessagesCount) {
                 this.rulesOnMessagesApplySuccessfully = rulesOnMessagesApplySuccessfully;
                 this.rulesOnMessagesApplyFailed = rulesOnMessagesApplyFailed;
                 this.maximumAppliedActionExceeded = maximumAppliedActionExceeded;
+                this.processedMessagesCount = processedMessagesCount;
             }
 
             public long getRulesOnMessagesApplySuccessfully() {
@@ -63,14 +65,16 @@ public class RunRulesOnMailboxTask implements Task {
 
                     return Objects.equals(this.rulesOnMessagesApplySuccessfully, that.rulesOnMessagesApplySuccessfully)
                         && Objects.equals(this.rulesOnMessagesApplyFailed, that.rulesOnMessagesApplyFailed)
-                        && Objects.equals(this.maximumAppliedActionExceeded, that.maximumAppliedActionExceeded);
+                        && Objects.equals(this.maximumAppliedActionExceeded, that.maximumAppliedActionExceeded)
+                        && Objects.equals(this.processedMessagesCount, that.processedMessagesCount);
                 }
                 return false;
             }
 
             @Override
             public final int hashCode() {
-                return Objects.hash(rulesOnMessagesApplySuccessfully, rulesOnMessagesApplyFailed, maximumAppliedActionExceeded);
+                return Objects.hash(rulesOnMessagesApplySuccessfully, rulesOnMessagesApplyFailed, maximumAppliedActionExceeded,
+                    processedMessagesCount);
             }
 
             @Override
@@ -79,6 +83,7 @@ public class RunRulesOnMailboxTask implements Task {
                     .add("rulesOnMessagesApplySuccessfully", rulesOnMessagesApplySuccessfully)
                     .add("rulesOnMessagesApplyFailed", rulesOnMessagesApplyFailed)
                     .add("maximumAppliedActionExceeded", maximumAppliedActionExceeded)
+                    .add("processedMessagesCount", processedMessagesCount)
                     .toString();
             }
         }
@@ -86,17 +91,21 @@ public class RunRulesOnMailboxTask implements Task {
         private final AtomicLong rulesOnMessagesApplySuccessfully;
         private final AtomicLong rulesOnMessagesApplyFailed;
         private final AtomicBoolean maximumAppliedActionExceeded;
+        private final AtomicLong processedMessagesCount;
 
         public Context() {
             this.rulesOnMessagesApplySuccessfully = new AtomicLong();
             this.rulesOnMessagesApplyFailed = new AtomicLong();
             this.maximumAppliedActionExceeded = new AtomicBoolean();
+            this.processedMessagesCount = new AtomicLong();
         }
 
-        public Context(long rulesOnMessagesApplySuccessfully, long rulesOnMessagesApplyFailed, boolean maximumAppliedActionExceeded) {
+        public Context(long rulesOnMessagesApplySuccessfully, long rulesOnMessagesApplyFailed, boolean maximumAppliedActionExceeded,
+                       long processedMessagesCount) {
             this.rulesOnMessagesApplySuccessfully = new AtomicLong(rulesOnMessagesApplySuccessfully);
             this.rulesOnMessagesApplyFailed = new AtomicLong(rulesOnMessagesApplyFailed);
             this.maximumAppliedActionExceeded = new AtomicBoolean(maximumAppliedActionExceeded);
+            this.processedMessagesCount = new AtomicLong(processedMessagesCount);
         }
 
         public void incrementSuccesses() {
@@ -111,8 +120,13 @@ public class RunRulesOnMailboxTask implements Task {
             maximumAppliedActionExceeded.set(true);
         }
 
+        public void increaseProcessedMessagesCount() {
+            processedMessagesCount.incrementAndGet();
+        }
+
         public Context.Snapshot snapshot() {
-            return new Context.Snapshot(rulesOnMessagesApplySuccessfully.get(), rulesOnMessagesApplyFailed.get(), maximumAppliedActionExceeded.get());
+            return new Context.Snapshot(rulesOnMessagesApplySuccessfully.get(), rulesOnMessagesApplyFailed.get(), maximumAppliedActionExceeded.get(),
+                processedMessagesCount.get());
         }
     }
 
@@ -123,7 +137,7 @@ public class RunRulesOnMailboxTask implements Task {
                                                   RunRulesOnMailboxTask.Context context) {
             Context.Snapshot snapshot = context.snapshot();
             return new AdditionalInformation(username, mailboxName, Clock.systemUTC().instant(), snapshot.rulesOnMessagesApplySuccessfully,
-                snapshot.rulesOnMessagesApplyFailed, snapshot.maximumAppliedActionExceeded);
+                snapshot.rulesOnMessagesApplyFailed, snapshot.maximumAppliedActionExceeded, snapshot.processedMessagesCount);
         }
 
         private final Username username;
@@ -132,19 +146,22 @@ public class RunRulesOnMailboxTask implements Task {
         private final long rulesOnMessagesApplySuccessfully;
         private final long rulesOnMessagesApplyFailed;
         private final boolean maximumAppliedActionExceeded;
+        private final long processedMessagesCount;
 
         public AdditionalInformation(Username username,
                                      MailboxName mailboxName,
                                      Instant timestamp,
                                      long rulesOnMessagesApplySuccessfully,
                                      long rulesOnMessagesApplyFailed,
-                                     boolean maximumAppliedActionExceeded) {
+                                     boolean maximumAppliedActionExceeded,
+                                     long processedMessagesCount) {
             this.username = username;
             this.mailboxName = mailboxName;
             this.timestamp = timestamp;
             this.rulesOnMessagesApplySuccessfully = rulesOnMessagesApplySuccessfully;
             this.rulesOnMessagesApplyFailed = rulesOnMessagesApplyFailed;
             this.maximumAppliedActionExceeded = maximumAppliedActionExceeded;
+            this.processedMessagesCount = processedMessagesCount;
         }
 
         public Username getUsername() {
@@ -169,6 +186,10 @@ public class RunRulesOnMailboxTask implements Task {
 
         public boolean maximumAppliedActionExceeded() {
             return maximumAppliedActionExceeded;
+        }
+
+        public long getProcessedMessagesCount() {
+            return processedMessagesCount;
         }
 
         @Override

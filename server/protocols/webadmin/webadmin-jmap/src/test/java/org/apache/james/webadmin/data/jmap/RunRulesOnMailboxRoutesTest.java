@@ -1041,7 +1041,8 @@ public class RunRulesOnMailboxRoutesTest {
             .body("additionalInformation.mailboxName", Matchers.is(MAILBOX_NAME))
             .body("additionalInformation.rulesOnMessagesApplySuccessfully", Matchers.is(2))
             .body("additionalInformation.rulesOnMessagesApplyFailed", Matchers.is(0))
-            .body("additionalInformation.maximumAppliedActionExceeded", Matchers.is(false));
+            .body("additionalInformation.maximumAppliedActionExceeded", Matchers.is(false))
+            .body("additionalInformation.processedMessagesCount", Matchers.is(3));
     }
 
     @Test

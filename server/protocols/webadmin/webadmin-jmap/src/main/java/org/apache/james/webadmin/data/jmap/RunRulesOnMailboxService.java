@@ -109,6 +109,8 @@ public class RunRulesOnMailboxService {
     }
 
     private Flux<Task.Result> runRulesOnMessage(RuleMatcher ruleMatcher, MessageResult messageResult, MailboxSession mailboxSession, RunRulesOnMailboxTask.Context context) throws MailboxException {
+        context.increaseProcessedMessagesCount();
+
         return Flux.fromStream(ruleMatcher.findApplicableRules(messageResult))
             .map(Rule::getAction)
             .handle(applyMaxActionsLimit(context))
