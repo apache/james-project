@@ -36,6 +36,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import jakarta.mail.Flags;
 
@@ -1039,6 +1040,161 @@ public class RunRulesOnMailboxRoutesTest {
             .body("additionalInformation.username", Matchers.is(USERNAME.asString()))
             .body("additionalInformation.mailboxName", Matchers.is(MAILBOX_NAME))
             .body("additionalInformation.rulesOnMessagesApplySuccessfully", Matchers.is(2))
-            .body("additionalInformation.rulesOnMessagesApplyFailed", Matchers.is(0));
+            .body("additionalInformation.rulesOnMessagesApplyFailed", Matchers.is(0))
+            .body("additionalInformation.maximumAppliedActionExceeded", Matchers.is(false))
+            .body("additionalInformation.processedMessagesCount", Matchers.is(3));
+    }
+
+    @Test
+    void taskShouldStopAndCompleteWhenAppliedActionsExceedMaximumLimit() throws Exception {
+        overrideTriageRulesRouteWithActionsLimit(2);
+
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USERNAME, OTHER_MAILBOX_NAME);
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+        mailboxManager.createMailbox(mailboxPath, systemSession);
+        mailboxManager.createMailbox(otherMailboxPath, systemSession);
+
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, systemSession);
+
+        // Add 20 matching messages, which exceeds the max actions of 2
+        IntStream.range(0, 20)
+            .forEach(Throwing.intConsumer(i -> messageManager.appendMessage(
+                MessageManager.AppendCommand.builder()
+                    .build(Message.Builder.of()
+                        .setSubject("plop")
+                        .setFrom("alice@example.com")
+                        .setBody("matched mail", StandardCharsets.UTF_8)),
+                systemSession)));
+
+        MailboxId otherMailboxId = mailboxManager.getMailbox(otherMailboxPath, systemSession).getId();
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body(RULE_PAYLOAD.formatted(otherMailboxId.serialize()))
+            .post(MAILBOX_NAME + "/messages")
+        .then()
+            .statusCode(CREATED_201)
+            .extract()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", Matchers.is("completed"))
+            .body("additionalInformation.rulesOnMessagesApplySuccessfully", Matchers.lessThan(20))
+            .body("additionalInformation.rulesOnMessagesApplyFailed", Matchers.is(0))
+            .body("additionalInformation.maximumAppliedActionExceeded", Matchers.is(true));
+    }
+
+    @Test
+    void taskShouldCompleteWhenAppliedActionsReachMaximumLimit() throws Exception {
+        overrideTriageRulesRouteWithActionsLimit(2);
+
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USERNAME, OTHER_MAILBOX_NAME);
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+        mailboxManager.createMailbox(mailboxPath, systemSession);
+        mailboxManager.createMailbox(otherMailboxPath, systemSession);
+
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, systemSession);
+
+        // Add 2 matching messages, reach the limit of 2
+        IntStream.range(0, 2)
+            .forEach(Throwing.intConsumer(i -> messageManager.appendMessage(
+                MessageManager.AppendCommand.builder()
+                    .build(Message.Builder.of()
+                        .setSubject("plop")
+                        .setFrom("alice@example.com")
+                        .setBody("matched mail", StandardCharsets.UTF_8)),
+                systemSession)));
+
+        MailboxId otherMailboxId = mailboxManager.getMailbox(otherMailboxPath, systemSession).getId();
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body(RULE_PAYLOAD.formatted(otherMailboxId.serialize()))
+            .post(MAILBOX_NAME + "/messages")
+        .then()
+            .statusCode(CREATED_201)
+            .extract()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", Matchers.is("completed"))
+            .body("additionalInformation.rulesOnMessagesApplySuccessfully", Matchers.is(2))
+            .body("additionalInformation.rulesOnMessagesApplyFailed", Matchers.is(0))
+            .body("additionalInformation.maximumAppliedActionExceeded", Matchers.is(false));
+    }
+
+    @Test
+    void taskShouldCompleteWhenAppliedActionsLessThanMaximumLimit() throws Exception {
+        overrideTriageRulesRouteWithActionsLimit(10);
+
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+        MailboxPath otherMailboxPath = MailboxPath.forUser(USERNAME, OTHER_MAILBOX_NAME);
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+        mailboxManager.createMailbox(mailboxPath, systemSession);
+        mailboxManager.createMailbox(otherMailboxPath, systemSession);
+
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, systemSession);
+
+        // Add 2 matching messages, < the limit of 10
+        IntStream.range(0, 2)
+            .forEach(Throwing.intConsumer(i -> messageManager.appendMessage(
+                MessageManager.AppendCommand.builder()
+                    .build(Message.Builder.of()
+                        .setSubject("plop")
+                        .setFrom("alice@example.com")
+                        .setBody("matched mail", StandardCharsets.UTF_8)),
+                systemSession)));
+
+        MailboxId otherMailboxId = mailboxManager.getMailbox(otherMailboxPath, systemSession).getId();
+
+        String taskId = given()
+            .queryParam("action", "triage")
+            .body(RULE_PAYLOAD.formatted(otherMailboxId.serialize()))
+            .post(MAILBOX_NAME + "/messages")
+        .then()
+            .statusCode(CREATED_201)
+            .extract()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", Matchers.is("completed"))
+            .body("additionalInformation.rulesOnMessagesApplySuccessfully", Matchers.is(2))
+            .body("additionalInformation.rulesOnMessagesApplyFailed", Matchers.is(0))
+            .body("additionalInformation.maximumAppliedActionExceeded", Matchers.is(false));
+    }
+
+    private void overrideTriageRulesRouteWithActionsLimit(int maxActionsLimit) {
+        webAdminServer.destroy();
+        webAdminServer = WebAdminUtils.createWebAdminServer(
+                new RunRulesOnMailboxRoutes(usersRepository, mailboxManager, taskManager, new JsonTransformer(),
+                    new RunRulesOnMailboxService(mailboxManager, new InMemoryId.Factory(), messageIdManager, maxActionsLimit)),
+                new TasksRoutes(taskManager, new JsonTransformer(),
+                    DTOConverter.of(RunRulesOnMailboxTaskAdditionalInformationDTO.SERIALIZATION_MODULE)))
+            .start();
+
+        RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
+            .setBasePath(USERS_BASE + SEPARATOR + USERNAME.asString() + SEPARATOR + UserMailboxesRoutes.MAILBOXES)
+            .setUrlEncodingEnabled(false)
+            .build();
     }
 }
