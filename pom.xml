@@ -3178,6 +3178,10 @@
                                                         <normalization>COMPILE_CLASSPATH</normalization>
                                                     </fileSet>
                                                     <fileSet>
+                                                        <name>classpath</name>
+                                                        <normalization>CLASSPATH</normalization>
+                                                    </fileSet>
+                                                    <fileSet>
                                                         <name>compilerPlugins</name>
                                                         <normalization>IGNORED_PATH</normalization>
                                                     </fileSet>
@@ -3265,10 +3269,10 @@
                                                     <ignore>notifyCompilation</ignore>
                                                     <ignore>javacGenerateDebugSymbols</ignore>
                                                     <!-- ignoring these feels wrong but I couldn't find a way to track them -->
-                                                    <ignore>classpath</ignore>
 <!--                                                    <ignore>pluginArtifacts</ignore>-->
 <!--                                                    <ignore>dependencies</ignore>-->
 <!--                                                    <ignore>compilerPlugins</ignore>-->
+<!--                                                    <ignore>classpath</ignore>-->
                                                 </ignoredProperties>
                                             </inputs>
                                             <iteratedProperties>
