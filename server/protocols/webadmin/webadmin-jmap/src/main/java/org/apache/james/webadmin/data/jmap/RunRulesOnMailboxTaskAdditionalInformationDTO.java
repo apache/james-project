@@ -44,7 +44,9 @@ public class RunRulesOnMailboxTaskAdditionalInformationDTO implements Additional
             new MailboxName(dto.getMailboxName()),
             dto.getTimestamp(),
             dto.getRulesOnMessagesApplySuccessfully(),
-            dto.getRulesOnMessagesApplyFailed());
+            dto.getRulesOnMessagesApplyFailed(),
+            dto.getMaximumAppliedActionExceeded(),
+            dto.getProcessedMessagesCount());
     }
 
     private static RunRulesOnMailboxTaskAdditionalInformationDTO toDto(RunRulesOnMailboxTask.AdditionalInformation domain, String type) {
@@ -54,7 +56,9 @@ public class RunRulesOnMailboxTaskAdditionalInformationDTO implements Additional
             domain.getMailboxName().asString(),
             domain.getTimestamp(),
             domain.getRulesOnMessagesApplySuccessfully(),
-            domain.getRulesOnMessagesApplyFailed());
+            domain.getRulesOnMessagesApplyFailed(),
+            domain.maximumAppliedActionExceeded(),
+            domain.getProcessedMessagesCount());
     }
 
     private final String type;
@@ -63,19 +67,25 @@ public class RunRulesOnMailboxTaskAdditionalInformationDTO implements Additional
     private final Instant timestamp;
     private final long rulesOnMessagesApplySuccessfully;
     private final long rulesOnMessagesApplyFailed;
+    private final boolean maximumAppliedActionExceeded;
+    private final long processedMessagesCount;
 
     public RunRulesOnMailboxTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                          @JsonProperty("username") String username,
                                                          @JsonProperty("mailboxName") String mailboxName,
                                                          @JsonProperty("timestamp") Instant timestamp,
                                                          @JsonProperty("rulesOnMessagesApplySuccessfully") long rulesOnMessagesApplySuccessfully,
-                                                         @JsonProperty("rulesOnMessagesApplyFailed") long rulesOnMessagesApplyFailed) {
+                                                         @JsonProperty("rulesOnMessagesApplyFailed") long rulesOnMessagesApplyFailed,
+                                                         @JsonProperty("maximumAppliedActionExceeded") boolean maximumAppliedActionExceeded,
+                                                         @JsonProperty("processedMessagesCount") long processedMessagesCount) {
         this.type = type;
         this.username = username;
         this.mailboxName = mailboxName;
         this.timestamp = timestamp;
         this.rulesOnMessagesApplySuccessfully = rulesOnMessagesApplySuccessfully;
         this.rulesOnMessagesApplyFailed = rulesOnMessagesApplyFailed;
+        this.maximumAppliedActionExceeded = maximumAppliedActionExceeded;
+        this.processedMessagesCount = processedMessagesCount;
     }
 
     @Override
@@ -102,5 +112,13 @@ public class RunRulesOnMailboxTaskAdditionalInformationDTO implements Additional
 
     public long getRulesOnMessagesApplyFailed() {
         return rulesOnMessagesApplyFailed;
+    }
+
+    public boolean getMaximumAppliedActionExceeded() {
+        return maximumAppliedActionExceeded;
+    }
+
+    public long getProcessedMessagesCount() {
+        return processedMessagesCount;
     }
 }
