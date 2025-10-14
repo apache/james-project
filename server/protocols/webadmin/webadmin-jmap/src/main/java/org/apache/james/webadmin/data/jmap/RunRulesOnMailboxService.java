@@ -65,7 +65,7 @@ public class RunRulesOnMailboxService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RunRulesOnMailboxService.class);
     private static final int MAX_ACTIONS_PER_MAILBOX = Optional.ofNullable(System.getProperty("james.rules.triage.max.actions.per.mailbox"))
         .map(Integer::valueOf)
-        .orElse(50000);
+        .orElse(25000);
 
     private final MailboxManager mailboxManager;
     private final MailboxId.Factory mailboxIdFactory;
@@ -96,7 +96,7 @@ public class RunRulesOnMailboxService {
             .onErrorResume(TooManyAppliedActionsException.class, e -> {
                 LOGGER.info("Maximum number of actions exceeded for mailbox {} of user {}", mailboxName.asString(), username);
                 context.setMaximumAppliedActionExceeded();
-                return Mono.just(Task.Result.PARTIAL);
+                return Mono.just(Task.Result.COMPLETED);
             })
             .onErrorResume(e -> {
                 LOGGER.error("Error when applying rules to mailbox. Mailbox {} for user {}", mailboxName.asString(), username, e);

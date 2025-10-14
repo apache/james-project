@@ -1046,7 +1046,7 @@ public class RunRulesOnMailboxRoutesTest {
     }
 
     @Test
-    void taskShouldFailWhenAppliedActionsExceedMaximumLimit() throws Exception {
+    void taskShouldStopAndCompleteWhenAppliedActionsExceedMaximumLimit() throws Exception {
         overrideTriageRulesRouteWithActionsLimit(2);
 
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
@@ -1085,7 +1085,7 @@ public class RunRulesOnMailboxRoutesTest {
         .when()
             .get(taskId + "/await")
         .then()
-            .body("status", Matchers.is("failed"))
+            .body("status", Matchers.is("completed"))
             .body("additionalInformation.rulesOnMessagesApplySuccessfully", Matchers.lessThan(20))
             .body("additionalInformation.rulesOnMessagesApplyFailed", Matchers.is(0))
             .body("additionalInformation.maximumAppliedActionExceeded", Matchers.is(true));
