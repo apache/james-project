@@ -21,6 +21,8 @@ package org.apache.james.webadmin.data.jmap;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
+import java.util.Optional;
+
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -49,6 +51,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -61,13 +64,15 @@ public class RunRulesOnMailboxRoutes implements Routes {
     private static final Logger LOGGER = LoggerFactory.getLogger(RunRulesOnMailboxRoutes.class);
 
     private static final TaskRegistrationKey TRIAGE = TaskRegistrationKey.of("triage");
+    private static final String ACTION_QUERY_PARAM = "action";
     private static final String MAILBOX_NAME = ":mailboxName";
     private static final String MAILBOXES = "mailboxes";
     private static final String USER_NAME = ":userName";
     private static final String USERS_BASE = "/users";
     public static final String USER_MAILBOXES_BASE = USERS_BASE + SEPARATOR + USER_NAME + SEPARATOR + MAILBOXES;
     public static final String SPECIFIC_MAILBOX = USER_MAILBOXES_BASE + SEPARATOR + MAILBOX_NAME;
-    public static final String MESSAGES_PATH = SPECIFIC_MAILBOX + "/messages";
+    public static final String MESSAGES_BASE = "/messages";
+    public static final String MESSAGES_PATH = SPECIFIC_MAILBOX + MESSAGES_BASE;
 
     private final UsersRepository usersRepository;
     private final MailboxManager mailboxManager;
@@ -75,6 +80,7 @@ public class RunRulesOnMailboxRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
     private final TaskManager taskManager;
     private final ObjectMapper jsonDeserialize;
+    private final Optional<RunRuleOnAllMailboxesRoute> allMailboxesRoute;
 
     @Inject
     RunRulesOnMailboxRoutes(UsersRepository usersRepository,
@@ -82,6 +88,16 @@ public class RunRulesOnMailboxRoutes implements Routes {
                             TaskManager taskManager,
                             JsonTransformer jsonTransformer,
                             RunRulesOnMailboxService runRulesOnMailboxService) {
+        this(usersRepository, mailboxManager, taskManager, jsonTransformer, runRulesOnMailboxService, Optional.empty());
+    }
+
+    @VisibleForTesting
+    RunRulesOnMailboxRoutes(UsersRepository usersRepository,
+                            MailboxManager mailboxManager,
+                            TaskManager taskManager,
+                            JsonTransformer jsonTransformer,
+                            RunRulesOnMailboxService runRulesOnMailboxService,
+                            Optional<RunRuleOnAllMailboxesRoute> allMailboxesRoute) {
         this.usersRepository = usersRepository;
         this.mailboxManager = mailboxManager;
         this.taskManager = taskManager;
@@ -90,6 +106,7 @@ public class RunRulesOnMailboxRoutes implements Routes {
         this.jsonDeserialize = new ObjectMapper()
             .registerModule(new Jdk8Module())
             .registerModule(new GuavaModule());
+        this.allMailboxesRoute = allMailboxesRoute;
     }
 
     @Override
@@ -100,11 +117,14 @@ public class RunRulesOnMailboxRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.post(MESSAGES_PATH, runRulesOnMailboxRoute(), jsonTransformer);
+
+        // TESTING only
+        allMailboxesRoute.ifPresent(route -> service.post(MESSAGES_BASE, route, jsonTransformer));
     }
 
     public Route runRulesOnMailboxRoute() {
         return TaskFromRequestRegistry.builder()
-            .parameterName("action")
+            .parameterName(ACTION_QUERY_PARAM)
             .register(TRIAGE, this::runRulesOnMailbox)
             .buildAsRoute(taskManager);
     }

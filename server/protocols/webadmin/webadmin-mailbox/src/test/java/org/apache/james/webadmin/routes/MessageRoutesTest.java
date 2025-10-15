@@ -96,6 +96,7 @@ class MessageRoutesTest {
                     null,
                     jsonTransformer,
                     ImmutableSet.of(),
+                    ImmutableSet.of(),
                     null))
             .start();
 

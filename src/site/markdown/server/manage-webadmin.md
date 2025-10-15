@@ -1485,6 +1485,69 @@ However the source of truth will not be impacted, hence rerunning the task will 
 This task could be run safely online and can be scheduled on a recurring basis outside of peak traffic 
 by an admin to ensure Cassandra message consistency.
 
+=== Running a filtering rule on a specific mailbox for all users
+
+```
+curl -XPOST http://ip:port/messages?action=triage&mailboxName={mailboxName} \
+-d '{
+  "id": "1",
+  "name": "rule 1",
+  "action": {
+    "moveTo": {
+      "mailboxName": "Trash"
+    }
+  },
+  "conditionGroup": {
+    "conditionCombiner": "OR",
+    "conditions": [
+      {
+        "comparator": "contains",
+        "field": "subject",
+        "value": "plop"
+      },
+      {
+        "comparator": "exactly-equals",
+        "field": "from",
+        "value": "bob@example.com"
+      }
+    ]
+  }
+}'
+```
+
+Will schedule a task for each user running a filtering rule passed as query parameter in `mailboxName` mailbox.
+
+Query parameter `mailboxName` should not be empty, nor contain `% *` characters, nor starting with `#`.
+If a user does not have a mailbox with that name, it will skip that user.
+
+The action of the rule should be `moveTo` with a mailbox name defined. If mailbox ids are defined in `appendIn` action,
+it will fail, as it makes no sense cluster scoped.
+
+Response codes:
+
+* 201: Success. Map[Username, TaskId] is returned.
+* 400: Invalid mailbox name
+* 400: Invalid JSON payload (including mailbox ids defined in the action)
+* 400: mailboxName query parameter is missing
+
+The response is a map of task id per user:
+
+```
+[
+  {
+    "username": "alice@example.org", "taskId": "5641376-02ed-47bd-bcc7-76ff6262d92a"
+  },
+  {
+    "username": "bob@example.org", "taskId": "5641376-02ed-47bd-bcc7-42cc1313f47b"
+  },
+
+  [...]
+
+]
+```
+
+[More details about details returned by running a filtering rule on a mailbox](#Running_a_filtering_rule_on_a_mailbox).
+
 ## Administrating user mailboxes
 
  - [Creating a mailbox](#Creating_a_mailbox)
