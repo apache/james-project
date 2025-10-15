@@ -88,6 +88,7 @@ class MessageRoutesExpireTest {
                     new ExpireMailboxService(usersRepository, mailboxManager, Clock.systemUTC()),
                     jsonTransformer,
                     ImmutableSet.of(),
+                    ImmutableSet.of(),
                     usersRepository))
             .start();
 
