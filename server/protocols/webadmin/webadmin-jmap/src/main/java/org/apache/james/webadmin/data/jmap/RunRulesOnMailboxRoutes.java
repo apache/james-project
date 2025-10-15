@@ -21,13 +21,11 @@ package org.apache.james.webadmin.data.jmap;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
-import java.util.List;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.RuleDTO;
 import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.Version;
@@ -36,12 +34,10 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Task;
-import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.data.jmap.dto.UserTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -55,13 +51,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import spark.Request;
-import spark.Response;
 import spark.Route;
 import spark.Service;
 
@@ -70,7 +65,6 @@ public class RunRulesOnMailboxRoutes implements Routes {
 
     private static final TaskRegistrationKey TRIAGE = TaskRegistrationKey.of("triage");
     private static final String ACTION_QUERY_PARAM = "action";
-    private static final String MAILBOX_NAME_QUERY_PARAM = "mailboxName";
     private static final String MAILBOX_NAME = ":mailboxName";
     private static final String MAILBOXES = "mailboxes";
     private static final String USER_NAME = ":userName";
@@ -86,6 +80,7 @@ public class RunRulesOnMailboxRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
     private final TaskManager taskManager;
     private final ObjectMapper jsonDeserialize;
+    private final Optional<RunRuleOnAllMailboxesRoute> allMailboxesRoute;
 
     @Inject
     RunRulesOnMailboxRoutes(UsersRepository usersRepository,
@@ -93,6 +88,16 @@ public class RunRulesOnMailboxRoutes implements Routes {
                             TaskManager taskManager,
                             JsonTransformer jsonTransformer,
                             RunRulesOnMailboxService runRulesOnMailboxService) {
+        this(usersRepository, mailboxManager, taskManager, jsonTransformer, runRulesOnMailboxService, Optional.empty());
+    }
+
+    @VisibleForTesting
+    RunRulesOnMailboxRoutes(UsersRepository usersRepository,
+                            MailboxManager mailboxManager,
+                            TaskManager taskManager,
+                            JsonTransformer jsonTransformer,
+                            RunRulesOnMailboxService runRulesOnMailboxService,
+                            Optional<RunRuleOnAllMailboxesRoute> allMailboxesRoute) {
         this.usersRepository = usersRepository;
         this.mailboxManager = mailboxManager;
         this.taskManager = taskManager;
@@ -101,6 +106,7 @@ public class RunRulesOnMailboxRoutes implements Routes {
         this.jsonDeserialize = new ObjectMapper()
             .registerModule(new Jdk8Module())
             .registerModule(new GuavaModule());
+        this.allMailboxesRoute = allMailboxesRoute;
     }
 
     @Override
@@ -112,8 +118,8 @@ public class RunRulesOnMailboxRoutes implements Routes {
     public void define(Service service) {
         service.post(MESSAGES_PATH, runRulesOnMailboxRoute(), jsonTransformer);
 
-        // JAMES-4148: should define a hook to be able to plug it as an extra task route on /messages endpoint
-        // service.post(MESSAGES_BASE, this::runRulesOnAllUsersMailbox, jsonTransformer);
+        // TESTING only
+        allMailboxesRoute.ifPresent(route -> service.post(MESSAGES_BASE, route, jsonTransformer));
     }
 
     public Route runRulesOnMailboxRoute() {
@@ -151,48 +157,6 @@ public class RunRulesOnMailboxRoutes implements Routes {
         }
     }
 
-    public List<UserTask> runRulesOnAllUsersMailbox(Request request, Response response) {
-        try {
-            actionPrecondition(request);
-            MailboxName mailboxName = getMailboxNameQueryParam(request);
-            RuleDTO ruleDTO = jsonDeserialize.readValue(request.body(), RuleDTO.class);
-            Rules rules = new Rules(RuleDTO.toRules(ImmutableList.of(ruleDTO)), Version.INITIAL);
-            rulesPrecondition(rules);
-
-            response.status(HttpStatus.CREATED_201);
-            return runRulesOnAllUsersMailbox(mailboxName, rules);
-        } catch (IllegalStateException e) {
-            LOGGER.info("Invalid argument on /messages", e);
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorResponder.ErrorType.NOT_FOUND)
-                .message("Invalid argument on /messages")
-                .cause(e)
-                .haltError();
-        } catch (JsonProcessingException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("JSON payload of the request is not valid")
-                .cause(e)
-                .haltError();
-        }
-    }
-
-    private List<UserTask> runRulesOnAllUsersMailbox(MailboxName mailboxName, Rules rules) {
-        return Flux.from(usersRepository.listReactive())
-            .filterWhen(username -> mailboxForUserExists(username, mailboxName))
-            .map(username -> runRulesOnUserMailbox(username, mailboxName, rules))
-            .collectList()
-            .block();
-    }
-
-    private UserTask runRulesOnUserMailbox(Username username, MailboxName mailboxName, Rules rules) {
-        Task task = new RunRulesOnMailboxTask(username, mailboxName, rules, runRulesOnMailboxService);
-        TaskId taskId = taskManager.submit(task); // TODO: should be handled by the hook
-        return new UserTask(username, taskId);
-    }
-
     private Username getUsernameParam(Request request) {
         return Username.of(request.params(USER_NAME));
     }
@@ -208,34 +172,5 @@ public class RunRulesOnMailboxRoutes implements Routes {
         Preconditions.checkState(Boolean.TRUE.equals(Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession)).block()),
             "Mailbox does not exist. " + mailboxPath.asString());
         mailboxManager.endProcessingRequest(mailboxSession);
-    }
-
-    private void actionPrecondition(Request request) {
-        Optional<String> action = Optional.ofNullable(request.queryParams(ACTION_QUERY_PARAM));
-
-        if (action.isEmpty() || !action.get().equalsIgnoreCase(TRIAGE.asString())) {
-            throw new IllegalArgumentException("'action' query parameter is compulsory. Supported values are [triage]");
-        }
-    }
-
-    private MailboxName getMailboxNameQueryParam(Request request) {
-            return Optional.ofNullable(request.queryParams(MAILBOX_NAME_QUERY_PARAM))
-                .map(MailboxName::new)
-                .orElseThrow(() -> new IllegalArgumentException("mailboxName query param is missing"));
-    }
-
-    private Mono<Boolean> mailboxForUserExists(Username username, MailboxName mailboxName) {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString());
-        return Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession));
-    }
-
-    private void rulesPrecondition(Rules rules) {
-        if (rules.getRules()
-            .stream()
-            .map(Rule::getAction)
-            .anyMatch(action -> !action.getAppendInMailboxes().getMailboxIds().isEmpty())) {
-            throw new IllegalArgumentException("Rule payload should not have [appendInMailboxes] action defined for runRulesOnAllUsersMailbox route");
-        }
     }
 }

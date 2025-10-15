@@ -24,8 +24,11 @@ import org.apache.james.webadmin.data.jmap.PopulateEmailQueryViewRequestToTask;
 import org.apache.james.webadmin.data.jmap.PopulateFilteringProjectionRequestToTask;
 import org.apache.james.webadmin.data.jmap.RecomputeAllFastViewProjectionItemsRequestToTask;
 import org.apache.james.webadmin.data.jmap.RecomputeUserFastViewProjectionItemsRequestToTask;
+import org.apache.james.webadmin.data.jmap.RunRuleOnAllMailboxesRoute;
 import org.apache.james.webadmin.data.jmap.RunRulesOnMailboxRoutes;
+import org.apache.james.webadmin.routes.ConditionalRoute;
 import org.apache.james.webadmin.routes.MailboxesRoutes;
+import org.apache.james.webadmin.routes.MessagesRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 
@@ -52,5 +55,9 @@ public class JmapTasksModule extends AbstractModule {
 
         Multibinder<Routes> routesMultiBinder = Multibinder.newSetBinder(binder(), Routes.class);
         routesMultiBinder.addBinding().to(RunRulesOnMailboxRoutes.class);
+
+        Multibinder.newSetBinder(binder(), ConditionalRoute.class, Names.named(MessagesRoutes.ALL_MESSAGES_TASKS))
+            .addBinding()
+            .to(RunRuleOnAllMailboxesRoute.class);
     }
 }

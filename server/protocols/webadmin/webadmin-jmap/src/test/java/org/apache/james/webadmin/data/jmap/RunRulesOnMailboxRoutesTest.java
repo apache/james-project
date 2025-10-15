@@ -37,6 +37,7 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import jakarta.mail.Flags;
@@ -176,9 +177,10 @@ public class RunRulesOnMailboxRoutesTest {
 
         taskManager = new MemoryTaskManager(new Hostname("foo"));
 
+        RunRulesOnMailboxService service = new RunRulesOnMailboxService(mailboxManager, new InMemoryId.Factory(), messageIdManager);
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new RunRulesOnMailboxRoutes(usersRepository, mailboxManager, taskManager, new JsonTransformer(),
-                    new RunRulesOnMailboxService(mailboxManager, new InMemoryId.Factory(), messageIdManager)),
+                new RunRulesOnMailboxRoutes(usersRepository, mailboxManager, taskManager, new JsonTransformer(), service,
+                    Optional.of(new RunRuleOnAllMailboxesRoute(usersRepository, mailboxManager, service, taskManager))),
                 new TasksRoutes(taskManager, new JsonTransformer(),
                     DTOConverter.of(RunRulesOnMailboxTaskAdditionalInformationDTO.SERIALIZATION_MODULE)))
             .start();
@@ -1462,9 +1464,10 @@ public class RunRulesOnMailboxRoutesTest {
 
         private void overrideTriageRulesRouteWithActionsLimit(int maxActionsLimit) {
             webAdminServer.destroy();
+            RunRulesOnMailboxService service = new RunRulesOnMailboxService(mailboxManager, new InMemoryId.Factory(), messageIdManager, maxActionsLimit);
             webAdminServer = WebAdminUtils.createWebAdminServer(
-                    new RunRulesOnMailboxRoutes(usersRepository, mailboxManager, taskManager, new JsonTransformer(),
-                        new RunRulesOnMailboxService(mailboxManager, new InMemoryId.Factory(), messageIdManager, maxActionsLimit)),
+                    new RunRulesOnMailboxRoutes(usersRepository, mailboxManager, taskManager, new JsonTransformer(), service,
+                        Optional.of(new RunRuleOnAllMailboxesRoute(usersRepository, mailboxManager, service, taskManager))),
                     new TasksRoutes(taskManager, new JsonTransformer(),
                         DTOConverter.of(RunRulesOnMailboxTaskAdditionalInformationDTO.SERIALIZATION_MODULE)))
                 .start();
