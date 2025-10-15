@@ -22,6 +22,7 @@ package org.apache.james.modules.server;
 import static org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.routes.ConditionalRoute;
 import org.apache.james.webadmin.routes.MessagesRoutes;
 
 import com.google.inject.AbstractModule;
@@ -35,5 +36,6 @@ public class MessagesRoutesModule extends AbstractModule {
         routesMultibinder.addBinding().to(MessagesRoutes.class);
 
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_TASKS));
+        Multibinder.newSetBinder(binder(), ConditionalRoute.class, Names.named(MessagesRoutes.ALL_MESSAGES_TASKS));
     }
 }
