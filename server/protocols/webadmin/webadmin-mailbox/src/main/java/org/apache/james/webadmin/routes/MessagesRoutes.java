@@ -60,6 +60,7 @@ public class MessagesRoutes implements Routes {
     private final ExpireMailboxService expireMailboxService;
     private final JsonTransformer jsonTransformer;
     private final Set<TaskFromRequestRegistry.TaskRegistration> allMessagesTaskRegistration;
+    private final Set<ConditionalRoute> postOverrides;
     private final UsersRepository usersRepository;
 
     public static final String ALL_MESSAGES_TASKS = "allMessagesTasks";
@@ -67,13 +68,16 @@ public class MessagesRoutes implements Routes {
     @Inject
     MessagesRoutes(TaskManager taskManager, MessageId.Factory messageIdFactory, MessageIdReIndexer reIndexer,
                    ExpireMailboxService expireMailboxService, JsonTransformer jsonTransformer,
-                   @Named(ALL_MESSAGES_TASKS) Set<TaskFromRequestRegistry.TaskRegistration> allMessagesTaskRegistration, UsersRepository usersRepository) {
+                   @Named(ALL_MESSAGES_TASKS) Set<TaskFromRequestRegistry.TaskRegistration> allMessagesTaskRegistration,
+                   @Named(ALL_MESSAGES_TASKS) Set<ConditionalRoute> postOverrides,
+                   UsersRepository usersRepository) {
         this.taskManager = taskManager;
         this.messageIdFactory = messageIdFactory;
         this.reIndexer = reIndexer;
         this.expireMailboxService = expireMailboxService;
         this.jsonTransformer = jsonTransformer;
         this.allMessagesTaskRegistration = allMessagesTaskRegistration;
+        this.postOverrides = postOverrides;
         this.usersRepository = usersRepository;
     }
 
@@ -87,8 +91,10 @@ public class MessagesRoutes implements Routes {
         TaskFromRequest expireMailboxTaskRequest = this::expireMailbox;
         service.delete(BASE_PATH, expireMailboxTaskRequest.asRoute(taskManager), jsonTransformer);
         service.post(MESSAGE_PATH, reIndexMessage(), jsonTransformer);
-        allMessagesOperations()
-            .ifPresent(route -> service.post(BASE_PATH, route, jsonTransformer));
+
+        if (!postOverrides.isEmpty() && !allMessagesTaskRegistration.isEmpty()) {
+            service.post(BASE_PATH, allMessagesOperations(), jsonTransformer);
+        }
     }
 
     private Task expireMailbox(Request request) {
@@ -135,10 +141,19 @@ public class MessagesRoutes implements Routes {
         }
     }
 
-    private Optional<Route> allMessagesOperations() {
-        return TaskFromRequestRegistry.builder()
-            .parameterName(TASK_PARAMETER)
-            .registrations(allMessagesTaskRegistration)
-            .buildAsRouteOptional(taskManager);
+    private Route allMessagesOperations() {
+        return (request, response) -> {
+            Optional<Route> override = postOverrides.stream()
+                .filter(postOverride -> postOverride.test(request))
+                .map(r -> (Route) r)
+                .findAny();
+
+            return override.or(() -> TaskFromRequestRegistry.builder()
+                    .parameterName(TASK_PARAMETER)
+                    .registrations(allMessagesTaskRegistration)
+                    .buildAsRouteOptional(taskManager))
+                .get()
+                .handle(request, response);
+        };
     }
 }

@@ -17,25 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.webadmin.data.jmap.dto;
 
-import static org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
+import org.apache.james.core.Username;
+import org.apache.james.task.TaskId;
 
-import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.routes.ConditionalRoute;
-import org.apache.james.webadmin.routes.MessagesRoutes;
+public class UserTask {
+    private final Username username;
+    private final TaskId taskId;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
+    public UserTask(Username username, TaskId taskId) {
+        this.username = username;
+        this.taskId = taskId;
+    }
 
-public class MessagesRoutesModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
-        routesMultibinder.addBinding().to(MessagesRoutes.class);
+    public String getUsername() {
+        return username.asString();
+    }
 
-        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(MessagesRoutes.ALL_MESSAGES_TASKS));
-        Multibinder.newSetBinder(binder(), ConditionalRoute.class, Names.named(MessagesRoutes.ALL_MESSAGES_TASKS));
+    public String getTaskId() {
+        return taskId.asString();
     }
 }
