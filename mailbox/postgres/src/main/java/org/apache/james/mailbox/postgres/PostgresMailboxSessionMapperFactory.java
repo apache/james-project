@@ -62,6 +62,7 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final BlobId.Factory blobIdFactory;
     private final Clock clock;
     private final RowLevelSecurity rowLevelSecurity;
+    private final boolean attachmentStorageEnabled;
 
     @Inject
     public PostgresMailboxSessionMapperFactory(PostgresExecutor.Factory executorFactory,
@@ -74,6 +75,7 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         this.blobIdFactory = blobIdFactory;
         this.clock = clock;
         this.rowLevelSecurity = postgresConfiguration.getRowLevelSecurity();
+        this.attachmentStorageEnabled = postgresConfiguration.isAttachmentStorageEnabled();
     }
 
     @Override
@@ -138,6 +140,10 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     @Override
     public PostgresAttachmentMapper getAttachmentMapper(MailboxSession session) {
         return createAttachmentMapper(session);
+    }
+
+    public boolean isAttachmentStorageEnabled() {
+        return attachmentStorageEnabled;
     }
 
     protected DeleteMessageListener deleteMessageListener() {
