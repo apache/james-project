@@ -60,7 +60,7 @@ public class PostgresConfiguration {
     public static final String JOOQ_REACTIVE_TIMEOUT = "jooq.reactive.timeout";
     public static final Duration JOOQ_REACTIVE_TIMEOUT_DEFAULT_VALUE = Duration.ofSeconds(10);
     public static final String ATTACHMENT_STORAGE_ENABLED = "attachment.storage.enabled";
-    public static final boolean ATTACHMENT_STORAGE_ENABLED_DEFAULT_VALUE = false;
+    public static final boolean ATTACHMENT_STORAGE_ENABLED_DEFAULT_VALUE = true;
 
     public static class Credential {
         private final String username;

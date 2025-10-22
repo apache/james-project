@@ -1,0 +1,18 @@
+<component name="libraryTable">
+  <library name="Maven: scala-sdk-2.13.14" type="Scala">
+    <properties>
+      <compiler-classpath>
+        <root url="file://$MAVEN_REPOSITORY$/org/scala-lang/scala-compiler/2.13.14/scala-compiler-2.13.14.jar" />
+        <root url="file://$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.13.14/scala-library-2.13.14.jar" />
+        <root url="file://$MAVEN_REPOSITORY$/org/scala-lang/scala-reflect/2.13.14/scala-reflect-2.13.14.jar" />
+        <root url="file://$MAVEN_REPOSITORY$/io/github/java-diff-utils/java-diff-utils/4.12/java-diff-utils-4.12.jar" />
+        <root url="file://$MAVEN_REPOSITORY$/org/jline/jline/3.25.1/jline-3.25.1.jar" />
+        <root url="file://$MAVEN_REPOSITORY$/net/java/dev/jna/jna/5.14.0/jna-5.14.0.jar" />
+      </compiler-classpath>
+      <compiler-bridge-binary-jar>file://$MAVEN_REPOSITORY$/org/scala-lang/scala2-sbt-bridge/2.13.14/scala2-sbt-bridge-2.13.14.jar</compiler-bridge-binary-jar>
+    </properties>
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
