@@ -116,7 +116,7 @@ public class IMAPCommandsThrottler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof ImapRequest imapRequest) {
-            ImapSession session = (ImapSession) ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY);
+            ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
             String key = imapRequest.getCommand().getName().toUpperCase(Locale.US);
 
             resetDelaysIfNeeded(key, session);
