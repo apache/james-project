@@ -144,9 +144,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
             .flatMap(msgId -> postgresMessageDAO.retrieveMessage(messageId)
                 .flatMap(executeDeletionCallbacks(mailboxId, owner))
                 .then(deleteBodyBlob(msgId, postgresMessageDAO))
-                .then(postgresConfiguration.isAttachmentStorageEnabled() 
-                    ? deleteAttachment(msgId, attachmentDAO) 
-                    : Mono.empty())
+                .then(deleteAttachmentIfEnabled(msgId, attachmentDAO))
                 .then(threadDAO.deleteSome(owner, msgId))
                 .then(postgresMessageDAO.deleteByMessageId(msgId)));
     }
@@ -177,5 +175,12 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         return attachmentDAO.listBlobsByMessageId(messageId)
             .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId)), ReactorUtils.DEFAULT_CONCURRENCY)
             .then();
+    }
+
+    private Mono<Void> deleteAttachmentIfEnabled(PostgresMessageId messageId, PostgresAttachmentDAO attachmentDAO) {
+        if (postgresConfiguration.isAttachmentStorageEnabled()) {
+            return deleteAttachment(messageId, attachmentDAO);
+        }
+        return Mono.empty();
     }
 }
