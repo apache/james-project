@@ -111,7 +111,7 @@ public class IMAPCommandsThrottler extends ChannelInboundHandlerAdapter {
     }
 
     private static void throttle(ChannelHandlerContext ctx, Object msg, ImapRequest imapRequest, ThrottlerConfigurationEntry configurationEntry) {
-        ImapSession session = (ImapSession) ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY);
+        ImapSession session = (ImapSession) ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
 
         AtomicLong atomicLong = retrieveAssociatedCounter(imapRequest, session, configurationEntry);
         Duration delay = Duration.ofMillis(configurationEntry.delayMSFor(atomicLong.getAndIncrement()));
