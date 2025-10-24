@@ -675,6 +675,14 @@ public class StoreMailboxManager implements MailboxManager {
 
         return mapper.executeReactive(fromMailboxPublisher
             .flatMap(mailbox -> doRenameMailbox(mailbox, to, fromSession, toSession, mapper)
+                .doOnSuccess(any -> AuditTrail.entry()
+                    .username(() -> fromSession.getUser().asString())
+                    .sessionId(() -> String.valueOf(fromSession.getSessionId().getValue()))
+                    .protocol("mailbox")
+                    .action("rename")
+                    .parameters(Throwing.supplier(() -> ImmutableMap.of("fromMailboxPath", mailbox.generateAssociatedPath().asString(),
+                        "toMailboxPath", to.asString())))
+                    .log("Mailbox Rename"))
                 .flatMap(renamedResults -> renameSubscriptionsIfNeeded(renamedResults, option, fromSession, toSession))));
     }
 
