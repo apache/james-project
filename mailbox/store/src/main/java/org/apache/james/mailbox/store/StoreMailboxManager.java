@@ -374,12 +374,13 @@ public class StoreMailboxManager implements MailboxManager {
                         .modifyErrorFilter(old -> old.and(e -> !(e instanceof MailboxException)))
                         .jitter(0.5)
                         .maxBackoff(Duration.ofSeconds(1)))
-                    .doOnSuccess(any -> AuditTrail.entry()
+                    .doOnSuccess(mailboxId -> AuditTrail.entry()
                         .username(() -> sanitizedMailboxPath.getUser().asString())
                         .sessionId(() -> String.valueOf(mailboxSession.getSessionId().getValue()))
                         .protocol("mailbox")
                         .action("create")
-                        .parameters(Throwing.supplier(() -> ImmutableMap.of("mailboxPath", sanitizedMailboxPath.asString())))
+                        .parameters(Throwing.supplier(() -> ImmutableMap.of("mailboxId", mailboxId.serialize(),
+                            "mailboxPath", sanitizedMailboxPath.asString())))
                         .log("Mailbox Create"));
             } catch (MailboxNameException e) {
                 return Mono.error(e);
@@ -680,7 +681,8 @@ public class StoreMailboxManager implements MailboxManager {
                     .sessionId(() -> String.valueOf(fromSession.getSessionId().getValue()))
                     .protocol("mailbox")
                     .action("rename")
-                    .parameters(Throwing.supplier(() -> ImmutableMap.of("fromMailboxPath", mailbox.generateAssociatedPath().asString(),
+                    .parameters(Throwing.supplier(() -> ImmutableMap.of("mailboxId", mailbox.getMailboxId().serialize(),
+                        "fromMailboxPath", mailbox.generateAssociatedPath().asString(),
                         "toMailboxPath", to.asString())))
                     .log("Mailbox Rename"))
                 .flatMap(renamedResults -> renameSubscriptionsIfNeeded(renamedResults, option, fromSession, toSession))));
