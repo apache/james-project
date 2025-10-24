@@ -86,6 +86,7 @@ import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.FunctionalUtils;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -372,7 +373,14 @@ public class StoreMailboxManager implements MailboxManager {
                     .retryWhen(Retry.backoff(5, Duration.ofMillis(100))
                         .modifyErrorFilter(old -> old.and(e -> !(e instanceof MailboxException)))
                         .jitter(0.5)
-                        .maxBackoff(Duration.ofSeconds(1)));
+                        .maxBackoff(Duration.ofSeconds(1)))
+                    .doOnSuccess(any -> AuditTrail.entry()
+                        .username(() -> sanitizedMailboxPath.getUser().asString())
+                        .sessionId(() -> String.valueOf(mailboxSession.getSessionId().getValue()))
+                        .protocol("mailbox")
+                        .action("create")
+                        .parameters(Throwing.supplier(() -> ImmutableMap.of("mailboxPath", sanitizedMailboxPath.asString())))
+                        .log("Mailbox Create"));
             } catch (MailboxNameException e) {
                 return Mono.error(e);
             }
