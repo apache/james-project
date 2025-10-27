@@ -46,7 +46,7 @@ class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCr
     pushSubscriptionSerializer.deserializePushSubscriptionSetRequest(invocation.arguments.value).asEitherRequest
       .flatMap(request => request.validate(configuration).map(_ => request))
 
-  override def doProcess(invocation: InvocationWithContext, mailboxSession: MailboxSession, request: PushSubscriptionSetRequest): SMono[InvocationWithContext] =
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: PushSubscriptionSetRequest): SMono[InvocationWithContext] =
     for {
       created <- createPerformer.create(request, mailboxSession)
       updated <- updatePerformer.update(request, mailboxSession)
