@@ -62,7 +62,7 @@ class PushSubscriptionGetMethod @Inject()(pushSubscriptionSerializer: PushSubscr
     pushSubscriptionSerializer.deserializePushSubscriptionGetRequest(invocation.arguments.value).asEitherRequest
       .flatMap(request => request.validate(configuration).map(_ => request))
 
-  override def doProcess(invocation: InvocationWithContext, session: MailboxSession, request: PushSubscriptionGetRequest): SMono[InvocationWithContext] =
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, session: MailboxSession, request: PushSubscriptionGetRequest): SMono[InvocationWithContext] =
     request.validateProperties
       .fold(e => SMono.error(e),
         properties => retrieveRecords(request, session)

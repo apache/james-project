@@ -176,7 +176,7 @@ trait MethodWithoutAccountId[REQUEST <: WithoutAccountId] extends Method {
     val either: Either[Exception, Publisher[InvocationWithContext]] = for {
       request <- getRequest(invocation.invocation)
     } yield {
-      doProcess(invocation, mailboxSession, request)
+      doProcess(capabilities, invocation, mailboxSession, request)
     }
 
     val result: SFlux[InvocationWithContext] = SFlux.fromPublisher(either.fold(e => SFlux.error[InvocationWithContext](e), r => r))
@@ -199,5 +199,5 @@ trait MethodWithoutAccountId[REQUEST <: WithoutAccountId] extends Method {
 
   def getRequest(invocation: Invocation): Either[Exception, REQUEST]
 
-  def doProcess(invocation: InvocationWithContext, mailboxSession: MailboxSession, request: REQUEST): Publisher[InvocationWithContext]
+  def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: REQUEST): Publisher[InvocationWithContext]
 }
