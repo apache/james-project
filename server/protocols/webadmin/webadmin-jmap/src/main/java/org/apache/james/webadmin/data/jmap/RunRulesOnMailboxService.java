@@ -46,7 +46,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.task.Task;
-import org.apache.james.webadmin.validation.MailboxName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,20 +85,20 @@ public class RunRulesOnMailboxService {
         this.maxActionsPerMailbox = maxActionsPerMailbox;
     }
 
-    public Mono<Task.Result> runRulesOnMailbox(Username username, MailboxName mailboxName, Rules rules, RunRulesOnMailboxTask.Context context) {
+    public Mono<Task.Result> runRulesOnMailbox(Username username, MailboxPath mailboxPath, Rules rules, RunRulesOnMailboxTask.Context context) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         RuleMatcher ruleMatcher = new RuleMatcher(rules.getRules());
 
-        return Mono.from(mailboxManager.getMailboxReactive(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession))
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, mailboxSession))
             .flatMapMany(messageManager -> Flux.from(messageManager.getMessagesReactive(MessageRange.all(), FetchGroup.HEADERS, mailboxSession))
                 .flatMap(Throwing.function(messageResult -> runRulesOnMessage(ruleMatcher, messageResult, mailboxSession, context)), DEFAULT_CONCURRENCY))
             .onErrorResume(TooManyAppliedActionsException.class, e -> {
-                LOGGER.info("Maximum number of actions exceeded for mailbox {} of user {}", mailboxName.asString(), username);
+                LOGGER.info("Maximum number of actions exceeded for mailbox {} of user {}", mailboxPath.asString(), username);
                 context.setMaximumAppliedActionExceeded();
                 return Mono.just(Task.Result.COMPLETED);
             })
             .onErrorResume(e -> {
-                LOGGER.error("Error when applying rules to mailbox. Mailbox {} for user {}", mailboxName.asString(), username, e);
+                LOGGER.error("Error when applying rules to mailbox. Mailbox {} for user {}", mailboxPath.asString(), username, e);
                 context.incrementFails();
                 return Mono.just(Task.Result.PARTIAL);
             })
