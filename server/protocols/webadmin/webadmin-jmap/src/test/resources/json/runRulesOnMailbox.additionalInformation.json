@@ -1,5 +1,5 @@
 {
-  "mailboxName": "mbx1",
+  "mailboxPath": "#private:bob@domain.tld:mbx1",
   "rulesOnMessagesApplyFailed": 9,
   "rulesOnMessagesApplySuccessfully": 10,
   "processedMessagesCount": 30,

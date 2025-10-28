@@ -23,15 +23,15 @@ import java.time.Instant;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.util.ClassLoaderUtils;
-import org.apache.james.webadmin.validation.MailboxName;
 import org.junit.jupiter.api.Test;
 
 public class RunRulesOnMailboxTaskAdditionalInformationDTOTest {
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
 
     private static final RunRulesOnMailboxTask.AdditionalInformation DOMAIN_OBJECT = new RunRulesOnMailboxTask.AdditionalInformation(
-        Username.of("bob@domain.tld"), new MailboxName("mbx1"), INSTANT, 10, 9, false, 30);
+        Username.of("bob@domain.tld"), MailboxPath.forUser(Username.of("bob@domain.tld"), "mbx1"), INSTANT, 10, 9, false, 30);
 
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {
