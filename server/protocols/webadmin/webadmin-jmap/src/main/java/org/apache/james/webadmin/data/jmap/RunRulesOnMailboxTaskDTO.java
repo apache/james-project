@@ -24,9 +24,9 @@ import org.apache.james.jmap.api.filtering.RuleDTO;
 import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.Version;
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
-import org.apache.james.webadmin.validation.MailboxName;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
@@ -34,16 +34,16 @@ import com.google.common.collect.ImmutableList;
 public class RunRulesOnMailboxTaskDTO implements TaskDTO {
     private final String type;
     private final String username;
-    private final String mailboxName;
+    private final String mailboxPath;
     private final ImmutableList<RuleDTO> rules;
 
     public RunRulesOnMailboxTaskDTO(@JsonProperty("type") String type,
                                     @JsonProperty("username") String username,
-                                    @JsonProperty("mailboxName") String mailboxName,
+                                    @JsonProperty("mailboxPath") String mailboxPath,
                                     @JsonProperty("rules") ImmutableList<RuleDTO> rules) {
         this.type = type;
         this.username = username;
-        this.mailboxName = mailboxName;
+        this.mailboxPath = mailboxPath;
         this.rules = rules;
     }
 
@@ -56,8 +56,8 @@ public class RunRulesOnMailboxTaskDTO implements TaskDTO {
         return username;
     }
 
-    public String getMailboxName() {
-        return mailboxName;
+    public String getMailboxPath() {
+        return mailboxPath;
     }
 
     public ImmutableList<RuleDTO> getRules() {
@@ -75,10 +75,11 @@ public class RunRulesOnMailboxTaskDTO implements TaskDTO {
     }
 
     public RunRulesOnMailboxTask fromDTO(RunRulesOnMailboxService runRulesOnMailboxService) {
-        return new RunRulesOnMailboxTask(Username.of(username), new MailboxName(mailboxName), new Rules(RuleDTO.toRules(rules), Version.INITIAL), runRulesOnMailboxService);
+        return new RunRulesOnMailboxTask(Username.of(username), MailboxPath.parseEscaped(mailboxPath).orElseThrow(() -> new IllegalArgumentException("Can not parse mailboxPath: " + mailboxPath)),
+            new Rules(RuleDTO.toRules(rules), Version.INITIAL), runRulesOnMailboxService);
     }
 
     public static RunRulesOnMailboxTaskDTO toDTO(RunRulesOnMailboxTask domainObject, String typeName) {
-        return new RunRulesOnMailboxTaskDTO(typeName, domainObject.getUsername().asString(), domainObject.getMailboxName().asString(), RuleDTO.from(domainObject.getRules().getRules()));
+        return new RunRulesOnMailboxTaskDTO(typeName, domainObject.getUsername().asString(), domainObject.getMailboxPath().asString(), RuleDTO.from(domainObject.getRules().getRules()));
     }
 }
