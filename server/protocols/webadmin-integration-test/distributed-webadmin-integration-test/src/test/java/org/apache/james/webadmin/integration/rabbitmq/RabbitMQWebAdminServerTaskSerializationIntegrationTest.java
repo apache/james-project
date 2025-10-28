@@ -90,7 +90,6 @@ import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -780,7 +779,6 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.mailboxPath", is(MailboxPath.forUser(Username.of(USERNAME), MailboxConstants.INBOX).asString()));
     }
 
-    @Disabled("JAMES-4148: Route not plugged yet")
     @Test
     void runRulesOnAllUsersMailboxShouldComplete(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class).addUser(USERNAME, "secret");
