@@ -33,9 +33,9 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Task;
-import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.webadmin.data.jmap.dto.UserTask;
 import org.apache.james.webadmin.routes.ConditionalRoute;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
@@ -57,7 +57,7 @@ import spark.Request;
 import spark.Response;
 
 public class RunRuleOnAllMailboxesRoute implements ConditionalRoute {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RunRulesOnMailboxRoutes.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RunRuleOnAllMailboxesRoute.class);
 
     private static final TaskRegistrationKey TRIAGE = TaskRegistrationKey.of("triage");
     private static final String ACTION_QUERY_PARAM = "action";
@@ -124,15 +124,17 @@ public class RunRuleOnAllMailboxesRoute implements ConditionalRoute {
     private List<UserTask> runRulesOnAllUsersMailbox(MailboxName mailboxName, Rules rules) {
         return Flux.from(usersRepository.listReactive())
             .filterWhen(username -> mailboxForUserExists(username, mailboxName))
-            .map(username -> runRulesOnUserMailbox(username, mailboxName, rules))
+            .flatMap(username -> runRulesOnUserMailbox(username, mailboxName, rules))
             .collectList()
             .block();
     }
 
-    private UserTask runRulesOnUserMailbox(Username username, MailboxName mailboxName, Rules rules) {
+    private Mono<UserTask> runRulesOnUserMailbox(Username username, MailboxName mailboxName, Rules rules) {
         Task task = new RunRulesOnMailboxTask(username, mailboxName, rules, runRulesOnMailboxService);
-        TaskId taskId = taskManager.submit(task);
-        return new UserTask(username, taskId);
+
+        return Mono.fromCallable(() -> taskManager.submit(task))
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+            .map(taskId -> new UserTask(username, taskId));
     }
 
     private void actionPrecondition(Request request) {
