@@ -1,5 +1,5 @@
 {
-  "mailboxName": "mbx1",
+  "mailboxPath": "#private:bob@domain.tld:mbx1",
   "type": "RunRulesOnMailboxTask",
   "username": "bob@domain.tld",
   "rules": [
