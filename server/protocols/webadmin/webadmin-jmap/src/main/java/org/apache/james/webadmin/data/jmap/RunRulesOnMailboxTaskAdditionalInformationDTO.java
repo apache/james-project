@@ -23,9 +23,9 @@ import java.time.Instant;
 
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
-import org.apache.james.webadmin.validation.MailboxName;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -41,7 +41,7 @@ public class RunRulesOnMailboxTaskAdditionalInformationDTO implements Additional
     private static RunRulesOnMailboxTask.AdditionalInformation toDomainObject(RunRulesOnMailboxTaskAdditionalInformationDTO dto) {
         return new RunRulesOnMailboxTask.AdditionalInformation(
             Username.of(dto.getUsername()),
-            new MailboxName(dto.getMailboxName()),
+            MailboxPath.parseEscaped(dto.getMailboxPath()).orElseThrow(),
             dto.getTimestamp(),
             dto.getRulesOnMessagesApplySuccessfully(),
             dto.getRulesOnMessagesApplyFailed(),
@@ -53,7 +53,7 @@ public class RunRulesOnMailboxTaskAdditionalInformationDTO implements Additional
         return new RunRulesOnMailboxTaskAdditionalInformationDTO(
             type,
             domain.getUsername().asString(),
-            domain.getMailboxName().asString(),
+            domain.getMailboxPath().asString(),
             domain.getTimestamp(),
             domain.getRulesOnMessagesApplySuccessfully(),
             domain.getRulesOnMessagesApplyFailed(),
@@ -63,7 +63,7 @@ public class RunRulesOnMailboxTaskAdditionalInformationDTO implements Additional
 
     private final String type;
     private final String username;
-    private final String mailboxName;
+    private final String mailboxPath;
     private final Instant timestamp;
     private final long rulesOnMessagesApplySuccessfully;
     private final long rulesOnMessagesApplyFailed;
@@ -72,7 +72,7 @@ public class RunRulesOnMailboxTaskAdditionalInformationDTO implements Additional
 
     public RunRulesOnMailboxTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                          @JsonProperty("username") String username,
-                                                         @JsonProperty("mailboxName") String mailboxName,
+                                                         @JsonProperty("mailboxPath") String mailboxPath,
                                                          @JsonProperty("timestamp") Instant timestamp,
                                                          @JsonProperty("rulesOnMessagesApplySuccessfully") long rulesOnMessagesApplySuccessfully,
                                                          @JsonProperty("rulesOnMessagesApplyFailed") long rulesOnMessagesApplyFailed,
@@ -80,7 +80,7 @@ public class RunRulesOnMailboxTaskAdditionalInformationDTO implements Additional
                                                          @JsonProperty("processedMessagesCount") long processedMessagesCount) {
         this.type = type;
         this.username = username;
-        this.mailboxName = mailboxName;
+        this.mailboxPath = mailboxPath;
         this.timestamp = timestamp;
         this.rulesOnMessagesApplySuccessfully = rulesOnMessagesApplySuccessfully;
         this.rulesOnMessagesApplyFailed = rulesOnMessagesApplyFailed;
@@ -102,8 +102,8 @@ public class RunRulesOnMailboxTaskAdditionalInformationDTO implements Additional
         return username;
     }
 
-    public String getMailboxName() {
-        return mailboxName;
+    public String getMailboxPath() {
+        return mailboxPath;
     }
 
     public long getRulesOnMessagesApplySuccessfully() {
