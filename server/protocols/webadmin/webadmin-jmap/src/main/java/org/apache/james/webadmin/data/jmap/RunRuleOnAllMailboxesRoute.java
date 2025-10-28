@@ -126,6 +126,7 @@ public class RunRuleOnAllMailboxesRoute implements ConditionalRoute {
             .filterWhen(username -> mailboxForUserExists(username, mailboxName))
             .flatMap(username -> runRulesOnUserMailbox(username, mailboxName, rules))
             .collectList()
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .block();
     }
 
@@ -133,7 +134,6 @@ public class RunRuleOnAllMailboxesRoute implements ConditionalRoute {
         Task task = new RunRulesOnMailboxTask(username, mailboxName, rules, runRulesOnMailboxService);
 
         return Mono.fromCallable(() -> taskManager.submit(task))
-            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .map(taskId -> new UserTask(username, taskId));
     }
 
