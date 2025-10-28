@@ -1035,7 +1035,7 @@ public class RunRulesOnMailboxRoutesTest {
                 .body("submitDate", Matchers.is(notNullValue()))
                 .body("completedDate", Matchers.is(notNullValue()))
                 .body("additionalInformation.username", Matchers.is(USERNAME.asString()))
-                .body("additionalInformation.mailboxName", Matchers.is(MAILBOX_NAME))
+                .body("additionalInformation.mailboxPath", Matchers.is(MailboxPath.forUser(USERNAME, MAILBOX_NAME).asString()))
                 .body("additionalInformation.rulesOnMessagesApplySuccessfully", Matchers.is(2))
                 .body("additionalInformation.rulesOnMessagesApplyFailed", Matchers.is(0));
         }

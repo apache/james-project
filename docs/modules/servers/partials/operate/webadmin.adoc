@@ -1854,7 +1854,7 @@ the following `additionalInformation`:
 
 ....
 {
-    "mailboxName": "mbx1",
+    "mailboxPath": "#private:bob@domain.tld:mbx1",
     "messagesFailCount": 9,
     "messagesSuccessCount": 10,
     "timestamp": "2007-12-03T10:15:30Z",
@@ -1926,7 +1926,7 @@ the following `additionalInformation`:
 
 ....
 {
-    "mailboxName": "mbx1",
+    "mailboxPath": "#private:bob@domain.tld:mbx1",
     "processedMessagesCount": 15,
     "rulesOnMessagesApplySuccessfully": 9,
     "rulesOnMessagesApplyFailed": 3,

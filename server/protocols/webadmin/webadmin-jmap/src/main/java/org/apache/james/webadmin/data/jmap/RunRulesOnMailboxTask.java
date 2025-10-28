@@ -134,15 +134,15 @@ public class RunRulesOnMailboxTask implements Task {
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
 
         private static AdditionalInformation from(Username username,
-                                                  MailboxName mailboxName,
+                                                  MailboxPath mailboxPath,
                                                   RunRulesOnMailboxTask.Context context) {
             Context.Snapshot snapshot = context.snapshot();
-            return new AdditionalInformation(username, mailboxName, Clock.systemUTC().instant(), snapshot.rulesOnMessagesApplySuccessfully,
+            return new AdditionalInformation(username, mailboxPath, Clock.systemUTC().instant(), snapshot.rulesOnMessagesApplySuccessfully,
                 snapshot.rulesOnMessagesApplyFailed, snapshot.maximumAppliedActionExceeded, snapshot.processedMessagesCount);
         }
 
         private final Username username;
-        private final MailboxName mailboxName;
+        private final MailboxPath mailboxPath;
         private final Instant timestamp;
         private final long rulesOnMessagesApplySuccessfully;
         private final long rulesOnMessagesApplyFailed;
@@ -150,14 +150,14 @@ public class RunRulesOnMailboxTask implements Task {
         private final long processedMessagesCount;
 
         public AdditionalInformation(Username username,
-                                     MailboxName mailboxName,
+                                     MailboxPath mailboxPath,
                                      Instant timestamp,
                                      long rulesOnMessagesApplySuccessfully,
                                      long rulesOnMessagesApplyFailed,
                                      boolean maximumAppliedActionExceeded,
                                      long processedMessagesCount) {
             this.username = username;
-            this.mailboxName = mailboxName;
+            this.mailboxPath = mailboxPath;
             this.timestamp = timestamp;
             this.rulesOnMessagesApplySuccessfully = rulesOnMessagesApplySuccessfully;
             this.rulesOnMessagesApplyFailed = rulesOnMessagesApplyFailed;
@@ -169,8 +169,8 @@ public class RunRulesOnMailboxTask implements Task {
             return username;
         }
 
-        public MailboxName getMailboxName() {
-            return mailboxName;
+        public MailboxPath getMailboxPath() {
+            return mailboxPath;
         }
 
         public Instant getTimestamp() {
@@ -238,7 +238,7 @@ public class RunRulesOnMailboxTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(AdditionalInformation.from(username, new MailboxName(mailboxPath.getName()), context));
+        return Optional.of(AdditionalInformation.from(username, mailboxPath, context));
     }
 
     public Username getUsername() {

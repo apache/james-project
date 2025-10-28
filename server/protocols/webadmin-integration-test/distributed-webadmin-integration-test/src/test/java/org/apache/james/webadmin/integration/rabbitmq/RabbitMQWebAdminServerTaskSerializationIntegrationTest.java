@@ -777,7 +777,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.rulesOnMessagesApplySuccessfully", is(1))
             .body("additionalInformation.rulesOnMessagesApplyFailed", is(0))
             .body("additionalInformation.username", is(USERNAME))
-            .body("additionalInformation.mailboxName", is(MailboxConstants.INBOX));
+            .body("additionalInformation.mailboxPath", is(MailboxPath.forUser(Username.of(USERNAME), MailboxConstants.INBOX).asString()));
     }
 
     @Disabled("JAMES-4148: Route not plugged yet")
