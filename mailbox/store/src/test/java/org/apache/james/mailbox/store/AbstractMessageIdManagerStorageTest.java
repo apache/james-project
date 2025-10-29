@@ -714,15 +714,15 @@ public abstract class AbstractMessageIdManagerStorageTest {
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
                     .forUser(BOB)
-                    .rights(Rfc4314Rights.allExcept(Right.Read))
+                    .rights(Rfc4314Rights.allExcept(Right.Read)) // the shared mailbox does not share the Read right for Bob
                     .asAddition()),
             aliceSession);
         MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
 
-        //When
+        // When Bob copies the message from the Alice's shared mailbox to Bob's mailbox, it should fail
         assertThatThrownBy(() ->
             messageIdManager.setInMailboxes(messageId,
-                ImmutableList.of(aliceMailbox1.getMailboxId(), bobMailbox1.getMailboxId()),
+                ImmutableList.of(bobMailbox1.getMailboxId()),
                 bobSession))
             .isInstanceOf(MailboxNotFoundException.class);
 
