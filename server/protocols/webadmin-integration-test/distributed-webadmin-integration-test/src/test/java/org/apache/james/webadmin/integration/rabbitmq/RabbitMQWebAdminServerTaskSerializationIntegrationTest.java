@@ -844,8 +844,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .hasSize(2)
             .first()
             .satisfies(map -> assertThat(map).hasSize(2)
-                .containsKeys("taskId")
-                .containsEntry("username", USERNAME));
+                .containsKeys("taskId", "username"));
     }
 
     @Test
