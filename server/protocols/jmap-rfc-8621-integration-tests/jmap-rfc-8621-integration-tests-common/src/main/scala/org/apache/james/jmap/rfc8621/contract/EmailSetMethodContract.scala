@@ -6508,7 +6508,7 @@ trait EmailSetMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andrePath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.DeleteMessages))
+      .replaceRights(andrePath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Insert, Right.Read, Right.DeleteMessages))
 
     server.getProbe(classOf[JmapGuiceProbe])
       .setInMailboxes(messageId, BOB, mailboxId)
