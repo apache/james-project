@@ -86,4 +86,28 @@ Optional integer, defaults to 2 times the count of CPUs.
 | maxExecutorCount
 | Set the maximum count of worker threads. Worker threads takes care of potentially blocking tasks like executing ManageSieve commands.
 Optional integer, defaults to 16.
+
+| oidc
+| If this property is present, OIDC will be configured and the following properties are mandatory (unless otherwise specified).
+
+| oidc.oidcConfigurationURL
+| Your identity provider's OIDC discovery URL. This is currently not used for managesieve but is still required when OIDC is configured.
+
+| oidc.jwksURL
+| URL to the endpoint for the JSON Web Key Set of your provider. This is used to locally validate tokens.
+
+| oidc.claim
+| Name of the claim in the token you want to use as the identifier for the user (e.g. "email_address").
+
+| oidc.scope
+| OIDC scope. This is currently not used for managesieve but is still required when OIDC is configured.
+
+| oidc.introspection.url
+| URL to your identity provider's introspection endpoint. It is optional and if specified James will use the endpoint to validate the token in addition to local validation.
+
+| oidc.introspection.auth
+| Provide Authorization header for introspection requests (optional, e.g. `Basic xyz`).
+
+| oidc.userinfo.url
+| URL to your identity provider's userinfo endpoint. It is optional and if specified James will use the endpoint to validate the token in addition to local validation. James will ignore this option if `oidc.introspection.url` is already configured.
 |===
