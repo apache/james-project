@@ -28,7 +28,7 @@ import org.apache.james.mailbox.model.MessageId;
 public class MemoryEmailSetMethodTest extends MemoryBase implements EmailSetMethodContract {
     @Override
     public MessageId randomMessageId() {
-        return InMemoryMessageId.of(ThreadLocalRandom.current().nextInt(100000) + 100);
+        return InMemoryMessageId.of(ThreadLocalRandom.current().nextInt(1000000) + 100);
     }
 
     @Override
