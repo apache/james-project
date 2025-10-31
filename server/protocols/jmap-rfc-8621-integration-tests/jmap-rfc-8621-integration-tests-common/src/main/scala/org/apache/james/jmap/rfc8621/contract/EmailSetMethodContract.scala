@@ -6495,23 +6495,20 @@ trait EmailSetMethodContract {
   def emailSetDestroyShouldDestroyEmailWhenMovedIntoAnotherMailbox(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
 
-    val andreMailbox: String = "andrecustom"
-    val andrePath = MailboxPath.forUser(ANDRE, andreMailbox)
-    val bobPath = MailboxPath.inbox(BOB)
-    mailboxProbe.createMailbox(andrePath)
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(bobPath)
+    val mailbox: String = "custom"
+    val anotherMailbox: String = "anotherCustom"
+    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, mailbox))
+    val anotherMailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, anotherMailbox))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, andrePath,
+      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, mailbox),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
-    server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andrePath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Insert))
-
+    // Move message from mailbox to anotherMailbox
     server.getProbe(classOf[JmapGuiceProbe])
-      .setInMailboxes(messageId, BOB, mailboxId)
+      .setInMailboxes(messageId, BOB, anotherMailboxId)
 
     val request =
       s"""{
