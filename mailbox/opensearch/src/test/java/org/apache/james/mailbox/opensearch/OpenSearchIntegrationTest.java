@@ -307,6 +307,33 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void tooLongSubjectShouldNotMakeIndexingFail() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        String recipient = "benwa@linagora.com";
+        ComposedMessageId composedMessageId = messageManager.appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setTo(recipient)
+                    .setSubject(Strings.repeat("0123456789", 5000))
+                    .setBody("0123456789", StandardCharsets.UTF_8)),
+            session).getId();
+
+        CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+            .untilAsserted(() -> assertThat(client.search(
+                    new SearchRequest.Builder()
+                        .index(indexName.getValue())
+                        .query(QueryBuilders.matchAll().build().toQuery())
+                        .build())
+                .block()
+                .hits().total().value()).isEqualTo(14));
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session)).toStream())
+            .containsExactly(composedMessageId.getUid());
+    }
+
+    @Test
     void fieldsExceedingLuceneLimitShouldNotBeIgnored() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
