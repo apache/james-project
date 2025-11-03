@@ -27,6 +27,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.james.mailbox.ModSeq;
@@ -145,7 +146,7 @@ public class IndexableMessage {
                     ZonedDateTime internalDate = getSanitizedInternalDate(message, zoneId);
 
                     List<HeaderCollection.Header> headers = headerCollection.getHeaders();
-                    Subjects subjects = Subjects.from(headerCollection.getSubjectSet());
+                    Subjects subjects = Subjects.from(limitSubjectsLength(headerCollection.getSubjectSet()));
                     EMailers from = EMailers.from(headerCollection.getFromAddressSet());
                     EMailers to = EMailers.from(headerCollection.getToAddressSet());
                     EMailers cc = EMailers.from(headerCollection.getCcAddressSet());
@@ -225,6 +226,12 @@ public class IndexableMessage {
             } else {
                 return ImmutableList.of();
             }
+        }
+
+        private Set<String> limitSubjectsLength(Set<String> subjects) {
+            return subjects.stream()
+                .map(SearchUtil::truncateSubjectField)
+                .collect(Collectors.toSet());
         }
     }
 
