@@ -221,6 +221,17 @@ public class WebAdminServer implements Startable {
                 .cause(ex)
                 .asString());
         });
+
+        service.exception(Exception.class, (ex, req, res) -> {
+            LOGGER.error("Unexpected error calling {} {}", req.requestMethod(), req.uri(), ex);
+            res.status(INTERNAL_SERVER_ERROR_500);
+            res.body(ErrorResponder.builder()
+                .statusCode(INTERNAL_SERVER_ERROR_500)
+                .type(SERVER_ERROR)
+                .message("WebAdmin encountered an unexpected internal error")
+                .cause(ex)
+                .asString());
+        });
     }
 
     @PreDestroy
