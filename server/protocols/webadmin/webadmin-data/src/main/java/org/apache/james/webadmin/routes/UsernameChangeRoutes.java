@@ -76,6 +76,7 @@ public class UsernameChangeRoutes implements Routes {
 
             Preconditions.checkArgument(request.queryParams(FORCE_PARAM) != null || usersRepository.contains(oldUser), "'oldUser' parameter should be an existing user");
             Preconditions.checkArgument(usersRepository.contains(newUser), "'newUser' parameter should be an existing user");
+            Preconditions.checkArgument(!oldUser.equals(newUser), "'newUser' should be distinct from 'oldUser'");
 
             Optional<StepName> fromStep = Optional.ofNullable(request.queryParams("fromStep")).map(StepName::new);
 
