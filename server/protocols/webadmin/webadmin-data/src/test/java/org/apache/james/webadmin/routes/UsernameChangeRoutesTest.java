@@ -177,6 +177,20 @@ class UsernameChangeRoutesTest {
         }
 
         @Test
+        void shouldRejectSameUser() {
+            given()
+                .queryParam("action", "rename")
+            .when()
+                .post("/users/" + OLD_USER.asString() + "/rename/"  + OLD_USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", Matchers.is(400))
+                .body("type", Matchers.is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", Matchers.is("Invalid arguments supplied in the user request"))
+                .body("details", Matchers.is("'newUser' should be distinct from 'oldUser'"));
+        }
+
+        @Test
         void shouldRejectUnknownSourceUser() {
             given()
                 .queryParam("action", "rename")
