@@ -5060,6 +5060,14 @@ Additionnal optional task parameters are supported:
  
 Example of date format: `2023-04-15T07:23:27.541254+07:00` and `2023-04-15T07%3A23%3A27.541254%2B07%3A00` once URL encoded.
 
+### Cleaning up old tasks
+
+```
+curl -XDELETE http://ip:port/tasks?olderThan=30day
+```
+
+Will start a task which will cleanup old tasks still referenced in the TaskManager.
+
 ### Endpoints returning a task
 
 Many endpoints do generate a task.
