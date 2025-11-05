@@ -36,6 +36,8 @@ import spark.Response;
 public class PasswordFilter implements AuthenticationFilter {
     public static final String PASSWORD = "Password";
     public static final String OPTIONS = "OPTIONS";
+    public static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
+    public static final String AUTHORIZATION_HEADER_NAME = "Authorization";
 
     private final List<String> passwords;
 
@@ -49,12 +51,24 @@ public class PasswordFilter implements AuthenticationFilter {
     public void handle(Request request, Response response) throws Exception {
         if (!request.requestMethod().equals(OPTIONS)) {
             Optional<String> password = Optional.ofNullable(request.headers(PASSWORD));
+            Optional<String> authorization = Optional.ofNullable(request.headers(AUTHORIZATION_HEADER_NAME));
 
             if (!password.isPresent()) {
-                halt(HttpStatus.UNAUTHORIZED_401, "No Password header.");
-            }
-            if (!passwords.contains(password.get())) {
-                halt(HttpStatus.UNAUTHORIZED_401, "Wrong Password header.");
+                if (authorization.isPresent()) {
+                    Optional<String> bearer = authorization
+                        .filter(value -> value.startsWith(AUTHORIZATION_HEADER_PREFIX))
+                        .map(value -> value.substring(AUTHORIZATION_HEADER_PREFIX.length()));
+
+                    if (!bearer.filter(passwords::contains).isPresent()) {
+                        halt(HttpStatus.UNAUTHORIZED_401, "Wrong Bearer.");
+                    }
+                } else {
+                    halt(HttpStatus.UNAUTHORIZED_401, "No Password header.");
+                }
+            } else {
+                if (!passwords.contains(password.get())) {
+                    halt(HttpStatus.UNAUTHORIZED_401, "Wrong Password header.");
+                }
             }
         }
     }

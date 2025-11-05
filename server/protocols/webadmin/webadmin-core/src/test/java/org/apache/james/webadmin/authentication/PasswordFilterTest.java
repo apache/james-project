@@ -53,7 +53,6 @@ class PasswordFilterTest {
         verifyNoMoreInteractions(response);
     }
 
-
     @Test
     void handleShouldRejectRequestWithoutHeaders() {
         Request request = mock(Request.class);
@@ -79,6 +78,18 @@ class PasswordFilterTest {
     }
 
     @Test
+    void handleShouldRejectWrongPasswordOnBearer() {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("GET");
+        when(request.headers("Authorization")).thenReturn("Bearer ghi");
+
+        assertThatThrownBy(() -> testee.handle(request, mock(Response.class)))
+            .isInstanceOf(HaltException.class)
+            .extracting(e -> HaltException.class.cast(e).statusCode())
+            .isEqualTo(401);
+    }
+
+    @Test
     void handleShouldRejectBothPassword() {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
@@ -96,6 +107,16 @@ class PasswordFilterTest {
         when(request.requestMethod()).thenReturn("GET");
         when(request.requestMethod()).thenReturn("GET");
         when(request.headers("Password")).thenReturn("abc");
+
+        testee.handle(request, mock(Response.class));
+    }
+
+    @Test
+    void handleShouldAcceptValidPasswordWhenBearer() throws Exception {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("GET");
+        when(request.requestMethod()).thenReturn("GET");
+        when(request.headers("Authorization")).thenReturn("Bearer abc");
 
         testee.handle(request, mock(Response.class));
     }
