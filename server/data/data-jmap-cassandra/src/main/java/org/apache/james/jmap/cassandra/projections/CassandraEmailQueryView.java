@@ -36,12 +36,14 @@ import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQu
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 
 import jakarta.inject.Inject;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -52,19 +54,21 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.util.streams.Limit;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraEmailQueryView implements EmailQueryView {
     private static final String LIMIT_MARKER = "LIMIT_BIND_MARKER";
-    private static final int COLLAPSE_THREADS_LIMIT_MULTIPLIER = 3;
+    private static final int COLLAPSE_THREADS_LIMIT_MULTIPLIER = 4;
 
     private class EmailEntry {
         private final MessageId messageId;
@@ -155,6 +159,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
             .whereColumn(RECEIVED_AT).isGreaterThanOrEqualTo(bindMarker(RECEIVED_AT))
             .orderBy(RECEIVED_AT, DESC)
+            .limit(bindMarker(LIMIT_MARKER))
             .build());
 
         listMailboxContentBeforeReceivedAt = session.prepare(selectFrom(TABLE_NAME_RECEIVED_AT)
@@ -227,28 +232,77 @@ public class CassandraEmailQueryView implements EmailQueryView {
     public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        Limit limitFetch = defineLimitFetch(limit, collapseThreads);
-        CassandraId cassandraId = (CassandraId) mailboxId;
+        Limit backendFetchLimit = backendLimitFetch(limit, collapseThreads);
+        return listMailboxContentSortedBySentAtWithBackendLimit((CassandraId) mailboxId, limit, collapseThreads, backendFetchLimit);
+    }
 
+    private Flux<MessageId> listMailboxContentSortedBySentAtWithBackendLimit(CassandraId mailboxId, Limit limit, boolean collapseThreads, Limit backendFetchLimit) {
         Flux<EmailEntry> baseEntries = executor.executeRows(listMailboxContentBySentAt.bind()
-            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-            .setInt(LIMIT_MARKER, limitFetch.getLimit().get()))
-            .map(this::getEmailSentAtEntry);
+            .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.UUID)
+            .setInt(LIMIT_MARKER, backendFetchLimit.getLimit().get()))
+            .map(asEmailEntry(SENT_AT));
 
-        return maybeCollapseThreads(baseEntries, collapseThreads)
-            .map(EmailEntry::getMessageId)
-            .take(limit.getLimit().get());
+        if (collapseThreads) {
+            return baseEntries.collectList()
+                .flatMapMany(results -> {
+                    List<EmailEntry> distinctByThreadId = distinctByThreadId(results);
+                    boolean hasEnoughResults = distinctByThreadId.size() >= limit.getLimit().get();
+                    boolean isExhaustive = results.size() < backendFetchLimit.getLimit().get();
+                    if (hasEnoughResults || isExhaustive) {
+                        return Flux.fromIterable(distinctByThreadId)
+                            .take(limit.getLimit().get())
+                            .map(EmailEntry::getMessageId);
+                    }
+                    Limit newBackendFetchLimit = Limit.from(backendFetchLimit.getLimit().get() * COLLAPSE_THREADS_LIMIT_MULTIPLIER);
+                    return listMailboxContentSortedBySentAtWithBackendLimit(mailboxId, limit, collapseThreads, newBackendFetchLimit);
+                });
+        }
+
+        return baseEntries.map(EmailEntry::getMessageId);
+    }
+
+    private List<EmailEntry> distinctByThreadId(List<EmailEntry> emailEntries) {
+        ImmutableList.Builder<EmailEntry> list = ImmutableList.builder();
+        HashSet<ThreadId> threadIdHashSet = new HashSet<>();
+        emailEntries.forEach(emailEntry -> {
+            if (threadIdHashSet.add(emailEntry.getThreadId())) {
+                list.add(emailEntry);
+            }
+        });
+        return list.build();
     }
 
     @Override
     public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        CassandraId cassandraId = (CassandraId) mailboxId;
-        return executor.executeRows(listMailboxContentByReceivedAt.bind()
-            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-            .setInt(LIMIT_MARKER, limit.getLimit().get()))
-            .map(row -> CassandraMessageId.Factory.of(row.get(0, TypeCodecs.UUID)));
+        Limit backendFetchLimit = backendLimitFetch(limit, collapseThreads);
+        return listMailboxContentSortedByReceivedAtWithBackendLimit((CassandraId) mailboxId, limit, collapseThreads, backendFetchLimit);
+    }
+
+    private Flux<MessageId> listMailboxContentSortedByReceivedAtWithBackendLimit(CassandraId mailboxId, Limit limit, boolean collapseThreads, Limit backendFetchLimit) {
+        Flux<EmailEntry> baseEntries = executor.executeRows(listMailboxContentByReceivedAt.bind()
+                .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.UUID)
+                .setInt(LIMIT_MARKER, backendFetchLimit.getLimit().get()))
+            .map(asEmailEntry(RECEIVED_AT));
+
+        if (collapseThreads) {
+            return baseEntries.collectList()
+                .flatMapMany(results -> {
+                    List<EmailEntry> distinctByThreadId = distinctByThreadId(results);
+                    boolean hasEnoughResults = distinctByThreadId.size() >= limit.getLimit().get();
+                    boolean isExhaustive = results.size() < backendFetchLimit.getLimit().get();
+                    if (hasEnoughResults || isExhaustive) {
+                        return Flux.fromIterable(distinctByThreadId)
+                            .take(limit.getLimit().get())
+                            .map(EmailEntry::getMessageId);
+                    }
+                    Limit newBackendFetchLimit = Limit.from(backendFetchLimit.getLimit().get() * COLLAPSE_THREADS_LIMIT_MULTIPLIER);
+                    return listMailboxContentSortedByReceivedAtWithBackendLimit(mailboxId, limit, collapseThreads, newBackendFetchLimit);
+                });
+        }
+
+        return baseEntries.map(EmailEntry::getMessageId);
     }
 
     @Override
@@ -257,17 +311,21 @@ public class CassandraEmailQueryView implements EmailQueryView {
 
         CassandraId cassandraId = (CassandraId) mailboxId;
 
-        return executor.executeRows(listMailboxContentSinceReceivedAt.bind()
+        Flux<EmailEntry> baseEntries = executor.executeRows(listMailboxContentSinceReceivedAt.bind()
                 .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
                 .setInstant(RECEIVED_AT, since.toInstant()))
-            .map(row -> {
-                CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID));
-                Instant sentAt = row.getInstant(SENT_AT);
+            .map(asEmailEntry(SENT_AT));
 
-                return Pair.of(messageId, sentAt);
-            })
-            .sort(Comparator.<Pair<CassandraMessageId, Instant>, Instant>comparing(Pair::getValue).reversed())
-            .map(pair -> (MessageId) pair.getKey())
+        if (collapseThreads) {
+            return baseEntries.groupBy(EmailEntry::getThreadId)
+                .flatMap(group -> group.reduce((e1, e2) ->
+                    e1.getMessageDate().isAfter(e2.getMessageDate()) ? e1 : e2))
+                .sort(Comparator.comparing(EmailEntry::getMessageDate).reversed())
+                .map(EmailEntry::getMessageId)
+                .take(limit.getLimit().get());
+        }
+        return baseEntries.sort(Comparator.comparing(EmailEntry::getMessageDate).reversed())
+            .map(EmailEntry::getMessageId)
             .take(limit.getLimit().get());
     }
 
@@ -275,53 +333,118 @@ public class CassandraEmailQueryView implements EmailQueryView {
     public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        CassandraId cassandraId = (CassandraId) mailboxId;
+        Limit backendFetchLimit = backendLimitFetch(limit, collapseThreads);
+        return listMailboxContentSinceAfterSortedByReceivedAtWithBackendLimit((CassandraId) mailboxId, since, limit, collapseThreads, backendFetchLimit);
+    }
 
-        return executor.executeRows(listMailboxContentSinceReceivedAt.bind()
-            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-            .setInstant(RECEIVED_AT, since.toInstant()))
-            .<MessageId>map(row -> CassandraMessageId.Factory.of(row.get(0, TypeCodecs.UUID)))
-            .take(limit.getLimit().get());
+    private Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAtWithBackendLimit(CassandraId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads, Limit backendFetchLimit) {
+        Flux<EmailEntry> baseEntries = executor.executeRows(listMailboxContentSinceReceivedAt.bind()
+                .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.UUID)
+                .setInstant(RECEIVED_AT, since.toInstant())
+                .setInt(LIMIT_MARKER, backendFetchLimit.getLimit().get()))
+            .map(asEmailEntry(SENT_AT));
+
+        if (collapseThreads) {
+            return baseEntries.collectList()
+                .flatMapMany(results -> {
+                    List<EmailEntry> distinctByThreadId = distinctByThreadId(results);
+                    boolean hasEnoughResults = distinctByThreadId.size() >= limit.getLimit().get();
+                    boolean isExhaustive = results.size() < backendFetchLimit.getLimit().get();
+                    if (hasEnoughResults || isExhaustive) {
+                        return Flux.fromIterable(distinctByThreadId)
+                            .take(limit.getLimit().get())
+                            .map(EmailEntry::getMessageId);
+                    }
+                    Limit newBackendFetchLimit = Limit.from(backendFetchLimit.getLimit().get() * COLLAPSE_THREADS_LIMIT_MULTIPLIER);
+                    return listMailboxContentSinceAfterSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newBackendFetchLimit);
+                });
+        }
+
+        return baseEntries.map(EmailEntry::getMessageId);
     }
 
     @Override
     public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        CassandraId cassandraId = (CassandraId) mailboxId;
+        Limit backendFetchLimit = backendLimitFetch(limit, collapseThreads);
+        return listMailboxContentBeforeSortedByReceivedAtWithBackendLimit((CassandraId) mailboxId, since, limit, collapseThreads, backendFetchLimit);
+    }
 
-        return executor.executeRows(listMailboxContentBeforeReceivedAt.bind()
-            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-            .setInt(LIMIT_MARKER, limit.getLimit().get())
-            .setInstant(RECEIVED_AT, since.toInstant()))
-            .map(row -> CassandraMessageId.Factory.of(row.get(0, TypeCodecs.UUID)));
+    private Flux<MessageId> listMailboxContentBeforeSortedByReceivedAtWithBackendLimit(CassandraId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads, Limit backendFetchLimit) {
+        Flux<EmailEntry> baseEntries = executor.executeRows(listMailboxContentBeforeReceivedAt.bind()
+                .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.UUID)
+                .setInstant(RECEIVED_AT, since.toInstant())
+                .setInt(LIMIT_MARKER, backendFetchLimit.getLimit().get()))
+            .map(asEmailEntry(SENT_AT));
+
+        if (collapseThreads) {
+            return baseEntries.collectList()
+                .flatMapMany(results -> {
+                    List<EmailEntry> distinctByThreadId = distinctByThreadId(results);
+                    boolean hasEnoughResults = distinctByThreadId.size() >= limit.getLimit().get();
+                    boolean isExhaustive = results.size() < backendFetchLimit.getLimit().get();
+                    if (hasEnoughResults || isExhaustive) {
+                        return Flux.fromIterable(distinctByThreadId)
+                            .take(limit.getLimit().get())
+                            .map(EmailEntry::getMessageId);
+                    }
+                    Limit newBackendFetchLimit = Limit.from(backendFetchLimit.getLimit().get() * COLLAPSE_THREADS_LIMIT_MULTIPLIER);
+                    return listMailboxContentBeforeSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newBackendFetchLimit);
+                });
+        }
+
+        return baseEntries.map(EmailEntry::getMessageId);
     }
 
     @Override
     public Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        CassandraId cassandraId = (CassandraId) mailboxId;
-
-        return executor.executeRows(listMailboxContentSinceSentAt.bind()
-            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-            .setInt(LIMIT_MARKER, limit.getLimit().get())
-            .setInstant(SENT_AT, since.toInstant()))
-            .map(row -> CassandraMessageId.Factory.of(row.get(0, TypeCodecs.UUID)));
+        Limit backendFetchLimit = backendLimitFetch(limit, collapseThreads);
+        return listMailboxContentSinceSentAtWithBackendLimit((CassandraId) mailboxId, since, limit, collapseThreads, backendFetchLimit);
     }
 
-    private Limit defineLimitFetch(Limit limit, boolean collapseThreads) {
+    private Flux<MessageId> listMailboxContentSinceSentAtWithBackendLimit(CassandraId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads, Limit backendFetchLimit) {
+        Flux<EmailEntry> baseEntries = executor.executeRows(listMailboxContentSinceSentAt.bind()
+                .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.UUID)
+                .setInstant(SENT_AT, since.toInstant())
+                .setInt(LIMIT_MARKER, backendFetchLimit.getLimit().get()))
+            .map(asEmailEntry(SENT_AT));
+
+        if (collapseThreads) {
+            return baseEntries.collectList()
+                .flatMapMany(results -> {
+                    List<EmailEntry> distinctByThreadId = distinctByThreadId(results);
+                    boolean hasEnoughResults = distinctByThreadId.size() >= limit.getLimit().get();
+                    boolean isExhaustive = results.size() < backendFetchLimit.getLimit().get();
+                    if (hasEnoughResults || isExhaustive) {
+                        return Flux.fromIterable(distinctByThreadId)
+                            .take(limit.getLimit().get())
+                            .map(EmailEntry::getMessageId);
+                    }
+                    Limit newBackendFetchLimit = Limit.from(backendFetchLimit.getLimit().get() * COLLAPSE_THREADS_LIMIT_MULTIPLIER);
+                    return listMailboxContentSinceSentAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newBackendFetchLimit);
+                });
+        }
+
+        return baseEntries.map(EmailEntry::getMessageId);
+    }
+
+    private Limit backendLimitFetch(Limit limit, boolean collapseThreads) {
         if (collapseThreads) {
             return Limit.limit(limit.getLimit().get() * COLLAPSE_THREADS_LIMIT_MULTIPLIER);
         }
         return limit;
     }
 
-    private EmailEntry getEmailSentAtEntry(Row row) {
-        CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID));
-        ThreadId threadId = getThreadIdFromRow(row, messageId);
-        Instant sentAt = row.getInstant(SENT_AT);
-        return new EmailEntry(messageId, threadId, sentAt);
+    private Function<Row, EmailEntry> asEmailEntry(CqlIdentifier dateField) {
+        return (Row row) -> {
+            CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID));
+            ThreadId threadId = getThreadIdFromRow(row, messageId);
+            Instant messageDate = row.getInstant(dateField);
+            return new EmailEntry(messageId, threadId, messageDate);
+        };
     }
 
     private ThreadId getThreadIdFromRow(Row row, MessageId messageId) {
@@ -330,15 +453,6 @@ public class CassandraEmailQueryView implements EmailQueryView {
             return ThreadId.fromBaseMessageId(messageId);
         }
         return ThreadId.fromBaseMessageId(CassandraMessageId.Factory.of(threadIdUUID));
-    }
-
-    private Flux<EmailEntry> maybeCollapseThreads(Flux<EmailEntry> entries, boolean collapseThreads) {
-        if (collapseThreads) {
-            return entries.groupBy(EmailEntry::getThreadId)
-                .flatMap(group -> group.reduce((e1, e2) ->
-                    e1.getMessageDate().isAfter(e2.getMessageDate()) ? e1 : e2));
-        }
-        return entries;
     }
 
     @Override
