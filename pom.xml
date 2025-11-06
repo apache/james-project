@@ -3178,10 +3178,6 @@
                                                         <normalization>COMPILE_CLASSPATH</normalization>
                                                     </fileSet>
                                                     <fileSet>
-                                                        <name>classpath</name>
-                                                        <normalization>CLASSPATH</normalization>
-                                                    </fileSet>
-                                                    <fileSet>
                                                         <name>compilerPlugins</name>
                                                         <normalization>IGNORED_PATH</normalization>
                                                     </fileSet>
@@ -3268,11 +3264,7 @@
                                                     <ignore>session</ignore>
                                                     <ignore>notifyCompilation</ignore>
                                                     <ignore>javacGenerateDebugSymbols</ignore>
-                                                    <!-- ignoring these feels wrong but I couldn't find a way to track them -->
-<!--                                                    <ignore>pluginArtifacts</ignore>-->
-<!--                                                    <ignore>dependencies</ignore>-->
-<!--                                                    <ignore>compilerPlugins</ignore>-->
-<!--                                                    <ignore>classpath</ignore>-->
+                                                    <ignore>classpath</ignore> <!-- Deprecated and included in the classpathElements -->
                                                 </ignoredProperties>
                                             </inputs>
                                             <iteratedProperties>
@@ -3363,6 +3355,10 @@
                                                         <name>classpathElements</name>
                                                         <normalization>COMPILE_CLASSPATH</normalization>
                                                     </fileSet>
+                                                    <fileSet>
+                                                        <name>compilerPlugins</name>
+                                                        <normalization>IGNORED_PATH</normalization>
+                                                    </fileSet>
                                                 </fileSets>
                                                 <properties>
                                                     <property>
@@ -3443,12 +3439,57 @@
                                                     <ignore>session</ignore>
                                                     <ignore>notifyCompilation</ignore>
                                                     <ignore>javacGenerateDebugSymbols</ignore>
-                                                    <!-- ignoring these feels wrong but I couldn't find a way to track them -->
-                                                    <ignore>pluginArtifacts</ignore>
-                                                    <ignore>dependencies</ignore>
-                                                    <ignore>compilerPlugins</ignore>
                                                 </ignoredProperties>
                                             </inputs>
+                                            <iteratedProperties>
+                                                <property>
+                                                    <name>pluginArtifacts</name>
+                                                    <inputs>
+                                                        <properties>
+                                                            <property>
+                                                                <name>groupId</name>
+                                                            </property>
+                                                            <property>
+                                                                <name>artifactId</name>
+                                                            </property>
+                                                            <property>
+                                                                <name>version</name>
+                                                            </property>
+                                                            <property>
+                                                                <name>baseVersion</name>
+                                                            </property>
+                                                            <property>
+                                                                <name>type</name>
+                                                            </property>
+                                                            <property>
+                                                                <name>classifier</name>
+                                                            </property>
+                                                            <property>
+                                                                <name>scope</name>
+                                                            </property>
+                                                        </properties>
+                                                    </inputs>
+                                                </property>
+                                                <property>
+                                                    <name>dependencies</name>
+                                                    <inputs>
+                                                        <properties>
+                                                            <property>
+                                                                <name>groupId</name>
+                                                            </property>
+                                                            <property>
+                                                                <name>artifactId</name>
+                                                            </property>
+                                                            <property>
+                                                                <name>version</name>
+                                                            </property>
+                                                            <property>
+                                                                <name>classifier</name>
+                                                            </property>
+                                                        </properties>
+                                                    </inputs>
+                                                </property>
+                                            </iteratedProperties>
                                             <outputs>
                                                 <cacheableBecause>compilation is CPU-bound with well-defined inputs and outputs</cacheableBecause>
                                                 <directories>
