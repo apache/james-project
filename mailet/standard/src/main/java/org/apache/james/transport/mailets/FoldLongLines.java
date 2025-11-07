@@ -95,8 +95,12 @@ public class FoldLongLines extends GenericMailet {
 
     private String fold(Header header) {
         int headerNameLength = header.getName().length() + HEADER_SEPARATOR.length();
-        // TODO After new release of mime4j with commit https://github.com/apache/james-mime4j/commit/66a09219457854c7a26e5b7c0e4c9dd59b4b0c32, update to use MimeUtil of mime4j and remove MimeUtil class file
-        return MimeUtil.fold(header.getValue(), headerNameLength, maxCharacters);
+        System.out.println(header.getValue());
+        String unfold = MimeUtil.unfold(header.getValue());
+        System.out.println(unfold);
+        String res = MimeUtil.fold(unfold, headerNameLength, maxCharacters);
+        System.out.println(res);
+        return res;
     }
 
     private boolean exceedLineLimit(Header header) {

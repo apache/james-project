@@ -90,8 +90,7 @@ public class FoldLongLinesTest {
 
         List<Header> headers = Streams.of(mail.getMessage().getAllHeaders()).filter(header -> header.getName().equals(HEADER_NAME)).toList();
         assertThat(headers).hasSize(1);
-        assertThat(headers.getFirst().getValue()).isEqualTo("<a1@gmailcom>\n" +
-            "<a2@gmailcom>\r\n" +
+        assertThat(headers.getFirst().getValue()).isEqualTo("<a1@gmailcom><a2@gmailcom>\r\n" +
             " <a3@gmailcom> <a4@gmailcom>");
     }
 
@@ -157,6 +156,47 @@ public class FoldLongLinesTest {
             assertThat(headers.getFirst().getValue()).isEqualTo("<b1@gmailcom>");
             assertThat(headers.getLast().getValue()).isEqualTo(FOLDED_LINE);
         });
+    }
+
+    @Test
+    void shouldBeIdempotent() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .mailetContext(mailetContext)
+            .setProperty(MAX_CHARACTERS_PARAMETER_NAME, "40")
+            .build();
+        foldMailet.init(mailetConfig);
+
+        Mail mail = FakeMail.builder()
+            .name("mail").mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader(HEADER_NAME, "a".repeat(40) + "\r\n a")
+                .build())
+            .build();
+        foldMailet.service(mail);
+
+        assertThat(mail.getMessage().getHeader(HEADER_NAME)[0])
+            .isEqualTo("a".repeat(40) + "\r\n a");
+    }
+
+    @Test
+    void shouldTolerateLongerFoldedLines() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .mailetContext(mailetContext)
+            .setProperty(MAX_CHARACTERS_PARAMETER_NAME, "40")
+            .build();
+        foldMailet.init(mailetConfig);
+
+        Mail mail = FakeMail.builder()
+            .name("mail").mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader(HEADER_NAME, "a a".repeat(20) + "\r\n a")
+                .build())
+            .build();
+        foldMailet.service(mail);
+
+        assertThat(mail.getMessage().getHeader(HEADER_NAME)[0])
+            .isEqualTo("a aa aa aa aa aa aa aa aa aa\r\n" +
+                " aa aa aa aa aa aa aa aa aa aa a a");
     }
 
     @Test
