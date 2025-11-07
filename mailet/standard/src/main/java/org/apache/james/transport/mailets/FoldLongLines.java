@@ -26,6 +26,7 @@ import jakarta.mail.Header;
 import jakarta.mail.MessagingException;
 
 import org.apache.commons.lang3.stream.Streams;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
