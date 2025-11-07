@@ -3165,6 +3165,16 @@
                                             <inputs>
                                                 <fileSets>
                                                     <fileSet>
+                                                        <name>sourceDirectory</name>
+                                                        <paths>
+                                                            <path>src/main/scala</path>
+                                                        </paths>
+                                                        <normalization>
+                                                            <ignoreLineEndings>true</ignoreLineEndings>
+                                                            <ignoreEmptyDirectories>true</ignoreEmptyDirectories>
+                                                        </normalization>
+                                                    </fileSet>
+                                                    <fileSet>
                                                         <name>sourceDir</name>
                                                         <includesProperty>includes</includesProperty>
                                                         <excludesProperty>excludes</excludesProperty>
@@ -3264,7 +3274,8 @@
                                                     <ignore>session</ignore>
                                                     <ignore>notifyCompilation</ignore>
                                                     <ignore>javacGenerateDebugSymbols</ignore>
-                                                    <ignore>classpath</ignore> <!-- Deprecated and included in the classpathElements -->
+                                                    <ignore>classpath</ignore>
+                                                    <!-- Deprecated and included in the classpathElements -->
                                                 </ignoredProperties>
                                             </inputs>
                                             <iteratedProperties>
@@ -3342,6 +3353,16 @@
                                             </skipIfTrue>
                                             <inputs>
                                                 <fileSets>
+                                                    <fileSet>
+                                                        <name>testSourceDirectory</name>
+                                                        <paths>
+                                                            <path>src/test/scala</path>
+                                                        </paths>
+                                                        <normalization>
+                                                            <ignoreLineEndings>true</ignoreLineEndings>
+                                                            <ignoreEmptyDirectories>true</ignoreEmptyDirectories>
+                                                        </normalization>
+                                                    </fileSet>
                                                     <fileSet>
                                                         <name>testSourceDir</name>
                                                         <includesProperty>includes</includesProperty>
