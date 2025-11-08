@@ -22,7 +22,9 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -110,13 +112,14 @@ public class ForwardRoutes implements Routes {
         ensureUserExist(forwardBaseAddress);
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(FORWARD_DESTINATION_ADDRESS), FORWARD_DESTINATION_ADDRESS_TYPE);
         MappingSource source = MappingSource.fromUser(Username.fromLocalPartWithDomain(forwardBaseAddress.getLocalPart(), forwardBaseAddress.getDomain()));
-        addForward(source, destinationAddress);
+        String comment = Optional.ofNullable(request.queryParams("comment")).orElse("");
+        addForward(source, destinationAddress, comment);
         return halt(HttpStatus.NO_CONTENT_204);
     }
 
-    private void addForward(MappingSource source, MailAddress destinationAddress) throws RecipientRewriteTableException {
+    private void addForward(MappingSource source, MailAddress destinationAddress, String comment) throws RecipientRewriteTableException {
         try {
-            recipientRewriteTable.addForwardMapping(source, destinationAddress.asString());
+            recipientRewriteTable.addForwardMapping(source, destinationAddress.asString(), comment);
         } catch (MappingAlreadyExistsException e) {
             // ignore
         } catch (SourceDomainIsNotInDomainListException e) {
@@ -160,12 +163,12 @@ public class ForwardRoutes implements Routes {
         ensureNonEmptyMappings(mappings);
 
         return mappings.asStream()
-                .map(mapping -> mapping.asMailAddress()
-                        .orElseThrow(() -> new IllegalStateException(String.format("Can not compute address for mapping %s", mapping.asString()))))
+            .map(mapping -> new ForwardDestinationResponse(mapping.asMailAddress()
                 .map(MailAddress::asString)
-                .sorted()
-                .map(ForwardDestinationResponse::new)
-                .collect(ImmutableSet.toImmutableSet());
+                .orElseThrow(() -> new IllegalStateException(String.format("Can not compute address for mapping %s", mapping.asString()))),
+                mapping.getComment()))
+            .sorted(Comparator.comparing(ForwardDestinationResponse::getMailAddress))
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private void ensureNonEmptyMappings(Mappings mappings) {

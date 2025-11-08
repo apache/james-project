@@ -306,8 +306,14 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void addForwardMapping(MappingSource source, String address) throws RecipientRewriteTableException {
+        addForwardMapping(source, address, "");
+    }
+
+    @Override
+    public void addForwardMapping(MappingSource source, String address, String comment) throws RecipientRewriteTableException {
         Mapping mapping = Mapping.forward(address)
-            .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
+            .appendDomainFromThrowingSupplierIfNone(this::defaultDomain)
+            .withComment(comment);
 
         checkHasValidAddress(mapping);
         checkDuplicateMapping(source, mapping);
@@ -317,6 +323,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         assertNoLoop(source, mapping);
         addMapping(source, mapping);
     }
+
 
     @Override
     public void removeForwardMapping(MappingSource source, String address) throws RecipientRewriteTableException {

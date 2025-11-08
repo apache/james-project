@@ -83,6 +83,8 @@ public interface RecipientRewriteTable {
 
     void addForwardMapping(MappingSource source, String address) throws RecipientRewriteTableException;
 
+    void addForwardMapping(MappingSource source, String address, String comment) throws RecipientRewriteTableException;
+
     void removeForwardMapping(MappingSource source, String address) throws RecipientRewriteTableException;
 
     void addGroupMapping(MappingSource source, String address) throws RecipientRewriteTableException;

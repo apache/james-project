@@ -343,6 +343,21 @@ class ForwardRoutesTest {
         }
 
         @Test
+        void putShouldAllowComments() {
+            given()
+                .queryParam("comment", "automated%20operation")
+                .put(ALICE_WITH_ENCODED_SLASH + SEPARATOR + "targets" + SEPARATOR + BOB);
+
+            when()
+                .get(ALICE_WITH_ENCODED_SLASH)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("mailAddress", hasItems(BOB))
+                .body("comment", hasItems("automated operation"));
+        }
+
+        @Test
         void putSameUserInForwardTwiceShouldBeIdempotent() {
             with()
                 .put(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB);

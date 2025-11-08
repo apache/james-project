@@ -21,12 +21,18 @@ package org.apache.james.webadmin.dto;
 
 public class ForwardDestinationResponse {
     private final String mailAddress;
+    private final String comment;
 
-    public ForwardDestinationResponse(String mailAddress) {
+    public ForwardDestinationResponse(String mailAddress, String comment) {
         this.mailAddress = mailAddress;
+        this.comment = comment;
     }
 
     public String getMailAddress() {
         return mailAddress;
+    }
+
+    public String getComment() {
+        return comment;
     }
 }

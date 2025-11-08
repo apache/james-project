@@ -41,11 +41,30 @@ public interface Mapping {
 
     static Mapping of(String mapping) {
         Type type = Mapping.detectType(mapping);
-        return of(type, type.withoutPrefix(mapping));
+        String withoutType = type.withoutPrefix(mapping);
+        int separatorPosition = withoutType.indexOf(':');
+        String comment = parseComment(withoutType, separatorPosition);
+        String mappingValue = parseMappingValue(separatorPosition, withoutType);
+        return new Impl(type, mappingValue, comment);
+    }
+
+    private static String parseMappingValue(int separatorPosition, String withoutType) {
+        if (separatorPosition < 1) {
+            return withoutType;
+        } else {
+            return withoutType.substring(0, separatorPosition);
+        }
+    }
+
+    private static String parseComment(String withoutType, int separatorPosition) {
+        if (separatorPosition > 0 && separatorPosition < withoutType.length() - 1) {
+            return withoutType.substring(separatorPosition);
+        }
+        return "";
     }
 
     static Mapping of(Type type, String mapping) {
-        return new Impl(type, mapping);
+        return new Impl(type, mapping, "");
     }
 
     enum MailAddressConversionPolicy {
@@ -237,9 +256,11 @@ public interface Mapping {
 
         private final Type type;
         private final String mapping;
+        private final String comment;
         private final UserRewritter rewriter;
 
-        private Impl(Type type, String mapping) {
+        private Impl(Type type, String mapping, String description) {
+            this.comment = description;
             Preconditions.checkNotNull(type);
             Preconditions.checkNotNull(mapping);
             this.type = type;
@@ -249,7 +270,20 @@ public interface Mapping {
 
         @Override
         public String asString() {
-            return type.asPrefix() + mapping;
+            if (comment.isEmpty()) {
+                return type.asPrefix() + mapping;
+            }
+            return type.asPrefix() + mapping + ":" + comment;
+        }
+
+        @Override
+        public String getComment() {
+            return comment;
+        }
+
+        @Override
+        public Mapping withComment(String comment) {
+            return new Impl(type,mapping, comment);
         }
 
         @Override
@@ -335,8 +369,12 @@ public interface Mapping {
     Type getType();
 
     String getMappingValue();
+
+    String getComment();
     
     String asString();
+
+    Mapping withComment(String comment);
 
     boolean hasDomain();
 
