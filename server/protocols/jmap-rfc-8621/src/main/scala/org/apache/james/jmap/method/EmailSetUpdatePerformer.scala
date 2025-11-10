@@ -207,13 +207,30 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
     if (mailboxIds.value.isEmpty) {
       SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), MessageNotFoundException(messageId)))
     } else {
-      updateFlags(messageId, update, mailboxIds, storedMetaData, session)
-        .flatMap {
-          case failure: EmailUpdateFailure => SMono.just[EmailUpdateResult](failure)
-          case _: EmailUpdateSuccess => updateMailboxIds(messageId, update, mailboxIds, session)
-        }
-        .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
-        .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
+      if (update.update.isMailboxUpdate && update.update.isFlagUpdate) {
+        // JAMS-3728 Handling move nd flags update at once prevents data race
+        val targetIds = update.mailboxIdsTransformation.apply(mailboxIds)
+        val originalFlags: Flags = storedMetaData
+          .foldLeft[Flags](new Flags())((flags: Flags, m: ComposedMessageIdWithMetaData) => {
+            flags.add(m.getFlags)
+            flags
+          })
+        val newFlags = update.keywordsTransformation
+          .apply(LENIENT_KEYWORDS_FACTORY.fromFlags(originalFlags).get)
+          .asFlagsWithRecentAndDeletedFrom(originalFlags)
+        SMono(messageIdManager.updateEmail(messageId, targetIds.value.asJava, newFlags, FlagsUpdateMode.REPLACE, session))
+          .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
+          .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
+          .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
+      } else {
+        updateFlags(messageId, update, mailboxIds, storedMetaData, session)
+          .flatMap {
+            case failure: EmailUpdateFailure => SMono.just[EmailUpdateResult](failure)
+            case _: EmailUpdateSuccess => updateMailboxIds(messageId, update, mailboxIds, session)
+          }
+          .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
+          .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
+      }
     }
   }
 
