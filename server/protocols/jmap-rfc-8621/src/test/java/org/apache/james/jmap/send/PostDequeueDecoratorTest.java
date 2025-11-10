@@ -277,17 +277,15 @@ public class PostDequeueDecoratorTest {
 
         when(messageIdManager.getMessagesReactive(any(), eq(FetchGroup.MINIMAL), any(MailboxSession.class)))
             .thenReturn(Flux.fromIterable(allMessages));
-        when(messageIdManager.setInMailboxesReactive(eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class)))
-            .thenReturn(Mono.empty());
-        when(messageIdManager.setFlagsReactive(eq(new Flags(Flag.SEEN)), eq(MessageManager.FlagsUpdateMode.ADD), eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class)))
+        when(messageIdManager.updateEmail(eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)),
+            eq(new Flags(Flag.SEEN)), eq(MessageManager.FlagsUpdateMode.ADD), any(MailboxSession.class)))
             .thenReturn(Mono.empty());
 
         testee.done(MailQueueItem.CompletionStatus.SUCCESS);
         testee.done(MailQueueItem.CompletionStatus.SUCCESS);
 
         verify(messageIdManager, times(1)).getMessagesReactive(any(), eq(FetchGroup.MINIMAL), any(MailboxSession.class));
-        verify(messageIdManager, times(1)).setInMailboxesReactive(eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
-        verify(messageIdManager, times(1)).setFlagsReactive(eq(new Flags(Flag.SEEN)), eq(MessageManager.FlagsUpdateMode.ADD), eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
+        verify(messageIdManager, times(1)).updateEmail(eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), eq(new Flags(Flag.SEEN)), eq(MessageManager.FlagsUpdateMode.ADD), any(MailboxSession.class));
 
         verifyNoMoreInteractions(messageIdManager);
     }
