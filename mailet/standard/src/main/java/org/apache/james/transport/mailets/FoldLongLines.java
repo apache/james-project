@@ -97,7 +97,6 @@ public class FoldLongLines extends GenericMailet {
         int headerNameLength = header.getName().length() + HEADER_SEPARATOR.length();
         String unfold = MimeUtil.unfold(header.getValue());
         String res = MimeUtil.fold(unfold, headerNameLength, maxCharacters);
-        System.out.println(res);
         return res;
     }
 
