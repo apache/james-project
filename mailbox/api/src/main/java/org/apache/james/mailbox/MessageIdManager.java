@@ -76,6 +76,8 @@ public interface MessageIdManager {
 
     Publisher<Void> setInMailboxesReactive(MessageId messageId, Collection<MailboxId> mailboxIds, MailboxSession mailboxSession);
 
+    Publisher<Void> updateEmail(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, FlagsUpdateMode replace, MailboxSession mailboxSession);
+
     default List<MessageResult> getMessage(MessageId messageId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
         return getMessages(ImmutableList.of(messageId), fetchGroup, mailboxSession);
     }
