@@ -138,11 +138,7 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
             .then(getSentMailboxId(mailboxSession)
                 .switchIfEmpty(Mono.error(() -> new MailboxRoleNotFoundException(Role.SENT)))
                 .flatMap(sentMailboxId ->
-                        Mono.from(messageIdManager.setInMailboxesReactive(messageId,
-                            ImmutableList.of(sentMailboxId), mailboxSession))
-                        .then(Mono.from(messageIdManager.setFlagsReactive(new Flags(Flag.SEEN),
-                            MessageManager.FlagsUpdateMode.ADD,
-                            messageId, ImmutableList.of(sentMailboxId), mailboxSession)))))
+                    Mono.from(messageIdManager.updateEmail(messageId, ImmutableList.of(sentMailboxId), new Flags(Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, mailboxSession))))
             .block();
     }
 
