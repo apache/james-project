@@ -18,20 +18,25 @@
 ################################################################
 
 C: AUTHENTICATE
-S: NO ManageSieve syntax is incorrect : You must specify a SASL mechanism as an argument of AUTHENTICATE command
+S: NO "ManageSieve syntax is incorrect: quoted SASL mechanism must be supplied"
 
 C: AUTHENTICATE "UNKNOWN"
-S: NO Unknown SASL mechanism UNKNOWN
+S: NO "Unknown SASL mechanism UNKNOWN"
 
 C: AUTHENTICATE "PLAIN"
-S: \+ ""
+S: ""
+S: OK
 C: GETSCRIPT toto.sieve
-S: NO ManageSieve syntax is incorrect : You must supply a password for the authentication mechanism. Formal syntax : <NULL>username<NULL>password
-
-C:  tin password
-S: NO authentication failed
+S: NO "ManageSieve syntax is incorrect: quoted authentication data must be supplied"
 
 C: AUTHENTICATE "PLAIN"
-S: \+ ""
-C:  user password
+S: ""
+S: OK
+C: "tin password"
+S: NO "Authentication failed with: Verification of credentials failed"
+
+C: AUTHENTICATE "PLAIN"
+S: ""
+S: OK
+C: "user password"
 S: OK
