@@ -26,6 +26,7 @@ import jakarta.mail.Header;
 import jakarta.mail.MessagingException;
 
 import org.apache.commons.lang3.stream.Streams;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -94,8 +95,9 @@ public class FoldLongLines extends GenericMailet {
 
     private String fold(Header header) {
         int headerNameLength = header.getName().length() + HEADER_SEPARATOR.length();
-        // TODO After new release of mime4j with commit https://github.com/apache/james-mime4j/commit/66a09219457854c7a26e5b7c0e4c9dd59b4b0c32, update to use MimeUtil of mime4j and remove MimeUtil class file
-        return MimeUtil.fold(header.getValue(), headerNameLength, maxCharacters);
+        String unfold = MimeUtil.unfold(header.getValue());
+        String res = MimeUtil.fold(unfold, headerNameLength, maxCharacters);
+        return res;
     }
 
     private boolean exceedLineLimit(Header header) {
