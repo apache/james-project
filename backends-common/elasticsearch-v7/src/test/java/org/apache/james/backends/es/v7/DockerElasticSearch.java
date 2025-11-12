@@ -132,7 +132,7 @@ public interface DockerElasticSearch {
 
         static DockerContainer defaultContainer(String imageName) {
             return DockerContainer.fromName(imageName)
-                .withTmpFs(ImmutableMap.of("/usr/share/elasticsearch/data", "rw,size=200m"))
+                .withTmpFs(ImmutableMap.of("/usr/share/elasticsearch/data", "rw,size=200m,mode=1777"))
                 .withExposedPorts(ES_HTTP_PORT)
                 .withEnv("discovery.type", "single-node")
                 .withEnv("ES_JAVA_OPTS", "-Xms" + ES_MEMORY + "m -Xmx" + ES_MEMORY + "m")
