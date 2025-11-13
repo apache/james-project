@@ -88,7 +88,7 @@ public class DockerRabbitMQ {
             .withExposedPorts(DEFAULT_RABBITMQ_PORT, DEFAULT_RABBITMQ_ADMIN_PORT)
             .waitingFor(waitStrategy())
             .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()))
-            .withTmpFs(ImmutableMap.of("/var/lib/rabbitmq/mnesia", "rw,noexec,nosuid,size=100m"));
+            .withTmpFs(ImmutableMap.of("/var/lib/rabbitmq/mnesia", "rw,noexec,nosuid,size=100m,mode=1777"));
         net.ifPresent(this.container::withNetwork);
         erlangCookie.ifPresent(cookie -> this.container.withEnv(RABBITMQ_ERLANG_COOKIE, cookie));
         this.nodeName = DEFAULT_RABBIT_NODE_NAME_PREFIX + "@" + this.rabbitHostName;

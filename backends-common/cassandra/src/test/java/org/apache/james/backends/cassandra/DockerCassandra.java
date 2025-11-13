@@ -193,7 +193,7 @@ public class DockerCassandra {
                             + "&& echo 'authenticator: PasswordAuthenticator' >> /etc/cassandra/cassandra.yaml"
                             + "&& echo 'authorizer: org.apache.cassandra.auth.CassandraAuthorizer' >> /etc/cassandra/cassandra.yaml"))
                         .build()))
-            .withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m"))
+            .withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m,mode=1777"))
             .withExposedPorts(CASSANDRA_PORT)
             .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-cassandra-test-" + UUID.randomUUID()))
             .withLogConsumer(DockerCassandra::displayDockerLog);

@@ -96,5 +96,5 @@ public interface PostgresFixture {
         .withUsername(DEFAULT_DATABASE.dbUser())
         .withPassword(DEFAULT_DATABASE.dbPassword())
         .withCreateContainerCmdModifier(cmd -> cmd.withName("james-postgres-test-" + UUID.randomUUID()))
-        .withTmpFs(singletonMap("/var/lib/postgresql/data", "rw"));
+        .withTmpFs(singletonMap("/var/lib/postgresql/data", "rw,mode=1777"));
 }
