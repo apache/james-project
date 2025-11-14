@@ -26,6 +26,8 @@ import java.util.Set;
 import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.cassandra.table.Flag;
+import org.apache.james.mailbox.store.StoreMessageIdManager;
+import org.apache.james.mailbox.store.StoreMessageManager;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.ProtocolVersion;
@@ -44,6 +46,9 @@ public class FlagsExtractor {
     private static Flags getFlags(Row row, ProtocolVersion protocolVersion) {
         Flags flags = new Flags();
         for (CqlIdentifier cqlId : Flag.ALL_LOWERCASE) {
+            if (!StoreMessageManager.HANDLE_RECENT && cqlId.equals(Flag.RECENT)) {
+                continue;
+            }
             if (TypeCodecs.BOOLEAN.decodePrimitive(row.getBytesUnsafe(cqlId), protocolVersion)) {
                 flags.add(Flag.JAVAX_MAIL_FLAG.get(cqlId));
             }
