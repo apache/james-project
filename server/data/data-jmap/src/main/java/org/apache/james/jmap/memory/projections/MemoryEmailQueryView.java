@@ -21,12 +21,14 @@ package org.apache.james.jmap.memory.projections;
 
 import java.time.ZonedDateTime;
 import java.util.Comparator;
+import java.util.function.Function;
 
 import jakarta.inject.Inject;
 
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.util.streams.Limit;
 
 import com.google.common.base.Preconditions;
@@ -46,61 +48,84 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit) {
+    public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        return Flux.fromIterable(entries.row(mailboxId).values())
+        Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values());
+
+        return maybeCollapseThreads(Entry::getSentAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getSentAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        return Flux.fromIterable(entries.row(mailboxId).values())
-            .filter(e -> e.getSentAt().isAfter(since) || e.getSentAt().isEqual(since))
+        Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values())
+            .filter(e -> e.getSentAt().isAfter(since) || e.getSentAt().isEqual(since));
+
+        return maybeCollapseThreads(Entry::getSentAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getSentAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        return Flux.fromIterable(entries.row(mailboxId).values())
-            .filter(e -> e.getReceivedAt().isAfter(since) || e.getReceivedAt().isEqual(since))
+        Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values())
+            .filter(e -> e.getReceivedAt().isAfter(since) || e.getReceivedAt().isEqual(since));
+
+        return maybeCollapseThreads(Entry::getSentAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getSentAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit) {
-        return Flux.fromIterable(entries.row(mailboxId).values())
+    public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
+        Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values());
+
+        return maybeCollapseThreads(Entry::getReceivedAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getReceivedAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
-        return Flux.fromIterable(entries.row(mailboxId).values())
-            .filter(e -> e.getReceivedAt().isAfter(since) || e.getReceivedAt().isEqual(since))
+    public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
+        Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values())
+            .filter(e -> e.getReceivedAt().isAfter(since) || e.getReceivedAt().isEqual(since));
+
+        return maybeCollapseThreads(Entry::getReceivedAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getReceivedAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime before, Limit limit) {
-        return Flux.fromIterable(entries.row(mailboxId).values())
-            .filter(e -> e.getReceivedAt().isBefore(before) || e.getReceivedAt().isEqual(before))
+    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime before, Limit limit, boolean collapseThreads) {
+        Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values())
+            .filter(e -> e.getReceivedAt().isBefore(before) || e.getReceivedAt().isEqual(before));
+
+        return maybeCollapseThreads(Entry::getReceivedAt, collapseThreads).apply(baseEntries)
             .sort(Comparator.comparing(Entry::getReceivedAt).reversed())
             .map(Entry::getMessageId)
             .take(limit.getLimit().get());
+    }
+
+    private Function<Flux<Entry>, Flux<Entry>> maybeCollapseThreads(Function<Entry, ZonedDateTime> dateExtractor, boolean collapseThreads) {
+        return entries -> {
+            if (collapseThreads) {
+                return entries.groupBy(Entry::getThreadId)
+                    .flatMap(group -> group.reduce((e1, e2) ->
+                        dateExtractor.apply(e1).isAfter(dateExtractor.apply(e2)) ? e1 : e2));
+            }
+            return entries;
+        };
     }
 
     @Override
@@ -114,7 +139,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, MessageId messageId) {
-        return Mono.fromRunnable(() -> entries.put(mailboxId, messageId, new Entry(mailboxId, messageId, sentAt, receivedAt)));
+    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, MessageId messageId, ThreadId threadId) {
+        return Mono.fromRunnable(() -> entries.put(mailboxId, messageId, new Entry(mailboxId, messageId, sentAt, receivedAt, threadId)));
     }
 }
