@@ -224,3 +224,17 @@ Ex in `jvm.properties`
 ----
 james.rights.crossdomain.allow=false
 ----
+
+== Drop IMAP Recent handling
+
+This allows for dropping the legacy IMAP flag support, concidering all emails as recent. This has no impact on modern
+IMAP application as this flag is concidered innacurate.
+
+Note that this flag is removed in IMAP4Rev2.
+
+Ex in  `jvm.properties`
+----
+james.mailbox.handleRecent=false
+----
+
+Defaults to true (no breaking changes)

@@ -34,6 +34,7 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxRecentsTable;
+import org.apache.james.mailbox.store.StoreMessageManager;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.ProtocolVersion;
@@ -101,6 +102,9 @@ public class CassandraMailboxRecentsDAO {
     }
 
     public Flux<MessageUid> getRecentMessageUidsInMailbox(CassandraId mailboxId) {
+        if (!StoreMessageManager.HANDLE_RECENT) {
+            return Flux.empty();
+        }
         return cassandraAsyncExecutor.executeRows(bindWithMailbox(mailboxId, readStatement))
             .map(row -> TypeCodecs.BIGINT.decodePrimitive(row.getBytesUnsafe(0), protocolVersion))
             .map(MessageUid::of);
@@ -112,12 +116,18 @@ public class CassandraMailboxRecentsDAO {
     }
 
     public Mono<Void> removeFromRecent(CassandraId mailboxId, MessageUid messageUid) {
+        if (!StoreMessageManager.HANDLE_RECENT) {
+            return Mono.empty();
+        }
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
             .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, messageUid.asLong()));
     }
 
     public Mono<Void> removeFromRecent(CassandraId mailboxId, List<MessageUid> uids) {
+        if (!StoreMessageManager.HANDLE_RECENT) {
+            return Mono.empty();
+        }
         if (uids.size() == 1) {
             return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
                 .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
@@ -139,17 +149,26 @@ public class CassandraMailboxRecentsDAO {
     }
 
     public Mono<Void> delete(CassandraId mailboxId) {
+        if (!StoreMessageManager.HANDLE_RECENT) {
+            return Mono.empty();
+        }
         return cassandraAsyncExecutor.executeVoid(deleteAllStatement.bind()
             .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid()));
     }
 
     public Mono<Void> addToRecent(CassandraId mailboxId, MessageUid messageUid) {
+        if (!StoreMessageManager.HANDLE_RECENT) {
+            return Mono.empty();
+        }
         return cassandraAsyncExecutor.executeVoid(addStatement.bind()
             .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
             .setLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, messageUid.asLong()));
     }
 
     public Mono<Void> addToRecent(CassandraId mailboxId, List<MessageUid> uids) {
+        if (!StoreMessageManager.HANDLE_RECENT) {
+            return Mono.empty();
+        }
         if (uids.size() == 1) {
             return cassandraAsyncExecutor.executeVoid(addStatement.bind()
                 .setUuid(CassandraMailboxRecentsTable.MAILBOX_ID, mailboxId.asUuid())
