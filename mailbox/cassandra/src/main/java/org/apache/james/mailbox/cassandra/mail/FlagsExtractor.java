@@ -26,7 +26,6 @@ import java.util.Set;
 import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.cassandra.table.Flag;
-import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
