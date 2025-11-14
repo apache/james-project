@@ -35,6 +35,7 @@ import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.mail.Keyword;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.address.AddressList;
+import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.DateTimeFieldLenientImpl;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.stream.RawField;
@@ -89,10 +90,18 @@ public interface ContentMatcher {
                 .stream()
                 .findFirst()
                 .map(Throwing.function(mailbox -> {
+                    if (looksLikeBareName(fullAddress, mailbox)) {
+                        return new InternetAddress(null, fullAddress, StandardCharsets.UTF_8.name());
+                    }
+
                     String addr = mailbox.getAddress();
                     String name = mailbox.getName();
                     return new InternetAddress(addr, name, StandardCharsets.UTF_8.name());
                 }));
+        }
+
+        private boolean looksLikeBareName(String value, Mailbox mailbox) {
+            return !value.contains("@") && mailbox.getDomain() == null;
         }
 
         boolean matchesIgnoreCase(AddressHeader other) {

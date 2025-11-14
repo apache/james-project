@@ -57,4 +57,14 @@ public class AddressHeaderTest {
         assertThat(internetAddress.get().getPersonal()).isEqualTo("kael >> Kaël");
     }
 
+    @Test
+    void shouldLenientlyParseMalformedAddressHeaderWithBareName() {
+        Optional<InternetAddress> internetAddress = ContentMatcher.asAddressHeader("Frédéric MARTIN")
+            .parseFullAddress();
+
+        assertThat(internetAddress).isPresent();
+        assertThat(internetAddress.get().getPersonal()).isEqualTo("Frédéric MARTIN");
+        assertThat(internetAddress.get().getAddress()).isNull();
+    }
+
 }
