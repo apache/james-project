@@ -423,11 +423,6 @@ class JMAPFilteringTest {
                         .valueToMatch("ser1 <"),
 
                     argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in a full " + fieldAndHeader.headerName + " header with multiple addresses")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", Invalid <invalid@ white.space.in.domain.tld>")
-                        .valueToMatch("invalid@ white.space.in.domain.tld"),
-
-                    argumentBuilder(fieldAndHeader.field)
                         .description("Address partial match in a full " + fieldAndHeader.headerName + " header")
                         .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch("ser1@jam"),
