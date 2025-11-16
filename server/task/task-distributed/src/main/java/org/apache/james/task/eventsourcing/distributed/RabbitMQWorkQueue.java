@@ -71,6 +71,9 @@ public class RabbitMQWorkQueue implements WorkQueue {
     static final boolean SINGLE_ACTIVE = Optional.ofNullable(System.getProperty("james.task.rabbitmq.singleActive.enabled"))
         .map(Boolean::parseBoolean)
         .orElse(true);
+    static final int QOS = Optional.ofNullable(System.getProperty("james.task.rabbitmq.qos"))
+        .map(Integer::parseInt)
+        .orElse(1);
 
     static final String EXCHANGE_NAME = "taskManagerWorkQueueExchange";
     static final String QUEUE_NAME = "taskManagerWorkQueue";
@@ -162,10 +165,10 @@ public class RabbitMQWorkQueue implements WorkQueue {
     private void consumeWorkqueue() {
         receiverHandle = Flux.using(
                 receiverProvider::createReceiver,
-                receiver -> receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions()),
+                receiver -> receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions().qos(QOS)),
                 Receiver::close)
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-            .concatMap(this::executeTask)
+            .flatMap(this::executeTask, QOS)
             .subscribe();
     }
 
