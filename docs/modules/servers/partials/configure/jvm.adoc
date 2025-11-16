@@ -212,6 +212,16 @@ james.deduplicating.blobstore.thread.switch.threshold=32768
 james.deduplicating.blobstore.file.threshold=10240
 ----
 
+== Turn off Distributed Task Manager single active consumer
+
+Turning this feature off allows for all James nodes to share the task execution.
+
+Defaults to `true`.
+
+----
+james.task.rabbitmq.singleActive.enabled=false
+----
+
 == Allow users to have rights for shares of different domain
 
 Typically, preventing users to obtain rights for shares of another domain is a useful security layer.
