@@ -114,8 +114,8 @@ public class OIDCTest {
         void oauthbearerLoginWithValidTokenAndContinuationShouldSucceed() throws Exception {
             this.client.sendCommand("AUTHENTICATE \"OAUTHBEARER\"");
             ManageSieveClient.ServerResponse continuationResponse = this.client.readResponse();
-            Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
-            Assertions.assertThat(continuationResponse.responseLines()).containsExactly("\"\"");
+            Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
+            Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
             this.client.sendCommand("\"" + VALID_OAUTHBEARER_INITIAL_CLIENT_RESPONSE + "\"");
             ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
@@ -126,8 +126,8 @@ public class OIDCTest {
         void oauthbearerLoginWithValidTokenAndContinuationCanBeAborted() throws Exception {
             this.client.sendCommand("AUTHENTICATE \"OAUTHBEARER\"");
             ManageSieveClient.ServerResponse continuationResponse = this.client.readResponse();
-            Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
-            Assertions.assertThat(continuationResponse.responseLines()).containsExactly("\"\"");
+            Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
+            Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
             this.client.sendCommand("\"*\"");
             ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
@@ -153,8 +153,8 @@ public class OIDCTest {
         void xoauth2LoginWithValidTokenAndContinuationShouldSucceed() throws Exception {
             this.client.sendCommand("AUTHENTICATE \"XOAUTH2\"");
             ManageSieveClient.ServerResponse continuationResponse = this.client.readResponse();
-            Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
-            Assertions.assertThat(continuationResponse.responseLines()).containsExactly("\"\"");
+            Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
+            Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
             this.client.sendCommand("\"" + VALID_XOAUTH2_INITIAL_CLIENT_RESPONSE + "\"");
             ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
@@ -165,8 +165,8 @@ public class OIDCTest {
         void xoauth2LoginWithValidTokenAndContinuationCanBeAborted() throws Exception {
             this.client.sendCommand("AUTHENTICATE \"XOAUTH2\"");
             ManageSieveClient.ServerResponse continuationResponse = this.client.readResponse();
-            Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
-            Assertions.assertThat(continuationResponse.responseLines()).containsExactly("\"\"");
+            Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
+            Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
             this.client.sendCommand("\"*\"");
             ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
