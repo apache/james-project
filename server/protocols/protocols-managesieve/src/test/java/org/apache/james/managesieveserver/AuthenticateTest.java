@@ -82,13 +82,12 @@ public class AuthenticateTest {
     // The SASL PLAIN standard (https://datatracker.ietf.org/doc/html/rfc4616) defines the following message:
     // message = [authzid] UTF8NUL authcid UTF8NUL passwd
     // The current code is more lenient and accepts the message without the first null byte.
-    @Disabled
     @Test
-    void plainLoginWithMalformedMessageShouldNotSucceed() throws IOException {
+    void plainLoginWithoutLeadingNullByteShouldSucceed() throws IOException {
         String initialClientResponse = ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD;
         this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
-        Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
+        Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
     }
 
     @Test
