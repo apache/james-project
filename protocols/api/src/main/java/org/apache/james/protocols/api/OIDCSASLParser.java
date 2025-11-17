@@ -61,6 +61,7 @@ public class OIDCSASLParser {
         Optional<String> decodeResult = decodeBase64(initialResponse);
 
         if (decodeResult.isPresent()) {
+            // See the format of the gs2-header in https://www.rfc-editor.org/rfc/rfc5801#section-4.
             String decodeValueWithoutDanglingPart = decodeResult.filter(value -> value.startsWith("n,"))
                 .map(value -> value.substring(2))
                 .orElse(decodeResult.get());
@@ -81,6 +82,10 @@ public class OIDCSASLParser {
                     userPartCounter++;
                 } else if (stringToken.startsWith(OAUTHBEARER_USER_PART_PREFIX)) {
                     userPart = stringToken.substring(OAUTHBEARER_USER_PART_INDEX);
+                    // See the format of the gs2-header in https://www.rfc-editor.org/rfc/rfc5801#section-4.
+                    if (userPart.endsWith(",")) {
+                        userPart = userPart.substring(0, userPart.length() - 1);
+                    }
                     userPartCounter++;
                 }
             }
