@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.mailet.filter;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -33,13 +34,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.mail.Keyword;
 import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.dom.address.AddressList;
+import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.DateTimeFieldLenientImpl;
+import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.util.DurationParser;
 import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
@@ -63,13 +69,39 @@ public interface ContentMatcher {
                 .or(() -> Optional.of(fullAddress));
         }
 
-        private Optional<InternetAddress> parseFullAddress() {
+        @VisibleForTesting
+        public Optional<InternetAddress> parseFullAddress() {
             try {
                 return Optional.of(new InternetAddress(fullAddress));
-            } catch (AddressException e) {
-                LOGGER.info("error while parsing full address {}", fullAddress, e);
-                return Optional.empty();
+            } catch (AddressException ignored) {
+                try {
+                    return parseFullAddressUsingMime4J();
+                } catch (Exception exception) {
+                    LOGGER.info("error while parsing full address {}", fullAddress, exception);
+                    return Optional.empty();
+                }
             }
+        }
+
+        private Optional<InternetAddress> parseFullAddressUsingMime4J() {
+            AddressList addresses = LenientAddressParser.DEFAULT.parseAddressList(fullAddress);
+
+            return addresses.flatten()
+                .stream()
+                .findFirst()
+                .map(Throwing.function(mailbox -> {
+                    if (looksLikeBareName(fullAddress, mailbox)) {
+                        return new InternetAddress(null, fullAddress, StandardCharsets.UTF_8.name());
+                    }
+
+                    String addr = mailbox.getAddress();
+                    String name = mailbox.getName();
+                    return new InternetAddress(addr, name, StandardCharsets.UTF_8.name());
+                }));
+        }
+
+        private boolean looksLikeBareName(String value, Mailbox mailbox) {
+            return !value.contains("@") && mailbox.getDomain() == null;
         }
 
         boolean matchesIgnoreCase(AddressHeader other) {
