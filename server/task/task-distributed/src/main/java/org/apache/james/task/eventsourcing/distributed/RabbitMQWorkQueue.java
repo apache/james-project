@@ -163,18 +163,20 @@ public class RabbitMQWorkQueue implements WorkQueue {
     }
 
     private void consumeWorkqueue() {
-        Flux<AcknowledgableDelivery> acknowledgableDeliveryFlux = Flux.using(
-                receiverProvider::createReceiver,
-                receiver -> receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions().qos(QOS)),
-                Receiver::close)
-            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
-        
         if (QOS > 1) {
-            receiverHandle = acknowledgableDeliveryFlux
+            receiverHandle =  Flux.using(
+                    receiverProvider::createReceiver,
+                    receiver -> receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions().qos(QOS)),
+                    Receiver::close)
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                 .flatMap(this::executeTask, QOS)
                 .subscribe();
         } else {
-            receiverHandle = acknowledgableDeliveryFlux
+            receiverHandle =  Flux.using(
+                    receiverProvider::createReceiver,
+                    receiver -> receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions()),
+                    Receiver::close)
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                 .concatMap(this::executeTask)
                 .subscribe();
         }
