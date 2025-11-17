@@ -27,8 +27,7 @@ C: UNAUTHENTICATE
 S: NO UNAUTHENTICATE command must be issued in authenticated state
 
 C: AUTHENTICATE "PLAIN"
-S: ""
-S: OK
+S: \+ ""
 C: "user password"
 S: OK
 

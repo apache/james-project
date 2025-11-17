@@ -24,19 +24,16 @@ C: AUTHENTICATE "UNKNOWN"
 S: NO "Unknown SASL mechanism UNKNOWN"
 
 C: AUTHENTICATE "PLAIN"
-S: ""
-S: OK
+S: \+ ""
 C: GETSCRIPT toto.sieve
 S: NO "ManageSieve syntax is incorrect: quoted authentication data must be supplied"
 
 C: AUTHENTICATE "PLAIN"
-S: ""
-S: OK
+S: \+ ""
 C: "tin password"
 S: NO "Authentication failed with: Verification of credentials failed"
 
 C: AUTHENTICATE "PLAIN"
-S: ""
-S: OK
+S: \+ ""
 C: "user password"
 S: OK

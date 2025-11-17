@@ -37,6 +37,7 @@ public class ManageSieveClient extends SocketClient {
 
     enum ResponseType {
         BYE,
+        CONTINUATION,
         NO,
         OK;
     }
@@ -90,6 +91,9 @@ public class ManageSieveClient extends SocketClient {
                 }
 
                 response = new ServerResponse(responseType, responseCode, explanation, lines);
+            } else if (tokens[0].equals("+")) {
+                Optional explanation = Optional.of(tokens[1].substring(1, tokens[1].length() - 1));
+                response = new ServerResponse(ResponseType.CONTINUATION, Optional.empty(), explanation, new ArrayList());
             } else {
                 lines.addLast(line);
             }

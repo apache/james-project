@@ -111,8 +111,8 @@ public class AuthenticateTest {
     void plainLoginWithContinuationShouldSucceed() throws IOException {
         this.client.sendCommand("AUTHENTICATE \"PLAIN\"");
         ManageSieveClient.ServerResponse continuationResponse = this.client.readResponse();
-        Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
-        Assertions.assertThat(continuationResponse.responseLines()).containsExactly("\"\"");
+        Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
+        Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
         String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD;
         this.client.sendCommand("\"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
@@ -124,8 +124,8 @@ public class AuthenticateTest {
     void plainLoginWithContinuationCanBeAborted() throws IOException {
         this.client.sendCommand("AUTHENTICATE \"PLAIN\"");
         ManageSieveClient.ServerResponse continuationResponse = this.client.readResponse();
-        Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
-        Assertions.assertThat(continuationResponse.responseLines()).containsExactly("\"\"");
+        Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
+        Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
         this.client.sendCommand("\"*\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
