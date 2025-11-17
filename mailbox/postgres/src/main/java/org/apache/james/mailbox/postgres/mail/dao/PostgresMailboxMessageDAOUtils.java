@@ -65,6 +65,7 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
+import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -83,6 +84,9 @@ interface PostgresMailboxMessageDAOUtils {
     Function<Record, Flags> RECORD_TO_FLAGS_FUNCTION = record -> {
         Flags flags = new Flags();
         BOOLEAN_FLAGS_MAPPING.forEach((flagColumn, flagMapped) -> {
+            if (!StoreMessageManager.HANDLE_RECENT && flagColumn.equals(IS_RECENT)) {
+                return;
+            }
             if (record.get(flagColumn)) {
                 flags.add(flagMapped);
             }
