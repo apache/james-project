@@ -24,8 +24,7 @@ C: SETACTIVE "foo"
 S: NO
 
 C: AUTHENTICATE "PLAIN"
-S: ""
-S: OK
+S: \+ ""
 C: "user password"
 S: OK
 

@@ -38,8 +38,7 @@ S: "VERSION" "1.0"
 S: OK
 
 C: AUTHENTICATE "PLAIN"
-S: ""
-S: OK
+S: \+ ""
 C: "user password"
 S: OK
 
