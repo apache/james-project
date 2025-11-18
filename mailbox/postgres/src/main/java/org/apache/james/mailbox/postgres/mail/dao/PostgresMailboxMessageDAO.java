@@ -72,6 +72,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable;
+import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -170,6 +171,9 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<MessageUid> findAllRecentMessageUid(PostgresMailboxId mailboxId) {
+        if (!StoreMessageManager.HANDLE_RECENT) {
+            return Flux.empty();
+        }
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
                 .from(TABLE_NAME)
                 .where(MAILBOX_ID.eq((mailboxId.asUuid())))

@@ -134,6 +134,9 @@ import reactor.core.scheduler.Schedulers;
  * {@link MailboxSession}'s.
  */
 public class StoreMessageManager implements MessageManager {
+    public static final boolean HANDLE_RECENT = Optional.ofNullable(System.getProperty("james.mailbox.handleRecent"))
+        .map(Boolean::parseBoolean)
+        .orElse(true);
     /**
      * The minimal Permanent flags the {@link MessageManager} must support. <br>
      * 
@@ -494,7 +497,7 @@ public class StoreMessageManager implements MessageManager {
             trimFlags(flags, mailboxSession);
 
         }
-        if (isRecent) {
+        if (isRecent && HANDLE_RECENT) {
             flags.add(Flag.RECENT);
         }
         return flags;
