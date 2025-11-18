@@ -68,6 +68,13 @@ import reactor.util.retry.Retry;
 public class RabbitMQWorkQueue implements WorkQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQWorkQueue.class);
 
+    static final boolean SINGLE_ACTIVE = Optional.ofNullable(System.getProperty("james.task.rabbitmq.singleActive.enabled"))
+        .map(Boolean::parseBoolean)
+        .orElse(true);
+    static final int QOS = Optional.ofNullable(System.getProperty("james.task.rabbitmq.qos"))
+        .map(Integer::parseInt)
+        .orElse(1);
+
     static final String EXCHANGE_NAME = "taskManagerWorkQueueExchange";
     static final String QUEUE_NAME = "taskManagerWorkQueue";
     static final String ROUTING_KEY = "taskManagerWorkQueueRoutingKey";
@@ -127,8 +134,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
         Mono<AMQP.Queue.DeclareOk> declareQueue = sender
             .declare(QueueSpecification.queue(QUEUE_NAME)
                 .durable(evaluateDurable(DURABLE, rabbitMQConfiguration.isQuorumQueuesUsed()))
-                .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder()
-                    .singleActiveConsumer()
+                .arguments(queueBaseArguments()
                     .consumerTimeout(consumerTimeout)
                     .build()))
             .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
@@ -142,6 +148,14 @@ public class RabbitMQWorkQueue implements WorkQueue {
             .block();
     }
 
+    private QueueArguments.Builder queueBaseArguments() {
+        if (SINGLE_ACTIVE) {
+            return rabbitMQConfiguration.workQueueArgumentsBuilder()
+                .singleActiveConsumer();
+        }
+        return rabbitMQConfiguration.workQueueArgumentsBuilder();
+    }
+
     @Override
     public void restart() {
         closeRabbitResources();
@@ -149,13 +163,23 @@ public class RabbitMQWorkQueue implements WorkQueue {
     }
 
     private void consumeWorkqueue() {
-        receiverHandle = Flux.using(
-                receiverProvider::createReceiver,
-                receiver -> receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions()),
-                Receiver::close)
-            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-            .concatMap(this::executeTask)
-            .subscribe();
+        if (QOS > 1) {
+            receiverHandle =  Flux.using(
+                    receiverProvider::createReceiver,
+                    receiver -> receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions().qos(QOS)),
+                    Receiver::close)
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+                .flatMap(this::executeTask, QOS)
+                .subscribe();
+        } else {
+            receiverHandle =  Flux.using(
+                    receiverProvider::createReceiver,
+                    receiver -> receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions()),
+                    Receiver::close)
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+                .concatMap(this::executeTask)
+                .subscribe();
+        }
     }
 
     private Mono<Task.Result> executeTask(AcknowledgableDelivery delivery) {
