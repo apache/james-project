@@ -53,10 +53,20 @@ import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 public class DefaultCriterionConverter implements CriterionConverter {
-    public static final CharMatcher QUERY_STRING_CONTROL_CHAR = CharMatcher.anyOf("()\"~-|*");
+    private static final CharMatcher QUERY_STRING_CONTROL_CHAR = CharMatcher.anyOf("()\"~|*");
+
+    public static boolean matchesQueryStringHeuristic(String query) {
+        if (QUERY_STRING_CONTROL_CHAR.matchesAnyOf(query)) {
+            return true;
+        }
+        return Splitter.on(' ').splitToStream(query)
+            .anyMatch(s -> s.startsWith("-"));
+    }
+
     protected final Map<Class<?>, Function<SearchQuery.Criterion, Query>> criterionConverterMap;
     protected final Map<Class<?>, BiFunction<String, SearchQuery.HeaderOperator, Query>> headerOperatorConverterMap;
     protected final String textFuzzinessSearchValue;
@@ -223,7 +233,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
     protected Query convertTextCriterion(SearchQuery.TextCriterion textCriterion) {
         switch (textCriterion.getType()) {
             case BODY:
-                if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(textCriterion.getOperator().getValue())) {
+                if (useQueryStringQuery && matchesQueryStringHeuristic(textCriterion.getOperator().getValue())) {
                     return new SimpleQueryStringQuery.Builder()
                         .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY))
                         .query(textCriterion.getOperator().getValue())
@@ -250,7 +260,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
                         .toQuery();
                 }
             case FULL:
-                if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(textCriterion.getOperator().getValue())) {
+                if (useQueryStringQuery && matchesQueryStringHeuristic(textCriterion.getOperator().getValue())) {
                     return new BoolQuery.Builder()
                         .should(new SimpleQueryStringQuery.Builder()
                             .fields(ImmutableList.of(JsonMessageConstants.TEXT_BODY, JsonMessageConstants.HTML_BODY, JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
@@ -297,7 +307,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
                         .toQuery();
                 }
             case ATTACHMENTS:
-                if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(textCriterion.getOperator().getValue())) {
+                if (useQueryStringQuery && matchesQueryStringHeuristic(textCriterion.getOperator().getValue())) {
                     return new BoolQuery.Builder()
                         .should(new SimpleQueryStringQuery.Builder()
                             .fields(ImmutableList.of(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT))
@@ -330,7 +340,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
                         .toQuery();
                 }
             case ATTACHMENT_FILE_NAME:
-                if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(textCriterion.getOperator().getValue())) {
+                if (useQueryStringQuery && matchesQueryStringHeuristic(textCriterion.getOperator().getValue())) {
                     return new BoolQuery.Builder()
                         .should(new SimpleQueryStringQuery.Builder()
                             .fields(ImmutableList.of(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILENAME))
@@ -541,7 +551,7 @@ public class DefaultCriterionConverter implements CriterionConverter {
     }
 
     protected Query convertSubject(SearchQuery.SubjectCriterion headerCriterion) {
-        if (useQueryStringQuery && QUERY_STRING_CONTROL_CHAR.matchesAnyOf(headerCriterion.getSubject())) {
+        if (useQueryStringQuery && matchesQueryStringHeuristic(headerCriterion.getSubject())) {
             return new SimpleQueryStringQuery.Builder()
                 .fields(ImmutableList.of(JsonMessageConstants.SUBJECT))
                 .query(headerCriterion.getSubject())
