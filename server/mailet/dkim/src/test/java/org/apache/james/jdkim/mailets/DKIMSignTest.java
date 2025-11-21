@@ -20,6 +20,7 @@
 package org.apache.james.jdkim.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 
 import java.io.ByteArrayInputStream;
@@ -35,12 +36,12 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMessage.RecipientType;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
 import org.apache.james.jdkim.exceptions.PermFailException;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
-import org.apache.james.core.MailAddress;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
@@ -51,8 +52,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class DKIMSignTest {
     private static final String PKCS1_PEM_FILE = "classpath://test-dkim-pkcs1.pem";
