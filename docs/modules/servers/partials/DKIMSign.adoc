@@ -38,6 +38,24 @@ Sample configuration with file-provided private key:
 </mailet>
 ....
 
+Sample configuration with domain interpolation for multi-domain support:
+
+....
+<mailet match=&quot;All&quot; class=&quot;DKIMSign&quot;>
+  <signatureTemplate>v=1; s=selector; d=%MAIL_FROM; h=from:to:received:received; a=rsa-sha256; bh=; b=;</signatureTemplate>
+  <privateKeyFilepath>dkim-signing.pem</privateKeyFilepath>
+  <defaultDomain>example.com</defaultDomain>
+</mailet>
+....
+
+Domain interpolation allows dynamic DKIM signing for multiple domains using a single configuration.
+The `%MAIL_FROM` placeholder in the signatureTemplate will be replaced with:
+
+1. The domain from the sender's email address (from `mail.getSender()`), or
+2. The `defaultDomain` if no sender is present or the sender has no domain
+
+This enables DMARC alignment for multi-domain deployments with a single DKIM private key.
+
 By default the mailet assume that Javamail will convert LF to CRLF when sending
 so will compute the hash using converted newlines. If you don't want this
 behaviour then set forceCRLF attribute to false.
