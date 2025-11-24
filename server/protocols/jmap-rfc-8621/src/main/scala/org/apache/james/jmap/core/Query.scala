@@ -47,7 +47,14 @@ case class LimitUnparsed(value: Int) extends AnyVal
 
 object Limit {
   type Limit = Int Refined Positive
-  val default: Limit = 256
+  private val defaultWhenNoneConfigured: Limit = 256
+  val default: Limit = Option(System.getProperty("james.jmap.email.query.limit.default"))
+    .map(s => s.toInt)
+    .flatMap(s => {
+      val refinedValue: Either[String, Limit] = refineV(s);
+      refinedValue.toOption
+    })
+    .getOrElse(defaultWhenNoneConfigured)
 
   def validateRequestLimit(requestLimit: Option[LimitUnparsed]): Either[IllegalArgumentException, Limit] = {
     val refinedLimit : Option[Either[String, Limit]] =  requestLimit.map(limit => refineV[Positive](limit.value))
