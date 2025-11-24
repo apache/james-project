@@ -90,6 +90,16 @@ public class AuthenticateTest {
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
     }
 
+    // The SASL PLAIN standard defines UTF8NUL as separator. To stay compatible with older versions of James,
+    // James is more lenient and also supports a space as the delimiter if the message is not base64-encoded.
+    @Test
+    void plainLoginWithSpaceAsDelimiterShouldSucceed() throws IOException {
+        String initialClientResponse = ManageSieveServerTestSystem.USERNAME.asString() + " " + ManageSieveServerTestSystem.PASSWORD;
+        this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + initialClientResponse + "\"");
+        ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
+        Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
+    }
+
     @Test
     void plainLoginWithoutMechanismQuotesShouldNotSucceed() throws IOException {
         String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD;
