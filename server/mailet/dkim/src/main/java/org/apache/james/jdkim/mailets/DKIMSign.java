@@ -98,27 +98,39 @@ import com.github.fge.lambdas.Throwing;
  * &lt;/mailet&gt;
  * </code></pre>
  *
+ * Sample configuration with domain interpolation for multi-domain support:
+ *
+ * <pre><code>
+ * &lt;mailet match=&quot;All&quot; class=&quot;DKIMSign&quot;&gt;
+ *   &lt;signatureTemplate&gt;v=1; s=selector; d=%MAIL_FROM; h=from:to:received:received; a=rsa-sha256; bh=; b=;&lt;/signatureTemplate&gt;
+ *   &lt;privateKeyFilepath&gt;conf://dkim-signing.pem&lt;/privateKeyFilepath&gt;
+ *   &lt;defaultDomain&gt;example.com&lt;/defaultDomain&gt;
+ * &lt;/mailet&gt;
+ * </code></pre>
+ *
+ * Domain interpolation allows dynamic DKIM signing for multiple domains using a single configuration.
+ * The %MAIL_FROM placeholder in the signatureTemplate will be replaced with:
+ * 1. The domain from the sender's email address (from mail.getSender()), or
+ * 2. The defaultDomain if no sender is present or the sender has no domain
+ *
+ * This enables DMARC alignment for multi-domain deployments with a single DKIM private key.
+ *
  * By default the mailet assume that Javamail will convert LF to CRLF when sending
  * so will compute the hash using converted newlines. If you don't want this
  * behaviour then set forceCRLF attribute to false.
  */
 public class DKIMSign extends GenericMailet {
 
+    public static final String MAIL_FROM_INTERPOLATION_PATTERN = "%MAIL_FROM";
     private final FileSystem fileSystem;
     private String signatureTemplate;
     private PrivateKey privateKey;
     private boolean forceCRLF;
+    private Optional<String> defaultDomain;
 
     @Inject
     public DKIMSign(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
-    }
-
-    /**
-     * @return the signatureTemplate
-     */
-    private String getSignatureTemplate() {
-        return signatureTemplate;
     }
 
     /**
@@ -132,13 +144,18 @@ public class DKIMSign extends GenericMailet {
         signatureTemplate = getInitParameter("signatureTemplate");
         Optional<String> privateKeyPassword = getInitParameterAsOptional("privateKeyPassword");
         forceCRLF = getInitParameter("forceCRLF", true);
+        defaultDomain = getInitParameterAsOptional("defaultDomain");
+
+        if (signatureTemplate.contains(MAIL_FROM_INTERPOLATION_PATTERN) && !defaultDomain.isPresent()) {
+            throw new IllegalStateException("signatureTemplate contains %MAIL_FROM placeholder but defaultDomain is not configured");
+        }
 
         try {
             char[] passphrase = privateKeyPassword.map(String::toCharArray).orElse(null);
             InputStream pem = getInitParameterAsOptional("privateKey")
                 .map(String::getBytes)
                 .map(ByteArrayInputStream::new)
-                .map(byteArrayInputStream -> (InputStream) byteArrayInputStream)
+                .map(InputStream.class::cast)
                 .orElseGet(Throwing.supplier(() -> fileSystem.getResource(getInitParameter("privateKeyFilepath"))).sneakyThrow());
 
             privateKey = extractPrivateKey(pem, passphrase);
@@ -152,9 +169,9 @@ public class DKIMSign extends GenericMailet {
     }
 
     public void service(Mail mail) throws MessagingException {
-        DKIMSigner signer = new DKIMSigner(getSignatureTemplate(), getPrivateKey());
-        SignatureRecord signRecord = signer
-                .newSignatureRecordTemplate(getSignatureTemplate());
+        String interpolatedTemplate = interpolateTemplate(mail);
+        DKIMSigner signer = new DKIMSigner(interpolatedTemplate, getPrivateKey());
+        SignatureRecord signRecord = signer.newSignatureRecordTemplate(interpolatedTemplate);
         try {
             BodyHasher bhj = signer.newBodyHasher(signRecord);
             MimeMessage message = mail.getMessage();
@@ -185,6 +202,21 @@ public class DKIMSign extends GenericMailet {
             throw new MessagingException("PermFail while signing: " + e.getMessage(), e);
         }
 
+    }
+
+    private String interpolateTemplate(Mail mail) {
+        if (signatureTemplate.contains(MAIL_FROM_INTERPOLATION_PATTERN)) {
+            String domain = extractDomainFromSender(mail)
+                .orElseGet(() -> defaultDomain.orElse(""));
+            return signatureTemplate.replace(MAIL_FROM_INTERPOLATION_PATTERN, domain);
+        }
+        return signatureTemplate;
+    }
+
+    private Optional<String> extractDomainFromSender(Mail mail) {
+        return mail.getMaybeSender()
+            .asOptional()
+            .map(mailAddress -> mailAddress.getDomain().asString());
     }
 
     private void prependHeader(MimeMessage message, String signatureHeader)
