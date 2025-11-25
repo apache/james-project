@@ -24,6 +24,8 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static org.apache.james.jmap.api.projections.EmailQueryViewUtils.backendLimitFetch;
+import static org.apache.james.jmap.api.projections.EmailQueryViewUtils.messagesWithCollapseThreads;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.DATE_LOOKUP_TABLE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MAILBOX_ID;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MESSAGE_ID;
@@ -36,9 +38,6 @@ import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQu
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -46,6 +45,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.jmap.api.projections.EmailQueryView;
+import org.apache.james.jmap.api.projections.EmailQueryViewUtils.EmailEntry;
 import org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -61,55 +61,12 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraEmailQueryView implements EmailQueryView {
     private static final String LIMIT_MARKER = "LIMIT_BIND_MARKER";
-    private static final int COLLAPSE_THREADS_LIMIT_MULTIPLIER = 4;
-
-    private class EmailEntry {
-        private final MessageId messageId;
-        private final ThreadId threadId;
-        private final Instant messageDate;
-
-        EmailEntry(MessageId messageId, ThreadId threadId, Instant messageDate) {
-            this.messageId = messageId;
-            this.threadId = threadId;
-            this.messageDate = messageDate;
-        }
-
-        public MessageId getMessageId() {
-            return messageId;
-        }
-
-        public ThreadId getThreadId() {
-            return threadId;
-        }
-
-        public Instant getMessageDate() {
-            return messageDate;
-        }
-
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof EmailEntry) {
-                EmailEntry entry = (EmailEntry) o;
-
-                return Objects.equals(this.messageId, entry.messageId)
-                    && Objects.equals(this.threadId, entry.threadId)
-                    && Objects.equals(this.messageDate, entry.messageDate);
-            }
-            return false;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(messageId, threadId, messageDate);
-        }
-    }
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement listMailboxContentBySentAt;
@@ -250,33 +207,6 @@ public class CassandraEmailQueryView implements EmailQueryView {
         return baseEntries.map(EmailEntry::getMessageId);
     }
 
-    private Flux<MessageId> messagesWithCollapseThreads(Limit limit, Limit backendFetchLimit, Flux<EmailEntry> baseEntries, Function<Limit, Flux<MessageId>> listMessagesCallbackFunction) {
-        return baseEntries.collectList()
-            .flatMapMany(results -> {
-                List<EmailEntry> distinctByThreadId = distinctByThreadId(results);
-                boolean hasEnoughResults = distinctByThreadId.size() >= limit.getLimit().get();
-                boolean isExhaustive = results.size() < backendFetchLimit.getLimit().get();
-                if (hasEnoughResults || isExhaustive) {
-                    return Flux.fromIterable(distinctByThreadId)
-                        .take(limit.getLimit().get())
-                        .map(EmailEntry::getMessageId);
-                }
-                Limit newBackendFetchLimit = Limit.from(backendFetchLimit.getLimit().get() * COLLAPSE_THREADS_LIMIT_MULTIPLIER);
-                return listMessagesCallbackFunction.apply(newBackendFetchLimit);
-            });
-    }
-
-    private List<EmailEntry> distinctByThreadId(List<EmailEntry> emailEntries) {
-        ImmutableList.Builder<EmailEntry> list = ImmutableList.builder();
-        HashSet<ThreadId> threadIdHashSet = new HashSet<>();
-        emailEntries.forEach(emailEntry -> {
-            if (threadIdHashSet.add(emailEntry.getThreadId())) {
-                list.add(emailEntry);
-            }
-        });
-        return list.build();
-    }
-
     @Override
     public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
@@ -390,13 +320,6 @@ public class CassandraEmailQueryView implements EmailQueryView {
         }
 
         return baseEntries.map(EmailEntry::getMessageId);
-    }
-
-    private Limit backendLimitFetch(Limit limit, boolean collapseThreads) {
-        if (collapseThreads) {
-            return Limit.limit(limit.getLimit().get() * COLLAPSE_THREADS_LIMIT_MULTIPLIER);
-        }
-        return limit;
     }
 
     private Function<Row, EmailEntry> asEmailEntry(CqlIdentifier dateField) {
