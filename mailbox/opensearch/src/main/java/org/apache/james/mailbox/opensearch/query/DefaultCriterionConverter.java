@@ -57,7 +57,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 public class DefaultCriterionConverter implements CriterionConverter {
-    private static final CharMatcher QUERY_STRING_CONTROL_CHAR = CharMatcher.anyOf("()\"~|*");
+    private static final CharMatcher QUERY_STRING_CONTROL_CHAR = CharMatcher.anyOf("\"~|*");
 
     public static boolean matchesQueryStringHeuristic(String query) {
         if (QUERY_STRING_CONTROL_CHAR.matchesAnyOf(query)) {
