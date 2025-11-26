@@ -78,5 +78,33 @@ public class MemoryEmailQueryMethodNoViewTest implements EmailQueryMethodContrac
         EmailQueryMethodContract.super.shouldListMailsReceivedAfterADate(server);
     }
 
+    @Test
+    @Override
+    @Disabled("JAMES-3340 Not supported for no email query view")
+    public void inMailboxAfterSortedByReceivedAtShouldCollapseThreads(GuiceJamesServer server) {
+    }
 
+    @Test
+    @Override
+    @Disabled("JAMES-3340 Not supported for no email query view")
+    public void inMailboxSortedByReceivedAtShouldCollapseThreads(GuiceJamesServer server) {
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-3340 Not supported for no email query view")
+    public void inMailboxAfterSortedBySentAtShouldCollapseThreads(GuiceJamesServer server) {
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-3340 Not supported for no email query view")
+    public void inMailboxSortedBySentAtShouldCollapseThreads(GuiceJamesServer server) {
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-3340 Not supported for no email query view")
+    public void inMailboxBeforeSortedByReceivedAtShouldCollapseThreads(GuiceJamesServer server) {
+    }
 }
