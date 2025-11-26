@@ -46,9 +46,9 @@ import jakarta.inject.Inject;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.EmailQueryViewUtils.EmailEntry;
+import org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
@@ -332,7 +332,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     }
 
     private ThreadId getThreadIdFromRow(Row row, MessageId messageId) {
-        UUID threadIdUUID = row.get(CassandraMessageIdTable.THREAD_ID, TypeCodecs.TIMEUUID);
+        UUID threadIdUUID = row.get(CassandraEmailQueryViewTable.THREAD_ID, TypeCodecs.TIMEUUID);
         if (threadIdUUID == null) {
             return ThreadId.fromBaseMessageId(messageId);
         }
