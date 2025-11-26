@@ -248,13 +248,13 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
 
             return callback.forMessage(copyCommandDTO.asPojo(mailboxIdFactory, messageIdFactory, blobIdFactory))
                 .timeout(Duration.ofMinutes(5))
+                .doOnSuccess(any -> delivery.ack())
+                .doOnCancel(() -> delivery.nack(REQUEUE))
                 .onErrorResume(e -> {
                     LOGGER.error("Failed executing deletion callback for {}", copyCommandDTO.messageId, e);
                     delivery.nack(REQUEUE);
                     return Mono.empty();
-                })
-                .doOnSuccess(any -> delivery.ack())
-                .doOnCancel(() -> delivery.nack(REQUEUE));
+                });
         } catch (Exception e) {
             LOGGER.error("Deserialization error: reject poisonous message for distributed Deleted message vault callback", e);
             // Deserialization error: reject poisonous messages
