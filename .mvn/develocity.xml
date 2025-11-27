@@ -50,7 +50,7 @@
       </cleanup>
     </local>
     <remote>
-      <enabled>true</enabled>
+      <enabled>false</enabled>
       <storeEnabled>#{isTrue(env['CI'])}</storeEnabled>
       <!--
       the next step is this
