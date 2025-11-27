@@ -25,7 +25,7 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.jmap.api.projections.EmailQueryViewUtils.backendLimitFetch;
-import static org.apache.james.jmap.api.projections.EmailQueryViewUtils.messagesWithCollapseThreads;
+import static org.apache.james.jmap.api.projections.EmailQueryViewUtils.messagesWithMaybeCollapseThreads;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.DATE_LOOKUP_TABLE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MAILBOX_ID;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MESSAGE_ID;
@@ -199,12 +199,8 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .setInt(LIMIT_MARKER, backendFetchLimit.getLimit().get()))
             .map(asEmailEntry(SENT_AT));
 
-        if (collapseThreads) {
-            return messagesWithCollapseThreads(limit, backendFetchLimit, baseEntries,
-                newLimit -> listMailboxContentSortedBySentAtWithBackendLimit(mailboxId, limit, collapseThreads, newLimit));
-        }
-
-        return baseEntries.map(EmailEntry::getMessageId);
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSortedBySentAtWithBackendLimit(mailboxId, limit, collapseThreads, newLimit));
     }
 
     @Override
@@ -221,12 +217,8 @@ public class CassandraEmailQueryView implements EmailQueryView {
                 .setInt(LIMIT_MARKER, backendFetchLimit.getLimit().get()))
             .map(asEmailEntry(RECEIVED_AT));
 
-        if (collapseThreads) {
-            return messagesWithCollapseThreads(limit, backendFetchLimit, baseEntries,
-                newLimit -> listMailboxContentSortedByReceivedAtWithBackendLimit(mailboxId, limit, collapseThreads, newLimit));
-        }
-
-        return baseEntries.map(EmailEntry::getMessageId);
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSortedByReceivedAtWithBackendLimit(mailboxId, limit, collapseThreads, newLimit));
     }
 
     @Override
@@ -268,12 +260,8 @@ public class CassandraEmailQueryView implements EmailQueryView {
                 .setInt(LIMIT_MARKER, backendFetchLimit.getLimit().get()))
             .map(asEmailEntry(SENT_AT));
 
-        if (collapseThreads) {
-            return messagesWithCollapseThreads(limit, backendFetchLimit, baseEntries,
-                newLimit -> listMailboxContentSinceAfterSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
-        }
-
-        return baseEntries.map(EmailEntry::getMessageId);
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSinceAfterSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
     }
 
     @Override
@@ -291,12 +279,8 @@ public class CassandraEmailQueryView implements EmailQueryView {
                 .setInt(LIMIT_MARKER, backendFetchLimit.getLimit().get()))
             .map(asEmailEntry(SENT_AT));
 
-        if (collapseThreads) {
-            return messagesWithCollapseThreads(limit, backendFetchLimit, baseEntries,
-                newLimit -> listMailboxContentBeforeSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
-        }
-
-        return baseEntries.map(EmailEntry::getMessageId);
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentBeforeSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
     }
 
     @Override
@@ -314,12 +298,8 @@ public class CassandraEmailQueryView implements EmailQueryView {
                 .setInt(LIMIT_MARKER, backendFetchLimit.getLimit().get()))
             .map(asEmailEntry(SENT_AT));
 
-        if (collapseThreads) {
-            return messagesWithCollapseThreads(limit, backendFetchLimit, baseEntries,
-                newLimit -> listMailboxContentSinceSentAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
-        }
-
-        return baseEntries.map(EmailEntry::getMessageId);
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSinceSentAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
     }
 
     private Function<Row, EmailEntry> asEmailEntry(CqlIdentifier dateField) {

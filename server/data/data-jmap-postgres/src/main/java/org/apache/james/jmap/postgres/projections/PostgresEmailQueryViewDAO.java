@@ -20,7 +20,7 @@
 package org.apache.james.jmap.postgres.projections;
 
 import static org.apache.james.jmap.api.projections.EmailQueryViewUtils.backendLimitFetch;
-import static org.apache.james.jmap.api.projections.EmailQueryViewUtils.messagesWithCollapseThreads;
+import static org.apache.james.jmap.api.projections.EmailQueryViewUtils.messagesWithMaybeCollapseThreads;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MAILBOX_ID;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MESSAGE_ID;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.PK_CONSTRAINT_NAME;
@@ -77,12 +77,8 @@ public class PostgresEmailQueryViewDAO {
                 .limit(backendFetchLimit.getLimit().get())))
             .map(asEmailEntry(SENT_AT));
 
-        if (collapseThreads) {
-            return messagesWithCollapseThreads(limit, backendFetchLimit, baseEntries,
-                newLimit -> listMailboxContentSortedBySentAtWithBackendLimit(mailboxId, limit, collapseThreads, newLimit));
-        }
-
-        return baseEntries.map(EmailEntry::getMessageId);
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSortedBySentAtWithBackendLimit(mailboxId, limit, collapseThreads, newLimit));
     }
 
     public Flux<MessageId> listMailboxContentSortedByReceivedAt(PostgresMailboxId mailboxId, Limit limit, boolean collapseThreads) {
@@ -101,12 +97,8 @@ public class PostgresEmailQueryViewDAO {
                 .limit(backendFetchLimit.getLimit().get())))
             .map(asEmailEntry(RECEIVED_AT));
 
-        if (collapseThreads) {
-            return messagesWithCollapseThreads(limit, backendFetchLimit, baseEntries,
-                newLimit -> listMailboxContentSortedByReceivedAtWithBackendLimit(mailboxId, limit, collapseThreads, newLimit));
-        }
-
-        return baseEntries.map(EmailEntry::getMessageId);
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSortedByReceivedAtWithBackendLimit(mailboxId, limit, collapseThreads, newLimit));
     }
 
     public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
@@ -126,12 +118,8 @@ public class PostgresEmailQueryViewDAO {
                 .limit(backendFetchLimit.getLimit().get())))
             .map(asEmailEntry(SENT_AT));
 
-        if (collapseThreads) {
-            return messagesWithCollapseThreads(limit, backendFetchLimit, baseEntries,
-                newLimit -> listMailboxContentSinceAfterSortedBySentAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
-        }
-
-        return baseEntries.map(EmailEntry::getMessageId);
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSinceAfterSortedBySentAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
     }
 
     public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
@@ -151,12 +139,8 @@ public class PostgresEmailQueryViewDAO {
                 .limit(backendFetchLimit.getLimit().get())))
             .map(asEmailEntry(RECEIVED_AT));
 
-        if (collapseThreads) {
-            return messagesWithCollapseThreads(limit, backendFetchLimit, baseEntries,
-                newLimit -> listMailboxContentSinceAfterSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
-        }
-
-        return baseEntries.map(EmailEntry::getMessageId);
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSinceAfterSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
     }
 
     public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
@@ -176,12 +160,8 @@ public class PostgresEmailQueryViewDAO {
                 .limit(backendFetchLimit.getLimit().get())))
             .map(asEmailEntry(RECEIVED_AT));
 
-        if (collapseThreads) {
-            return messagesWithCollapseThreads(limit, backendFetchLimit, baseEntries,
-                newLimit -> listMailboxContentBeforeSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
-        }
-
-        return baseEntries.map(EmailEntry::getMessageId);
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentBeforeSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
     }
 
     public Flux<MessageId> listMailboxContentSinceSentAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
@@ -201,12 +181,8 @@ public class PostgresEmailQueryViewDAO {
                 .limit(backendFetchLimit.getLimit().get())))
             .map(asEmailEntry(SENT_AT));
 
-        if (collapseThreads) {
-            return messagesWithCollapseThreads(limit, backendFetchLimit, baseEntries,
-                newLimit -> listMailboxContentSinceSentAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
-        }
-
-        return baseEntries.map(EmailEntry::getMessageId);
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSinceSentAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
     }
 
     private Function<Record, EmailEntry> asEmailEntry(Field<OffsetDateTime> dateField) {
