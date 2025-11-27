@@ -61,6 +61,9 @@
               Ignore opensearch.user and opensearch.password to not be using authentication (default behaviour).
               Otherwise, you need to specify both properties.
           </dd>
+
+          <dt><strong>opensearch.request.timeout</strong></dt>
+          <dd>Request timeout. Duration. Optional. Default value 30s.</dd>
       </dl>
 
       Or you can connect a cluster by :

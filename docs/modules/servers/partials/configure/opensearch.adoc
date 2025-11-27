@@ -62,6 +62,9 @@ You may consult the https://www.elastic.co/guide/en/elasticsearch/reference/7.10
 | opensearch.retryConnection.minDelay
 | Minimum delay between connection attempts
 
+| opensearch.request.timeout
+| Request timeout. Duration. Optional. Default value 30s.
+
 | opensearch.max.connections
 | Maximum count of HTTP connections allowed for the OpenSearch driver. Optional integer, if unspecified driver defaults
 applies (30 connections).

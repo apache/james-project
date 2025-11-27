@@ -38,6 +38,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration.HostNameVerifier;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration.SSLTrustStore;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration.SSLConfiguration.SSLValidationStrategy;
+import org.apache.james.util.DurationParser;
 import org.apache.james.util.Host;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -444,6 +445,7 @@ public class OpenSearchConfiguration {
     public static final String OPENSEARCH_NB_SHARDS = "opensearch.nb.shards";
     public static final String OPENSEARCH_RETRY_CONNECTION_MIN_DELAY = "opensearch.retryConnection.minDelay";
     public static final String OPENSEARCH_RETRY_CONNECTION_MAX_RETRIES = "opensearch.retryConnection.maxRetries";
+    public static final String OPENSEARCH_REQUEST_TIMEOUT = "opensearch.request.timeout";
     public static final String OPENSEARCH_MAX_CONNECTIONS = "opensearch.max.connections";
     public static final String OPENSEARCH_MAX_CONNECTIONS_PER_HOSTS = "opensearch.max.connections.per.hosts";
     public static final String OPENSEARCH_SEARCH_OVERRIDES = "opensearch.search.overrides";
@@ -475,6 +477,8 @@ public class OpenSearchConfiguration {
             .waitForActiveShards(configuration.getInteger(WAIT_FOR_ACTIVE_SHARDS, DEFAULT_WAIT_FOR_ACTIVE_SHARDS))
             .minDelay(Optional.ofNullable(configuration.getInteger(OPENSEARCH_RETRY_CONNECTION_MIN_DELAY, null)))
             .maxRetries(Optional.ofNullable(configuration.getInteger(OPENSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
+            .requestTimeout(Optional.ofNullable(configuration.getString(OPENSEARCH_REQUEST_TIMEOUT, null))
+                .map(DurationParser::parse))
             .maxConnections(Optional.ofNullable(configuration.getInteger(OPENSEARCH_MAX_CONNECTIONS, null)))
             .maxConnectionsPerHost(Optional.ofNullable(configuration.getInteger(OPENSEARCH_MAX_CONNECTIONS_PER_HOSTS, null)))
             .withSearchOverrides(Optional.ofNullable(configuration.getStringArray(OPENSEARCH_SEARCH_OVERRIDES)).map(ImmutableList::copyOf).orElse(ImmutableList.of()))
