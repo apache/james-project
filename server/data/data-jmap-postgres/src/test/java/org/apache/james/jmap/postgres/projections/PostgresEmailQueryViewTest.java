@@ -24,6 +24,7 @@ import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.EmailQueryViewContract;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -35,6 +36,7 @@ public class PostgresEmailQueryViewTest implements EmailQueryViewContract {
     public static final PostgresMessageId MESSAGE_ID_2 = MESSAGE_ID_FACTORY.generate();
     public static final PostgresMessageId MESSAGE_ID_3 = MESSAGE_ID_FACTORY.generate();
     public static final PostgresMessageId MESSAGE_ID_4 = MESSAGE_ID_FACTORY.generate();
+    public static final ThreadId THREAD_ID = ThreadId.fromBaseMessageId(MESSAGE_ID_FACTORY.generate());
 
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresEmailQueryViewDataDefinition.MODULE);
@@ -67,5 +69,20 @@ public class PostgresEmailQueryViewTest implements EmailQueryViewContract {
     @Override
     public MessageId messageId4() {
         return MESSAGE_ID_4;
+    }
+
+    @Override
+    public ThreadId threadId1() {
+        return THREAD_ID;
+    }
+
+    @Override
+    public ThreadId threadId2() {
+        return ThreadId.fromBaseMessageId(MESSAGE_ID_FACTORY.generate());
+    }
+
+    @Override
+    public ThreadId threadId3() {
+        return ThreadId.fromBaseMessageId(MESSAGE_ID_FACTORY.generate());
     }
 }

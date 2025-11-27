@@ -30,4 +30,5 @@ public interface CassandraEmailQueryViewTable {
     CqlIdentifier MESSAGE_ID = CqlIdentifier.fromCql("messageId");
     CqlIdentifier RECEIVED_AT = CqlIdentifier.fromCql("receivedAt");
     CqlIdentifier SENT_AT = CqlIdentifier.fromCql("sentAt");
+    CqlIdentifier THREAD_ID = CqlIdentifier.fromCql("thread_id");
 }

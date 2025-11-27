@@ -19,23 +19,34 @@
 
 package org.apache.james.jmap.postgres.projections;
 
+import static org.apache.james.jmap.api.projections.EmailQueryViewUtils.backendLimitFetch;
+import static org.apache.james.jmap.api.projections.EmailQueryViewUtils.messagesWithMaybeCollapseThreads;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MAILBOX_ID;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MESSAGE_ID;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.PK_CONSTRAINT_NAME;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.RECEIVED_AT;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.SENT_AT;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.TABLE_NAME;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.THREAD_ID;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
+import java.util.UUID;
+import java.util.function.Function;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.jmap.api.projections.EmailQueryViewUtils.EmailEntry;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.util.streams.Limit;
+import org.jooq.Field;
+import org.jooq.Record;
 
 import com.google.common.base.Preconditions;
 
@@ -50,74 +61,145 @@ public class PostgresEmailQueryViewDAO {
         this.postgresExecutor = postgresExecutor;
     }
 
-    public Flux<MessageId> listMailboxContentSortedBySentAt(PostgresMailboxId mailboxId, Limit limit) {
+    public Flux<MessageId> listMailboxContentSortedBySentAt(PostgresMailboxId mailboxId, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID)
+        Limit backendFetchLimit = backendLimitFetch(limit, collapseThreads);
+
+        return listMailboxContentSortedBySentAtWithBackendLimit(mailboxId, limit, collapseThreads, backendFetchLimit);
+    }
+
+    private Flux<MessageId> listMailboxContentSortedBySentAtWithBackendLimit(PostgresMailboxId mailboxId, Limit limit, boolean collapseThreads, Limit backendFetchLimit) {
+        Flux<EmailEntry> baseEntries = postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, SENT_AT, THREAD_ID)
                 .from(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .orderBy(SENT_AT.desc())
-                .limit(limit.getLimit().get())))
-            .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
+                .limit(backendFetchLimit.getLimit().get())))
+            .map(asEmailEntry(SENT_AT));
+
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSortedBySentAtWithBackendLimit(mailboxId, limit, collapseThreads, newLimit));
     }
 
-    public Flux<MessageId> listMailboxContentSortedByReceivedAt(PostgresMailboxId mailboxId, Limit limit) {
+    public Flux<MessageId> listMailboxContentSortedByReceivedAt(PostgresMailboxId mailboxId, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID)
+        Limit backendFetchLimit = backendLimitFetch(limit, collapseThreads);
+
+        return listMailboxContentSortedByReceivedAtWithBackendLimit(mailboxId, limit, collapseThreads, backendFetchLimit);
+    }
+
+    private Flux<MessageId> listMailboxContentSortedByReceivedAtWithBackendLimit(PostgresMailboxId mailboxId, Limit limit, boolean collapseThreads, Limit backendFetchLimit) {
+        Flux<EmailEntry> baseEntries = postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, RECEIVED_AT, THREAD_ID)
                 .from(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .orderBy(RECEIVED_AT.desc())
-                .limit(limit.getLimit().get())))
-            .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
+                .limit(backendFetchLimit.getLimit().get())))
+            .map(asEmailEntry(RECEIVED_AT));
+
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSortedByReceivedAtWithBackendLimit(mailboxId, limit, collapseThreads, newLimit));
     }
 
-    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID)
+        Limit backendFetchLimit = backendLimitFetch(limit, collapseThreads);
+
+        return listMailboxContentSinceAfterSortedBySentAtWithBackendLimit(mailboxId, since, limit, collapseThreads, backendFetchLimit);
+    }
+
+    private Flux<MessageId> listMailboxContentSinceAfterSortedBySentAtWithBackendLimit(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads, Limit backendFetchLimit) {
+        Flux<EmailEntry> baseEntries = postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, SENT_AT, THREAD_ID)
                 .from(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .and(RECEIVED_AT.greaterOrEqual(since.toOffsetDateTime()))
                 .orderBy(SENT_AT.desc())
-                .limit(limit.getLimit().get())))
-            .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
+                .limit(backendFetchLimit.getLimit().get())))
+            .map(asEmailEntry(SENT_AT));
+
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSinceAfterSortedBySentAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
     }
 
-    public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID)
+        Limit backendFetchLimit = backendLimitFetch(limit, collapseThreads);
+
+        return listMailboxContentSinceAfterSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, backendFetchLimit);
+    }
+
+    private Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAtWithBackendLimit(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads, Limit backendFetchLimit) {
+        Flux<EmailEntry> baseEntries = postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, RECEIVED_AT, THREAD_ID)
                 .from(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .and(RECEIVED_AT.greaterOrEqual(since.toOffsetDateTime()))
                 .orderBy(RECEIVED_AT.desc())
-                .limit(limit.getLimit().get())))
-            .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
+                .limit(backendFetchLimit.getLimit().get())))
+            .map(asEmailEntry(RECEIVED_AT));
+
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSinceAfterSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
     }
 
-    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID)
+        Limit backendFetchLimit = backendLimitFetch(limit, collapseThreads);
+
+        return listMailboxContentBeforeSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, backendFetchLimit);
+    }
+
+    private Flux<MessageId> listMailboxContentBeforeSortedByReceivedAtWithBackendLimit(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads, Limit backendFetchLimit) {
+        Flux<EmailEntry> baseEntries = postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, RECEIVED_AT, THREAD_ID)
                 .from(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .and(RECEIVED_AT.lessOrEqual(since.toOffsetDateTime()))
                 .orderBy(RECEIVED_AT.desc())
-                .limit(limit.getLimit().get())))
-            .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
+                .limit(backendFetchLimit.getLimit().get())))
+            .map(asEmailEntry(RECEIVED_AT));
+
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentBeforeSortedByReceivedAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
     }
 
-    public Flux<MessageId> listMailboxContentSinceSentAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit) {
+    public Flux<MessageId> listMailboxContentSinceSentAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
 
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID)
+        Limit backendFetchLimit = backendLimitFetch(limit, collapseThreads);
+
+        return listMailboxContentSinceSentAtWithBackendLimit(mailboxId, since, limit, collapseThreads, backendFetchLimit);
+    }
+
+    private Flux<MessageId> listMailboxContentSinceSentAtWithBackendLimit(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads, Limit backendFetchLimit) {
+        Flux<EmailEntry> baseEntries = postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, SENT_AT, THREAD_ID)
                 .from(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .and(SENT_AT.greaterOrEqual(since.toOffsetDateTime()))
                 .orderBy(SENT_AT.desc())
-                .limit(limit.getLimit().get())))
-            .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
+                .limit(backendFetchLimit.getLimit().get())))
+            .map(asEmailEntry(SENT_AT));
+
+        return messagesWithMaybeCollapseThreads(limit, backendFetchLimit, baseEntries, collapseThreads,
+            newLimit -> listMailboxContentSinceSentAtWithBackendLimit(mailboxId, since, limit, collapseThreads, newLimit));
+    }
+
+    private Function<Record, EmailEntry> asEmailEntry(Field<OffsetDateTime> dateField) {
+        return (Record record) -> {
+            PostgresMessageId messageId = PostgresMessageId.Factory.of(record.get(MESSAGE_ID));
+            ThreadId threadId = getThreadIdFromRecord(record, messageId);
+            Instant messageDate = record.get(dateField).toInstant();
+            return new EmailEntry(messageId, threadId, messageDate);
+        };
+    }
+
+    private ThreadId getThreadIdFromRecord(Record record, MessageId messageId) {
+        UUID threadIdUUID = record.get(THREAD_ID);
+        if (threadIdUUID == null) {
+            return ThreadId.fromBaseMessageId(messageId);
+        }
+        return ThreadId.fromBaseMessageId(PostgresMessageId.Factory.of(threadIdUUID));
     }
 
     public Mono<Void> delete(PostgresMailboxId mailboxId, PostgresMessageId messageId) {
@@ -131,12 +213,13 @@ public class PostgresEmailQueryViewDAO {
             .where(MAILBOX_ID.eq(mailboxId.asUuid()))));
     }
 
-    public Mono<Void> save(PostgresMailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, PostgresMessageId messageId) {
+    public Mono<Void> save(PostgresMailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, PostgresMessageId messageId, ThreadId threadId) {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
             .set(MAILBOX_ID, mailboxId.asUuid())
             .set(MESSAGE_ID, messageId.asUuid())
             .set(SENT_AT, sentAt.toOffsetDateTime())
             .set(RECEIVED_AT, receivedAt.toOffsetDateTime())
+            .set(THREAD_ID, ((PostgresMessageId) threadId.getBaseMessageId()).asUuid())
             .onConflictOnConstraint(PK_CONSTRAINT_NAME)
             .doNothing()));
     }
