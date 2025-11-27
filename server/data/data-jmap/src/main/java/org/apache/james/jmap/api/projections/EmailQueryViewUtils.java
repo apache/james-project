@@ -100,6 +100,25 @@ public class EmailQueryViewUtils {
             });
     }
 
+    public static Flux<MessageId> messagesWithMaybeCollapseThreads(Limit limit, Limit backendFetchLimit, Flux<EmailEntry> baseEntries, boolean collapseThreads, Function<Limit, Flux<MessageId>> listMessagesCallbackFunction) {
+        if (collapseThreads) {
+            return baseEntries.collectList()
+                .flatMapMany(results -> {
+                    List<EmailEntry> distinctByThreadId = distinctByThreadId(results);
+                    boolean hasEnoughResults = distinctByThreadId.size() >= limit.getLimit().get();
+                    boolean isExhaustive = results.size() < backendFetchLimit.getLimit().get();
+                    if (hasEnoughResults || isExhaustive) {
+                        return Flux.fromIterable(distinctByThreadId)
+                            .take(limit.getLimit().get())
+                            .map(EmailEntry::getMessageId);
+                    }
+                    Limit newBackendFetchLimit = Limit.from(backendFetchLimit.getLimit().get() * COLLAPSE_THREADS_LIMIT_MULTIPLIER);
+                    return listMessagesCallbackFunction.apply(newBackendFetchLimit);
+                });
+        }
+        return baseEntries.map(EmailEntry::getMessageId);
+    }
+
     private static List<EmailEntry> distinctByThreadId(List<EmailEntry> emailEntries) {
         ImmutableList.Builder<EmailEntry> list = ImmutableList.builder();
         HashSet<ThreadId> threadIdHashSet = new HashSet<>();

@@ -7472,26 +7472,9 @@ trait EmailQueryMethodContract {
 
   @Test
   def inMailboxAfterSortedByReceivedAtShouldCollapseThreads(server: GuiceJamesServer): Unit = {
-    val message1: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setMessageId("Message-ID")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
-
-    val message2: Message = Message.Builder
-      .of
-      .setSubject("BTW")
-      .setMessageId("Message-ID-2")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
-
-    val message3: Message = Message.Builder
-      .of
-      .setSubject("Hello again")
-      .setMessageId("Message-ID-3")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message1: Message = buildTestThreadMessage("test", "Message-ID")
+    val message2: Message = buildTestThreadMessage("BTW", "Message-ID-2")
+    val message3: Message = buildTestThreadMessage("Hello again", "Message-ID-3")
 
     val beforeRequestDate1 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
     val requestDate = ZonedDateTime.now().minusDays(1)
@@ -7500,31 +7483,11 @@ trait EmailQueryMethodContract {
     val afterRequestDate3 = Date.from(ZonedDateTime.now().plusDays(2).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
-        AppendCommand.builder()
-          .withInternalDate(beforeRequestDate1)
-          .build(message1))
-      .getMessageId
 
-    val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(afterRequestDate1)
-        .build(message2))
-      .getMessageId
-
-    val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
-        AppendCommand.builder()
-          .withInternalDate(afterRequestDate2)
-          .build(message3))
-      .getMessageId
-
-    val messageId4: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(afterRequestDate3)
-        .build(message3))
-      .getMessageId
+    val messageId1: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate1)
+    val messageId2: MessageId = sendMessageToBobInbox(server, message2, afterRequestDate1)
+    val messageId3: MessageId = sendMessageToBobInbox(server, message3, afterRequestDate2)
+    val messageId4: MessageId = sendMessageToBobInbox(server, message3, afterRequestDate3)
 
     val request =
       s"""{
@@ -7582,19 +7545,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def inMailboxSortedByReceivedAtShouldCollapseThreads(server: GuiceJamesServer): Unit = {
-    val message1: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setMessageId("Message-ID")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
-
-    val message2: Message = Message.Builder
-      .of
-      .setSubject("BTW")
-      .setMessageId("Message-ID-2")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message1: Message = buildTestThreadMessage("test", "Message-ID")
+    val message2: Message = buildTestThreadMessage("BTW", "Message-ID-2")
 
     val beforeRequestDate1 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
     val beforeRequestDate2 = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
@@ -7602,31 +7554,11 @@ trait EmailQueryMethodContract {
     val afterRequestDate2 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
-        AppendCommand.builder()
-          .withInternalDate(beforeRequestDate1)
-          .build(message1))
-      .getMessageId
 
-    val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(beforeRequestDate2)
-        .build(message1))
-      .getMessageId
-
-    val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
-        AppendCommand.builder()
-          .withInternalDate(afterRequestDate1)
-          .build(message2))
-      .getMessageId
-
-    val messageId4: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(afterRequestDate2)
-        .build(message2))
-      .getMessageId
+    val messageId1: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate1)
+    val messageId2: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate2)
+    val messageId3: MessageId = sendMessageToBobInbox(server, message2, afterRequestDate1)
+    val messageId4: MessageId = sendMessageToBobInbox(server, message2, afterRequestDate2)
 
     val request =
       s"""{
@@ -7683,26 +7615,9 @@ trait EmailQueryMethodContract {
 
   @Test
   def inMailboxAfterSortedBySentAtShouldCollapseThreads(server: GuiceJamesServer): Unit = {
-    val message1: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setMessageId("Message-ID")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
-
-    val message2: Message = Message.Builder
-      .of
-      .setSubject("BTW")
-      .setMessageId("Message-ID-2")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
-
-    val message3: Message = Message.Builder
-      .of
-      .setSubject("Hello again")
-      .setMessageId("Message-ID-3")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message1: Message = buildTestThreadMessage("test", "Message-ID")
+    val message2: Message = buildTestThreadMessage("BTW", "Message-ID-2")
+    val message3: Message = buildTestThreadMessage("Hello again", "Message-ID-3")
 
     val beforeRequestDate1 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
     val requestDate = ZonedDateTime.now().minusDays(1)
@@ -7711,31 +7626,11 @@ trait EmailQueryMethodContract {
     val afterRequestDate3 = Date.from(ZonedDateTime.now().plusDays(2).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
-        AppendCommand.builder()
-          .withInternalDate(beforeRequestDate1)
-          .build(message1))
-      .getMessageId
 
-    val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(afterRequestDate1)
-        .build(message2))
-      .getMessageId
-
-    val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
-        AppendCommand.builder()
-          .withInternalDate(afterRequestDate2)
-          .build(message3))
-      .getMessageId
-
-    val messageId4: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(afterRequestDate3)
-        .build(message3))
-      .getMessageId
+    val messageId1: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate1)
+    val messageId2: MessageId = sendMessageToBobInbox(server, message2, afterRequestDate1)
+    val messageId3: MessageId = sendMessageToBobInbox(server, message3, afterRequestDate2)
+    val messageId4: MessageId = sendMessageToBobInbox(server, message3, afterRequestDate3)
 
     val request =
       s"""{
@@ -7793,19 +7688,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def inMailboxSortedBySentAtShouldCollapseThreads(server: GuiceJamesServer): Unit = {
-    val message1: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setMessageId("Message-ID")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
-
-    val message2: Message = Message.Builder
-      .of
-      .setSubject("BTW")
-      .setMessageId("Message-ID-2")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message1: Message = buildTestThreadMessage("test", "Message-ID")
+    val message2: Message = buildTestThreadMessage("BTW", "Message-ID-2")
 
     val beforeRequestDate1 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
     val beforeRequestDate2 = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
@@ -7813,31 +7697,11 @@ trait EmailQueryMethodContract {
     val afterRequestDate2 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
-        AppendCommand.builder()
-          .withInternalDate(beforeRequestDate1)
-          .build(message1))
-      .getMessageId
 
-    val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(beforeRequestDate2)
-        .build(message1))
-      .getMessageId
-
-    val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
-        AppendCommand.builder()
-          .withInternalDate(afterRequestDate1)
-          .build(message2))
-      .getMessageId
-
-    val messageId4: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(afterRequestDate2)
-        .build(message2))
-      .getMessageId
+    val messageId1: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate1)
+    val messageId2: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate2)
+    val messageId3: MessageId = sendMessageToBobInbox(server, message2, afterRequestDate1)
+    val messageId4: MessageId = sendMessageToBobInbox(server, message2, afterRequestDate2)
 
     val request =
       s"""{
@@ -7894,26 +7758,9 @@ trait EmailQueryMethodContract {
 
   @Test
   def inMailboxBeforeSortedByReceivedAtShouldCollapseThreads(server: GuiceJamesServer): Unit = {
-    val message1: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setMessageId("Message-ID")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
-
-    val message2: Message = Message.Builder
-      .of
-      .setSubject("BTW")
-      .setMessageId("Message-ID-2")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
-
-    val message3: Message = Message.Builder
-      .of
-      .setSubject("Hello again")
-      .setMessageId("Message-ID-3")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+    val message1: Message = buildTestThreadMessage("test", "Message-ID")
+    val message2: Message = buildTestThreadMessage("BTW", "Message-ID-2")
+    val message3: Message = buildTestThreadMessage("Hello again", "Message-ID-3")
 
     val beforeRequestDate1 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
     val beforeRequestDate2 = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
@@ -7922,31 +7769,11 @@ trait EmailQueryMethodContract {
     val afterRequestDate1 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
-        AppendCommand.builder()
-          .withInternalDate(beforeRequestDate1)
-          .build(message1))
-      .getMessageId
 
-    val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(beforeRequestDate2)
-        .build(message2))
-      .getMessageId
-
-    val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
-        AppendCommand.builder()
-          .withInternalDate(beforeRequestDate3)
-          .build(message2))
-      .getMessageId
-
-    val messageId4: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(afterRequestDate1)
-        .build(message3))
-      .getMessageId
+    val messageId1: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate1)
+    val messageId2: MessageId = sendMessageToBobInbox(server, message2, beforeRequestDate2)
+    val messageId3: MessageId = sendMessageToBobInbox(server, message2, beforeRequestDate3)
+    val messageId4: MessageId = sendMessageToBobInbox(server, message3, afterRequestDate1)
 
     val request =
       s"""{
@@ -8007,6 +7834,15 @@ trait EmailQueryMethodContract {
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
         AppendCommand.builder().withInternalDate(requestDate).build(message))
       .getMessageId
+  }
+
+  private def buildTestThreadMessage(subject: String, mimeMessageId: String) = {
+    Message.Builder
+      .of
+      .setMessageId(mimeMessageId)
+      .setSubject(subject)
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
   }
 
   private def generateQueryState(messages: MessageId*): String =
