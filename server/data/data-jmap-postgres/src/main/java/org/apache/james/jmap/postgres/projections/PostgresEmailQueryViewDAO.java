@@ -54,8 +54,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresEmailQueryViewDAO {
-    private static final int COLLAPSE_THREADS_LIMIT_MULTIPLIER = 4;
-
     private PostgresExecutor postgresExecutor;
 
     @Inject
