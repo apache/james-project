@@ -82,10 +82,7 @@ object EmailBodyPart {
         Option(Disposition.ATTACHMENT)
       }
 
-    def parsePartIdFromBlobId(blobId: String): PartId =
-      PartId(blobId.substring(blobId.lastIndexOf("_") + 1).asInstanceOf[PartIdValue])
-
-    EmailBodyPart(partId = parsePartIdFromBlobId(attachment.getAttachmentId.getId),
+    EmailBodyPart(partId = PartId.parse("1").get,
       blobId = BlobId.of(attachment.getAttachmentId.getId).toOption,
       headers = entity.getHeader.getFields.asScala.toList.map(EmailHeader(_)),
       size = Size.sanitizeSize(attachment.getAttachment.getSize),

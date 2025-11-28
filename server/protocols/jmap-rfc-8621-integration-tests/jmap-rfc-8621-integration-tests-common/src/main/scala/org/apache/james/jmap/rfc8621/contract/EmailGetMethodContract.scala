@@ -5086,6 +5086,119 @@ trait EmailGetMethodContract {
   }
 
   @Test
+  def shouldUseFastViewWithAttachmentMetadataWhenSupportedBodyPropertiesAtAttachmentReadLevel(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"ids": ["${messageId.serialize}"],
+         |				"properties": [
+         |					"id",
+         |					"subject",
+         |					"from",
+         |					"to",
+         |					"cc",
+         |					"bcc",
+         |					"keywords",
+         |					"size",
+         |					"receivedAt",
+         |					"sentAt",
+         |					"preview",
+         |					"hasAttachment",
+         |					"attachments",
+         |					"replyTo",
+         |					"mailboxIds"
+         |				],
+         |				"fetchTextBodyValues": true,
+         |				"bodyProperties": ["size", "name", "type", "charset", "disposition", "cid"]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post.prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[0][1].list[0].attachments[0].blobId", "methodResponses[0][1].list[0].attachments[1].blobId")
+      .isEqualTo(
+      s"""{
+         |	"sessionState": "${SESSION_STATE.value}",
+         |	"methodResponses": [
+         |		[
+         |			"Email/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"notFound": [],
+         |				"list": [{
+         |					"preview": "Main test message...",
+         |					"to": [{
+         |						"name": "Alice",
+         |						"email": "alice@domain.tld"
+         |					}],
+         |					"id": "${messageId.serialize}",
+         |					"mailboxIds": {
+         |						"${mailboxId.serialize}": true
+         |					},
+         |					"from": [{
+         |						"name": "Bob",
+         |						"email": "bob@domain.tld"
+         |					}],
+         |					"keywords": {
+         |
+         |					},
+         |					"receivedAt": "$${json-unit.ignore}",
+         |					"sentAt": "$${json-unit.ignore}",
+         |					"hasAttachment": true,
+         |					"attachments": [{
+         |							"charset": "US-ASCII",
+         |							"disposition": "attachment",
+         |							"size": 102,
+         |							"name": "yyy.txt",
+         |							"type": "application/json"
+         |						},
+         |						{
+         |							"charset": "US-ASCII",
+         |							"disposition": "attachment",
+         |							"size": 102,
+         |							"name": "xxx.txt",
+         |							"type": "application/json"
+         |						}
+         |					],
+         |					"subject": "My subject",
+         |					"size": 1011
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
   def shouldBeAbleToDownloadAttachmentBaseOnFastViewWithAttachmentsMetadataResult(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
@@ -5145,7 +5258,88 @@ trait EmailGetMethodContract {
 
     val blob = `given`
       .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER).log().all()
+    .when
+      .get(s"/download/29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6/$blobId").
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("application/json")
+      .extract
+      .body
+      .asString
+
+    val expectedBlob: String =
+      """[
+        |    {
+        |        "Id": "2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        |    }
+        |]""".stripMargin
+
+    assertThat(new ByteArrayInputStream(blob.getBytes(StandardCharsets.UTF_8)))
+      .hasContent(expectedBlob)
+  }
+
+  @Test
+  def shouldBeAbleToDownloadAttachmentBaseOnFastViewWithAttachmentsMetadataResultWithReadLevelFll(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-single-attachment.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"ids": ["${messageId.serialize}"],
+         |				"properties": [
+         |					"id",
+         |					"subject",
+         |					"from",
+         |					"to",
+         |					"cc",
+         |					"bcc",
+         |					"keywords",
+         |					"size",
+         |					"receivedAt",
+         |					"sentAt",
+         |					"preview",
+         |					"hasAttachment",
+         |					"attachments",
+         |					"replyTo",
+         |					"mailboxIds"
+         |				],
+         |				"fetchTextBodyValues": true,
+         |				"bodyProperties": ["blobId", "partId", "size", "name", "type", "charset", "disposition", "cid"]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val blobId = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .jsonPath()
+      .getString("methodResponses[0][1].list[0].attachments[0].blobId")
+
+    val blob = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER).log().all()
     .when
       .get(s"/download/29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6/$blobId")
     .`then`

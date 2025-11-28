@@ -4992,7 +4992,7 @@ trait EmailSetMethodContract {
            |}""".stripMargin)
 
     assertThatJson(response)
-      .inPath(s"methodResponses[1][1].list[0]")
+      .inPath("methodResponses[1][1].list[0]")
       .isEqualTo(
         s"""{
            |  "id": "$messageId",
