@@ -5134,7 +5134,7 @@ trait EmailGetMethodContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
@@ -5260,7 +5260,7 @@ trait EmailGetMethodContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER).log().all()
     .when
-      .get(s"/download/29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6/$blobId").
+      .get(s"/download/29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6/$blobId")
     .`then`
       .statusCode(SC_OK)
       .contentType("application/json")
