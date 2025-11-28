@@ -203,7 +203,7 @@ case object MetadataReadLevel extends ReadLevel
 case object HeaderReadLevel extends ReadLevel
 case object FastViewReadLevel extends ReadLevel
 case object FastViewWithAttachmentsMetadataReadLevel extends ReadLevel {
-  private val availableFetchingBodyPropertiesForFastViewWithAttachments = Seq("partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "headers")
+  private val availableFetchingBodyPropertiesForFastViewWithAttachments = Seq("blobId", "size", "name", "type", "charset", "disposition", "cid")
 
   def supportedByFastViewWithAttachments(bodyProperties: Option[Properties]): Boolean =
     bodyProperties.exists(supportedByFastViewWithAttachments)
