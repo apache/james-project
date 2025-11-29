@@ -163,7 +163,7 @@ case class UnparsedEmailId(id: Id)
 
 object ReadLevel {
   private val metadataProperty: Seq[NonEmptyString] = Seq("id", "size", "mailboxIds",
-    "mailboxIds", "blobId", "threadId", "receivedAt")
+    "mailboxIds", "blobId", "threadId", "receivedAt", "keywords")
   private val fastViewProperty: Seq[NonEmptyString] = Seq("preview", "hasAttachment")
   private val attachmentsMetadataViewProperty: Seq[NonEmptyString] = Seq("attachments")
   private val fullProperty: Seq[NonEmptyString] = Seq("bodyStructure", "textBody", "htmlBody", "bodyValues")
@@ -203,13 +203,14 @@ case object MetadataReadLevel extends ReadLevel
 case object HeaderReadLevel extends ReadLevel
 case object FastViewReadLevel extends ReadLevel
 case object FastViewWithAttachmentsMetadataReadLevel extends ReadLevel {
-  private val availableFetchingBodyPropertiesForFastViewWithAttachments = Seq("partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "headers")
+  private val availableFetchingBodyPropertiesForFastViewWithAttachments = Seq("blobId", "size", "name", "type", "charset", "disposition", "cid")
 
   def supportedByFastViewWithAttachments(bodyProperties: Option[Properties]): Boolean =
     bodyProperties.exists(supportedByFastViewWithAttachments)
 
   private def supportedByFastViewWithAttachments(properties: Properties): Boolean =
     properties.value
+      .map(s => s.value)
       .map(availableFetchingBodyPropertiesForFastViewWithAttachments.contains)
       .reduce(_&&_)
 }
