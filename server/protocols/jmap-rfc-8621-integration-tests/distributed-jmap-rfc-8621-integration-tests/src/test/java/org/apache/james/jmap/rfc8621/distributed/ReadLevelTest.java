@@ -155,7 +155,7 @@ class ReadLevelTest {
             "      \"accountId\": \"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6\"," +
             "      \"ids\": [\"" + messageId.serialize() + "\"]," +
             "      \"properties\": [\"id\", \"size\", \"mailboxIds\", \"mailboxIds\", \"blobId\", " +
-            "                       \"threadId\", \"receivedAt\"]" +
+            "                       \"threadId\", \"receivedAt\", \"keywords\"]" +
             "    }," +
             "    \"c1\"]]" +
             "} ";
@@ -217,6 +217,38 @@ class ReadLevelTest {
             "                       \"references\", \"to\", \"cc\", \"bcc\", \"from\", \"sender\", " +
             "                       \"replyTo\", \"subject\", \"headers\", \"header:anything\", " +
             "                       \"preview\", \"hasAttachment\"]" +
+            "    }," +
+            "    \"c1\"]]" +
+            "} ";
+        with()
+            .header(HttpHeaderNames.ACCEPT.toString(), Fixture.ACCEPT_RFC8621_VERSION_HEADER())
+            .body(request)
+            .post();
+
+        assertThat(statementRecorder.listExecutedStatements(
+            StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM blobs")))
+            .hasSize(1);
+    }
+
+    @Test
+    void gettingAttachmentDetailsShouldReadBlobOnce(GuiceJamesServer server) {
+        StatementRecorder statementRecorder = server.getProbe(TestingSessionProbe.class)
+            .getTestingSession()
+            .recordStatements();
+
+        String request = "{" +
+            "  \"using\": [\"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"]," +
+            "  \"methodCalls\": [[" +
+            "    \"Email/get\"," +
+            "    {" +
+            "      \"accountId\": \"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6\"," +
+            "      \"ids\": [\"" + messageId.serialize() + "\"]," +
+            "      \"bodyProperties\":[\"blobId\", \"name\", \"type\"]," +
+            "      \"properties\": [\"id\", \"size\", \"mailboxIds\", \"mailboxIds\", \"blobId\", " +
+            "                       \"threadId\", \"receivedAt\",  \"messageId\", \"inReplyTo\", " +
+            "                       \"references\", \"to\", \"cc\", \"bcc\", \"from\", \"sender\", " +
+            "                       \"replyTo\", \"subject\", \"headers\", \"header:anything\", " +
+            "                       \"preview\", \"hasAttachment\", \"attachments\"]" +
             "    }," +
             "    \"c1\"]]" +
             "} ";
