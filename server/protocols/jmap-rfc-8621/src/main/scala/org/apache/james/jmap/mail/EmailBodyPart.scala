@@ -84,7 +84,7 @@ object EmailBodyPart {
 
     EmailBodyPart(partId = PartId.parse("1").get,
       blobId = BlobId.of(attachment.getAttachmentId.getId).toOption,
-      headers = entity.getHeader.getFields.asScala.toList.map(EmailHeader(_)),
+      headers = List(),
       size = Size.sanitizeSize(attachment.getAttachment.getSize),
       name = attachment.getName.map(Name(_)).toScala,
       `type` = Type(attachment.getAttachment.getType.mimeType().asString()),
@@ -95,7 +95,7 @@ object EmailBodyPart {
       location = Option.empty,
       subParts = Option.empty,
       entity = entity,
-      specificHeaders = EmailHeaders.extractSpecificHeaders(properties)(zoneId, entity.getHeader))
+      specificHeaders = Map())
   }
 
   def of(properties: Option[Properties], zoneId: ZoneId, blobId: BlobId, message: Message): Try[EmailBodyPart] =
