@@ -868,7 +868,7 @@ private class EmailFastViewWithAttachmentsMetadataReader @Inject()(messageIdMana
           preview = fastView.getPreview),
         header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
         specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage.getHeader),
-        attachments = AttachmentsMetadata(firstMessage.getLoadedAttachments.asScala.toList.map(EmailBodyPart.fromAttachment(request.bodyProperties, zoneIdProvider.get(), _, mime4JMessage))))
+        attachments = AttachmentsMetadata(firstMessage.getLoadedAttachments.asScala.toList.map(EmailBodyPart.fromAttachment(_, mime4JMessage))))
     }
   }
 }
