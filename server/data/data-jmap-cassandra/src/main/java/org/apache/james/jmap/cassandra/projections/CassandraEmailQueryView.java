@@ -35,7 +35,6 @@ import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQu
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.util.Comparator;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -59,7 +58,6 @@ import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
-import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -204,30 +202,6 @@ public class CassandraEmailQueryView implements EmailQueryView {
                     .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
                     .setInt(LIMIT_MARKER, backendFetchLimit.getLimit().get()))
                 .map(asEmailEntry(RECEIVED_AT)));
-    }
-
-    @Override
-    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
-        Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
-
-        CassandraId cassandraId = (CassandraId) mailboxId;
-
-        Flux<EmailEntry> baseEntries = executor.executeRows(listMailboxContentSinceReceivedAt.bind()
-                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-                .setInstant(RECEIVED_AT, since.toInstant()))
-            .map(asEmailEntry(SENT_AT));
-
-        if (collapseThreads) {
-            return baseEntries.groupBy(EmailEntry::threadId)
-                .flatMap(group -> group.reduce((e1, e2) ->
-                    e1.messageDate().isAfter(e2.messageDate()) ? e1 : e2))
-                .sort(Comparator.comparing(EmailEntry::messageDate).reversed())
-                .map(EmailEntry::messageId)
-                .take(limit.getLimit().get());
-        }
-        return baseEntries.sort(Comparator.comparing(EmailEntry::messageDate).reversed())
-            .map(EmailEntry::messageId)
-            .take(limit.getLimit().get());
     }
 
     @Override

@@ -78,17 +78,6 @@ public class PostgresEmailQueryViewDAO {
                 .map(asEmailEntry(RECEIVED_AT)));
     }
 
-    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
-        return EmailQueryViewUtils.QueryViewExtender.of(limit, collapseThreads)
-            .resolve(backendFetchLimit -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, SENT_AT, THREAD_ID)
-                    .from(TABLE_NAME)
-                    .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                    .and(RECEIVED_AT.greaterOrEqual(since.toOffsetDateTime()))
-                    .orderBy(SENT_AT.desc())
-                    .limit(backendFetchLimit.getLimit().get())))
-                .map(asEmailEntry(SENT_AT)));
-    }
-
     public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         return EmailQueryViewUtils.QueryViewExtender.of(limit, collapseThreads)
             .resolve(backendFetchLimit -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, RECEIVED_AT, THREAD_ID)

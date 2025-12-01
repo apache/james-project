@@ -53,11 +53,6 @@ public class PostgresEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
-        return emailQueryViewDAO.listMailboxContentSinceAfterSortedBySentAt(PostgresMailboxId.class.cast(mailboxId), since, limit, collapseThreads);
-    }
-
-    @Override
     public Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
         return emailQueryViewDAO.listMailboxContentSinceAfterSortedByReceivedAt(PostgresMailboxId.class.cast(mailboxId), since, limit, collapseThreads);
     }
