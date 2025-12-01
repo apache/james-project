@@ -21,6 +21,7 @@ package org.apache.james.jmap.mail
 
 import java.time.ZoneId
 import java.util.Locale
+
 import cats.implicits._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
