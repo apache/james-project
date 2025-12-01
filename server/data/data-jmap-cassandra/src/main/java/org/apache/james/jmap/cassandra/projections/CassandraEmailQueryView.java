@@ -218,15 +218,15 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .map(asEmailEntry(SENT_AT));
 
         if (collapseThreads) {
-            return baseEntries.groupBy(EmailEntry::getThreadId)
+            return baseEntries.groupBy(EmailEntry::threadId)
                 .flatMap(group -> group.reduce((e1, e2) ->
-                    e1.getMessageDate().isAfter(e2.getMessageDate()) ? e1 : e2))
-                .sort(Comparator.comparing(EmailEntry::getMessageDate).reversed())
-                .map(EmailEntry::getMessageId)
+                    e1.messageDate().isAfter(e2.messageDate()) ? e1 : e2))
+                .sort(Comparator.comparing(EmailEntry::messageDate).reversed())
+                .map(EmailEntry::messageId)
                 .take(limit.getLimit().get());
         }
-        return baseEntries.sort(Comparator.comparing(EmailEntry::getMessageDate).reversed())
-            .map(EmailEntry::getMessageId)
+        return baseEntries.sort(Comparator.comparing(EmailEntry::messageDate).reversed())
+            .map(EmailEntry::messageId)
             .take(limit.getLimit().get());
     }
 
