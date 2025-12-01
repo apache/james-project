@@ -28,7 +28,7 @@ S: NO UNAUTHENTICATE command must be issued in authenticated state
 
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
-C: "user password"
+C: user password
 S: OK
 
 C: GETSCRIPT any

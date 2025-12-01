@@ -124,7 +124,7 @@ public class AuthenticateTest {
         Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
         String initialClientResponse = "\0" + ManageSieveServerTestSystem.USERNAME.asString() + "\0" + ManageSieveServerTestSystem.PASSWORD;
-        this.client.sendCommand("\"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
+        this.client.sendCommand(Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)));
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
     }
@@ -136,7 +136,7 @@ public class AuthenticateTest {
         Assertions.assertThat(continuationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.CONTINUATION);
         Assertions.assertThat(continuationResponse.explanation().get()).isEqualTo("");
 
-        this.client.sendCommand("\"*\"");
+        this.client.sendCommand("*");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.NO);
         Assertions.assertThat(authenticationResponse.explanation()).get().isEqualTo("Authentication failed with: authentication aborted by client");

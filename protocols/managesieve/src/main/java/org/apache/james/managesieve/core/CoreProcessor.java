@@ -239,7 +239,7 @@ public class CoreProcessor implements CoreCommands {
             SupportedMechanism currentAuthenticationMechanism = session.getChoosedAuthenticationMechanism();
             AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(currentAuthenticationMechanism);
             if (Strings.isNullOrEmpty(suppliedData)) {
-                throw new SyntaxException("quoted authentication data must be supplied");
+                throw new SyntaxException("authentication data must be supplied");
             }
             if (suppliedData.equals("*")) {
                 throw new AuthenticationException("authentication aborted by client");
