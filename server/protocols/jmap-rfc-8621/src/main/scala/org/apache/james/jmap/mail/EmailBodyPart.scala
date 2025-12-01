@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mail
 
 import java.time.ZoneId
+import java.util.Locale
 import cats.implicits._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
@@ -40,7 +41,6 @@ import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime
 import org.apache.james.mime4j.stream.{Field, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
 
-import java.util.Locale
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 import scala.util.{Failure, Success, Try}
