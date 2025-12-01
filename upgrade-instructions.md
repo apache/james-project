@@ -10,12 +10,56 @@ software documentation. Do not follow this guide blindly!
 
 ## Unreleased
 
-No specific operation to conduct from a 3.9.0 version.
-
-## 3.9.0 version (tagged but not yet released)
-
 Note: this section is in progress. It will be updated during all the development process until the release.
-No changes yet.
+
+Changes to apply between 3.9.x and 3.10.0 will be reported here.
+
+Change list:
+ - [Adding thread_id column to Cassandra email_query_view_sent_at and email_query_view_received_at tables](#adding-thread_id-column-to-cassandra-email_query_view_sent_at-and-email_query_view_received_at-tables)
+ - [Adding thread_id column to Postgresql email_query_view table](#adding-thread_id-column-to-postgresql-email_query_view-table)
+
+### Adding thread_id column to Cassandra email_query_view_sent_at and email_query_view_received_at tables
+
+Date: 01/12/2025
+
+Concerned products: Distributed James
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3340
+
+James supports now collapseThreads Email/query option for the email query views (not the search).
+
+For this, we need to add the following columns to `email_query_view_sent_at` and `email_query_view_received_at` tables:
+
+- thread_id (UUID)
+
+To add these columns, run the following CQL commands:
+
+```sql
+ALTER TABLE james_keyspace.email_query_view_sent_at ADD thread_id UUID;
+ALTER TABLE james_keyspace.email_query_view_received_at ADD thread_id UUID;
+```
+
+### Adding thread_id column to Postgresql email_query_view table
+
+Date: 01/12/2025
+
+Concerned products: Postgresql James
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3340
+
+James supports now collapseThreads Email/query option for the email query views (not the search).
+
+For this, we need to add the following columns to `email_query_view` table:
+
+- thread_id (UUID)
+
+To add that column, run the following CQL command:
+
+```sql
+ALTER TABLE james_keyspace.email_query_view ADD COLUMN thread_id UUID;
+```
+
+## 3.9.0 version
 
 Changes to apply between 3.8.x and 3.9.0 will be reported here.
 
