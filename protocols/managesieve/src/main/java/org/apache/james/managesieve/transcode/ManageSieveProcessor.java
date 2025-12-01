@@ -115,10 +115,12 @@ public class ManageSieveProcessor {
                 if (arguments.isEmpty()) {
                     return result;
                 }
+                // Unquote the argument in this case because continuation is not used.
+                arguments = ParserUtils.unquoteFirst(arguments);
             }
 
             // The authentication is in progress, the mechanism has been chosen, and the arguments contain an initial client response.
-            return argumentParser.authenticate(session, ParserUtils.unquoteFirst(arguments));
+            return argumentParser.authenticate(session, arguments);
         } else if (command.equalsIgnoreCase(CAPABILITY)) {
             return argumentParser.capability(session, arguments);
         } else if (command.equalsIgnoreCase(CHECKSCRIPT)) {
