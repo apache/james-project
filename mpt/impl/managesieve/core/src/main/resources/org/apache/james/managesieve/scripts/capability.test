@@ -39,7 +39,7 @@ S: OK
 
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
-C: "user password"
+C: user password
 S: OK
 
 C: CAPABILITY
