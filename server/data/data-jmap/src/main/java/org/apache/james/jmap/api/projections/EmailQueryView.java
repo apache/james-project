@@ -149,29 +149,6 @@ public interface EmailQueryView {
      *           "after":"aDate"
      *       }
      *       "sort": [{
-     *         "property":"sentAt",
-     *         "isAscending": false
-     *       }]
-     *     },
-     *     "c1"]
-     *
-     * @return messageIds of the messages in this mailbox, since being "after". Sorted by sentAt.
-     */
-    Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads);
-
-    /**
-     *  Sample JMAP requests:
-     *
-     *      - RFC-8621:
-     *
-     *    ["Email/query",
-     *     {
-     *       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-     *       "filter: {
-     *           "inMailbox":"abcd",
-     *           "after":"aDate"
-     *       }
-     *       "sort": [{
      *         "property":"receivedAt",
      *         "isAscending": false
      *       }]

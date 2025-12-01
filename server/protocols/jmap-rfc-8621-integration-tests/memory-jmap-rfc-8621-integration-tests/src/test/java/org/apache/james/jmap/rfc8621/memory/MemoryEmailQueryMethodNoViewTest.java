@@ -93,12 +93,6 @@ public class MemoryEmailQueryMethodNoViewTest implements EmailQueryMethodContrac
     @Test
     @Override
     @Disabled("JAMES-3340 Not supported for no email query view")
-    public void inMailboxAfterSortedBySentAtShouldCollapseThreads(GuiceJamesServer server) {
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-3340 Not supported for no email query view")
     public void inMailboxSortedBySentAtShouldCollapseThreads(GuiceJamesServer server) {
     }
 
