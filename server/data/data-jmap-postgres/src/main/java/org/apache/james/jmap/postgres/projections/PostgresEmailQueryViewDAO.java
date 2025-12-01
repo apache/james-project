@@ -30,7 +30,7 @@ import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewD
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
-import java.util.UUID;
+import java.util.Optional;
 import java.util.function.Function;
 
 import jakarta.inject.Inject;
@@ -114,18 +114,12 @@ public class PostgresEmailQueryViewDAO {
     private Function<Record, EmailEntry> asEmailEntry(Field<OffsetDateTime> dateField) {
         return (Record record) -> {
             PostgresMessageId messageId = PostgresMessageId.Factory.of(record.get(MESSAGE_ID));
-            ThreadId threadId = getThreadIdFromRecord(record, messageId);
+            ThreadId threadId = Optional.ofNullable(record.get(THREAD_ID))
+                .map(uuid -> ThreadId.fromBaseMessageId(PostgresMessageId.Factory.of(uuid)))
+                .orElseGet(() -> ThreadId.fromBaseMessageId(messageId));
             Instant messageDate = record.get(dateField).toInstant();
             return new EmailEntry(messageId, threadId, messageDate);
         };
-    }
-
-    private ThreadId getThreadIdFromRecord(Record record, MessageId messageId) {
-        UUID threadIdUUID = record.get(THREAD_ID);
-        if (threadIdUUID == null) {
-            return ThreadId.fromBaseMessageId(messageId);
-        }
-        return ThreadId.fromBaseMessageId(PostgresMessageId.Factory.of(threadIdUUID));
     }
 
     public Mono<Void> delete(PostgresMailboxId mailboxId, PostgresMessageId messageId) {

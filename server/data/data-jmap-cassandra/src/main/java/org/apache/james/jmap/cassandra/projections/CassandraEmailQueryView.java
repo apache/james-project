@@ -35,7 +35,7 @@ import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQu
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.util.UUID;
+import java.util.Optional;
 import java.util.function.Function;
 
 import jakarta.inject.Inject;
@@ -243,18 +243,12 @@ public class CassandraEmailQueryView implements EmailQueryView {
     private Function<Row, EmailEntry> asEmailEntry(CqlIdentifier dateField) {
         return (Row row) -> {
             CassandraMessageId messageId = CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID));
-            ThreadId threadId = getThreadIdFromRow(row, messageId);
+            ThreadId threadId = Optional.ofNullable(row.get(CassandraEmailQueryViewTable.THREAD_ID, TypeCodecs.TIMEUUID))
+                .map(uuid -> ThreadId.fromBaseMessageId(CassandraMessageId.Factory.of(uuid)))
+                .orElseGet(() -> ThreadId.fromBaseMessageId(messageId));
             Instant messageDate = row.getInstant(dateField);
             return new EmailEntry(messageId, threadId, messageDate);
         };
-    }
-
-    private ThreadId getThreadIdFromRow(Row row, MessageId messageId) {
-        UUID threadIdUUID = row.get(CassandraEmailQueryViewTable.THREAD_ID, TypeCodecs.TIMEUUID);
-        if (threadIdUUID == null) {
-            return ThreadId.fromBaseMessageId(messageId);
-        }
-        return ThreadId.fromBaseMessageId(CassandraMessageId.Factory.of(threadIdUUID));
     }
 
     @Override
