@@ -22,7 +22,6 @@ package org.apache.james.jmap.api.projections;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 
 import org.apache.james.mailbox.model.MessageId;
@@ -37,45 +36,8 @@ import reactor.core.publisher.Flux;
 public class EmailQueryViewUtils {
     private static final int COLLAPSE_THREADS_LIMIT_MULTIPLIER = 4;
 
-    public static class EmailEntry {
-        private final MessageId messageId;
-        private final ThreadId threadId;
-        private final Instant messageDate;
+    public record EmailEntry(MessageId messageId, ThreadId threadId, Instant messageDate) {
 
-        public EmailEntry(MessageId messageId, ThreadId threadId, Instant messageDate) {
-            this.messageId = messageId;
-            this.threadId = threadId;
-            this.messageDate = messageDate;
-        }
-
-        public MessageId getMessageId() {
-            return messageId;
-        }
-
-        public ThreadId getThreadId() {
-            return threadId;
-        }
-
-        public Instant getMessageDate() {
-            return messageDate;
-        }
-
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof EmailEntry) {
-                EmailEntry entry = (EmailEntry) o;
-
-                return Objects.equals(this.messageId, entry.messageId)
-                    && Objects.equals(this.threadId, entry.threadId)
-                    && Objects.equals(this.messageDate, entry.messageDate);
-            }
-            return false;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(messageId, threadId, messageDate);
-        }
     }
 
     public interface QueryViewExtender {
@@ -99,7 +61,7 @@ public class EmailQueryViewUtils {
 
             @Override
             public Flux<MessageId> resolve(Function<Limit, Flux<EmailEntry>> fetchMoreResults) {
-                return fetchMoreResults.apply(limit).map(EmailEntry::getMessageId);
+                return fetchMoreResults.apply(limit).map(EmailEntry::messageId);
             }
         }
 
@@ -123,7 +85,7 @@ public class EmailQueryViewUtils {
                         if (hasEnoughResults || isExhaustive) {
                             return Flux.fromIterable(distinctByThreadId)
                                 .take(initialLimit.getLimit().get())
-                                .map(EmailEntry::getMessageId);
+                                .map(EmailEntry::messageId);
                         }
                         return increaseBackendetchLimit().resolve(fetchMoreResults);
                     });
@@ -137,7 +99,7 @@ public class EmailQueryViewUtils {
                 ImmutableList.Builder<EmailEntry> list = ImmutableList.builder();
                 HashSet<ThreadId> threadIdHashSet = new HashSet<>();
                 emailEntries.forEach(emailEntry -> {
-                    if (threadIdHashSet.add(emailEntry.getThreadId())) {
+                    if (threadIdHashSet.add(emailEntry.threadId())) {
                         list.add(emailEntry);
                     }
                 });
