@@ -22,7 +22,6 @@ package org.apache.james.managesieve.core;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,6 @@ import org.apache.james.user.api.UsersRepository;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class CoreProcessor implements CoreCommands {
@@ -84,11 +82,6 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-    public String getAdvertisedCapabilities() {
-        return convertCapabilityMapToString(capabilitiesBase) + "\r\n";
-    }
-
-    @Override
     public String capability(Session session) {
         return convertCapabilityMapToString(computeCapabilityMap(session)) + "\r\nOK";
     }
@@ -106,6 +99,11 @@ public class CoreProcessor implements CoreCommands {
         if (session.isAuthenticated()) {
             capabilities.put(Capabilities.OWNER, session.getUser().asString());
         }
+        session.getOidcSASLConfiguration().ifPresent(oidcConfiguration -> {
+            this.authenticationProcessorMap.putIfAbsent(SupportedMechanism.XOAUTH2, new OAUTHAuthenticationProcessor(oidcConfiguration));
+            this.authenticationProcessorMap.putIfAbsent(SupportedMechanism.OAUTHBEARER, new OAUTHAuthenticationProcessor(oidcConfiguration));
+        });
+        capabilities.put(Capabilities.SASL, constructSaslSupportedAuthenticationMechanisms());
         return capabilities;
     }
 
@@ -214,17 +212,24 @@ public class CoreProcessor implements CoreCommands {
     public String chooseMechanism(Session session, String mechanism) {
         try {
             if (Strings.isNullOrEmpty(mechanism)) {
-                return "NO ManageSieve syntax is incorrect : You must specify a SASL mechanism as an argument of AUTHENTICATE command";
+                throw new SyntaxException("quoted SASL mechanism must be supplied");
             }
-            String unquotedMechanism = ParserUtils.unquoteFirst(mechanism);
-            SupportedMechanism supportedMechanism = SupportedMechanism.retrieveMechanism(unquotedMechanism);
+
+            SupportedMechanism supportedMechanism = SupportedMechanism.retrieveMechanism(mechanism);
+            if (!this.authenticationProcessorMap.containsKey(supportedMechanism)) {
+                throw new UnknownSaslMechanism("SASL mechanism disabled: " + mechanism);
+            }
 
             session.setChoosedAuthenticationMechanism(supportedMechanism);
             session.setState(Session.State.AUTHENTICATION_IN_PROGRESS);
             AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(supportedMechanism);
             return authenticationProcessor.initialServerResponse(session);
-        } catch (UnknownSaslMechanism unknownSaslMechanism) {
-            return "NO " + unknownSaslMechanism.getMessage();
+        } catch (UnknownSaslMechanism e) {
+            resetSession(session);
+            return "NO \"" + e.getMessage() + "\"";
+        } catch (SyntaxException e) {
+            resetSession(session);
+            return "NO \"ManageSieve syntax is incorrect: " + e.getMessage() + "\"";
         }
     }
 
@@ -233,32 +238,44 @@ public class CoreProcessor implements CoreCommands {
         try {
             SupportedMechanism currentAuthenticationMechanism = session.getChoosedAuthenticationMechanism();
             AuthenticationProcessor authenticationProcessor = authenticationProcessorMap.get(currentAuthenticationMechanism);
+            if (Strings.isNullOrEmpty(suppliedData)) {
+                throw new SyntaxException("authentication data must be supplied");
+            }
+            if (suppliedData.equals("*")) {
+                throw new AuthenticationException("authentication aborted by client");
+            }
             Username authenticatedUsername = authenticationProcessor.isAuthenticationSuccesfull(session, suppliedData);
             if (authenticatedUsername != null) {
                 session.setUser(authenticatedUsername);
                 session.setState(Session.State.AUTHENTICATED);
                 return "OK";
             } else {
-                session.setState(Session.State.UNAUTHENTICATED);
-                session.setUser(null);
-                return "NO authentication failed";
+                resetSession(session);
+                return "NO \"authentication failed\"";
             }
         } catch (AuthenticationException e) {
-            return "NO Authentication failed with " + e.getCause().getClass() + " : " + e.getMessage();
+            resetSession(session);
+            return "NO \"Authentication failed with: " + e.getMessage() + "\"";
         } catch (SyntaxException e) {
-            return "NO ManageSieve syntax is incorrect : " + e.getMessage();
+            resetSession(session);
+            return "NO \"ManageSieve syntax is incorrect: " + e.getMessage() + "\"";
         }
     }
 
     @Override
     public String unauthenticate(Session session) {
         if (session.isAuthenticated()) {
-            session.setState(Session.State.UNAUTHENTICATED);
-            session.setUser(null);
+            resetSession(session);
             return "OK";
         } else {
             return "NO UNAUTHENTICATE command must be issued in authenticated state";
         }
+    }
+
+    private static void resetSession(Session session) {
+        session.setState(Session.State.UNAUTHENTICATED);
+        session.setUser(null);
+        session.setChoosedAuthenticationMechanism(null);
     }
 
     @Override
@@ -328,7 +345,6 @@ public class CoreProcessor implements CoreCommands {
         Map<Capabilities, String> capabilitiesBase = new HashMap<>();
         capabilitiesBase.put(Capabilities.IMPLEMENTATION, IMPLEMENTATION_DESCRIPTION);
         capabilitiesBase.put(Capabilities.VERSION, MANAGE_SIEVE_VERSION);
-        capabilitiesBase.put(Capabilities.SASL, constructSaslSupportedAuthenticationMechanisms());
         capabilitiesBase.put(Capabilities.STARTTLS, null);
         if (!extensions.isEmpty()) {
             capabilitiesBase.put(Capabilities.SIEVE, extensions);
@@ -337,10 +353,12 @@ public class CoreProcessor implements CoreCommands {
     }
 
     private String constructSaslSupportedAuthenticationMechanisms() {
-        return Joiner.on(' ')
-            .join(Lists.transform(
-                Arrays.asList(SupportedMechanism.values()),
-                Enum::toString));
+        return Joiner.on(' ').join(this.authenticationProcessorMap
+            .keySet()
+            .stream()
+            .map(Enum::toString)
+            .iterator()
+        );
     }
 
     private String sanitizeString(String message) {

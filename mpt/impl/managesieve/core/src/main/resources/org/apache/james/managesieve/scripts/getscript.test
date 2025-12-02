@@ -25,7 +25,7 @@ S: NO
 
 C: AUTHENTICATE "PLAIN"
 S: \+ ""
-C:  user password
+C: user password
 S: OK
 
 C: GETSCRIPT "foo"
@@ -48,5 +48,3 @@ S:   fileinto "INBOX.sent";
 S: \}
 S:
 S: OK
-
-
