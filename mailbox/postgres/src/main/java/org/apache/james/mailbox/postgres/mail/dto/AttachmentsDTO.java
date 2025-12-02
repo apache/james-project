@@ -97,7 +97,12 @@ public class AttachmentsDTO extends ArrayList<MessageRepresentation.AttachmentRe
         private MessageRepresentation.AttachmentRepresentation fromJsonNode(JsonNode jsonNode) {
             AttachmentId attachmentId = StringBackedAttachmentId.from(jsonNode.get(ATTACHMENT_ID_PROPERTY).asText());
             Optional<String> name = Optional.ofNullable(jsonNode.get(NAME_PROPERTY)).map(JsonNode::asText);
-            Optional<Cid> cid = Optional.ofNullable(jsonNode.get(CID_PROPERTY)).map(JsonNode::asText).map(Cid::from);
+            Optional<Cid> cid = Optional.ofNullable(jsonNode.get(CID_PROPERTY)).flatMap(node -> {
+                if (node.isNull()) {
+                    return Optional.empty();
+                }
+                return Optional.ofNullable(node.textValue());
+            }).map(Cid::from);
             boolean isInline = jsonNode.get(IN_LINE_PROPERTY).asBoolean();
 
             return new MessageRepresentation.AttachmentRepresentation(attachmentId, name, cid, isInline);

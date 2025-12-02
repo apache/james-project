@@ -50,6 +50,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -174,15 +175,9 @@ interface PostgresMailboxMessageDAOUtils {
     };
 
     Function<MessageMapper.FetchType, PostgresMailboxMessageFetchStrategy> FETCH_TYPE_TO_FETCH_STRATEGY = fetchType -> {
-        switch (fetchType) {
-            case METADATA:
-            case ATTACHMENTS_METADATA:
-                return PostgresMailboxMessageFetchStrategy.METADATA;
-            case HEADERS:
-            case FULL:
-                return PostgresMailboxMessageFetchStrategy.FULL;
-            default:
-                throw new RuntimeException("Unknown FetchType " + fetchType);
+        if (Objects.requireNonNull(fetchType) == MessageMapper.FetchType.METADATA) {
+            return PostgresMailboxMessageFetchStrategy.METADATA;
         }
+        return PostgresMailboxMessageFetchStrategy.FULL;
     };
 }
