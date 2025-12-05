@@ -31,7 +31,7 @@
     </section>
 
     <section name="Current Supported Relational Database">
-      <p>James supports Derby as a default database, you do not need to do any additional configuration if you are using Derby</p>
+      <p>James supports H2 as a default database, you do not need to do any additional configuration if you are using H2</p>
     </section>
 
     <section name="Spring JPA With Postgres Configuration">
