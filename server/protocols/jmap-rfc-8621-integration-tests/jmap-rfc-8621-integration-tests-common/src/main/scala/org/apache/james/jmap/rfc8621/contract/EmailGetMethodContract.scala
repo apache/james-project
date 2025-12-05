@@ -5145,60 +5145,62 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[0][1].list[0].attachments[0].blobId", "methodResponses[0][1].list[0].attachments[1].blobId")
-      .isEqualTo(
-      s"""{
-         |	"sessionState": "${SESSION_STATE.value}",
-         |	"methodResponses": [
-         |		[
-         |			"Email/get",
-         |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |				"notFound": [],
-         |				"list": [{
-         |					"preview": "Main test message...",
-         |					"to": [{
-         |						"name": "Alice",
-         |						"email": "alice@domain.tld"
-         |					}],
-         |					"id": "${messageId.serialize}",
-         |					"mailboxIds": {
-         |						"${mailboxId.serialize}": true
-         |					},
-         |					"from": [{
-         |						"name": "Bob",
-         |						"email": "bob@domain.tld"
-         |					}],
-         |					"keywords": {
-         |
-         |					},
-         |					"receivedAt": "$${json-unit.ignore}",
-         |					"sentAt": "$${json-unit.ignore}",
-         |					"hasAttachment": true,
-         |					"attachments": [{
-         |							"charset": "US-ASCII",
-         |							"disposition": "attachment",
-         |							"size": 102,
-         |							"name": "yyy.txt",
-         |							"type": "application/json"
-         |						},
-         |						{
-         |							"charset": "US-ASCII",
-         |							"disposition": "attachment",
-         |							"size": 102,
-         |							"name": "xxx.txt",
-         |							"type": "application/json"
-         |						}
-         |					],
-         |					"subject": "My subject",
-         |					"size": 1011
-         |				}]
-         |			},
-         |			"c1"
-         |		]
-         |	]
-         |}""".stripMargin)
+    Awaitility.await().atMost(Duration.ofSeconds(5))
+      .untilAsserted(() =>
+        assertThatJson(response)
+          .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[0][1].list[0].attachments[0].blobId", "methodResponses[0][1].list[0].attachments[1].blobId")
+          .isEqualTo(
+            s"""{
+               |	"sessionState": "${SESSION_STATE.value}",
+               |	"methodResponses": [
+               |		[
+               |			"Email/get",
+               |			{
+               |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |				"notFound": [],
+               |				"list": [{
+               |					"preview": "Main test message...",
+               |					"to": [{
+               |						"name": "Alice",
+               |						"email": "alice@domain.tld"
+               |					}],
+               |					"id": "${messageId.serialize}",
+               |					"mailboxIds": {
+               |						"${mailboxId.serialize}": true
+               |					},
+               |					"from": [{
+               |						"name": "Bob",
+               |						"email": "bob@domain.tld"
+               |					}],
+               |					"keywords": {
+               |
+               |					},
+               |					"receivedAt": "$${json-unit.ignore}",
+               |					"sentAt": "$${json-unit.ignore}",
+               |					"hasAttachment": true,
+               |					"attachments": [{
+               |							"charset": "US-ASCII",
+               |							"disposition": "attachment",
+               |							"size": 102,
+               |							"name": "yyy.txt",
+               |							"type": "application/json"
+               |						},
+               |						{
+               |							"charset": "US-ASCII",
+               |							"disposition": "attachment",
+               |							"size": 102,
+               |							"name": "xxx.txt",
+               |							"type": "application/json"
+               |						}
+               |					],
+               |					"subject": "My subject",
+               |					"size": 1011
+               |				}]
+               |			},
+               |			"c1"
+               |		]
+               |	]
+               |}""".stripMargin))
   }
 
   @Test
