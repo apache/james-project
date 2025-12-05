@@ -108,7 +108,7 @@ usersrepository.xml
 wrapper.xml
 lib folder (for your additional jar, e.g. JDBC drviers,...)
 
-James is packaged with virtual hosting enabled, JPA (Derby database) storage for the mails, users, and domains.
+James is packaged with virtual hosting enabled, JPA (H2 database) storage for the mails, users, and domains.
 On SMTP (see smtpserver.xml config)
   * authRequired is true by default, so you can safely deploy James on the Internet (it won't be an open relay).
   * verifyIdentity is true by default (you can only send mails with a FROM being the authenticated user).

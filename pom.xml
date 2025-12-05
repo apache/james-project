@@ -624,7 +624,7 @@
         <activemq.version>6.1.6</activemq.version>
         <apache-mime4j.version>0.8.13</apache-mime4j.version>
         <apache.openjpa.version>4.1.1</apache.openjpa.version>
-        <derby.version>10.17.1.0</derby.version>
+        <h2.version>2.3.232</h2.version>
         <log4j2.version>2.24.3</log4j2.version>
         <jakarta.inject-api.version>2.0.1</jakarta.inject-api.version>
         <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
@@ -2284,6 +2284,11 @@
                 <version>${guice.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
                 <artifactId>json-path</artifactId>
                 <version>2.9.0</version>
@@ -2698,16 +2703,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
                 <version>1.13.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.derby</groupId>
-                <artifactId>derby</artifactId>
-                <version>${derby.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.derby</groupId>
-                <artifactId>derbytools</artifactId>
-                <version>${derby.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
@@ -3840,6 +3835,7 @@
                             <exclude>release.properties</exclude>
                             <exclude>dist/**/*</exclude>
                             <exclude>**/derby.log</exclude>
+                            <exclude>**/h2.log</exclude>
                             <!-- Eclipse -->
                             <exclude>**/.*</exclude>
                             <exclude>.*/**/*</exclude>

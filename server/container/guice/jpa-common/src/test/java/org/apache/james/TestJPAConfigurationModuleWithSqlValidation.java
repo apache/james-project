@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -49,7 +48,7 @@ public interface TestJPAConfigurationModuleWithSqlValidation {
 
         @Override
         protected void configure() {
-            setupAuthenticationOnDerby();
+            setupDatabaseAuthentication();
         }
 
         @Provides
@@ -61,30 +60,11 @@ public interface TestJPAConfigurationModuleWithSqlValidation {
                 .build();
         }
 
-        private void setupAuthenticationOnDerby() {
+        private void setupDatabaseAuthentication() {
             try (Connection conn = DriverManager.getConnection(JDBC_EMBEDDED_URL, DATABASE_USERNAME, DATABASE_PASSWORD)) {
-                // Setting and Confirming requireAuthentication
-                setDerbyProperty(conn, "derby.connection.requireAuthentication", "true");
-
-                // Setting authentication scheme and username password to Derby
-                setDerbyProperty(conn, "derby.authentication.provider", "BUILTIN");
-                setDerbyProperty(conn, "derby.user." + DATABASE_USERNAME + "", DATABASE_PASSWORD);
-                setDerbyProperty(conn, "derby.database.propertiesOnly", "true");
-
-                // Setting default connection mode to no access to restrict accesses without authentication information
-                setDerbyProperty(conn, "derby.database.defaultConnectionMode", "noAccess");
-                setDerbyProperty(conn, "derby.database.fullAccessUsers", DATABASE_USERNAME);
-                setDerbyProperty(conn, "derby.database.propertiesOnly", "false");
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private void setDerbyProperty(Connection conn, String key, String value) {
-            try (CallableStatement call = conn.prepareCall("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(?, ?)")) {
-                call.setString(1, key);
-                call.setString(2, value);
-                call.execute();
+                // H2 authentication is handled through the connection URL and credentials
+                // No additional setup required as H2 accepts user/password in connection parameters
+                // The database will be created with the provided credentials
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -93,9 +73,9 @@ public interface TestJPAConfigurationModuleWithSqlValidation {
 
     String DATABASE_USERNAME = "james";
     String DATABASE_PASSWORD = "james-secret";
-    String JDBC_EMBEDDED_URL = "jdbc:derby:memory:mailboxintegration;create=true";
-    String JDBC_EMBEDDED_DRIVER = org.apache.derby.jdbc.EmbeddedDriver.class.getName();
-    String VALIDATION_SQL_QUERY = "VALUES 1";
+    String JDBC_EMBEDDED_URL = "jdbc:h2:mem:mailboxintegration;DB_CLOSE_DELAY=-1";
+    String JDBC_EMBEDDED_DRIVER = org.h2.Driver.class.getName();
+    String VALIDATION_SQL_QUERY = "SELECT 1";
 
     static JPAConfiguration.ReadyToBuild jpaConfigurationBuilder() {
         return JPAConfiguration.builder()

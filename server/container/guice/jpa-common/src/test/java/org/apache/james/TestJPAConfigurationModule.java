@@ -28,8 +28,8 @@ import com.google.inject.Provides;
 
 public class TestJPAConfigurationModule extends AbstractModule {
 
-    private static final String JDBC_EMBEDDED_URL = "jdbc:derby:memory:mailboxintegration;create=true";
-    private static final String JDBC_EMBEDDED_DRIVER = org.apache.derby.jdbc.EmbeddedDriver.class.getName();
+    private static final String JDBC_EMBEDDED_URL = "jdbc:h2:mem:mailboxintegration;DB_CLOSE_DELAY=-1";
+    private static final String JDBC_EMBEDDED_DRIVER = org.h2.Driver.class.getName();
 
     @Override
     protected void configure() {

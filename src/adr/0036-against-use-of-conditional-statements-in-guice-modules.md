@@ -38,8 +38,8 @@ Here is the list of products we provide:
  ElasticSearch for search, RabbitMQ for messaging, and ObjectStorage for blobs.
  - Cassandra: An implementation step toward Distributed James. It does not include messaging and ObjectStorage and 
  should not be run in a cluster way but is still relevant for good performance.
- - JPA: A JPA and Lucene based implementation of James. Only Derby driver is currently supported.
- - JPA with SMTP only using Derby: A minimalist SMTP server based on JPA storage technology and Derby driver
+ - JPA: A JPA and Lucene based implementation of James. H2 driver is used by default.
+ - JPA with SMTP only using H2: A minimalist SMTP server based on JPA storage technology with H2 driver as default
  - JPA with SMTP only using MariaDB: A minimalist SMTP server based on JPA storage technology and MariaDB driver
 
 Some components however do have several implementations a user can choose from in a given product. This is the case for:

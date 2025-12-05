@@ -44,7 +44,7 @@
                 <li><a href="https://github.com/apache/james-project/tree/master/server/apps/distributed-app">
                     Distributed: cassandra-rabbitmq-guice</a>: Ships a James server storing emails in Cassandra and index them in OpenSearch targeting multi node deployments. S3 is used to store blobs. RabbitMQ is used for inter-node messaging. Optional support for LDAP authentication.</li>
                 <li><a href="https://github.com/apache/james-project/tree/master/server/apps/jpa-app">
-                    Jpa-Guice</a>: Ships a James server storing emails in a SQL database (derby by default) accessed with JPA and Lucene to index emails and targets single node deployment.</li>
+                    Jpa-Guice</a>: Ships a James server storing emails in a SQL database (H2 by default) accessed with JPA and Lucene to index emails and targets single node deployment.</li>
                 <li><a href="https://github.com/apache/james-project/tree/master/server/apps/jpa-smtp-app">
                     Jpa-Smtp</a>: A tiny SMTP server shiped without mailbox, using SQL database to store data, accessed by JPA.</li>
             </ul>
@@ -241,7 +241,7 @@
                     <tr>
                         <td>apache/james:jpa-3.9.0</td>
                         <td>Single node</td>
-                        <td>Embedded Derby database (JPA, SQL)</td>
+                        <td>Embedded H2 database (JPA, SQL)</td>
                         <td>Not applicable</td>
                         <td>In VM</td>
                         <td>Index Lucene on the filesystem</td>
@@ -250,7 +250,7 @@
                     <tr>
                         <td>apache/james:demo-3.9.0</td>
                         <td>Pre-provisioned Single node instance to ease project discovery</td>
-                        <td>Embedded Derby database (JPA, SQL)</td>
+                        <td>Embedded H2 database (JPA, SQL)</td>
                         <td>Not applicable</td>
                         <td>In VM</td>
                         <td>Index Lucene on the filesystem</td>

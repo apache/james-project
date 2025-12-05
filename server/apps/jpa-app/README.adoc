@@ -1,6 +1,6 @@
 = Guice-JPA Server How-to
 
-This server target single node James deployments. By default, the derby database is used.
+This server target single node James deployments. By default, the H2 database is used.
 
 == Requirements
 
