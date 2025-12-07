@@ -148,7 +148,7 @@ object EmailBodyPart {
           size = size,
           name = Name.of(entity),
           `type` = Type(entity.getMimeType),
-          charset = Option(entity.getCharset).map(Charset),
+          charset = Option(entity.getCharset).map(_.toUpperCase(Locale.US)).map(Charset),
           disposition = Option(entity.getDispositionType).map(Disposition(_)),
           cid = ClientCid.of(entity),
           language = Languages.of(entity),
