@@ -40,6 +40,7 @@ public class JpaTestCluster {
         HashMap<String, String> properties = new HashMap<>();
         properties.put("openjpa.ConnectionDriverName", org.h2.Driver.class.getName());
         properties.put("openjpa.ConnectionURL", "jdbc:h2:mem:mailboxintegrationtesting;DB_CLOSE_DELAY=-1"); // Memory H2 database
+        properties.put("openjpa.jdbc.DBDictionary", "h2");
         properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)"); // Create Foreign Keys
         properties.put("openjpa.jdbc.SchemaFactory", "native(ForeignKeys=true)");
         properties.put("openjpa.jdbc.MappingDefaults", "ForeignKeyDeleteAction=cascade, JoinForeignKeyDeleteAction=cascade");

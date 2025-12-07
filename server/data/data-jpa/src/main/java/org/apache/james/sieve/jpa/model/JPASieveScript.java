@@ -112,7 +112,7 @@ public class JPASieveScript {
     @Column(name = "IS_ACTIVE", nullable = false)
     private boolean isActive;
 
-    @Column(name = "ACTIVATION_DATE_TIME")
+    @Column(name = "ACTIVATION_DATE_TIME", columnDefinition = "TIMESTAMP")
     private OffsetDateTime activationDateTime;
 
     /**
