@@ -21,17 +21,22 @@ package org.apache.james.jwt;
 
 import java.net.URL;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.apache.james.core.Username;
 import org.apache.james.jwt.introspection.IntrospectionEndpoint;
 import org.apache.james.jwt.introspection.TokenIntrospectionResponse;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+
 import reactor.core.publisher.Mono;
 
 public class OidcJwtTokenVerifier {
     public static final CheckTokenClient CHECK_TOKEN_CLIENT = new DefaultCheckTokenClient();
+    private static final Logger LOGGER = LoggerFactory.getLogger(OidcJwtTokenVerifier.class);
 
     private final OidcSASLConfiguration oidcSASLConfiguration;
 
@@ -77,10 +82,25 @@ public class OidcJwtTokenVerifier {
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
             .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.introspect(introspectionEndpoint, jwtToken))
                 .filter(TokenIntrospectionResponse::active)
+                .filter(validateAud())
                 .filter(tokenIntrospectionResponse -> tokenIntrospectionResponse.claimByPropertyName(oidcSASLConfiguration.getClaim())
                     .map(claim -> claim.equals(claimResult))
                     .orElse(false))
                 .map(activeResponse -> claimResult));
+    }
+
+    private Predicate<TokenIntrospectionResponse> validateAud() {
+        return oidcSASLConfiguration.getAud()
+            .map(this::validateAud)
+            .orElse(any -> true);
+    }
+
+    private Predicate<TokenIntrospectionResponse> validateAud(String expectedAud) {
+        return token -> {
+            boolean result = token.aud().map(expectedAud::equals).orElse(false);
+            LOGGER.warn("Wrong aud. Expected {} got {}", expectedAud, token.aud());
+            return result;
+        };
     }
 
     @VisibleForTesting
