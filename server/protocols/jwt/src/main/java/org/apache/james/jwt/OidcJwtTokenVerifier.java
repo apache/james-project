@@ -22,9 +22,12 @@ package org.apache.james.jwt;
 import java.net.URL;
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.jwt.introspection.IntrospectionEndpoint;
 import org.apache.james.jwt.introspection.TokenIntrospectionResponse;
 import org.reactivestreams.Publisher;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
@@ -62,22 +65,62 @@ public class OidcJwtTokenVerifier {
         }
     }
 
-    public static Publisher<String> verifyWithIntrospection(String jwtToken, URL jwksURL, String claimName, IntrospectionEndpoint introspectionEndpoint) {
-        return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken, jwksURL, claimName))
+    private final OidcSASLConfiguration oidcSASLConfiguration;
+
+    public OidcJwtTokenVerifier(OidcSASLConfiguration oidcSASLConfiguration) {
+        this.oidcSASLConfiguration = oidcSASLConfiguration;
+    }
+
+    public Optional<Username> validateToken(String token) {
+        if (oidcSASLConfiguration.isCheckTokenByIntrospectionEndpoint()) {
+            return validTokenWithIntrospection(token);
+        } else if (oidcSASLConfiguration.isCheckTokenByUserinfoEndpoint()) {
+            return validTokenWithUserInfo(token);
+        } else {
+            return verifySignatureAndExtractClaim(token)
+                .map(Username::of);
+        }
+    }
+
+    private Optional<Username> validTokenWithUserInfo(String token) {
+        return Mono.from(verifyWithUserinfo(token, oidcSASLConfiguration.getUserInfoEndpoint().orElseThrow()))
+            .blockOptional()
+            .map(Username::of);
+    }
+
+    private Optional<Username> validTokenWithIntrospection(String token) {
+        return Mono.from(verifyWithIntrospection(token,
+                oidcSASLConfiguration.getIntrospectionEndpoint()
+                    .map(endpoint -> new IntrospectionEndpoint(endpoint, oidcSASLConfiguration.getIntrospectionEndpointAuthorization()))
+                    .orElseThrow()))
+            .blockOptional()
+            .map(Username::of);
+    }
+
+    @VisibleForTesting
+    Optional<String> verifySignatureAndExtractClaim(String jwtToken) {
+        return new JwtTokenVerifier(JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL()))
+            .verifyAndExtractClaim(jwtToken, oidcSASLConfiguration.getClaim(), String.class);
+    }
+
+    @VisibleForTesting
+    Publisher<String> verifyWithIntrospection(String jwtToken, IntrospectionEndpoint introspectionEndpoint) {
+        return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken))
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
             .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.introspect(introspectionEndpoint, jwtToken))
                 .filter(TokenIntrospectionResponse::active)
-                .filter(tokenIntrospectionResponse -> tokenIntrospectionResponse.claimByPropertyName(claimName)
+                .filter(tokenIntrospectionResponse -> tokenIntrospectionResponse.claimByPropertyName(oidcSASLConfiguration.getClaim())
                     .map(claim -> claim.equals(claimResult))
                     .orElse(false))
                 .map(activeResponse -> claimResult));
     }
 
-    public static Publisher<String> verifyWithUserinfo(String jwtToken, URL jwksURL, String claimName, URL userinfoEndpoint) {
-        return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken, jwksURL, claimName))
+    @VisibleForTesting
+   Publisher<String> verifyWithUserinfo(String jwtToken, URL userinfoEndpoint) {
+        return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken))
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
             .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.userInfo(userinfoEndpoint, jwtToken))
-                .filter(userinfoResponse -> userinfoResponse.claimByPropertyName(claimName)
+                .filter(userinfoResponse -> userinfoResponse.claimByPropertyName(oidcSASLConfiguration.getClaim())
                     .map(claim -> claim.equals(claimResult))
                     .orElse(false))
                 .map(userinfoResponse -> claimResult));

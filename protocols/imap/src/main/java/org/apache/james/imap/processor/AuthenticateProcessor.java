@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -40,19 +39,16 @@ import org.apache.james.imap.message.request.AuthenticateRequest;
 import org.apache.james.imap.message.request.IRAuthenticateRequest;
 import org.apache.james.imap.message.response.AuthenticateResponse;
 import org.apache.james.jwt.OidcJwtTokenVerifier;
-import org.apache.james.jwt.introspection.IntrospectionEndpoint;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.OIDCSASLParser;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import reactor.core.publisher.Mono;
 
 /**
  * Processor which handles the AUTHENTICATE command. Only authtype of PLAIN is supported ATM.
@@ -210,7 +206,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
 
     private void doOAuth(OIDCSASLParser.OIDCInitialResponse oidcInitialResponse, OidcSASLConfiguration oidcSASLConfiguration,
                          ImapSession session, ImapRequest request, Responder responder) {
-        validateToken(oidcSASLConfiguration, oidcInitialResponse.getToken())
+        new OidcJwtTokenVerifier(oidcSASLConfiguration).validateToken(oidcInitialResponse.getToken())
             .ifPresentOrElse(authenticatedUser -> {
                 Username associatedUser = Username.of(oidcInitialResponse.getAssociatedUser());
                 if (!associatedUser.equals(authenticatedUser)) {
@@ -222,37 +218,6 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                     authSuccess(authenticatedUser, session, request, responder);
                 }
             }, () -> manageFailureCount(session, request, responder));
-    }
-
-    private Optional<Username> validateToken(OidcSASLConfiguration oidcSASLConfiguration, String token) {
-        if (oidcSASLConfiguration.isCheckTokenByIntrospectionEndpoint()) {
-            return validTokenWithIntrospection(oidcSASLConfiguration, token);
-        } else if (oidcSASLConfiguration.isCheckTokenByUserinfoEndpoint()) {
-            return validTokenWithUserInfo(oidcSASLConfiguration, token);
-        } else {
-            return OidcJwtTokenVerifier.verifySignatureAndExtractClaim(token, oidcSASLConfiguration.getJwksURL(), oidcSASLConfiguration.getClaim())
-                .map(Username::of);
-        }
-    }
-
-    private static Optional<Username> validTokenWithUserInfo(OidcSASLConfiguration oidcSASLConfiguration, String token) {
-        return Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(token,
-                oidcSASLConfiguration.getJwksURL(),
-                oidcSASLConfiguration.getClaim(),
-                oidcSASLConfiguration.getUserInfoEndpoint().orElseThrow()))
-            .blockOptional()
-            .map(Username::of);
-    }
-
-    private static Optional<Username> validTokenWithIntrospection(OidcSASLConfiguration oidcSASLConfiguration, String token) {
-        return Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(token,
-                oidcSASLConfiguration.getJwksURL(),
-                oidcSASLConfiguration.getClaim(),
-                oidcSASLConfiguration.getIntrospectionEndpoint()
-                    .map(endpoint -> new IntrospectionEndpoint(endpoint, oidcSASLConfiguration.getIntrospectionEndpointAuthorization()))
-                    .orElseThrow()))
-            .blockOptional()
-            .map(Username::of);
     }
 
     private static String extractInitialClientResponse(byte[] data) {

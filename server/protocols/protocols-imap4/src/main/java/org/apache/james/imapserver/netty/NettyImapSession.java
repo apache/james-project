@@ -35,8 +35,8 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.encode.ImapResponseWriter;
 import org.apache.james.imap.message.Literal;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.protocols.netty.LineHandlerAware;
 
