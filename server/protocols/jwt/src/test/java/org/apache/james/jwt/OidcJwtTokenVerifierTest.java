@@ -369,6 +369,48 @@ class OidcJwtTokenVerifierTest {
     }
 
     @Test
+    void verifyWithIntrospectionShouldReturnWhenValidAud() throws Exception {
+        mockServer
+            .when(HttpRequest.request().withPath(INTROSPECTION_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(INTROSPECTION_RESPONSE, StandardCharsets.UTF_8));
+
+        assertThat(Mono.from(new OidcJwtTokenVerifier(
+                OidcSASLConfiguration.builder()
+                    .jwksURL(getJwksURL())
+                    .scope("email")
+                    .oidcConfigurationURL(new URL("https://whatever.nte"))
+                    .claim("email_address")
+                    .aud("account")
+                    .build())
+                .verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+            .block())
+            .isNotNull();
+    }
+    
+    @Test
+    void verifyWithIntrospectionShouldReturnEmptyWhenWrongAud() throws Exception {
+        mockServer
+            .when(HttpRequest.request().withPath(INTROSPECTION_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(INTROSPECTION_RESPONSE, StandardCharsets.UTF_8));
+
+        assertThat(Mono.from(new OidcJwtTokenVerifier(
+                OidcSASLConfiguration.builder()
+                    .jwksURL(getJwksURL())
+                    .scope("email")
+                    .oidcConfigurationURL(new URL("https://whatever.nte"))
+                    .claim("email_address")
+                    .aud("other")
+                    .build())
+                .verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+            .block())
+            .isNull();
+    }
+
+    @Test
     void verifyWithIntrospectionShouldReturnEmptyWhenINVALIDToken() {
         mockServer
             .when(HttpRequest.request().withPath(INTROSPECTION_PATH))
