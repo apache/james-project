@@ -94,6 +94,15 @@ public class AuthenticateTest {
     // James is more lenient and also supports a space as the delimiter if the message is not base64-encoded.
     @Test
     void plainLoginWithSpaceAsDelimiterShouldSucceed() throws IOException {
+        String initialClientResponse = " " + ManageSieveServerTestSystem.USERNAME.asString() + " " + ManageSieveServerTestSystem.PASSWORD;
+        this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + initialClientResponse + "\"");
+        ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
+        Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
+    }
+
+    // This tests the combination of both lenient behaviors above.
+    @Test
+    void plainLoginWithSpaceAsDelimiterWithoutLeadingSpaceShouldSucceed() throws IOException {
         String initialClientResponse = ManageSieveServerTestSystem.USERNAME.asString() + " " + ManageSieveServerTestSystem.PASSWORD;
         this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + initialClientResponse + "\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
