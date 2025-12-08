@@ -80,7 +80,7 @@ class OidcJwtTokenVerifierTest {
 
     @Test
     void verifyAndClaimShouldReturnClaimValueWhenValidTokenHasKid() {
-        Optional<String> emailAddress = OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address");
+        Optional<String> emailAddress = new OidcJwtTokenVerifier(configForClaim("email_address")).verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(emailAddress.isPresent()).isTrue();
             softly.assertThat(emailAddress.get()).isEqualTo("user@domain.org");
@@ -89,7 +89,7 @@ class OidcJwtTokenVerifierTest {
 
     @Test
     void verifyAndClaimShouldReturnClaimValueWhenValidTokenHasNotKid() {
-        Optional<String> emailAddress = OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN_HAS_NOT_KID, getJwksURL(), "email_address");
+        Optional<String> emailAddress = new OidcJwtTokenVerifier(configForClaim("email_address")).verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN_HAS_NOT_KID);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(emailAddress.isPresent()).isTrue();
             softly.assertThat(emailAddress.get()).isEqualTo("user@domain.org");
@@ -110,7 +110,7 @@ class OidcJwtTokenVerifierTest {
             .signWith(toPrivateKey(OidcTokenFixture.PRIVATE_KEY_BASE64), Jwts.SIG.RS256)
             .compact();
 
-        assertThatThrownBy(() -> OidcJwtTokenVerifier.verifySignatureAndExtractClaim(jws, getJwksURL(), "kid"))
+        assertThatThrownBy(() -> new OidcJwtTokenVerifier(configForClaim("kid")).verifySignatureAndExtractClaim(jws))
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("Rejecting a ZIP JWT");
     }
@@ -126,7 +126,7 @@ class OidcJwtTokenVerifierTest {
         boolean prev = JwtTokenVerifier.allowZipJWT;
         JwtTokenVerifier.allowZipJWT = true;
         try {
-            assertThatCode(() -> OidcJwtTokenVerifier.verifySignatureAndExtractClaim(jws, getJwksURL(), "kid"))
+            assertThatCode(() -> new OidcJwtTokenVerifier(configForClaim("kid")).verifySignatureAndExtractClaim(jws))
                 .doesNotThrowAnyException();
         } finally {
             JwtTokenVerifier.allowZipJWT = prev;
@@ -135,19 +135,22 @@ class OidcJwtTokenVerifierTest {
 
     @Test
     void verifyAndClaimShouldReturnEmptyWhenValidTokenHasNotFoundKid() {
-        assertThat(OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN_HAS_NOT_FOUND_KID, getJwksURL(), "email_address"))
+        assertThat(new OidcJwtTokenVerifier(configForClaim("email_address"))
+            .verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN_HAS_NOT_FOUND_KID))
             .isEmpty();
     }
 
     @Test
     void verifyAndClaimShouldReturnEmptyWhenClaimNameNotFound() {
-        assertThat(OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "not_found"))
+        assertThat(new OidcJwtTokenVerifier(configForClaim("not_found"))
+            .verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN))
             .isEmpty();
     }
 
     @Test
     void verifyAndClaimShouldReturnEmptyWhenInvalidToken() {
-        assertThat(OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.INVALID_TOKEN, getJwksURL(), "email_address"))
+        assertThat(new OidcJwtTokenVerifier(configForClaim("email_address"))
+            .verifySignatureAndExtractClaim(OidcTokenFixture.INVALID_TOKEN))
             .isEmpty();
     }
 
@@ -157,7 +160,8 @@ class OidcJwtTokenVerifierTest {
             .when(HttpRequest.request().withPath(USERINFO_PATH))
             .respond(HttpResponse.response().withStatusCode(201));
 
-        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address", getUserInfoEndpoint()))
+        assertThatThrownBy(() -> Mono.from(new OidcJwtTokenVerifier(configForClaim("email_address"))
+                .verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getUserInfoEndpoint()))
             .block())
             .isInstanceOf(UserInfoCheckException.class)
             .hasMessageContaining("Error when check token by userInfo");
@@ -171,7 +175,8 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody("badResponse1", StandardCharsets.UTF_8));
 
-        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address", getUserInfoEndpoint()))
+        assertThatThrownBy(() -> Mono.from(new OidcJwtTokenVerifier(configForClaim("email_address"))
+                .verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getUserInfoEndpoint()))
             .block())
             .isInstanceOf(UserInfoCheckException.class)
             .hasMessageContaining("Error when check token by userInfo");
@@ -192,9 +197,23 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(userInfoResponse, StandardCharsets.UTF_8));
 
-        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "preferred_username", getUserInfoEndpoint()))
+        assertThat(Mono.from(new OidcJwtTokenVerifier(configForClaim("preferred_username"))
+                .verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getUserInfoEndpoint()))
             .block())
             .isNull();
+    }
+
+    private OidcSASLConfiguration configForClaim(String claim) {
+        try {
+            return OidcSASLConfiguration.builder()
+                .jwksURL(getJwksURL())
+                .scope("email")
+                .oidcConfigurationURL(new URL("https://whatever.nte"))
+                .claim(claim)
+                .build();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -205,7 +224,8 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(USERINFO_RESPONSE, StandardCharsets.UTF_8));
 
-        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address", getUserInfoEndpoint()))
+        assertThat(Mono.from(new OidcJwtTokenVerifier(configForClaim("email_address"))
+                .verifyWithUserinfo(OidcTokenFixture.VALID_TOKEN, getUserInfoEndpoint()))
             .block())
             .isEqualTo("user@domain.org");
     }
@@ -218,7 +238,8 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(USERINFO_RESPONSE, StandardCharsets.UTF_8));
 
-        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.INVALID_TOKEN, getJwksURL(), "email_address", getUserInfoEndpoint()))
+        assertThat(Mono.from(new OidcJwtTokenVerifier(configForClaim("email_address"))
+                .verifyWithUserinfo(OidcTokenFixture.INVALID_TOKEN, getUserInfoEndpoint()))
             .block())
             .isNull();
     }
@@ -239,7 +260,7 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(userInfoResponse, StandardCharsets.UTF_8));
 
-        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(OidcTokenFixture.INVALID_TOKEN, getJwksURL(), "preferred_username", getUserInfoEndpoint()))
+        assertThat(Mono.from(new OidcJwtTokenVerifier(configForClaim("preferred_username")).verifyWithUserinfo(OidcTokenFixture.INVALID_TOKEN, getUserInfoEndpoint()))
             .block())
             .isNull();
     }
@@ -250,8 +271,8 @@ class OidcJwtTokenVerifierTest {
             .when(HttpRequest.request().withPath(INTROSPECTION_PATH))
             .respond(HttpResponse.response().withStatusCode(201));
 
-        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address",
-                new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+        assertThatThrownBy(() -> Mono.from(new OidcJwtTokenVerifier(configForClaim("email_address"))
+                    .verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
             .block())
             .isInstanceOf(TokenIntrospectionException.class)
             .hasMessageContaining("Error when introspecting token");
@@ -265,8 +286,8 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody("badResponse1", StandardCharsets.UTF_8));
 
-        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address",
-                new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+        assertThatThrownBy(() -> Mono.from(new OidcJwtTokenVerifier(configForClaim("email_address"))
+                .verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
             .block())
             .isInstanceOf(TokenIntrospectionException.class)
             .hasMessageContaining("Error when introspecting token");
@@ -295,8 +316,8 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(introspectionResponse, StandardCharsets.UTF_8));
 
-        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address",
-                new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+        assertThatThrownBy(() -> Mono.from(new OidcJwtTokenVerifier(configForClaim("email_address"))
+                .verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
             .block())
             .isInstanceOf(TokenIntrospectionException.class)
             .hasMessageContaining("Error when introspecting token");
@@ -326,8 +347,8 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(introspectionResponse, StandardCharsets.UTF_8));
 
-        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address",
-                new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+        assertThatThrownBy(() -> Mono.from(new OidcJwtTokenVerifier(configForClaim("email_address"))
+                .verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
             .block())
             .isInstanceOf(TokenIntrospectionException.class)
             .hasMessageContaining("Error when introspecting token");
@@ -341,8 +362,8 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(INTROSPECTION_RESPONSE, StandardCharsets.UTF_8));
 
-        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address",
-                new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+        assertThat(Mono.from(new OidcJwtTokenVerifier(configForClaim("email_address"))
+                .verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
             .block())
             .isEqualTo("user@domain.org");
     }
@@ -363,8 +384,8 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(introspectionResponse, StandardCharsets.UTF_8));
 
-        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "preferred_username",
-                new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+        assertThat(Mono.from(new OidcJwtTokenVerifier(configForClaim("preferred_username"))
+                .verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
             .block())
             .isNull();
     }
@@ -385,8 +406,8 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(introspectionResponse, StandardCharsets.UTF_8));
 
-        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "preferred_username",
-                new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+        assertThat(Mono.from(new OidcJwtTokenVerifier(configForClaim("preferred_username"))
+                .verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
             .block())
             .isNull();
     }
@@ -399,8 +420,8 @@ class OidcJwtTokenVerifierTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody(INTROSPECTION_RESPONSE, StandardCharsets.UTF_8));
 
-        assertThat(Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.INVALID_TOKEN, getJwksURL(), "email_address",
-                new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+        assertThat(Mono.from(new OidcJwtTokenVerifier(configForClaim("email_address"))
+                .verifyWithIntrospection(OidcTokenFixture.INVALID_TOKEN, new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
             .block())
             .isNull();
     }
