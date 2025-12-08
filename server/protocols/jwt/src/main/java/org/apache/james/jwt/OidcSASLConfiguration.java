@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.api;
+package org.apache.james.jwt;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -27,11 +27,95 @@ import java.util.Optional;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class OidcSASLConfiguration {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OidcSASLConfiguration.class);
+
+    private static final boolean FORCE_INTROSPECT = Boolean.parseBoolean(System.getProperty("james.sasl.oidc.force.introspect", "true"));
+
+    @VisibleForTesting
+    static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private URL jwksURL;
+        private String claim;
+        private URL oidcConfigurationURL;
+        private String scope;
+        private Optional<URL> introspectionEndpoint = Optional.empty();
+        private Optional<String> introspectionEndpointAuthorization = Optional.empty();
+        private Optional<URL> userInfoEndpoint = Optional.empty();
+
+        private Builder() {
+        }
+
+        public Builder jwksURL(URL jwksURL) {
+            this.jwksURL = jwksURL;
+            return this;
+        }
+
+        public Builder claim(String claim) {
+            this.claim = claim;
+            return this;
+        }
+
+        public Builder oidcConfigurationURL(URL oidcConfigurationURL) {
+            this.oidcConfigurationURL = oidcConfigurationURL;
+            return this;
+        }
+
+        public Builder scope(String scope) {
+            this.scope = scope;
+            return this;
+        }
+
+        public Builder introspectionEndpoint(Optional<URL> introspectionEndpoint) {
+            this.introspectionEndpoint = introspectionEndpoint;
+            return this;
+        }
+
+        public Builder introspectionEndpoint(URL introspectionEndpoint) {
+            this.introspectionEndpoint = Optional.ofNullable(introspectionEndpoint);
+            return this;
+        }
+
+        public Builder introspectionEndpointAuthorization(Optional<String> introspectionEndpointAuthorization) {
+            this.introspectionEndpointAuthorization = introspectionEndpointAuthorization;
+            return this;
+        }
+
+        public Builder introspectionEndpointAuthorization(String introspectionEndpointAuthorization) {
+            this.introspectionEndpointAuthorization = Optional.ofNullable(introspectionEndpointAuthorization);
+            return this;
+        }
+
+        public Builder userInfoEndpoint(Optional<URL> userInfoEndpoint) {
+            this.userInfoEndpoint = userInfoEndpoint;
+            return this;
+        }
+
+        public Builder userInfoEndpoint(URL userInfoEndpoint) {
+            this.userInfoEndpoint = Optional.ofNullable(userInfoEndpoint);
+            return this;
+        }
+
+        public OidcSASLConfiguration build() {
+            Preconditions.checkNotNull(jwksURL, "jwksURL is mandatory");
+            Preconditions.checkNotNull(claim, "claim is mandatory");
+            Preconditions.checkNotNull(oidcConfigurationURL, "oidcConfigurationURL is mandatory");
+            Preconditions.checkNotNull(scope, "scope is mandatory");
+
+            return new OidcSASLConfiguration(jwksURL, claim, oidcConfigurationURL, scope,
+                introspectionEndpoint, introspectionEndpointAuthorization, userInfoEndpoint);
+        }
+    }
 
     public static OidcSASLConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) throws MalformedURLException, URISyntaxException {
         String jwksURL = configuration.getString("jwksURL", null);
@@ -47,6 +131,14 @@ public class OidcSASLConfiguration {
         String introspectionUrl = configuration.getString("introspection.url", null);
         String userInfoUrl = configuration.getString("userinfo.url", null);
 
+        if (introspectionUrl == null) {
+            if (FORCE_INTROSPECT) {
+                throw new IllegalArgumentException("'introspection.url' is mandatory for secure set up. Disable this check with -Djames.sasl.oidc.force.introspect=false.");
+            } else {
+                LOGGER.warn("'introspection.url' is mandatory for secure set up. This check was disabled with -Djames.sasl.oidc.force.introspect=false.");
+            }
+        }
+
         return new OidcSASLConfiguration(new URI(jwksURL).toURL(), claim, new URI(oidcConfigurationURL).toURL(), scope, Optional.ofNullable(introspectionUrl)
             .map(Throwing.function(value -> new URI(value).toURL())), Optional.ofNullable(configuration.getString("introspection.auth", null)),
             Optional.ofNullable(userInfoUrl).map(Throwing.function(value -> new URI(value).toURL())));
@@ -60,7 +152,7 @@ public class OidcSASLConfiguration {
     private final Optional<String> introspectionEndpointAuthorization;
     private final Optional<URL> userInfoEndpoint;
 
-    public OidcSASLConfiguration(URL jwksURL,
+    private OidcSASLConfiguration(URL jwksURL,
                                  String claim,
                                  URL oidcConfigurationURL,
                                  String scope,
