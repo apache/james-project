@@ -24,11 +24,10 @@ import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jwt.OidcJwtTokenVerifier;
-import org.apache.james.jwt.introspection.IntrospectionEndpoint;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.protocols.api.OIDCSASLParser;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -37,8 +36,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import reactor.core.publisher.Mono;
 
 /**
  * This Auth hook can be used to authenticate against the james user repository
@@ -77,7 +74,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
     @Override
     public HookResult doSasl(SMTPSession session, OidcSASLConfiguration configuration, String initialResponse) {
         return OIDCSASLParser.parse(initialResponse)
-            .flatMap(oidcInitialResponseValue -> validateToken(configuration, oidcInitialResponseValue.getToken())
+            .flatMap(oidcInitialResponseValue -> new OidcJwtTokenVerifier(configuration).validateToken(oidcInitialResponseValue.getToken())
                 .map(authenticatedUser -> {
                     Username associatedUser = Username.of(oidcInitialResponseValue.getAssociatedUser());
                     if (!associatedUser.equals(authenticatedUser)) {
@@ -114,36 +111,5 @@ public class UsersRepositoryAuthHook implements AuthHook {
             LOGGER.warn("Invalid username", e);
             return HookResult.DECLINED;
         }
-    }
-
-    private Optional<Username> validateToken(OidcSASLConfiguration oidcSASLConfiguration, String token) {
-        if (oidcSASLConfiguration.isCheckTokenByIntrospectionEndpoint()) {
-            return validTokenWithIntrospection(oidcSASLConfiguration, token);
-        } else if (oidcSASLConfiguration.isCheckTokenByUserinfoEndpoint()) {
-            return validTokenWithUserInfo(oidcSASLConfiguration, token);
-        } else {
-            return OidcJwtTokenVerifier.verifySignatureAndExtractClaim(token, oidcSASLConfiguration.getJwksURL(), oidcSASLConfiguration.getClaim())
-                .map(Username::of);
-        }
-    }
-
-    private Optional<Username> validTokenWithUserInfo(OidcSASLConfiguration oidcSASLConfiguration, String token) {
-        return Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(token,
-                oidcSASLConfiguration.getJwksURL(),
-                oidcSASLConfiguration.getClaim(),
-                oidcSASLConfiguration.getUserInfoEndpoint().orElseThrow()))
-            .blockOptional()
-            .map(Username::of);
-    }
-
-    private static Optional<Username> validTokenWithIntrospection(OidcSASLConfiguration oidcSASLConfiguration, String token) {
-        return Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(token,
-                oidcSASLConfiguration.getJwksURL(),
-                oidcSASLConfiguration.getClaim(),
-                oidcSASLConfiguration.getIntrospectionEndpoint()
-                    .map(endpoint -> new IntrospectionEndpoint(endpoint, oidcSASLConfiguration.getIntrospectionEndpointAuthorization()))
-                    .orElseThrow()))
-            .blockOptional()
-            .map(Username::of);
     }
 }
