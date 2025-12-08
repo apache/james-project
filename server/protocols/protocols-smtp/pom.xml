@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.7.7-SNAPSHOT</version>
+        <version>3.8.3-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -33,16 +33,6 @@
     <name>Apache James :: Server :: SMTP</name>
 
     <dependencies>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-spamassassin</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-spamassassin</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
@@ -184,7 +174,7 @@
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
+            <artifactId>netty-handler</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
@@ -222,4 +212,27 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <!--https://issues.apache.org/jira/browse/JAMES-3724-->
+                        <james.lifecycle.leak.detection.mode>NONE</james.lifecycle.leak.detection.mode>
+                        <!--https://netty.io/wiki/reference-counted-objects.html#best-practices-to-avoid-leaks -->
+                        <io.netty.leakDetection.level>PARANOID</io.netty.leakDetection.level>
+                    </systemPropertyVariables>
+                    <argLine>-Djava.library.path=
+                        -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
+                        -Xms512m -Xmx1024m -Djames.sasl.oidc.force.introspect=false</argLine>
+                    <reuseForks>true</reuseForks>
+                    <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
+                    <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
+                    <excludedGroups>unstable</excludedGroups>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

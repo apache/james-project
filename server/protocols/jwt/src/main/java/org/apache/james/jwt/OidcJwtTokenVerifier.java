@@ -22,37 +22,107 @@ package org.apache.james.jwt;
 import java.net.URL;
 import java.util.Optional;
 
+import org.apache.james.core.Username;
+import org.apache.james.jwt.introspection.IntrospectionEndpoint;
+import org.apache.james.jwt.introspection.TokenIntrospectionResponse;
+import org.reactivestreams.Publisher;
+
+import com.google.common.annotations.VisibleForTesting;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
+import reactor.core.publisher.Mono;
 
 public class OidcJwtTokenVerifier {
+    public static final CheckTokenClient CHECK_TOKEN_CLIENT = new DefaultCheckTokenClient();
 
-    public Optional<String> verifyAndExtractClaim(String jwtToken, URL jwksURL, String claimName) {
-        PublicKeyProvider jwksPublicKeyProvider = getClaimWithoutSignatureVerification(jwtToken, "kid", String.class)
+    public static Optional<String> verifySignatureAndExtractClaim(String jwtToken, URL jwksURL, String claimName) {
+        Optional<String> unverifiedClaim = getClaimWithoutSignatureVerification(jwtToken, "kid");
+        PublicKeyProvider jwksPublicKeyProvider = unverifiedClaim
             .map(kidValue -> JwksPublicKeyProvider.of(jwksURL, kidValue))
             .orElse(JwksPublicKeyProvider.of(jwksURL));
         return new JwtTokenVerifier(jwksPublicKeyProvider).verifyAndExtractClaim(jwtToken, claimName, String.class);
     }
 
-    public static <T> Optional<T> getClaimWithoutSignatureVerification(String token, String claimName, Class<T> returnType) {
+    public static <T> Optional<T> getClaimWithoutSignatureVerification(String token, String claimName) {
         int signatureIndex = token.lastIndexOf('.');
         if (signatureIndex <= 0) {
             return Optional.empty();
         }
         String nonSignedToken = token.substring(0, signatureIndex + 1);
         try {
-            Jwt<Header, Claims> headerClaims = Jwts.parser().parseClaimsJwt(nonSignedToken);
+            Jwt<Header, Claims> headerClaims = Jwts.parserBuilder().build().parseClaimsJwt(nonSignedToken);
             T claim = (T) headerClaims.getHeader().get(claimName);
             if (claim == null) {
-                throw new MalformedJwtException("'" + claimName + "' field in token is mandatory");
+                return Optional.empty();
             }
             return Optional.of(claim);
         } catch (JwtException e) {
             return Optional.empty();
         }
+    }
+
+    private final OidcSASLConfiguration oidcSASLConfiguration;
+
+    public OidcJwtTokenVerifier(OidcSASLConfiguration oidcSASLConfiguration) {
+        this.oidcSASLConfiguration = oidcSASLConfiguration;
+    }
+
+    public Optional<Username> validateToken(String token) {
+        if (oidcSASLConfiguration.isCheckTokenByIntrospectionEndpoint()) {
+            return validTokenWithIntrospection(token);
+        } else if (oidcSASLConfiguration.isCheckTokenByUserinfoEndpoint()) {
+            return validTokenWithUserInfo(token);
+        } else {
+            return verifySignatureAndExtractClaim(token)
+                .map(Username::of);
+        }
+    }
+
+    private Optional<Username> validTokenWithUserInfo(String token) {
+        return Mono.from(verifyWithUserinfo(token, oidcSASLConfiguration.getUserInfoEndpoint().orElseThrow()))
+            .blockOptional()
+            .map(Username::of);
+    }
+
+    private Optional<Username> validTokenWithIntrospection(String token) {
+        return Mono.from(verifyWithIntrospection(token,
+                oidcSASLConfiguration.getIntrospectionEndpoint()
+                    .map(endpoint -> new IntrospectionEndpoint(endpoint, oidcSASLConfiguration.getIntrospectionEndpointAuthorization()))
+                    .orElseThrow()))
+            .blockOptional()
+            .map(Username::of);
+    }
+
+    @VisibleForTesting
+    Optional<String> verifySignatureAndExtractClaim(String jwtToken) {
+        return new JwtTokenVerifier(JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL()))
+            .verifyAndExtractClaim(jwtToken, oidcSASLConfiguration.getClaim(), String.class);
+    }
+
+    @VisibleForTesting
+    Publisher<String> verifyWithIntrospection(String jwtToken, IntrospectionEndpoint introspectionEndpoint) {
+        return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken))
+            .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
+            .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.introspect(introspectionEndpoint, jwtToken))
+                .filter(TokenIntrospectionResponse::active)
+                .filter(tokenIntrospectionResponse -> tokenIntrospectionResponse.claimByPropertyName(oidcSASLConfiguration.getClaim())
+                    .map(claim -> claim.equals(claimResult))
+                    .orElse(false))
+                .map(activeResponse -> claimResult));
+    }
+
+    @VisibleForTesting
+   Publisher<String> verifyWithUserinfo(String jwtToken, URL userinfoEndpoint) {
+        return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken))
+            .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
+            .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.userInfo(userinfoEndpoint, jwtToken))
+                .filter(userinfoResponse -> userinfoResponse.claimByPropertyName(oidcSASLConfiguration.getClaim())
+                    .map(claim -> claim.equals(claimResult))
+                    .orElse(false))
+                .map(userinfoResponse -> claimResult));
     }
 }

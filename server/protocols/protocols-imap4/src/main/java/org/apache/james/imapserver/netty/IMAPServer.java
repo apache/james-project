@@ -18,13 +18,10 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
-import static org.jboss.netty.channel.Channels.pipeline;
-
 import java.net.MalformedURLException;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.SSLEngine;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -34,29 +31,29 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
-import org.apache.james.protocols.api.Encryption;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.jwt.OidcSASLConfiguration;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
-import org.apache.james.protocols.netty.ChannelGroupHandler;
+import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
+import org.apache.james.protocols.netty.Encryption;
+import org.apache.james.protocols.netty.HandlerConstants;
 import org.apache.james.util.Size;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.handler.execution.ExecutionHandler;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.jboss.netty.handler.stream.ChunkedWriteHandler;
-import org.jboss.netty.handler.timeout.IdleStateHandler;
-import org.jboss.netty.util.HashedWheelTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
+
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
+import io.netty.handler.stream.ChunkedWriteHandler;
+
 
 /**
  * NIO IMAP Server which use Netty.
@@ -125,11 +122,16 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private static final String SOFTWARE_TYPE = "JAMES " + VERSION + " Server ";
     private static final String DEFAULT_TIME_UNIT = "SECONDS";
     private static final String CAPABILITY_SEPARATOR = "|";
+    public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
+    public static final Size DEFAULT_IN_MEMORY_SIZE_LIMIT = Size.of(10L, Size.Unit.M); // Use 10MB as default
+    public static final int DEFAULT_TIMEOUT = 30 * 60; // default timeout is 30 minutes
+    public static final int DEFAULT_LITERAL_SIZE_LIMIT = 0;
 
     private final ImapProcessor processor;
     private final ImapEncoder encoder;
     private final ImapDecoder decoder;
     private final ImapMetrics imapMetrics;
+    private final GaugeRegistry gaugeRegistry;
 
     private String hello;
     private boolean compress;
@@ -138,17 +140,19 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private int timeout;
     private int literalSizeLimit;
     private AuthenticationConfiguration authenticationConfiguration;
+    private Optional<ConnectionLimitUpstreamHandler> connectionLimitUpstreamHandler = Optional.empty();
+    private Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler = Optional.empty();
+    private boolean ignoreIDLEUponProcessing;
+    private Duration heartbeatInterval;
+    private ReactiveThrottler reactiveThrottler;
 
-    public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
-    public static final Size DEFAULT_IN_MEMORY_SIZE_LIMIT = Size.of(10L, Size.Unit.M); // Use 10MB as default
-    public static final int DEFAULT_TIMEOUT = 30 * 60; // default timeout is 30 minutes
-    public static final int DEFAULT_LITERAL_SIZE_LIMIT = 0;
 
-    public IMAPServer(ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor, ImapMetrics imapMetrics) {
+    public IMAPServer(ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor, ImapMetrics imapMetrics, GaugeRegistry gaugeRegistry) {
         this.processor = processor;
         this.encoder = encoder;
         this.decoder = decoder;
         this.imapMetrics = imapMetrics;
+        this.gaugeRegistry = gaugeRegistry;
     }
 
     @Override
@@ -163,19 +167,28 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .map(Size::parse)
             .orElse(DEFAULT_IN_MEMORY_SIZE_LIMIT)
             .asBytes());
-        literalSizeLimit = Optional.ofNullable(configuration.getString("literalSizeLimit", null))
-            .map(Size::parse)
-            .map(Size::asBytes)
-            .map(Math::toIntExact)
-            .orElse(DEFAULT_LITERAL_SIZE_LIMIT);
+        literalSizeLimit = parseLiteralSizeLimit(configuration);
 
         timeout = configuration.getInt("timeout", DEFAULT_TIMEOUT);
         if (timeout < DEFAULT_TIMEOUT) {
             throw new ConfigurationException("Minimum timeout of 30 minutes required. See rfc2060 5.4 for details");
         }
         authenticationConfiguration = AuthenticationConfiguration.parse(configuration);
+        connectionLimitUpstreamHandler = ConnectionLimitUpstreamHandler.forCount(connectionLimit);
+        connectionPerIpLimitUpstreamHandler = ConnectionPerIpLimitUpstreamHandler.forCount(connPerIP);
+        ignoreIDLEUponProcessing = configuration.getBoolean("ignoreIDLEUponProcessing", true);
+        ImapConfiguration imapConfiguration = getImapConfiguration(configuration);
+        heartbeatInterval = imapConfiguration.idleTimeIntervalAsDuration();
+        reactiveThrottler = new ReactiveThrottler(gaugeRegistry, imapConfiguration.getConcurrentRequests(), imapConfiguration.getMaxQueueSize());
+        processor.configure(imapConfiguration);
+    }
 
-        processor.configure(getImapConfiguration(configuration));
+    private static Integer parseLiteralSizeLimit(HierarchicalConfiguration<ImmutableNode> configuration) {
+        return Optional.ofNullable(configuration.getString("literalSizeLimit", null))
+            .map(Size::parse)
+            .map(Size::asBytes)
+            .map(Math::toIntExact)
+            .orElse(DEFAULT_LITERAL_SIZE_LIMIT);
     }
 
     @VisibleForTesting static ImapConfiguration getImapConfiguration(HierarchicalConfiguration<ImmutableNode> configuration) {
@@ -186,6 +199,11 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                 .idleTimeInterval(configuration.getLong("idleTimeInterval", ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS))
                 .idleTimeIntervalUnit(getTimeIntervalUnit(configuration.getString("idleTimeIntervalUnit", DEFAULT_TIME_UNIT)))
                 .disabledCaps(disabledCaps)
+                .appendLimit(Optional.of(parseLiteralSizeLimit(configuration)).filter(i -> i > 0))
+                .maxQueueSize(configuration.getInteger("maxQueueSize", ImapConfiguration.DEFAULT_QUEUE_SIZE))
+                .concurrentRequests(configuration.getInteger("concurrentRequests", ImapConfiguration.DEFAULT_CONCURRENT_REQUESTS))
+                .isProvisionDefaultMailboxes(configuration.getBoolean("provisionDefaultMailboxes", ImapConfiguration.DEFAULT_PROVISION_DEFAULT_MAILBOXES))
+                .withCustomProperties(configuration.getProperties("customProperties"))
                 .build();
     }
 
@@ -208,25 +226,29 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         return "IMAP Service";
     }
 
+
     @Override
-    protected ChannelPipelineFactory createPipelineFactory(final ChannelGroup group) {
+    protected AbstractChannelPipelineFactory createPipelineFactory() {
         
-        return new ChannelPipelineFactory() {
-            
-            private final ChannelGroupHandler groupHandler = new ChannelGroupHandler(group);
-            private final HashedWheelTimer timer = new HashedWheelTimer();
-            
-            private final TimeUnit timeoutUnit = TimeUnit.SECONDS;
+        return new AbstractChannelPipelineFactory(getFrameHandlerFactory(), getExecutorGroup()) {
 
             @Override
-            public ChannelPipeline getPipeline() throws Exception {
-                ChannelPipeline pipeline = pipeline();
-                pipeline.addLast(GROUP_HANDLER, groupHandler);
-                pipeline.addLast("idleHandler", new IdleStateHandler(timer, 0, 0, timeout, timeoutUnit));
-                pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler());
-                pipeline.addLast(CONNECTION_LIMIT_HANDLER, new ConnectionLimitUpstreamHandler(IMAPServer.this.connectionLimit));
+            protected ChannelInboundHandlerAdapter createHandler() {
+                return createCoreHandler();
+            }
 
-                pipeline.addLast(CONNECTION_LIMIT_PER_IP_HANDLER, new ConnectionPerIpLimitUpstreamHandler(IMAPServer.this.connPerIP));
+            @Override
+            public void initChannel(Channel channel) {
+                ChannelPipeline pipeline = channel.pipeline();
+                pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
+
+                connectionLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_HANDLER, handler));
+                connectionPerIpLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_PER_IP_HANDLER, handler));
+
+                if (proxyRequired) {
+                    pipeline.addLast(HandlerConstants.PROXY_HANDLER, new HAProxyMessageDecoder());
+                    pipeline.addLast("proxyInformationHandler", new HAProxyMessageHandler());
+                }
 
                 // Add the text line decoder which limit the max line length,
                 // don't strip the delimiter and use CRLF as delimiter
@@ -235,26 +257,19 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                
                 Encryption secure = getEncryption();
                 if (secure != null && !secure.isStartTLS()) {
-                    // We need to set clientMode to false.
-                    // See https://issues.apache.org/jira/browse/JAMES-1025
-                    SSLEngine engine = secure.createSSLEngine();
-                    engine.setUseClientMode(false);
-                    pipeline.addFirst(SSL_HANDLER, new SslHandler(engine));
-
+                    if (proxyRequired) {
+                        channel.pipeline().addAfter("proxyInformationHandler", SSL_HANDLER, secure.sslHandler());
+                    } else {
+                        channel.pipeline().addFirst(SSL_HANDLER, secure.sslHandler());
+                    }
                 }
-                pipeline.addLast(CONNECTION_COUNT_HANDLER, getConnectionCountHandler());
 
                 pipeline.addLast(CHUNK_WRITE_HANDLER, new ChunkedWriteHandler());
 
-                ExecutionHandler ehandler = getExecutionHandler();
-                if (ehandler  != null) {
-                    pipeline.addLast(EXECUTION_HANDLER, ehandler);
-
-                }
-                pipeline.addLast(REQUEST_DECODER, new ImapRequestFrameDecoder(decoder, inMemorySizeLimit, literalSizeLimit, maxLineLength));
+                pipeline.addLast(REQUEST_DECODER, new ImapRequestFrameDecoder(decoder, inMemorySizeLimit,
+                    literalSizeLimit, maxLineLength));
 
                 pipeline.addLast(CORE_HANDLER, createCoreHandler());
-                return pipeline;
             }
 
         };
@@ -266,21 +281,20 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     }
 
     @Override
-    protected ChannelUpstreamHandler createCoreHandler() {
+    protected ChannelInboundHandlerAdapter createCoreHandler() {
         Encryption secure = getEncryption();
-        ImapChannelUpstreamHandler.ImapChannelUpstreamHandlerBuilder coreHandlerBuilder = ImapChannelUpstreamHandler.builder()
+        return ImapChannelUpstreamHandler.builder()
+            .reactiveThrottler(reactiveThrottler)
             .hello(hello)
             .processor(processor)
             .encoder(encoder)
             .compress(compress)
             .authenticationConfiguration(authenticationConfiguration)
             .secure(secure)
-            .imapMetrics(imapMetrics);
-
-        if (secure != null && secure.isStartTLS()) {
-            coreHandlerBuilder.secure(secure);
-        }
-        return coreHandlerBuilder.build();
+            .imapMetrics(imapMetrics)
+            .heartbeatInterval(heartbeatInterval)
+            .ignoreIDLEUponProcessing(ignoreIDLEUponProcessing)
+            .build();
     }
 
     @Override

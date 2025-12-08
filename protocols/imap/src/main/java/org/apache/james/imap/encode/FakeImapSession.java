@@ -18,17 +18,30 @@
  ****************************************************************/
 package org.apache.james.imap.encode;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLSession;
 
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.jwt.OidcSASLConfiguration;
+import org.apache.james.util.concurrent.NamedThreadFactory;
+
+import reactor.core.publisher.Mono;
 
 public class FakeImapSession implements ImapSession {
+    private static final int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
+    private static final ThreadFactory THREAD_FACTORY = NamedThreadFactory.withClassName(FakeImapSession.class);
+    private static final ScheduledExecutorService EXECUTOR_SERVICE = Executors.newScheduledThreadPool(DEFAULT_SCHEDULED_POOL_CORE_SIZE, THREAD_FACTORY);
 
     private ImapSessionState state = ImapSessionState.NON_AUTHENTICATED;
 
@@ -63,9 +76,9 @@ public class FakeImapSession implements ImapSession {
     }
 
     @Override
-    public void logout() {
-        closeMailbox();
-        state = ImapSessionState.LOGOUT;
+    public Mono<Void> logout() {
+        return closeMailbox()
+            .then(Mono.fromRunnable(() -> state = ImapSessionState.LOGOUT));
     }
 
     @Override
@@ -74,16 +87,16 @@ public class FakeImapSession implements ImapSession {
     }
 
     @Override
-    public void deselect() {
+    public Mono<Void> deselect() {
         this.state = ImapSessionState.AUTHENTICATED;
-        closeMailbox();
+        return closeMailbox();
     }
 
     @Override
-    public void selected(SelectedMailbox mailbox) {
+    public Mono<Void> selected(SelectedMailbox mailbox) {
         this.state = ImapSessionState.SELECTED;
-        closeMailbox();
-        this.selectedMailbox = mailbox;
+        return closeMailbox()
+            .then(Mono.fromRunnable(() -> selectedMailbox = mailbox));
     }
 
     @Override
@@ -96,11 +109,12 @@ public class FakeImapSession implements ImapSession {
         return this.state;
     }
 
-    public void closeMailbox() {
+    private Mono<Void> closeMailbox() {
         if (selectedMailbox != null) {
-            selectedMailbox.deselect();
-            selectedMailbox = null;
+            return selectedMailbox.deselect()
+                .then(Mono.fromRunnable(() -> selectedMailbox = null));
         }
+        return Mono.empty();
     }
 
     @Override
@@ -118,7 +132,7 @@ public class FakeImapSession implements ImapSession {
     }
     
     @Override
-    public boolean startTLS() {
+    public boolean startTLS(Runnable runnable) {
         return false;
     }
 
@@ -128,12 +142,17 @@ public class FakeImapSession implements ImapSession {
     }
 
     @Override
+    public Optional<SSLSession> getSSLSession() {
+        return Optional.empty();
+    }
+
+    @Override
     public boolean isCompressionSupported() {
         return false;
     }
 
     @Override
-    public boolean startCompression() {
+    public boolean startCompression(Runnable runnable) {
         return false;
     }
 
@@ -181,4 +200,8 @@ public class FakeImapSession implements ImapSession {
         return false;
     }
 
+    @Override
+    public void schedule(Runnable runnable, Duration waitDelay) {
+       EXECUTOR_SERVICE.schedule(runnable, waitDelay.toMillis(), TimeUnit.MILLISECONDS);
+    }
 }

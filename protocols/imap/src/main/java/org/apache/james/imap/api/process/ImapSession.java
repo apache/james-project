@@ -25,9 +25,9 @@ import java.util.Optional;
 import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionState;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.protocols.api.CommandDetectionSession;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
 
 /**
  * Encapsulates all state held for an ongoing Imap session, which commences when

@@ -36,7 +36,7 @@ import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Username;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;

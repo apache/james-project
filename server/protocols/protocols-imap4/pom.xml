@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.7.7-SNAPSHOT</version>
+        <version>3.8.3-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -119,21 +119,25 @@
             <artifactId>protocols-netty</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-beanutils</groupId>
-            <artifactId>commons-beanutils</artifactId>
-            <scope>test</scope>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jzlib</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.hakky54</groupId>
+            <artifactId>sslcontext-kickstart-for-pem</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
+            <artifactId>netty-handler</artifactId>
         </dependency>
         <dependency>
             <groupId>io.projectreactor.netty</groupId>
-            <artifactId>reactor-netty</artifactId>
+            <artifactId>reactor-netty-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -173,5 +177,29 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <!--https://issues.apache.org/jira/browse/JAMES-3724-->
+                        <james.lifecycle.leak.detection.mode>testing</james.lifecycle.leak.detection.mode>
+                        <!--https://netty.io/wiki/reference-counted-objects.html#best-practices-to-avoid-leaks -->
+                        <io.netty.leakDetection.level>PARANOID</io.netty.leakDetection.level>
+                    </systemPropertyVariables>
+                    <argLine>-Djava.library.path=
+                        -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
+                        -Xms512m -Xmx1024m -Djames.sasl.oidc.force.introspect=false</argLine>
+                    <reuseForks>true</reuseForks>
+                    <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
+                    <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
+                    <excludedGroups>unstable</excludedGroups>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

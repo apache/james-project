@@ -23,9 +23,11 @@ import java.util.Optional;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.lmtpserver.CoreCmdHandlerLoader;
 import org.apache.james.lmtpserver.jmx.JMXHandlersLoader;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.protocols.api.ProtocolSession;
+import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.lmtp.LMTPConfiguration;
@@ -33,10 +35,12 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPProtocol;
-import org.apache.james.smtpserver.netty.SMTPChannelUpstreamHandler;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
+import org.apache.james.smtpserver.ExtendedSMTPSession;
+import org.apache.james.smtpserver.netty.SMTPChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.netty.channel.ChannelInboundHandlerAdapter;
 
 public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServerMBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(LMTPServer.class);
@@ -139,9 +143,14 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
     }
 
     @Override
-    protected ChannelUpstreamHandler createCoreHandler() {
-        SMTPProtocol protocol = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig);
-        return new SMTPChannelUpstreamHandler(protocol, lmtpMetrics);
+    protected ChannelInboundHandlerAdapter createCoreHandler() {
+        SMTPProtocol transport = new SMTPProtocol(getProtocolHandlerChain(), lmtpConfig) {
+            @Override
+            public ProtocolSession newSession(ProtocolTransport transport) {
+                return new ExtendedSMTPSession(lmtpConfig, transport);
+            }
+        };
+        return new SMTPChannelInboundHandler(transport, lmtpMetrics);
     }
 
     @Override
