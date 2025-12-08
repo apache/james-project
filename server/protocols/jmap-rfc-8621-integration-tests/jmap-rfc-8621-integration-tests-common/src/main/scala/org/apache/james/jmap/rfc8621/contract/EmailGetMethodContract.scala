@@ -5133,20 +5133,21 @@ trait EmailGetMethodContract {
          |		]
          |	]
          |}""".stripMargin
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
 
     Awaitility.await().atMost(Duration.ofSeconds(5))
-      .untilAsserted(() =>
+      .untilAsserted(() => {
+        val response = `given`
+          .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+          .body(request)
+        .when
+          .post
+        .`then`
+          .statusCode(SC_OK)
+          .contentType(JSON)
+          .extract
+          .body
+          .asString
+
         assertThatJson(response)
           .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[0][1].list[0].attachments[0].blobId", "methodResponses[0][1].list[0].attachments[1].blobId")
           .isEqualTo(
@@ -5200,7 +5201,8 @@ trait EmailGetMethodContract {
                |			"c1"
                |		]
                |	]
-               |}""".stripMargin))
+               |}""".stripMargin)
+      })
   }
 
   @Test
