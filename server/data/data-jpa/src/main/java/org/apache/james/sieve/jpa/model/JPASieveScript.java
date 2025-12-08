@@ -19,7 +19,9 @@
 
 package org.apache.james.sieve.jpa.model;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -60,7 +62,7 @@ public class JPASieveScript {
         private String scriptContent;
         private long scriptSize;
         private boolean isActive;
-        private OffsetDateTime activationDateTime;
+        private Instant activationDateTime;
 
         public Builder username(String username) {
             Preconditions.checkNotNull(username);
@@ -89,7 +91,7 @@ public class JPASieveScript {
         public JPASieveScript build() {
             Preconditions.checkState(StringUtils.isNotBlank(username), "'username' is mandatory");
             Preconditions.checkState(StringUtils.isNotBlank(scriptName), "'scriptName' is mandatory");
-            this.activationDateTime = isActive ? OffsetDateTime.now() : null;
+            this.activationDateTime = isActive ? Instant.now() : null;
             return new JPASieveScript(username, scriptName, scriptContent, scriptSize, isActive, activationDateTime);
         }
     }
@@ -112,8 +114,8 @@ public class JPASieveScript {
     @Column(name = "IS_ACTIVE", nullable = false)
     private boolean isActive;
 
-    @Column(name = "ACTIVATION_DATE_TIME", columnDefinition = "TIMESTAMP")
-    private OffsetDateTime activationDateTime;
+    @Column(name = "ACTIVATION_DATE_TIME")
+    private Instant activationDateTime;
 
     /**
      * @deprecated enhancement only
@@ -122,7 +124,7 @@ public class JPASieveScript {
     protected JPASieveScript() {
     }
 
-    private JPASieveScript(String username, String scriptName, String scriptContent, long scriptSize, boolean isActive, OffsetDateTime activationDateTime) {
+    private JPASieveScript(String username, String scriptName, String scriptContent, long scriptSize, boolean isActive, Instant activationDateTime) {
         this.username = username;
         this.scriptName = scriptName;
         this.scriptContent = scriptContent;
@@ -152,12 +154,12 @@ public class JPASieveScript {
     }
 
     public OffsetDateTime getActivationDateTime() {
-        return activationDateTime;
+        return activationDateTime != null ? activationDateTime.atOffset(ZoneOffset.UTC) : null;
     }
 
     public void activate() {
         this.isActive = true;
-        this.activationDateTime = OffsetDateTime.now();
+        this.activationDateTime = Instant.now();
     }
 
     public void deactivate() {
