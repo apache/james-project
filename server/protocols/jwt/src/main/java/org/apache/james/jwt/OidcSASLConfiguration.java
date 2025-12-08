@@ -38,6 +38,7 @@ public class OidcSASLConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(OidcSASLConfiguration.class);
 
     private static final boolean FORCE_INTROSPECT = Boolean.parseBoolean(System.getProperty("james.sasl.oidc.force.introspect", "true"));
+    private static final boolean VALIDATE_AUD = Boolean.parseBoolean(System.getProperty("james.sasl.oidc.validate.aud", "true"));
 
     @VisibleForTesting
     static Builder builder() {
@@ -51,6 +52,7 @@ public class OidcSASLConfiguration {
         private String scope;
         private Optional<URL> introspectionEndpoint = Optional.empty();
         private Optional<String> introspectionEndpointAuthorization = Optional.empty();
+        private Optional<String> aud = Optional.empty();
         private Optional<URL> userInfoEndpoint = Optional.empty();
 
         private Builder() {
@@ -106,6 +108,11 @@ public class OidcSASLConfiguration {
             return this;
         }
 
+        public Builder aud(String aud) {
+            this.aud = Optional.ofNullable(aud);
+            return this;
+        }
+
         public OidcSASLConfiguration build() {
             Preconditions.checkNotNull(jwksURL, "jwksURL is mandatory");
             Preconditions.checkNotNull(claim, "claim is mandatory");
@@ -113,7 +120,7 @@ public class OidcSASLConfiguration {
             Preconditions.checkNotNull(scope, "scope is mandatory");
 
             return new OidcSASLConfiguration(jwksURL, claim, oidcConfigurationURL, scope,
-                introspectionEndpoint, introspectionEndpointAuthorization, userInfoEndpoint);
+                introspectionEndpoint, introspectionEndpointAuthorization, userInfoEndpoint, aud);
         }
     }
 
@@ -130,6 +137,7 @@ public class OidcSASLConfiguration {
 
         String introspectionUrl = configuration.getString("introspection.url", null);
         String userInfoUrl = configuration.getString("userinfo.url", null);
+        String aud = configuration.getString("aud", null);
 
         if (introspectionUrl == null) {
             if (FORCE_INTROSPECT) {
@@ -139,9 +147,17 @@ public class OidcSASLConfiguration {
             }
         }
 
+        if (aud == null) {
+            if (VALIDATE_AUD) {
+                throw new IllegalArgumentException("'aud' is mandatory for secure set up. Disable this check with -Djames.sasl.oidc.validate.aud=false.");
+            } else {
+                LOGGER.warn("'aud' is mandatory for secure set up. This check was disabled with -Djames.sasl.oidc.validate.aud=false.");
+            }
+        }
+
         return new OidcSASLConfiguration(new URI(jwksURL).toURL(), claim, new URI(oidcConfigurationURL).toURL(), scope, Optional.ofNullable(introspectionUrl)
             .map(Throwing.function(value -> new URI(value).toURL())), Optional.ofNullable(configuration.getString("introspection.auth", null)),
-            Optional.ofNullable(userInfoUrl).map(Throwing.function(value -> new URI(value).toURL())));
+            Optional.ofNullable(userInfoUrl).map(Throwing.function(value -> new URI(value).toURL())), Optional.ofNullable(aud));
     }
 
     private final URL jwksURL;
@@ -149,21 +165,24 @@ public class OidcSASLConfiguration {
     private final URL oidcConfigurationURL;
     private final String scope;
     private final Optional<URL> introspectionEndpoint;
+    private final Optional<String> aud;
     private final Optional<String> introspectionEndpointAuthorization;
     private final Optional<URL> userInfoEndpoint;
 
     private OidcSASLConfiguration(URL jwksURL,
-                                 String claim,
-                                 URL oidcConfigurationURL,
-                                 String scope,
-                                 Optional<URL> introspectionEndpoint,
-                                 Optional<String> introspectionEndpointAuthorization,
-                                 Optional<URL> userInfoEndpoint) {
+                                  String claim,
+                                  URL oidcConfigurationURL,
+                                  String scope,
+                                  Optional<URL> introspectionEndpoint,
+                                  Optional<String> introspectionEndpointAuthorization,
+                                  Optional<URL> userInfoEndpoint,
+                                  Optional<String> aud) {
         this.jwksURL = jwksURL;
         this.claim = claim;
         this.oidcConfigurationURL = oidcConfigurationURL;
         this.scope = scope;
         this.introspectionEndpoint = introspectionEndpoint;
+        this.aud = aud;
         this.introspectionEndpointAuthorization = introspectionEndpointAuthorization;
         this.userInfoEndpoint = userInfoEndpoint;
     }
@@ -200,6 +219,9 @@ public class OidcSASLConfiguration {
         return getIntrospectionEndpoint().isPresent();
     }
 
+    public Optional<String> getAud() {
+        return aud;
+    }
 
     public boolean isCheckTokenByUserinfoEndpoint() {
         return getUserInfoEndpoint().isPresent();
