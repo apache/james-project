@@ -239,7 +239,7 @@ trait EmailImportContract {
          |                        "id": "$messageId",
          |                        "htmlBody": [
          |                            {
-         |                                "charset": "utf-8",
+         |                                "charset": "UTF-8",
          |                                "size": 39,
          |                                "partId": "2",
          |                                "blobId": "${messageId}_2",
@@ -364,7 +364,7 @@ trait EmailImportContract {
          |                        "id": "$messageId",
          |                        "htmlBody": [
          |                            {
-         |                                "charset": "utf-8",
+         |                                "charset": "UTF-8",
          |                                "size": 39,
          |                                "partId": "2",
          |                                "blobId": "${messageId}_2",
@@ -486,7 +486,7 @@ trait EmailImportContract {
          |                        "id": "$messageId",
          |                        "htmlBody": [
          |                            {
-         |                                "charset": "utf-8",
+         |                                "charset": "UTF-8",
          |                                "size": 39,
          |                                "partId": "2",
          |                                "blobId": "${messageId}_2",
@@ -606,7 +606,7 @@ trait EmailImportContract {
          |                        "id": "$messageId",
          |                        "htmlBody": [
          |                            {
-         |                                "charset": "utf-8",
+         |                                "charset": "UTF-8",
          |                                "size": 39,
          |                                "partId": "2",
          |                                "blobId": "${messageId}_2",

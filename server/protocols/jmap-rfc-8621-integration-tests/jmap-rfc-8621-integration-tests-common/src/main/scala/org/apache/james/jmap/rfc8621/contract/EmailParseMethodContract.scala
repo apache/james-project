@@ -109,7 +109,7 @@ trait EmailParseMethodContract {
            |                        "references": null,
            |                        "textBody": [
            |                            {
-           |                                "charset": "utf-8",
+           |                                "charset": "UTF-8",
            |                                "size": 39,
            |                                "partId": "2",
            |                                "blobId": "${messageId.serialize()}_2",
@@ -153,7 +153,7 @@ trait EmailParseMethodContract {
            |                        "preview": "Send concerted from html",
            |                        "htmlBody": [
            |                            {
-           |                                "charset": "utf-8",
+           |                                "charset": "UTF-8",
            |                                "size": 39,
            |                                "partId": "2",
            |                                "blobId": "${messageId.serialize()}_2",
