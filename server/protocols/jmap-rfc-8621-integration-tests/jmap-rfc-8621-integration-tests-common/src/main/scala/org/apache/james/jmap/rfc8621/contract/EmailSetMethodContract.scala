@@ -2474,7 +2474,7 @@ trait EmailSetMethodContract {
            |      "blobId": "${messageId}_4",
            |      "size": 11,
            |      "type": "text/plain",
-           |      "charset": "ascii",
+           |      "charset": "ASCII",
            |      "disposition": "attachment"
            |    }
            |  ]
@@ -4593,7 +4593,7 @@ trait EmailSetMethodContract {
            |          "id": "$messageId",
            |          "bodyStructure": {
            |            "type": "multipart/alternative",
-           |            "charset": "us-ascii",
+           |            "charset": "US-ASCII",
            |            "subParts": [
            |              {
            |                "type": "text/plain",
@@ -5006,7 +5006,7 @@ trait EmailSetMethodContract {
            |      "blobId": "${messageId}_4",
            |      "size": 155,
            |      "type": "message/rfc822",
-           |      "charset": "us-ascii",
+           |      "charset": "US-ASCII",
            |      "disposition": "attachment"
            |    }
            |  ]

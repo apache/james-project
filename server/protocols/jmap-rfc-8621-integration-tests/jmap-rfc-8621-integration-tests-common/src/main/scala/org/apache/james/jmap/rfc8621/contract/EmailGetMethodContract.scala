@@ -2459,7 +2459,7 @@ trait EmailGetMethodContract {
          |                                "blobId": "${messageId.serialize}_2",
          |                                "size": 8,
          |                                "type": "text/plain",
-         |                                "charset": "utf-8"
+         |                                "charset": "UTF-8"
          |                            }
          |                        ],
          |                        "attachments": [
@@ -2497,7 +2497,7 @@ trait EmailGetMethodContract {
          |                                "blobId": "${messageId.serialize}_2",
          |                                "size": 8,
          |                                "type": "text/plain",
-         |                                "charset": "utf-8"
+         |                                "charset": "UTF-8"
          |                            }
          |                        ],
          |                        "bodyValues": {},
@@ -3947,7 +3947,7 @@ trait EmailGetMethodContract {
          |                                    ],
          |                                    "size": 8,
          |                                    "type": "text/plain",
-         |                                    "charset": "utf-8"
+         |                                    "charset": "UTF-8"
          |                                },
          |                                {
          |                                    "partId": "3",
@@ -4199,7 +4199,7 @@ trait EmailGetMethodContract {
          |                                    "size": 19,
          |                                    "name": "avertissement.txt",
          |                                    "type": "text/plain",
-         |                                    "charset": "iso-8859-1",
+         |                                    "charset": "ISO-8859-1",
          |                                    "disposition": "inline",
          |                                    "cid": "14672787885774e5c4d4cee471352039@linagora.com"
          |                                }
@@ -4268,7 +4268,7 @@ trait EmailGetMethodContract {
          |                                "blobId": "${messageId.serialize}_2",
          |                                "size": 8,
          |                                "type": "text/plain",
-         |                                "charset": "utf-8"
+         |                                "charset": "UTF-8"
          |                            }
          |                        ]
          |                    }
@@ -4336,7 +4336,7 @@ trait EmailGetMethodContract {
          |                                "charset": "ISO-8859-1"
          |                            },
          |                            {
-         |                                "charset": "iso-8859-1",
+         |                                "charset": "ISO-8859-1",
          |                                "disposition": "inline",
          |                                "size": 19,
          |                                "partId": "5",
@@ -4411,7 +4411,7 @@ trait EmailGetMethodContract {
          |                                "charset": "ISO-8859-1"
          |                            },
          |                            {
-         |                                "charset": "iso-8859-1",
+         |                                "charset": "ISO-8859-1",
          |                                "disposition": "inline",
          |                                "size": 19,
          |                                "partId": "5",
@@ -4927,7 +4927,7 @@ trait EmailGetMethodContract {
          |                                "size": 4334,
          |                                "name": "Screenshot 2025-05-06 at 09.50.27.png",
          |                                "type": "image/png",
-         |                                "charset": "base64",
+         |                                "charset": "BASE64",
          |                                "disposition": "inline",
          |                                "cid": "e612b3e0-2a24-11f0-aacf-77a69744ec20"
          |                            }
@@ -6189,7 +6189,7 @@ trait EmailGetMethodContract {
          |                                "size": 19,
          |                                "name": "avertissement.txt",
          |                                "type": "text/plain",
-         |                                "charset": "iso-8859-1",
+         |                                "charset": "ISO-8859-1",
          |                                "disposition": "inline",
          |                                "cid": "14672787885774e5c4d4cee471352039@linagora.com"
          |                            }
