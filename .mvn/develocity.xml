@@ -51,11 +51,10 @@
     </local>
     <remote>
       <enabled>true</enabled>
-      <storeEnabled>#{isTrue(env['CI'])}</storeEnabled>
+      <storeEnabled>#{isTrue(env['CI']) and (env['BRANCH_NAME'] == 'master')}</storeEnabled>
       <!--
-      the next step is this
-      <storeEnabled>#{isTrue(env['CI'])</storeEnabled>
-      but it requires requesting a cache node to infra project
+      Only master branch can write to cache to ensure cache quality.
+      All branches can read from cache.
       -->
     </remote>
   </buildCache>
