@@ -27,6 +27,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.mailbox.events.MailboxEvents.MessageContentDeletionEvent;
 import org.apache.james.vault.metadata.DeletedMessageVaultDeletionCallback;
@@ -34,7 +35,7 @@ import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 
-public class DeletedMessageVaultDeletionListener implements EventListener.ReactiveGroupEventListener {
+public class DeletedMessageVaultDeletionListener implements EventListener.ReactiveGroupEventListener, Startable {
     public static class DeletedMessageVaultListenerGroup extends Group {
 
     }

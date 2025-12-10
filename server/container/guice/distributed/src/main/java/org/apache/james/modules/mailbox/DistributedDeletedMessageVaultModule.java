@@ -19,9 +19,12 @@
 
 package org.apache.james.modules.mailbox;
 
+import static org.apache.james.modules.event.ContentDeletionEventBusModule.CONTENT_DELETION;
+
+import jakarta.inject.Named;
+
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
-import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
-import org.apache.james.mailbox.cassandra.DeleteMessageListener;
+import org.apache.james.events.EventBus;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -64,20 +67,12 @@ public class DistributedDeletedMessageVaultModule extends AbstractModule {
         bind(BlobStoreDeletedMessageVault.class).in(Scopes.SINGLETON);
         bind(DeletedMessageVault.class)
             .to(BlobStoreDeletedMessageVault.class);
-
-        Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class)
-            .addBinding()
-            .to(DistributedDeletedMessageVaultDeletionCallback.class);
-        bind(DistributedDeletedMessageVaultDeletionCallback.class).in(Scopes.SINGLETON);
-
-        Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
-        reconnectionHandlerMultibinder.addBinding().to(DeletedMessageVaultWorkQueueReconnectionHandler.class);
     }
 
     @ProvidesIntoSet
-    InitializationOperation init(DistributedDeletedMessageVaultDeletionCallback callback) {
+    InitializationOperation registerDeletedMessageVaultDeletionListener(@Named(CONTENT_DELETION) EventBus instance, DeletedMessageVaultDeletionListener messageVaultDeletionListener) {
         return InitilizationOperationBuilder
-            .forClass(DistributedDeletedMessageVaultDeletionCallback.class)
-            .init(callback::init);
+            .forClass(DeletedMessageVaultDeletionListener.class)
+            .init(() -> instance.register(messageVaultDeletionListener));
     }
 }
