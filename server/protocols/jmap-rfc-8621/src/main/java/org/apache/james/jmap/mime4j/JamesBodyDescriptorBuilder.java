@@ -25,7 +25,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.james.jmap.mail.Email;
-import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.FieldParser;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
@@ -94,7 +93,7 @@ public class JamesBodyDescriptorBuilder implements BodyDescriptorBuilder {
         fields.clear();
     }
 
-    public Field addField(final RawField rawfield) throws MimeException {
+    public Field addField(final RawField rawfield) {
         ParsedField field = fieldParser.parse(rawfield, monitor);
         String name = field.getNameLowerCase();
         if (field.bodyDescriptionField() && !fields.containsKey(name)) {
