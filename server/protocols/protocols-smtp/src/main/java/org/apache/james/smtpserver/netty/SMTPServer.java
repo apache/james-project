@@ -44,7 +44,7 @@ import org.apache.james.core.Disconnector;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.lib.handler.HandlersPackage;

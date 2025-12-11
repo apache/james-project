@@ -20,7 +20,7 @@ package org.apache.james.protocols.lmtp;
 
 import java.util.Optional;
 
-import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.jwt.OidcSASLConfiguration;
 
 public class LMTPConfigurationImpl extends LMTPConfiguration {
 

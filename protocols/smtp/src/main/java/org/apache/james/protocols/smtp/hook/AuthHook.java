@@ -19,7 +19,7 @@
 package org.apache.james.protocols.smtp.hook;
 
 import org.apache.james.core.Username;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 
 /**

@@ -25,7 +25,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProtocolConfiguration;
 
 import com.google.common.collect.ImmutableSet;
