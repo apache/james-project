@@ -29,10 +29,13 @@ import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.event.json.MailboxEventSerializer;
+import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.events.GroupRegistrationHandler;
 import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
@@ -44,6 +47,7 @@ import org.apache.james.jmap.change.Factory;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
+import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -52,9 +56,31 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Names;
 
+import reactor.core.publisher.Mono;
 import reactor.rabbitmq.Sender;
 
 public class ContentDeletionEventBusModule extends AbstractModule {
+    public static class NoopListener implements EventListener.ReactiveGroupEventListener {
+        public static class NoopListenerGroup extends Group {
+
+        }
+
+        @Override
+        public Group getDefaultGroup() {
+            return new NoopListenerGroup();
+        }
+
+        @Override
+        public Publisher<Void> reactiveEvent(Event event) {
+            return Mono.empty();
+        }
+
+        @Override
+        public boolean isHandling(Event event) {
+            return false;
+        }
+    }
+
     public static final String CONTENT_DELETION = "contentDeletion";
 
     @Override
@@ -66,7 +92,10 @@ public class ContentDeletionEventBusModule extends AbstractModule {
     InitializationOperation workQueue(@Named(CONTENT_DELETION) RabbitMQEventBus instance) {
         return InitilizationOperationBuilder
             .forClass(RabbitMQEventBus.class)
-            .init(instance::start);
+            .init(() -> {
+                instance.start();
+                instance.register(new NoopListener());
+            });
     }
 
     @ProvidesIntoSet
