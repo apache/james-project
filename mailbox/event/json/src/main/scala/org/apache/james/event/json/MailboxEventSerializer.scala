@@ -242,13 +242,13 @@ private object ScalaConverter {
   private def toScala(event: JavaMessageContentDeletionEvent): DTO.MessageContentDeletionEvent = DTO.MessageContentDeletionEvent(
       eventId = event.getEventId,
       username = event.getUsername,
-      mailboxId = event.getMailboxId,
-      messageId = event.getMessageId,
-      size = event.getSize,
-      internalDate = event.getInternalDate,
+      mailboxId = event.mailboxId(),
+      messageId = event.messageId(),
+      size = event.size(),
+      internalDate = event.internalDate(),
       hasAttachments = event.hasAttachments,
-      headerBlobId = event.getHeaderBlobId,
-      bodyBlobId = event.getBodyBlobId)
+      headerBlobId = event.headerBlobId(),
+      bodyBlobId = event.bodyBlobId())
 
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
     case e: JavaAdded => toScala(e)

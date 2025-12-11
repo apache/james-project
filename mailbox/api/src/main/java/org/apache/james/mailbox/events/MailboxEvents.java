@@ -536,36 +536,8 @@ public interface MailboxEvents {
         }
     }
 
-    class MessageContentDeletionEvent implements Event {
-        private final EventId eventId;
-        private final Username username;
-        private final MailboxId mailboxId;
-        private final MessageId messageId;
-        private final long size;
-        private final Instant internalDate;
-        private final boolean hasAttachments;
-        private final String headerBlobId;
-        private final String bodyBlobId;
-
-        public MessageContentDeletionEvent(EventId eventId,
-                                           Username username,
-                                           MailboxId mailboxId,
-                                           MessageId messageId,
-                                           long size,
-                                           Instant internalDate,
-                                           boolean hasAttachments,
-                                           String headerBlobId,
-                                           String bodyBlobId) {
-            this.eventId = eventId;
-            this.username = username;
-            this.mailboxId = mailboxId;
-            this.messageId = messageId;
-            this.size = size;
-            this.internalDate = internalDate;
-            this.hasAttachments = hasAttachments;
-            this.headerBlobId = headerBlobId;
-            this.bodyBlobId = bodyBlobId;
-        }
+    record MessageContentDeletionEvent(EventId eventId, Username username, MailboxId mailboxId, MessageId messageId, long size,
+                                       Instant internalDate, boolean hasAttachments, String headerBlobId, String bodyBlobId) implements Event {
 
         @Override
         public EventId getEventId() {
@@ -579,55 +551,6 @@ public interface MailboxEvents {
         @Override
         public boolean isNoop() {
             return false;
-        }
-
-        public MailboxId getMailboxId() {
-            return mailboxId;
-        }
-
-        public MessageId getMessageId() {
-            return messageId;
-        }
-
-        public long getSize() {
-            return size;
-        }
-
-        public Instant getInternalDate() {
-            return internalDate;
-        }
-
-        public boolean hasAttachments() {
-            return hasAttachments;
-        }
-
-        public String getHeaderBlobId() {
-            return headerBlobId;
-        }
-
-        public String getBodyBlobId() {
-            return bodyBlobId;
-        }
-
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof MessageContentDeletionEvent that) {
-                return Objects.equals(this.eventId, that.eventId)
-                    && Objects.equals(this.username, that.username)
-                    && Objects.equals(this.mailboxId, that.mailboxId)
-                    && Objects.equals(this.messageId, that.messageId)
-                    && Objects.equals(this.size, that.size)
-                    && Objects.equals(this.internalDate, that.internalDate)
-                    && Objects.equals(this.hasAttachments, that.hasAttachments)
-                    && Objects.equals(this.headerBlobId, that.headerBlobId)
-                    && Objects.equals(this.bodyBlobId, that.bodyBlobId);
-            }
-            return false;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(eventId, username, mailboxId, messageId, size, internalDate, hasAttachments, headerBlobId, bodyBlobId);
         }
     }
 

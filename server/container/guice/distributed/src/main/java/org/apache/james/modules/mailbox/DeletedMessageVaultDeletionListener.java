@@ -72,13 +72,13 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
     }
 
     private DeleteMessageListener.DeletedMessageCopyCommand asDeletedMessageCopyCommand(MessageContentDeletionEvent messageContentDeletionEvent) {
-        return new DeleteMessageListener.DeletedMessageCopyCommand(messageContentDeletionEvent.getMessageId(),
-            messageContentDeletionEvent.getMailboxId(),
+        return new DeleteMessageListener.DeletedMessageCopyCommand(messageContentDeletionEvent.messageId(),
+            messageContentDeletionEvent.mailboxId(),
             messageContentDeletionEvent.getUsername(),
-            Date.from(messageContentDeletionEvent.getInternalDate()),
-            messageContentDeletionEvent.getSize(),
+            Date.from(messageContentDeletionEvent.internalDate()),
+            messageContentDeletionEvent.size(),
             messageContentDeletionEvent.hasAttachments(),
-            blobIdFactory.parse(messageContentDeletionEvent.getHeaderBlobId()),
-            blobIdFactory.parse(messageContentDeletionEvent.getBodyBlobId()));
+            blobIdFactory.parse(messageContentDeletionEvent.headerBlobId()),
+            blobIdFactory.parse(messageContentDeletionEvent.bodyBlobId()));
     }
 }
