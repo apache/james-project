@@ -58,13 +58,6 @@
                     </dd>
                 </dl>
                 <dl>
-                    <dt><strong>workQueueEnabled</strong></dt>
-                    <dd>
-                        Enable work queue to be used with deleted message vault.
-                        Default to false.
-                    </dd>
-                </dl>
-                <dl>
                     <dt><strong>retentionPeriod</strong></dt>
                     <dd>
                         Deleted messages stored in the Deleted Messages Vault are expired after this period (default: 1 year).
