@@ -544,6 +544,7 @@ public interface MailboxEvents {
             return eventId;
         }
 
+        @Override
         public Username getUsername() {
             return username;
         }
