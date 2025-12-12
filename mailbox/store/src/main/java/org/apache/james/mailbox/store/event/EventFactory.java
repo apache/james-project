@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.Function;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
@@ -215,12 +216,12 @@ public class EventFactory {
 
     @FunctionalInterface
     public interface RequireHeaderBlobId<T> {
-        T headerBlobId(String headerBlobId);
+        T headerBlobId(BlobId headerBlobId);
     }
 
     @FunctionalInterface
     public interface RequireBodyBlobId<T> {
-        T bodyBlobId(String bodyBlobId);
+        T bodyBlobId(BlobId bodyBlobId);
     }
 
     @FunctionalInterface
@@ -554,8 +555,8 @@ public class EventFactory {
         private final long size;
         private final Instant internalDate;
         private final boolean hasAttachments;
-        private final String headerBlobId;
-        private final String bodyBlobId;
+        private final BlobId headerBlobId;
+        private final BlobId bodyBlobId;
 
         MessageContentDeletionFinalStage(Event.EventId eventId,
                                          Username username,
@@ -564,8 +565,8 @@ public class EventFactory {
                                          long size,
                                          Instant internalDate,
                                          boolean hasAttachments,
-                                         String headerBlobId,
-                                         String bodyBlobId) {
+                                         BlobId headerBlobId,
+                                         BlobId bodyBlobId) {
             this.eventId = eventId;
             this.username = username;
             this.mailboxId = mailboxId;

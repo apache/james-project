@@ -216,8 +216,8 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
             .size(message.getSize())
             .instant(message.getInternalDate().toInstant())
             .hasAttachments(!message.getAttachments().isEmpty())
-            .headerBlobId(message.getHeaderId().asString())
-            .bodyBlobId(message.getBodyId().asString())
+            .headerBlobId(message.getHeaderId())
+            .bodyBlobId(message.getBodyId())
             .build(),
             ImmutableSet.of()));
     }

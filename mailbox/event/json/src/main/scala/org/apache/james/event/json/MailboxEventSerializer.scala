@@ -25,6 +25,7 @@ import java.util.{TreeMap => JavaTreeMap}
 
 import jakarta.inject.Inject
 import julienrf.json.derived
+import org.apache.james.blob.api.BlobId
 import org.apache.james.core.Username
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaSizeLimit, QuotaSizeUsage}
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
@@ -141,8 +142,8 @@ private object DTO {
                                          size: Long,
                                          internalDate: Instant,
                                          hasAttachments: Boolean,
-                                         headerBlobId: String,
-                                         bodyBlobId: String) extends Event {
+                                         headerBlobId: BlobId,
+                                         bodyBlobId: BlobId) extends Event {
     override def toJava: JavaEvent = new JavaMessageContentDeletionEvent(eventId, username, mailboxId, messageId, size, internalDate, hasAttachments, headerBlobId, bodyBlobId)
   }
 }
@@ -267,7 +268,8 @@ private object ScalaConverter {
   }
 }
 
-class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) {
+class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, blobIdFactory: BlobId.Factory,
+                    quotaRootDeserializer: QuotaRootDeserializer) {
   implicit val systemFlagsWrites: Writes[SystemFlag] = Writes.enumNameWrites
   implicit val userWriters: Writes[Username] = (user: Username) => JsString(user.asString)
   implicit val quotaRootWrites: Writes[QuotaRoot] = quotaRoot => JsString(quotaRoot.getValue)
@@ -280,6 +282,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val quotaSizeWrites: Writes[Quota[QuotaSizeLimit, QuotaSizeUsage]] = Json.writes[Quota[QuotaSizeLimit, QuotaSizeUsage]]
   implicit val mailboxPathWrites: Writes[MailboxPath] = Json.writes[MailboxPath]
   implicit val mailboxIdWrites: Writes[MailboxId] = value => JsString(value.serialize())
+  implicit val blobIdWrites: Writes[BlobId] = value => JsString(value.asString())
   implicit val sessionIdWrites: Writes[SessionId] = value => JsNumber(value.getValue)
   implicit val aclEntryKeyWrites: Writes[JavaMailboxACL.EntryKey] = value => JsString(value.serialize())
   implicit val aclRightsWrites: Writes[JavaMailboxACL.Rfc4314Rights] = value => JsString(value.serialize())
@@ -310,6 +313,10 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   }
   implicit val mailboxIdReads: Reads[MailboxId] = {
     case JsString(serializedMailboxId) => JsSuccess(mailboxIdFactory.fromString(serializedMailboxId))
+    case _ => JsError()
+  }
+  implicit val blobIdReads: Reads[BlobId] = {
+    case JsString(serializedBlobId) => JsSuccess(blobIdFactory.parse(serializedBlobId))
     case _ => JsError()
   }
   implicit val quotaCountLimitReads: Reads[QuotaCountLimit] = {
@@ -445,8 +452,9 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     .map(event => event.map(_.toJava))
 }
 
-class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) extends EventSerializer {
-  private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory, quotaRootDeserializer)
+class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory,
+                                       blobIdFactory: BlobId.Factory, quotaRootDeserializer: QuotaRootDeserializer) extends EventSerializer {
+  private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory, blobIdFactory, quotaRootDeserializer)
 
   override def toJson(event: JavaEvent): String = jsonSerialize.toJson(event)
 
