@@ -31,11 +31,13 @@ import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.event.json.MailboxEventSerializer;
+import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.events.GroupRegistrationHandler;
 import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
@@ -44,25 +46,52 @@ import org.apache.james.events.RabbitMQEventBus;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
 import org.apache.james.jmap.change.Factory;
+import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
+import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Names;
 
+import reactor.core.publisher.Mono;
 import reactor.rabbitmq.Sender;
 
 public class ContentDeletionEventBusModule extends AbstractModule {
+    public static class NoopListener implements EventListener.ReactiveGroupEventListener {
+        public static class NoopListenerGroup extends Group {
+
+        }
+
+        @Override
+        public Group getDefaultGroup() {
+            return new NoopListenerGroup();
+        }
+
+        @Override
+        public Publisher<Void> reactiveEvent(Event event) {
+            return Mono.empty();
+        }
+
+        @Override
+        public boolean isHandling(Event event) {
+            return false;
+        }
+    }
+
     public static final String CONTENT_DELETION = "contentDeletion";
 
     @Override
     protected void configure() {
         bind(EventBusId.class).annotatedWith(Names.named(CONTENT_DELETION)).toInstance(EventBusId.random());
+
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class, Names.named(DeleteMessageListener.CONTENT_DELETION));
     }
 
     @ProvidesIntoSet
@@ -73,6 +102,10 @@ public class ContentDeletionEventBusModule extends AbstractModule {
             .init(() -> {
                 instance.start();
                 contentDeletionListeners.forEach(instance::register);
+
+                // workaround for Postgres app to make the content deletion queue created and pass tests
+                // TODO remove after refactoring JAMES-4154 for Postgres app
+                instance.register(new NoopListener());
             });
     }
 
