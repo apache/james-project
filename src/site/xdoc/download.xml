@@ -86,7 +86,7 @@
         <p><b>JPA James server</b> (legacy):</p>
 
         <p>This artifact packages the JPA James server, a simple distribution with zero external dependencies
-          (defaults to an embedded Derby database) that can be configured with an external SQL database.</p>
+          (defaults to an embedded H2 database) that can be configured with an external SQL database.</p>
 
         <li>Binary (ZIP Format) for the JPA James server:
           <a href="https://www.apache.org/dyn/closer.lua/james/server/3.9.0/james-server-jpa-guice.zip">james-server-jpa-guice.zip</a>
@@ -117,7 +117,7 @@
         <p><b>JPA James server</b>:</p>
 
         <p>This artifact packages the JPA James server, a simple distribution with zero external dependencies
-          (defaults to an embedded Derby database) that can be configured with an external SQL database.</p>
+          (defaults to an embedded H2 database) that can be configured with an external SQL database.</p>
 
         <li>Binary (ZIP Format) for the JPA James server:
           <a href="https://www.apache.org/dyn/closer.lua/james/server/3.7.6/james-server-jpa-guice.zip">james-server-jpa-guice.zip</a>

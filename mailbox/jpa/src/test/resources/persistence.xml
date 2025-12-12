@@ -42,6 +42,7 @@
         <class>org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotationId</class>
         <class>org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage$MailboxIdUidKey</class>
         <properties>
+            <property name="openjpa.jdbc.DBDictionary" value="h2"/>
             <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
             <property name="openjpa.jdbc.MappingDefaults" value="ForeignKeyDeleteAction=cascade, JoinForeignKeyDeleteAction=cascade"/>
             <property name="openjpa.jdbc.SchemaFactory" value="native(ForeignKeys=true)"/>

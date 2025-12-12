@@ -80,7 +80,7 @@
     <a href="images/uml/org.apache.james-package-detail_large.png" id="arch-img-id"><img src="images/uml/org.apache.james-package-detail_small.png"/></a>
     <p><a href="images/uml/org.apache.james-package-detail_large.png" id="arch-txt-id">Click to enlarge image</a></p>
     
-    <p>James uses many other components: Spring, ActiveMQ, OpenJPA, Netty, Jackrabbit, Derby...</p>
+    <p>James uses many other components: Spring, ActiveMQ, OpenJPA, Netty, Jackrabbit, H2...</p>
     
     <p>The modules can be classified into 3 categories:</p>
     <ul>

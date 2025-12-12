@@ -1,6 +1,6 @@
 = Guice-JPA SMTP Server How-to
 
-This server target single node James deployments. By default, the derby database is used.
+This server target single node James deployments. By default, the H2 database is used.
 
 This server acts as a Mail Transfer Agent and do not embed the mailbox component.
 
