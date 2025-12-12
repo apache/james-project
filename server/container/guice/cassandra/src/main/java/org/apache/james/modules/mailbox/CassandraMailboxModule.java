@@ -251,7 +251,6 @@ public class CassandraMailboxModule extends AbstractModule {
             .addBinding().to(MailboxSubscriptionListener.class);
         Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
             .addBinding().to(DeleteMessageListener.class);
-        Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class);
 
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
 

@@ -48,6 +48,7 @@ import org.apache.james.modules.data.PostgresEventStoreModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
 import org.apache.james.modules.data.PostgresVacationModule;
 import org.apache.james.modules.data.SievePostgresRepositoryModules;
+import org.apache.james.modules.event.ContentDeletionEventBusModule;
 import org.apache.james.modules.event.JMAPEventBusModule;
 import org.apache.james.modules.event.MailboxEventBusModule;
 import org.apache.james.modules.events.PostgresDeadLetterModule;
@@ -232,6 +233,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
             case RABBITMQ:
                 return List.of(
                     Modules.override(new DefaultEventModule()).with(new MailboxEventBusModule()),
+                    new ContentDeletionEventBusModule(),
                     new RabbitMQModule(),
                     new RabbitMQMailQueueModule(),
                     new FakeMailQueueViewModule(),

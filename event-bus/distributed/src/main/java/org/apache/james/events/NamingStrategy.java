@@ -24,8 +24,10 @@ import reactor.rabbitmq.QueueSpecification;
 public class NamingStrategy {
     public static final EventBusName JMAP_EVENT_BUS_NAME = new EventBusName("jmapEvent");
     public static final EventBusName MAILBOX_EVENT_BUS_NAME = new EventBusName("mailboxEvent");
+    public static final EventBusName CONTENT_DELETION_EVENT_BUS_NAME = new EventBusName("contentDeletionEvent");
     public static final NamingStrategy JMAP_NAMING_STRATEGY = new NamingStrategy(JMAP_EVENT_BUS_NAME);
     public static final NamingStrategy MAILBOX_EVENT_NAMING_STRATEGY = new NamingStrategy(MAILBOX_EVENT_BUS_NAME);
+    public static final NamingStrategy CONTENT_DELETION_NAMING_STRATEGY = new NamingStrategy(CONTENT_DELETION_EVENT_BUS_NAME);
 
     private final EventBusName eventBusName;
 

@@ -21,21 +21,46 @@ package org.apache.james.jmap.cassandra.projections;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
-import org.apache.james.mailbox.cassandra.DeleteMessageListener;
+import org.apache.james.mailbox.events.MailboxEvents;
+import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 
-public class CassandraMessageFastViewProjectionDeletionCallback implements DeleteMessageListener.DeletionCallback {
+public class CassandraMessageFastViewProjectionDeletionListener implements EventListener.ReactiveGroupEventListener {
+    public static class CassandraMessageFastViewProjectionDeletionListenerGroup extends Group {
+
+    }
+
+    private static final Group GROUP = new CassandraMessageFastViewProjectionDeletionListenerGroup();
+
     private final MessageFastViewProjection messageFastViewProjection;
 
     @Inject
-    public CassandraMessageFastViewProjectionDeletionCallback(MessageFastViewProjection messageFastViewProjection) {
+    public CassandraMessageFastViewProjectionDeletionListener(MessageFastViewProjection messageFastViewProjection) {
         this.messageFastViewProjection = messageFastViewProjection;
     }
 
     @Override
-    public Mono<Void> forMessage(DeleteMessageListener.DeletedMessageCopyCommand copyCommand) {
-        return Mono.from(messageFastViewProjection.delete(copyCommand.getMessageId()));
+    public Group getDefaultGroup() {
+        return GROUP;
     }
+
+    @Override
+    public boolean isHandling(Event event) {
+        return event instanceof MailboxEvents.MessageContentDeletionEvent;
+    }
+
+    @Override
+    public Publisher<Void> reactiveEvent(Event event) {
+        if (event instanceof MailboxEvents.MessageContentDeletionEvent contentDeletionEvent) {
+            return Mono.from(messageFastViewProjection.delete(contentDeletionEvent.messageId()));
+        }
+
+        return Mono.empty();
+    }
+
 }

@@ -25,6 +25,7 @@ import java.util.{TreeMap => JavaTreeMap}
 
 import jakarta.inject.Inject
 import julienrf.json.derived
+import org.apache.james.blob.api.BlobId
 import org.apache.james.core.Username
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaSizeLimit, QuotaSizeUsage}
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
@@ -33,7 +34,7 @@ import org.apache.james.events.Event.EventId
 import org.apache.james.events.{EventSerializer, Event => JavaEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
 import org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED
-import org.apache.james.mailbox.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, MailboxSubscribedEvent => JavaMailboxSubscribedEvent, MailboxUnsubscribedEvent => JavaMailboxUnsubscribedEvent, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.mailbox.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, MailboxSubscribedEvent => JavaMailboxSubscribedEvent, MailboxUnsubscribedEvent => JavaMailboxUnsubscribedEvent, MessageContentDeletionEvent => JavaMessageContentDeletionEvent, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.events.{MessageMoveEvent => JavaMessageMoveEvent}
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, ThreadId, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import org.apache.james.mailbox.quota.QuotaRootDeserializer
@@ -133,6 +134,18 @@ private object DTO {
   case class MailboxUnSubscribedEvent(eventId: EventId, mailboxPath: MailboxPath, mailboxId: MailboxId, user: Username, sessionId: SessionId) extends Event {
     override def toJava: JavaEvent = new JavaMailboxUnsubscribedEvent(sessionId, user, mailboxPath.toJava, mailboxId, eventId)
   }
+
+  case class MessageContentDeletionEvent(eventId: EventId,
+                                         username: Username,
+                                         mailboxId: MailboxId,
+                                         messageId: MessageId,
+                                         size: Long,
+                                         internalDate: Instant,
+                                         hasAttachments: Boolean,
+                                         headerBlobId: BlobId,
+                                         bodyBlobId: BlobId) extends Event {
+    override def toJava: JavaEvent = new JavaMessageContentDeletionEvent(eventId, username, mailboxId, messageId, size, internalDate, hasAttachments, headerBlobId, bodyBlobId)
+  }
 }
 
 private object ScalaConverter {
@@ -227,6 +240,17 @@ private object ScalaConverter {
     user = event.getUsername,
     sessionId = event.getSessionId)
 
+  private def toScala(event: JavaMessageContentDeletionEvent): DTO.MessageContentDeletionEvent = DTO.MessageContentDeletionEvent(
+      eventId = event.getEventId,
+      username = event.getUsername,
+      mailboxId = event.mailboxId(),
+      messageId = event.messageId(),
+      size = event.size(),
+      internalDate = event.internalDate(),
+      hasAttachments = event.hasAttachments,
+      headerBlobId = event.headerBlobId(),
+      bodyBlobId = event.bodyBlobId())
+
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
     case e: JavaAdded => toScala(e)
     case e: JavaExpunged => toScala(e)
@@ -239,11 +263,13 @@ private object ScalaConverter {
     case e: JavaQuotaUsageUpdatedEvent => toScala(e)
     case e: JavaMailboxSubscribedEvent => toScala(e)
     case e: JavaMailboxUnsubscribedEvent => toScala(e)
+    case e: JavaMessageContentDeletionEvent => toScala(e)
     case _ => throw new RuntimeException("no Scala conversion known")
   }
 }
 
-class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) {
+class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, blobIdFactory: BlobId.Factory,
+                    quotaRootDeserializer: QuotaRootDeserializer) {
   implicit val systemFlagsWrites: Writes[SystemFlag] = Writes.enumNameWrites
   implicit val userWriters: Writes[Username] = (user: Username) => JsString(user.asString)
   implicit val quotaRootWrites: Writes[QuotaRoot] = quotaRoot => JsString(quotaRoot.getValue)
@@ -256,6 +282,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val quotaSizeWrites: Writes[Quota[QuotaSizeLimit, QuotaSizeUsage]] = Json.writes[Quota[QuotaSizeLimit, QuotaSizeUsage]]
   implicit val mailboxPathWrites: Writes[MailboxPath] = Json.writes[MailboxPath]
   implicit val mailboxIdWrites: Writes[MailboxId] = value => JsString(value.serialize())
+  implicit val blobIdWrites: Writes[BlobId] = value => JsString(value.asString())
   implicit val sessionIdWrites: Writes[SessionId] = value => JsNumber(value.getValue)
   implicit val aclEntryKeyWrites: Writes[JavaMailboxACL.EntryKey] = value => JsString(value.serialize())
   implicit val aclRightsWrites: Writes[JavaMailboxACL.Rfc4314Rights] = value => JsString(value.serialize())
@@ -286,6 +313,10 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   }
   implicit val mailboxIdReads: Reads[MailboxId] = {
     case JsString(serializedMailboxId) => JsSuccess(mailboxIdFactory.fromString(serializedMailboxId))
+    case _ => JsError()
+  }
+  implicit val blobIdReads: Reads[BlobId] = {
+    case JsString(serializedBlobId) => JsSuccess(blobIdFactory.parse(serializedBlobId))
     case _ => JsError()
   }
   implicit val quotaCountLimitReads: Reads[QuotaCountLimit] = {
@@ -421,8 +452,9 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     .map(event => event.map(_.toJava))
 }
 
-class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) extends EventSerializer {
-  private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory, quotaRootDeserializer)
+class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory,
+                                       blobIdFactory: BlobId.Factory, quotaRootDeserializer: QuotaRootDeserializer) extends EventSerializer {
+  private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory, blobIdFactory, quotaRootDeserializer)
 
   override def toJson(event: JavaEvent): String = jsonSerialize.toJson(event)
 

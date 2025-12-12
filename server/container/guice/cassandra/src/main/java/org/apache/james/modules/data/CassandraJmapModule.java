@@ -19,11 +19,14 @@
 
 package org.apache.james.modules.data;
 
+import static org.apache.james.mailbox.cassandra.DeleteMessageListener.CONTENT_DELETION;
+
 import java.io.FileNotFoundException;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.events.EventListener;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
@@ -54,14 +57,13 @@ import org.apache.james.jmap.cassandra.projections.CassandraEmailQueryView;
 import org.apache.james.jmap.cassandra.projections.CassandraEmailQueryViewDataDefinition;
 import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjection;
 import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjectionDataDefinition;
-import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjectionDeletionCallback;
+import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjectionDeletionListener;
 import org.apache.james.jmap.cassandra.pushsubscription.CassandraPushSubscriptionDataDefinition;
 import org.apache.james.jmap.cassandra.pushsubscription.CassandraPushSubscriptionRepository;
 import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
 import org.apache.james.jmap.cassandra.upload.CassandraUploadUsageRepository;
 import org.apache.james.jmap.cassandra.upload.UploadDAO;
 import org.apache.james.jmap.cassandra.upload.UploadDataDefinition;
-import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.utils.PropertiesProvider;
@@ -72,6 +74,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
 public class CassandraJmapModule extends AbstractModule {
     @Override
@@ -116,9 +119,9 @@ public class CassandraJmapModule extends AbstractModule {
         eventDTOModuleBinder.addBinding().toInstance(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED);
         eventDTOModuleBinder.addBinding().toInstance(FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT);
 
-        Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class)
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class, Names.named(CONTENT_DELETION))
             .addBinding()
-            .to(CassandraMessageFastViewProjectionDeletionCallback.class);
+            .to(CassandraMessageFastViewProjectionDeletionListener.class);
 
         Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
             .addBinding()

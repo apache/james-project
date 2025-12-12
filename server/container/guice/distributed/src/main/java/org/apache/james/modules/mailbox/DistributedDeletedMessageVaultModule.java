@@ -20,11 +20,9 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
-import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
+import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.blob.BucketNameGenerator;
@@ -39,7 +37,7 @@ import org.apache.james.vault.metadata.UserPerBucketDAO;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.multibindings.ProvidesIntoSet;
+import com.google.inject.name.Names;
 
 public class DistributedDeletedMessageVaultModule extends AbstractModule {
     @Override
@@ -65,19 +63,8 @@ public class DistributedDeletedMessageVaultModule extends AbstractModule {
         bind(DeletedMessageVault.class)
             .to(BlobStoreDeletedMessageVault.class);
 
-        Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class)
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class, Names.named(DeleteMessageListener.CONTENT_DELETION))
             .addBinding()
-            .to(DistributedDeletedMessageVaultDeletionCallback.class);
-        bind(DistributedDeletedMessageVaultDeletionCallback.class).in(Scopes.SINGLETON);
-
-        Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
-        reconnectionHandlerMultibinder.addBinding().to(DeletedMessageVaultWorkQueueReconnectionHandler.class);
-    }
-
-    @ProvidesIntoSet
-    InitializationOperation init(DistributedDeletedMessageVaultDeletionCallback callback) {
-        return InitilizationOperationBuilder
-            .forClass(DistributedDeletedMessageVaultDeletionCallback.class)
-            .init(callback::init);
+            .to(DeletedMessageVaultDeletionListener.class);
     }
 }

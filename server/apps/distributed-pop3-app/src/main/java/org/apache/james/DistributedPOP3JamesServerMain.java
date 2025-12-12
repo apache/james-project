@@ -56,11 +56,11 @@ import org.apache.james.modules.data.CassandraSieveQuotaModule;
 import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.data.CassandraVacationModule;
+import org.apache.james.modules.event.ContentDeletionEventBusModule;
 import org.apache.james.modules.event.JMAPEventBusModule;
 import org.apache.james.modules.event.MailboxEventBusModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
 import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
-import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraMailboxQuotaLegacyModule;
 import org.apache.james.modules.mailbox.CassandraMailboxQuotaModule;
@@ -176,6 +176,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
             new RabbitMQMailQueueModule(),
             new RabbitMailQueueRoutesModule(),
             new MailboxEventBusModule(),
+            new ContentDeletionEventBusModule(),
             new DistributedTaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
@@ -219,15 +220,10 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
     }
 
     private static Module chooseDeletedMessageVault(VaultConfiguration vaultConfiguration) {
-        if (vaultConfiguration.isEnabled() && vaultConfiguration.isWorkQueueEnabled()) {
-            return Modules.combine(
-                new DistributedDeletedMessageVaultModule(),
-                new DeletedMessageVaultRoutesModule());
-        }
         if (vaultConfiguration.isEnabled()) {
             return Modules.combine(
                 new DistributedDeletedMessageVaultModule(),
-                new CassandraDeletedMessageVaultModule());
+                new DeletedMessageVaultRoutesModule());
         }
         return binder -> {
 
