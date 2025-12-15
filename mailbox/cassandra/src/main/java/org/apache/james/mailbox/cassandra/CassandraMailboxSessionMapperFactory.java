@@ -25,6 +25,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraAnnotationMapper;
@@ -63,7 +64,7 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Cassandra implementation of {@link MailboxSessionMapperFactory}
@@ -229,9 +230,11 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
 
     }
 
-    public DeleteMessageListener deleteMessageListener() {
+    @VisibleForTesting
+    public DeleteMessageListener deleteMessageListener(EventBus contentDeletionEventBus) {
         return new DeleteMessageListener(threadDAO, threadLookupDAO, imapUidDAO, messageIdDAO, messageDAOV3, attachmentDAOV2,
             aclMapper, userMailboxRightsDAO, applicableFlagDAO, firstUnseenDAO, deletedMessageDAO,
-            mailboxCounterDAO, mailboxRecentsDAO, blobStore, cassandraConfiguration, ImmutableSet.of());
+            mailboxCounterDAO, mailboxRecentsDAO, blobStore, cassandraConfiguration,
+            contentDeletionEventBus);
     }
 }

@@ -24,9 +24,6 @@ to get some examples and hints.
 | enabled
 | Allows to enable or disable usage of the Deleted Message Vault. Default to false.
 
-| workQueueEnabled
-| Enable work queue to be used with deleted message vault. Default to false.
-
 | retentionPeriod
 | Deleted messages stored in the Deleted Messages Vault are expired after this period (default: 1 year). It can be expressed in *y* years, *d* days, *h* hours, ...
 

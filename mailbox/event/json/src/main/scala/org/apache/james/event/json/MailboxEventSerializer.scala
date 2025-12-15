@@ -33,7 +33,7 @@ import org.apache.james.events.Event.EventId
 import org.apache.james.events.{EventSerializer, Event => JavaEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
 import org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED
-import org.apache.james.mailbox.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, MailboxSubscribedEvent => JavaMailboxSubscribedEvent, MailboxUnsubscribedEvent => JavaMailboxUnsubscribedEvent, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.mailbox.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, MailboxSubscribedEvent => JavaMailboxSubscribedEvent, MailboxUnsubscribedEvent => JavaMailboxUnsubscribedEvent, MessageContentDeletionEvent => JavaMessageContentDeletionEvent, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.events.{MessageMoveEvent => JavaMessageMoveEvent}
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, ThreadId, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import org.apache.james.mailbox.quota.QuotaRootDeserializer
@@ -133,6 +133,18 @@ private object DTO {
   case class MailboxUnSubscribedEvent(eventId: EventId, mailboxPath: MailboxPath, mailboxId: MailboxId, user: Username, sessionId: SessionId) extends Event {
     override def toJava: JavaEvent = new JavaMailboxUnsubscribedEvent(sessionId, user, mailboxPath.toJava, mailboxId, eventId)
   }
+
+  case class MessageContentDeletionEvent(eventId: EventId,
+                                         username: Username,
+                                         mailboxId: MailboxId,
+                                         messageId: MessageId,
+                                         size: Long,
+                                         internalDate: Instant,
+                                         hasAttachments: Boolean,
+                                         headerBlobId: String,
+                                         bodyBlobId: String) extends Event {
+    override def toJava: JavaEvent = new JavaMessageContentDeletionEvent(eventId, username, mailboxId, messageId, size, internalDate, hasAttachments, headerBlobId, bodyBlobId)
+  }
 }
 
 private object ScalaConverter {
@@ -227,6 +239,17 @@ private object ScalaConverter {
     user = event.getUsername,
     sessionId = event.getSessionId)
 
+  private def toScala(event: JavaMessageContentDeletionEvent): DTO.MessageContentDeletionEvent = DTO.MessageContentDeletionEvent(
+      eventId = event.getEventId,
+      username = event.getUsername,
+      mailboxId = event.mailboxId(),
+      messageId = event.messageId(),
+      size = event.size(),
+      internalDate = event.internalDate(),
+      hasAttachments = event.hasAttachments,
+      headerBlobId = event.headerBlobId(),
+      bodyBlobId = event.bodyBlobId())
+
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
     case e: JavaAdded => toScala(e)
     case e: JavaExpunged => toScala(e)
@@ -239,6 +262,7 @@ private object ScalaConverter {
     case e: JavaQuotaUsageUpdatedEvent => toScala(e)
     case e: JavaMailboxSubscribedEvent => toScala(e)
     case e: JavaMailboxUnsubscribedEvent => toScala(e)
+    case e: JavaMessageContentDeletionEvent => toScala(e)
     case _ => throw new RuntimeException("no Scala conversion known")
   }
 }

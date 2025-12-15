@@ -32,11 +32,9 @@ import com.google.common.base.Preconditions;
 
 public class VaultConfiguration {
     public static final VaultConfiguration DEFAULT =
-        new VaultConfiguration(false, false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
+        new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
     public static final VaultConfiguration ENABLED_DEFAULT =
-        new VaultConfiguration(true, false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
-    public static final VaultConfiguration ENABLED_WORKQUEUE =
-        new VaultConfiguration(true, true, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
+        new VaultConfiguration(true, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
 
     public static VaultConfiguration from(Configuration propertiesConfiguration) {
         Duration retentionPeriod = Optional.ofNullable(propertiesConfiguration.getString("retentionPeriod"))
@@ -45,18 +43,15 @@ public class VaultConfiguration {
         String restoreLocation = Optional.ofNullable(propertiesConfiguration.getString("restoreLocation"))
             .orElse(DEFAULT.getRestoreLocation());
         boolean enabled = propertiesConfiguration.getBoolean("enabled", false);
-        boolean workQueueEnabled = propertiesConfiguration.getBoolean("workQueueEnabled", false);
-        return new VaultConfiguration(enabled, workQueueEnabled, retentionPeriod, restoreLocation);
+        return new VaultConfiguration(enabled, retentionPeriod, restoreLocation);
     }
 
     private final boolean enabled;
-    private final boolean workQueueEnabled;
     private final Duration retentionPeriod;
     private final String restoreLocation;
 
-    VaultConfiguration(boolean enabled, boolean workQueueEnabled, Duration retentionPeriod, String restoreLocation) {
+    VaultConfiguration(boolean enabled, Duration retentionPeriod, String restoreLocation) {
         this.enabled = enabled;
-        this.workQueueEnabled = workQueueEnabled;
         Preconditions.checkNotNull(retentionPeriod);
         Preconditions.checkNotNull(restoreLocation);
 
@@ -66,10 +61,6 @@ public class VaultConfiguration {
 
     public boolean isEnabled() {
         return enabled;
-    }
-
-    public boolean isWorkQueueEnabled() {
-        return workQueueEnabled;
     }
 
     public Duration getRetentionPeriod() {
@@ -87,14 +78,13 @@ public class VaultConfiguration {
 
             return Objects.equals(this.retentionPeriod, that.retentionPeriod)
                 && Objects.equals(this.restoreLocation, that.restoreLocation)
-                && Objects.equals(this.enabled, that.enabled)
-                && Objects.equals(this.workQueueEnabled, that.workQueueEnabled);
+                && Objects.equals(this.enabled, that.enabled);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(retentionPeriod, restoreLocation, enabled, workQueueEnabled);
+        return Objects.hash(retentionPeriod, restoreLocation, enabled);
     }
 }
