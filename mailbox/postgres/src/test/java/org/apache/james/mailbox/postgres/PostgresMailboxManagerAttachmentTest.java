@@ -84,8 +84,9 @@ public class PostgresMailboxManagerAttachmentTest extends AbstractMailboxManager
     void beforeAll() throws Exception {
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
+        PostgresConfiguration postgresConfiguration = PostgresConfiguration.builder().username("a").password("a").build();
         mapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, blobIdFactory,
-            postgresExtension.getPostgresConfiguration(),
+            postgresConfiguration,
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
@@ -110,7 +111,7 @@ public class PostgresMailboxManagerAttachmentTest extends AbstractMailboxManager
         PostgresThreadDAO.Factory threadDAOFactory = new PostgresThreadDAO.Factory(postgresExtension.getExecutorFactory());
 
         eventBus.register(new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory,
-            attachmentDAOFactory, threadDAOFactory, ImmutableSet.of()));
+            attachmentDAOFactory, threadDAOFactory, postgresConfiguration, ImmutableSet.of()));
 
         mailboxManager = new PostgresMailboxManager(mapperFactory, sessionProvider,
             messageParser, new PostgresMessageId.Factory(),

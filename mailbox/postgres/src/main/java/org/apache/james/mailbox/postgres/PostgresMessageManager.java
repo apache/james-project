@@ -70,10 +70,22 @@ public class PostgresMessageManager extends StoreMessageManager {
                                   Clock clock, PreDeletionHooks preDeletionHooks) {
         super(StoreMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
             quotaManager, quotaRootResolver, batchSizes, storeRightManager, preDeletionHooks,
-            new MessageStorer.WithAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), mapperFactory, messageParser, threadIdGuessingAlgorithm, clock));
+            createMessageStorer(mapperFactory, messageIdFactory, messageParser, threadIdGuessingAlgorithm, clock));
         this.storeRightManager = storeRightManager;
         this.mapperFactory = mapperFactory;
         this.mailbox = mailbox;
+    }
+
+    private static MessageStorer createMessageStorer(PostgresMailboxSessionMapperFactory mapperFactory,
+                                                     MessageId.Factory messageIdFactory,
+                                                     MessageParser messageParser,
+                                                     ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                                     Clock clock) {
+        if (mapperFactory.isAttachmentStorageEnabled()) {
+            return new MessageStorer.WithAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), mapperFactory, messageParser, threadIdGuessingAlgorithm, clock);
+        } else {
+            return new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), threadIdGuessingAlgorithm, clock);
+        }
     }
 
 

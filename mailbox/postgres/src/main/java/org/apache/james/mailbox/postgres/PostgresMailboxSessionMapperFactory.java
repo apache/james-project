@@ -64,6 +64,8 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final Clock clock;
     private final RowLevelSecurity rowLevelSecurity;
     private final AttachmentIdAssignationStrategy attachmentIdAssignationStrategy;
+    private final boolean attachmentStorageEnabled;
+    private final PostgresConfiguration postgresConfiguration;
 
     @Inject
     public PostgresMailboxSessionMapperFactory(PostgresExecutor.Factory executorFactory,
@@ -78,6 +80,8 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         this.clock = clock;
         this.rowLevelSecurity = postgresConfiguration.getRowLevelSecurity();
         this.attachmentIdAssignationStrategy = attachmentIdAssignationStrategy;
+        this.attachmentStorageEnabled = postgresConfiguration.isAttachmentStorageEnabled();
+        this.postgresConfiguration = postgresConfiguration;
     }
 
     @Override
@@ -145,6 +149,10 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         return createAttachmentMapper(session);
     }
 
+    public boolean isAttachmentStorageEnabled() {
+        return attachmentStorageEnabled;
+    }
+
     protected DeleteMessageListener deleteMessageListener() {
         PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(blobIdFactory, executorFactory);
         PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(executorFactory);
@@ -152,6 +160,6 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         PostgresThreadDAO.Factory threadDAOFactory = new PostgresThreadDAO.Factory(executorFactory);
 
         return new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory,
-            attachmentDAOFactory, threadDAOFactory, ImmutableSet.of());
+            attachmentDAOFactory, threadDAOFactory, postgresConfiguration, ImmutableSet.of());
     }
 }
