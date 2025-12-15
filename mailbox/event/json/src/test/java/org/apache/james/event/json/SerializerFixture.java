@@ -19,17 +19,14 @@
 
 package org.apache.james.event.json;
 
-import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.events.Event;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 
 public interface SerializerFixture {
-    JsonSerialize DTO_JSON_SERIALIZE = new JsonSerialize(new TestId.Factory(), new TestMessageId.Factory(),
-        new TestBlobId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
-    MailboxEventSerializer EVENT_SERIALIZER = new MailboxEventSerializer(new TestId.Factory(), new TestMessageId.Factory(),
-        new TestBlobId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
+    JsonSerialize DTO_JSON_SERIALIZE = new JsonSerialize(new TestId.Factory(), new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
+    MailboxEventSerializer EVENT_SERIALIZER = new MailboxEventSerializer(new TestId.Factory(), new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
 
     String SERIALIZED_EVENT_ID = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
     Event.EventId EVENT_ID = Event.EventId.of(SERIALIZED_EVENT_ID);

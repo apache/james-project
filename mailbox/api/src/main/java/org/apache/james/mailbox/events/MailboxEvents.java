@@ -27,7 +27,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedMap;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
@@ -538,7 +537,7 @@ public interface MailboxEvents {
     }
 
     record MessageContentDeletionEvent(EventId eventId, Username username, MailboxId mailboxId, MessageId messageId, long size,
-                                       Instant internalDate, boolean hasAttachments, BlobId headerBlobId, BlobId bodyBlobId) implements Event {
+                                       Instant internalDate, boolean hasAttachments, String headerBlobId, String bodyBlobId) implements Event {
 
         @Override
         public EventId getEventId() {

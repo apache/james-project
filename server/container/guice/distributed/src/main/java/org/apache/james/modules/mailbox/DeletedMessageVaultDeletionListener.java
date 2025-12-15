@@ -31,6 +31,7 @@ import java.util.Set;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -64,13 +65,15 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
     private static final Group DELETED_MESSAGE_VAULT_DELETION_GROUP = new DeletedMessageVaultListenerGroup();
     private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessageVaultDeletionListener.class);
 
+    private final BlobId.Factory blobIdFactory;
     private final DeletedMessageVault deletedMessageVault;
     private final BlobStore blobStore;
     private final Clock clock;
 
     @Inject
-    public DeletedMessageVaultDeletionListener(DeletedMessageVault deletedMessageVault,
+    public DeletedMessageVaultDeletionListener(BlobId.Factory blobIdFactory, DeletedMessageVault deletedMessageVault,
                                                BlobStore blobStore, Clock clock) {
+        this.blobIdFactory = blobIdFactory;
         this.deletedMessageVault = deletedMessageVault;
         this.blobStore = blobStore;
         this.clock = clock;
@@ -96,7 +99,7 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
     }
 
     public Mono<Void> forMessage(MessageContentDeletionEvent messageContentDeletionEvent) {
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), messageContentDeletionEvent.headerBlobId(), BlobStore.StoragePolicy.LOW_COST))
+        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.parse(messageContentDeletionEvent.headerBlobId()), BlobStore.StoragePolicy.LOW_COST))
             .flatMap(bytes -> {
                 Optional<Message> mimeMessage = parseMessage(new ByteArrayInputStream(bytes), messageContentDeletionEvent.messageId());
                 DeletedMessage deletedMessage = DeletedMessage.builder()
@@ -112,7 +115,7 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
                     .subject(mimeMessage.map(Message::getSubject))
                     .build();
 
-                return Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), messageContentDeletionEvent.bodyBlobId(), BlobStore.StoragePolicy.LOW_COST))
+                return Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), blobIdFactory.parse(messageContentDeletionEvent.bodyBlobId()), BlobStore.StoragePolicy.LOW_COST))
                     .map(bodyStream -> new SequenceInputStream(new ByteArrayInputStream(bytes), bodyStream))
                     .flatMap(bodyStream -> Mono.from(deletedMessageVault.append(deletedMessage, bodyStream)));
             });
