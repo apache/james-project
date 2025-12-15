@@ -76,6 +76,18 @@ public class PostgresMessageManager extends StoreMessageManager {
         this.mailbox = mailbox;
     }
 
+    private static MessageStorer createMessageStorer(PostgresMailboxSessionMapperFactory mapperFactory,
+                                                     MessageId.Factory messageIdFactory,
+                                                     MessageParser messageParser,
+                                                     ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                                     Clock clock) {
+        if (mapperFactory.isAttachmentStorageEnabled()) {
+            return new MessageStorer.WithAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), mapperFactory, messageParser, threadIdGuessingAlgorithm, clock);
+        } else {
+            return new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), threadIdGuessingAlgorithm, clock);
+        }
+    }
+
 
     @Override
     public Flags getPermanentFlags(MailboxSession session) {

@@ -62,6 +62,8 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final BlobId.Factory blobIdFactory;
     private final Clock clock;
     private final RowLevelSecurity rowLevelSecurity;
+    private final boolean attachmentStorageEnabled;
+    private final PostgresConfiguration postgresConfiguration;
 
     @Inject
     public PostgresMailboxSessionMapperFactory(PostgresExecutor.Factory executorFactory,
@@ -74,6 +76,8 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         this.blobIdFactory = blobIdFactory;
         this.clock = clock;
         this.rowLevelSecurity = postgresConfiguration.getRowLevelSecurity();
+        this.attachmentStorageEnabled = postgresConfiguration.isAttachmentStorageEnabled();
+        this.postgresConfiguration = postgresConfiguration;
     }
 
     @Override
@@ -81,7 +85,7 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(executorFactory.create(session.getUser().getDomainPart()));
         if (rowLevelSecurity.isRowLevelSecurityEnabled()) {
             return new RLSSupportPostgresMailboxMapper(mailboxDAO,
-                new PostgresMailboxMemberDAO(executorFactory.create(session.getUser().getDomainPart())));
+                    new PostgresMailboxMemberDAO(executorFactory.create(session.getUser().getDomainPart())));
         } else {
             return new PostgresMailboxMapper(mailboxDAO);
         }
@@ -90,23 +94,23 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     @Override
     public MessageMapper createMessageMapper(MailboxSession session) {
         return new PostgresMessageMapper(executorFactory.create(session.getUser().getDomainPart()),
-            getModSeqProvider(session),
-            getUidProvider(session),
-            blobStore,
-            clock,
-            blobIdFactory);
+                getModSeqProvider(session),
+                getUidProvider(session),
+                blobStore,
+                clock,
+                blobIdFactory);
     }
 
     @Override
     public MessageIdMapper createMessageIdMapper(MailboxSession session) {
         return new PostgresMessageIdMapper(new PostgresMailboxDAO(executorFactory.create(session.getUser().getDomainPart())),
-            new PostgresMessageDAO(executorFactory.create(session.getUser().getDomainPart()), blobIdFactory),
-            new PostgresMailboxMessageDAO(executorFactory.create(session.getUser().getDomainPart())),
-            getModSeqProvider(session),
-            getAttachmentMapper(session),
-            blobStore,
-            blobIdFactory,
-            clock);
+                new PostgresMessageDAO(executorFactory.create(session.getUser().getDomainPart()), blobIdFactory),
+                new PostgresMailboxMessageDAO(executorFactory.create(session.getUser().getDomainPart())),
+                getModSeqProvider(session),
+                getAttachmentMapper(session),
+                blobStore,
+                blobIdFactory,
+                clock);
     }
 
     @Override
@@ -140,6 +144,10 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         return createAttachmentMapper(session);
     }
 
+    public boolean isAttachmentStorageEnabled() {
+        return attachmentStorageEnabled;
+    }
+
     protected DeleteMessageListener deleteMessageListener() {
         PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(blobIdFactory, executorFactory);
         PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(executorFactory);
@@ -147,6 +155,6 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         PostgresThreadDAO.Factory threadDAOFactory = new PostgresThreadDAO.Factory(executorFactory);
 
         return new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory,
-            attachmentDAOFactory, threadDAOFactory, ImmutableSet.of());
+                attachmentDAOFactory, threadDAOFactory, postgresConfiguration, ImmutableSet.of());
     }
 }
