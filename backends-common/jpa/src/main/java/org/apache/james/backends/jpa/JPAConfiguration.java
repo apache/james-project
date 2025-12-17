@@ -205,7 +205,7 @@ public class JPAConfiguration {
         }
 
         public ReadyToBuild setCustomOpenjpaProperties(Map<String, String> customOpenjpaProperties) {
-            this.customOpenjpaProperties = customOpenjpaProperties;
+            this.customOpenjpaProperties = new HashMap<>(customOpenjpaProperties);
             DEFAULT_JPA_PROPERTIES.forEach(this.customOpenjpaProperties::remove);
             return this;
         }
