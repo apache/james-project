@@ -214,11 +214,6 @@ public class EventFactory {
     }
 
     @FunctionalInterface
-    public interface RequireHeaderBlobId<T> {
-        T headerBlobId(String headerBlobId);
-    }
-
-    @FunctionalInterface
     public interface RequireBodyBlobId<T> {
         T bodyBlobId(String bodyBlobId);
     }
@@ -554,8 +549,8 @@ public class EventFactory {
         private final long size;
         private final Instant internalDate;
         private final boolean hasAttachments;
-        private final String headerBlobId;
         private final String bodyBlobId;
+        private Optional<String> headerBlobId;
 
         MessageContentDeletionFinalStage(Event.EventId eventId,
                                          Username username,
@@ -564,7 +559,6 @@ public class EventFactory {
                                          long size,
                                          Instant internalDate,
                                          boolean hasAttachments,
-                                         String headerBlobId,
                                          String bodyBlobId) {
             this.eventId = eventId;
             this.username = username;
@@ -573,16 +567,21 @@ public class EventFactory {
             this.size = size;
             this.internalDate = internalDate;
             this.hasAttachments = hasAttachments;
-            this.headerBlobId = headerBlobId;
             this.bodyBlobId = bodyBlobId;
+            this.headerBlobId = Optional.empty();
+        }
+
+        public MessageContentDeletionFinalStage headerBlobId(String headerBlobId) {
+            this.headerBlobId = Optional.ofNullable(headerBlobId);
+            return this;
         }
 
         public MailboxEvents.MessageContentDeletionEvent build() {
+            Preconditions.checkNotNull(eventId);
             Preconditions.checkNotNull(username);
             Preconditions.checkNotNull(mailboxId);
             Preconditions.checkNotNull(messageId);
             Preconditions.checkNotNull(internalDate);
-            Preconditions.checkNotNull(headerBlobId);
             Preconditions.checkNotNull(bodyBlobId);
 
             return new MailboxEvents.MessageContentDeletionEvent(
@@ -684,9 +683,9 @@ public class EventFactory {
         return eventId -> user -> quotaRoot -> quotaCount -> quotaSize -> instant -> new QuotaUsageUpdatedFinalStage(eventId, user, quotaRoot, quotaCount, quotaSize, instant);
     }
 
-    public static RequireEventId<RequireUser<RequireMailboxId<RequireMessageId<RequireSize<RequireInstant<RequireHasAttachments<RequireHeaderBlobId<RequireBodyBlobId<MessageContentDeletionFinalStage>>>>>>>>> messageContentDeleted() {
-        return eventId -> user -> mailboxId -> messageId -> size -> instant -> hasAttachments -> headerBlobId -> bodyBlobId ->
-            new MessageContentDeletionFinalStage(eventId, user, mailboxId, messageId, size, instant, hasAttachments, headerBlobId, bodyBlobId);
+    public static RequireEventId<RequireUser<RequireMailboxId<RequireMessageId<RequireSize<RequireInstant<RequireHasAttachments<RequireBodyBlobId<MessageContentDeletionFinalStage>>>>>>>> messageContentDeleted() {
+        return eventId -> user -> mailboxId -> messageId -> size -> instant -> hasAttachments -> bodyBlobId ->
+            new MessageContentDeletionFinalStage(eventId, user, mailboxId, messageId, size, instant, hasAttachments, bodyBlobId);
     }
 
     public static RequireMailboxEvent<MailboxSubscribedFinalStage> mailboxSubscribed() {

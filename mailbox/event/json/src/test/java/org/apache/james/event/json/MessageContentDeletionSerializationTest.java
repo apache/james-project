@@ -25,6 +25,7 @@ import static org.apache.james.event.json.SerializerFixture.EVENT_SERIALIZER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.events.MailboxEvents.MessageContentDeletionEvent;
@@ -41,7 +42,7 @@ class MessageContentDeletionSerializationTest {
     private static final long SIZE = 12345L;
     private static final Instant INTERNAL_DATE = Instant.parse("2024-12-15T08:23:45Z");
     private static final boolean HAS_ATTACHMENTS = true;
-    private static final String HEADER_BLOB_ID = "header-blob-id";
+    private static final Optional<String> HEADER_BLOB_ID = Optional.of("header-blob-id");
     private static final String BODY_BLOB_ID = "body-blob-id";
 
     private static final MessageContentDeletionEvent EVENT = new MessageContentDeletionEvent(

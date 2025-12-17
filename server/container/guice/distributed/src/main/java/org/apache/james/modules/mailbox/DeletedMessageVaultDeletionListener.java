@@ -99,7 +99,8 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
     }
 
     public Mono<Void> forMessage(MessageContentDeletionEvent messageContentDeletionEvent) {
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.parse(messageContentDeletionEvent.headerBlobId()), BlobStore.StoragePolicy.LOW_COST))
+        // todo fallback to header content string if header blob id is missing
+        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.parse(messageContentDeletionEvent.headerBlobId().get()), BlobStore.StoragePolicy.LOW_COST))
             .flatMap(bytes -> {
                 Optional<Message> mimeMessage = parseMessage(new ByteArrayInputStream(bytes), messageContentDeletionEvent.messageId());
                 DeletedMessage deletedMessage = DeletedMessage.builder()
