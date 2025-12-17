@@ -551,6 +551,7 @@ public class EventFactory {
         private final boolean hasAttachments;
         private final String bodyBlobId;
         private Optional<String> headerBlobId;
+        private Optional<String> headerContent;
 
         MessageContentDeletionFinalStage(Event.EventId eventId,
                                          Username username,
@@ -569,10 +570,16 @@ public class EventFactory {
             this.hasAttachments = hasAttachments;
             this.bodyBlobId = bodyBlobId;
             this.headerBlobId = Optional.empty();
+            this.headerContent = Optional.empty();
         }
 
         public MessageContentDeletionFinalStage headerBlobId(String headerBlobId) {
             this.headerBlobId = Optional.ofNullable(headerBlobId);
+            return this;
+        }
+
+        public MessageContentDeletionFinalStage headerContent(String headerContent) {
+            this.headerContent = Optional.ofNullable(headerContent);
             return this;
         }
 
@@ -583,6 +590,7 @@ public class EventFactory {
             Preconditions.checkNotNull(messageId);
             Preconditions.checkNotNull(internalDate);
             Preconditions.checkNotNull(bodyBlobId);
+            Preconditions.checkArgument(headerBlobId.isPresent() || headerContent.isPresent(), "Either headerBlobId or headerContent must be present");
 
             return new MailboxEvents.MessageContentDeletionEvent(
                 eventId,
@@ -593,6 +601,7 @@ public class EventFactory {
                 internalDate,
                 hasAttachments,
                 headerBlobId,
+                headerContent,
                 bodyBlobId);
         }
     }

@@ -43,6 +43,8 @@ class MessageContentDeletionSerializationTest {
     private static final Instant INTERNAL_DATE = Instant.parse("2024-12-15T08:23:45Z");
     private static final boolean HAS_ATTACHMENTS = true;
     private static final Optional<String> HEADER_BLOB_ID = Optional.of("header-blob-id");
+    private static final Optional<String> HEADER_CONTENT = Optional.of("Header: value");
+    private static final Optional<String> EMPTY_HEADER_CONTENT = Optional.empty();
     private static final String BODY_BLOB_ID = "body-blob-id";
 
     private static final MessageContentDeletionEvent EVENT = new MessageContentDeletionEvent(
@@ -54,9 +56,39 @@ class MessageContentDeletionSerializationTest {
         INTERNAL_DATE,
         HAS_ATTACHMENTS,
         HEADER_BLOB_ID,
+        HEADER_CONTENT,
+        BODY_BLOB_ID);
+
+    private static final MessageContentDeletionEvent EVENT_WITHOUT_HEADER_CONTENT = new MessageContentDeletionEvent(
+        EVENT_ID,
+        USERNAME,
+        MAILBOX_ID,
+        MESSAGE_ID,
+        SIZE,
+        INTERNAL_DATE,
+        HAS_ATTACHMENTS,
+        HEADER_BLOB_ID,
+        EMPTY_HEADER_CONTENT,
         BODY_BLOB_ID);
 
     private static final String JSON = """
+        {
+            "MessageContentDeletionEvent": {
+                "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
+                "username": "user@domain.tld",
+                "size": 12345,
+                "hasAttachments": true,
+                "internalDate": "2024-12-15T08:23:45Z",
+                "mailboxId": "18",
+                "headerBlobId": "header-blob-id",
+                "messageId": "42",
+                "bodyBlobId": "body-blob-id",
+                "headerContent": "Header: value"
+            }
+        }
+        """;
+
+    private static final String JSON_WITHOUT_HEADER_CONTENT = """
         {
             "MessageContentDeletionEvent": {
                 "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
@@ -74,14 +106,14 @@ class MessageContentDeletionSerializationTest {
 
     @Test
     void messageContentDeletionEventShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(EVENT))
-            .isEqualTo(JSON);
+        assertThatJson(EVENT_SERIALIZER.toJson(EVENT)).isEqualTo(JSON);
+        assertThatJson(EVENT_SERIALIZER.toJson(EVENT_WITHOUT_HEADER_CONTENT)).isEqualTo(JSON_WITHOUT_HEADER_CONTENT);
     }
 
     @Test
     void messageContentDeletionEventShouldBeWellDeserialized() {
-        assertThat(EVENT_SERIALIZER.fromJson(JSON).get())
-            .isEqualTo(EVENT);
+        assertThat(EVENT_SERIALIZER.fromJson(JSON).get()).isEqualTo(EVENT);
+        assertThat(EVENT_SERIALIZER.fromJson(JSON_WITHOUT_HEADER_CONTENT).get()).isEqualTo(EVENT_WITHOUT_HEADER_CONTENT);
     }
 
 }
