@@ -56,7 +56,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
 
 public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
 
@@ -155,6 +154,6 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         PostgresThreadDAO.Factory threadDAOFactory = new PostgresThreadDAO.Factory(executorFactory);
 
         return new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory,
-            attachmentDAOFactory, threadDAOFactory, ImmutableSet.of(), contentDeletionEventBus);
+            attachmentDAOFactory, threadDAOFactory, contentDeletionEventBus);
     }
 }

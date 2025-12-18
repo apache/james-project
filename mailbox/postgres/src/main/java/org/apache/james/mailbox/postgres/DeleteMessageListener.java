@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.postgres;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Set;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -52,11 +51,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class DeleteMessageListener implements EventListener.ReactiveGroupEventListener {
-    @FunctionalInterface
-    public interface DeletionCallback {
-        Mono<Void> forMessage(MessageRepresentation messageRepresentation, MailboxId mailboxId, Username owner);
-    }
-
     public static class DeleteMessageListenerGroup extends Group {
     }
 
@@ -64,8 +58,6 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     public static final String CONTENT_DELETION = "contentDeletion";
 
     private final BlobStore blobStore;
-    private final Set<DeletionCallback> deletionCallbackList;
-
     private final PostgresMessageDAO.Factory messageDAOFactory;
     private final PostgresMailboxMessageDAO.Factory mailboxMessageDAOFactory;
     private final PostgresAttachmentDAO.Factory attachmentDAOFactory;
@@ -78,12 +70,10 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                                  PostgresMessageDAO.Factory messageDAOFactory,
                                  PostgresAttachmentDAO.Factory attachmentDAOFactory,
                                  PostgresThreadDAO.Factory threadDAOFactory,
-                                 Set<DeletionCallback> deletionCallbackList,
                                  @Named(CONTENT_DELETION) EventBus contentDeletionEventBus) {
         this.messageDAOFactory = messageDAOFactory;
         this.mailboxMessageDAOFactory = mailboxMessageDAOFactory;
         this.blobStore = blobStore;
-        this.deletionCallbackList = deletionCallbackList;
         this.attachmentDAOFactory = attachmentDAOFactory;
         this.threadDAOFactory = threadDAOFactory;
         this.contentDeletionEventBus = contentDeletionEventBus;
@@ -148,18 +138,11 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         return Mono.just(messageId)
             .filterWhen(msgId -> isUnreferenced(msgId, postgresMailboxMessageDAO))
             .flatMap(msgId -> postgresMessageDAO.retrieveMessage(messageId)
-                .flatMap(messageRepresentation -> executeDeletionCallbacks(mailboxId, owner, messageRepresentation)
-                    .then(dispatchMessageContentDeletionEvent(mailboxId, owner, messageRepresentation)))
+                .flatMap(messageRepresentation -> dispatchMessageContentDeletionEvent(mailboxId, owner, messageRepresentation))
                 .then(deleteBodyBlob(msgId, postgresMessageDAO))
                 .then(deleteAttachment(msgId, attachmentDAO))
                 .then(threadDAO.deleteSome(owner, msgId))
                 .then(postgresMessageDAO.deleteByMessageId(msgId)));
-    }
-
-    private Mono<Void> executeDeletionCallbacks(MailboxId mailboxId, Username owner, MessageRepresentation messageRepresentation) {
-        return Flux.fromIterable(deletionCallbackList)
-            .concatMap(callback -> callback.forMessage(messageRepresentation, mailboxId, owner))
-            .then();
     }
 
     private Mono<Void> dispatchMessageContentDeletionEvent(MailboxId mailboxId, Username owner, MessageRepresentation message) {
