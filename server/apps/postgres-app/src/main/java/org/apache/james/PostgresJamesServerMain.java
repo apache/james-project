@@ -55,6 +55,7 @@ import org.apache.james.modules.events.PostgresDeadLetterModule;
 import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.PostgresDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.PostgresMailboxModule;
+import org.apache.james.modules.mailbox.PostgresMemoryContentDeletionEventBusModule;
 import org.apache.james.modules.mailbox.RLSSupportPostgresMailboxModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.plugins.QuotaMailingModule;
@@ -229,7 +230,8 @@ public class PostgresJamesServerMain implements JamesServerMain {
             case IN_MEMORY:
                 return List.of(
                     new DefaultEventModule(),
-                    new ActiveMQQueueModule());
+                    new ActiveMQQueueModule(),
+                    new PostgresMemoryContentDeletionEventBusModule());
             case RABBITMQ:
                 return List.of(
                     Modules.override(new DefaultEventModule()).with(new MailboxEventBusModule()),

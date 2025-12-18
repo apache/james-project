@@ -91,7 +91,7 @@ public class PostgresTestSystemFixture {
             new UpdatableTickingClock(Instant.now()));
 
         eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));
-        eventBus.register(mapperFactory.deleteMessageListener());
+        eventBus.register(mapperFactory.deleteMessageListener(eventBus));
 
         return postgresMailboxManager;
     }

@@ -76,7 +76,7 @@ public class PostgresMailboxManagerProvider {
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mapperFactory);
         MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), new UnsupportAttachmentContentLoader());
 
-        eventBus.register(mapperFactory.deleteMessageListener());
+        eventBus.register(mapperFactory.deleteMessageListener(eventBus));
 
         return new PostgresMailboxManager(mapperFactory, sessionProvider,
             messageParser, new PostgresMessageId.Factory(),
