@@ -19,7 +19,10 @@
 
 package org.apache.james.modules.data;
 
+import static org.apache.james.mailbox.postgres.DeleteMessageListener.CONTENT_DELETION;
+
 import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.events.EventListener;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.FiltersDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
@@ -29,6 +32,7 @@ import org.apache.james.jmap.api.identity.IdentityUserDeletionTaskStep;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.EmailQueryViewManager;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
+import org.apache.james.jmap.api.projections.MessageFastViewProjectionDeletionListener;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
 import org.apache.james.jmap.api.pushsubscription.PushDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.upload.UploadRepository;
@@ -37,9 +41,7 @@ import org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDAO;
 import org.apache.james.jmap.postgres.projections.PostgresEmailQueryView;
 import org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewManager;
 import org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjection;
-import org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionDeletionCallback;
 import org.apache.james.jmap.postgres.upload.PostgresUploadRepository;
-import org.apache.james.mailbox.postgres.DeleteMessageListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
@@ -47,6 +49,7 @@ import org.apache.james.user.api.UsernameChangeTaskStep;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
 public class PostgresDataJmapModule extends AbstractModule {
 
@@ -67,9 +70,9 @@ public class PostgresDataJmapModule extends AbstractModule {
         bind(PostgresMessageFastViewProjection.class).in(Scopes.SINGLETON);
         bind(MessageFastViewProjection.class).to(PostgresMessageFastViewProjection.class);
 
-        Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class)
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class, Names.named(CONTENT_DELETION))
             .addBinding()
-            .to(PostgresMessageFastViewProjectionDeletionCallback.class);
+            .to(MessageFastViewProjectionDeletionListener.class);
 
         bind(PostgresEmailQueryView.class).in(Scopes.SINGLETON);
         bind(EmailQueryView.class).to(PostgresEmailQueryView.class);

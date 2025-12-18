@@ -42,6 +42,7 @@ import org.apache.james.jmap.api.projections.DefaultEmailQueryViewManager;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.EmailQueryViewManager;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
+import org.apache.james.jmap.api.projections.MessageFastViewProjectionDeletionListener;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
 import org.apache.james.jmap.api.pushsubscription.PushDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
@@ -57,7 +58,6 @@ import org.apache.james.jmap.cassandra.projections.CassandraEmailQueryView;
 import org.apache.james.jmap.cassandra.projections.CassandraEmailQueryViewDataDefinition;
 import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjection;
 import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjectionDataDefinition;
-import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjectionDeletionListener;
 import org.apache.james.jmap.cassandra.pushsubscription.CassandraPushSubscriptionDataDefinition;
 import org.apache.james.jmap.cassandra.pushsubscription.CassandraPushSubscriptionRepository;
 import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
@@ -121,7 +121,7 @@ public class CassandraJmapModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class, Names.named(CONTENT_DELETION))
             .addBinding()
-            .to(CassandraMessageFastViewProjectionDeletionListener.class);
+            .to(MessageFastViewProjectionDeletionListener.class);
 
         Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
             .addBinding()
