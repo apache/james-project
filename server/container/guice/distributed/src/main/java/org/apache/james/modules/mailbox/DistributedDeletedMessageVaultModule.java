@@ -24,6 +24,7 @@ import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.vault.DeletedMessageVault;
+import org.apache.james.vault.DeletedMessageVaultDeletionListener;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.blob.BucketNameGenerator;
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;

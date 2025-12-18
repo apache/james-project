@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.mailbox;
+package org.apache.james.vault;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -48,8 +48,6 @@ import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.server.core.Envelope;
-import org.apache.james.vault.DeletedMessage;
-import org.apache.james.vault.DeletedMessageVault;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
