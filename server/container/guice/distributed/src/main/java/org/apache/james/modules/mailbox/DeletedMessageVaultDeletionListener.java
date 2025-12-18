@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -99,8 +100,7 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
     }
 
     public Mono<Void> forMessage(MessageContentDeletionEvent messageContentDeletionEvent) {
-        // todo fallback to header content string if header blob id is missing
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.parse(messageContentDeletionEvent.headerBlobId().get()), BlobStore.StoragePolicy.LOW_COST))
+        return fetchMessageHeaderBytes(messageContentDeletionEvent)
             .flatMap(bytes -> {
                 Optional<Message> mimeMessage = parseMessage(new ByteArrayInputStream(bytes), messageContentDeletionEvent.messageId());
                 DeletedMessage deletedMessage = DeletedMessage.builder()
@@ -120,6 +120,14 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
                     .map(bodyStream -> new SequenceInputStream(new ByteArrayInputStream(bytes), bodyStream))
                     .flatMap(bodyStream -> Mono.from(deletedMessageVault.append(deletedMessage, bodyStream)));
             });
+    }
+
+    private Mono<byte[]> fetchMessageHeaderBytes(MessageContentDeletionEvent messageContentDeletionEvent) {
+        return Mono.justOrEmpty(messageContentDeletionEvent.headerBlobId())
+            .flatMap(headerBlobId -> Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.parse(headerBlobId), BlobStore.StoragePolicy.LOW_COST)))
+            .switchIfEmpty(Mono.justOrEmpty(messageContentDeletionEvent.headerContent())
+                .map(headerContent -> headerContent.getBytes(StandardCharsets.UTF_8))
+                .switchIfEmpty(Mono.error(() -> new IllegalArgumentException("No header content nor header blob id provided"))));
     }
 
     private Optional<Message> parseMessage(InputStream inputStream, MessageId messageId) {
