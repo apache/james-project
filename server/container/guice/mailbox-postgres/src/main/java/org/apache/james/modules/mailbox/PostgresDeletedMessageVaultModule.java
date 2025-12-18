@@ -19,17 +19,20 @@
 
 package org.apache.james.modules.mailbox;
 
+import static org.apache.james.mailbox.postgres.DeleteMessageListener.CONTENT_DELETION;
+
 import org.apache.james.backends.postgres.PostgresDataDefinition;
-import org.apache.james.mailbox.postgres.DeleteMessageListener;
+import org.apache.james.events.EventListener;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
+import org.apache.james.vault.DeletedMessageVaultDeletionListener;
 import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.PostgresDeletedMessageMetadataDataDefinition;
 import org.apache.james.vault.metadata.PostgresDeletedMessageMetadataVault;
-import org.apache.james.vault.metadata.PostgresDeletedMessageVaultDeletionCallback;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
 public class PostgresDeletedMessageVaultModule extends AbstractModule {
     @Override
@@ -43,8 +46,8 @@ public class PostgresDeletedMessageVaultModule extends AbstractModule {
         bind(DeletedMessageMetadataVault.class)
             .to(PostgresDeletedMessageMetadataVault.class);
 
-        Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class)
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class, Names.named(CONTENT_DELETION))
             .addBinding()
-            .to(PostgresDeletedMessageVaultDeletionCallback.class);
+            .to(DeletedMessageVaultDeletionListener.class);
     }
 }
