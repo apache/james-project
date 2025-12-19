@@ -537,7 +537,8 @@ public interface MailboxEvents {
     }
 
     record MessageContentDeletionEvent(EventId eventId, Username username, MailboxId mailboxId, MessageId messageId, long size,
-                                       Instant internalDate, boolean hasAttachments, String headerBlobId, String bodyBlobId) implements Event {
+                                       Instant internalDate, boolean hasAttachments, Optional<String> headerBlobId, Optional<String> headerContent,
+                                       String bodyBlobId) implements Event {
 
         @Override
         public EventId getEventId() {

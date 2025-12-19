@@ -17,11 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.vault.metadata;
+package org.apache.james.vault;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -30,14 +32,15 @@ import java.util.Set;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
-import org.apache.james.core.Username;
-import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
+import org.apache.james.mailbox.events.MailboxEvents.MessageContentDeletionEvent;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.postgres.DeleteMessageListener;
-import org.apache.james.mailbox.postgres.mail.MessageRepresentation;
 import org.apache.james.mime4j.MimeIOException;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Message;
@@ -45,52 +48,84 @@ import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.server.core.Envelope;
-import org.apache.james.vault.DeletedMessage;
-import org.apache.james.vault.DeletedMessageVault;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 
-public class PostgresDeletedMessageVaultDeletionCallback implements DeleteMessageListener.DeletionCallback {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresDeletedMessageVaultDeletionCallback.class);
+public class DeletedMessageVaultDeletionListener implements EventListener.ReactiveGroupEventListener {
+    public static class DeletedMessageVaultListenerGroup extends Group {
 
+    }
+
+    private static final Group DELETED_MESSAGE_VAULT_DELETION_GROUP = new DeletedMessageVaultListenerGroup();
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessageVaultDeletionListener.class);
+
+    private final BlobId.Factory blobIdFactory;
     private final DeletedMessageVault deletedMessageVault;
     private final BlobStore blobStore;
     private final Clock clock;
 
     @Inject
-    public PostgresDeletedMessageVaultDeletionCallback(DeletedMessageVault deletedMessageVault, BlobStore blobStore, Clock clock) {
+    public DeletedMessageVaultDeletionListener(BlobId.Factory blobIdFactory, DeletedMessageVault deletedMessageVault,
+                                               BlobStore blobStore, Clock clock) {
+        this.blobIdFactory = blobIdFactory;
         this.deletedMessageVault = deletedMessageVault;
         this.blobStore = blobStore;
         this.clock = clock;
     }
 
     @Override
-    public Mono<Void> forMessage(MessageRepresentation message, MailboxId mailboxId, Username owner) {
-        return Mono.fromSupplier(Throwing.supplier(() -> message.getHeaderContent().getInputStream()))
-            .flatMap(headerStream -> {
-                Optional<Message> mimeMessage = parseMessage(headerStream, message.getMessageId());
+    public Group getDefaultGroup() {
+        return DELETED_MESSAGE_VAULT_DELETION_GROUP;
+    }
+
+    @Override
+    public boolean isHandling(Event event) {
+        return event instanceof MessageContentDeletionEvent;
+    }
+
+    @Override
+    public Publisher<Void> reactiveEvent(Event event) {
+        if (event instanceof MessageContentDeletionEvent contentDeletionEvent) {
+            return forMessage(contentDeletionEvent);
+        }
+
+        return Mono.empty();
+    }
+
+    public Mono<Void> forMessage(MessageContentDeletionEvent messageContentDeletionEvent) {
+        return fetchMessageHeaderBytes(messageContentDeletionEvent)
+            .flatMap(bytes -> {
+                Optional<Message> mimeMessage = parseMessage(new ByteArrayInputStream(bytes), messageContentDeletionEvent.messageId());
                 DeletedMessage deletedMessage = DeletedMessage.builder()
-                    .messageId(message.getMessageId())
-                    .originMailboxes(mailboxId)
-                    .user(owner)
-                    .deliveryDate(ZonedDateTime.ofInstant(message.getInternalDate().toInstant(), ZoneOffset.UTC))
+                    .messageId(messageContentDeletionEvent.messageId())
+                    .originMailboxes(messageContentDeletionEvent.mailboxId())
+                    .user(messageContentDeletionEvent.getUsername())
+                    .deliveryDate(ZonedDateTime.ofInstant(messageContentDeletionEvent.internalDate(), ZoneOffset.UTC))
                     .deletionDate(ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC))
                     .sender(retrieveSender(mimeMessage))
                     .recipients(retrieveRecipients(mimeMessage))
-                    .hasAttachment(!message.getAttachments().isEmpty())
-                    .size(message.getSize())
+                    .hasAttachment(messageContentDeletionEvent.hasAttachments())
+                    .size(messageContentDeletionEvent.size())
                     .subject(mimeMessage.map(Message::getSubject))
                     .build();
 
-                return Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), message.getBodyBlobId(), BlobStore.StoragePolicy.LOW_COST))
-                    .map(bodyStream -> new SequenceInputStream(headerStream, bodyStream))
+                return Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), blobIdFactory.parse(messageContentDeletionEvent.bodyBlobId()), BlobStore.StoragePolicy.LOW_COST))
+                    .map(bodyStream -> new SequenceInputStream(new ByteArrayInputStream(bytes), bodyStream))
                     .flatMap(bodyStream -> Mono.from(deletedMessageVault.append(deletedMessage, bodyStream)));
             });
+    }
+
+    private Mono<byte[]> fetchMessageHeaderBytes(MessageContentDeletionEvent messageContentDeletionEvent) {
+        return Mono.justOrEmpty(messageContentDeletionEvent.headerBlobId())
+            .flatMap(headerBlobId -> Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.parse(headerBlobId), BlobStore.StoragePolicy.LOW_COST)))
+            .switchIfEmpty(Mono.justOrEmpty(messageContentDeletionEvent.headerContent())
+                .map(headerContent -> headerContent.getBytes(StandardCharsets.UTF_8))
+                .switchIfEmpty(Mono.error(() -> new IllegalArgumentException("No header content nor header blob id provided"))));
     }
 
     private Optional<Message> parseMessage(InputStream inputStream, MessageId messageId) {

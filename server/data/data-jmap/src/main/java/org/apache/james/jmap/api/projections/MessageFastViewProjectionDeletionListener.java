@@ -17,28 +17,49 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.postgres.projections;
+package org.apache.james.jmap.api.projections;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.core.Username;
-import org.apache.james.jmap.api.projections.MessageFastViewProjection;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.postgres.DeleteMessageListener;
-import org.apache.james.mailbox.postgres.mail.MessageRepresentation;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
+import org.apache.james.mailbox.events.MailboxEvents;
+import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 
-public class PostgresMessageFastViewProjectionDeletionCallback implements DeleteMessageListener.DeletionCallback {
+public class MessageFastViewProjectionDeletionListener implements EventListener.ReactiveGroupEventListener {
+    public static class MessageFastViewProjectionDeletionListenerGroup extends Group {
+
+    }
+
+    private static final Group GROUP = new MessageFastViewProjectionDeletionListenerGroup();
+
     private final MessageFastViewProjection messageFastViewProjection;
 
     @Inject
-    public PostgresMessageFastViewProjectionDeletionCallback(MessageFastViewProjection messageFastViewProjection) {
+    public MessageFastViewProjectionDeletionListener(MessageFastViewProjection messageFastViewProjection) {
         this.messageFastViewProjection = messageFastViewProjection;
     }
 
     @Override
-    public Mono<Void> forMessage(MessageRepresentation messageRepresentation, MailboxId mailboxId, Username owner) {
-        return Mono.from(messageFastViewProjection.delete(messageRepresentation.getMessageId()));
+    public Group getDefaultGroup() {
+        return GROUP;
     }
+
+    @Override
+    public boolean isHandling(Event event) {
+        return event instanceof MailboxEvents.MessageContentDeletionEvent;
+    }
+
+    @Override
+    public Publisher<Void> reactiveEvent(Event event) {
+        if (event instanceof MailboxEvents.MessageContentDeletionEvent contentDeletionEvent) {
+            return Mono.from(messageFastViewProjection.delete(contentDeletionEvent.messageId()));
+        }
+
+        return Mono.empty();
+    }
+
 }

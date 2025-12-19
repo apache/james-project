@@ -21,33 +21,37 @@ package org.apache.james.modules.mailbox;
 
 import static org.apache.james.mailbox.postgres.DeleteMessageListener.CONTENT_DELETION;
 
-import org.apache.james.backends.postgres.PostgresDataDefinition;
+import java.util.Set;
+
+import jakarta.inject.Named;
+
+import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
-import org.apache.james.modules.vault.DeletedMessageVaultModule;
-import org.apache.james.vault.DeletedMessageVaultDeletionListener;
-import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
-import org.apache.james.vault.metadata.PostgresDeletedMessageMetadataDataDefinition;
-import org.apache.james.vault.metadata.PostgresDeletedMessageMetadataVault;
+import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Names;
 
-public class PostgresDeletedMessageVaultModule extends AbstractModule {
+public class PostgresMemoryContentDeletionEventBusModule extends AbstractModule {
+    public static class ContentDeletionListenersLoader implements Startable {
+
+    }
+
     @Override
     protected void configure() {
-        install(new DeletedMessageVaultModule());
+        bind(EventBus.class).annotatedWith(Names.named(CONTENT_DELETION)).to(EventBus.class);
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class, Names.named(CONTENT_DELETION));
+    }
 
-        Multibinder<PostgresDataDefinition> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresDataDefinition.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresDeletedMessageMetadataDataDefinition.MODULE);
-
-        bind(PostgresDeletedMessageMetadataVault.class).in(Scopes.SINGLETON);
-        bind(DeletedMessageMetadataVault.class)
-            .to(PostgresDeletedMessageMetadataVault.class);
-
-        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class, Names.named(CONTENT_DELETION))
-            .addBinding()
-            .to(DeletedMessageVaultDeletionListener.class);
+    @ProvidesIntoSet
+    public InitializationOperation registerListener(@Named(CONTENT_DELETION) EventBus contentDeletionEventBus,
+                                                    @Named(CONTENT_DELETION) Set<EventListener.ReactiveGroupEventListener> contentDeletionListeners) {
+        return InitilizationOperationBuilder
+            .forClass(ContentDeletionListenersLoader.class)
+            .init(() -> contentDeletionListeners.forEach(contentDeletionEventBus::register));
     }
 }

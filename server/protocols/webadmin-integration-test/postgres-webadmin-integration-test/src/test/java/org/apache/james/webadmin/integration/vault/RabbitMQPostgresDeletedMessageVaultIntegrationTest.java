@@ -27,12 +27,16 @@ import org.apache.james.PostgresJamesConfiguration;
 import org.apache.james.PostgresJamesServerMain;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.vault.VaultConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class PostgresDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegrationTest {
+class RabbitMQPostgresDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegrationTest {
+    @RegisterExtension
+    static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
+
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
@@ -40,7 +44,7 @@ class PostgresDeletedMessageVaultIntegrationTest extends DeletedMessageVaultInte
             .configurationFromClasspath()
             .searchConfiguration(SearchConfiguration.scanning())
             .usersRepository(DEFAULT)
-            .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.IN_MEMORY)
+            .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.RABBITMQ)
             .deletedMessageVaultConfiguration(VaultConfiguration.ENABLED_DEFAULT)
             .blobStore(BlobStoreConfiguration.builder()
                 .postgres()
@@ -52,6 +56,7 @@ class PostgresDeletedMessageVaultIntegrationTest extends DeletedMessageVaultInte
             .overrideWith(new TestJMAPServerModule()))
         .extension(PostgresExtension.empty())
         .extension(new ClockExtension())
+        .extension(rabbitMQExtension)
         .build();
 
     @Override

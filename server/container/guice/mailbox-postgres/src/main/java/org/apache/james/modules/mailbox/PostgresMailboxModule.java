@@ -168,7 +168,6 @@ public class PostgresMailboxModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
             .addBinding().to(DeleteMessageListener.class);
-        Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class);
 
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
         bind(MailboxManagerConfiguration.class).toInstance(MailboxManagerConfiguration.DEFAULT);
