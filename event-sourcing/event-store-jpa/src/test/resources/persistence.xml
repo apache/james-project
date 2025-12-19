@@ -29,6 +29,7 @@
         <class>org.apache.james.eventsourcing.eventstore.jpa.model.JPAEvent</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
+            <property name="openjpa.jdbc.DBDictionary" value="h2"/>
             <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
             <property name="openjpa.jdbc.MappingDefaults" value="ForeignKeyDeleteAction=cascade, JoinForeignKeyDeleteAction=cascade"/>
             <property name="openjpa.jdbc.SchemaFactory" value="native(ForeignKeys=true)"/>

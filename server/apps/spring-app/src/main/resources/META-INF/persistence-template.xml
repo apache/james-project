@@ -57,6 +57,8 @@
         <class>org.apache.james.rrt.jpa.model.JPARecipientRewrite</class>
 
         <properties>
+            <!--  DBDictionary for H2 database -->
+            <property name="openjpa.jdbc.DBDictionary" value="h2"/>
             <!--  Create tables on startup -->
             <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
             <!--  Create foreign keys on startup -->

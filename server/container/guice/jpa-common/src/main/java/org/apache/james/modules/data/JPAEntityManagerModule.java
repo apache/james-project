@@ -82,7 +82,19 @@ public class JPAEntityManagerModule extends AbstractModule {
         Configuration dataSource = propertiesProvider.getConfiguration("james-database");
 
         Map<String, String> openjpaProperties = getKeysForPrefix(dataSource, "openjpa", false);
+        // Remove default JPA properties that are already set via the builder
+        openjpaProperties.remove(JPAConfiguration.JPA_CONNECTION_DRIVER_NAME);
+        openjpaProperties.remove(JPAConfiguration.JPA_CONNECTION_URL);
+        openjpaProperties.remove(JPAConfiguration.JPA_MULTITHREADED);
+        openjpaProperties.remove(JPAConfiguration.JPA_CONNECTION_USERNAME);
+        openjpaProperties.remove(JPAConfiguration.JPA_CONNECTION_PASSWORD);
+
         Map<String, String> datasourceProperties = getKeysForPrefix(dataSource, "datasource", true);
+        // Remove default datasource properties that are already set via the builder
+        datasourceProperties.remove("testOnBorrow");
+        datasourceProperties.remove("validationQueryTimeoutSec");
+        datasourceProperties.remove("validationQuery");
+        datasourceProperties.remove("maxTotal");
 
         return JPAConfiguration.builder()
                 .driverName(dataSource.getString("database.driverClassName"))

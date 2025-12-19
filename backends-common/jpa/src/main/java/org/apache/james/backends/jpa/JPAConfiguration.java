@@ -28,8 +28,6 @@ import static org.apache.james.backends.jpa.JPAConfiguration.ReadyToBuild.NO_TES
 import static org.apache.james.backends.jpa.JPAConfiguration.ReadyToBuild.NO_VALIDATION_QUERY;
 import static org.apache.james.backends.jpa.JPAConfiguration.ReadyToBuild.NO_VALIDATION_QUERY_TIMEOUT_SEC;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -47,13 +45,11 @@ public class JPAConfiguration {
     public static final String JPA_CONNECTION_PROPERTIES = "openjpa.ConnectionProperties";
     public static final String JPA_CONNECTION_URL = "openjpa.ConnectionURL";
     public static final String JPA_MULTITHREADED = "openjpa.Multithreaded";
-    public static final List<String> DEFAULT_JPA_PROPERTIES = List.of(JPA_CONNECTION_DRIVER_NAME, JPA_CONNECTION_URL, JPA_MULTITHREADED, JPA_CONNECTION_USERNAME, JPA_CONNECTION_PASSWORD);
 
     public static final String DATASOURCE_TEST_ON_BORROW = "datasource.testOnBorrow";
     public static final String DATASOURCE_VALIDATION_QUERY_TIMEOUT_SEC = "datasource.validationQueryTimeoutSec";
     public static final String DATASOURCE_VALIDATION_QUERY = "datasource.validationQuery";
     public static final String DATASOURCE_MAX_TOTAL = "datasource.maxTotal";
-    public static final List<String> DEFAULT_DATASOURCE_PROPERTIES = List.of(DATASOURCE_TEST_ON_BORROW, DATASOURCE_VALIDATION_QUERY_TIMEOUT_SEC, DATASOURCE_VALIDATION_QUERY, DATASOURCE_MAX_TOTAL);
 
     public static final String ATTACHMENT_STORAGE = "attachmentStorage.enabled";
 
@@ -199,14 +195,12 @@ public class JPAConfiguration {
         }
 
         public ReadyToBuild setCustomDatasourceProperties(Map<String, String> customDatasourceProperties) {
-            this.customDatasourceProperties = new HashMap<>(customDatasourceProperties);
-            DEFAULT_DATASOURCE_PROPERTIES.forEach(this.customDatasourceProperties::remove);
+            this.customDatasourceProperties = customDatasourceProperties;
             return this;
         }
 
         public ReadyToBuild setCustomOpenjpaProperties(Map<String, String> customOpenjpaProperties) {
             this.customOpenjpaProperties = customOpenjpaProperties;
-            DEFAULT_JPA_PROPERTIES.forEach(this.customOpenjpaProperties::remove);
             return this;
         }
 

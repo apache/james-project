@@ -149,6 +149,10 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.linagora</groupId>
             <artifactId>logback-elasticsearch-appender</artifactId>
         </dependency>
@@ -162,14 +166,6 @@
                     <artifactId>commons-logging</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derby</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derbytools</artifactId>
         </dependency>
         <dependency>
             <groupId>org.awaitility</groupId>
@@ -241,7 +237,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- Isolation issues with Derby inMemory database -->
+                    <!-- Isolation issues with H2 inMemory database -->
                     <reuseForks>false</reuseForks>
                     <!-- Speed up a bit things -->
                     <forkCount>1C</forkCount>
@@ -297,7 +293,7 @@
                             <volume>/root/conf</volume>
                             <!-- Data for ActiveMQ mailQueue -->
                             <volume>/root/var</volume>
-                            <!-- Data for derby database -->
+                            <!-- Data for H2 database -->
                             <volume>/var/store</volume>
                             <volume>/root/glowroot/plugins</volume>
                             <volume>/root/glowroot/data</volume>

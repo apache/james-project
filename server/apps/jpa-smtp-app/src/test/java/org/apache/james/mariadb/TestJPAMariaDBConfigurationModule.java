@@ -49,6 +49,7 @@ public class TestJPAMariaDBConfigurationModule extends AbstractModule {
                 .driverURL(mariaDBUrl)
                 .username(MARIA_USERNAME)
                 .password(MARIA_PASSWORD)
+                .setCustomOpenjpaProperties(java.util.Map.of("openjpa.jdbc.DBDictionary", "mariadb"))
                 .build();
     }
 }

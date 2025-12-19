@@ -59,16 +59,16 @@
                                 value="mailboxmanager"/>
                             <property
                                 name="torque.database.mailboxmanager.adapter"
-                                value="derby"/>
+                                value="h2"/>
                             <property
                                 name="torque.dsfactory.mailboxmanager.factory"
                                 value="org.apache.torque.dsfactory.SharedPoolDataSourceFactory"/>
                             <property
                                 name="torque.dsfactory.mailboxmanager.connection.driver"
-                                value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                                value="org.h2.Driver"/>
                             <property
                                 name="torque.dsfactory.mailboxmanager.connection.url"
-                                value="jdbc:derby:tmp/mailboxmanager-derbydb;create=true"/>
+                                value="jdbc:h2:file:tmp/mailboxmanager-h2db;DB_CLOSE_DELAY=-1"/>
                             <property
                                 name="torque.dsfactory.mailboxmanager.connection.user"
                                 value="app"/>
