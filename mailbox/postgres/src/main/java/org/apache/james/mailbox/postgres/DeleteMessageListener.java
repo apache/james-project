@@ -31,6 +31,7 @@ import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
+import org.apache.james.mailbox.events.MailboxEvents;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.model.MailboxId;
@@ -148,18 +149,22 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     private Mono<Void> dispatchMessageContentDeletionEvent(MailboxId mailboxId, Username owner, MessageRepresentation message) {
         return Mono.fromCallable(() -> IOUtils.toString(message.getHeaderContent().getInputStream(), StandardCharsets.UTF_8))
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-            .flatMap(headerContent -> Mono.from(contentDeletionEventBus.dispatch(EventFactory.messageContentDeleted()
-                    .randomEventId()
-                    .user(owner)
-                    .mailboxId(mailboxId)
-                    .messageId(message.getMessageId())
-                    .size(message.getSize())
-                    .instant(message.getInternalDate().toInstant())
-                    .hasAttachments(!message.getAttachments().isEmpty())
-                    .bodyBlobId(message.getBodyBlobId().asString())
-                    .headerContent(headerContent)
-                    .build(),
+            .flatMap(headerContent -> Mono.from(contentDeletionEventBus.dispatch(messageContentDeletionEvent(mailboxId, owner, message, headerContent),
                 ImmutableSet.of())));
+    }
+
+    private MailboxEvents.MessageContentDeletionEvent messageContentDeletionEvent(MailboxId mailboxId, Username owner, MessageRepresentation message, String headerContent) {
+        return EventFactory.messageContentDeleted()
+            .randomEventId()
+            .user(owner)
+            .mailboxId(mailboxId)
+            .messageId(message.getMessageId())
+            .size(message.getSize())
+            .instant(message.getInternalDate().toInstant())
+            .hasAttachments(!message.getAttachments().isEmpty())
+            .bodyBlobId(message.getBodyBlobId().asString())
+            .headerContent(headerContent)
+            .build();
     }
 
     private Mono<Void> deleteBodyBlob(PostgresMessageId id, PostgresMessageDAO postgresMessageDAO) {
