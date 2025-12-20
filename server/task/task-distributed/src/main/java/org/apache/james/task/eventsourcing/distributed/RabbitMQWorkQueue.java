@@ -189,7 +189,8 @@ public class RabbitMQWorkQueue implements WorkQueue {
             .flatMap(taskId -> Mono.fromCallable(() -> new String(delivery.getBody(), StandardCharsets.UTF_8))
                 .flatMap(bodyValue -> deserialize(bodyValue, taskId))
                 .doOnNext(task -> delivery.ack())
-                .flatMap(task -> executeOnWorker(taskId, task)))
+                .flatMap(task -> executeOnWorker(taskId, task))
+                .doOnSuccess(result -> LOGGER.info("Executed task {} yield {}", taskId, result)))
             .onErrorResume(error -> {
                 Optional<Object> taskId = Optional.ofNullable(delivery.getProperties())
                     .flatMap(props -> Optional.ofNullable(props.getHeaders()))
@@ -211,6 +212,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
     }
 
     private Mono<Task.Result> executeOnWorker(TaskId taskId, Task task) {
+        LOGGER.info("Executing task {} ({}) ", taskId, task.getClass());
         return worker.executeTask(new TaskWithId(taskId, task))
             .timeout(rabbitMQConfiguration.getTaskQueueConsumerTimeout())
             .onErrorResume(error -> {
@@ -275,6 +277,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
             OutboundMessage outboundMessage = new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, basicProperties, payload);
             sender.send(Mono.just(outboundMessage)).block();
+            LOGGER.info("Submitted task {} ({})", taskWithId.getId(), taskWithId.getTask().getClass());
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -282,6 +285,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     @Override
     public void cancel(TaskId taskId) {
+        LOGGER.info("Requesting cancel for task {}", taskId);
         sendCancelRequestsQueue.emitNext(taskId, FAIL_FAST);
     }
 
