@@ -276,7 +276,13 @@ public class RabbitMQWorkQueue implements WorkQueue {
                 .build();
 
             OutboundMessage outboundMessage = new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, basicProperties, payload);
-            sender.send(Mono.just(outboundMessage)).block();
+            sender.send(Mono.just(outboundMessage))
+                .onErrorResume(e -> {
+                    LOGGER.error("Publishing task {} failed", taskWithId.getId(), e);
+                    return Mono.from(worker.fail(taskWithId.getId(), Mono.just(Optional.empty()), "Publishing task failed", e))
+                        .then(Mono.error(e));
+                })
+                .block();
             LOGGER.info("Submitted task {} ({})", taskWithId.getId(), taskWithId.getTask().getClass());
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
