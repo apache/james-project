@@ -76,7 +76,8 @@ public class MailboxMergingTaskRunner {
         return cassandraMessageIdDAO.retrieveMessages(oldMailboxId, MessageRange.all(), Limit.unlimited())
             .map(CassandraMessageMetadata::getComposedMessageId)
             .map(ComposedMessageIdWithMetaData::getComposedMessageId)
-            .concatMap(messageId -> Mono.fromCallable(() -> moveMessage(newMailboxId, messageId, session, context)).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
+            .flatMap(messageId -> Mono.fromCallable(() -> moveMessage(newMailboxId, messageId, session, context))
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER), ReactorUtils.DEFAULT_CONCURRENCY)
             .reduce(Task.Result.COMPLETED, Task::combine)
             .block();
     }
