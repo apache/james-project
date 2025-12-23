@@ -22,7 +22,7 @@ package org.apache.james.protocols.smtp;
 
 import java.util.Optional;
 
-import org.apache.james.protocols.api.OidcSASLConfiguration;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProtocolConfigurationImpl;
 
 /**

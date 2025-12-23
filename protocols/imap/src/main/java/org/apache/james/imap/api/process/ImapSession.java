@@ -28,9 +28,9 @@ import javax.net.ssl.SSLSession;
 import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionState;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.protocols.api.CommandDetectionSession;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
 
 import reactor.core.publisher.Mono;
 
