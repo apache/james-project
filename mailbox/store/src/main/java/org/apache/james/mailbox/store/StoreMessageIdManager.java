@@ -363,22 +363,20 @@ public class StoreMessageIdManager implements MessageIdManager {
             .flatMap(eventBus::dispatch);
     }
 
-    public void setInMailboxesNoCheck(MessageId messageId, MailboxId targetMailboxId, MailboxSession mailboxSession) throws MailboxException {
-        MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
-        List<MailboxMessage> currentMailboxMessages = messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA);
-
-        MailboxReactorUtils.block(messageMovesWithMailbox(MessageMoves.builder()
-            .targetMailboxIds(targetMailboxId)
-            .previousMailboxIds(toMailboxIds(currentMailboxMessages))
-            .build(), mailboxSession)
-            .flatMapMany(messageMove -> {
-                if (messageMove.isChange()) {
-                    return applyMessageMoveNoMailboxChecks(mailboxSession, currentMailboxMessages, messageMove);
-                }
-                return Flux.empty();
-            })
-            .collectList()
-            .flatMap(eventBus::dispatch));
+    public Mono<Void> setInMailboxesNoCheck(MessageId messageId, MailboxId targetMailboxId, MailboxSession mailboxSession) {
+        return findRelatedMailboxMessages(messageId, mailboxSession)
+            .flatMap(currentMailboxMessages -> messageMovesWithMailbox(MessageMoves.builder()
+                .targetMailboxIds(targetMailboxId)
+                .previousMailboxIds(toMailboxIds(currentMailboxMessages))
+                .build(), mailboxSession)
+                .flatMapMany(messageMove -> {
+                    if (messageMove.isChange()) {
+                        return applyMessageMoveNoMailboxChecks(mailboxSession, currentMailboxMessages, messageMove);
+                    }
+                    return Flux.empty();
+                })
+                .collectList()
+                .flatMap(eventBus::dispatch));
     }
 
     private Mono<List<MailboxMessage>> findRelatedMailboxMessages(MessageId messageId, MailboxSession mailboxSession) {
