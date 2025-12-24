@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import java.util.function.Function;
+
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -67,35 +69,49 @@ public class MailboxMergingTaskRunner {
 
     public Task.Result run(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxMergingTask.Context context) {
         return moveMessages(oldMailboxId, newMailboxId, mailboxSession, context)
-            .onComplete(
-                () -> mergeRights(oldMailboxId, newMailboxId).block(),
-                () -> mailboxDAO.delete(oldMailboxId).block());
-    }
-
-    private Task.Result moveMessages(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxSession session, MailboxMergingTask.Context context) {
-        return cassandraMessageIdDAO.retrieveMessages(oldMailboxId, MessageRange.all(), Limit.unlimited())
-            .map(CassandraMessageMetadata::getComposedMessageId)
-            .map(ComposedMessageIdWithMetaData::getComposedMessageId)
-            .flatMap(messageId -> Mono.fromCallable(() -> moveMessage(newMailboxId, messageId, session, context))
-                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER), ReactorUtils.DEFAULT_CONCURRENCY)
-            .reduce(Task.Result.COMPLETED, Task::combine)
+            .flatMap(onMoveCompleteOperations(oldMailboxId, newMailboxId))
             .block();
     }
 
-    private Task.Result moveMessage(CassandraId newMailboxId, ComposedMessageId composedMessageId, MailboxSession session, MailboxMergingTask.Context context) {
-        try {
-            messageIdManager.setInMailboxesNoCheck(composedMessageId.getMessageId(), newMailboxId, session);
-            context.incrementMovedCount();
-            return Task.Result.COMPLETED;
-        } catch (OverQuotaException e) {
-            LOGGER.warn("Failed moving message {} due to quota error", composedMessageId.getMessageId(), e);
-            context.incrementFailedCount();
-            return Task.Result.PARTIAL;
-        } catch (MailboxException e) {
-            LOGGER.warn("Failed moving message {}", composedMessageId.getMessageId(), e);
-            context.incrementFailedCount();
-            return Task.Result.PARTIAL;
-        }
+    private Function<Task.Result, Mono<Task.Result>> onMoveCompleteOperations(CassandraId oldMailboxId, CassandraId newMailboxId) {
+        return result -> {
+            if (result == Task.Result.COMPLETED) {
+                return mergeRights(oldMailboxId, newMailboxId)
+                    .then(mailboxDAO.delete(oldMailboxId))
+                    .thenReturn(result)
+                    .onErrorResume(e -> {
+                        LOGGER.error("Error while executing move completion operation", e);
+                        return Mono.just(Task.Result.PARTIAL);
+                    });
+            }
+            return Mono.just(result);
+        };
+    }
+
+    private Mono<Task.Result> moveMessages(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxSession session, MailboxMergingTask.Context context) {
+        return cassandraMessageIdDAO.retrieveMessages(oldMailboxId, MessageRange.all(), Limit.unlimited())
+            .map(CassandraMessageMetadata::getComposedMessageId)
+            .map(ComposedMessageIdWithMetaData::getComposedMessageId)
+            .flatMap(messageId -> moveMessage(newMailboxId, messageId, session, context), ReactorUtils.DEFAULT_CONCURRENCY)
+            .reduce(Task.Result.COMPLETED, Task::combine);
+    }
+
+    private Mono<Task.Result> moveMessage(CassandraId newMailboxId, ComposedMessageId composedMessageId, MailboxSession session, MailboxMergingTask.Context context) {
+        return messageIdManager.setInMailboxesNoCheck(composedMessageId.getMessageId(), newMailboxId, session)
+            .then(Mono.fromCallable(() -> {
+                context.incrementMovedCount();
+                return Task.Result.COMPLETED;
+            }))
+            .onErrorResume(OverQuotaException.class, e -> {
+                LOGGER.warn("Failed moving message {} due to quota error", composedMessageId.getMessageId(), e);
+                context.incrementFailedCount();
+                return Mono.just(Task.Result.PARTIAL);
+            })
+            .onErrorResume(MailboxException.class, e -> {
+                LOGGER.warn("Failed moving message {}", composedMessageId.getMessageId(), e);
+                context.incrementFailedCount();
+                return Mono.just(Task.Result.PARTIAL);
+            });
     }
 
     private Mono<Void> mergeRights(CassandraId oldMailboxId, CassandraId newMailboxId) {
