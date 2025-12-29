@@ -27,7 +27,7 @@ import org.testcontainers.utility.DockerImageName;
 
 public class DockerClamAV {
     private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("clamav/clamav");
-    private static final String DEFAULT_TAG = "0.105";
+    private static final String DEFAULT_TAG = "1.4";
     private static final int DEFAULT_PORT = 3310;
 
     private final GenericContainer<?> container;
