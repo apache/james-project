@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="INFO" monitorInterval="30">
     <Properties>
-        <Property name="logDir">${sys:app.home}/log</Property>
+        <Property name="logDir">${sys:app.home:-..}/log</Property>
         <Property name="logLayoutTomcat">%d{dd-MMM-yyyy HH:mm:ss.SSS} %level [%t] %C.%M:%L - %msg%n</Property>
         <Property name="logLayout1">%d %-7level %logger{36} - %msg%n</Property>
         <Property name="logLayout2">%d %-7level [%t] %C.%M:%L - %msg%n</Property>
