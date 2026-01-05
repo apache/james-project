@@ -12,5 +12,9 @@
         <claim>sub</claim>
         <oidcConfigurationURL>https://127.0.0.1/realms/test/.well-known/openid-configuration</oidcConfigurationURL>
         <scope>email</scope>
+        <introspection>
+            <url>https://127.0.0.1/oidc/introspect</url>
+        </introspection>
+        <aud>james</aud>
     </oidc>
 </managesieveserver>

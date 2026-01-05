@@ -24,16 +24,13 @@ import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.jwt.OidcJwtTokenVerifier;
-import org.apache.james.jwt.introspection.IntrospectionEndpoint;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationProcessor;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.protocols.api.OIDCSASLParser;
 import org.apache.james.protocols.api.OIDCSASLParser.OIDCInitialResponse;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
-
-import reactor.core.publisher.Mono;
 
 public class OAUTHAuthenticationProcessor implements AuthenticationProcessor {
 
@@ -58,7 +55,7 @@ public class OAUTHAuthenticationProcessor implements AuthenticationProcessor {
 
         Optional<Username> authenticatedUserResult = Optional.empty();
         try {
-            authenticatedUserResult = validateToken(oidcInitialResponse.getToken());
+            authenticatedUserResult = new OidcJwtTokenVerifier(this.oidcConfiguration).validateToken(oidcInitialResponse.getToken());
         } catch (Exception e) {
             throw new AuthenticationException("Could not validate the JWT");
         }
@@ -74,36 +71,5 @@ public class OAUTHAuthenticationProcessor implements AuthenticationProcessor {
         }
 
         return authenticatedUser;
-    }
-
-    private Optional<Username> validateToken(String token) {
-        if (this.oidcConfiguration.isCheckTokenByIntrospectionEndpoint()) {
-            return validTokenWithIntrospection(token);
-        } else if (this.oidcConfiguration.isCheckTokenByUserinfoEndpoint()) {
-            return validTokenWithUserInfo(token);
-        } else {
-            return OidcJwtTokenVerifier.verifySignatureAndExtractClaim(token, this.oidcConfiguration.getJwksURL(), this.oidcConfiguration.getClaim())
-                .map(Username::of);
-        }
-    }
-
-    private Optional<Username> validTokenWithUserInfo(String token) {
-        return Mono.from(OidcJwtTokenVerifier.verifyWithUserinfo(token,
-                this.oidcConfiguration.getJwksURL(),
-                this.oidcConfiguration.getClaim(),
-                this.oidcConfiguration.getUserInfoEndpoint().orElseThrow()))
-            .blockOptional()
-            .map(Username::of);
-    }
-
-    private Optional<Username> validTokenWithIntrospection(String token) {
-        return Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(token,
-                this.oidcConfiguration.getJwksURL(),
-                this.oidcConfiguration.getClaim(),
-                this.oidcConfiguration.getIntrospectionEndpoint()
-                    .map(endpoint -> new IntrospectionEndpoint(endpoint, this.oidcConfiguration.getIntrospectionEndpointAuthorization()))
-                    .orElseThrow()))
-            .blockOptional()
-            .map(Username::of);
     }
 }

@@ -104,7 +104,7 @@ public class OidcJwtTokenVerifier {
     }
 
     @VisibleForTesting
-   Publisher<String> verifyWithUserinfo(String jwtToken, URL userinfoEndpoint) {
+    Publisher<String> verifyWithUserinfo(String jwtToken, URL userinfoEndpoint) {
         return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken))
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
             .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.userInfo(userinfoEndpoint, jwtToken))

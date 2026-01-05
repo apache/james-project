@@ -23,12 +23,12 @@ import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.util.Optional;
 
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SessionTerminatedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieve.transcode.NotEnoughDataException;
 import org.apache.james.managesieve.util.SettableSession;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.protocols.netty.Encryption;
 import org.slf4j.Logger;
