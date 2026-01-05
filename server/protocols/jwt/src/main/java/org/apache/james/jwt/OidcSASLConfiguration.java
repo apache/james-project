@@ -37,9 +37,6 @@ import com.google.common.base.Preconditions;
 public class OidcSASLConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(OidcSASLConfiguration.class);
 
-    private static final boolean FORCE_INTROSPECT = Boolean.parseBoolean(System.getProperty("james.sasl.oidc.force.introspect", "true"));
-    private static final boolean VALIDATE_AUD = Boolean.parseBoolean(System.getProperty("james.sasl.oidc.validate.aud", "true"));
-
     @VisibleForTesting
     static Builder builder() {
         return new Builder();
@@ -140,7 +137,7 @@ public class OidcSASLConfiguration {
         String aud = configuration.getString("aud", null);
 
         if (introspectionUrl == null) {
-            if (FORCE_INTROSPECT) {
+            if (Boolean.parseBoolean(System.getProperty("james.sasl.oidc.force.introspect", "true"))) {
                 throw new IllegalArgumentException("'introspection.url' is mandatory for secure set up. Disable this check with -Djames.sasl.oidc.force.introspect=false.");
             } else {
                 LOGGER.warn("'introspection.url' is mandatory for secure set up. This check was disabled with -Djames.sasl.oidc.force.introspect=false.");
@@ -148,7 +145,7 @@ public class OidcSASLConfiguration {
         }
 
         if (aud == null) {
-            if (VALIDATE_AUD) {
+            if (Boolean.parseBoolean(System.getProperty("james.sasl.oidc.validate.aud", "true"))) {
                 throw new IllegalArgumentException("'aud' is mandatory for secure set up. Disable this check with -Djames.sasl.oidc.validate.aud=false.");
             } else {
                 LOGGER.warn("'aud' is mandatory for secure set up. This check was disabled with -Djames.sasl.oidc.validate.aud=false.");
