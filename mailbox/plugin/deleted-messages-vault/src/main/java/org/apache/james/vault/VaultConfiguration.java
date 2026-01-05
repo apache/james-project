@@ -31,10 +31,11 @@ import org.apache.james.util.DurationParser;
 import com.google.common.base.Preconditions;
 
 public class VaultConfiguration {
+    public static final String DEFAULT_SINGLE_BUCKET_NAME = "deleted-message-vault";
     public static final VaultConfiguration DEFAULT =
-        new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
+        new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES, DEFAULT_SINGLE_BUCKET_NAME);
     public static final VaultConfiguration ENABLED_DEFAULT =
-        new VaultConfiguration(true, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES);
+        new VaultConfiguration(true, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES, DEFAULT_SINGLE_BUCKET_NAME);
 
     public static VaultConfiguration from(Configuration propertiesConfiguration) {
         Duration retentionPeriod = Optional.ofNullable(propertiesConfiguration.getString("retentionPeriod"))
@@ -42,21 +43,26 @@ public class VaultConfiguration {
             .orElse(DEFAULT.getRetentionPeriod());
         String restoreLocation = Optional.ofNullable(propertiesConfiguration.getString("restoreLocation"))
             .orElse(DEFAULT.getRestoreLocation());
+        String singleBucketName = Optional.ofNullable(propertiesConfiguration.getString("singleBucketName"))
+            .orElse(DEFAULT.getSingleBucketName());
         boolean enabled = propertiesConfiguration.getBoolean("enabled", false);
-        return new VaultConfiguration(enabled, retentionPeriod, restoreLocation);
+        return new VaultConfiguration(enabled, retentionPeriod, restoreLocation, singleBucketName);
     }
 
     private final boolean enabled;
     private final Duration retentionPeriod;
     private final String restoreLocation;
+    private final String singleBucketName;
 
-    VaultConfiguration(boolean enabled, Duration retentionPeriod, String restoreLocation) {
+    VaultConfiguration(boolean enabled, Duration retentionPeriod, String restoreLocation, String singleBucketName) {
         this.enabled = enabled;
         Preconditions.checkNotNull(retentionPeriod);
         Preconditions.checkNotNull(restoreLocation);
+        Preconditions.checkNotNull(singleBucketName);
 
         this.retentionPeriod = retentionPeriod;
         this.restoreLocation = restoreLocation;
+        this.singleBucketName = singleBucketName;
     }
 
     public boolean isEnabled() {
@@ -71,6 +77,10 @@ public class VaultConfiguration {
         return restoreLocation;
     }
 
+    public String getSingleBucketName() {
+        return singleBucketName;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof VaultConfiguration) {
@@ -78,13 +88,14 @@ public class VaultConfiguration {
 
             return Objects.equals(this.retentionPeriod, that.retentionPeriod)
                 && Objects.equals(this.restoreLocation, that.restoreLocation)
-                && Objects.equals(this.enabled, that.enabled);
+                && Objects.equals(this.enabled, that.enabled)
+                && Objects.equals(this.singleBucketName, that.singleBucketName);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(retentionPeriod, restoreLocation, enabled);
+        return Objects.hash(retentionPeriod, restoreLocation, enabled, singleBucketName);
     }
 }
