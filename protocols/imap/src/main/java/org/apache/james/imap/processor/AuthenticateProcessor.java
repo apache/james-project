@@ -215,6 +215,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 Username associatedUser = Username.of(oidcInitialResponse.getAssociatedUser());
                 if (!associatedUser.equals(authenticatedUser)) {
                     doAuthWithDelegation(() -> getMailboxManager()
+                            .withExtraAuthorizator(withAdminUsers())
                             .authenticate(authenticatedUser)
                             .as(associatedUser),
                         session, request, responder, authenticatedUser, associatedUser);

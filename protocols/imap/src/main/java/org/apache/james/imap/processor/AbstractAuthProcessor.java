@@ -27,6 +27,7 @@ import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
+import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -126,11 +127,21 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         }
         Username otherUser = authenticationAttempt.getDelegateUserName().orElseThrow();
         doAuthWithDelegation(() -> getMailboxManager()
+                .withExtraAuthorizator(withAdminUsers())
                 .authenticate(givenUser, authenticationAttempt.getPassword())
                 .as(otherUser),
             session,
             request, responder,
             givenUser, otherUser);
+    }
+
+    protected Authorizator withAdminUsers() {
+        return (userId, otherUserId) -> {
+            if (imapConfiguration.getAdminUsers().contains(userId.asString())) {
+                return Authorizator.AuthorizationState.ALLOWED;
+            }
+            return Authorizator.AuthorizationState.FORBIDDEN;
+        };
     }
 
     protected void doAuthWithDelegation(MailboxSessionAuthWithDelegationSupplier mailboxSessionSupplier,
