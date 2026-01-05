@@ -67,6 +67,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -249,19 +250,21 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
 
     @VisibleForTesting static ImapConfiguration getImapConfiguration(HierarchicalConfiguration<ImmutableNode> configuration) {
         ImmutableSet<String> disabledCaps = ImmutableSet.copyOf(Splitter.on(CAPABILITY_SEPARATOR).split(configuration.getString("disabledCaps", "")));
+        ImmutableList<String> adminUsers = ImmutableList.copyOf(configuration.getStringArray("auth.adminUsers.adminUser"));
 
         return ImapConfiguration.builder()
-                .enableIdle(configuration.getBoolean("enableIdle", ImapConfiguration.DEFAULT_ENABLE_IDLE))
-                .idleTimeInterval(configuration.getLong("idleTimeInterval", ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS))
-                .idleTimeIntervalUnit(getTimeIntervalUnit(configuration.getString("idleTimeIntervalUnit", DEFAULT_TIME_UNIT)))
-                .disabledCaps(disabledCaps)
-                .appendLimit(Optional.of(parseLiteralSizeLimit(configuration)).filter(i -> i > 0))
-                .maxQueueSize(configuration.getInteger("maxQueueSize", ImapConfiguration.DEFAULT_QUEUE_SIZE))
-                .concurrentRequests(configuration.getInteger("concurrentRequests", ImapConfiguration.DEFAULT_CONCURRENT_REQUESTS))
-                .isProvisionDefaultMailboxes(configuration.getBoolean("provisionDefaultMailboxes", ImapConfiguration.DEFAULT_PROVISION_DEFAULT_MAILBOXES))
-                .withCustomProperties(configuration.getProperties("customProperties"))
-                .idFieldsResponse(getIdCommandResponseFields(configuration))
-                .build();
+            .enableIdle(configuration.getBoolean("enableIdle", ImapConfiguration.DEFAULT_ENABLE_IDLE))
+            .idleTimeInterval(configuration.getLong("idleTimeInterval", ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS))
+            .idleTimeIntervalUnit(getTimeIntervalUnit(configuration.getString("idleTimeIntervalUnit", DEFAULT_TIME_UNIT)))
+            .disabledCaps(disabledCaps)
+            .appendLimit(Optional.of(parseLiteralSizeLimit(configuration)).filter(i -> i > 0))
+            .maxQueueSize(configuration.getInteger("maxQueueSize", ImapConfiguration.DEFAULT_QUEUE_SIZE))
+            .concurrentRequests(configuration.getInteger("concurrentRequests", ImapConfiguration.DEFAULT_CONCURRENT_REQUESTS))
+            .isProvisionDefaultMailboxes(configuration.getBoolean("provisionDefaultMailboxes", ImapConfiguration.DEFAULT_PROVISION_DEFAULT_MAILBOXES))
+            .withCustomProperties(configuration.getProperties("customProperties"))
+            .idFieldsResponse(getIdCommandResponseFields(configuration))
+            .adminUsers(adminUsers)
+            .build();
     }
 
     private static ImmutableMap<String, String> getIdCommandResponseFields(HierarchicalConfiguration<ImmutableNode> configuration) {

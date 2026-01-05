@@ -45,6 +45,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -1060,6 +1061,41 @@ class IMAPServerTest {
                     .login(USER.asString(), USER_PASS)
                     .sendCommand("STATUS \"INBOX\" (APPENDLIMIT)"))
                 .contains("* STATUS \"INBOX\" (APPENDLIMIT 131072)");
+        }
+    }
+
+    @Nested
+    class AdminUsers {
+        IMAPServer imapServer;
+        private int port;
+        private SocketChannel clientConnection;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerAdminUsers.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+
+
+            clientConnection = SocketChannel.open();
+            clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(clientConnection);
+        }
+
+        @AfterEach
+        void tearDown() throws Exception {
+            clientConnection.close();
+            imapServer.destroy();
+        }
+
+        @Test
+        void shouldSupportPerPortAdminUsers() throws Exception {
+            clientConnection.write(ByteBuffer.wrap("a0 AUTHENTICATE PLAIN\r\n".getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.startsWith("+"));
+            clientConnection.write(ByteBuffer.wrap((Base64.getEncoder().encodeToString((USER2.asString() + "\0" + USER.asString() + "\0" + USER_PASS).getBytes(StandardCharsets.US_ASCII)) + "\r\n").getBytes(StandardCharsets.US_ASCII)));
+
+            String reply = readStringUntil(clientConnection, s -> s.startsWith("a0")).getLast();
+
+            assertThat(reply).startsWith("a0 OK");
         }
     }
 
