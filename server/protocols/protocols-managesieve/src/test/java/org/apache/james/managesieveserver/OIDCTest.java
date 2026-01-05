@@ -30,6 +30,7 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -85,6 +86,12 @@ public class OIDCTest {
             this.configuration.addProperty("oidc.scope", SCOPE);
         }
 
+        @BeforeAll
+        void initialSetup() {
+            System.setProperty("james.sasl.oidc.force.introspect", "false");
+            System.setProperty("james.sasl.oidc.validate.aud", "false");
+        }
+
         @BeforeEach
         void setUp() throws Exception {
             this.testSystem.setUp(this.configuration);
@@ -99,8 +106,10 @@ public class OIDCTest {
         }
 
         @AfterAll
-        void finalTearDown() {
+        void finalTeardown() {
             this.authServer.stop();
+            System.clearProperty("james.sasl.oidc.force.introspect");
+            System.clearProperty("james.sasl.oidc.validate.aud");
         }
 
         @Test
@@ -204,7 +213,7 @@ public class OIDCTest {
                 .when(HttpRequest.request().withPath(INTROSPECTION_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody(String.format("{\"active\": true, \"%s\": \"%s\"}", OidcTokenFixture.CLAIM, OidcTokenFixture.USER_EMAIL_ADDRESS), StandardCharsets.UTF_8));
+                    .withBody(String.format("{\"active\": true, \"%s\": \"%s\", \"aud\": \"%s\"}", OidcTokenFixture.CLAIM, OidcTokenFixture.USER_EMAIL_ADDRESS, OidcTokenFixture.AUDIENCE), StandardCharsets.UTF_8));
             this.authServer
                 .when(HttpRequest.request().withPath(JWKS_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(200)
@@ -216,6 +225,7 @@ public class OIDCTest {
             configuration.addProperty("oidc.oidcConfigurationURL", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), DISCOVERY_URI_PATH));
             configuration.addProperty("oidc.scope", SCOPE);
             configuration.addProperty("oidc.introspection.url", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), INTROSPECTION_URI_PATH));
+            configuration.addProperty("oidc.aud", OidcTokenFixture.AUDIENCE);
             testSystem.setUp(configuration);
 
             ManageSieveClient client = new ManageSieveClient();
@@ -234,7 +244,7 @@ public class OIDCTest {
                 .when(HttpRequest.request().withPath(INTROSPECTION_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody(String.format("{\"active\": false, \"%s\": \"%s\"}", OidcTokenFixture.CLAIM, OidcTokenFixture.USER_EMAIL_ADDRESS), StandardCharsets.UTF_8));
+                    .withBody(String.format("{\"active\": false, \"%s\": \"%s\", \"aud\": \"%s\"}", OidcTokenFixture.CLAIM, OidcTokenFixture.USER_EMAIL_ADDRESS, OidcTokenFixture.AUDIENCE), StandardCharsets.UTF_8));
             this.authServer
                 .when(HttpRequest.request().withPath(JWKS_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(200)
@@ -246,6 +256,7 @@ public class OIDCTest {
             configuration.addProperty("oidc.oidcConfigurationURL", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), DISCOVERY_URI_PATH));
             configuration.addProperty("oidc.scope", SCOPE);
             configuration.addProperty("oidc.introspection.url", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), INTROSPECTION_URI_PATH));
+            configuration.addProperty("oidc.aud", OidcTokenFixture.AUDIENCE);
             testSystem.setUp(configuration);
 
             ManageSieveClient client = new ManageSieveClient();
@@ -264,7 +275,7 @@ public class OIDCTest {
                 .when(HttpRequest.request().withPath(INTROSPECTION_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody(String.format("{\"active\": true, \"%s\": \"%s-wrong\"}", OidcTokenFixture.CLAIM, OidcTokenFixture.USER_EMAIL_ADDRESS), StandardCharsets.UTF_8));
+                    .withBody(String.format("{\"active\": true, \"%s\": \"%s-wrong\", \"aud\": \"%s\"}", OidcTokenFixture.CLAIM, OidcTokenFixture.USER_EMAIL_ADDRESS, OidcTokenFixture.AUDIENCE), StandardCharsets.UTF_8));
             this.authServer
                 .when(HttpRequest.request().withPath(JWKS_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(200)
@@ -276,6 +287,7 @@ public class OIDCTest {
             configuration.addProperty("oidc.oidcConfigurationURL", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), DISCOVERY_URI_PATH));
             configuration.addProperty("oidc.scope", SCOPE);
             configuration.addProperty("oidc.introspection.url", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), INTROSPECTION_URI_PATH));
+            configuration.addProperty("oidc.aud", OidcTokenFixture.AUDIENCE);
             testSystem.setUp(configuration);
 
             ManageSieveClient client = new ManageSieveClient();
@@ -294,7 +306,7 @@ public class OIDCTest {
                 .when(HttpRequest.request().withPath(INTROSPECTION_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody(String.format("{\"%s\": \"%s\"}", OidcTokenFixture.CLAIM, OidcTokenFixture.USER_EMAIL_ADDRESS), StandardCharsets.UTF_8));
+                    .withBody(String.format("{\"%s\": \"%s\", \"aud\": \"%s\"}", OidcTokenFixture.CLAIM, OidcTokenFixture.USER_EMAIL_ADDRESS, OidcTokenFixture.AUDIENCE), StandardCharsets.UTF_8));
             this.authServer
                 .when(HttpRequest.request().withPath(JWKS_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(200)
@@ -306,6 +318,7 @@ public class OIDCTest {
             configuration.addProperty("oidc.oidcConfigurationURL", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), DISCOVERY_URI_PATH));
             configuration.addProperty("oidc.scope", SCOPE);
             configuration.addProperty("oidc.introspection.url", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), INTROSPECTION_URI_PATH));
+            configuration.addProperty("oidc.aud", OidcTokenFixture.AUDIENCE);
             testSystem.setUp(configuration);
 
             ManageSieveClient client = new ManageSieveClient();
@@ -324,7 +337,7 @@ public class OIDCTest {
                 .when(HttpRequest.request().withPath(INTROSPECTION_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody("{\"active\": true}", StandardCharsets.UTF_8));
+                    .withBody(String.format("{\"active\": true, \"aud\": \"%s\"}", OidcTokenFixture.AUDIENCE), StandardCharsets.UTF_8));
             this.authServer
                 .when(HttpRequest.request().withPath(JWKS_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(200)
@@ -336,6 +349,7 @@ public class OIDCTest {
             configuration.addProperty("oidc.oidcConfigurationURL", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), DISCOVERY_URI_PATH));
             configuration.addProperty("oidc.scope", SCOPE);
             configuration.addProperty("oidc.introspection.url", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), INTROSPECTION_URI_PATH));
+            configuration.addProperty("oidc.aud", OidcTokenFixture.AUDIENCE);
             testSystem.setUp(configuration);
 
             ManageSieveClient client = new ManageSieveClient();
@@ -364,6 +378,7 @@ public class OIDCTest {
             configuration.addProperty("oidc.oidcConfigurationURL", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), DISCOVERY_URI_PATH));
             configuration.addProperty("oidc.scope", SCOPE);
             configuration.addProperty("oidc.introspection.url", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), INTROSPECTION_URI_PATH));
+            configuration.addProperty("oidc.aud", OidcTokenFixture.AUDIENCE);
             testSystem.setUp(configuration);
 
             ManageSieveClient client = new ManageSieveClient();
@@ -382,7 +397,7 @@ public class OIDCTest {
                 .when(HttpRequest.request().withPath(INTROSPECTION_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody(String.format("{\"active\": true, \"%s\": \"%s\"}", OidcTokenFixture.CLAIM, OidcTokenFixture.USER_EMAIL_ADDRESS), StandardCharsets.UTF_8));
+                    .withBody(String.format("{\"active\": true, \"%s\": \"%s\", \"aud\": \"%s\"}", OidcTokenFixture.CLAIM, OidcTokenFixture.USER_EMAIL_ADDRESS, OidcTokenFixture.AUDIENCE), StandardCharsets.UTF_8));
             this.authServer
                 .when(HttpRequest.request().withPath(JWKS_URI_PATH))
                 .respond(HttpResponse.response().withStatusCode(500));
@@ -392,6 +407,7 @@ public class OIDCTest {
             configuration.addProperty("oidc.oidcConfigurationURL", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), DISCOVERY_URI_PATH));
             configuration.addProperty("oidc.scope", SCOPE);
             configuration.addProperty("oidc.introspection.url", String.format("http://127.0.0.1:%s%s", this.authServer.getLocalPort(), INTROSPECTION_URI_PATH));
+            configuration.addProperty("oidc.aud", OidcTokenFixture.AUDIENCE);
             testSystem.setUp(configuration);
 
             ManageSieveClient client = new ManageSieveClient();
@@ -413,10 +429,22 @@ public class OIDCTest {
             this.testSystem = new ManageSieveServerTestSystem();
         }
 
+        @BeforeAll
+        static void initialSetup() {
+            System.setProperty("james.sasl.oidc.force.introspect", "false");
+            System.setProperty("james.sasl.oidc.validate.aud", "false");
+        }
+
         @AfterEach
         void tearDown() {
             this.testSystem.manageSieveServer.destroy();
             this.authServer.stop();
+        }
+
+        @AfterAll
+        static void finalTeardown() {
+            System.clearProperty("james.sasl.oidc.force.introspect");
+            System.clearProperty("james.sasl.oidc.validate.aud");
         }
 
         @Test

@@ -23,9 +23,9 @@ package org.apache.james.managesieve.util;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.commands.Authenticate;
-import org.apache.james.protocols.api.OidcSASLConfiguration;
 
 public class SettableSession implements Session {
 
