@@ -38,7 +38,7 @@ class SessionTranslator  @Inject()(sessionProvider: SessionProvider) {
   private def needDelegation(session: MailboxSession, targetAccountId: AccountId): Boolean =
    !hasAccountId(targetAccountId)(session.getUser)
 
-  private def hasAccountId(targetAccountId: AccountId)(username: Username): Boolean =
+  def hasAccountId(targetAccountId: AccountId)(username: Username): Boolean =
     AccountId.from(username).toOption.contains(targetAccountId)
 
   private def delegate(session: MailboxSession, targetAccountId: AccountId): SMono[MailboxSession] =
