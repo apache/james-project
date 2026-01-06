@@ -25,7 +25,6 @@ import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Optional;
@@ -71,7 +70,7 @@ import com.google.common.collect.ImmutableSortedMap;
 
 import reactor.core.publisher.Mono;
 
-public class PopulateEmailQueryViewListenerTest {
+class PopulateEmailQueryViewListenerTest {
     private static final Username BOB = Username.of("bob");
     private static final MailboxPath BOB_INBOX_PATH = MailboxPath.inbox(BOB);
     private static final MailboxPath BOB_OTHER_BOX_PATH = MailboxPath.forUser(BOB, "otherBox");
