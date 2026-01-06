@@ -42,6 +42,7 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
+import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -110,7 +111,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), StoreMailboxManagerTest.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
+        eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.FAST, new MemoryEventDeadLetters());
         eventCollector = new EventCollector();
         quotaManager = mock(QuotaManager.class);
 

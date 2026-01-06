@@ -75,13 +75,6 @@ class StoreMailboxManagerTest {
     static final Username UNKNOWN_USER = Username.of("otheruser");
     static final String BAD_PASSWORD = "badpassword";
     static final String EMPTY_PREFIX = "";
-    static final double DEFAULT_JITTER_FACTOR = 0.5;
-    static final java.time.Duration DEFAULT_FIRST_BACKOFF = java.time.Duration.ofMillis(5);
-    public static final RetryBackoffConfiguration RETRY_BACKOFF_CONFIGURATION = RetryBackoffConfiguration.builder()
-        .maxRetries(3)
-        .firstBackoff(DEFAULT_FIRST_BACKOFF)
-        .jitterFactor(DEFAULT_JITTER_FACTOR)
-        .build();
 
     StoreMailboxManager storeMailboxManager;
     MailboxMapper mockedMailboxMapper;
@@ -100,7 +93,7 @@ class StoreMailboxManagerTest {
         authenticator.addUser(CURRENT_USER, CURRENT_USER_PASSWORD);
         authenticator.addUser(ADMIN, ADMIN_PASSWORD);
 
-        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.FAST, new MemoryEventDeadLetters());
 
         StoreRightManager storeRightManager = new StoreRightManager(mockedMapperFactory, new UnionMailboxACLResolver(), eventBus);
 
