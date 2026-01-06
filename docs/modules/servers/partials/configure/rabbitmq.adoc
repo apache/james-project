@@ -109,6 +109,16 @@ A coma separated list of hosts, example: hosts=ip1:5672,ip2:5672
 | Whether to propagate errors back to the callers when eventbus fails to dispatch group events to RabbitMQ (then store the failed events in the event dead letters).
 Optional boolean, defaults to true.
 
+| event.bus.execution.rate
+| Number of events to process in parallel. Defaults to 10.
+
+| event.bus.initial.execution.timeout
+| Per listener timeout applied on initial execution. This allows mitigating slow listeners and prevent them to delay event execution for others. Duration. None if unspecified.
+
+| event.bus.execution.timeout
+| Per listener timeout applied on retries and on initial execution if `event.bus.initial.execution.timeout` is unspecified.
+Duration. None if unspecified.
+
 | vhost
 | Optional string. This parameter is only a workaround to support invalid URIs containing character like '_'.
 You still need to specify the vhost in the uri parameter.

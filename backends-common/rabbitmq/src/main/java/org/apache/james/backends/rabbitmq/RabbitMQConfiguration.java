@@ -415,6 +415,9 @@ public class RabbitMQConfiguration {
         private Optional<Boolean> eventBusPropagateDispatchError;
         private Optional<String> vhost;
         private Optional<Duration> taskQueueConsumerTimeout;
+        private Optional<Integer> eventBusExecutionRate;
+        private Optional<Duration> eventBusExecutionTimeout;
+        private Optional<Duration> eventBusInitialExecutionTimeout;
 
         private Builder(URI amqpUri, URI managementUri, ManagementCredentials managementCredentials) {
             this.amqpUri = amqpUri;
@@ -440,6 +443,9 @@ public class RabbitMQConfiguration {
             this.vhost = Optional.empty();
             this.taskQueueConsumerTimeout = Optional.empty();
             this.eventBusPropagateDispatchError = Optional.empty();
+            this.eventBusExecutionRate = Optional.empty();
+            this.eventBusExecutionTimeout = Optional.empty();
+            this.eventBusInitialExecutionTimeout = Optional.empty();
         }
 
         public Builder maxRetries(int maxRetries) {
@@ -563,6 +569,21 @@ public class RabbitMQConfiguration {
             return this;
         }
 
+        public Builder eventBusExecutionRate(Optional<Integer> executionRate) {
+            this.eventBusExecutionRate = executionRate;
+            return this;
+        }
+
+        public Builder eventBusExecutionTimeout(Optional<Duration> eventBusExecutionTimeout) {
+            this.eventBusExecutionTimeout = eventBusExecutionTimeout;
+            return this;
+        }
+
+        public Builder eventBusInitialExecutionTimeout(Optional<Duration> eventBusInitialExecutionTimeout) {
+            this.eventBusInitialExecutionTimeout = eventBusInitialExecutionTimeout;
+            return this;
+        }
+
         public RabbitMQConfiguration build() {
             Preconditions.checkNotNull(amqpUri, "'amqpUri' should not be null");
             Preconditions.checkNotNull(managementUri, "'managementUri' should not be null");
@@ -587,9 +608,10 @@ public class RabbitMQConfiguration {
                     queueTTL,
                     eventBusPublishConfirmEnabled.orElse(true),
                     eventBusNotificationDurabilityEnabled.orElse(true),
-                    vhost,
-                    taskQueueConsumerTimeout.orElse(DEFAULT_TASK_QUEUE_CONSUMER_TIMEOUT),
-                    eventBusPropagateDispatchError.orElse(true));
+                    eventBusExecutionRate,
+                    eventBusInitialExecutionTimeout,
+                    eventBusExecutionTimeout,
+                    vhost, taskQueueConsumerTimeout.orElse(DEFAULT_TASK_QUEUE_CONSUMER_TIMEOUT), eventBusPropagateDispatchError.orElse(true));
         }
 
         private List<Host> hostsDefaultingToUri() {
@@ -667,6 +689,9 @@ public class RabbitMQConfiguration {
             .eventBusPropagateDispatchError(configuration.getBoolean(EVENT_BUS_PROPAGATE_DISPATCH_ERROR, null))
             .vhost(vhost)
             .taskQueueConsumerTimeout(taskQueueConsumerTimeout)
+            .eventBusExecutionRate(Optional.ofNullable(configuration.getInteger("event.bus.execution.rate", null)))
+            .eventBusExecutionTimeout(Optional.ofNullable(configuration.getString("event.bus.execution.timeout", null)).map(DurationParser::parse))
+            .eventBusInitialExecutionTimeout(Optional.ofNullable(configuration.getString("event.bus.initial.execution.timeout", null)).map(DurationParser::parse))
             .build();
     }
 
@@ -738,6 +763,9 @@ public class RabbitMQConfiguration {
     private final Optional<Long> queueTTL;
     private final boolean eventBusPublishConfirmEnabled;
     private final boolean eventBusNotificationDurabilityEnabled;
+    private final Optional<Integer> eventBusExecutionRate;
+    private final Optional<Duration> eventBusInitialExecutionTimeout;
+    private final Optional<Duration> eventBusExecutionTimeout;
     private final Optional<String> vhost;
     private final Duration taskQueueConsumerTimeout;
     private final boolean eventBusPropagateDispatchError;
@@ -747,6 +775,7 @@ public class RabbitMQConfiguration {
                                   int networkRecoveryIntervalInMs, Boolean useSsl, Boolean useSslManagement, SSLConfiguration sslConfiguration,
                                   boolean useQuorumQueues, Optional<Integer> quorumQueueDeliveryLimit, int quorumQueueReplicationFactor, List<Host> hosts, Optional<Long> queueTTL,
                                   boolean eventBusPublishConfirmEnabled, boolean eventBusNotificationDurabilityEnabled,
+                                  Optional<Integer> eventBusExecutionRate, Optional<Duration> eventBusInitialExecutionTimeout, Optional<Duration> eventBusExecutionTimeout,
                                   Optional<String> vhost, Duration taskQueueConsumerTimeout, boolean eventBusPropagateDispatchError) {
         this.uri = uri;
         this.managementUri = managementUri;
@@ -768,6 +797,9 @@ public class RabbitMQConfiguration {
         this.queueTTL = queueTTL;
         this.eventBusPublishConfirmEnabled = eventBusPublishConfirmEnabled;
         this.eventBusNotificationDurabilityEnabled = eventBusNotificationDurabilityEnabled;
+        this.eventBusExecutionRate = eventBusExecutionRate;
+        this.eventBusInitialExecutionTimeout = eventBusInitialExecutionTimeout;
+        this.eventBusExecutionTimeout = eventBusExecutionTimeout;
         this.vhost = vhost;
         this.taskQueueConsumerTimeout = taskQueueConsumerTimeout;
         this.eventBusPropagateDispatchError = eventBusPropagateDispatchError;
@@ -891,6 +923,18 @@ public class RabbitMQConfiguration {
         return eventBusPropagateDispatchError;
     }
 
+    public Optional<Integer> getEventBusExecutionRate() {
+        return eventBusExecutionRate;
+    }
+
+    public Optional<Duration> getEventBusInitialExecutionTimeout() {
+        return eventBusInitialExecutionTimeout;
+    }
+
+    public Optional<Duration> getEventBusExecutionTimeout() {
+        return eventBusExecutionTimeout;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof RabbitMQConfiguration) {
@@ -918,7 +962,10 @@ public class RabbitMQConfiguration {
                 && Objects.equals(this.eventBusNotificationDurabilityEnabled, that.eventBusNotificationDurabilityEnabled)
                 && Objects.equals(this.vhost, that.vhost)
                 && Objects.equals(this.taskQueueConsumerTimeout, that.taskQueueConsumerTimeout)
-                && Objects.equals(this.eventBusPropagateDispatchError, that.eventBusPropagateDispatchError);
+                && Objects.equals(this.eventBusPropagateDispatchError, that.eventBusPropagateDispatchError)
+                && Objects.equals(this.eventBusExecutionRate, that.eventBusExecutionRate)
+                && Objects.equals(this.eventBusExecutionTimeout, that.eventBusExecutionTimeout)
+                && Objects.equals(this.eventBusInitialExecutionTimeout, that.eventBusInitialExecutionTimeout);
         }
         return false;
     }
@@ -927,6 +974,7 @@ public class RabbitMQConfiguration {
     public final int hashCode() {
         return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs, quorumQueueReplicationFactor, quorumQueueDeliveryLimit, useQuorumQueues, hosts,
             channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement,
-            sslConfiguration, queueTTL, eventBusPublishConfirmEnabled, eventBusNotificationDurabilityEnabled, vhost, taskQueueConsumerTimeout, eventBusPropagateDispatchError);
+            sslConfiguration, queueTTL, eventBusPublishConfirmEnabled, eventBusNotificationDurabilityEnabled, vhost, taskQueueConsumerTimeout, eventBusPropagateDispatchError,
+            eventBusExecutionRate, eventBusExecutionTimeout, eventBusInitialExecutionTimeout);
     }
 }

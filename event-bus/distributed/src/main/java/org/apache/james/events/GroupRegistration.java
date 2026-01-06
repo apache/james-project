@@ -27,6 +27,7 @@ import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateExclusive;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -112,7 +113,8 @@ class GroupRegistration implements Registration {
     }
 
     GroupRegistration start() {
-        scheduler = Schedulers.newBoundedElastic(EventBus.EXECUTION_RATE, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "group-handler");
+        int threadCap = configuration.getEventBusExecutionRate().orElse(EventBus.EXECUTION_RATE);
+        scheduler = Schedulers.newBoundedElastic(threadCap, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "group-handler");
         receiverSubscriber = Optional
             .of(createGroupWorkQueue()
                 .then(retryHandler.createRetryExchange(queueName))
@@ -142,9 +144,10 @@ class GroupRegistration implements Registration {
     }
 
     private Disposable consumeWorkQueue() {
+        int qos = configuration.getEventBusExecutionRate().orElse(EventBus.EXECUTION_RATE);
         return Flux.using(
                 receiverProvider::createReceiver,
-                receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
+                receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(qos)),
                 Receiver::close)
             .publishOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
@@ -170,15 +173,23 @@ class GroupRegistration implements Registration {
     }
 
     public Mono<Void> runListenerReliably(int currentRetryCount, Event event) {
-        return runListener(event)
+        return runListener(event, timeout(currentRetryCount))
             .onErrorResume(throwable -> retryHandler.handleRetry(event, currentRetryCount, throwable));
     }
 
     public Mono<Void> runListenerReliably(int currentRetryCount, List<Event> events) {
-        return runListener(events)
+        return runListener(events, timeout(currentRetryCount))
             .onErrorResume(throwable -> Flux.fromIterable(events)
                 .concatMap(event -> retryHandler.handleRetry(event, currentRetryCount, throwable))
                 .then());
+    }
+
+    private Optional<Duration> timeout(int currentRetryCount) {
+        if (currentRetryCount == 0) {
+            return configuration.getEventBusInitialExecutionTimeout()
+                .or(configuration::getEventBusExecutionTimeout);
+        }
+        return configuration.getEventBusExecutionTimeout();
     }
 
     private Mono<Event> deserializeEvent(byte[] eventAsBytes) {
@@ -190,20 +201,20 @@ class GroupRegistration implements Registration {
         return retryHandler.retryOrStoreToDeadLetter(event, DEFAULT_RETRY_COUNT);
     }
 
-    private Mono<Void> runListener(Event event) {
-        return listenerExecutor.execute(
-            listener,
-            MDCBuilder.create()
-                .addToContext(EventBus.StructuredLoggingFields.GROUP, group.asString()),
-            event);
+    private Mono<Void> runListener(Event event, Optional<Duration> timeout) {
+        MDCBuilder mdc = MDCBuilder.create()
+            .addToContext(EventBus.StructuredLoggingFields.GROUP, group.asString());
+
+        Mono<Void> result = listenerExecutor.execute(listener, mdc, event);
+        return timeout.map(result::timeout).orElse(result);
     }
 
-    private Mono<Void> runListener(List<Event> events) {
-        return listenerExecutor.execute(
-            listener,
-            MDCBuilder.create()
-                .addToContext(EventBus.StructuredLoggingFields.GROUP, group.asString()),
-            events);
+    private Mono<Void> runListener(List<Event> events, Optional<Duration> timeout) {
+        MDCBuilder mdc = MDCBuilder.create()
+            .addToContext(EventBus.StructuredLoggingFields.GROUP, group.asString());
+
+        Mono<Void> result = listenerExecutor.execute(listener, mdc, events);
+        return timeout.map(result::timeout).orElse(result);
     }
 
     private int getRetryCount(AcknowledgableDelivery acknowledgableDelivery) {

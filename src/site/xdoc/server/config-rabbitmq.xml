@@ -152,6 +152,16 @@
           <dd>Whether to propagate errors back to the callers when eventbus fails to dispatch group events to RabbitMQ (then store the failed events in the event dead letters).
               Optional boolean, defaults to true.</dd>
 
+          <dt><strong>event.bus.execution.rate</strong></dt>
+          <dd>Number of events to process in parallel. Defaults to 10.</dd>
+
+          <dt><strong>event.bus.initial.execution.timeout</strong></dt>
+          <dd>Per listener timeout applied on initial execution. This allows mitigating slow listeners and prevent them to delay event execution for others. Duration. None if unspecified.</dd>
+
+          <dt><strong>event.bus.execution.timeout</strong></dt>
+          <dd>Per listener timeout applied on retries and on initial execution if `event.bus.initial.execution.timeout` is unspecified.
+              Duration. None if unspecified.</dd>
+
           <dt><strong>vhost</strong></dt>
           <dd>Optional string.
               This parameter is only a workaround to support invalid URIs containing character like '_'.

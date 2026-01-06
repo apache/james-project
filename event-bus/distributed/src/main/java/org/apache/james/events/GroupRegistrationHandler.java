@@ -97,7 +97,8 @@ public class GroupRegistrationHandler {
         this.configuration = configuration;
         this.groupRegistrations = new ConcurrentHashMap<>();
         this.queueName = namingStrategy.workQueue(GROUP);
-        this.scheduler = Schedulers.newBoundedElastic(EventBus.EXECUTION_RATE, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "groups-handler");
+        int threadCap = configuration.getEventBusExecutionRate().orElse(EventBus.EXECUTION_RATE);
+        this.scheduler = Schedulers.newBoundedElastic(threadCap, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "groups-handler");
         this.consumer = Optional.empty();
     }
 
@@ -126,9 +127,10 @@ public class GroupRegistrationHandler {
     }
 
     private Disposable consumeWorkQueue() {
+        int qos = configuration.getEventBusExecutionRate().orElse(EventBus.EXECUTION_RATE);
         return Flux.using(
                 receiverProvider::createReceiver,
-            receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
+            receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(qos)),
             Receiver::close)
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
             .flatMap(this::deliver, EventBus.EXECUTION_RATE)
