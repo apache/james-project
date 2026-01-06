@@ -84,8 +84,8 @@ public class GroupRegistrationHandler {
     private Optional<Disposable> consumer;
 
     GroupRegistrationHandler(NamingStrategy namingStrategy, EventSerializer eventSerializer, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider,
-                             RetryBackoffConfiguration retryBackoff,
-                             EventDeadLetters eventDeadLetters, ListenerExecutor listenerExecutor, EventBusId eventBusId, RabbitMQConfiguration configuration) {
+                             RetryBackoffConfiguration retryBackoff, EventDeadLetters eventDeadLetters,
+                             ListenerExecutor listenerExecutor, RabbitMQConfiguration configuration) {
         this.namingStrategy = namingStrategy;
         this.eventSerializer = eventSerializer;
         this.channelPool = channelPool;
