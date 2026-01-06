@@ -26,8 +26,8 @@ import java.util.stream
 import java.util.stream.Stream
 
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
+import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
-import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
 import jakarta.inject.{Inject, Named}
 import org.apache.commons.fileupload.util.LimitedInputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
@@ -42,7 +42,7 @@ import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.{ResponseSerializer, UploadSerializer}
 import org.apache.james.jmap.mail.BlobId
 import org.apache.james.jmap.method.AccountNotFoundException
-import org.apache.james.jmap.routes.UploadRoutes.LOGGER
+import org.apache.james.jmap.routes.UploadRoutes.{LOGGER, asBlobId}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.ContentType
@@ -57,6 +57,9 @@ case class TooBigUploadException() extends RuntimeException
 
 object UploadRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[UploadRoutes])
+
+  def asBlobId(uploadId: UploadId): BlobId =
+    BlobId.of(s"uploads-${uploadId.asString()}").get
 }
 
 case class UploadResponse(accountId: AccountId,
@@ -159,8 +162,6 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
         `type` = uploadMetaData.contentType,
         size = uploadMetaData.size,
         accountId = accountId)
-
-  private def asBlobId(uploadId: UploadId): BlobId = BlobId.of(s"uploads-${uploadId.asString()}" ).get
 
   private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): SMono[Void] =
     SMono.fromCallable(() => ResponseSerializer.serialize(details).toString)

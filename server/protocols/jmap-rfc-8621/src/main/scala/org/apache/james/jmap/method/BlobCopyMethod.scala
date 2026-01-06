@@ -22,7 +22,6 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import org.apache.james.core.Username
-import org.apache.james.jmap.api.model.UploadId
 import org.apache.james.jmap.api.upload.UploadService
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
@@ -31,15 +30,15 @@ import org.apache.james.jmap.core.{BlobCopyRequest, BlobCopyResponse, ErrorCode,
 import org.apache.james.jmap.json.BlobCopySerializer
 import org.apache.james.jmap.mail.BlobId
 import org.apache.james.jmap.mail.MDNParse.UnparsedBlobId
+import org.apache.james.jmap.routes.UploadRoutes.asBlobId
 import org.apache.james.jmap.routes.{Blob, BlobNotFoundException, BlobResolvers, SessionSupplier}
 import org.apache.james.mailbox.{MailboxSession, SessionProvider}
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
+import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.{SFlux, SMono}
-
-import scala.jdk.OptionConverters._
 
 sealed trait CopyResult {
   def sourceBlobId: BlobId
@@ -85,13 +84,14 @@ class BlobCopyMethod @Inject()(val metricFactory: MetricFactory,
     if (request.fromAccountId.equals(request.accountId)) {
       SMono.just(mailboxSession)
     } else {
-      mailboxSession.getLoggedInUser.toScala
-        .filter(loggedInUser => sessionTranslator.hasAccountId(request.fromAccountId)(loggedInUser))
-        .map(createSourceSession)
-        .getOrElse(SMono.error(FromAccountNotFoundException()))
+      SMono(Mono.justOrEmpty(mailboxSession.getLoggedInUser))
+        .flatMap(createLoggedInUserSession)
+        .flatMap(session => sessionTranslator.delegateIfNeeded(session, request.fromAccountId)
+          .onErrorResume { case _: AccountNotFoundException => SMono.error(FromAccountNotFoundException())})
+        .switchIfEmpty(SMono.error(FromAccountNotFoundException()))
     }
 
-  private def createSourceSession(loggedInUser: Username): SMono[MailboxSession] =
+  private def createLoggedInUserSession(loggedInUser: Username): SMono[MailboxSession] =
     SMono.fromCallable(() => sessionProvider.authenticate(loggedInUser).withoutDelegation())
       .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 
@@ -135,9 +135,6 @@ class BlobCopyMethod @Inject()(val metricFactory: MetricFactory,
   private def uploadBlob(sourceBlobId: BlobId, blob: Blob, targetSession: MailboxSession): SMono[CopyResult] =
     SMono.fromPublisher(uploadService.upload(blob.content, blob.contentType, targetSession.getUser))
       .map(upload => Copied(sourceBlobId, asBlobId(upload.uploadId)))
-
-  private def asBlobId(uploadId: UploadId): BlobId =
-    BlobId.of(s"uploads-${uploadId.asString()}").get
 
   private def asSetError(sourceId: BlobId, sourceSession: MailboxSession, targetSession: MailboxSession, throwable: Throwable): SetError =
     throwable match {

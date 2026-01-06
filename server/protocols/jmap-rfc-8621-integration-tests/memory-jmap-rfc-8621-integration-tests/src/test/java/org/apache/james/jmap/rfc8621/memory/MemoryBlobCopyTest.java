@@ -19,7 +19,31 @@
 
 package org.apache.james.jmap.rfc8621.memory;
 
-import org.apache.james.jmap.rfc8621.contract.BlobCopyContract;
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
-public class MemoryBlobCopyTest extends MemoryBase implements BlobCopyContract {
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.MemoryJamesConfiguration;
+import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.jmap.rfc8621.contract.BlobCopyContract;
+import org.apache.james.jmap.rfc8621.contract.BlobCopyContract$;
+import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.google.common.collect.ImmutableMap;
+
+public class MemoryBlobCopyTest implements BlobCopyContract {
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
+        MemoryJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .enableJMAP()
+            .build())
+        .server(configuration -> MemoryJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJMAPServerModule(ImmutableMap.of("upload.quota.limit", BlobCopyContract$.MODULE$.TWENTY_KILO_BYTES_UPLOAD_QUOTA_LIMIT())),
+                new DelegationProbeModule()))
+        .build();
 }

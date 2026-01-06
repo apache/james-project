@@ -19,7 +19,43 @@
 
 package org.apache.james.jmap.rfc8621.postgres;
 
-import org.apache.james.jmap.rfc8621.contract.BlobCopyContract;
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
-public class PostgresBlobCopyTest extends PostgresBase implements BlobCopyContract {
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.PostgresJamesConfiguration;
+import org.apache.james.PostgresJamesServerMain;
+import org.apache.james.SearchConfiguration;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.jmap.rfc8621.contract.BlobCopyContract;
+import org.apache.james.jmap.rfc8621.contract.BlobCopyContract$;
+import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.google.common.collect.ImmutableMap;
+
+public class PostgresBlobCopyTest implements BlobCopyContract {
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
+        PostgresJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .searchConfiguration(SearchConfiguration.scanning())
+            .usersRepository(DEFAULT)
+            .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.RABBITMQ)
+            .blobStore(BlobStoreConfiguration.builder()
+                .postgres()
+                .disableCache()
+                .deduplication()
+                .noCryptoConfig())
+            .build())
+        .extension(PostgresExtension.empty())
+        .extension(new RabbitMQExtension())
+        .server(configuration -> PostgresJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJMAPServerModule(ImmutableMap.of("upload.quota.limit", BlobCopyContract$.MODULE$.TWENTY_KILO_BYTES_UPLOAD_QUOTA_LIMIT())))
+            .overrideWith(new DelegationProbeModule()))
+        .build();
 }

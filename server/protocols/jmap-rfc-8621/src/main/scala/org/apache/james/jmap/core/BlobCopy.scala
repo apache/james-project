@@ -27,8 +27,8 @@ case class BlobCopyRequest(fromAccountId: AccountId,
                            blobIds: BlobIds) extends WithAccountId with ValidableRequest {
   override def validate(configuration: JmapRfc8621Configuration): Either[Exception, BlobCopyRequest] =
     if (blobIds.value.size > configuration.maxObjectsInSet.value.value) {
-      Left(RequestTooLargeException(s"Too many items in a Blob/copy request. " +
-        s"Got ${blobIds.value.size} items instead of maximum ${configuration.maxObjectsInSet.value.value}."))
+      Left(RequestTooLargeException(s"""Too many items in a Blob/copy request.
+        Got ${blobIds.value.size} items instead of maximum ${configuration.maxObjectsInSet.value.value}."""))
     } else {
       scala.Right(this)
     }
