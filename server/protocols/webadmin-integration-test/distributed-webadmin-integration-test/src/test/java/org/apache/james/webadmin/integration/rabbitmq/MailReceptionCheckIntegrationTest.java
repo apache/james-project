@@ -82,11 +82,7 @@ class MailReceptionCheckIntegrationTest {
                     Optional.of(ALICE), Duration.ofSeconds(10))))
             // Enforce a single eventBus retry. Required as Current Quotas are handled by the eventBus.
             .overrideWith(binder -> binder.bind(RetryBackoffConfiguration.class)
-                .toInstance(RetryBackoffConfiguration.builder()
-                    .maxRetries(1)
-                    .firstBackoff(Duration.ofMillis(2))
-                    .jitterFactor(0.5)
-                    .build())))
+                .toInstance(RetryBackoffConfiguration.FAST)))
         .build();
 
     @BeforeEach

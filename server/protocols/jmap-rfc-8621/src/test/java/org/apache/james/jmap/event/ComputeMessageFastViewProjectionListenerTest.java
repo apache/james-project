@@ -30,7 +30,6 @@ import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 
 import org.apache.james.core.Username;
 import org.apache.james.events.Group;
@@ -110,15 +109,11 @@ class ComputeMessageFastViewProjectionListenerTest {
         eventDeadLetters = new MemoryEventDeadLetters();
         // Default RetryBackoffConfiguration leads each events to be re-executed for 30s which is too long
         // Reducing the wait time for the event bus allow a faster test suite execution without harming test correctness
-        RetryBackoffConfiguration backoffConfiguration = RetryBackoffConfiguration.builder()
-            .maxRetries(2)
-            .firstBackoff(Duration.ofMillis(1))
-            .jitterFactor(0.5)
-            .build();
+
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
-            .eventBus(new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), backoffConfiguration, eventDeadLetters))
+            .eventBus(new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.FAST, eventDeadLetters))
             .defaultAnnotationLimits()
             .defaultMessageParser()
             .scanningSearchIndex()

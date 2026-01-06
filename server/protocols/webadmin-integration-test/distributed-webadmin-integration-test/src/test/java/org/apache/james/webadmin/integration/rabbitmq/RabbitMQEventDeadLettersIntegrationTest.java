@@ -221,11 +221,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         .extension(new RetryEventsListenerExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(RetryBackoffConfiguration.class)
-                .toInstance(RetryBackoffConfiguration.builder()
-                    .maxRetries(MAX_RETRIES)
-                    .firstBackoff(java.time.Duration.ofMillis(5))
-                    .jitterFactor(0.2)
-                    .build())))
+                .toInstance(RetryBackoffConfiguration.FAST)))
         .build();
 
     private static final String DOMAIN = "domain.tld";

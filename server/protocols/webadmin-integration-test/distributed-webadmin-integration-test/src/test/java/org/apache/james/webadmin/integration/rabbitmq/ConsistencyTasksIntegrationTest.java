@@ -38,7 +38,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
-import java.time.Duration;
 
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
@@ -143,11 +142,7 @@ class ConsistencyTasksIntegrationTest {
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             // Enforce a single eventBus retry. Required as Current Quotas are handled by the eventBus.
             .overrideWith(binder -> binder.bind(RetryBackoffConfiguration.class)
-                .toInstance(RetryBackoffConfiguration.builder()
-                    .maxRetries(1)
-                    .firstBackoff(Duration.ofMillis(2))
-                    .jitterFactor(0.5)
-                    .build()))
+                .toInstance(RetryBackoffConfiguration.FAST))
             .overrideWith(new TestingSessionModule()))
         .build();
 
