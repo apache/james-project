@@ -72,6 +72,11 @@ public class RetryBackoffConfiguration {
         DEFAULT_MAX_RETRIES,
         DEFAULT_FIRST_BACKOFF,
         DEFAULT_JITTER_FACTOR);
+    public static final RetryBackoffConfiguration FAST = RetryBackoffConfiguration.builder()
+        .maxRetries(2)
+        .firstBackoff(Duration.ofMillis(1))
+        .jitterFactor(0.5)
+        .build();
 
     private final int maxRetries;
     private final Duration firstBackoff;

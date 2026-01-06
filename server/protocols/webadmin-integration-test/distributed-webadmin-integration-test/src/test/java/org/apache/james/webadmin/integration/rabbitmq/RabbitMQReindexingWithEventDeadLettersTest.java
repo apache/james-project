@@ -97,11 +97,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(RetryBackoffConfiguration.class)
-                .toInstance(RetryBackoffConfiguration.builder()
-                    .maxRetries(2)
-                    .firstBackoff(java.time.Duration.ofMillis(10))
-                    .jitterFactor(0.2)
-                    .build())))
+                .toInstance(RetryBackoffConfiguration.FAST)))
         .build();
 
     private RequestSpecification webAdminApi;

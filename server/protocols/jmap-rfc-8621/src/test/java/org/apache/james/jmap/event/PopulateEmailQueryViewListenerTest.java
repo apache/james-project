@@ -25,7 +25,6 @@ import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Optional;
@@ -71,7 +70,7 @@ import com.google.common.collect.ImmutableSortedMap;
 
 import reactor.core.publisher.Mono;
 
-public class PopulateEmailQueryViewListenerTest {
+class PopulateEmailQueryViewListenerTest {
     private static final Username BOB = Username.of("bob");
     private static final MailboxPath BOB_INBOX_PATH = MailboxPath.inbox(BOB);
     private static final MailboxPath BOB_OTHER_BOX_PATH = MailboxPath.forUser(BOB, "otherBox");
@@ -92,15 +91,10 @@ public class PopulateEmailQueryViewListenerTest {
     void setup() throws Exception {
         // Default RetryBackoffConfiguration leads each events to be re-executed for 30s which is too long
         // Reducing the wait time for the event bus allow a faster test suite execution without harming test correctness
-        RetryBackoffConfiguration backoffConfiguration = RetryBackoffConfiguration.builder()
-            .maxRetries(2)
-            .firstBackoff(Duration.ofMillis(1))
-            .jitterFactor(0.5)
-            .build();
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
-            .eventBus(new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), backoffConfiguration, new MemoryEventDeadLetters()))
+            .eventBus(new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.FAST, new MemoryEventDeadLetters()))
             .defaultAnnotationLimits()
             .defaultMessageParser()
             .scanningSearchIndex()
