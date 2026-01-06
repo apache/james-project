@@ -690,12 +690,10 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         }
 
         @Override
-        public Optional<TaskExecutionDetails.AdditionalInformation> details() {
+        public Mono<Optional<TaskExecutionDetails.AdditionalInformation>> detailsReactive() {
             // Some task requires cassandra query execution upon detail generation
-            Mono.from(session.executeReactive("SELECT dateof(now()) FROM system.local ;"))
-                .block();
-
-            return Optional.empty();
+            return Mono.from(session.executeReactive("SELECT dateof(now()) FROM system.local ;"))
+                .thenReturn(Optional.empty());
         }
     }
 
