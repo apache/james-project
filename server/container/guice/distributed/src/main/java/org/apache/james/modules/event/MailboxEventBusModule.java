@@ -22,15 +22,12 @@ package org.apache.james.modules.event;
 import static org.apache.james.events.NamingStrategy.MAILBOX_EVENT_NAMING_STRATEGY;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
-import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
-import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.GroupRegistrationHandler;
 import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.NamingStrategy;
@@ -41,7 +38,6 @@ import org.apache.james.events.RegistrationKey;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
-import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
@@ -50,8 +46,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
-
-import reactor.rabbitmq.Sender;
 
 public class MailboxEventBusModule extends AbstractModule {
 
@@ -95,13 +89,11 @@ public class MailboxEventBusModule extends AbstractModule {
 
     @Provides
     @Singleton
-    RabbitMQEventBus provideRabbitMQEventBus(NamingStrategy namingStrategy, Sender sender, ReceiverProvider receiverProvider, MailboxEventSerializer eventSerializer,
-                                         RetryBackoffConfiguration retryBackoff,
-                                         RoutingKeyConverter routingKeyConverter,
-                                         EventDeadLetters eventDeadLetters, MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool,
-                                         EventBusId eventBusId, RabbitMQConfiguration configuration) {
-        return new RabbitMQEventBus(namingStrategy, sender, receiverProvider, eventSerializer, routingKeyConverter,
-            eventDeadLetters, metricFactory, channelPool, eventBusId, new RabbitMQEventBus.Configurations(configuration, retryBackoff));
+    RabbitMQEventBus provideRabbitMQEventBus(RabbitMQEventBus.Factory eventBusFactory, NamingStrategy namingStrategy,
+                                             MailboxEventSerializer eventSerializer, RetryBackoffConfiguration retryBackoff,
+                                             RoutingKeyConverter routingKeyConverter, EventBusId eventBusId,
+                                             RabbitMQConfiguration configuration) {
+        return eventBusFactory.create(eventBusId, namingStrategy, routingKeyConverter, eventSerializer, new RabbitMQEventBus.Configurations(configuration, retryBackoff));
     }
 
     @Provides
