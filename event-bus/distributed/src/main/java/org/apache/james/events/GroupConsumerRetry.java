@@ -25,7 +25,6 @@ import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.events.GroupRegistration.RETRY_COUNT;
 
-import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
