@@ -139,11 +139,11 @@ class GroupRegistration implements Registration {
     private Disposable consumeWorkQueue() {
         return Flux.using(
                 receiverProvider::createReceiver,
-                receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
+                receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(configurations.eventBusConfiguration().executionRate())),
                 Receiver::close)
             .publishOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
-            .flatMap(this::deliver, EventBus.EXECUTION_RATE)
+            .flatMap(this::deliver, configurations.eventBusConfiguration().executionRate())
             .subscribeOn(scheduler)
             .subscribe();
     }
@@ -186,19 +186,15 @@ class GroupRegistration implements Registration {
     }
 
     private Mono<Void> runListener(Event event) {
-        return listenerExecutor.execute(
-            listener,
-            MDCBuilder.create()
-                .addToContext(EventBus.StructuredLoggingFields.GROUP, group.asString()),
-            event);
+        MDCBuilder mdc = MDCBuilder.create().addToContext(EventBus.StructuredLoggingFields.GROUP, group.asString());
+        Mono<Void> result = listenerExecutor.execute(listener, mdc, event);
+        return configurations.eventBusConfiguration().executionTimeout().map(result::timeout).orElse(result);
     }
 
     private Mono<Void> runListener(List<Event> events) {
-        return listenerExecutor.execute(
-            listener,
-            MDCBuilder.create()
-                .addToContext(EventBus.StructuredLoggingFields.GROUP, group.asString()),
-            events);
+        MDCBuilder mdc = MDCBuilder.create().addToContext(EventBus.StructuredLoggingFields.GROUP, group.asString());
+        Mono<Void> result = listenerExecutor.execute(listener, mdc, events);
+        return configurations.eventBusConfiguration().executionTimeout().map(result::timeout).orElse(result);
     }
 
     private int getRetryCount(AcknowledgableDelivery acknowledgableDelivery) {

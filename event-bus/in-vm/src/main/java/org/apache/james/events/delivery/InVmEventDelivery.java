@@ -23,6 +23,7 @@ import static org.apache.james.events.EventBus.Metrics.timerName;
 import static org.apache.james.util.ReactorUtils.context;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
@@ -47,11 +48,18 @@ public class InVmEventDelivery implements EventDelivery {
     private static final Logger LOGGER = LoggerFactory.getLogger(InVmEventDelivery.class);
 
     private final MetricFactory metricFactory;
+    private final EventBus.Configuration configuration;
 
-    @Inject
     @VisibleForTesting
     public InVmEventDelivery(MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
+        this.configuration = new EventBus.Configuration(EventBus.EXECUTION_RATE, Optional.empty());
+    }
+
+    @Inject
+    public InVmEventDelivery(MetricFactory metricFactory, EventBus.Configuration configuration) {
+        this.metricFactory = metricFactory;
+        this.configuration = configuration;
     }
 
     @Override
@@ -95,8 +103,9 @@ public class InVmEventDelivery implements EventDelivery {
         if (events.stream().noneMatch(listener::isHandling)) {
             return Mono.empty();
         }
-        return Mono.defer(() -> Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
-                listener.reactiveEvent(events))))
+        Mono<Void> result = Mono.defer(() -> Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
+            listener.reactiveEvent(events))));
+        return configuration.executionTimeout().map(result::timeout).orElse(result)
             .contextWrite(context("deliver", buildMDC(listener, events)));
     }
 

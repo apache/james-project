@@ -19,7 +19,9 @@
 
 package org.apache.james.events;
 
+import java.time.Duration;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 
 import org.reactivestreams.Publisher;
@@ -31,6 +33,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface EventBus {
+    record Configuration(int executionRate, Optional<Duration> executionTimeout) {
+
+    }
+
     int EXECUTION_RATE = 10;
 
     interface StructuredLoggingFields {

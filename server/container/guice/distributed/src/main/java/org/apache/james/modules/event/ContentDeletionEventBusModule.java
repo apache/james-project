@@ -103,8 +103,9 @@ public class ContentDeletionEventBusModule extends AbstractModule {
                                                     MailboxEventSerializer eventSerializer,
                                                     RetryBackoffConfiguration retryBackoffConfiguration,
                                                     @Named(CONTENT_DELETION) EventBusId eventBusId,
-                                                    RabbitMQConfiguration configuration) {
-        return eventBusFactory.create(eventBusId, CONTENT_DELETION_NAMING_STRATEGY,  new RoutingKeyConverter(ImmutableSet.of(new Factory())), eventSerializer, new RabbitMQEventBus.Configurations(configuration, retryBackoffConfiguration));
+                                                    RabbitMQConfiguration configuration,
+                                                    EventBus.Configuration eventBusConfiguration) {
+        return eventBusFactory.create(eventBusId, CONTENT_DELETION_NAMING_STRATEGY,  new RoutingKeyConverter(ImmutableSet.of(new Factory())), eventSerializer, new RabbitMQEventBus.Configurations(configuration, retryBackoffConfiguration, eventBusConfiguration));
     }
 
     @Provides

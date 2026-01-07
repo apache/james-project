@@ -19,7 +19,11 @@
 
 package org.apache.james.modules.mailbox;
 
+import java.util.Optional;
+
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
@@ -31,6 +35,7 @@ import org.apache.james.events.delivery.EventDelivery;
 import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.modules.EventDeadLettersProbe;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
+import org.apache.james.util.DurationParser;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -80,5 +85,14 @@ public class DefaultEventModule extends AbstractModule {
         return InitilizationOperationBuilder
             .forClass(MailboxListenersLoaderImpl.class)
             .init(() -> listeners.configure(configuration));
+    }
+
+    @Provides
+    @Singleton
+    EventBus.Configuration providesEventBusConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
+        HierarchicalConfiguration<ImmutableNode> configuration = configurationProvider.getConfiguration("listeners");
+
+        return new EventBus.Configuration(configuration.getInt("executionRate", EventBus.EXECUTION_RATE),
+            Optional.ofNullable(configuration.getString("executionTimeout", null)).map(DurationParser::parse));
     }
 }
