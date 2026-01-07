@@ -28,7 +28,6 @@ import jakarta.mail.internet.MimeMessage;
 import org.apache.james.backends.pulsar.DockerPulsarExtension;
 import org.apache.james.backends.pulsar.PulsarClients;
 import org.apache.james.backends.pulsar.PulsarConfiguration;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
@@ -70,7 +69,7 @@ class PulsarMailQueueFactoryTest implements MailQueueFactoryContract<PulsarMailQ
         blobIdFactory = new PlainBlobId.Factory();
 
         MemoryBlobStoreDAO memoryBlobStore = new MemoryBlobStoreDAO();
-        PassThroughBlobStore blobStore = new PassThroughBlobStore(memoryBlobStore, BucketName.DEFAULT, blobIdFactory);
+        PassThroughBlobStore blobStore = new PassThroughBlobStore(memoryBlobStore, blobIdFactory);
         MimeMessageStore.Factory mimeMessageStoreFactory = new MimeMessageStore.Factory(blobStore);
         mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
         factory = new RawMailQueueItemDecoratorFactory();

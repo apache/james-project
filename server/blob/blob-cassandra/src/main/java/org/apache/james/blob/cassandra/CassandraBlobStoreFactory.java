@@ -20,7 +20,6 @@
 package org.apache.james.blob.cassandra;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
@@ -32,10 +31,9 @@ public class CassandraBlobStoreFactory {
         PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, session);
         CassandraDefaultBucketDAO defaultBucketDAO = new CassandraDefaultBucketDAO(session, blobIdFactory);
-        CassandraBlobStoreDAO blobStoreDAO = new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, CassandraConfiguration.DEFAULT_CONFIGURATION, BucketName.DEFAULT, metricFactory);
+        CassandraBlobStoreDAO blobStoreDAO = new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, CassandraConfiguration.DEFAULT_CONFIGURATION, metricFactory);
         return BlobStoreFactory.builder()
             .blobStoreDAO(blobStoreDAO)
-            .blobIdFactory(blobIdFactory)
-            .defaultBucketName();
+            .blobIdFactory(blobIdFactory);
     }
 }

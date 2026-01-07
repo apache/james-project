@@ -40,7 +40,6 @@ import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobType;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.api.Store.CloseableByteSource;
 import org.apache.james.lifecycle.api.Disposable;
@@ -65,17 +64,11 @@ public class MimeMessageStore {
         }
 
         public Store<MimeMessage, MimeMessagePartsId> mimeMessageStore() {
-            return mimeMessageStore(blobStore.getDefaultBucketName());
-        }
-
-        public Store<MimeMessage, MimeMessagePartsId> mimeMessageStore(BucketName bucketName) {
             return new Store.Impl<>(
                 new MimeMessagePartsId.Factory(),
                 new MimeMessageEncoder(),
                 new MimeMessageDecoder(),
-                blobStore,
-                bucketName
-            );
+                blobStore);
         }
     }
 

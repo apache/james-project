@@ -22,14 +22,12 @@ package org.apache.james.modules;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import com.google.inject.name.Names;
 
 public class BlobMemoryModule extends AbstractModule {
 
@@ -43,9 +41,5 @@ public class BlobMemoryModule extends AbstractModule {
 
         bind(MemoryBlobStoreDAO.class).in(Scopes.SINGLETON);
         bind(BlobStoreDAO.class).to(MemoryBlobStoreDAO.class);
-
-        bind(BucketName.class)
-            .annotatedWith(Names.named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER))
-            .toInstance(BucketName.DEFAULT);
     }
 }

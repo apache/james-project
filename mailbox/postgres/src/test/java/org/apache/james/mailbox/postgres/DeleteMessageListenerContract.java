@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
@@ -214,9 +215,9 @@ public abstract class DeleteMessageListenerContract {
         inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
 
         assertSoftly(softly -> {
-            softly.assertThatThrownBy(() -> Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), attachmentBlobId)).block())
+            softly.assertThatThrownBy(() -> Mono.from(blobStore.readReactive(BucketName.DEFAULT, attachmentBlobId)).block())
                 .isInstanceOf(ObjectNotFoundException.class);
-            softly.assertThatThrownBy(() -> Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), messageBodyBlobId)).block())
+            softly.assertThatThrownBy(() -> Mono.from(blobStore.readReactive(BucketName.DEFAULT, messageBodyBlobId)).block())
                 .isInstanceOf(ObjectNotFoundException.class);
         });
     }
@@ -236,9 +237,9 @@ public abstract class DeleteMessageListenerContract {
         inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
 
         assertSoftly(softly -> {
-            assertThat(Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), attachmentBlobId)).blockOptional())
+            assertThat(Mono.from(blobStore.readReactive(BucketName.DEFAULT, attachmentBlobId)).blockOptional())
                 .isNotEmpty();
-            assertThat(Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), messageBodyBlobId)).blockOptional())
+            assertThat(Mono.from(blobStore.readReactive(BucketName.DEFAULT, messageBodyBlobId)).blockOptional())
                 .isNotEmpty();
         });
     }

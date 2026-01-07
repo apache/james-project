@@ -175,7 +175,7 @@ public interface BucketBlobStoreContract {
         BlobStore store = testee();
 
         assertThat(Flux.from(store.listBuckets()).collectList().block())
-            .containsOnly(store.getDefaultBucketName());
+            .containsOnly(BucketName.DEFAULT);
     }
 
     @Test
@@ -185,7 +185,7 @@ public interface BucketBlobStoreContract {
         Mono.from(store.save(CUSTOM, SHORT_BYTEARRAY, LOW_COST)).block();
 
         assertThat(Flux.from(store.listBuckets()).collectList().block())
-            .containsOnly(store.getDefaultBucketName(), CUSTOM);
+            .containsOnly(BucketName.DEFAULT, CUSTOM);
     }
 
     @Test
@@ -196,6 +196,6 @@ public interface BucketBlobStoreContract {
         Mono.from(store.deleteBucket(CUSTOM)).block();
 
         assertThat(Flux.from(store.listBuckets()).collectList().block())
-            .containsOnly(store.getDefaultBucketName());
+            .containsOnly(BucketName.DEFAULT);
     }
 }

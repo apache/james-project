@@ -70,7 +70,7 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
         testee = createBlobStore(blobIdFactory);
 
         // Why? https://github.com/apache/james-project/pull/1981#issuecomment-2380396460
-        createBucket(testee.getDefaultBucketName().asString());
+        createBucket(BucketName.DEFAULT.asString());
     }
 
     @AfterEach
@@ -110,7 +110,6 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
         return BlobStoreFactory.builder()
             .blobStoreDAO(s3BlobStoreDAO)
             .blobIdFactory(blobIdFactory)
-            .defaultBucketName()
             .deduplication();
     }
 
@@ -119,10 +118,9 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
     void saveShouldReturnBlobIdOfString(BlobStore.StoragePolicy storagePolicy) {
         // Given: A BlobStore and its default bucket
         BlobStore store = testee();
-        BucketName defaultBucketName = store.getDefaultBucketName();
 
         // When: Saving a blob
-        BlobId blobId = Mono.from(store.save(defaultBucketName, "toto", storagePolicy)).block();
+        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT, "toto", storagePolicy)).block();
         String blobIdString = blobId.asString();
 
         // Then: BlobId string and parsed BlobId should match expectations
@@ -141,14 +139,12 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
 
         private BlobStore withGenerationAwareBlobId;
         private BlobStore withMinIOGenerationAwareBlobId;
-        private BucketName defaultBucketName;
 
         @BeforeEach
         void setup() {
             BlobId.Factory plainBlobIdFactory = new PlainBlobId.Factory();
             withGenerationAwareBlobId = createBlobStore(new GenerationAwareBlobId.Factory(clock, plainBlobIdFactory, GenerationAwareBlobId.Configuration.DEFAULT));
             withMinIOGenerationAwareBlobId = createBlobStore(new MinIOGenerationAwareBlobId.Factory(clock, GenerationAwareBlobId.Configuration.DEFAULT, plainBlobIdFactory));
-            defaultBucketName = withGenerationAwareBlobId.getDefaultBucketName();
         }
 
 
@@ -156,12 +152,12 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
         void readWithMinIOGenerationAwareShouldSuccessWhenBlobWasStoredByGenerationAware() {
             String originalData = "toto" + UUID.randomUUID();
             // Given a blob stored with GenerationAwareBlobId
-            BlobId blobId = Mono.from(withGenerationAwareBlobId.save(defaultBucketName, originalData, LOW_COST)).block();
+            BlobId blobId = Mono.from(withGenerationAwareBlobId.save(BucketName.DEFAULT, originalData, LOW_COST)).block();
 
             assertThat(blobId).isInstanceOf(GenerationAwareBlobId.class);
 
             // When reading it with MinIOGenerationAwareBlobId
-            byte[] readAsByte = Mono.from(withMinIOGenerationAwareBlobId.readBytes(defaultBucketName, blobId)).block();
+            byte[] readAsByte = Mono.from(withMinIOGenerationAwareBlobId.readBytes(BucketName.DEFAULT, blobId)).block();
 
             // Then the data should be the same
             assertThat(new String(readAsByte, StandardCharsets.UTF_8)).isEqualTo(originalData);
@@ -171,16 +167,16 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
         void listBlobsShouldReturnCorrectBlobIdWhenBlobWasStoredByGenerationAware() {
             String originalData = "toto" + UUID.randomUUID();
             // Given a blob stored with GenerationAwareBlobId
-            BlobId blobId = Mono.from(withGenerationAwareBlobId.save(defaultBucketName, originalData, LOW_COST)).block();
+            BlobId blobId = Mono.from(withGenerationAwareBlobId.save(BucketName.DEFAULT, originalData, LOW_COST)).block();
             assertThat(blobId).isInstanceOf(GenerationAwareBlobId.class);
 
             // When listing blobs with MinIOGenerationAwareBlobId
-            List<BlobId> blobIdList = Flux.from(withMinIOGenerationAwareBlobId.listBlobs(defaultBucketName)).collectList().block();
+            List<BlobId> blobIdList = Flux.from(withMinIOGenerationAwareBlobId.listBlobs(BucketName.DEFAULT)).collectList().block();
             assertThat(blobIdList).hasSize(1);
             assertThat(blobIdList.getFirst()).isInstanceOf(GenerationAwareBlobId.class);
 
             // And using the returned BlobId to read the data
-            byte[] readAsByte = Mono.from(withMinIOGenerationAwareBlobId.readBytes(defaultBucketName, blobIdList.getFirst())).block();
+            byte[] readAsByte = Mono.from(withMinIOGenerationAwareBlobId.readBytes(BucketName.DEFAULT, blobIdList.getFirst())).block();
 
             // Then the data should be the same as the original data
             assertThat(new String(readAsByte, StandardCharsets.UTF_8)).isEqualTo(originalData);
@@ -190,11 +186,11 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
         void readWithGenerationAwareShouldSuccessWhenBlobWasStoredByMinIOGenerationAware() {
             String originalData = "toto" + UUID.randomUUID();
             // Given a blob stored with MinIOGenerationAwareBlobId
-            BlobId blobId = Mono.from(withMinIOGenerationAwareBlobId.save(defaultBucketName, originalData, LOW_COST)).block();
+            BlobId blobId = Mono.from(withMinIOGenerationAwareBlobId.save(BucketName.DEFAULT, originalData, LOW_COST)).block();
             assertThat(blobId).isInstanceOf(MinIOGenerationAwareBlobId.class);
 
             // When reading it with GenerationAwareBlobId
-            byte[] readAsByte = Mono.from(withGenerationAwareBlobId.readBytes(defaultBucketName, blobId)).block();
+            byte[] readAsByte = Mono.from(withGenerationAwareBlobId.readBytes(BucketName.DEFAULT, blobId)).block();
 
             // Then the data should be the same
             assertThat(new String(readAsByte, StandardCharsets.UTF_8)).isEqualTo(originalData);
@@ -204,16 +200,16 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
         void listBlobsShouldReturnCorrectBlobIdWhenBlobWasStoredByMinIOGenerationAware() {
             String originalData = "toto" + UUID.randomUUID();
             // Given a blob stored with MinIOGenerationAwareBlobId
-            BlobId blobId = Mono.from(withMinIOGenerationAwareBlobId.save(defaultBucketName, originalData, LOW_COST)).block();
+            BlobId blobId = Mono.from(withMinIOGenerationAwareBlobId.save(BucketName.DEFAULT, originalData, LOW_COST)).block();
             assertThat(blobId).isInstanceOf(MinIOGenerationAwareBlobId.class);
 
             // When listing blobs with GenerationAwareBlobId
-            List<BlobId> blobIdList = Flux.from(withGenerationAwareBlobId.listBlobs(defaultBucketName)).collectList().block();
+            List<BlobId> blobIdList = Flux.from(withGenerationAwareBlobId.listBlobs(BucketName.DEFAULT)).collectList().block();
             assertThat(blobIdList).hasSize(1);
             assertThat(blobIdList.getFirst()).isInstanceOf(GenerationAwareBlobId.class);
 
             // And using the returned BlobId to read the data
-            byte[] readAsByte = Mono.from(withGenerationAwareBlobId.readBytes(defaultBucketName, blobIdList.getFirst())).block();
+            byte[] readAsByte = Mono.from(withGenerationAwareBlobId.readBytes(BucketName.DEFAULT, blobIdList.getFirst())).block();
 
             // Then the data should be the same as the original data
             assertThat(new String(readAsByte, StandardCharsets.UTF_8)).isEqualTo(originalData);

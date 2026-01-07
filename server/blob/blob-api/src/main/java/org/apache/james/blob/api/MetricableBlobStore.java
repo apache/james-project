@@ -113,11 +113,6 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public BucketName getDefaultBucketName() {
-        return blobStoreImpl.getDefaultBucketName();
-    }
-
-    @Override
     public Publisher<Boolean> delete(BucketName bucketName, BlobId blobId) {
         return metricFactory.decoratePublisherWithTimerMetric(DELETE_TIMER_NAME, blobStoreImpl.delete(bucketName, blobId));
     }

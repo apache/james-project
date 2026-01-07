@@ -154,7 +154,7 @@ public class CachedBlobStore implements BlobStore {
     }
 
     private Mono<InputStream> readInputStream(BucketName bucketName, BlobId blobId) {
-        if (bucketName.equals(getDefaultBucketName())) {
+        if (bucketName.equals(BucketName.DEFAULT)) {
             return readInDefaultBucket(bucketName, blobId);
         }
         return readFromBackend(bucketName, blobId);
@@ -176,7 +176,7 @@ public class CachedBlobStore implements BlobStore {
         if (storagePolicy == LOW_COST) {
             return readBytesFromBackend(bucketName, blobId);
         }
-        if (getDefaultBucketName().equals(bucketName)) {
+        if (BucketName.DEFAULT.equals(bucketName)) {
             return readBytesInDefaultBucket(bucketName, blobId);
         }
         return readBytesFromBackend(bucketName, blobId);
@@ -310,15 +310,10 @@ public class CachedBlobStore implements BlobStore {
     }
 
     @Override
-    public BucketName getDefaultBucketName() {
-        return backend.getDefaultBucketName();
-    }
-
-    @Override
     public Mono<Boolean> delete(BucketName bucketName, BlobId blobId) {
         return Mono.from(backend.delete(bucketName, blobId))
             .flatMap(deleted -> {
-                if (backend.getDefaultBucketName().equals(bucketName) && deleted) {
+                if (BucketName.DEFAULT.equals(bucketName) && deleted) {
                     return Mono.from(cache.remove(blobId)).thenReturn(deleted);
                 }
                 return Mono.just(deleted);
@@ -370,11 +365,11 @@ public class CachedBlobStore implements BlobStore {
     }
 
     private boolean isAbleToCache(BucketName bucketName, StoragePolicy storagePolicy) {
-        return backend.getDefaultBucketName().equals(bucketName) && !storagePolicy.equals(LOW_COST);
+        return BucketName.DEFAULT.equals(bucketName) && !storagePolicy.equals(LOW_COST);
     }
 
     private boolean isAbleToCache(ReadAheadInputStream readAhead, BucketName bucketName) {
-        return !readAhead.hasMore && backend.getDefaultBucketName().equals(bucketName);
+        return !readAhead.hasMore && BucketName.DEFAULT.equals(bucketName);
     }
 
     private boolean isAbleToCache(byte[] bytes) {

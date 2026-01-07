@@ -40,7 +40,6 @@ public class MemoryBlobStoreTest implements MetricableBlobStoreContract, Dedupli
     public MetricableBlobStore createBlobStore() {
         return new MetricableBlobStore(metricsTestExtension.getMetricFactory(), MemoryBlobStoreFactory.builder()
                 .blobIdFactory(BLOB_ID_FACTORY)
-                .defaultBucketName()
                 .deduplication());
     }
 

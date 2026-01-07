@@ -84,7 +84,7 @@ public interface BloomFilterGCAlgorithmContract {
     }
 
     default BlobStore blobStore() {
-        return new DeDuplicationBlobStore(blobStoreDAO(), DEFAULT_BUCKET, GENERATION_AWARE_BLOB_ID_FACTORY);
+        return new DeDuplicationBlobStore(blobStoreDAO(), GENERATION_AWARE_BLOB_ID_FACTORY);
     }
 
     default BloomFilterGCAlgorithm bloomFilterGCAlgorithm() {

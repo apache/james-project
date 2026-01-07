@@ -26,7 +26,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.mailbox.MessageUid;
@@ -69,7 +68,7 @@ public class PostgresMapperProvider implements MapperProvider {
         this.updatableTickingClock = new UpdatableTickingClock(Instant.now());
         this.messageIdFactory = new PostgresMessageId.Factory();
         this.blobIdFactory = new PlainBlobId.Factory();
-        this.blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
+        this.blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), blobIdFactory);
         this.messageUidProvider = new PostgresUidProvider(new PostgresMailboxDAO(postgresExtension.getDefaultPostgresExecutor()));
         this.attachmentIdAssignationStrategy = new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory());
     }

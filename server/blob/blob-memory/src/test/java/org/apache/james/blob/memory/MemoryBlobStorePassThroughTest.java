@@ -36,7 +36,6 @@ public class MemoryBlobStorePassThroughTest implements DeleteBlobStoreContract, 
     void setUp() {
         blobStore = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), MemoryBlobStoreFactory.builder()
                 .blobIdFactory(BLOB_ID_FACTORY)
-                .defaultBucketName()
                 .passthrough());
     }
 

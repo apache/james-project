@@ -39,6 +39,7 @@ import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.PostgresUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
@@ -266,7 +267,7 @@ public class PostgresMessageMapper implements MessageMapper {
 
     private Mono<BlobId> saveBodyContent(MailboxMessage message) {
         return Mono.fromCallable(() -> MESSAGE_BODY_CONTENT_LOADER.apply(message))
-            .flatMap(bodyByteSource -> Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyByteSource, LOW_COST)));
+            .flatMap(bodyByteSource -> Mono.from(blobStore.save(BucketName.DEFAULT, bodyByteSource, LOW_COST)));
     }
 
     @Override

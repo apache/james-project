@@ -28,8 +28,6 @@ import com.google.common.io.ByteSource;
 import reactor.util.function.Tuple2;
 
 public interface BlobStore {
-    String DEFAULT_BUCKET_NAME_QUALIFIER = "defaultBucket";
-
     enum StoragePolicy {
         SIZE_BASED,
         LOW_COST,
@@ -74,8 +72,6 @@ public interface BlobStore {
     default Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
         return readReactive(bucketName, blobId);
     }
-
-    BucketName getDefaultBucketName();
 
     Publisher<BucketName> listBuckets();
 

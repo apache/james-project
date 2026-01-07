@@ -25,7 +25,6 @@ import java.time.Instant;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Username;
@@ -47,7 +46,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class PostgresAnnotationMapperRowLevelSecurityTest {
+class PostgresAnnotationMapperRowLevelSecurityTest {
     private static final UidValidity UID_VALIDITY = UidValidity.of(42);
     private static final Username BENWA = Username.of("benwa@localhost");
     protected static final MailboxPath benwaInboxPath = MailboxPath.forUser(BENWA, "INBOX");
@@ -73,7 +72,7 @@ public class PostgresAnnotationMapperRowLevelSecurityTest {
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(),
             new UpdatableTickingClock(Instant.now()),
-            new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
+            new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), blobIdFactory),
             blobIdFactory,
             postgresExtension.getPostgresConfiguration(),
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));

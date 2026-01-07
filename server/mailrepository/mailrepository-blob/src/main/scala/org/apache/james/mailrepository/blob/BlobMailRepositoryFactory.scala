@@ -19,7 +19,6 @@
 
 package org.apache.james.mailrepository.blob
 
-import jakarta.inject.Named
 import jakarta.mail.internet.MimeMessage
 import org.apache.james.blob.api._
 import org.apache.james.blob.mail.{MimeMessagePartsId, MimeMessageStore}
@@ -40,24 +39,18 @@ class MailRepositoryBlobIdFactory(
 }
 
 class BlobMailRepositoryFactory(blobStoreDao: BlobStoreDAO,
-                                blobIdFactory: BlobId.Factory,
-                                @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) defaultBucketName: BucketName
-                               ) extends MailRepositoryFactory {
+                                blobIdFactory: BlobId.Factory) extends MailRepositoryFactory {
   override val mailRepositoryClass: Class[_ <: MailRepository] = classOf[BlobMailRepository]
 
   override def create(url: MailRepositoryUrl): MailRepository = {
     val metadataUrl = url.subUrl("mailMetadata")
     val metadataIdFactory = new MailRepositoryBlobIdFactory(
       blobIdFactory = blobIdFactory,
-      url = metadataUrl
-    )
+      url = metadataUrl)
 
     val metadataBlobStore = BlobStoreFactory.builder()
       .blobStoreDAO(blobStoreDao)
-      .blobIdFactory(
-        metadataIdFactory
-      )
-      .bucket(defaultBucketName)
+      .blobIdFactory(metadataIdFactory)
       .passthrough()
 
     val mimeMessageStore: Store[MimeMessage, MimeMessagePartsId] = buildMimeMessageStore(url)
@@ -68,14 +61,11 @@ class BlobMailRepositoryFactory(blobStoreDao: BlobStoreDAO,
   private def buildMimeMessageStore(url: MailRepositoryUrl) = {
     val mimeMessageIdFactory = new MailRepositoryBlobIdFactory(
       blobIdFactory = blobIdFactory,
-      url = url.subUrl("mimeMessagedata")
-    )
+      url = url.subUrl("mimeMessagedata"))
+
     val mimeMessageBlobStore = BlobStoreFactory.builder()
       .blobStoreDAO(blobStoreDao)
-      .blobIdFactory(
-        mimeMessageIdFactory
-      )
-      .bucket(defaultBucketName)
+      .blobIdFactory(mimeMessageIdFactory)
       .passthrough()
     val mimeMessageStore = new MimeMessageStore.Factory(mimeMessageBlobStore).mimeMessageStore()
     mimeMessageStore

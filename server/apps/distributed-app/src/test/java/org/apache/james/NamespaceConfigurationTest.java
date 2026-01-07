@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -37,15 +37,15 @@ import com.google.inject.multibindings.Multibinder;
 
 class NamespaceConfigurationTest {
     static class DefaultBucketProbe implements GuiceProbe {
-        private final BlobStore blobStore;
+        private final S3BlobStoreConfiguration configuration;
 
         @Inject
-        DefaultBucketProbe(BlobStore blobStore) {
-            this.blobStore = blobStore;
+        DefaultBucketProbe(S3BlobStoreConfiguration configuration) {
+            this.configuration = configuration;
         }
 
         public BucketName getDefaultBucket() {
-            return blobStore.getDefaultBucketName();
+            return configuration.getNamespace().get();
         }
     }
 
