@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.retry.Retry;
 
 public interface EventDelivery {
 
@@ -99,7 +98,7 @@ public interface EventDelivery {
             @Override
             public Mono<Void> doRetry(Mono<Void> executionResult, Event event) {
                 return executionResult
-                    .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.parallel()))
+                    .retryWhen(retryBackoff.asReactorRetry().scheduler(Schedulers.parallel()))
                     .doOnError(throwable -> LOGGER.error("listener {} exceeded maximum retry({}) to handle event {}",
                         listener.getClass().getCanonicalName(),
                         retryBackoff.getMaxRetries(),
@@ -111,7 +110,7 @@ public interface EventDelivery {
             @Override
             public Mono<Void> doRetry(Mono<Void> executionResult, List<Event> events) {
                 return executionResult
-                    .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.parallel()))
+                    .retryWhen(retryBackoff.asReactorRetry().scheduler(Schedulers.parallel()))
                     .doOnError(throwable -> LOGGER.error("listener {} exceeded maximum retry({}) to handle event {}",
                         listener.getClass().getCanonicalName(),
                         retryBackoff.getMaxRetries(),
