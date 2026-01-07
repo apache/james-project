@@ -25,6 +25,9 @@ import java.util.Objects;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
+import reactor.util.retry.Retry;
+import reactor.util.retry.RetryBackoffSpec;
+
 public class RetryBackoffConfiguration {
 
     @FunctionalInterface
@@ -95,6 +98,10 @@ public class RetryBackoffConfiguration {
 
     public double getJitterFactor() {
         return jitterFactor;
+    }
+
+    public RetryBackoffSpec asReactorRetry() {
+        return Retry.backoff(maxRetries, firstBackoff).jitter(jitterFactor);
     }
 
     @Override

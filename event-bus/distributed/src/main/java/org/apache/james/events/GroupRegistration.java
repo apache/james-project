@@ -52,7 +52,6 @@ import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.Sender;
-import reactor.util.retry.Retry;
 
 class GroupRegistration implements Registration {
 
@@ -117,7 +116,7 @@ class GroupRegistration implements Registration {
             .of(createGroupWorkQueue()
                 .then(retryHandler.createRetryExchange(queueName))
                 .then(Mono.fromCallable(this::consumeWorkQueue))
-                .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()))
+                .retryWhen(retryBackoff.asReactorRetry().scheduler(Schedulers.boundedElastic()))
                 .block());
         return this;
     }
