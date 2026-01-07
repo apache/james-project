@@ -58,7 +58,6 @@ import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.Sender;
-import reactor.util.retry.Retry;
 
 public class GroupRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupRegistrationHandler.class);
@@ -119,7 +118,7 @@ public class GroupRegistrationHandler {
                 .exchange(namingStrategy.exchange())
                 .queue(queueName.asString())
                 .routingKey(EMPTY_ROUTING_KEY))
-            .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()))
+            .retryWhen(retryBackoff.asReactorRetry().scheduler(Schedulers.boundedElastic()))
             .block();
 
         this.consumer = Optional.of(consumeWorkQueue());
