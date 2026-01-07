@@ -54,6 +54,7 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private static final Logger LOGGER = LoggerFactory.getLogger(BlobStoreDeletedMessageVault.class);
@@ -72,12 +73,13 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private final BucketNameGenerator nameGenerator;
     private final Clock clock;
     private final VaultConfiguration vaultConfiguration;
+    private final BlobIdTimeGenerator blobIdTimeGenerator;
     private final BlobStoreVaultGarbageCollectionTask.Factory taskFactory;
 
     @Inject
     public BlobStoreDeletedMessageVault(MetricFactory metricFactory, DeletedMessageMetadataVault messageMetadataVault,
                                         BlobStore blobStore, BlobStoreDAO blobStoreDAO, BucketNameGenerator nameGenerator,
-                                        Clock clock,
+                                        Clock clock, BlobIdTimeGenerator blobIdTimeGenerator,
                                         VaultConfiguration vaultConfiguration) {
         this.metricFactory = metricFactory;
         this.messageMetadataVault = messageMetadataVault;
@@ -86,21 +88,23 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         this.nameGenerator = nameGenerator;
         this.clock = clock;
         this.vaultConfiguration = vaultConfiguration;
+        this.blobIdTimeGenerator = blobIdTimeGenerator;
         this.taskFactory = new BlobStoreVaultGarbageCollectionTask.Factory(this);
     }
 
-    @Override
-    public Publisher<Void> append(DeletedMessage deletedMessage, InputStream mimeMessage) {
+    @Deprecated
+    @VisibleForTesting
+    public Publisher<Void> appendV1(DeletedMessage deletedMessage, InputStream mimeMessage) {
         Preconditions.checkNotNull(deletedMessage);
         Preconditions.checkNotNull(mimeMessage);
         BucketName bucketName = nameGenerator.currentBucket();
 
         return metricFactory.decoratePublisherWithTimerMetric(
             APPEND_METRIC_NAME,
-            appendMessage(deletedMessage, mimeMessage, bucketName));
+            appendMessageV1(deletedMessage, mimeMessage, bucketName));
     }
 
-    private Mono<Void> appendMessage(DeletedMessage deletedMessage, InputStream mimeMessage, BucketName bucketName) {
+    private Mono<Void> appendMessageV1(DeletedMessage deletedMessage, InputStream mimeMessage, BucketName bucketName) {
         return Mono.from(blobStore.save(bucketName, mimeMessage, LOW_COST))
             .map(blobId -> StorageInformation.builder()
                 .bucketName(bucketName)
@@ -108,6 +112,33 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
             .map(storageInformation -> new DeletedMessageWithStorageInformation(deletedMessage, storageInformation))
             .flatMap(message -> Mono.from(messageMetadataVault.store(message)))
             .then();
+    }
+
+    @Override
+    public Publisher<Void> append(DeletedMessage deletedMessage, InputStream mimeMessage) {
+        Preconditions.checkNotNull(deletedMessage);
+        Preconditions.checkNotNull(mimeMessage);
+        BucketName bucketName = BucketName.of(vaultConfiguration.getSingleBucketName());
+
+        return metricFactory.decoratePublisherWithTimerMetric(
+            APPEND_METRIC_NAME,
+            appendMessage(deletedMessage, mimeMessage, bucketName));
+    }
+
+    private Mono<Void> appendMessage(DeletedMessage deletedMessage, InputStream mimeMessage, BucketName bucketName) {
+        return Mono.from(blobStore.save(bucketName, mimeMessage, withTimePrefixBlobId(), LOW_COST))
+            .map(blobId -> StorageInformation.builder()
+                .bucketName(bucketName)
+                .blobId(blobId))
+            .map(storageInformation -> new DeletedMessageWithStorageInformation(deletedMessage, storageInformation))
+            .flatMap(message -> Mono.from(messageMetadataVault.store(message)))
+            .then();
+    }
+
+    private BlobStore.BlobIdProvider<InputStream> withTimePrefixBlobId() {
+        return data -> Mono.just(Tuples.of(
+            blobIdTimeGenerator.currentBlobId(),
+            data));
     }
 
     @Override

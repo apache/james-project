@@ -43,6 +43,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.task.Task;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.james.utils.UpdatableTickingClock;
+import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.search.CriterionFactory;
 import org.apache.james.vault.search.Query;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ import reactor.core.publisher.Mono;
 public interface DeletedMessageVaultContract {
     Clock CLOCK = Clock.fixed(NOW.toInstant(), NOW.getZone());
 
-    DeletedMessageVault getVault();
+    BlobStoreDeletedMessageVault getVault();
 
     UpdatableTickingClock getClock();
 
@@ -243,7 +244,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldCompleteWhenAllMailsDeleted() throws InterruptedException {
-        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         Mono.from(getVault().delete(USERNAME, DELETED_MESSAGE.getMessageId())).block();
 
         Task.Result result = getVault().deleteExpiredMessagesTask().run();
@@ -253,7 +254,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyRecentMails() throws InterruptedException {
-        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         Task.Result result = getVault().deleteExpiredMessagesTask().run();
 
@@ -262,7 +263,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyOldMails() throws InterruptedException {
-        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         Task.Result result = getVault().deleteExpiredMessagesTask().run();
 
@@ -279,7 +280,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldNotDeleteRecentMails() throws InterruptedException {
-        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         getVault().deleteExpiredMessagesTask().run();
 
@@ -289,7 +290,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldDeleteOldMails() throws InterruptedException {
-        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         getClock().setInstant(NOW.plusYears(2).toInstant());
         getVault().deleteExpiredMessagesTask().run();
@@ -300,11 +301,11 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteExpiredMessagesTaskShouldDeleteOldMailsWhenRunSeveralTime() throws InterruptedException {
-        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         getClock().setInstant(NOW.plusYears(2).toInstant());
         getVault().deleteExpiredMessagesTask().run();
 
-        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().appendV1(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         getClock().setInstant(NOW.plusYears(4).toInstant());
         getVault().deleteExpiredMessagesTask().run();
 

@@ -110,9 +110,9 @@ import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessage;
-import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.DeletedMessageZipper;
 import org.apache.james.vault.VaultConfiguration;
+import org.apache.james.vault.blob.BlobIdTimeGenerator;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.blob.BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO;
 import org.apache.james.vault.blob.BucketNameGenerator;
@@ -169,7 +169,7 @@ class DeletedMessagesVaultRoutesTest {
     private static final String BOB_DELETE_PATH = BOB_PATH + SEPARATOR + DELETED_MESSAGE_PARAM_PATH;
 
     private WebAdminServer webAdminServer;
-    private DeletedMessageVault vault;
+    private BlobStoreDeletedMessageVault vault;
     private InMemoryMailboxManager mailboxManager;
     private MemoryTaskManager taskManager;
     private NoopBlobExporting blobExporting;
@@ -192,6 +192,7 @@ class DeletedMessagesVaultRoutesTest {
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
             blobStore, blobStoreDAO, new BucketNameGenerator(clock), clock,
+            new BlobIdTimeGenerator(blobIdFactory, clock),
             VaultConfiguration.ENABLED_DEFAULT));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();
         mailboxManager = spy(inMemoryResource.getMailboxManager());
@@ -2015,8 +2016,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void purgeShouldProduceASuccessfulTaskWithAdditionalInformation() {
-            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             clock.setInstant(NOW.toInstant());
 
@@ -2056,12 +2057,12 @@ class DeletedMessagesVaultRoutesTest {
                 .size(CONTENT.length)
                 .build();
 
-            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             clock.setInstant(NOW.toInstant());
 
-            Mono.from(vault.append(notExpiredMessage, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.appendV1(notExpiredMessage, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 with()
@@ -2080,8 +2081,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void purgeShouldNotAppendMessagesToUserMailbox() throws Exception {
-            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
             String taskId =
                 with()
@@ -2102,8 +2103,8 @@ class DeletedMessagesVaultRoutesTest {
         class FailingPurgeTest {
             @Test
             void purgeShouldProduceAFailedTaskWhenFailingDeletingBucket() {
-                Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-                Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+                Mono.from(vault.appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+                Mono.from(vault.appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
                 doReturn(Mono.error(new RuntimeException("mock exception")))
                     .when(blobStore)
