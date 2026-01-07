@@ -24,14 +24,11 @@ import static org.apache.james.events.NamingStrategy.JMAP_NAMING_STRATEGY;
 import jakarta.inject.Named;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
-import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
-import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventSerializer;
 import org.apache.james.events.GroupRegistrationHandler;
 import org.apache.james.events.KeyReconnectionHandler;
@@ -44,7 +41,6 @@ import org.apache.james.jmap.InjectionKeys;
 import org.apache.james.jmap.change.Factory;
 import org.apache.james.jmap.change.JmapEventSerializer;
 import org.apache.james.jmap.pushsubscription.PushListener;
-import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
@@ -54,8 +50,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Names;
-
-import reactor.rabbitmq.Sender;
 
 public class JMAPEventBusModule extends AbstractModule {
 
@@ -99,17 +93,13 @@ public class JMAPEventBusModule extends AbstractModule {
     @Provides
     @Singleton
     @Named(InjectionKeys.JMAP)
-    RabbitMQEventBus provideJmapEventBus(Sender sender, ReceiverProvider receiverProvider,
+    RabbitMQEventBus provideJmapEventBus(RabbitMQEventBus.Factory eventBusFactory,
                                          JmapEventSerializer eventSerializer,
                                          RetryBackoffConfiguration retryBackoffConfiguration,
-                                         EventDeadLetters eventDeadLetters,
-                                         MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool,
                                          @Named(InjectionKeys.JMAP) EventBusId eventBusId,
                                          RabbitMQConfiguration configuration) {
-        return new RabbitMQEventBus(
-            JMAP_NAMING_STRATEGY,
-            sender, receiverProvider, eventSerializer, new RoutingKeyConverter(ImmutableSet.of(new Factory())), eventDeadLetters,
-            metricFactory, channelPool, eventBusId, new RabbitMQEventBus.Configurations(configuration, retryBackoffConfiguration));
+        return eventBusFactory.create(eventBusId,
+            JMAP_NAMING_STRATEGY, new RoutingKeyConverter(ImmutableSet.of(new Factory())), eventSerializer, new RabbitMQEventBus.Configurations(configuration, retryBackoffConfiguration));
     }
 
     @Provides

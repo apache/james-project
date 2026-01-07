@@ -26,15 +26,12 @@ import java.util.Set;
 import jakarta.inject.Named;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
-import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
-import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.GroupRegistrationHandler;
 import org.apache.james.events.KeyReconnectionHandler;
@@ -45,7 +42,6 @@ import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
 import org.apache.james.jmap.change.Factory;
 import org.apache.james.mailbox.cassandra.DeleteMessageListener;
-import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
@@ -56,8 +52,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Names;
-
-import reactor.rabbitmq.Sender;
 
 public class ContentDeletionEventBusModule extends AbstractModule {
     public static final String CONTENT_DELETION = "contentDeletion";
@@ -105,17 +99,12 @@ public class ContentDeletionEventBusModule extends AbstractModule {
     @Provides
     @Singleton
     @Named(CONTENT_DELETION)
-    RabbitMQEventBus provideContentDeletionEventBus(Sender sender, ReceiverProvider receiverProvider,
+    RabbitMQEventBus provideContentDeletionEventBus(RabbitMQEventBus.Factory eventBusFactory,
                                                     MailboxEventSerializer eventSerializer,
                                                     RetryBackoffConfiguration retryBackoffConfiguration,
-                                                    EventDeadLetters eventDeadLetters,
-                                                    MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool,
                                                     @Named(CONTENT_DELETION) EventBusId eventBusId,
                                                     RabbitMQConfiguration configuration) {
-        return new RabbitMQEventBus(
-            CONTENT_DELETION_NAMING_STRATEGY,
-            sender, receiverProvider, eventSerializer, new RoutingKeyConverter(ImmutableSet.of(new Factory())),
-            eventDeadLetters, metricFactory, channelPool, eventBusId, new RabbitMQEventBus.Configurations(configuration, retryBackoffConfiguration));
+        return eventBusFactory.create(eventBusId, CONTENT_DELETION_NAMING_STRATEGY,  new RoutingKeyConverter(ImmutableSet.of(new Factory())), eventSerializer, new RabbitMQEventBus.Configurations(configuration, retryBackoffConfiguration));
     }
 
     @Provides
