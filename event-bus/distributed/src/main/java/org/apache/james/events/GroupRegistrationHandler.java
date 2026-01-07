@@ -124,10 +124,10 @@ public class GroupRegistrationHandler {
     private Disposable consumeWorkQueue() {
         return Flux.using(
                 receiverProvider::createReceiver,
-            receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
+            receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(configurations.eventBusConfiguration().executionRate())),
             Receiver::close)
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
-            .flatMap(this::deliver, EventBus.EXECUTION_RATE)
+            .flatMap(this::deliver, configurations.eventBusConfiguration().executionRate())
             .subscribeOn(scheduler)
             .subscribe();
     }

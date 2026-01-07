@@ -20,6 +20,7 @@
 package org.apache.james.events;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 
 import jakarta.annotation.PreDestroy;
@@ -65,8 +66,10 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private static final String NOT_RUNNING_ERROR_MESSAGE = "Event Bus is not running";
     static final String EVENT_BUS_ID = "eventBusId";
 
-    public record Configurations(RabbitMQConfiguration rabbitMQConfiguration, RetryBackoffConfiguration retryBackoff) {
-
+    public record Configurations(RabbitMQConfiguration rabbitMQConfiguration, RetryBackoffConfiguration retryBackoff, EventBus.Configuration eventBusConfiguration) {
+        public Configurations(RabbitMQConfiguration rabbitMQConfiguration, RetryBackoffConfiguration retryBackoff) {
+            this(rabbitMQConfiguration, retryBackoff, new Configuration(EventBus.EXECUTION_RATE, Optional.empty()));
+        }
     }
 
     private final NamingStrategy namingStrategy;
