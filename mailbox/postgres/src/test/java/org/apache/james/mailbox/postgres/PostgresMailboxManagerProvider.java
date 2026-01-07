@@ -24,7 +24,6 @@ import java.time.Instant;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.events.EventBusTestFixture;
@@ -59,7 +58,7 @@ public class PostgresMailboxManagerProvider {
     public static final BlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 
     public static PostgresMailboxManager provideMailboxManager(PostgresExtension postgresExtension, PreDeletionHooks preDeletionHooks) {
-        DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, BLOB_ID_FACTORY);
+        DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BLOB_ID_FACTORY);
         PostgresMailboxSessionMapperFactory mapperFactory = provideMailboxSessionMapperFactory(postgresExtension, BLOB_ID_FACTORY, blobStore);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
@@ -87,7 +86,7 @@ public class PostgresMailboxManagerProvider {
 
     public static PostgresMailboxSessionMapperFactory provideMailboxSessionMapperFactory(PostgresExtension postgresExtension) {
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
-        DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
+        DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), blobIdFactory);
 
         return provideMailboxSessionMapperFactory(postgresExtension, blobIdFactory, blobStore);
     }

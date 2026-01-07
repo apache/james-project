@@ -22,7 +22,7 @@ package org.apache.james.server.blob.deduplication
 import com.google.common.base.Preconditions
 import com.google.common.hash.{HashCode, Hashing, HashingInputStream}
 import com.google.common.io.{BaseEncoding, ByteSource, FileBackedOutputStream}
-import jakarta.inject.{Inject, Named}
+import jakarta.inject.Inject
 import org.apache.commons.io.IOUtils
 import org.apache.james.blob.api.BlobStore.BlobIdProvider
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
@@ -61,7 +61,6 @@ object DeDuplicationBlobStore {
 }
 
 class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
-                                       @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) defaultBucketName: BucketName,
                                        blobIdFactory: BlobId.Factory) extends BlobStore {
 
   private val HASH_BLOB_ID_ENCODING_TYPE_PROPERTY = "james.blob.id.hash.encoding"
@@ -177,8 +176,6 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     blobStoreDAO.readReactive(bucketName, blobId)
   }
 
-  override def getDefaultBucketName: BucketName = defaultBucketName
-
   override def deleteBucket(bucketName: BucketName): Publisher[Void] = {
     blobStoreDAO.deleteBucket(bucketName)
   }
@@ -190,7 +187,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     SMono.just(Boolean.box(false))
   }
 
-  override def listBuckets(): Publisher[BucketName] = Flux.concat(blobStoreDAO.listBuckets(), Flux.just(defaultBucketName)).distinct()
+  override def listBuckets(): Publisher[BucketName] = Flux.concat(blobStoreDAO.listBuckets(), Flux.just(BucketName.DEFAULT)).distinct()
 
   override def listBlobs(bucketName: BucketName): Publisher[BlobId] = blobStoreDAO.listBlobs(bucketName)
 }

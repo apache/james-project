@@ -35,6 +35,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -252,6 +253,6 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
 
     private Mono<BlobId> saveBodyContent(MailboxMessage message) {
         return Mono.fromCallable(() -> MESSAGE_BODY_CONTENT_LOADER.apply(message))
-            .flatMap(bodyByteSource -> Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyByteSource, LOW_COST)));
+            .flatMap(bodyByteSource -> Mono.from(blobStore.save(BucketName.DEFAULT, bodyByteSource, LOW_COST)));
     }
 }

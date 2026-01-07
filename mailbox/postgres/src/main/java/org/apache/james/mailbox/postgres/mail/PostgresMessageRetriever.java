@@ -30,6 +30,7 @@ import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Content;
@@ -112,7 +113,7 @@ public class PostgresMessageRetriever {
         }
 
         private Mono<Content> retrieveFullContent(Record messageRecord) {
-            return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(),
+            return Mono.from(blobStore.readBytes(BucketName.DEFAULT,
                     blobIdFactory.parse(messageRecord.get(BODY_BLOB_ID)),
                     SIZE_BASED))
                 .map(bodyBytes -> new HeaderAndBodyByteContent(messageRecord.get(HEADER_CONTENT), bodyBytes));

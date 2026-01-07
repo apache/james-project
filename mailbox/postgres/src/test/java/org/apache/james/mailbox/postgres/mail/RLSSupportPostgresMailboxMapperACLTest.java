@@ -25,7 +25,6 @@ import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -48,7 +47,7 @@ class RLSSupportPostgresMailboxMapperACLTest extends MailboxMapperACLTest {
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         PostgresMailboxSessionMapperFactory postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(),
             new UpdatableTickingClock(Instant.now()),
-            new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
+            new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), blobIdFactory),
             blobIdFactory,
             PostgresConfiguration.builder().username("a").password("a").rowLevelSecurityEnabled().byPassRLSUser("b").byPassRLSPassword("b").build(),
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));

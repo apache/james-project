@@ -28,7 +28,6 @@ import jakarta.mail.Flags;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Username;
@@ -55,7 +54,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class PostgresMessageMapperRowLevelSecurityTest {
+class PostgresMessageMapperRowLevelSecurityTest {
     private static final int BODY_START = 16;
     private static final UidValidity UID_VALIDITY = UidValidity.of(42);
     private static final Username BENWA = Username.of("benwa@domain.org");
@@ -80,7 +79,7 @@ public class PostgresMessageMapperRowLevelSecurityTest {
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(),
             new UpdatableTickingClock(Instant.now()),
-            new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
+            new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), blobIdFactory),
             blobIdFactory,
             postgresExtension.getPostgresConfiguration(),
             new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
