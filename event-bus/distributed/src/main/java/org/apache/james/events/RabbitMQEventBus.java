@@ -43,17 +43,20 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private static final String NOT_RUNNING_ERROR_MESSAGE = "Event Bus is not running";
     static final String EVENT_BUS_ID = "eventBusId";
 
+    public record Configurations(RabbitMQConfiguration rabbitMQConfiguration, RetryBackoffConfiguration retryBackoff) {
+
+    }
+
     private final NamingStrategy namingStrategy;
     private final EventSerializer eventSerializer;
     private final RoutingKeyConverter routingKeyConverter;
-    private final RetryBackoffConfiguration retryBackoff;
     private final EventBusId eventBusId;
     private final EventDeadLetters eventDeadLetters;
     private final ListenerExecutor listenerExecutor;
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
     private final ReactorRabbitMQChannelPool channelPool;
-    private final RabbitMQConfiguration configuration;
+    private final Configurations configurations;
     private final MetricFactory metricFactory;
 
     private volatile boolean isRunning;
@@ -63,10 +66,9 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private EventDispatcher eventDispatcher;
 
     public RabbitMQEventBus(NamingStrategy namingStrategy, Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
-                            RetryBackoffConfiguration retryBackoff,
                             RoutingKeyConverter routingKeyConverter,
                             EventDeadLetters eventDeadLetters, MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool,
-                            EventBusId eventBusId, RabbitMQConfiguration configuration) {
+                            EventBusId eventBusId, Configurations configurations) {
         this.namingStrategy = namingStrategy;
         this.sender = sender;
         this.receiverProvider = receiverProvider;
@@ -75,9 +77,8 @@ public class RabbitMQEventBus implements EventBus, Startable {
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.routingKeyConverter = routingKeyConverter;
-        this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;
-        this.configuration = configuration;
+        this.configurations = configurations;
         this.metricFactory = metricFactory;
         this.isRunning = false;
         this.isStopping = false;
@@ -88,9 +89,9 @@ public class RabbitMQEventBus implements EventBus, Startable {
         if (!isRunning && !isStopping) {
 
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
-            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, listenerExecutor, retryBackoff, configuration, metricFactory);
-            groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, retryBackoff, eventDeadLetters, listenerExecutor, configuration);
-            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration);
+            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, listenerExecutor, configurations, metricFactory);
+            groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, eventDeadLetters, listenerExecutor, configurations);
+            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configurations.rabbitMQConfiguration());
 
             eventDispatcher.start();
             keyRegistrationHandler.start();
@@ -109,9 +110,9 @@ public class RabbitMQEventBus implements EventBus, Startable {
         if (!isRunning && !isStopping) {
 
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
-            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, listenerExecutor, retryBackoff, configuration, metricFactory);
-            groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, retryBackoff, eventDeadLetters, listenerExecutor, configuration);
-            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration);
+            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, listenerExecutor, configurations, metricFactory);
+            groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, eventDeadLetters, listenerExecutor, configurations);
+            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configurations.rabbitMQConfiguration());
 
             keyRegistrationHandler.declareQueue();
 
