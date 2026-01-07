@@ -97,9 +97,10 @@ public class JMAPEventBusModule extends AbstractModule {
                                          JmapEventSerializer eventSerializer,
                                          RetryBackoffConfiguration retryBackoffConfiguration,
                                          @Named(InjectionKeys.JMAP) EventBusId eventBusId,
-                                         RabbitMQConfiguration configuration) {
+                                         RabbitMQConfiguration configuration,
+                                         EventBus.Configuration eventBusConfiguration) {
         return eventBusFactory.create(eventBusId,
-            JMAP_NAMING_STRATEGY, new RoutingKeyConverter(ImmutableSet.of(new Factory())), eventSerializer, new RabbitMQEventBus.Configurations(configuration, retryBackoffConfiguration));
+            JMAP_NAMING_STRATEGY, new RoutingKeyConverter(ImmutableSet.of(new Factory())), eventSerializer, new RabbitMQEventBus.Configurations(configuration, retryBackoffConfiguration, eventBusConfiguration));
     }
 
     @Provides

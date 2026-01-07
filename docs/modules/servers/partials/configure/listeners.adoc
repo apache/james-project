@@ -26,6 +26,10 @@ If *true* the execution will be scheduled in a reactor elastic scheduler. If *fa
 
 Already provided additional listeners are documented below.
 
+The <executionRate> property controls the number of events processed in parallel. Defaults to 10.
+
+The <executionTimeout> property (duration) controls the timeout for the execution of each listener. None if omitted.
+
 === SpamAssassinListener
 
 Provides per user real-time HAM/SPAM feedback to a SpamAssassin server depending on user actions.
