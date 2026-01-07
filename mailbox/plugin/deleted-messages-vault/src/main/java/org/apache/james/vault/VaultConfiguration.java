@@ -31,7 +31,7 @@ import org.apache.james.util.DurationParser;
 import com.google.common.base.Preconditions;
 
 public class VaultConfiguration {
-    public static final String DEFAULT_SINGLE_BUCKET_NAME = "deleted-message-vault";
+    public static final String DEFAULT_SINGLE_BUCKET_NAME = "james-deleted-message-vault";
     public static final VaultConfiguration DEFAULT =
         new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.RESTORED_MESSAGES, DEFAULT_SINGLE_BUCKET_NAME);
     public static final VaultConfiguration ENABLED_DEFAULT =
