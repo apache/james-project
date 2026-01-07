@@ -59,7 +59,6 @@ class S3NamespaceTest implements BlobStoreContract {
         testee = BlobStoreFactory.builder()
             .blobStoreDAO(s3BlobStoreDAO)
             .blobIdFactory(blobIdFactory)
-            .bucket(BucketName.of("namespace"))
             .passthrough();
     }
 

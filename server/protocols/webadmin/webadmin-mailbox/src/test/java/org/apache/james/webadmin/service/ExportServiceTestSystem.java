@@ -79,7 +79,6 @@ public class ExportServiceTestSystem {
 
         blobStore = Mockito.spy(MemoryBlobStoreFactory.builder()
             .blobIdFactory(FACTORY)
-            .defaultBucketName()
             .passthrough());
         mailetContext = FakeMailContext.builder().postmaster(MailAddressFixture.POSTMASTER_AT_JAMES).build();
         blobExport = new LocalFileBlobExportMechanism(mailetContext, blobStore, fileSystem, dnsService,

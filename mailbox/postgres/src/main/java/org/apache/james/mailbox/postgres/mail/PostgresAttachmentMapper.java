@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
@@ -64,7 +65,7 @@ public class PostgresAttachmentMapper implements AttachmentMapper {
     @Override
     public Mono<InputStream> loadAttachmentContentReactive(AttachmentId attachmentId) {
         return postgresAttachmentDAO.getAttachment(attachmentId)
-            .flatMap(pair -> Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), pair.getRight(), LOW_COST)))
+            .flatMap(pair -> Mono.from(blobStore.readReactive(BucketName.DEFAULT, pair.getRight(), LOW_COST)))
             .switchIfEmpty(Mono.error(() -> new AttachmentNotFoundException(attachmentId.toString())));
     }
 
@@ -112,7 +113,7 @@ public class PostgresAttachmentMapper implements AttachmentMapper {
 
     private Mono<MessageAttachmentMetadata> storeAttachmentAsync(ParsedAttachment parsedAttachment, MessageId ownerMessageId) {
         return Mono.fromCallable(parsedAttachment::getContent)
-            .flatMap(content -> Mono.from(blobStore.save(blobStore.getDefaultBucketName(), parsedAttachment.getContent(), BlobStore.StoragePolicy.LOW_COST))
+            .flatMap(content -> Mono.from(blobStore.save(BucketName.DEFAULT, parsedAttachment.getContent(), BlobStore.StoragePolicy.LOW_COST))
                 .flatMap(blobId -> {
                     AttachmentId attachmentId = attachmentIdAssignationStrategy.assign(parsedAttachment, ownerMessageId);
                     return postgresAttachmentDAO.storeAttachment(AttachmentMetadata.builder()

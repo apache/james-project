@@ -38,7 +38,6 @@ public class FileBlobStorePassThroughTest implements DeleteBlobStoreContract, Me
         FileSystemImpl fileSystem = FileSystemImpl.forTesting();
         blobStore = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), new FileBlobStoreFactory(fileSystem).builder()
                 .blobIdFactory(BLOB_ID_FACTORY)
-                .defaultBucketName()
                 .passthrough());
     }
 

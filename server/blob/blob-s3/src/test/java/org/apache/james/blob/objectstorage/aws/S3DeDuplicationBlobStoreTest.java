@@ -73,7 +73,6 @@ class S3DeDuplicationBlobStoreTest implements BlobStoreContract, DeduplicationBl
         return BlobStoreFactory.builder()
                 .blobStoreDAO(s3BlobStoreDAO)
                 .blobIdFactory(blobIdFactory)
-                .defaultBucketName()
                 .deduplication();
     }
 

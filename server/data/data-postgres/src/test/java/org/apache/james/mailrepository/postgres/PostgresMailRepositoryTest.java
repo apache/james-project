@@ -56,7 +56,6 @@ public class PostgresMailRepositoryTest implements MailRepositoryContract {
         MailRepositoryUrl url = MailRepositoryUrl.fromPathAndProtocol(new Protocol("postgres"), path);
         BlobStore blobStore = MemoryBlobStoreFactory.builder()
             .blobIdFactory(BLOB_ID_FACTORY)
-            .defaultBucketName()
             .passthrough();
         return new PostgresMailRepository(url, new PostgresMailRepositoryContentDAO(postgresExtension.getDefaultPostgresExecutor(), MimeMessageStore.factory(blobStore), BLOB_ID_FACTORY));
     }

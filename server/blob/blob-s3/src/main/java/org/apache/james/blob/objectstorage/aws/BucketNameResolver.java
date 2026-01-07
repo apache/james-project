@@ -87,17 +87,15 @@ public class BucketNameResolver {
     BucketName resolve(BucketName bucketName) {
         Preconditions.checkNotNull(bucketName);
 
-        if (isNameSpace(bucketName)) {
-            return bucketName;
-        }
-        return prefix
-            .map(bucketPrefix -> BucketName.of(bucketPrefix + bucketName.asString()))
-            .orElse(bucketName);
+        return namespace.filter(any -> BucketName.DEFAULT.equals(bucketName))
+            .orElse(prefix
+                .map(bucketPrefix -> BucketName.of(bucketPrefix + bucketName.asString()))
+                .orElse(bucketName));
     }
 
     Optional<BucketName> unresolve(BucketName bucketName) {
         if (isNameSpace(bucketName)) {
-            return Optional.of(bucketName);
+            return Optional.of(BucketName.DEFAULT);
         }
 
         return prefix.map(p -> {

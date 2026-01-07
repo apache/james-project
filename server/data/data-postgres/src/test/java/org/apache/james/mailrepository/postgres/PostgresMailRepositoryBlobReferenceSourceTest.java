@@ -41,7 +41,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class PostgresMailRepositoryBlobReferenceSourceTest {
+class PostgresMailRepositoryBlobReferenceSourceTest {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresMailRepositoryDataDefinition.MODULE));
 
@@ -55,7 +55,6 @@ public class PostgresMailRepositoryBlobReferenceSourceTest {
         BlobId.Factory factory = new PlainBlobId.Factory();
         BlobStore blobStore = MemoryBlobStoreFactory.builder()
             .blobIdFactory(factory)
-            .defaultBucketName()
             .passthrough();
         postgresMailRepositoryContentDAO = new PostgresMailRepositoryContentDAO(postgresExtension.getDefaultPostgresExecutor(), MimeMessageStore.factory(blobStore), factory);
         postgresMailRepositoryBlobReferenceSource = new PostgresMailRepositoryBlobReferenceSource(postgresMailRepositoryContentDAO);

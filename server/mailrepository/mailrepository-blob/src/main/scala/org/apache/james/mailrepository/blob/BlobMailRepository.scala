@@ -171,14 +171,14 @@ class BlobMailRepository(val mailMetaDataBlobStore: BlobStore,
 
   @throws[MessagingException]
   override def size: Long =
-    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+    Flux.from(mailMetaDataBlobStore.listBlobs(BucketName.DEFAULT))
     .filter(this.belongsToMailRepository)
     .count()
     .block()
 
   @throws[MessagingException]
   override def list: util.Iterator[MailKey] =
-    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+    Flux.from(mailMetaDataBlobStore.listBlobs(BucketName.DEFAULT))
     .filter(this.belongsToMailRepository)
     .map[MailKey](blobId => new MailKey(blobId.asString))
     .toIterable
@@ -219,7 +219,7 @@ class BlobMailRepository(val mailMetaDataBlobStore: BlobStore,
 
   @throws[MessagingException]
   override def removeAll(): Unit = {
-    Flux.from(mailMetaDataBlobStore.listBlobs(mailMetaDataBlobStore.getDefaultBucketName))
+    Flux.from(mailMetaDataBlobStore.listBlobs(BucketName.DEFAULT))
       .flatMap(blobId => this.remove(MailPartsId(blobId)))
       .blockLast()
   }
@@ -228,7 +228,6 @@ class BlobMailRepository(val mailMetaDataBlobStore: BlobStore,
     new MailPartsId.Factory,
     new BlobMailRepository.MailEncoder(mailMetadataBlobIdFactory),
     new BlobMailRepository.MailDecoder(mailMetadataBlobIdFactory),
-    mailMetaDataBlobStore,
-    mailMetaDataBlobStore.getDefaultBucketName
+    mailMetaDataBlobStore
   )
 }

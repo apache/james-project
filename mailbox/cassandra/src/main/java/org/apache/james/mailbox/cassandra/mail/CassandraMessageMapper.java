@@ -43,6 +43,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
@@ -267,7 +268,7 @@ public class CassandraMessageMapper implements MessageMapper {
             return Mono.just(metadata.asMailboxMessage(EMPTY_BYTE_ARRAY));
         }
         if (fetchType == FetchType.HEADERS && metadata.isComplete()) {
-            return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), metadata.getHeaderContent().get(), SIZE_BASED))
+            return Mono.from(blobStore.readBytes(BucketName.DEFAULT, metadata.getHeaderContent().get(), SIZE_BASED))
                 .map(metadata::asMailboxMessage);
         }
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)

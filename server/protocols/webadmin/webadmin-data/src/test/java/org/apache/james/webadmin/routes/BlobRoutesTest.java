@@ -101,7 +101,7 @@ class BlobRoutesTest {
         GenerationAwareBlobId.Factory generationAwareBlobIdFactory = new GenerationAwareBlobId.Factory(clock, BLOB_ID_FACTORY, GENERATION_AWARE_BLOB_ID_CONFIGURATION);
 
         BlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
-        blobStore = new DeDuplicationBlobStore(blobStoreDAO, DEFAULT_BUCKET, generationAwareBlobIdFactory);
+        blobStore = new DeDuplicationBlobStore(blobStoreDAO, generationAwareBlobIdFactory);
         JsonTransformer jsonTransformer = new JsonTransformer();
         TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(BlobGCTaskAdditionalInformationDTO.SERIALIZATION_MODULE));
         BlobRoutes blobRoutes = new BlobRoutes(
@@ -109,7 +109,6 @@ class BlobRoutesTest {
             jsonTransformer,
             clock,
             blobStoreDAO,
-            DEFAULT_BUCKET,
             ImmutableSet.of(blobReferenceSource),
             GENERATION_AWARE_BLOB_ID_CONFIGURATION,
             generationAwareBlobIdFactory);

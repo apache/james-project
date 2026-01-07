@@ -26,7 +26,6 @@ import java.time.Instant;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
@@ -64,7 +63,7 @@ public class DeleteMessageListenerTest extends DeleteMessageListenerContract {
 
     @BeforeAll
     static void beforeAll() {
-        blobStore = new PassThroughBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, BLOB_ID_FACTORY);
+        blobStore = new PassThroughBlobStore(new MemoryBlobStoreDAO(), BLOB_ID_FACTORY);
 
         PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(
             postgresExtension.getExecutorFactory(),

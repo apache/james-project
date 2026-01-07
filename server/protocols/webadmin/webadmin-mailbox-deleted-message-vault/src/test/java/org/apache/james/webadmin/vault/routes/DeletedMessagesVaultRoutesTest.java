@@ -187,7 +187,6 @@ class DeletedMessagesVaultRoutesTest {
         blobStore = spy(BlobStoreFactory.builder()
             .blobStoreDAO(blobStoreDAO)
             .blobIdFactory(blobIdFactory)
-            .defaultBucketName()
             .passthrough());
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
@@ -1986,7 +1985,7 @@ class DeletedMessagesVaultRoutesTest {
 
             byte[] expectedZippedData = zippedMessagesData();
 
-            assertThat(blobStore.read(blobStore.getDefaultBucketName(), blobExporting.getExportedBlobId().get()))
+            assertThat(blobStore.read(BucketName.DEFAULT, blobExporting.getExportedBlobId().get()))
                 .hasSameContentAs(new ByteArrayInputStream(expectedZippedData));
         }
 

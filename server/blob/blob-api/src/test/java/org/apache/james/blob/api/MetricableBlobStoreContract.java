@@ -66,8 +66,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void saveBytesShouldPublishSaveBytesTimerMetrics() {
         BlobStore store = testee();
 
-        Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
-        Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
+        Mono.from(store.save(BucketName.DEFAULT, BYTES_CONTENT, LOW_COST)).block();
+        Mono.from(store.save(BucketName.DEFAULT, BYTES_CONTENT, LOW_COST)).block();
 
         await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_BYTES_TIMER_NAME))
@@ -78,8 +78,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void saveStringShouldPublishSaveBytesTimerMetrics() {
         BlobStore store = testee();
 
-        Mono.from(store.save(store.getDefaultBucketName(), STRING_CONTENT, LOW_COST)).block();
-        Mono.from(store.save(store.getDefaultBucketName(), STRING_CONTENT, LOW_COST)).block();
+        Mono.from(store.save(BucketName.DEFAULT, STRING_CONTENT, LOW_COST)).block();
+        Mono.from(store.save(BucketName.DEFAULT, STRING_CONTENT, LOW_COST)).block();
 
         await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_BYTES_TIMER_NAME))
@@ -90,8 +90,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void saveInputStreamShouldPublishSaveInputStreamTimerMetrics() {
         BlobStore store = testee();
 
-        Mono.from(store.save(store.getDefaultBucketName(), new ByteArrayInputStream(BYTES_CONTENT), LOW_COST)).block();
-        Mono.from(store.save(store.getDefaultBucketName(), new ByteArrayInputStream(BYTES_CONTENT), LOW_COST)).block();
+        Mono.from(store.save(BucketName.DEFAULT, new ByteArrayInputStream(BYTES_CONTENT), LOW_COST)).block();
+        Mono.from(store.save(BucketName.DEFAULT, new ByteArrayInputStream(BYTES_CONTENT), LOW_COST)).block();
 
         await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_INPUT_STREAM_TIMER_NAME))
@@ -102,9 +102,9 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void readBytesShouldPublishReadBytesTimerMetrics() {
         BlobStore store = testee();
 
-        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
-        Mono.from(store.readBytes(store.getDefaultBucketName(), blobId)).block();
-        Mono.from(store.readBytes(store.getDefaultBucketName(), blobId)).block();
+        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT, BYTES_CONTENT, LOW_COST)).block();
+        Mono.from(store.readBytes(BucketName.DEFAULT, blobId)).block();
+        Mono.from(store.readBytes(BucketName.DEFAULT, blobId)).block();
 
         await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(READ_BYTES_TIMER_NAME))
@@ -115,9 +115,9 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void readShouldPublishReadTimerMetrics() {
         BlobStore store = testee();
 
-        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
-        store.read(store.getDefaultBucketName(), blobId);
-        store.read(store.getDefaultBucketName(), blobId);
+        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT, BYTES_CONTENT, LOW_COST)).block();
+        store.read(BucketName.DEFAULT, blobId);
+        store.read(BucketName.DEFAULT, blobId);
 
         await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(READ_TIMER_NAME))
@@ -143,8 +143,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void deleteShouldPublishDeleteTimerMetrics() {
         BlobStore store = testee();
 
-        BlobId blobId1 = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
-        BlobId blobId2 = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
+        BlobId blobId1 = Mono.from(store.save(BucketName.DEFAULT, BYTES_CONTENT, LOW_COST)).block();
+        BlobId blobId2 = Mono.from(store.save(BucketName.DEFAULT, BYTES_CONTENT, LOW_COST)).block();
 
         Mono.from(store.delete(BucketName.DEFAULT, blobId1)).block();
         Mono.from(store.delete(BucketName.DEFAULT, blobId2)).block();

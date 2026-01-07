@@ -20,7 +20,6 @@
 package org.apache.james.blob.api;
 
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
@@ -29,25 +28,6 @@ import org.reactivestreams.Publisher;
 import com.google.common.io.ByteSource;
 
 public interface BlobStoreDAO {
-    class ReactiveByteSource {
-        private final long size;
-        private final Publisher<ByteBuffer> content;
-
-        public ReactiveByteSource(long size, Publisher<ByteBuffer> content) {
-            this.size = size;
-            this.content = content;
-        }
-
-        public long getSize() {
-            return size;
-        }
-
-        public Publisher<ByteBuffer> getContent() {
-            return content;
-        }
-    }
-
-
     /**
      * Reads a Blob based on its BucketName and its BlobId.
      *

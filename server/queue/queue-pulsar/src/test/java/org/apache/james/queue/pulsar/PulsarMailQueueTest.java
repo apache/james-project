@@ -94,7 +94,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
         blobIdFactory = new PlainBlobId.Factory();
 
         memoryBlobStore = new MemoryBlobStoreDAO();
-        PassThroughBlobStore blobStore = new PassThroughBlobStore(memoryBlobStore, BucketName.DEFAULT, blobIdFactory);
+        PassThroughBlobStore blobStore = new PassThroughBlobStore(memoryBlobStore, blobIdFactory);
         MimeMessageStore.Factory mimeMessageStoreFactory = new MimeMessageStore.Factory(blobStore);
         mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
         factory = new RawMailQueueItemDecoratorFactory();

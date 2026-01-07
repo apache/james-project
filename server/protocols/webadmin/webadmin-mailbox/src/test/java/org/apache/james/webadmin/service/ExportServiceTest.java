@@ -35,6 +35,7 @@ import java.io.InputStream;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.export.api.FileExtension;
@@ -189,10 +190,10 @@ class ExportServiceTest {
         String blobId = fileName.substring(fileName.lastIndexOf("-") + 1);
 
         SoftAssertions.assertSoftly(softly -> {
-            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.parse(blobId)))
+            assertThatThrownBy(() -> testSystem.blobStore.read(BucketName.DEFAULT, FACTORY.parse(blobId)))
                 .isInstanceOf(ObjectNotFoundException.class);
-            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), FACTORY.parse(blobId)))
-                .hasMessage(String.format("blob '%s' not found in bucket '%s'", blobId, testSystem.blobStore.getDefaultBucketName().asString()));
+            assertThatThrownBy(() -> testSystem.blobStore.read(BucketName.DEFAULT, FACTORY.parse(blobId)))
+                .hasMessage(String.format("blob '%s' not found in bucket '%s'", blobId, BucketName.DEFAULT.asString()));
         });
     }
 

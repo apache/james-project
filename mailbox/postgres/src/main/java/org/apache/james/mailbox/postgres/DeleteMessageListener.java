@@ -26,6 +26,7 @@ import jakarta.inject.Named;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.Username;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
@@ -169,7 +170,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
 
     private Mono<Void> deleteBodyBlob(PostgresMessageId id, PostgresMessageDAO postgresMessageDAO) {
         return postgresMessageDAO.getBodyBlobId(id)
-            .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId))
+            .flatMap(blobId -> Mono.from(blobStore.delete(BucketName.DEFAULT, blobId))
                 .then());
     }
 
@@ -185,7 +186,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
 
     private Mono<Void> deleteAttachmentBlobs(PostgresMessageId messageId, PostgresAttachmentDAO attachmentDAO) {
         return attachmentDAO.listBlobsByMessageId(messageId)
-            .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId)), ReactorUtils.DEFAULT_CONCURRENCY)
+            .flatMap(blobId -> Mono.from(blobStore.delete(BucketName.DEFAULT, blobId)), ReactorUtils.DEFAULT_CONCURRENCY)
             .then();
     }
 }
