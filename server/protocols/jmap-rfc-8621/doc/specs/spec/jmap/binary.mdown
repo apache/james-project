@@ -67,8 +67,8 @@ When an HTTP error response is returned to the client, the server SHOULD return 
 
 ## Blob/copy
 
-> :warning:
-> Not implemented.
+> :information_source:
+> Implemented
 
 Binary data may be copied **between** two different accounts using the *Blob/copy* method rather than having to download and then reupload on the client.
 
