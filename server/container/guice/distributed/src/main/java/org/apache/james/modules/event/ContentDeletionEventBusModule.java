@@ -114,8 +114,8 @@ public class ContentDeletionEventBusModule extends AbstractModule {
                                                     RabbitMQConfiguration configuration) {
         return new RabbitMQEventBus(
             CONTENT_DELETION_NAMING_STRATEGY,
-            sender, receiverProvider, eventSerializer, retryBackoffConfiguration, new RoutingKeyConverter(ImmutableSet.of(new Factory())),
-            eventDeadLetters, metricFactory, channelPool, eventBusId, configuration);
+            sender, receiverProvider, eventSerializer, new RoutingKeyConverter(ImmutableSet.of(new Factory())),
+            eventDeadLetters, metricFactory, channelPool, eventBusId, new RabbitMQEventBus.Configurations(configuration, retryBackoffConfiguration));
     }
 
     @Provides

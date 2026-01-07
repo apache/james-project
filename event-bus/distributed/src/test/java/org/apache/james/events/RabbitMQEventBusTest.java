@@ -159,10 +159,9 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     }
 
     private RabbitMQEventBus newEventBus(NamingStrategy namingStrategy, Sender sender, ReceiverProvider receiverProvider) throws Exception {
-        return new RabbitMQEventBus(namingStrategy, sender, receiverProvider, eventSerializer,
-            EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
-            memoryEventDeadLetters, new RecordingMetricFactory(),
-            rabbitMQExtension.getRabbitChannelPool(), EventBusId.random(), rabbitMQExtension.getRabbitMQ().getConfiguration());
+        return new RabbitMQEventBus(namingStrategy, sender, receiverProvider, eventSerializer, routingKeyConverter,
+            memoryEventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(), EventBusId.random(),
+            new RabbitMQEventBus.Configurations(rabbitMQExtension.getRabbitMQ().getConfiguration(), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION));
     }
 
     @Override
