@@ -52,6 +52,7 @@ import org.apache.james.jmap.http.rfc8621.InjectionKeys;
 import org.apache.james.jmap.mail.DefaultNamespaceFactory;
 import org.apache.james.jmap.mail.NamespaceFactory;
 import org.apache.james.jmap.mail.SortOrderProvider;
+import org.apache.james.jmap.method.BlobCopyMethod;
 import org.apache.james.jmap.method.CoreEchoMethod;
 import org.apache.james.jmap.method.DelegateGetMethod;
 import org.apache.james.jmap.method.DelegateSetMethod;
@@ -141,6 +142,7 @@ public class RFC8621MethodsModule extends AbstractModule {
 
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(CoreEchoMethod.class);
+        methods.addBinding().to(BlobCopyMethod.class);
         methods.addBinding().to(EmailChangesMethod.class);
         methods.addBinding().to(EmailImportMethod.class);
         methods.addBinding().to(EmailGetMethod.class);
