@@ -64,12 +64,10 @@ class GroupConsumerRetry {
     private final EventDeadLetters eventDeadLetters;
     private final Group group;
     private final EventSerializer eventSerializer;
-    private final RabbitMQConfiguration rabbitMQConfiguration;
 
     GroupConsumerRetry(NamingStrategy namingStrategy, Sender sender, Group group, RetryBackoffConfiguration retryBackoff,
-                       EventDeadLetters eventDeadLetters, EventSerializer eventSerializer, RabbitMQConfiguration rabbitMQConfiguration) {
+                       EventDeadLetters eventDeadLetters, EventSerializer eventSerializer) {
         this.sender = sender;
-        this.rabbitMQConfiguration = rabbitMQConfiguration;
         this.retryExchangeName = namingStrategy.retryExchange(group);
         this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;

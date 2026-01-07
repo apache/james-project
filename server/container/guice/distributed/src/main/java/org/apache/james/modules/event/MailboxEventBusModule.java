@@ -100,8 +100,8 @@ public class MailboxEventBusModule extends AbstractModule {
                                          RoutingKeyConverter routingKeyConverter,
                                          EventDeadLetters eventDeadLetters, MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool,
                                          EventBusId eventBusId, RabbitMQConfiguration configuration) {
-        return new RabbitMQEventBus(namingStrategy, sender, receiverProvider, eventSerializer, retryBackoff, routingKeyConverter,
-            eventDeadLetters, metricFactory, channelPool, eventBusId, configuration);
+        return new RabbitMQEventBus(namingStrategy, sender, receiverProvider, eventSerializer, routingKeyConverter,
+            eventDeadLetters, metricFactory, channelPool, eventBusId, new RabbitMQEventBus.Configurations(configuration, retryBackoff));
     }
 
     @Provides

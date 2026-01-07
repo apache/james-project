@@ -53,13 +53,12 @@ class NetworkErrorTest {
     void setUp() throws Exception {
         eventDeadLetters = new MemoryEventDeadLetters();
 
-        EventSerializer eventSerializer = new TestEventSerializer();
         RoutingKeyConverter routingKeyConverter = RoutingKeyConverter.forFactories(new EventBusTestFixture.TestRegistrationKeyFactory());
 
         eventBus = new RabbitMQEventBus(new NamingStrategy(new EventBusName("test")), rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
-            eventSerializer, RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
+            new TestEventSerializer(), routingKeyConverter,
             eventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
-            EventBusId.random(), rabbitMQExtension.getRabbitMQ().getConfiguration());
+            EventBusId.random(), new RabbitMQEventBus.Configurations(rabbitMQExtension.getRabbitMQ().getConfiguration(), RETRY_BACKOFF_CONFIGURATION));
 
         eventBus.start();
     }
@@ -108,9 +107,9 @@ class NetworkErrorTest {
             .eventBusPropagateDispatchError(false)
             .build();
         eventBus = new RabbitMQEventBus(new NamingStrategy(new EventBusName("test")), rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
-            new TestEventSerializer(), RETRY_BACKOFF_CONFIGURATION, RoutingKeyConverter.forFactories(new EventBusTestFixture.TestRegistrationKeyFactory()),
+            new TestEventSerializer(), RoutingKeyConverter.forFactories(new EventBusTestFixture.TestRegistrationKeyFactory()),
             eventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
-            EventBusId.random(), disablePropagateDispatchError);
+            EventBusId.random(), new RabbitMQEventBus.Configurations(disablePropagateDispatchError, RETRY_BACKOFF_CONFIGURATION));
         eventBus.start();
 
         assertThat(eventDeadLetters.containEvents().block()).isFalse();

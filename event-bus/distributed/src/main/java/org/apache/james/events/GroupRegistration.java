@@ -32,7 +32,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.util.MDCBuilder;
@@ -83,30 +82,27 @@ class GroupRegistration implements Registration {
     private final GroupConsumerRetry retryHandler;
     private final WaitDelayGenerator delayGenerator;
     private final Group group;
-    private final RetryBackoffConfiguration retryBackoff;
     private final ListenerExecutor listenerExecutor;
-    private final RabbitMQConfiguration configuration;
+    private final RabbitMQEventBus.Configurations configurations;
     private Optional<Disposable> receiverSubscriber;
     private final ReceiverProvider receiverProvider;
     private Scheduler scheduler;
 
     GroupRegistration(NamingStrategy namingStrategy, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
-                      EventListener.ReactiveEventListener listener, Group group, RetryBackoffConfiguration retryBackoff,
-                      EventDeadLetters eventDeadLetters,
-                      Runnable unregisterGroup, ListenerExecutor listenerExecutor, RabbitMQConfiguration configuration) {
+                      EventListener.ReactiveEventListener listener, Group group, EventDeadLetters eventDeadLetters, Runnable unregisterGroup,
+                      ListenerExecutor listenerExecutor, RabbitMQEventBus.Configurations configurations) {
         this.namingStrategy = namingStrategy;
         this.channelPool = channelPool;
         this.eventSerializer = eventSerializer;
         this.listener = listener;
-        this.configuration = configuration;
+        this.configurations = configurations;
         this.queueName = namingStrategy.workQueue(group);
         this.receiverProvider = receiverProvider;
-        this.retryBackoff = retryBackoff;
         this.listenerExecutor = listenerExecutor;
         this.receiverSubscriber = Optional.empty();
         this.unregisterGroup = unregisterGroup;
-        this.retryHandler = new GroupConsumerRetry(namingStrategy, sender, group, retryBackoff, eventDeadLetters, eventSerializer, configuration);
-        this.delayGenerator = WaitDelayGenerator.of(retryBackoff);
+        this.retryHandler = new GroupConsumerRetry(namingStrategy, sender, group, configurations.retryBackoff(), eventDeadLetters, eventSerializer);
+        this.delayGenerator = WaitDelayGenerator.of(configurations.retryBackoff());
         this.group = group;
     }
 
@@ -116,7 +112,7 @@ class GroupRegistration implements Registration {
             .of(createGroupWorkQueue()
                 .then(retryHandler.createRetryExchange(queueName))
                 .then(Mono.fromCallable(this::consumeWorkQueue))
-                .retryWhen(retryBackoff.asReactorRetry().scheduler(Schedulers.boundedElastic()))
+                .retryWhen(configurations.retryBackoff().asReactorRetry().scheduler(Schedulers.boundedElastic()))
                 .block());
         return this;
     }
@@ -132,10 +128,10 @@ class GroupRegistration implements Registration {
     private Mono<Void> createGroupWorkQueue() {
         return channelPool.createWorkQueue(
             QueueSpecification.queue(queueName.asString())
-                .durable(evaluateDurable(DURABLE, configuration.isQuorumQueuesUsed()))
-                .exclusive(evaluateExclusive(!EXCLUSIVE, configuration.isQuorumQueuesUsed()))
-                .autoDelete(evaluateAutoDelete(!AUTO_DELETE, configuration.isQuorumQueuesUsed()))
-                .arguments(configuration.workQueueArgumentsBuilder()
+                .durable(evaluateDurable(DURABLE, configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
+                .exclusive(evaluateExclusive(!EXCLUSIVE, configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
+                .autoDelete(evaluateAutoDelete(!AUTO_DELETE, configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
+                .arguments(configurations.rabbitMQConfiguration().workQueueArgumentsBuilder()
                     .deadLetter(namingStrategy.deadLetterExchange())
                     .build()));
     }

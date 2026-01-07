@@ -33,7 +33,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.james.backends.rabbitmq.QueueArguments;
-import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
@@ -56,11 +55,9 @@ import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.Sender;
-import reactor.util.retry.Retry;
 
 class KeyRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyRegistrationHandler.class);
-    private static final Duration EXPIRATION_TIMEOUT = Duration.ofMinutes(30);
 
     private static final Duration TOPOLOGY_CHANGES_TIMEOUT = Duration.ofMinutes(1);
 
@@ -72,8 +69,7 @@ class KeyRegistrationHandler {
     private final RegistrationQueueName registrationQueue;
     private final RegistrationBinder registrationBinder;
     private final ListenerExecutor listenerExecutor;
-    private final RetryBackoffConfiguration retryBackoff;
-    private final RabbitMQConfiguration configuration;
+    private final RabbitMQEventBus.Configurations configurations;
     private final ReceiverProvider receiverProvider;
     private Optional<Disposable> receiverSubscriber;
     private final MetricFactory metricFactory;
@@ -83,7 +79,7 @@ class KeyRegistrationHandler {
     KeyRegistrationHandler(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer,
                            Sender sender, ReceiverProvider receiverProvider,
                            RoutingKeyConverter routingKeyConverter, LocalListenerRegistry localListenerRegistry,
-                           ListenerExecutor listenerExecutor, RetryBackoffConfiguration retryBackoff, RabbitMQConfiguration configuration, MetricFactory metricFactory) {
+                           ListenerExecutor listenerExecutor, RabbitMQEventBus.Configurations configurations, MetricFactory metricFactory) {
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
@@ -91,12 +87,11 @@ class KeyRegistrationHandler {
         this.localListenerRegistry = localListenerRegistry;
         this.receiverProvider = receiverProvider;
         this.listenerExecutor = listenerExecutor;
-        this.retryBackoff = retryBackoff;
-        this.configuration = configuration;
         this.metricFactory = metricFactory;
         this.registrationQueue = namingStrategy.queueName(eventBusId);
         this.registrationBinder = new RegistrationBinder(namingStrategy, sender, registrationQueue);
         this.receiverSubscriber = Optional.empty();
+        this.configurations = configurations;
     }
 
     void start() {
@@ -126,24 +121,24 @@ class KeyRegistrationHandler {
     }
 
     private void declareQueue(Sender sender) {
-        QueueArguments.Builder builder = configuration.workQueueArgumentsBuilder();
-        configuration.getQueueTTL().ifPresent(builder::queueTTL);
+        QueueArguments.Builder builder = configurations.rabbitMQConfiguration().workQueueArgumentsBuilder();
+        configurations.rabbitMQConfiguration().getQueueTTL().ifPresent(builder::queueTTL);
         sender.declareQueue(
             QueueSpecification.queue(registrationQueue.asString())
-                .durable(evaluateDurable(configuration.isEventBusNotificationDurabilityEnabled(), configuration.isQuorumQueuesUsed()))
-                .exclusive(evaluateExclusive(!EXCLUSIVE, configuration.isQuorumQueuesUsed()))
-                .autoDelete(evaluateAutoDelete(AUTO_DELETE, configuration.isQuorumQueuesUsed()))
+                .durable(evaluateDurable(configurations.rabbitMQConfiguration().isEventBusNotificationDurabilityEnabled(), configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
+                .exclusive(evaluateExclusive(!EXCLUSIVE, configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
+                .autoDelete(evaluateAutoDelete(AUTO_DELETE, configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
                 .arguments(builder.build()))
             .timeout(TOPOLOGY_CHANGES_TIMEOUT)
             .map(AMQP.Queue.DeclareOk::getQueue)
-            .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()))
+            .retryWhen(configurations.retryBackoff().asReactorRetry())
             .block();
     }
 
     void stop() {
         sender.delete(QueueSpecification.queue(registrationQueue.asString()))
             .timeout(TOPOLOGY_CHANGES_TIMEOUT)
-            .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.parallel()))
+            .retryWhen(configurations.retryBackoff().asReactorRetry().scheduler(Schedulers.parallel()))
             .block();
         receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
                 .ifPresent(Disposable::dispose);
@@ -158,7 +153,7 @@ class KeyRegistrationHandler {
                 if (registration.unregister().lastListenerRemoved()) {
                     return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-unregister", registrationBinder.unbind(key)
                         .timeout(TOPOLOGY_CHANGES_TIMEOUT)
-                        .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()))))
+                        .retryWhen(configurations.retryBackoff().asReactorRetry().scheduler(Schedulers.boundedElastic()))))
                         // Unbind is potentially blocking
                         .subscribeOn(Schedulers.boundedElastic());
                 }
@@ -172,7 +167,7 @@ class KeyRegistrationHandler {
                 // Bind is potentially blocking
                 .subscribeOn(Schedulers.boundedElastic())
                 .timeout(TOPOLOGY_CHANGES_TIMEOUT)
-                .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()));
+                .retryWhen(configurations.retryBackoff().asReactorRetry().scheduler(Schedulers.boundedElastic()));
         }
         return Mono.empty();
     }
