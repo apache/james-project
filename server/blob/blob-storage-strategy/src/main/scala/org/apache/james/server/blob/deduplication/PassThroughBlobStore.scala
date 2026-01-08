@@ -120,7 +120,5 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO, blobIdFactory: 
       .`then`(SMono.just(Boolean.box(true)))
   }
 
-  override def listBuckets(): Publisher[BucketName] = Flux.concat(blobStoreDAO.listBuckets(), Flux.just(BucketName.DEFAULT)).distinct()
-
   override def listBlobs(bucketName: BucketName): Publisher[BlobId] = blobStoreDAO.listBlobs(bucketName)
 }

@@ -73,8 +73,6 @@ public interface BlobStore {
         return readReactive(bucketName, blobId);
     }
 
-    Publisher<BucketName> listBuckets();
-
     Publisher<Void> deleteBucket(BucketName bucketName);
 
     Publisher<Boolean> delete(BucketName bucketName, BlobId blobId);

@@ -187,7 +187,5 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     SMono.just(Boolean.box(false))
   }
 
-  override def listBuckets(): Publisher[BucketName] = Flux.concat(blobStoreDAO.listBuckets(), Flux.just(BucketName.DEFAULT)).distinct()
-
   override def listBlobs(bucketName: BucketName): Publisher[BlobId] = blobStoreDAO.listBlobs(bucketName)
 }
