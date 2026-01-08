@@ -58,8 +58,13 @@ public abstract class AbstractSenderAuthIdentifyVerificationHook implements Mail
      * the user was already authenticated
      */
     protected boolean senderDoesNotMatchAuthUser(SMTPSession session, MaybeSender sender) {
+        if (sender.isNullSender()) {
+            // Authenticated users can legitimately use MAIL FROM eg for MDNs CF RFC 8098
+            // Please note that the header From is later verified by the DATA hook.
+            return false;
+        }
         return session.getUsername() != null &&
-            (isAnonymous(sender) || !senderMatchSessionUser(sender, session) || !belongsToLocalDomain(sender));
+            (!senderMatchSessionUser(sender, session) || !belongsToLocalDomain(sender));
     }
 
     /*
