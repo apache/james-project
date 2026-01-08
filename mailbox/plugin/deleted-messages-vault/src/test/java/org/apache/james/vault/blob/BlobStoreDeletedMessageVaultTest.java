@@ -204,7 +204,7 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
     @Test
     public void searchAllShouldReturnOldAndNewMessages() {
         Mono.from(getVault().appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(getVault().appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
@@ -215,7 +215,7 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
         Mono.from(getVault().appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         Mono.from(getVault().appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
         DeletedMessage deletedMessage3 = DELETED_MESSAGE_GENERATOR.apply(InMemoryMessageId.of(33).getRawId());
-        Mono.from(getVault().appendV1(deletedMessage3, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(deletedMessage3, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(Flux.from(getVault().search(USERNAME, Query.of(1, List.of()))).collectList().block())
             .hasSize(1);
