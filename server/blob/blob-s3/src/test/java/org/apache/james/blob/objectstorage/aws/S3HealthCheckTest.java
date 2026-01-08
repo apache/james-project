@@ -21,7 +21,6 @@ package org.apache.james.blob.objectstorage.aws;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
@@ -32,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-public class S3HealthCheckTest {
+class S3HealthCheckTest {
 
     private ObjectStorageHealthCheck s3HealthCheck;
 

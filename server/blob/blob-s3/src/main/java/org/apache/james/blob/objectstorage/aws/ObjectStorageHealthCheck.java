@@ -23,7 +23,6 @@ import java.time.Duration;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
