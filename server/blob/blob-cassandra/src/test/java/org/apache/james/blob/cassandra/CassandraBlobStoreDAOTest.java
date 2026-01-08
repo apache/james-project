@@ -27,7 +27,6 @@ import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraBlobStoreDAOTest implements BlobStoreDAOContract {
@@ -56,11 +55,5 @@ public class CassandraBlobStoreDAOTest implements BlobStoreDAOContract {
     @Override
     public BlobStoreDAO testee() {
         return testee;
-    }
-
-    @Override
-    @Disabled("Not supported by the Cassandra blob store")
-    public void listBucketsShouldReturnBucketsWithNoBlob() {
-
     }
 }
