@@ -419,7 +419,6 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .then();
     }
 
-    @Override
     public Publisher<BucketName> listBuckets() {
         return Mono.fromFuture(client::listBuckets)
             .flatMapIterable(ListBucketsResponse::buckets)

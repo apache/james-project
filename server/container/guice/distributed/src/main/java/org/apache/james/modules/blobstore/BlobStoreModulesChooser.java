@@ -28,7 +28,7 @@ import org.apache.james.blob.aes.AESBlobStoreDAO;
 import org.apache.james.blob.aes.CryptoConfig;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.ObjectStorageHealthCheck;
+import org.apache.james.blob.objectstorage.aws.ObjectStorageHealthCheck;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
 import org.apache.james.blob.file.FileBlobStoreDAO;

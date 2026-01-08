@@ -17,12 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.api;
+package org.apache.james.blob.objectstorage.aws;
 
 import java.time.Duration;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
@@ -35,10 +36,10 @@ public class ObjectStorageHealthCheck implements HealthCheck {
 
     private static final ComponentName COMPONENT_NAME = new ComponentName("ObjectStorage");
 
-    private final BlobStoreDAO blobStoreDAO;
+    private final S3BlobStoreDAO blobStoreDAO;
 
     @Inject
-    public ObjectStorageHealthCheck(BlobStoreDAO blobStoreDAO) {
+    public ObjectStorageHealthCheck(S3BlobStoreDAO blobStoreDAO) {
         this.blobStoreDAO = blobStoreDAO;
     }
 
