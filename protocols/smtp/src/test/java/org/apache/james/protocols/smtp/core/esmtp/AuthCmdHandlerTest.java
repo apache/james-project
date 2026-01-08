@@ -18,11 +18,11 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core.esmtp;
 
+import java.util.Optional;
+
 import org.apache.james.core.Username;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.Optional;
 
 class AuthCmdHandlerTest {
 
