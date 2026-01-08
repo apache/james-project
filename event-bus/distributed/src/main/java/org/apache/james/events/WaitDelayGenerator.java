@@ -37,10 +37,10 @@ class WaitDelayGenerator {
 
     private static Duration randomBetween(Duration base, Duration jitter) {
         Preconditions.checkArgument(!jitter.isNegative(), "jitter value should always be positive");
-        if (jitter.isZero()) {
+        long maxJitterAsMillis = jitter.toMillis();
+        if (maxJitterAsMillis <= 0) {
             return base;
         }
-        long maxJitterAsMillis = jitter.toMillis();
         long jitterAsMillis = SECURE_RANDOM.nextInt(Ints.checkedCast(maxJitterAsMillis * 2)) / 2;
         return base.plusMillis(jitterAsMillis);
     }
