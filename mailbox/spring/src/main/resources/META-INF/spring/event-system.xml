@@ -25,10 +25,7 @@
           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-    <bean id="eventBusConfiguration"
-          class="org.apache.james.events.EventBus$Configuration">
-        <util:constant static-field="org.apache.james.events.EventBus$Configuration.DEFAULT"/>
-    </bean>
+    <util:constant id="eventBusConfiguration" static-field="org.apache.james.events.EventBus$Configuration.DEFAULT"/>
 
     <bean id="event-bus" class="org.apache.james.events.InVMEventBus" lazy-init="true">
         <constructor-arg index="0" ref="event-delivery"/>
