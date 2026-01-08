@@ -134,19 +134,19 @@ public class InVMEventBus implements EventBus {
 
     private Mono<Void> keyDeliveries(Event event, Set<RegistrationKey> keys) {
         return Flux.fromIterable(registeredListenersByKeys(keys))
-            .flatMap(listener -> eventDelivery.deliver(listener, event, EventDelivery.DeliveryOption.none()), EventBus.EXECUTION_RATE)
+            .flatMap(listener -> eventDelivery.deliver(listener, event, EventDelivery.DeliveryOption.none()), EventBus.DEFAULT_MAX_CONCURRENCY)
             .then();
     }
 
     private Mono<Void> keyDeliveries(List<Event> events, Set<RegistrationKey> keys) {
         return Flux.fromIterable(registeredListenersByKeys(keys))
-            .flatMap(listener -> eventDelivery.deliver(listener, events, EventDelivery.DeliveryOption.none()), EventBus.EXECUTION_RATE)
+            .flatMap(listener -> eventDelivery.deliver(listener, events, EventDelivery.DeliveryOption.none()), EventBus.DEFAULT_MAX_CONCURRENCY)
             .then();
     }
 
     private Mono<Void> groupDeliveries(List<Event> events) {
         return Flux.fromIterable(groups.entrySet())
-            .flatMap(entry -> groupDelivery(events, entry.getValue(), entry.getKey()), EventBus.EXECUTION_RATE)
+            .flatMap(entry -> groupDelivery(events, entry.getValue(), entry.getKey()), EventBus.DEFAULT_MAX_CONCURRENCY)
             .then();
     }
 
