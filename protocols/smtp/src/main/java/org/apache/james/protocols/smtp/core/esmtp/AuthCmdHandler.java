@@ -18,21 +18,15 @@
  ****************************************************************/
 
 
-
 package org.apache.james.protocols.smtp.core.esmtp;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Username;
 import org.apache.james.jwt.OidcSASLConfiguration;
@@ -268,42 +262,57 @@ public class AuthCmdHandler
      */
     private Response doPlainAuth(SMTPSession session, String line) {
         try {
-            List<String> tokens = Optional.ofNullable(decodeBase64(line))
-                .map(userpass1 -> Arrays.stream(userpass1.split("\0"))
-                    .filter(token -> !token.isBlank())
-                    .collect(Collectors.toList()))
-                .orElse(List.of());
-            Preconditions.checkArgument(tokens.size() == 1 || tokens.size() == 2 || tokens.size() == 3);
-            Response response = null;
 
-            if (tokens.size() == 1) {
-                response = doDelegation(session, Username.of(tokens.get(0)));
-            } else if (tokens.size() == 2) {
-                // If we got here, this is what happened.  RFC 2595
-                // says that "the client may leave the authorization
-                // identity empty to indicate that it is the same as
-                // the authentication identity."  As noted above,
-                // that would be represented as a decoded string of
-                // the form: "\0authenticate-id\0password".  The
-                // first call to nextToken will skip the empty
-                // authorize-id, and give us the authenticate-id,
-                // which we would store as the authorize-id.  The
-                // second call will give us the password, which we
-                // think is the authenticate-id (user).  Then when
-                // we ask for the password, there are no more
-                // elements, leading to the exception we just
-                // caught.  So we need to move the user to the
-                // password, and the authorize_id to the user.
-                response = doAuthTest(session, Optional.of(Username.of(tokens.get(0))), Optional.of(tokens.get(1)), AUTH_TYPE_PLAIN);
+            AuthValues authValues =
+                    Optional.ofNullable(decodeBase64(line))
+                            .flatMap(AuthCmdHandler::parseAuthValues)
+                            .orElseThrow(() -> new IllegalArgumentException("Can't parse line as authentication values"));
+
+            Response response;
+
+            if (authValues.password.isEmpty()) {
+                response = doDelegation(session, authValues.username);
             } else {
-                response = doAuthTest(session, Optional.of(Username.of(tokens.get(1))), Optional.of(tokens.get(2)), AUTH_TYPE_PLAIN);
+                response = doAuthTest(session, Optional.of(authValues.username), authValues.password, AUTH_TYPE_PLAIN);
             }
+
             session.popLineHandler();
             return response;
         } catch (Exception e) {
             LOGGER.info("Could not decode parameters for AUTH PLAIN", e);
-            return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,"Could not decode parameters for AUTH PLAIN");
+            return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, "Could not decode parameters for AUTH PLAIN");
         }
+    }
+
+    @VisibleForTesting
+    static Optional<AuthValues> parseAuthValues(String input) {
+
+        List<String> parts = Splitter.on('\0').splitToStream(input).filter(token -> !token.isBlank()).toList();
+
+        return switch (parts.size()) {
+            case 1 -> Optional.of(new AuthValues(Username.of(parts.get(0)), Optional.empty()));
+            // If we got here, this is what happened.  RFC 2595
+            // says that "the client may leave the authorization
+            // identity empty to indicate that it is the same as
+            // the authentication identity."  As noted above,
+            // that would be represented as a decoded string of
+            // the form: "\0authenticate-id\0password".  The
+            // first call to nextToken will skip the empty
+            // authorize-id, and give us the authenticate-id,
+            // which we would store as the authorize-id.  The
+            // second call will give us the password, which we
+            // think is the authenticate-id (user).  Then when
+            // we ask for the password, there are no more
+            // elements, leading to the exception we just
+            // caught.  So we need to move the user to the
+            // password, and the authorize_id to the user.
+            case 2 -> Optional.of(new AuthValues(Username.of(parts.get(0)), Optional.of(parts.get(1))));
+            case 3 -> Optional.of(new AuthValues(Username.of(parts.get(1)), Optional.of(parts.get(2))));
+            default -> Optional.empty();
+        };
+    }
+
+    record AuthValues(Username username, Optional<String> password) {
     }
 
     private String decodeBase64(String line) {
