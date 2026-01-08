@@ -33,11 +33,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface EventBus {
-    record Configuration(int executionRate, Optional<Duration> executionTimeout) {
-        public static Configuration DEFAULT = new Configuration(EXECUTION_RATE, Optional.empty());
+    record Configuration(int maxConcurrency, Optional<Duration> executionTimeout) {
+        public static Configuration DEFAULT = new Configuration(DEFAULT_MAX_CONCURRENCY, Optional.empty());
     }
 
-    int EXECUTION_RATE = 10;
+    int DEFAULT_MAX_CONCURRENCY = 10;
 
     interface StructuredLoggingFields {
         String EVENT_ID = "eventId";

@@ -73,7 +73,7 @@ public interface KeyContract extends EventBusContract {
             AtomicBoolean rateExceeded = new AtomicBoolean(false);
 
             Mono.from(eventBus().register(event -> {
-                if (nbCalls.get() - finishedExecutions.get() > EventBus.EXECUTION_RATE) {
+                if (nbCalls.get() - finishedExecutions.get() > EventBus.DEFAULT_MAX_CONCURRENCY) {
                     rateExceeded.set(true);
                 }
                 nbCalls.incrementAndGet();
