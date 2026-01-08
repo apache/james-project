@@ -82,7 +82,7 @@ public interface GroupContract {
 
                 @Override
                 public void event(Event event) throws Exception {
-                    if (inFlight.incrementAndGet() > EventBus.EXECUTION_RATE) {
+                    if (inFlight.incrementAndGet() > EventBus.DEFAULT_MAX_CONCURRENCY) {
                         rateExceeded.set(true);
                     }
                     nbCalls.incrementAndGet();

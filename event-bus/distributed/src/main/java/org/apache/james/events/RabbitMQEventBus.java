@@ -68,7 +68,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
 
     public record Configurations(RabbitMQConfiguration rabbitMQConfiguration, RetryBackoffConfiguration retryBackoff, EventBus.Configuration eventBusConfiguration) {
         public Configurations(RabbitMQConfiguration rabbitMQConfiguration, RetryBackoffConfiguration retryBackoff) {
-            this(rabbitMQConfiguration, retryBackoff, new Configuration(EventBus.EXECUTION_RATE, Optional.empty()));
+            this(rabbitMQConfiguration, retryBackoff, new Configuration(EventBus.DEFAULT_MAX_CONCURRENCY, Optional.empty()));
         }
     }
 

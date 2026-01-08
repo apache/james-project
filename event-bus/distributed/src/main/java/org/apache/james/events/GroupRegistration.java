@@ -107,7 +107,7 @@ class GroupRegistration implements Registration {
     }
 
     GroupRegistration start() {
-        scheduler = Schedulers.newBoundedElastic(EventBus.EXECUTION_RATE, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "group-handler");
+        scheduler = Schedulers.newBoundedElastic(configurations.eventBusConfiguration().maxConcurrency(), ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "group-handler");
         receiverSubscriber = Optional
             .of(createGroupWorkQueue()
                 .then(retryHandler.createRetryExchange(queueName))
@@ -139,11 +139,11 @@ class GroupRegistration implements Registration {
     private Disposable consumeWorkQueue() {
         return Flux.using(
                 receiverProvider::createReceiver,
-                receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(configurations.eventBusConfiguration().executionRate())),
+                receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(configurations.eventBusConfiguration().maxConcurrency())),
                 Receiver::close)
             .publishOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
-            .flatMap(this::deliver, configurations.eventBusConfiguration().executionRate())
+            .flatMap(this::deliver, configurations.eventBusConfiguration().maxConcurrency())
             .subscribeOn(scheduler)
             .subscribe();
     }

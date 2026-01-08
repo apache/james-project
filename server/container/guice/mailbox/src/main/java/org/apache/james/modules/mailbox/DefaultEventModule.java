@@ -92,7 +92,7 @@ public class DefaultEventModule extends AbstractModule {
     EventBus.Configuration providesEventBusConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
         HierarchicalConfiguration<ImmutableNode> configuration = configurationProvider.getConfiguration("listeners");
 
-        return new EventBus.Configuration(configuration.getInt("executionRate", EventBus.EXECUTION_RATE),
+        return new EventBus.Configuration(configuration.getInt("maxConcurrency", EventBus.DEFAULT_MAX_CONCURRENCY),
             Optional.ofNullable(configuration.getString("executionTimeout", null)).map(DurationParser::parse));
     }
 }

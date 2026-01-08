@@ -53,7 +53,7 @@ public class InVmEventDelivery implements EventDelivery {
     @VisibleForTesting
     public InVmEventDelivery(MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
-        this.configuration = new EventBus.Configuration(EventBus.EXECUTION_RATE, Optional.empty());
+        this.configuration = new EventBus.Configuration(EventBus.DEFAULT_MAX_CONCURRENCY, Optional.empty());
     }
 
     @Inject

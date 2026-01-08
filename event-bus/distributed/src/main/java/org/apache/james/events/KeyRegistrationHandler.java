@@ -95,14 +95,14 @@ class KeyRegistrationHandler {
     }
 
     void start() {
-        scheduler = Schedulers.newBoundedElastic(EventBus.EXECUTION_RATE, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "keys-handler");
+        scheduler = Schedulers.newBoundedElastic(EventBus.DEFAULT_MAX_CONCURRENCY, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "keys-handler");
         declareQueue();
 
         newSubscription = Flux.using(
             receiverProvider::createReceiver,
-            receiver -> receiver.consumeAutoAck(registrationQueue.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
+            receiver -> receiver.consumeAutoAck(registrationQueue.asString(), new ConsumeOptions().qos(EventBus.DEFAULT_MAX_CONCURRENCY)),
             Receiver::close)
-            .flatMap(this::handleDelivery, EventBus.EXECUTION_RATE)
+            .flatMap(this::handleDelivery, EventBus.DEFAULT_MAX_CONCURRENCY)
             .subscribeOn(scheduler)
             .subscribe();
         receiverSubscriber = Optional.of(newSubscription);
@@ -194,7 +194,7 @@ class KeyRegistrationHandler {
         List<Event> events = toEvent(delivery);
 
         return Flux.fromIterable(listenersToCall)
-            .flatMap(listener -> executeListener(listener, events, registrationKey), EventBus.EXECUTION_RATE)
+            .flatMap(listener -> executeListener(listener, events, registrationKey), EventBus.DEFAULT_MAX_CONCURRENCY)
             .then();
     }
 
