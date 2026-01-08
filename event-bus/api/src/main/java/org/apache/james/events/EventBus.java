@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
 
 public interface EventBus {
     record Configuration(int executionRate, Optional<Duration> executionTimeout) {
-
+        public static Configuration DEFAULT = new Configuration(EXECUTION_RATE, Optional.empty());
     }
 
     int EXECUTION_RATE = 10;
