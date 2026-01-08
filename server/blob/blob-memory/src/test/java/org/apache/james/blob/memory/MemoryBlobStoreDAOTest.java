@@ -22,7 +22,6 @@ package org.apache.james.blob.memory;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 
 class MemoryBlobStoreDAOTest implements BlobStoreDAOContract {
 
@@ -36,11 +35,5 @@ class MemoryBlobStoreDAOTest implements BlobStoreDAOContract {
     @Override
     public BlobStoreDAO testee() {
         return blobStore;
-    }
-
-    @Override
-    @Disabled("Not supported")
-    public void listBucketsShouldReturnBucketsWithNoBlob() {
-
     }
 }
