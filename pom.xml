@@ -3786,7 +3786,7 @@
                             <james.exit.on.startup.error>false</james.exit.on.startup.error>
                         </systemPropertyVariables>
                         <argLine>-Djava.library.path=
-                            -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
+                            -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec:${org.mockito:mockito-core:jar}
                             -Xms512m -Xmx1024m
                             --add-opens java.base/java.lang=ALL-UNNAMED
                             --add-opens java.base/java.math=ALL-UNNAMED
