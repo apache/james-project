@@ -21,12 +21,15 @@
 package org.apache.james.protocols.smtp.core.esmtp;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Username;
 import org.apache.james.jwt.OidcSASLConfiguration;
@@ -49,8 +52,9 @@ import org.apache.james.util.AuditTrail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
