@@ -19,10 +19,13 @@
 
 package org.apache.james.vault.blob;
 
+import static org.apache.james.vault.blob.BlobIdTimeGenerator.BLOB_ID_GENERATING_FORMAT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.util.UUID;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
@@ -31,6 +34,8 @@ import org.apache.james.server.blob.deduplication.MinIOGenerationAwareBlobId;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class BlobIdTimeGeneratorTest {
     private static final Instant NOW = Instant.parse("2007-07-03T10:15:30.00Z");
@@ -39,16 +44,41 @@ public class BlobIdTimeGeneratorTest {
     interface BlobIdTimeGeneratorContract {
         BlobId.Factory blobIdFactory();
 
+        BlobIdTimeGenerator blobIdTimeGenerator();
+
         @Test
         default void currentBlobIdShouldReturnBlobIdFormattedWithYearAndMonthPrefix() {
-            BlobIdTimeGenerator blobIdTimeGenerator = new BlobIdTimeGenerator(blobIdFactory(), CLOCK);
-            String currentBlobId = blobIdTimeGenerator.currentBlobId().asString();
+            String currentBlobId = blobIdTimeGenerator().currentBlobId().asString();
 
             int firstSlash = currentBlobId.indexOf('/');
             int secondSlash = currentBlobId.indexOf('/', firstSlash + 1);
             String prefix = currentBlobId.substring(0, secondSlash);
 
             assertThat(prefix).isEqualTo("2007/07");
+        }
+
+        @Test
+        default void shouldReturnNextMonthAsEndTime() {
+            BlobId blobId = new PlainBlobId(String.format(BLOB_ID_GENERATING_FORMAT, 2018, 7, blobIdFactory().of(UUID.randomUUID().toString()).asString()));
+
+            assertThat(blobIdTimeGenerator().blobIdEndTime(blobId))
+                .contains(ZonedDateTime.parse("2018-08-01T00:00:00.000000000Z[UTC]"));
+        }
+
+        @Test
+        default void shouldReturnProperDeletedMessageBlobIdFromString() {
+            BlobId currentBlobId = blobIdTimeGenerator().currentBlobId();
+            BlobId deletedMessageBlobId = blobIdTimeGenerator().toDeletedMessageBlobId(currentBlobId.asString());
+
+            assertThat(deletedMessageBlobId).isEqualTo(currentBlobId);
+        }
+
+        @Test
+        default void shouldFallbackToOldDeletedBlobIdFromString() {
+            BlobId currentBlobId = blobIdFactory().of(UUID.randomUUID().toString());
+            BlobId deletedMessageBlobId = blobIdTimeGenerator().toDeletedMessageBlobId(currentBlobId.asString());
+
+            assertThat(deletedMessageBlobId).isEqualTo(currentBlobId);
         }
     }
 
@@ -58,6 +88,27 @@ public class BlobIdTimeGeneratorTest {
         public BlobId.Factory blobIdFactory() {
             return new PlainBlobId.Factory();
         }
+
+        @Override
+        public BlobIdTimeGenerator blobIdTimeGenerator() {
+            return new BlobIdTimeGenerator(blobIdFactory(), CLOCK);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {
+            "2018-07-cddf9c7c-12f1-4ce7-9993-8606b9fb8816",
+            "2018-07/cddf9c7c-12f1-4ce7-9993-8606b9fb8816",
+            "2018/07-cddf9c7c-12f1-4ce7-9993-8606b9fb8816",
+            "cddf9c7c-12f1-4ce7-9993-8606b9fb8816",
+            "18/07/cddf9c7c-12f1-4ce7-9993-8606b9fb8816",
+            "2018/7/cddf9c7c-12f1-4ce7-9993-8606b9fb8816",
+            "07/2018/cddf9c7c-12f1-4ce7-9993-8606b9fb8816",
+        })
+        public void shouldBeEmptyWhenPassingNonWellFormattedBlobId(String blobIdAsString) {
+            BlobId blobId = blobIdFactory().of(blobIdAsString);
+
+            assertThat(blobIdTimeGenerator().blobIdEndTime(blobId)).isEmpty();
+        }
     }
 
     @Nested
@@ -66,6 +117,11 @@ public class BlobIdTimeGeneratorTest {
         public BlobId.Factory blobIdFactory() {
             return new GenerationAwareBlobId.Factory(CLOCK, new PlainBlobId.Factory(), GenerationAwareBlobId.Configuration.DEFAULT);
         }
+
+        @Override
+        public BlobIdTimeGenerator blobIdTimeGenerator() {
+            return new BlobIdTimeGenerator(blobIdFactory(), CLOCK);
+        }
     }
 
     @Nested
@@ -73,6 +129,11 @@ public class BlobIdTimeGeneratorTest {
         @Override
         public BlobId.Factory blobIdFactory() {
             return new MinIOGenerationAwareBlobId.Factory(CLOCK, GenerationAwareBlobId.Configuration.DEFAULT, new PlainBlobId.Factory());
+        }
+
+        @Override
+        public BlobIdTimeGenerator blobIdTimeGenerator() {
+            return new BlobIdTimeGenerator(blobIdFactory(), CLOCK);
         }
     }
 }
