@@ -94,7 +94,7 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
     public Result run() {
         deletedMessageVault.deleteExpiredMessages(beginningOfRetentionPeriod)
             .doOnNext(deletedBuckets::add)
-            .then()
+            .then(deletedMessageVault.deleteUserExpiredMessages(beginningOfRetentionPeriod))
             .block();
 
         return Result.COMPLETED;

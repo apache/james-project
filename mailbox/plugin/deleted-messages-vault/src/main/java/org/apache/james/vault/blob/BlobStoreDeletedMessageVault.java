@@ -29,6 +29,7 @@ import java.util.Optional;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
@@ -37,6 +38,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.task.Task;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageContentNotFoundException;
 import org.apache.james.vault.DeletedMessageVault;
@@ -54,6 +56,7 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private static final Logger LOGGER = LoggerFactory.getLogger(BlobStoreDeletedMessageVault.class);
@@ -72,13 +75,15 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private final BucketNameGenerator nameGenerator;
     private final Clock clock;
     private final VaultConfiguration vaultConfiguration;
+    private final BlobIdTimeGenerator blobIdTimeGenerator;
+    private final UsersRepository usersRepository;
     private final BlobStoreVaultGarbageCollectionTask.Factory taskFactory;
 
     @Inject
     public BlobStoreDeletedMessageVault(MetricFactory metricFactory, DeletedMessageMetadataVault messageMetadataVault,
                                         BlobStore blobStore, BlobStoreDAO blobStoreDAO, BucketNameGenerator nameGenerator,
-                                        Clock clock,
-                                        VaultConfiguration vaultConfiguration) {
+                                        Clock clock, BlobIdTimeGenerator blobIdTimeGenerator,
+                                        VaultConfiguration vaultConfiguration, UsersRepository usersRepository) {
         this.metricFactory = metricFactory;
         this.messageMetadataVault = messageMetadataVault;
         this.blobStore = blobStore;
@@ -86,21 +91,24 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         this.nameGenerator = nameGenerator;
         this.clock = clock;
         this.vaultConfiguration = vaultConfiguration;
+        this.blobIdTimeGenerator = blobIdTimeGenerator;
+        this.usersRepository = usersRepository;
         this.taskFactory = new BlobStoreVaultGarbageCollectionTask.Factory(this);
     }
 
-    @Override
-    public Publisher<Void> append(DeletedMessage deletedMessage, InputStream mimeMessage) {
+    @Deprecated
+    @VisibleForTesting
+    public Publisher<Void> appendV1(DeletedMessage deletedMessage, InputStream mimeMessage) {
         Preconditions.checkNotNull(deletedMessage);
         Preconditions.checkNotNull(mimeMessage);
         BucketName bucketName = nameGenerator.currentBucket();
 
         return metricFactory.decoratePublisherWithTimerMetric(
             APPEND_METRIC_NAME,
-            appendMessage(deletedMessage, mimeMessage, bucketName));
+            appendMessageV1(deletedMessage, mimeMessage, bucketName));
     }
 
-    private Mono<Void> appendMessage(DeletedMessage deletedMessage, InputStream mimeMessage, BucketName bucketName) {
+    private Mono<Void> appendMessageV1(DeletedMessage deletedMessage, InputStream mimeMessage, BucketName bucketName) {
         return Mono.from(blobStore.save(bucketName, mimeMessage, LOW_COST))
             .map(blobId -> StorageInformation.builder()
                 .bucketName(bucketName)
@@ -108,6 +116,33 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
             .map(storageInformation -> new DeletedMessageWithStorageInformation(deletedMessage, storageInformation))
             .flatMap(message -> Mono.from(messageMetadataVault.store(message)))
             .then();
+    }
+
+    @Override
+    public Publisher<Void> append(DeletedMessage deletedMessage, InputStream mimeMessage) {
+        Preconditions.checkNotNull(deletedMessage);
+        Preconditions.checkNotNull(mimeMessage);
+        BucketName bucketName = BucketName.of(vaultConfiguration.getSingleBucketName());
+
+        return metricFactory.decoratePublisherWithTimerMetric(
+            APPEND_METRIC_NAME,
+            appendMessage(deletedMessage, mimeMessage, bucketName));
+    }
+
+    private Mono<Void> appendMessage(DeletedMessage deletedMessage, InputStream mimeMessage, BucketName bucketName) {
+        return Mono.from(blobStore.save(bucketName, mimeMessage, withTimePrefixBlobId(), LOW_COST))
+            .map(blobId -> StorageInformation.builder()
+                .bucketName(bucketName)
+                .blobId(blobId))
+            .map(storageInformation -> new DeletedMessageWithStorageInformation(deletedMessage, storageInformation))
+            .flatMap(message -> Mono.from(messageMetadataVault.store(message)))
+            .then();
+    }
+
+    private BlobStore.BlobIdProvider<InputStream> withTimePrefixBlobId() {
+        return data -> Mono.just(Tuples.of(
+            blobIdTimeGenerator.currentBlobId(),
+            data));
     }
 
     @Override
@@ -170,7 +205,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         return taskFactory.create();
     }
 
-
+    @Deprecated
     Flux<BucketName> deleteExpiredMessages(ZonedDateTime beginningOfRetentionPeriod) {
         return Flux.from(
             metricFactory.decoratePublisherWithTimerMetric(
@@ -185,6 +220,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     }
 
     @VisibleForTesting
+    @Deprecated
     Flux<BucketName> retentionQualifiedBuckets(ZonedDateTime beginningOfRetentionPeriod) {
         return Flux.from(messageMetadataVault.listRelatedBuckets())
             .filter(bucketName -> isFullyExpired(beginningOfRetentionPeriod, bucketName));
@@ -203,5 +239,31 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private Mono<Void> deleteBucketData(BucketName bucketName) {
         return Mono.from(blobStore.deleteBucket(bucketName))
             .then(Mono.from(messageMetadataVault.removeMetadataRelatedToBucket(bucketName)));
+    }
+
+    Mono<Void> deleteUserExpiredMessages(ZonedDateTime beginningOfRetentionPeriod) {
+        BucketName bucketName = BucketName.of(vaultConfiguration.getSingleBucketName());
+
+        return Flux.from(metricFactory.decoratePublisherWithTimerMetric(
+            DELETE_EXPIRED_MESSAGES_METRIC_NAME,
+            Flux.from(usersRepository.listReactive())
+                .flatMap(username -> Flux.from(messageMetadataVault.listMessages(bucketName, username))
+                    .filter(deletedMessage -> isMessageFullyExpired(beginningOfRetentionPeriod, deletedMessage))
+                    .flatMap(deletedMessage -> messageMetadataVault.remove(bucketName, username, deletedMessage.getDeletedMessage().getMessageId())))))
+            .then();
+    }
+
+
+
+    private boolean isMessageFullyExpired(ZonedDateTime beginningOfRetentionPeriod, DeletedMessageWithStorageInformation deletedMessage) {
+        BlobId blobId = deletedMessage.getStorageInformation().getBlobId();
+        Optional<ZonedDateTime> maybeEndDate = blobIdTimeGenerator.blobIdEndTime(blobId);
+
+        if (maybeEndDate.isEmpty()) {
+            LOGGER.error("Pattern used for blobId used in deletedMessageVault is invalid and end date cannot be parsed {}", blobId);
+        }
+
+        return maybeEndDate.map(endDate -> endDate.isBefore(beginningOfRetentionPeriod))
+            .orElse(false);
     }
 }

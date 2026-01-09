@@ -20,6 +20,7 @@
 package org.apache.james.vault.metadata;
 
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
+import static org.apache.james.vault.DeletedMessageFixture.NOW;
 import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.MODULE;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.BUCKET_NAME;
@@ -35,6 +36,8 @@ import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.utils.UpdatableTickingClock;
+import org.apache.james.vault.blob.BlobIdTimeGenerator;
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +52,9 @@ class MetadataDAOTest {
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         DeletedMessageWithStorageInformationConverter dtoConverter = new DeletedMessageWithStorageInformationConverter(
-            new PlainBlobId.Factory(), new InMemoryMessageId.Factory(), new InMemoryId.Factory());
+            new BlobIdTimeGenerator(new PlainBlobId.Factory(), new UpdatableTickingClock(NOW.toInstant())),
+            new InMemoryMessageId.Factory(),
+            new InMemoryId.Factory());
 
         testee = new MetadataDAO(cassandra.getConf(), new InMemoryMessageId.Factory(),
             new MetadataSerializer(dtoConverter));

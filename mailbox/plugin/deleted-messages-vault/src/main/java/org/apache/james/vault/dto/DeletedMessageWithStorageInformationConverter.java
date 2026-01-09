@@ -25,7 +25,6 @@ import java.util.List;
 import jakarta.inject.Inject;
 import jakarta.mail.internet.AddressException;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -33,6 +32,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.vault.DeletedMessage;
+import org.apache.james.vault.blob.BlobIdTimeGenerator;
 import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
 import org.apache.james.vault.metadata.StorageInformation;
 
@@ -40,15 +40,15 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class DeletedMessageWithStorageInformationConverter {
-    private final BlobId.Factory blobFactory;
+    private final BlobIdTimeGenerator blobIdTimeGenerator;
     private final MessageId.Factory messageIdFactory;
     private final MailboxId.Factory mailboxIdFactory;
 
     @Inject
-    public DeletedMessageWithStorageInformationConverter(BlobId.Factory blobFactory,
+    public DeletedMessageWithStorageInformationConverter(BlobIdTimeGenerator blobIdTimeGenerator,
                                                          MessageId.Factory messageIdFactory,
                                                          MailboxId.Factory mailboxIdFactory) {
-        this.blobFactory = blobFactory;
+        this.blobIdTimeGenerator = blobIdTimeGenerator;
         this.messageIdFactory = messageIdFactory;
         this.mailboxIdFactory = mailboxIdFactory;
     }
@@ -56,7 +56,7 @@ public class DeletedMessageWithStorageInformationConverter {
     public StorageInformation toDomainObject(DeletedMessageWithStorageInformationDTO.StorageInformationDTO storageInformationDTO) {
         return StorageInformation.builder()
             .bucketName(BucketName.of(storageInformationDTO.getBucketName()))
-            .blobId(blobFactory.parse(storageInformationDTO.getBlobId()));
+            .blobId(blobIdTimeGenerator.toDeletedMessageBlobId(storageInformationDTO.getBlobId()));
     }
 
     public DeletedMessage toDomainObject(DeletedMessageWithStorageInformationDTO.DeletedMessageDTO deletedMessageDTO) throws AddressException {

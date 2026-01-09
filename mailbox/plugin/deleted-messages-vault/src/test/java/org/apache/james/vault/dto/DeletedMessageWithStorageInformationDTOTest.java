@@ -23,6 +23,7 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.util.ClassLoaderUtils.getSystemResourceAsString;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_WITH_SUBJECT;
+import static org.apache.james.vault.DeletedMessageFixture.NOW;
 import static org.apache.james.vault.dto.DeletedMessageWithStorageInformationDTO.DeletedMessageDTO;
 import static org.apache.james.vault.dto.DeletedMessageWithStorageInformationDTO.StorageInformationDTO;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.STORAGE_INFORMATION;
@@ -34,6 +35,8 @@ import jakarta.mail.internet.AddressException;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.utils.UpdatableTickingClock;
+import org.apache.james.vault.blob.BlobIdTimeGenerator;
 import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,7 +76,7 @@ class DeletedMessageWithStorageInformationDTOTest {
             .setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
 
         this.converter = new DeletedMessageWithStorageInformationConverter(
-            new PlainBlobId.Factory(),
+            new BlobIdTimeGenerator(new PlainBlobId.Factory(), new UpdatableTickingClock(NOW.toInstant())),
             new InMemoryMessageId.Factory(),
             new InMemoryId.Factory());
     }
