@@ -31,7 +31,6 @@ import java.time.Duration;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.Test;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface BucketBlobStoreContract {
@@ -168,34 +167,5 @@ public interface BucketBlobStoreContract {
             .threadCount(10)
             .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
-    }
-
-    @Test
-    default void listBucketsShouldReturnDefaultBucket() {
-        BlobStore store = testee();
-
-        assertThat(Flux.from(store.listBuckets()).collectList().block())
-            .containsOnly(store.getDefaultBucketName());
-    }
-
-    @Test
-    default void listBucketsShouldReturnACustomBucket() {
-        BlobStore store = testee();
-
-        Mono.from(store.save(CUSTOM, SHORT_BYTEARRAY, LOW_COST)).block();
-
-        assertThat(Flux.from(store.listBuckets()).collectList().block())
-            .containsOnly(store.getDefaultBucketName(), CUSTOM);
-    }
-
-    @Test
-    default void listBucketsShouldNotReturnADeletedBucket() {
-        BlobStore store = testee();
-
-        Mono.from(store.save(CUSTOM, SHORT_BYTEARRAY, LOW_COST)).block();
-        Mono.from(store.deleteBucket(CUSTOM)).block();
-
-        assertThat(Flux.from(store.listBuckets()).collectList().block())
-            .containsOnly(store.getDefaultBucketName());
     }
 }

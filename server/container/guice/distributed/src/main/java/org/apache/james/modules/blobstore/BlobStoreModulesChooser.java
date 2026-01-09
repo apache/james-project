@@ -28,10 +28,10 @@ import org.apache.james.blob.aes.AESBlobStoreDAO;
 import org.apache.james.blob.aes.CryptoConfig;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.ObjectStorageHealthCheck;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
 import org.apache.james.blob.file.FileBlobStoreDAO;
+import org.apache.james.blob.objectstorage.aws.ObjectStorageHealthCheck;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
 import org.apache.james.blob.objectstorage.aws.S3RequestOption;
@@ -44,7 +44,6 @@ import org.apache.james.modules.blobstore.validation.BlobStoreConfigurationValid
 import org.apache.james.modules.blobstore.validation.StoragePolicyConfigurationSanityEnforcementModule;
 import org.apache.james.modules.mailbox.BlobStoreAPIModule;
 import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
-import org.apache.james.modules.mailbox.DefaultBucketModule;
 import org.apache.james.modules.objectstorage.S3BlobStoreModule;
 import org.apache.james.modules.objectstorage.S3BucketModule;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
@@ -71,7 +70,6 @@ public class BlobStoreModulesChooser {
         @Override
         protected void configure() {
             install(new CassandraBlobStoreDependenciesModule());
-            install(new DefaultBucketModule());
 
             bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(CassandraBlobStoreDAO.class);
         }
@@ -105,7 +103,6 @@ public class BlobStoreModulesChooser {
     static class FileBlobStoreDAODeclarationModule extends AbstractModule {
         @Override
         protected void configure() {
-            install(new DefaultBucketModule());
 
             bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(FileBlobStoreDAO.class);
         }
@@ -116,7 +113,6 @@ public class BlobStoreModulesChooser {
         protected void configure() {
             install(new BlobPostgresModule());
 
-            install(new DefaultBucketModule());
 
             bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(PostgresBlobStoreDAO.class);
         }

@@ -31,6 +31,7 @@ import jakarta.inject.Named;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.Username;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
@@ -239,8 +240,8 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
 
     private Mono<MessageRepresentation> deleteMessageBlobs(MessageRepresentation message) {
         return Flux.merge(
-                blobStore.delete(blobStore.getDefaultBucketName(), message.getHeaderId()),
-                blobStore.delete(blobStore.getDefaultBucketName(), message.getBodyId()))
+                blobStore.delete(BucketName.DEFAULT, message.getHeaderId()),
+                blobStore.delete(BucketName.DEFAULT, message.getBodyId()))
             .then()
             .thenReturn(message);
     }
@@ -253,7 +254,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         return Flux.fromIterable(message.getAttachments())
             .concatMap(attachment -> attachmentDAO.getAttachment(attachment.getAttachmentId())
                 .map(CassandraAttachmentDAOV2.DAOAttachment::getBlobId)
-                .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId)))
+                .flatMap(blobId -> Mono.from(blobStore.delete(BucketName.DEFAULT, blobId)))
                 .then(attachmentDAO.delete(attachment.getAttachmentId())))
             .then();
     }

@@ -24,11 +24,9 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraBlobStoreDAOTest implements BlobStoreDAOContract {
@@ -51,18 +49,11 @@ public class CassandraBlobStoreDAOTest implements BlobStoreDAOContract {
             CassandraConfiguration.builder()
                 .blobPartSize(CHUNK_SIZE)
                 .build(),
-            BucketName.DEFAULT,
             new RecordingMetricFactory());
     }
 
     @Override
     public BlobStoreDAO testee() {
         return testee;
-    }
-
-    @Override
-    @Disabled("Not supported by the Cassandra blob store")
-    public void listBucketsShouldReturnBucketsWithNoBlob() {
-
     }
 }

@@ -201,15 +201,6 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<BucketName> listBuckets() {
-        return Mono.fromCallable(() -> Files.list(root.toPath()))
-            .flatMapMany(Flux::fromStream)
-            .map(path -> BucketName.of(path.getFileName().toString()))
-            .subscribeOn(Schedulers.boundedElastic())
-            .onErrorResume(NoSuchFileException.class, e -> Flux.empty());
-    }
-
-    @Override
     public Publisher<BlobId> listBlobs(BucketName bucketName) {
         return Mono.fromCallable(() -> {
                 File bucketRoot = getBucketRoot(bucketName);

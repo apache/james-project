@@ -30,7 +30,6 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.io.ByteSource;
@@ -83,11 +82,5 @@ class AESBlobStoreDAOTest implements BlobStoreDAOContract {
         byte[] bytes = Mono.from(underlying.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
 
         assertThat(bytes).isNotEqualTo(SHORT_BYTEARRAY);
-    }
-
-    @Override
-    @Disabled("Not supported by the Memory blob store")
-    public void listBucketsShouldReturnBucketsWithNoBlob() {
-
     }
 }

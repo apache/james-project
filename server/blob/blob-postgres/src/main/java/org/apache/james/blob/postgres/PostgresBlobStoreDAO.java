@@ -148,13 +148,6 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Flux<BucketName> listBuckets() {
-        return postgresExecutor.executeRows(dsl -> Flux.from(dsl.selectDistinct(BUCKET_NAME)
-                .from(TABLE_NAME)))
-            .map(record -> BucketName.of(record.get(BUCKET_NAME)));
-    }
-
-    @Override
     public Flux<BlobId> listBlobs(BucketName bucketName) {
         return Flux.defer(() -> listBlobsBatch(bucketName, Optional.empty(), PostgresUtils.QUERY_BATCH_SIZE))
             .expand(blobIds -> {

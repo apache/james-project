@@ -24,11 +24,9 @@ import java.util.Optional;
 import java.util.Set;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
-import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.server.blob.deduplication.BlobGCTask;
@@ -54,7 +52,6 @@ public class BlobRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
     private final Clock clock;
     private final BlobStoreDAO blobStoreDAO;
-    private final BucketName bucketName;
     private final Set<BlobReferenceSource> blobReferenceSources;
     private final GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration;
     private final BlobId.Factory generationAwareBlobIdFactory;
@@ -64,7 +61,6 @@ public class BlobRoutes implements Routes {
                       JsonTransformer jsonTransformer,
                       Clock clock,
                       BlobStoreDAO blobStoreDAO,
-                      @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) BucketName defaultBucketName,
                       Set<BlobReferenceSource> blobReferenceSources,
                       GenerationAwareBlobId.Configuration generationAwareBlobIdConfiguration,
                       BlobId.Factory generationAwareBlobIdFactory) {
@@ -72,7 +68,6 @@ public class BlobRoutes implements Routes {
         this.jsonTransformer = jsonTransformer;
         this.clock = clock;
         this.blobStoreDAO = blobStoreDAO;
-        this.bucketName = defaultBucketName;
         this.blobReferenceSources = blobReferenceSources;
         this.generationAwareBlobIdConfiguration = generationAwareBlobIdConfiguration;
         this.generationAwareBlobIdFactory = generationAwareBlobIdFactory;
@@ -104,7 +99,7 @@ public class BlobRoutes implements Routes {
             .generationAwareBlobIdFactory(generationAwareBlobIdFactory)
             .generationAwareBlobIdConfiguration(generationAwareBlobIdConfiguration)
             .blobReferenceSource(blobReferenceSources)
-            .bucketName(bucketName)
+            .bucketName(BucketName.DEFAULT)
             .clock(clock)
             .expectedBlobCount(expectedBlobCount)
             .associatedProbability(associatedProbability)

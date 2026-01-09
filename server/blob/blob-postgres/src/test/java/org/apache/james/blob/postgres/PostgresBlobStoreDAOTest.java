@@ -32,7 +32,6 @@ import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -57,11 +56,6 @@ class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
     @Override
     public BlobStoreDAO testee() {
         return blobStore;
-    }
-
-    @Override
-    @Disabled("Not supported")
-    public void listBucketsShouldReturnBucketsWithNoBlob() {
     }
 
     @Override

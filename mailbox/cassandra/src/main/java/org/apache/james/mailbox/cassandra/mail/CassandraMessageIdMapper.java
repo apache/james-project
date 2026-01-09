@@ -38,6 +38,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -135,7 +136,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             return Mono.just(metadata.asMailboxMessage(EMPTY_BYTE_ARRAY));
         }
         if (fetchType == FetchType.HEADERS && metadata.isComplete()) {
-            return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), metadata.getHeaderContent().get(), SIZE_BASED))
+            return Mono.from(blobStore.readBytes(BucketName.DEFAULT, metadata.getHeaderContent().get(), SIZE_BASED))
                 .map(metadata::asMailboxMessage);
         }
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)

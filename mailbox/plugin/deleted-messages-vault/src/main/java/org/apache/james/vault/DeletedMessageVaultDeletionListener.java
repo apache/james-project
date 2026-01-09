@@ -34,6 +34,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.events.Event;
@@ -114,7 +115,7 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
                     .subject(mimeMessage.map(Message::getSubject))
                     .build();
 
-                return Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), blobIdFactory.parse(messageContentDeletionEvent.bodyBlobId()), BlobStore.StoragePolicy.LOW_COST))
+                return Mono.from(blobStore.readReactive(BucketName.DEFAULT, blobIdFactory.parse(messageContentDeletionEvent.bodyBlobId()), BlobStore.StoragePolicy.LOW_COST))
                     .map(bodyStream -> new SequenceInputStream(new ByteArrayInputStream(bytes), bodyStream))
                     .flatMap(bodyStream -> Mono.from(deletedMessageVault.append(deletedMessage, bodyStream)));
             });
@@ -122,7 +123,7 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
 
     private Mono<byte[]> fetchMessageHeaderBytes(MessageContentDeletionEvent messageContentDeletionEvent) {
         return Mono.justOrEmpty(messageContentDeletionEvent.headerBlobId())
-            .flatMap(headerBlobId -> Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.parse(headerBlobId), BlobStore.StoragePolicy.LOW_COST)))
+            .flatMap(headerBlobId -> Mono.from(blobStore.readBytes(BucketName.DEFAULT, blobIdFactory.parse(headerBlobId), BlobStore.StoragePolicy.LOW_COST)))
             .switchIfEmpty(Mono.justOrEmpty(messageContentDeletionEvent.headerContent())
                 .map(headerContent -> headerContent.getBytes(StandardCharsets.UTF_8))
                 .switchIfEmpty(Mono.error(() -> new IllegalArgumentException("No header content nor header blob id provided"))));

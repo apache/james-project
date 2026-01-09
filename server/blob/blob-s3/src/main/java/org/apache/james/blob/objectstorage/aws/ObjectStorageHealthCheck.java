@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.api;
+package org.apache.james.blob.objectstorage.aws;
 
 import java.time.Duration;
 
@@ -31,15 +31,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ObjectStorageHealthCheck implements HealthCheck {
-
-    private static final Integer HEALTH_CHECK_TIMEOUT = 10;
+    private static final Duration HEALTH_CHECK_TIMEOUT = Duration.ofSeconds(10);
 
     private static final ComponentName COMPONENT_NAME = new ComponentName("ObjectStorage");
 
-    private final BlobStoreDAO blobStoreDAO;
+    private final S3BlobStoreDAO blobStoreDAO;
 
     @Inject
-    public ObjectStorageHealthCheck(BlobStoreDAO blobStoreDAO) {
+    public ObjectStorageHealthCheck(S3BlobStoreDAO blobStoreDAO) {
         this.blobStoreDAO = blobStoreDAO;
     }
 
@@ -51,7 +50,7 @@ public class ObjectStorageHealthCheck implements HealthCheck {
     @Override
     public Mono<Result> check() {
         return Flux.from(blobStoreDAO.listBuckets())
-            .timeout(Duration.ofSeconds(HEALTH_CHECK_TIMEOUT))
+            .timeout(HEALTH_CHECK_TIMEOUT)
             .next()
             .thenReturn(Result.healthy(COMPONENT_NAME))
             .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking ObjectSotrage", e)));

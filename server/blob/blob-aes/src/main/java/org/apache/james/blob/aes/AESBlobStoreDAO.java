@@ -191,11 +191,6 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<BucketName> listBuckets() {
-        return underlying.listBuckets();
-    }
-
-    @Override
     public Publisher<BlobId> listBlobs(BucketName bucketName) {
         return underlying.listBlobs(bucketName);
     }
