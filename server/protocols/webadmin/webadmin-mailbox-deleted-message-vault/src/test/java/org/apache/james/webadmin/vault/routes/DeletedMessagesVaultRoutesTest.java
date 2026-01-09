@@ -190,10 +190,11 @@ class DeletedMessagesVaultRoutesTest {
             .defaultBucketName()
             .passthrough());
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
+        usersRepository = createUsersRepository();
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
             blobStore, blobStoreDAO, new BucketNameGenerator(clock), clock,
             new BlobIdTimeGenerator(blobIdFactory, clock),
-            VaultConfiguration.ENABLED_DEFAULT));
+            VaultConfiguration.ENABLED_DEFAULT, usersRepository));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();
         mailboxManager = spy(inMemoryResource.getMailboxManager());
 
@@ -205,7 +206,6 @@ class DeletedMessagesVaultRoutesTest {
         zipper = new DeletedMessageZipper();
         exportService = new ExportService(blobExporting, blobStore, zipper, vault);
         QueryTranslator queryTranslator = new QueryTranslator(new InMemoryId.Factory());
-        usersRepository = createUsersRepository();
         MessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new TasksRoutes(taskManager, jsonTransformer,

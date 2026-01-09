@@ -35,7 +35,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
-import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
 
@@ -52,8 +51,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface DeletedMessageVaultContract {
-    Clock CLOCK = Clock.fixed(NOW.toInstant(), NOW.getZone());
-
     BlobStoreDeletedMessageVault getVault();
 
     UpdatableTickingClock getClock();
@@ -253,6 +250,16 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
+    default void deleteExpiredMessagesSingleBucketTaskShouldCompleteWhenAllMailsDeleted() throws InterruptedException {
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().delete(USERNAME, DELETED_MESSAGE.getMessageId())).block();
+
+        Task.Result result = getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+    }
+
+    @Test
     default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyRecentMails() throws InterruptedException {
         Mono.from(getVault().appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
@@ -262,8 +269,26 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
+    default void deleteExpiredMessagesSingleBucketTaskShouldCompleteWhenOnlyRecentMails() throws InterruptedException {
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        Task.Result result = getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+    }
+
+    @Test
     default void deleteExpiredMessagesTaskShouldCompleteWhenOnlyOldMails() throws InterruptedException {
         Mono.from(getVault().appendV1(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        Task.Result result = getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(result).isEqualTo(Task.Result.COMPLETED);
+    }
+
+    @Test
+    default void deleteExpiredMessagesSingleBucketTaskShouldCompleteWhenOnlyOldMails() throws InterruptedException {
+        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         Task.Result result = getVault().deleteExpiredMessagesTask().run();
 
@@ -289,8 +314,29 @@ public interface DeletedMessageVaultContract {
     }
 
     @Test
+    default void deleteExpiredMessagesSingleBucketTaskShouldNotDeleteRecentMails() throws InterruptedException {
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
+            .containsOnly(DELETED_MESSAGE);
+    }
+
+    @Test
     default void deleteExpiredMessagesTaskShouldDeleteOldMails() throws InterruptedException {
         Mono.from(getVault().appendV1(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        getClock().setInstant(NOW.plusYears(2).toInstant());
+        getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    default void deleteExpiredMessagesSingleBucketTaskShouldDeleteOldMails() throws InterruptedException {
+        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
         getClock().setInstant(NOW.plusYears(2).toInstant());
         getVault().deleteExpiredMessagesTask().run();
@@ -312,6 +358,37 @@ public interface DeletedMessageVaultContract {
         assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .isEmpty();
         assertThat(Flux.from(getVault().search(USERNAME_2, ALL)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    default void deleteExpiredMessagesSingleBucketTaskShouldDeleteOldMailsWhenRunSeveralTime() throws InterruptedException {
+        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        getClock().setInstant(NOW.plusYears(2).toInstant());
+        getVault().deleteExpiredMessagesTask().run();
+
+        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        getClock().setInstant(NOW.plusYears(4).toInstant());
+        getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
+            .isEmpty();
+        assertThat(Flux.from(getVault().search(USERNAME_2, ALL)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    default void deleteExpiredMessagesTaskShouldDeleteOldMailsInBothCases() throws InterruptedException {
+        Mono.from(getVault().appendV1(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        getClock().setInstant(NOW.plusYears(2).toInstant());
+
+        Mono.from(getVault().append(OLD_DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+
+        getClock().setInstant(NOW.plusYears(4).toInstant());
+        getVault().deleteExpiredMessagesTask().run();
+
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .isEmpty();
     }
 }

@@ -24,6 +24,7 @@ import static org.apache.james.vault.DeletedMessageFixture.DELIVERY_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.INTERNAL_DATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.mock;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -54,6 +55,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.vault.blob.BlobIdTimeGenerator;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.blob.BucketNameGenerator;
@@ -118,6 +120,9 @@ class DeletedMessageVaultHookTest {
         clock = Clock.fixed(DELETION_DATE.toInstant(), ZoneOffset.UTC);
         MemoryBlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
+
+        UsersRepository usersRepository = mock(UsersRepository.class);
+
         messageVault = new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
             BlobStoreFactory.builder()
                 .blobStoreDAO(blobStoreDAO)
@@ -125,7 +130,7 @@ class DeletedMessageVaultHookTest {
                 .defaultBucketName()
                 .passthrough(), blobStoreDAO, new BucketNameGenerator(clock), clock,
             new BlobIdTimeGenerator(blobIdFactory, clock),
-            VaultConfiguration.ENABLED_DEFAULT);
+            VaultConfiguration.ENABLED_DEFAULT, usersRepository);
 
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();
 

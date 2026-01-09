@@ -19,12 +19,16 @@
 
 package org.apache.james.vault.metadata;
 
+import static org.apache.james.vault.DeletedMessageFixture.NOW;
+
 import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.utils.UpdatableTickingClock;
+import org.apache.james.vault.blob.BlobIdTimeGenerator;
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -36,12 +40,13 @@ class PostgresDeletedMessageMetadataVaultTest implements DeletedMessageMetadataV
     @Override
     public DeletedMessageMetadataVault metadataVault() {
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
+        BlobIdTimeGenerator blobIdTimeGenerator = new BlobIdTimeGenerator(blobIdFactory, new UpdatableTickingClock(NOW.toInstant()));
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        DeletedMessageWithStorageInformationConverter dtoConverter = new DeletedMessageWithStorageInformationConverter(blobIdFactory,
+        DeletedMessageWithStorageInformationConverter dtoConverter = new DeletedMessageWithStorageInformationConverter(blobIdTimeGenerator,
             messageIdFactory, new InMemoryId.Factory());
 
         return new PostgresDeletedMessageMetadataVault(postgresExtension.getDefaultPostgresExecutor(),
             new MetadataSerializer(dtoConverter),
-            blobIdFactory);
+            blobIdTimeGenerator);
     }
 }
