@@ -30,6 +30,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.core.Username;
@@ -112,7 +113,7 @@ public class ExportService {
     Mono<Task.Result> export(Progress progress, Username username, InputStream inputStream) {
         return Mono.fromRunnable(() -> progress.setStage(Stage.EXPORTING))
             .then(Mono.usingWhen(
-                blobStore.save(blobStore.getDefaultBucketName(), inputStream, BlobStore.StoragePolicy.LOW_COST),
+                blobStore.save(BucketName.DEFAULT, inputStream, BlobStore.StoragePolicy.LOW_COST),
                 blobId -> export(username, blobId),
                 this::deleteBlob)
             .doOnSuccess(any -> progress.setStage(Stage.COMPLETED))
@@ -137,7 +138,7 @@ public class ExportService {
     }
 
     private Mono<Void> deleteBlob(BlobId blobId) {
-        return Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId))
+        return Mono.from(blobStore.delete(BucketName.DEFAULT, blobId))
             .onErrorResume(e -> {
                 LOGGER.error("Error deleting Blob with blobId: {}", blobId.asString(), e);
                 return Mono.empty();

@@ -38,7 +38,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.util.ReactorUtils;
@@ -58,7 +57,6 @@ import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.Sender;
-import reactor.util.retry.Retry;
 
 public class GroupRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupRegistrationHandler.class);
@@ -75,29 +73,27 @@ public class GroupRegistrationHandler {
     private final ReactorRabbitMQChannelPool channelPool;
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
-    private final RetryBackoffConfiguration retryBackoff;
+    private final RabbitMQEventBus.Configurations configurations;
     private final EventDeadLetters eventDeadLetters;
     private final ListenerExecutor listenerExecutor;
-    private final RabbitMQConfiguration configuration;
     private final GroupRegistration.WorkQueueName queueName;
     private final Scheduler scheduler;
     private Optional<Disposable> consumer;
 
-    GroupRegistrationHandler(NamingStrategy namingStrategy, EventSerializer eventSerializer, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider,
-                             RetryBackoffConfiguration retryBackoff,
-                             EventDeadLetters eventDeadLetters, ListenerExecutor listenerExecutor, EventBusId eventBusId, RabbitMQConfiguration configuration) {
+    GroupRegistrationHandler(NamingStrategy namingStrategy, EventSerializer eventSerializer, ReactorRabbitMQChannelPool channelPool,
+                             Sender sender, ReceiverProvider receiverProvider, EventDeadLetters eventDeadLetters,
+                             ListenerExecutor listenerExecutor, RabbitMQEventBus.Configurations configurations) {
         this.namingStrategy = namingStrategy;
         this.eventSerializer = eventSerializer;
         this.channelPool = channelPool;
         this.sender = sender;
         this.receiverProvider = receiverProvider;
-        this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;
         this.listenerExecutor = listenerExecutor;
-        this.configuration = configuration;
+        this.configurations = configurations;
         this.groupRegistrations = new ConcurrentHashMap<>();
         this.queueName = namingStrategy.workQueue(GROUP);
-        this.scheduler = Schedulers.newBoundedElastic(EventBus.EXECUTION_RATE, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "groups-handler");
+        this.scheduler = Schedulers.newBoundedElastic(configurations.eventBusConfiguration().maxConcurrency(), ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "groups-handler");
         this.consumer = Optional.empty();
     }
 
@@ -109,17 +105,17 @@ public class GroupRegistrationHandler {
     public void start() {
         channelPool.createWorkQueue(
             QueueSpecification.queue(queueName.asString())
-                .durable(evaluateDurable(DURABLE, configuration.isQuorumQueuesUsed()))
-                .exclusive(evaluateExclusive(!EXCLUSIVE, configuration.isQuorumQueuesUsed()))
-                .autoDelete(evaluateAutoDelete(!AUTO_DELETE, configuration.isQuorumQueuesUsed()))
-                .arguments(configuration.workQueueArgumentsBuilder()
+                .durable(evaluateDurable(DURABLE, configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
+                .exclusive(evaluateExclusive(!EXCLUSIVE, configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
+                .autoDelete(evaluateAutoDelete(!AUTO_DELETE, configurations.rabbitMQConfiguration().isQuorumQueuesUsed()))
+                .arguments(configurations.rabbitMQConfiguration().workQueueArgumentsBuilder()
                     .deadLetter(namingStrategy.deadLetterExchange())
                     .build()),
             BindingSpecification.binding()
                 .exchange(namingStrategy.exchange())
                 .queue(queueName.asString())
                 .routingKey(EMPTY_ROUTING_KEY))
-            .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()))
+            .retryWhen(configurations.retryBackoff().asReactorRetry().scheduler(Schedulers.boundedElastic()))
             .block();
 
         this.consumer = Optional.of(consumeWorkQueue());
@@ -128,10 +124,10 @@ public class GroupRegistrationHandler {
     private Disposable consumeWorkQueue() {
         return Flux.using(
                 receiverProvider::createReceiver,
-            receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
+            receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(configurations.eventBusConfiguration().maxConcurrency())),
             Receiver::close)
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
-            .flatMap(this::deliver, EventBus.EXECUTION_RATE)
+            .flatMap(this::deliver, configurations.eventBusConfiguration().maxConcurrency())
             .subscribeOn(scheduler)
             .subscribe();
     }
@@ -197,10 +193,9 @@ public class GroupRegistrationHandler {
             eventSerializer,
             listener,
             group,
-            retryBackoff,
             eventDeadLetters,
             () -> groupRegistrations.remove(group),
-            listenerExecutor, configuration);
+            listenerExecutor, configurations);
     }
 
     Collection<Group> registeredGroups() {

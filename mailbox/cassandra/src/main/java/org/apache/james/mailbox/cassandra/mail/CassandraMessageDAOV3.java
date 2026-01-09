@@ -68,6 +68,7 @@ import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Attachments;
 import org.apache.james.mailbox.model.ByteContent;
@@ -234,8 +235,8 @@ public class CassandraMessageDAOV3 {
                     }
                 };
 
-                Mono<BlobId> headerFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), headerContent, SIZE_BASED));
-                Mono<BlobId> bodyFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyByteSource, LOW_COST));
+                Mono<BlobId> headerFuture = Mono.from(blobStore.save(BucketName.DEFAULT, headerContent, SIZE_BASED));
+                Mono<BlobId> bodyFuture = Mono.from(blobStore.save(BucketName.DEFAULT, bodyByteSource, LOW_COST));
 
                 return headerFuture.zipWith(bodyFuture);
             });
@@ -413,7 +414,7 @@ public class CassandraMessageDAOV3 {
     }
 
     private Mono<byte[]> getContent(BlobId blobId, BlobStore.StoragePolicy storagePolicy) {
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobId, storagePolicy));
+        return Mono.from(blobStore.readBytes(BucketName.DEFAULT, blobId, storagePolicy));
     }
 
     private BlobId retrieveBlobId(CqlIdentifier field, Row row) {

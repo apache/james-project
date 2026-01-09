@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.util.io.ZeroedInputStream;
@@ -50,9 +51,9 @@ public interface CassandraBlobStoreContract extends MetricableBlobStoreContract 
     @Test
     default void readBytesShouldReturnSplitSavedDataByChunk() {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
-        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), longString, LOW_COST)).block();
+        BlobId blobId = Mono.from(testee().save(BucketName.DEFAULT, longString, LOW_COST)).block();
 
-        byte[] bytes = Mono.from(testee().readBytes(testee().getDefaultBucketName(), blobId)).block();
+        byte[] bytes = Mono.from(testee().readBytes(BucketName.DEFAULT, blobId)).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
     }
@@ -61,11 +62,11 @@ public interface CassandraBlobStoreContract extends MetricableBlobStoreContract 
     default void readBytesShouldNotReturnInvalidResultsWhenPartialDataPresent() {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), longString, LOW_COST)).block();
+        BlobId blobId = Mono.from(testee().save(BucketName.DEFAULT, longString, LOW_COST)).block();
 
         when(defaultBucketDAO().readPart(blobId, 1)).thenReturn(Mono.empty());
 
-        assertThatThrownBy(() -> Mono.from(testee().readBytes(testee().getDefaultBucketName(), blobId)).block())
+        assertThatThrownBy(() -> Mono.from(testee().readBytes(BucketName.DEFAULT, blobId)).block())
             .isInstanceOf(ObjectStoreException.class)
             .hasMessageContaining("Missing blob part for blobId");
     }
@@ -74,18 +75,18 @@ public interface CassandraBlobStoreContract extends MetricableBlobStoreContract 
     default void readShouldNotReturnInvalidResultsWhenPartialDataPresent() {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), longString, LOW_COST)).block();
+        BlobId blobId = Mono.from(testee().save(BucketName.DEFAULT, longString, LOW_COST)).block();
 
         when(defaultBucketDAO().readPart(blobId, 1)).thenReturn(Mono.empty());
 
-        assertThatThrownBy(() -> IOUtils.toString(testee().read(testee().getDefaultBucketName(), blobId), StandardCharsets.UTF_8))
+        assertThatThrownBy(() -> IOUtils.toString(testee().read(BucketName.DEFAULT, blobId), StandardCharsets.UTF_8))
             .isInstanceOf(ObjectStoreException.class)
             .hasMessageContaining("Missing blob part for blobId");
     }
 
     @Test
     default void deleteBucketShouldThrowWhenDeletingDefaultBucket() {
-        assertThatThrownBy(() ->  testee().deleteBucket(testee().getDefaultBucketName()))
+        assertThatThrownBy(() ->  testee().deleteBucket(BucketName.DEFAULT))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Deleting the default bucket is forbidden");
     }
@@ -94,9 +95,9 @@ public interface CassandraBlobStoreContract extends MetricableBlobStoreContract 
     default void blobStoreShouldSupport100MBBlob() throws IOException {
         ZeroedInputStream data = new ZeroedInputStream(100_000_000);
         HashingInputStream writeHash = new HashingInputStream(Hashing.sha256(), data);
-        BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), writeHash, LOW_COST)).block();
+        BlobId blobId = Mono.from(testee().save(BucketName.DEFAULT, writeHash, LOW_COST)).block();
 
-        InputStream bytes = testee().read(testee().getDefaultBucketName(), blobId);
+        InputStream bytes = testee().read(BucketName.DEFAULT, blobId);
         HashingInputStream readHash = new HashingInputStream(Hashing.sha256(), bytes);
         consumeStream(readHash);
 

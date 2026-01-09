@@ -119,9 +119,8 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         MailboxEventSerializer eventSerializer = new MailboxEventSerializer(mailboxIdFactory, messageIdFactory, new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         RoutingKeyConverter routingKeyConverter = new RoutingKeyConverter(ImmutableSet.of(new MailboxIdRegistrationKey.Factory(mailboxIdFactory)));
         return new RabbitMQEventBus(MAILBOX_EVENT_NAMING_STRATEGY, reactorRabbitMQChannelPool.getSender(), reactorRabbitMQChannelPool::createReceiver,
-            eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, new MemoryEventDeadLetters(),
-            new RecordingMetricFactory(),
-            reactorRabbitMQChannelPool, EventBusId.random(), dockerRabbitMQ.getConfiguration());
+            eventSerializer, routingKeyConverter, new MemoryEventDeadLetters(), new RecordingMetricFactory(),
+            reactorRabbitMQChannelPool, EventBusId.random(), new RabbitMQEventBus.Configurations(dockerRabbitMQ.getConfiguration(), RetryBackoffConfiguration.DEFAULT));
     }
 
     @Override

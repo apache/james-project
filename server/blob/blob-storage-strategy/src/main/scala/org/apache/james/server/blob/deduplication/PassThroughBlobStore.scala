@@ -21,21 +21,19 @@ package org.apache.james.server.blob.deduplication
 
 import com.google.common.base.Preconditions
 import com.google.common.io.ByteSource
-import jakarta.inject.{Inject, Named}
+import jakarta.inject.Inject
 import org.apache.james.blob.api.BlobStore.BlobIdProvider
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
-import reactor.core.scala.publisher.{SMono, tupleTwo2ScalaTuple2}
+import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
-import reactor.util.function.{Tuple2, Tuples}
+import reactor.util.function.Tuples
 
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.InputStream
 import java.util.UUID
 
-class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
-                                     @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) defaultBucketName: BucketName,
-                                     blobIdFactory: BlobId.Factory) extends BlobStore {
+class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO, blobIdFactory: BlobId.Factory) extends BlobStore {
 
   override def save(bucketName: BucketName, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     save(bucketName, data, withBlobIdByteArray, storagePolicy)
@@ -110,8 +108,6 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     blobStoreDAO.readReactive(bucketName, blobId)
   }
 
-  override def getDefaultBucketName: BucketName = defaultBucketName
-
   override def deleteBucket(bucketName: BucketName): Publisher[Void] = {
     blobStoreDAO.deleteBucket(bucketName)
   }
@@ -124,7 +120,7 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
       .`then`(SMono.just(Boolean.box(true)))
   }
 
-  override def listBuckets(): Publisher[BucketName] = Flux.concat(blobStoreDAO.listBuckets(), Flux.just(defaultBucketName)).distinct()
+  override def listBuckets(): Publisher[BucketName] = Flux.concat(blobStoreDAO.listBuckets(), Flux.just(BucketName.DEFAULT)).distinct()
 
   override def listBlobs(bucketName: BucketName): Publisher[BlobId] = blobStoreDAO.listBlobs(bucketName)
 }

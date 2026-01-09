@@ -59,9 +59,8 @@ class RabbitMQEventBusDeadLetterQueueUpgradeTest {
         RoutingKeyConverter routingKeyConverter = RoutingKeyConverter.forFactories(new TestRegistrationKeyFactory());
 
         eventBus = new RabbitMQEventBus(NAMING_STRATEGY, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
-            eventSerializer, RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
-            memoryEventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
-            EventBusId.random(), rabbitMQExtension.getRabbitMQ().getConfiguration());
+            eventSerializer, routingKeyConverter, memoryEventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
+            EventBusId.random(), new RabbitMQEventBus.Configurations(rabbitMQExtension.getRabbitMQ().getConfiguration(), RETRY_BACKOFF_CONFIGURATION));
 
         eventBus.start();
     }

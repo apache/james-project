@@ -58,7 +58,6 @@ class S3PrefixTest implements BlobStoreContract {
         testee = BlobStoreFactory.builder()
             .blobStoreDAO(s3BlobStoreDAO)
             .blobIdFactory(blobIdFactory)
-            .defaultBucketName()
             .passthrough();
     }
 

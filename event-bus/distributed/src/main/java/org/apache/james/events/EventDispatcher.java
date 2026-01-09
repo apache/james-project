@@ -137,9 +137,9 @@ public class EventDispatcher {
     private Mono<Void> dispatchToLocalListeners(Event event, Set<RegistrationKey> keys) {
         return Flux.fromIterable(keys)
             .flatMap(key -> Flux.fromIterable(localListenerRegistry.getLocalListeners(key))
-                .map(listener -> Tuples.of(key, listener)), EventBus.EXECUTION_RATE)
+                .map(listener -> Tuples.of(key, listener)), EventBus.DEFAULT_MAX_CONCURRENCY)
             .filter(pair -> pair.getT2().getExecutionMode() == EventListener.ExecutionMode.SYNCHRONOUS)
-            .flatMap(pair -> executeListener(event, pair.getT2(), pair.getT1()), EventBus.EXECUTION_RATE)
+            .flatMap(pair -> executeListener(event, pair.getT2(), pair.getT1()), EventBus.DEFAULT_MAX_CONCURRENCY)
             .then();
     }
 

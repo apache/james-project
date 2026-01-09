@@ -29,12 +29,10 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
@@ -70,7 +68,6 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     private final CassandraDefaultBucketDAO defaultBucketDAO;
     private final CassandraBucketDAO bucketDAO;
     private final CassandraConfiguration configuration;
-    private final BucketName defaultBucket;
 
     private final Metric metricClOneHitCount;
     private final Metric metricClOneMissCount;
@@ -80,12 +77,10 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     public CassandraBlobStoreDAO(CassandraDefaultBucketDAO defaultBucketDAO,
                                  CassandraBucketDAO bucketDAO,
                                  CassandraConfiguration cassandraConfiguration,
-                                 @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) BucketName defaultBucket,
                                  MetricFactory metricFactory) {
         this.defaultBucketDAO = defaultBucketDAO;
         this.bucketDAO = bucketDAO;
         this.configuration = cassandraConfiguration;
-        this.defaultBucket = defaultBucket;
 
         this.metricClOneMissCount = metricFactory.generate(CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME);
         this.metricClOneHitCount = metricFactory.generate(CASSANDRA_BLOBSTORE_CL_ONE_HIT_COUNT_METRIC_NAME);
@@ -173,7 +168,7 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     }
 
     private boolean isDefaultBucket(BucketName bucketName) {
-        return bucketName.equals(defaultBucket);
+        return bucketName.equals(BucketName.DEFAULT);
     }
 
     @Override

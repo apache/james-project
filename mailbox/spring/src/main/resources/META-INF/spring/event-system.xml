@@ -25,6 +25,8 @@
           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
+    <util:constant id="eventBusConfiguration" static-field="org.apache.james.events.EventBus$Configuration.DEFAULT"/>
+
     <bean id="event-bus" class="org.apache.james.events.InVMEventBus" lazy-init="true">
         <constructor-arg index="0" ref="event-delivery"/>
         <constructor-arg index="1">
@@ -34,6 +36,7 @@
     </bean>
     <bean id="event-delivery" class="org.apache.james.events.delivery.InVmEventDelivery" lazy-init="true">
         <constructor-arg index="0" ref="metricFactory"/>
+        <constructor-arg index="1" ref="eventBusConfiguration"/>
     </bean>
     <bean id="event-deadletters" class="org.apache.james.events.MemoryEventDeadLetters" lazy-init="true"/>
 </beans>

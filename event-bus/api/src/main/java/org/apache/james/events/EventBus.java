@@ -19,7 +19,9 @@
 
 package org.apache.james.events;
 
+import java.time.Duration;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 
 import org.reactivestreams.Publisher;
@@ -31,7 +33,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface EventBus {
-    int EXECUTION_RATE = 10;
+    record Configuration(int maxConcurrency, Optional<Duration> executionTimeout) {
+        public static Configuration DEFAULT = new Configuration(DEFAULT_MAX_CONCURRENCY, Optional.empty());
+    }
+
+    int DEFAULT_MAX_CONCURRENCY = 10;
 
     interface StructuredLoggingFields {
         String EVENT_ID = "eventId";
