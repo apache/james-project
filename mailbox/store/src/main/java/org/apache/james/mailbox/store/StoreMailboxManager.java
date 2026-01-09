@@ -37,6 +37,7 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.events.EventBus;
+import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxAnnotationManager;
 import org.apache.james.mailbox.MailboxManager;
@@ -248,6 +249,11 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public AuthorizationStep authenticate(Username givenUserid, String passwd) {
         return sessionProvider.authenticate(givenUserid, passwd);
+    }
+
+    @Override
+    public SessionProvider withExtraAuthorizator(Authorizator authorizator) {
+        return sessionProvider.withExtraAuthorizator(authorizator);
     }
 
     @Override

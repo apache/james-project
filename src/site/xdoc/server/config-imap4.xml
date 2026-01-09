@@ -107,6 +107,8 @@
         <dd>Whether to enable Authentication PLAIN/ LOGIN command. Defaults to true.</dd>
         <dt><strong>auth.requireSSL</strong></dt>
         <dd>true or false. Defaults to true. Whether to require SSL to authenticate. If this is required, the IMAP server will disable authentication on unencrypted channels.</dd>
+        <dt><strong>auth.adminUsers.adminUser</strong></dt>
+        <dd>XML list of administrators able to impersonate any IMAP users. This is typically enable on non publicly exposed IMAP servers eg port 994 for admin support or migration.</dd>
         <dt><strong>auth.oidc.oidcConfigurationURL</strong></dt>
         <dd>Provide OIDC url address for information to user. Only configure this when you want to authenticate IMAP server using a OIDC provider.</dd>
         <dt><strong>auth.oidc.jwksURL</strong></dt>

@@ -75,4 +75,6 @@ public interface SessionProvider {
      *             when the creation fails for other reasons
      */
     AuthorizationStep authenticate(Username givenUserid);
+
+    SessionProvider withExtraAuthorizator(Authorizator authorizator);
 }

@@ -148,4 +148,9 @@ public class SessionProviderImpl implements SessionProvider {
     private Optional<Username> isValidLogin(Username userid, String passwd) throws MailboxException {
         return authenticator.isAuthentic(userid, passwd);
     }
+
+    @Override
+    public SessionProvider withExtraAuthorizator(Authorizator authorizator) {
+        return new SessionProviderImpl(authenticator, Authorizator.combine(this.authorizator, authorizator));
+    }
 }

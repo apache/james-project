@@ -38,7 +38,17 @@ public interface Authorizator {
     enum AuthorizationState {
         ALLOWED,
         FORBIDDEN,
-        UNKNOWN_USER
+        UNKNOWN_USER;
+
+        static AuthorizationState combine(AuthorizationState a, AuthorizationState b) {
+            if (a == AuthorizationState.FORBIDDEN) {
+                return b;
+            }
+            if (a == UNKNOWN_USER && b == ALLOWED) {
+                return b;
+            }
+            return a;
+        }
     }
 
     AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) throws MailboxException;
@@ -49,6 +59,12 @@ public interface Authorizator {
 
     default Collection<Username> delegatedUsers(Username username) {
         return ImmutableList.of();
+    }
+
+    static Authorizator combine(Authorizator a, Authorizator b) {
+        return (userA, userB) -> AuthorizationState.combine(
+            a.canLoginAsOtherUser(userA, userB),
+            b.canLoginAsOtherUser(userA, userB));
     }
 }
 

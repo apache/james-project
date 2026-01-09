@@ -36,6 +36,8 @@ acting on the behalf of any user.
 | administratorIds
 | List of usernames. Allows multiple administrators to access the https://tools.ietf.org/html/rfc4616#section-2[impersonation command],
 acting on behalf of any user by specifying multiple `<administratorId>` entries inside the `<administratorIds>` block.
+Prefer ref:imap.adoc[imapserver.xml] `auth.adminUsers` property to not
+enable admin impersonation onto publicly exposed interfaces.
 
 Notes: Only one of the above `<administratorId>` property or this `<administratorIds>` block should be used to specify the administrator(s).
 
