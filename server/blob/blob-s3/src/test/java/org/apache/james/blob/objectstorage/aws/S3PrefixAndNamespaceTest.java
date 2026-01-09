@@ -68,7 +68,6 @@ class S3PrefixAndNamespaceTest implements BlobStoreContract, DeduplicationBlobSt
         return BlobStoreFactory.builder()
                 .blobStoreDAO(s3BlobStoreDAO)
                 .blobIdFactory(blobIdFactory)
-                .bucket(BucketName.of("namespace"))
                 .deduplication();
     }
 

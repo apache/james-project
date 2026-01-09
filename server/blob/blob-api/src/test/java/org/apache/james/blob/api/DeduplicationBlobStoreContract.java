@@ -77,9 +77,8 @@ public interface DeduplicationBlobStoreContract {
     @MethodSource("storagePolicies")
     default void saveShouldReturnBlobIdOfString(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
-        BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_STRING, storagePolicy)).block();
+        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT, SHORT_STRING, storagePolicy)).block();
 
         assertThat(blobId).isEqualTo(blobIdFactory().parse("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
     }
@@ -88,9 +87,8 @@ public interface DeduplicationBlobStoreContract {
     @MethodSource("storagePolicies")
     default void saveShouldReturnBlobId(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
-        BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy)).block();
+        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT, SHORT_BYTEARRAY, storagePolicy)).block();
 
         assertThat(blobId).isEqualTo(blobIdFactory().parse("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
     }
@@ -99,9 +97,8 @@ public interface DeduplicationBlobStoreContract {
     @MethodSource("storagePolicies")
     default void saveShouldReturnBlobIdOfInputStream(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
-        BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = Mono.from(store.save(defaultBucketName, new ByteArrayInputStream(SHORT_BYTEARRAY), storagePolicy)).block();
+        BlobId blobId = Mono.from(store.save(BucketName.DEFAULT, new ByteArrayInputStream(SHORT_BYTEARRAY), storagePolicy)).block();
         // This fix is ok because it will only affect deduplication, after this change the same content might be assigned a different blobid
         // and thus might be duplicated in the store. No data can be lost since no api allows for externally deterministic blob id construction
         // before this change.

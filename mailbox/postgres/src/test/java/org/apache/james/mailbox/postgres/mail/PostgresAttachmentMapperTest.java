@@ -22,7 +22,6 @@ package org.apache.james.mailbox.postgres.mail;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
@@ -45,7 +44,7 @@ class PostgresAttachmentMapperTest extends AttachmentMapperTest {
     @Override
     protected AttachmentMapper createAttachmentMapper() {
         PostgresAttachmentDAO postgresAttachmentDAO = new PostgresAttachmentDAO(postgresExtension.getDefaultPostgresExecutor(), BLOB_ID_FACTORY);
-        BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, BLOB_ID_FACTORY);
+        BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BLOB_ID_FACTORY);
         return new PostgresAttachmentMapper(postgresAttachmentDAO, blobStore, new AttachmentIdAssignationStrategy.Default(new StringBackedAttachmentIdFactory()));
     }
 

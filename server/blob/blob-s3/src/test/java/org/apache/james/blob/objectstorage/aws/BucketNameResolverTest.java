@@ -32,7 +32,7 @@ class BucketNameResolverTest {
     @Nested
     class EmptyPrefix {
         @ParameterizedTest
-        @ValueSource(strings = {"namespace", "any", "bucketPrefix-aaa", "bucketPrefix-"})
+        @ValueSource(strings = {"default", "any", "bucketPrefix-aaa", "bucketPrefix-"})
         void withShouldAddNewValuesInSet(String bucketNameString) {
             BucketNameResolver resolver = BucketNameResolver.builder()
                 .noPrefix()
@@ -85,7 +85,7 @@ class BucketNameResolverTest {
                 .build();
 
             assertThat(resolver.unresolve(BucketName.of("namespace")))
-                .contains(BucketName.of("namespace"));
+                .contains(BucketName.DEFAULT);
         }
     }
 
@@ -204,13 +204,13 @@ class BucketNameResolverTest {
         }
 
         @Test
-        void resolveShouldReturnNamespaceWhenPassingNamespace() {
+        void resolveShouldReturnNamespaceWhenPassingDefault() {
             BucketNameResolver resolver = BucketNameResolver.builder()
                 .prefix("bucketPrefix-")
                 .namespace(BucketName.of("namespace"))
                 .build();
 
-            assertThat(resolver.resolve(BucketName.of("namespace")))
+            assertThat(resolver.resolve(BucketName.DEFAULT))
                 .isEqualTo(BucketName.of("namespace"));
         }
 
@@ -244,7 +244,7 @@ class BucketNameResolverTest {
                 .build();
 
             assertThat(resolver.unresolve(BucketName.of("namespace")))
-                .contains(BucketName.of("namespace"));
+                .contains(BucketName.DEFAULT);
         }
     }
 

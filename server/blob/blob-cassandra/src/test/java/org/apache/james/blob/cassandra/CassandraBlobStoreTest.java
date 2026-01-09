@@ -26,7 +26,6 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.DeduplicationBlobStoreContract;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.PlainBlobId;
@@ -61,9 +60,8 @@ public class CassandraBlobStoreTest implements CassandraBlobStoreContract, Dedup
         return new MetricableBlobStore(
                 metricFactory,
                 BlobStoreFactory.builder()
-                        .blobStoreDAO(new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT, metricFactory))
+                        .blobStoreDAO(new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, cassandraConfiguration, metricFactory))
                         .blobIdFactory(blobIdFactory)
-                        .defaultBucketName()
                         .deduplication());
     }
 

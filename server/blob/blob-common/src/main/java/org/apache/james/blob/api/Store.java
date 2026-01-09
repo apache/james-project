@@ -79,14 +79,12 @@ public interface Store<T, I> {
         private final Encoder<T> encoder;
         private final Decoder<T> decoder;
         private final BlobStore blobStore;
-        private final BucketName bucketName;
 
-        public Impl(BlobPartsId.Factory<I> idFactory, Encoder<T> encoder, Decoder<T> decoder, BlobStore blobStore, BucketName bucketName) {
+        public Impl(BlobPartsId.Factory<I> idFactory, Encoder<T> encoder, Decoder<T> decoder, BlobStore blobStore) {
             this.idFactory = idFactory;
             this.encoder = encoder;
             this.decoder = decoder;
             this.blobStore = blobStore;
-            this.bucketName = bucketName;
         }
 
         @Override
@@ -100,14 +98,14 @@ public interface Store<T, I> {
 
         private Mono<Tuple2<BlobType, BlobId>> saveEntry(Pair<BlobType, ValueToSave> entry) {
             return Mono.just(entry.getLeft())
-                .zipWith(entry.getRight().saveIn(bucketName, blobStore));
+                .zipWith(entry.getRight().saveIn(BucketName.DEFAULT, blobStore));
         }
 
         @Override
         public Mono<T> read(I blobIds) {
             return Flux.fromIterable(blobIds.asMap().entrySet())
                 .publishOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-                .flatMap(entry -> readByteSource(bucketName, entry.getValue(), entry.getKey().getStoragePolicy())
+                .flatMap(entry -> readByteSource(BucketName.DEFAULT, entry.getValue(), entry.getKey().getStoragePolicy())
                     .map(result -> Pair.of(entry.getKey(), result)))
                 .collectMap(Map.Entry::getKey, Pair::getValue)
                 // Critical to correctly propagate errors.
@@ -141,7 +139,7 @@ public interface Store<T, I> {
         @Override
         public Publisher<Void> delete(I blobIds) {
             return Flux.fromIterable(blobIds.asMap().values())
-                .flatMap(id -> blobStore.delete(bucketName, id), DEFAULT_CONCURRENCY)
+                .flatMap(id -> blobStore.delete(BucketName.DEFAULT, id), DEFAULT_CONCURRENCY)
                 .then();
         }
     }
