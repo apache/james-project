@@ -41,9 +41,11 @@ import com.google.common.collect.ImmutableSet;
 public class BlobStoreVaultGarbageCollectionTask implements Task {
 
     static class BlobStoreVaultGarbageCollectionContext {
+        private final Collection<BucketName> deletedBuckets;
         private final AtomicInteger deletedBlobs;
 
         BlobStoreVaultGarbageCollectionContext() {
+            this.deletedBuckets = new ConcurrentLinkedQueue<>();
             this.deletedBlobs = new AtomicInteger(0);
         }
 
@@ -53,6 +55,14 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
 
         int deletedBlobsCount() {
             return deletedBlobs.get();
+        }
+
+        void recordDeletedBucketSuccess(BucketName bucketName) {
+            deletedBuckets.add(bucketName);
+        }
+
+        ImmutableSet<BucketName> getDeletedBuckets() {
+            return ImmutableSet.copyOf(deletedBuckets);
         }
     }
 
@@ -90,7 +100,6 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
     }
 
     static final TaskType TYPE = TaskType.of("deleted-messages-blob-store-based-garbage-collection");
-    private final Collection<BucketName> deletedBuckets;
     private final BlobStoreVaultGarbageCollectionContext context;
     private final BlobStoreDeletedMessageVault deletedMessageVault;
     private final ZonedDateTime beginningOfRetentionPeriod;
@@ -111,15 +120,12 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
     private BlobStoreVaultGarbageCollectionTask(BlobStoreDeletedMessageVault deletedMessageVault) {
         this.beginningOfRetentionPeriod = deletedMessageVault.getBeginningOfRetentionPeriod();
         this.deletedMessageVault = deletedMessageVault;
-        this.deletedBuckets = new ConcurrentLinkedQueue<>();
         this.context = new BlobStoreVaultGarbageCollectionContext();
     }
 
     @Override
     public Result run() {
-        deletedMessageVault.deleteExpiredMessages(beginningOfRetentionPeriod)
-            .doOnNext(deletedBuckets::add)
-            .then(deletedMessageVault.deleteUserExpiredMessages(beginningOfRetentionPeriod, context))
+        deletedMessageVault.deleteExpiredMessages(beginningOfRetentionPeriod, context)
             .block();
 
         return Result.COMPLETED;
@@ -134,7 +140,7 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.of(new AdditionalInformation(
             beginningOfRetentionPeriod,
-            ImmutableSet.copyOf(deletedBuckets),
+            context.getDeletedBuckets(),
             context.deletedBlobsCount(),
             Clock.systemUTC().instant()));
     }

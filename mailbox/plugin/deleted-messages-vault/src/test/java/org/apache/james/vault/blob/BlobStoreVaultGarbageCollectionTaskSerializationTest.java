@@ -21,7 +21,6 @@ package org.apache.james.vault.blob;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -38,8 +37,6 @@ import org.mockito.Mockito;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
 
-import reactor.core.publisher.Flux;
-
 class BlobStoreVaultGarbageCollectionTaskSerializationTest {
    private static final BlobStoreDeletedMessageVault DELETED_MESSAGE_VAULT = Mockito.mock(BlobStoreDeletedMessageVault.class);
    private static final BlobStoreVaultGarbageCollectionTask.Factory TASK_FACTORY = new BlobStoreVaultGarbageCollectionTask.Factory(DELETED_MESSAGE_VAULT);
@@ -48,7 +45,6 @@ class BlobStoreVaultGarbageCollectionTaskSerializationTest {
     private static final ZonedDateTime BEGINNING_OF_RETENTION_PERIOD = ZonedDateTime.parse("2019-09-03T15:26:13.356+02:00[Europe/Paris]");
     private static final ImmutableSet<BucketName> BUCKET_IDS = ImmutableSet.of(BucketName.of("1"), BucketName.of("2"), BucketName.of("3"));
     private static final int DELETED_BLOBS = 5;
-    private static final Flux<BucketName> RETENTION_OPERATION = Flux.fromIterable(BUCKET_IDS);
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
     private static final BlobStoreVaultGarbageCollectionTask.AdditionalInformation DETAILS = new BlobStoreVaultGarbageCollectionTask.AdditionalInformation(BEGINNING_OF_RETENTION_PERIOD, BUCKET_IDS, DELETED_BLOBS, TIMESTAMP);
     private static final BlobStoreVaultGarbageCollectionTask TASK = TASK_FACTORY.create();
@@ -62,8 +58,6 @@ class BlobStoreVaultGarbageCollectionTaskSerializationTest {
     static void setUp() {
         Mockito.when(DELETED_MESSAGE_VAULT.getBeginningOfRetentionPeriod())
             .thenReturn(BEGINNING_OF_RETENTION_PERIOD);
-        Mockito.when(DELETED_MESSAGE_VAULT.deleteExpiredMessages(any()))
-            .thenReturn(RETENTION_OPERATION);
     }
 
     @Test

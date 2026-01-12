@@ -206,13 +206,20 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         return taskFactory.create();
     }
 
-    @Deprecated
-    Flux<BucketName> deleteExpiredMessages(ZonedDateTime beginningOfRetentionPeriod) {
+    Mono<Void> deleteExpiredMessages(ZonedDateTime beginningOfRetentionPeriod, BlobStoreVaultGarbageCollectionContext context) {
         return Flux.from(
             metricFactory.decoratePublisherWithTimerMetric(
                 DELETE_EXPIRED_MESSAGES_METRIC_NAME,
-                retentionQualifiedBuckets(beginningOfRetentionPeriod)
-                    .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName)), DEFAULT_CONCURRENCY)));
+                deletedExpiredMessagesFromOldBuckets(beginningOfRetentionPeriod, context)
+                    .then(deleteUserExpiredMessages(beginningOfRetentionPeriod, context))))
+            .then();
+    }
+
+    @Deprecated
+    private Flux<BucketName> deletedExpiredMessagesFromOldBuckets(ZonedDateTime beginningOfRetentionPeriod, BlobStoreVaultGarbageCollectionContext context) {
+        return retentionQualifiedBuckets(beginningOfRetentionPeriod)
+            .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName)), DEFAULT_CONCURRENCY)
+            .doOnNext(context::recordDeletedBucketSuccess);
     }
 
     ZonedDateTime getBeginningOfRetentionPeriod() {
@@ -242,20 +249,16 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
             .then(Mono.from(messageMetadataVault.removeMetadataRelatedToBucket(bucketName)));
     }
 
-    Mono<Void> deleteUserExpiredMessages(ZonedDateTime beginningOfRetentionPeriod, BlobStoreVaultGarbageCollectionContext context) {
+    private Mono<Void> deleteUserExpiredMessages(ZonedDateTime beginningOfRetentionPeriod, BlobStoreVaultGarbageCollectionContext context) {
         BucketName bucketName = BucketName.of(vaultConfiguration.getSingleBucketName());
 
-        return Flux.from(metricFactory.decoratePublisherWithTimerMetric(
-            DELETE_EXPIRED_MESSAGES_METRIC_NAME,
-            Flux.from(usersRepository.listReactive())
-                .flatMap(username -> Flux.from(messageMetadataVault.listMessages(bucketName, username))
-                    .filter(deletedMessage -> isMessageFullyExpired(beginningOfRetentionPeriod, deletedMessage))
-                    .flatMap(deletedMessage -> Mono.from(messageMetadataVault.remove(bucketName, username, deletedMessage.getDeletedMessage().getMessageId()))
-                        .doOnSuccess(any -> context.recordDeletedBlobSuccess())))))
+        return Flux.from(usersRepository.listReactive())
+            .flatMap(username -> Flux.from(messageMetadataVault.listMessages(bucketName, username))
+                .filter(deletedMessage -> isMessageFullyExpired(beginningOfRetentionPeriod, deletedMessage))
+                .flatMap(deletedMessage -> Mono.from(messageMetadataVault.remove(bucketName, username, deletedMessage.getDeletedMessage().getMessageId()))
+                    .doOnSuccess(any -> context.recordDeletedBlobSuccess())))
             .then();
     }
-
-
 
     private boolean isMessageFullyExpired(ZonedDateTime beginningOfRetentionPeriod, DeletedMessageWithStorageInformation deletedMessage) {
         BlobId blobId = deletedMessage.getStorageInformation().getBlobId();
