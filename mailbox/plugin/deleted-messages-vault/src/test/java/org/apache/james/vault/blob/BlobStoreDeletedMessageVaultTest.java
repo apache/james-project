@@ -185,7 +185,7 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
         getVault().deleteExpiredMessagesTask().run();
 
         assertThat(metricFactory.executionTimesFor(DELETE_EXPIRED_MESSAGES_METRIC_NAME))
-            .hasSize(1);
+            .hasSize(2);
     }
 
     @Test
