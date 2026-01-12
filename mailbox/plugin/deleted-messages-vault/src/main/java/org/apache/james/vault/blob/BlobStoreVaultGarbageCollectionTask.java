@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.inject.Inject;
 
@@ -39,14 +40,32 @@ import com.google.common.collect.ImmutableSet;
 
 public class BlobStoreVaultGarbageCollectionTask implements Task {
 
+    static class BlobStoreVaultGarbageCollectionContext {
+        private final AtomicInteger deletedBlobs;
+
+        BlobStoreVaultGarbageCollectionContext() {
+            this.deletedBlobs = new AtomicInteger(0);
+        }
+
+        void recordDeletedBlobSuccess() {
+            deletedBlobs.incrementAndGet();
+        }
+
+        int deletedBlobsCount() {
+            return deletedBlobs.get();
+        }
+    }
+
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final ZonedDateTime beginningOfRetentionPeriod;
         private final ImmutableSet<BucketName> deletedBuckets;
+        private final int deletedBlobs;
         private final Instant timestamp;
 
-        AdditionalInformation(ZonedDateTime beginningOfRetentionPeriod, ImmutableSet<BucketName> deletedBuckets, Instant timestamp) {
+        AdditionalInformation(ZonedDateTime beginningOfRetentionPeriod, ImmutableSet<BucketName> deletedBuckets, int deletedBlobs, Instant timestamp) {
             this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
             this.deletedBuckets = deletedBuckets;
+            this.deletedBlobs = deletedBlobs;
             this.timestamp = timestamp;
         }
 
@@ -60,6 +79,10 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
                 .collect(ImmutableList.toImmutableList());
         }
 
+        public int getDeletedBlobs() {
+            return deletedBlobs;
+        }
+
         @Override
         public Instant timestamp() {
             return timestamp;
@@ -68,6 +91,7 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
 
     static final TaskType TYPE = TaskType.of("deleted-messages-blob-store-based-garbage-collection");
     private final Collection<BucketName> deletedBuckets;
+    private final BlobStoreVaultGarbageCollectionContext context;
     private final BlobStoreDeletedMessageVault deletedMessageVault;
     private final ZonedDateTime beginningOfRetentionPeriod;
 
@@ -88,13 +112,14 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
         this.beginningOfRetentionPeriod = deletedMessageVault.getBeginningOfRetentionPeriod();
         this.deletedMessageVault = deletedMessageVault;
         this.deletedBuckets = new ConcurrentLinkedQueue<>();
+        this.context = new BlobStoreVaultGarbageCollectionContext();
     }
 
     @Override
     public Result run() {
         deletedMessageVault.deleteExpiredMessages(beginningOfRetentionPeriod)
             .doOnNext(deletedBuckets::add)
-            .then(deletedMessageVault.deleteUserExpiredMessages(beginningOfRetentionPeriod))
+            .then(deletedMessageVault.deleteUserExpiredMessages(beginningOfRetentionPeriod, context))
             .block();
 
         return Result.COMPLETED;
@@ -107,6 +132,10 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(beginningOfRetentionPeriod, ImmutableSet.copyOf(deletedBuckets), Clock.systemUTC().instant()));
+        return Optional.of(new AdditionalInformation(
+            beginningOfRetentionPeriod,
+            ImmutableSet.copyOf(deletedBuckets),
+            context.deletedBlobsCount(),
+            Clock.systemUTC().instant()));
     }
 }

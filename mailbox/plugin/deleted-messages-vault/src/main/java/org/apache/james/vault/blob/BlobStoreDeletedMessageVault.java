@@ -43,6 +43,7 @@ import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageContentNotFoundException;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.VaultConfiguration;
+import org.apache.james.vault.blob.BlobStoreVaultGarbageCollectionTask.BlobStoreVaultGarbageCollectionContext;
 import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
 import org.apache.james.vault.metadata.StorageInformation;
@@ -241,7 +242,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
             .then(Mono.from(messageMetadataVault.removeMetadataRelatedToBucket(bucketName)));
     }
 
-    Mono<Void> deleteUserExpiredMessages(ZonedDateTime beginningOfRetentionPeriod) {
+    Mono<Void> deleteUserExpiredMessages(ZonedDateTime beginningOfRetentionPeriod, BlobStoreVaultGarbageCollectionContext context) {
         BucketName bucketName = BucketName.of(vaultConfiguration.getSingleBucketName());
 
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric(
@@ -249,7 +250,8 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
             Flux.from(usersRepository.listReactive())
                 .flatMap(username -> Flux.from(messageMetadataVault.listMessages(bucketName, username))
                     .filter(deletedMessage -> isMessageFullyExpired(beginningOfRetentionPeriod, deletedMessage))
-                    .flatMap(deletedMessage -> messageMetadataVault.remove(bucketName, username, deletedMessage.getDeletedMessage().getMessageId())))))
+                    .flatMap(deletedMessage -> Mono.from(messageMetadataVault.remove(bucketName, username, deletedMessage.getDeletedMessage().getMessageId()))
+                        .doOnSuccess(any -> context.recordDeletedBlobSuccess())))))
             .then();
     }
 
