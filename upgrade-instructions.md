@@ -42,6 +42,13 @@ Change list:
  - [JAMES-4118 Cleanup message previews](#james-4118-cleanup-message-previews)
  - [JAMES-4128 Breaking Mailet API changes](#james-4128-breaking-mailet-api-changes)
 
+### JAMES-4160 LDAP with spring update
+Date: 13/01/2026
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-4160
+
+Users using Spring in addition with LDAP usersrepository needs to use `org.apache.james.user.ldap.LegacyReadOnlyUsersLDAPRepository` instead.
+
 ### JAMES-4128 Breaking Mailet API changes
 Date: 02/04/2025
 
