@@ -19,6 +19,8 @@
 
 package org.apache.james.events;
 
+import java.util.Set;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.DockerCassandra;
@@ -39,7 +41,7 @@ class CassandraEventDeadLettersHealthCheckTest implements EventDeadLettersHealth
         EventSerializer eventSerializer = new TestEventSerializer();
         eventDeadLetters = new CassandraEventDeadLetters(new CassandraEventDeadLettersDAO(cassandraCluster.getConf(), eventSerializer),
                                                          new CassandraEventDeadLettersGroupDAO(cassandraCluster.getConf()));
-        testee = new EventDeadLettersHealthCheck(eventDeadLetters);
+        testee = new EventDeadLettersHealthCheck(eventDeadLetters, Set.of());
         this.dockerCassandra = dockerCassandra;
     }
 

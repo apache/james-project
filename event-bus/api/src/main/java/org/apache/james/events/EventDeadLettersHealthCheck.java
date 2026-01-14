@@ -19,7 +19,10 @@
 
 package org.apache.james.events;
 
+import java.util.Set;
+
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
@@ -28,13 +31,17 @@ import org.apache.james.core.healthcheck.Result;
 import reactor.core.publisher.Mono;
 
 public class EventDeadLettersHealthCheck implements HealthCheck {
+    public static final String DEAD_LETTERS_IGNORED_GROUPS = "dead-letters-ignored-groups";
     private static final ComponentName COMPONENT_NAME = new ComponentName("EventDeadLettersHealthCheck");
 
     private final EventDeadLetters eventDeadLetters;
+    private final Set<Group> ignoredGroups;
 
     @Inject
-    public EventDeadLettersHealthCheck(EventDeadLetters eventDeadLetters) {
+    public EventDeadLettersHealthCheck(EventDeadLetters eventDeadLetters,
+                                       @Named(DEAD_LETTERS_IGNORED_GROUPS) Set<Group> ignoredGroups) {
         this.eventDeadLetters = eventDeadLetters;
+        this.ignoredGroups = ignoredGroups;
     }
 
     @Override
@@ -44,14 +51,20 @@ public class EventDeadLettersHealthCheck implements HealthCheck {
 
     @Override
     public Mono<Result> check() {
-        return eventDeadLetters.containEvents()
-            .map(containEvents -> {
-                if (containEvents) {
+        return eventDeadLetters.groupsWithFailedEvents()
+            .filter(group -> !ignoredGroup(group))
+            .hasElements()
+            .map(containsCriticalEvents -> {
+                if (containsCriticalEvents) {
                     return Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events. This might indicate transient failure on event processing.");
                 }
 
                 return Result.healthy(COMPONENT_NAME);
             })
             .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking EventDeadLettersHealthCheck", e)));
+    }
+
+    private boolean ignoredGroup(Group group) {
+        return ignoredGroups.contains(group);
     }
 }

@@ -19,14 +19,18 @@
 
 package org.apache.james.modules.mailbox;
 
+import static org.apache.james.events.EventDeadLettersHealthCheck.DEAD_LETTERS_IGNORED_GROUPS;
+
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventDeadLettersHealthCheck;
+import org.apache.james.events.Group;
 import org.apache.james.events.MemoryEventDeadLetters;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
 public class MemoryDeadLetterModule extends AbstractModule {
     @Override
@@ -37,5 +41,6 @@ public class MemoryDeadLetterModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), HealthCheck.class)
             .addBinding()
             .to(EventDeadLettersHealthCheck.class);
+        Multibinder.newSetBinder(binder(), Group.class, Names.named(DEAD_LETTERS_IGNORED_GROUPS));
     }
 }
