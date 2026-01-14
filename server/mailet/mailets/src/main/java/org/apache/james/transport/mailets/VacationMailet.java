@@ -30,7 +30,6 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
@@ -131,26 +130,24 @@ public class VacationMailet extends GenericMailet {
             return;
         }
 
-        AccountId accountId = AccountId.fromString(recipient.toString());
+        RecipientId replyRecipient = RecipientId.fromMailAddress(processedMail.getMaybeSender().get());
+        VacationInformation vacationInformation = retrieveVacationInformation(recipient, replyRecipient);
 
-        Mono<Vacation> vacation = vacationService.retrieveVacation(accountId);
-        Mono<Boolean> alreadySent = vacationService.isNotificationRegistered(
-                AccountId.fromString(recipient.toString()),
-                RecipientId.fromMailAddress(processedMail.getMaybeSender().get()));
-        Pair<Vacation, Boolean> pair = Flux.combineLatest(vacation, alreadySent, Pair::of)
-            .blockFirst();
-
-        sendNotificationIfRequired(recipient, processedMail, processingDate, pair.getKey(), pair.getValue());
-    }
-
-    private void sendNotificationIfRequired(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate, Vacation vacation, Boolean alreadySent) {
-        if (shouldSendNotification(vacation, processingDate, alreadySent)) {
-            sendNotification(recipient, processedMail, vacation);
+        boolean shouldSendNotification = vacationInformation.vacation.isActiveAtDate(processingDate) && !vacationInformation.alreadySent;
+        if (shouldSendNotification) {
+            sendNotification(processedMail, vacationInformation);
         }
     }
 
-    private boolean shouldSendNotification(Vacation vacation, ZonedDateTime processingDate, boolean alreadySent) {
-        return vacation.isActiveAtDate(processingDate) && !alreadySent;
+    record VacationInformation(Vacation vacation, MailAddress recipient, AccountId accountId, RecipientId replyRecipient, Boolean alreadySent) {
+
+    }
+
+    private VacationInformation retrieveVacationInformation(MailAddress recipient, RecipientId replyRecipient) {
+        AccountId accountId = AccountId.fromString(recipient.toString());
+        Mono<Vacation> vacation = vacationService.retrieveVacation(accountId);
+        Mono<Boolean> alreadySent = vacationService.isNotificationRegistered(accountId, replyRecipient);
+        return Flux.combineLatest(vacation, alreadySent, (a, b) -> new VacationInformation(a, recipient, accountId, replyRecipient, b)).blockFirst();
     }
 
     private boolean isNoReplySender(Mail processedMail) {
@@ -168,28 +165,25 @@ public class VacationMailet extends GenericMailet {
             .orElse(false);
     }
 
-    private void sendNotification(MailAddress recipient, Mail processedMail, Vacation vacation) {
+    private void sendNotification(Mail processedMail, VacationInformation vacationInformation) {
         try {
             VacationReply vacationReply = VacationReply.builder(processedMail)
-                .receivedMailRecipient(recipient)
-                .vacation(vacation)
+                .replyRecipient(vacationInformation.replyRecipient.getMailAddress())
+                .receivedMailRecipient(vacationInformation.recipient())
+                .vacation(vacationInformation.vacation)
                 .build(mimeMessageBodyGenerator);
 
-            sendNotification(vacationReply, recipient);
+            getMailetContext().sendMail(getSender(vacationInformation.recipient),
+                vacationReply.getRecipients(),
+                vacationReply.getMimeMessage());
 
-            vacationService.registerNotification(AccountId.fromString(recipient.toString()),
-                RecipientId.fromMailAddress(processedMail.getMaybeSender().get()),
-                vacation.getToDate())
+            vacationService.registerNotification(vacationInformation.accountId(),
+                vacationInformation.replyRecipient(),
+                vacationInformation.vacation().getToDate())
                 .block();
         } catch (MessagingException e) {
-            LOGGER.warn("Failed to send JMAP vacation notification from {} to {}", recipient, processedMail.getMaybeSender(), e);
+            LOGGER.warn("Failed to send JMAP vacation notification from {} to {}", vacationInformation.recipient(), vacationInformation.replyRecipient().getAsString(), e);
         }
-    }
-
-    private void sendNotification(VacationReply vacationReply, MailAddress recipient) throws MessagingException {
-        getMailetContext().sendMail(getSender(recipient),
-            vacationReply.getRecipients(),
-            vacationReply.getMimeMessage());
     }
 
     private MailAddress getSender(MailAddress recipient) {
