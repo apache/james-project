@@ -21,6 +21,8 @@ package org.apache.james.events;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Set;
+
 import org.apache.james.core.Username;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.Result;
@@ -122,4 +124,34 @@ interface EventDeadLettersHealthCheckContract {
 
         assertThat(actualResult.isUnHealthy()).isTrue();
     }
+
+    @Test
+    default void checkShouldReturnHealthyWhenOnlyIgnoredGroupsContainEvents() {
+        eventDeadLetters().store(GROUP_A, EVENT_1).block();
+
+        EventDeadLettersHealthCheck ignoredGroupHealthCheck = new EventDeadLettersHealthCheck(eventDeadLetters(), Set.of(GROUP_A));
+
+        assertThat(ignoredGroupHealthCheck.check().block().isHealthy()).isTrue();
+    }
+
+    @Test
+    default void checkShouldReturnDegradedWhenNonIgnoredGroupContainsEvents() {
+        eventDeadLetters().store(GROUP_A, EVENT_1).block();
+        eventDeadLetters().store(GROUP_B, EVENT_2).block();
+
+        EventDeadLettersHealthCheck ignoredGroupHealthCheck = new EventDeadLettersHealthCheck(eventDeadLetters(), Set.of(GROUP_A));
+
+        assertThat(ignoredGroupHealthCheck.check().block().isDegraded()).isTrue();
+    }
+
+    @Test
+    default void checkShouldReturnDegradedWhenMixingIgnoredAndNonIgnoredEvents() {
+        eventDeadLetters().store(GROUP_A, EVENT_1).block();
+        eventDeadLetters().store(GROUP_B, EVENT_2).block();
+
+        EventDeadLettersHealthCheck ignoredGroupHealthCheck = new EventDeadLettersHealthCheck(eventDeadLetters(), Set.of(GROUP_A));
+
+        assertThat(ignoredGroupHealthCheck.check().block().isDegraded()).isTrue();
+    }
+
 }

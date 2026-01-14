@@ -19,6 +19,8 @@
 
 package org.apache.james.events;
 
+import java.util.Set;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -26,7 +28,7 @@ import org.junit.jupiter.api.Test;
 public class MemoryEventDeadLettersHealthCheckTest implements EventDeadLettersHealthCheckContract {
 
     private MemoryEventDeadLetters eventDeadLetters = new MemoryEventDeadLetters();
-    private EventDeadLettersHealthCheck testee = new EventDeadLettersHealthCheck(eventDeadLetters);
+    private EventDeadLettersHealthCheck testee = new EventDeadLettersHealthCheck(eventDeadLetters, Set.of());
 
     @Override
     public EventDeadLettersHealthCheck testee() {
