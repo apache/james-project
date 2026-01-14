@@ -235,6 +235,18 @@ interface EventDeadLettersContract {
         }
 
         @Test
+        default void removeLastEventShouldRemoveGroup() {
+            EventDeadLetters eventDeadLetters = eventDeadLetters();
+
+            InsertionId insertionId = eventDeadLetters.store(GROUP_A, EVENT_1).block();
+
+            eventDeadLetters.remove(GROUP_A, insertionId).block();
+
+            assertThat(eventDeadLetters.groupsWithFailedEvents().collectList().block())
+                .isEmpty();
+        }
+
+        @Test
         default void removeAllEventsOfAGroupShouldAllEventsOfThatGroup() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 

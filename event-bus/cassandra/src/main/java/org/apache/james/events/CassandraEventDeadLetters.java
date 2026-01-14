@@ -54,7 +54,8 @@ public class CassandraEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredInsertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
 
-        return cassandraEventDeadLettersDAO.removeEvent(registeredGroup, failDeliveredInsertionId);
+        return cassandraEventDeadLettersDAO.removeEvent(registeredGroup, failDeliveredInsertionId)
+            .then(removeGroupIfLastEvent(registeredGroup));
     }
 
     @Override
@@ -88,5 +89,13 @@ public class CassandraEventDeadLetters implements EventDeadLetters {
     @Override
     public Mono<Boolean> containEvents() {
         return cassandraEventDeadLettersDAO.containEvents();
+    }
+
+    private Mono<Void> removeGroupIfLastEvent(Group registeredGroup) {
+        return cassandraEventDeadLettersDAO.retrieveInsertionIdsWithGroup(registeredGroup)
+            .hasElements()
+            .flatMap(hasRemainingEvents -> hasRemainingEvents
+                ? Mono.empty()
+                : cassandraEventDeadLettersGroupDAO.deleteGroup(registeredGroup));
     }
 }
