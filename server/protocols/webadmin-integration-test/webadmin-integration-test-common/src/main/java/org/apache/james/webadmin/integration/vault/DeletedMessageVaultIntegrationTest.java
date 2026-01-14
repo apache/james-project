@@ -771,7 +771,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
     }
 
     @Test
-    void vaultDeleteShouldDeleteAllMessagesHavingSameBlobContent() throws Exception {
+    public void vaultDeleteShouldDeleteAllMessagesHavingSameBlobContent() throws Exception {
         bartSendMessageToHomerAndJack();
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
 
