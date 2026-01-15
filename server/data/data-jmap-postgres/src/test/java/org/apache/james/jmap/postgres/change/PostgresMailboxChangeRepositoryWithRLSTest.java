@@ -22,17 +22,19 @@ package org.apache.james.jmap.postgres.change;
 import java.util.UUID;
 
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChangeRepositoryContract;
 import org.apache.james.jmap.api.change.State;
+import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class PostgresMailboxChangeRepositoryTest implements MailboxChangeRepositoryContract {
+class PostgresMailboxChangeRepositoryWithRLSTest implements MailboxChangeRepositoryContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxChangeDataDefinition.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresMailboxChangeDataDefinition.MODULE);
 
     PostgresMailboxChangeRepository postgresMailboxChangeRepository;
 
@@ -54,5 +56,10 @@ class PostgresMailboxChangeRepositoryTest implements MailboxChangeRepositoryCont
     @Override
     public MailboxId generateNewMailboxId() {
         return PostgresMailboxId.of(UUID.randomUUID());
+    }
+
+    @Override
+    public AccountId accountId() {
+        return AccountId.fromUsername(Username.of("bob@domain.tld"));
     }
 }

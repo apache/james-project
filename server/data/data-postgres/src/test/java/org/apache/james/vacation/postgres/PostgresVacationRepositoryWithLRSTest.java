@@ -17,42 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.postgres.change;
+package org.apache.james.vacation.postgres;
 
-import java.util.UUID;
-
+import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.jmap.api.change.MailboxChangeRepository;
-import org.apache.james.jmap.api.change.MailboxChangeRepositoryContract;
-import org.apache.james.jmap.api.change.State;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.postgres.PostgresMailboxId;
+import org.apache.james.vacation.api.AccountId;
+import org.apache.james.vacation.api.VacationRepository;
+import org.apache.james.vacation.api.VacationRepositoryContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class PostgresMailboxChangeRepositoryTest implements MailboxChangeRepositoryContract {
+class PostgresVacationRepositoryWithLRSTest implements VacationRepositoryContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxChangeDataDefinition.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresDataDefinition.aggregateModules(PostgresVacationDataDefinition.MODULE));
 
-    PostgresMailboxChangeRepository postgresMailboxChangeRepository;
+    VacationRepository vacationRepository;
 
     @BeforeEach
-    public void setUp() {
-        postgresMailboxChangeRepository = new PostgresMailboxChangeRepository(postgresExtension.getExecutorFactory(), DEFAULT_NUMBER_OF_CHANGES);
+    void setUp() {
+        vacationRepository = new PostgresVacationRepository(postgresExtension.getExecutorFactory());
     }
 
     @Override
-    public State.Factory stateFactory() {
-        return new PostgresStateFactory();
+    public VacationRepository vacationRepository() {
+        return vacationRepository;
     }
 
     @Override
-    public MailboxChangeRepository mailboxChangeRepository() {
-        return postgresMailboxChangeRepository;
-    }
-
-    @Override
-    public MailboxId generateNewMailboxId() {
-        return PostgresMailboxId.of(UUID.randomUUID());
+    public AccountId accountId() {
+        return AccountId.fromString("identifier@domain.tld");
     }
 }

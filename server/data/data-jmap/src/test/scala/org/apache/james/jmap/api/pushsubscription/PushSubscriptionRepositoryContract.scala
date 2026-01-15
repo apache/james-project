@@ -75,14 +75,16 @@ trait PushSubscriptionRepositoryContract {
   def clock: UpdatableTickingClock
   def testee: PushSubscriptionRepository
 
+  def alice() = ALICE;
+
   @Test
   def validSubscriptionShouldBeSavedSuccessfully(): Unit = {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
-    val singleRecordSaved = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).count().block()
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
+    val singleRecordSaved = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).count().block()
 
     assertThat(singleRecordSaved).isEqualTo(1)
   }
@@ -93,8 +95,8 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
-    val newSavedSubscription = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).blockFirst().get
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
+    val newSavedSubscription = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).blockFirst().get
 
     assertThat(newSavedSubscription.validated).isEqualTo(false)
   }
@@ -106,8 +108,8 @@ trait PushSubscriptionRepositoryContract {
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Some(PushSubscriptionExpiredTime(VALID_EXPIRE.plusDays(8))),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, request)).block().id
-    val newSavedSubscription = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).blockFirst().get
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), request)).block().id
+    val newSavedSubscription = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).blockFirst().get
 
     assertThat(newSavedSubscription.expires.value).isEqualTo(MAX_EXPIRE)
   }
@@ -120,7 +122,7 @@ trait PushSubscriptionRepositoryContract {
       expires = Some(PushSubscriptionExpiredTime(INVALID_EXPIRE)),
       types = Some(Seq(CustomTypeName1)))
 
-    assertThatThrownBy(() => SMono.fromPublisher(testee.save(ALICE, invalidRequest)).block())
+    assertThatThrownBy(() => SMono.fromPublisher(testee.save(alice(), invalidRequest)).block())
       .isInstanceOf(classOf[ExpireTimeInvalidException])
   }
 
@@ -130,14 +132,14 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
-    SMono.fromPublisher(testee.save(ALICE, firstRequest)).block()
+    SMono.fromPublisher(testee.save(alice(), firstRequest)).block()
 
     val secondRequestWithDuplicatedDeviceClientId = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
 
-    assertThatThrownBy(() => SMono.fromPublisher(testee.save(ALICE, secondRequestWithDuplicatedDeviceClientId)).block())
+    assertThatThrownBy(() => SMono.fromPublisher(testee.save(alice(), secondRequestWithDuplicatedDeviceClientId)).block())
       .isInstanceOf(classOf[DeviceClientIdInvalidException])
   }
 
@@ -147,9 +149,9 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
 
-    assertThatThrownBy(() => SMono.fromPublisher(testee.updateExpireTime(ALICE, pushSubscriptionId, INVALID_EXPIRE)).block())
+    assertThatThrownBy(() => SMono.fromPublisher(testee.updateExpireTime(alice(), pushSubscriptionId, INVALID_EXPIRE)).block())
       .isInstanceOf(classOf[ExpireTimeInvalidException])
   }
 
@@ -159,10 +161,10 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
-    SMono.fromPublisher(testee.updateExpireTime(ALICE, pushSubscriptionId, MAX_EXPIRE.plusDays(1))).block()
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
+    SMono.fromPublisher(testee.updateExpireTime(alice(), pushSubscriptionId, MAX_EXPIRE.plusDays(1))).block()
 
-    val updatedSubscription = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).blockFirst().get
+    val updatedSubscription = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).blockFirst().get
     assertThat(updatedSubscription.expires.value).isEqualTo(MAX_EXPIRE)
   }
 
@@ -170,7 +172,7 @@ trait PushSubscriptionRepositoryContract {
   def updateExpiresWithNotFoundPushSubscriptionIdShouldThrowException(): Unit = {
     val randomId = PushSubscriptionId.generate()
 
-    assertThatThrownBy(() => SMono.fromPublisher(testee.updateExpireTime(ALICE, randomId, VALID_EXPIRE)).block())
+    assertThatThrownBy(() => SMono.fromPublisher(testee.updateExpireTime(alice(), randomId, VALID_EXPIRE)).block())
       .isInstanceOf(classOf[PushSubscriptionNotFoundException])
   }
 
@@ -180,10 +182,10 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
-    SMono.fromPublisher(testee.updateExpireTime(ALICE, pushSubscriptionId, VALID_EXPIRE)).block()
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
+    SMono.fromPublisher(testee.updateExpireTime(alice(), pushSubscriptionId, VALID_EXPIRE)).block()
 
-    val updatedSubscription = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).blockFirst().get
+    val updatedSubscription = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).blockFirst().get
     assertThat(updatedSubscription.expires.value).isEqualTo(VALID_EXPIRE)
   }
 
@@ -193,8 +195,8 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
-    val fixedExpires = SMono.fromPublisher(testee.updateExpireTime(ALICE, pushSubscriptionId, MAX_EXPIRE.plusDays(1))).block()
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
+    val fixedExpires = SMono.fromPublisher(testee.updateExpireTime(alice(), pushSubscriptionId, MAX_EXPIRE.plusDays(1))).block()
 
     assertThat(fixedExpires).isEqualTo(PushSubscriptionExpiredTime(MAX_EXPIRE))
   }
@@ -205,12 +207,12 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
 
     val newTypes: Set[TypeName] = Set(CustomTypeName1, CustomTypeName2)
-    SMono.fromPublisher(testee.updateTypes(ALICE, pushSubscriptionId, newTypes.asJava)).block()
+    SMono.fromPublisher(testee.updateTypes(alice(), pushSubscriptionId, newTypes.asJava)).block()
 
-    val updatedSubscription = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).blockFirst().get
+    val updatedSubscription = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).blockFirst().get
     assertThat(updatedSubscription.types.toSet.asJava).containsExactlyInAnyOrder(CustomTypeName1, CustomTypeName2)
   }
 
@@ -219,7 +221,7 @@ trait PushSubscriptionRepositoryContract {
     val randomId = PushSubscriptionId.generate()
     val newTypes: Set[TypeName] = Set(CustomTypeName1, CustomTypeName2)
 
-    assertThatThrownBy(() => SMono.fromPublisher(testee.updateTypes(ALICE, randomId, newTypes.asJava)).block())
+    assertThatThrownBy(() => SMono.fromPublisher(testee.updateTypes(alice(), randomId, newTypes.asJava)).block())
       .isInstanceOf(classOf[PushSubscriptionNotFoundException])
   }
 
@@ -227,7 +229,7 @@ trait PushSubscriptionRepositoryContract {
   def getNotFoundShouldReturnEmpty(): Unit = {
     val randomId = PushSubscriptionId.generate()
 
-    assertThat(SMono.fromPublisher(testee.get(ALICE, Set(randomId).asJava)).blockOption().toJava)
+    assertThat(SMono.fromPublisher(testee.get(alice(), Set(randomId).asJava)).blockOption().toJava)
       .isEmpty
   }
 
@@ -237,12 +239,12 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
-    val singleRecordSaved = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).count().block()
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
+    val singleRecordSaved = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).count().block()
     assertThat(singleRecordSaved).isEqualTo(1)
 
-    SMono.fromPublisher(testee.revoke(ALICE, pushSubscriptionId)).block()
-    val remaining = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).collectSeq().block().asJava
+    SMono.fromPublisher(testee.revoke(alice(), pushSubscriptionId)).block()
+    val remaining = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).collectSeq().block().asJava
 
     assertThat(remaining).isEmpty()
   }
@@ -253,12 +255,12 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
-    val singleRecordSaved = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).count().block()
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
+    val singleRecordSaved = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).count().block()
     assertThat(singleRecordSaved).isEqualTo(1)
 
-    SMono.fromPublisher(testee.delete(ALICE)).block()
-    val remaining = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).collectSeq().block().asJava
+    SMono.fromPublisher(testee.delete(alice())).block()
+    val remaining = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).collectSeq().block().asJava
 
     assertThat(remaining).isEmpty()
   }
@@ -266,14 +268,14 @@ trait PushSubscriptionRepositoryContract {
   @Test
   def revokeNotFoundShouldNotFail(): Unit = {
     val pushSubscriptionId = PushSubscriptionId.generate()
-    assertThatCode(() => SMono.fromPublisher(testee.revoke(ALICE, pushSubscriptionId)).block())
+    assertThatCode(() => SMono.fromPublisher(testee.revoke(alice(), pushSubscriptionId)).block())
       .doesNotThrowAnyException()
   }
 
   @Test
   def deleteNotFoundShouldNotFail(): Unit = {
     val pushSubscriptionId = PushSubscriptionId.generate()
-    assertThatCode(() => SMono.fromPublisher(testee.delete(ALICE)).block())
+    assertThatCode(() => SMono.fromPublisher(testee.delete(alice())).block())
       .doesNotThrowAnyException()
   }
 
@@ -291,10 +293,10 @@ trait PushSubscriptionRepositoryContract {
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE)),
       types = Some(Seq(CustomTypeName2)))
-    val pushSubscriptionId1 = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
-    val pushSubscriptionId2 = SMono.fromPublisher(testee.save(ALICE, validRequest2)).block().id
+    val pushSubscriptionId1 = SMono.fromPublisher(testee.save(alice(), validRequest1)).block().id
+    val pushSubscriptionId2 = SMono.fromPublisher(testee.save(alice(), validRequest2)).block().id
 
-    val pushSubscriptions = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId1, pushSubscriptionId2).asJava)).collectSeq().block()
+    val pushSubscriptions = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId1, pushSubscriptionId2).asJava)).collectSeq().block()
 
     assertThat(pushSubscriptions.map(_.id).toList.asJava).containsExactlyInAnyOrder(pushSubscriptionId1, pushSubscriptionId2)
   }
@@ -307,10 +309,10 @@ trait PushSubscriptionRepositoryContract {
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE)),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId1 = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
+    val pushSubscriptionId1 = SMono.fromPublisher(testee.save(alice(), validRequest1)).block().id
     val pushSubscriptionId2 = PushSubscriptionId.generate()
 
-    val pushSubscriptions = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId1, pushSubscriptionId2).asJava)).collectSeq().block()
+    val pushSubscriptions = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId1, pushSubscriptionId2).asJava)).collectSeq().block()
 
     assertThat(pushSubscriptions.map(_.id).toList.asJava).containsExactlyInAnyOrder(pushSubscriptionId1)
   }
@@ -322,11 +324,11 @@ trait PushSubscriptionRepositoryContract {
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE.plusDays(1))),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest1)).block().id
 
     clock.setInstant(VALID_EXPIRE.plusDays(2).toInstant)
 
-    val pushSubscriptions = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).collectSeq().block()
+    val pushSubscriptions = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).collectSeq().block()
 
     assertThat(pushSubscriptions.map(_.id).toList.asJava).containsOnly(pushSubscriptionId)
   }
@@ -343,10 +345,10 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = deviceClientId2,
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName2)))
-    val pushSubscriptionId1: PushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
-    val pushSubscriptionId2: PushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest2)).block().id
+    val pushSubscriptionId1: PushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest1)).block().id
+    val pushSubscriptionId2: PushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest2)).block().id
 
-    val idList: List[PushSubscription] = SFlux(testee.list(ALICE)).collectSeq().block().toList
+    val idList: List[PushSubscription] = SFlux(testee.list(alice())).collectSeq().block().toList
 
     SoftAssertions.assertSoftly(softly => {
       softly.assertThat(idList.map(_.id).asJava).containsExactlyInAnyOrder(pushSubscriptionId1, pushSubscriptionId2)
@@ -361,11 +363,11 @@ trait PushSubscriptionRepositoryContract {
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE.plusDays(1))),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest1)).block().id
 
     clock.setInstant(VALID_EXPIRE.plusDays(2).toInstant)
 
-    val pushSubscriptions = SFlux.fromPublisher(testee.list(ALICE)).collectSeq().block()
+    val pushSubscriptions = SFlux.fromPublisher(testee.list(alice())).collectSeq().block()
 
     assertThat(pushSubscriptions.map(_.id).toList.asJava).containsOnly(pushSubscriptionId)
   }
@@ -376,10 +378,10 @@ trait PushSubscriptionRepositoryContract {
       deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)))
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
-    SMono.fromPublisher(testee.validateVerificationCode(ALICE, pushSubscriptionId)).block()
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
+    SMono.fromPublisher(testee.validateVerificationCode(alice(), pushSubscriptionId)).block()
 
-    val validatedSubscription = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).blockFirst().get
+    val validatedSubscription = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).blockFirst().get
     assertThat(validatedSubscription.validated).isEqualTo(true)
   }
 
@@ -387,7 +389,7 @@ trait PushSubscriptionRepositoryContract {
   def validateVerificationCodeWithNotFoundPushSubscriptionIdShouldThrowException(): Unit = {
     val randomId = PushSubscriptionId.generate()
 
-    assertThatThrownBy(() => SMono.fromPublisher(testee.validateVerificationCode(ALICE, randomId)).block())
+    assertThatThrownBy(() => SMono.fromPublisher(testee.validateVerificationCode(alice(), randomId)).block())
       .isInstanceOf(classOf[PushSubscriptionNotFoundException])
   }
 
@@ -400,9 +402,9 @@ trait PushSubscriptionRepositoryContract {
       types = Some(Seq(CustomTypeName1)),
       keys = fullKeyPair)
 
-    val pushSubscriptionId1 = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
+    val pushSubscriptionId1 = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
 
-    val pushSubscriptions = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId1).asJava)).collectSeq().block()
+    val pushSubscriptions = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId1).asJava)).collectSeq().block()
 
     assertThat(pushSubscriptions.map(_.keys).toList.asJava).containsExactlyInAnyOrder(fullKeyPair)
   }
@@ -415,9 +417,9 @@ trait PushSubscriptionRepositoryContract {
       url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Some(Seq(CustomTypeName1)),
       keys = emptyKeyPair)
-    val pushSubscriptionId1 = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
+    val pushSubscriptionId1 = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
 
-    val pushSubscriptions = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId1).asJava)).collectSeq().block()
+    val pushSubscriptions = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId1).asJava)).collectSeq().block()
 
     assertThat(pushSubscriptions.map(_.keys).toList.asJava).containsExactlyInAnyOrder(emptyKeyPair)
   }
@@ -432,7 +434,7 @@ trait PushSubscriptionRepositoryContract {
       types = Some(Seq(CustomTypeName1)),
       keys = emptyP256hKey)
 
-    assertThatThrownBy(() => SMono.fromPublisher(testee.save(ALICE, validRequest)).block())
+    assertThatThrownBy(() => SMono.fromPublisher(testee.save(alice(), validRequest)).block())
       .isInstanceOf(classOf[InvalidPushSubscriptionKeys])
   }
 
@@ -446,7 +448,7 @@ trait PushSubscriptionRepositoryContract {
       types = Some(Seq(CustomTypeName1)),
       keys = emptyAuthKey)
 
-    assertThatThrownBy(() => SMono.fromPublisher(testee.save(ALICE, validRequest)).block())
+    assertThatThrownBy(() => SMono.fromPublisher(testee.save(alice(), validRequest)).block())
       .isInstanceOf(classOf[InvalidPushSubscriptionKeys])
   }
 
@@ -457,15 +459,15 @@ trait PushSubscriptionRepositoryContract {
       url = PushSubscriptionServerURL(new URL("https://example.com/push")),
       types = Some(Seq(CustomTypeName1)))
 
-    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(alice(), validRequest)).block().id
 
     val ZONE_ID: ZoneId = ZoneId.of("Europe/Paris")
     val CLOCK: Clock = Clock.fixed(Instant.parse("2021-10-25T07:05:39.160Z"), ZONE_ID)
 
     val zonedDateTime: ZonedDateTime = ZonedDateTime.now(CLOCK)
-    SMono.fromPublisher(testee.updateExpireTime(ALICE, pushSubscriptionId, zonedDateTime)).block()
+    SMono.fromPublisher(testee.updateExpireTime(alice(), pushSubscriptionId, zonedDateTime)).block()
 
-    val updatedSubscription = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).blockFirst().get
+    val updatedSubscription = SFlux.fromPublisher(testee.get(alice(), Set(pushSubscriptionId).asJava)).blockFirst().get
     assertThat(updatedSubscription.expires.value).isEqualTo(zonedDateTime)
   }
 

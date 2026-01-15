@@ -32,7 +32,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresEmailChangeRepositoryTest implements EmailChangeRepositoryContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresEmailChangeDataDefinition.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresEmailChangeDataDefinition.MODULE);
 
     PostgresEmailChangeRepository postgresEmailChangeRepository;
 

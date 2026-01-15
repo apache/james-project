@@ -22,37 +22,44 @@ package org.apache.james.jmap.postgres.change;
 import java.util.UUID;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.jmap.api.change.MailboxChangeRepository;
-import org.apache.james.jmap.api.change.MailboxChangeRepositoryContract;
+import org.apache.james.core.Username;
+import org.apache.james.jmap.api.change.EmailChangeRepository;
+import org.apache.james.jmap.api.change.EmailChangeRepositoryContract;
 import org.apache.james.jmap.api.change.State;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.postgres.PostgresMailboxId;
+import org.apache.james.jmap.api.model.AccountId;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class PostgresMailboxChangeRepositoryTest implements MailboxChangeRepositoryContract {
+public class PostgresEmailChangeRepositoryWithLRSTest implements EmailChangeRepositoryContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxChangeDataDefinition.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresEmailChangeDataDefinition.MODULE);
 
-    PostgresMailboxChangeRepository postgresMailboxChangeRepository;
+    PostgresEmailChangeRepository postgresEmailChangeRepository;
 
     @BeforeEach
     public void setUp() {
-        postgresMailboxChangeRepository = new PostgresMailboxChangeRepository(postgresExtension.getExecutorFactory(), DEFAULT_NUMBER_OF_CHANGES);
+        postgresEmailChangeRepository = new PostgresEmailChangeRepository(postgresExtension.getExecutorFactory(), DEFAULT_NUMBER_OF_CHANGES);
     }
 
     @Override
-    public State.Factory stateFactory() {
-        return new PostgresStateFactory();
+    public EmailChangeRepository emailChangeRepository() {
+        return postgresEmailChangeRepository;
     }
 
     @Override
-    public MailboxChangeRepository mailboxChangeRepository() {
-        return postgresMailboxChangeRepository;
+    public MessageId generateNewMessageId() {
+        return PostgresMessageId.Factory.of(UUID.randomUUID());
     }
 
     @Override
-    public MailboxId generateNewMailboxId() {
-        return PostgresMailboxId.of(UUID.randomUUID());
+    public State generateNewState() {
+        return new PostgresStateFactory().generate();
+    }
+
+    @Override
+    public AccountId accountId() {
+        return AccountId.fromUsername(Username.of("bob@domain.tld"));
     }
 }

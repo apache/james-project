@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.james.backends.postgres.PostgresDataDefinition;
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.change.TypeStateFactory;
 import org.apache.james.jmap.api.model.TypeName;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
@@ -33,10 +34,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import scala.jdk.javaapi.CollectionConverters;
 
-class PostgresPushSubscriptionRepositoryTest implements PushSubscriptionRepositoryContract {
+class PostgresPushSubscriptionRepositoryWithRLSTest implements PushSubscriptionRepositoryContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(
         PostgresDataDefinition.aggregateModules(PostgresPushSubscriptionDataDefinition.MODULE));
 
     UpdatableTickingClock clock;
@@ -58,5 +59,10 @@ class PostgresPushSubscriptionRepositoryTest implements PushSubscriptionReposito
     @Override
     public PushSubscriptionRepository testee() {
         return pushSubscriptionRepository;
+    }
+
+    @Override
+    public Username alice() {
+        return Username.of("alice@domain.tld");
     }
 }

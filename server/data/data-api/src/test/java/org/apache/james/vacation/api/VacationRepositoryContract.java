@@ -47,9 +47,13 @@ public interface VacationRepositoryContract {
 
     VacationRepository vacationRepository();
 
+    default AccountId accountId() {
+        return ACCOUNT_ID;
+    }
+
     @Test
     default void retrieveVacationShouldReturnDefaultValueByDefault() {
-        assertThat(vacationRepository().retrieveVacation(ACCOUNT_ID).block()).isEqualTo(VacationRepository.DEFAULT_VACATION);
+        assertThat(vacationRepository().retrieveVacation(accountId()).block()).isEqualTo(VacationRepository.DEFAULT_VACATION);
     }
 
     @Test
@@ -58,9 +62,9 @@ public interface VacationRepositoryContract {
             .isEnabled(true)
             .build();
 
-        vacationRepository().modifyVacation(ACCOUNT_ID, vacationPatch).block();
+        vacationRepository().modifyVacation(accountId(), vacationPatch).block();
 
-        assertThat(vacationRepository().retrieveVacation(ACCOUNT_ID).block())
+        assertThat(vacationRepository().retrieveVacation(accountId()).block())
             .isEqualTo(Vacation.builder()
                 .enabled(true)
                 .build());
@@ -72,9 +76,9 @@ public interface VacationRepositoryContract {
             .fromDate(DATE_2014)
             .build();
 
-        vacationRepository().modifyVacation(ACCOUNT_ID, vacationPatch).block();
+        vacationRepository().modifyVacation(accountId(), vacationPatch).block();
 
-        assertThat(vacationRepository().retrieveVacation(ACCOUNT_ID).block())
+        assertThat(vacationRepository().retrieveVacation(accountId()).block())
             .isEqualTo(Vacation.builder()
                 .fromDate(Optional.of(DATE_2014))
                 .enabled(false)
@@ -87,9 +91,9 @@ public interface VacationRepositoryContract {
             .toDate(DATE_2017)
             .build();
 
-        vacationRepository().modifyVacation(ACCOUNT_ID, vacationPatch).block();
+        vacationRepository().modifyVacation(accountId(), vacationPatch).block();
 
-        assertThat(vacationRepository().retrieveVacation(ACCOUNT_ID).block())
+        assertThat(vacationRepository().retrieveVacation(accountId()).block())
             .isEqualTo(Vacation.builder()
                 .toDate(Optional.of(DATE_2017))
                 .enabled(false)
@@ -103,9 +107,9 @@ public interface VacationRepositoryContract {
             .subject(newSubject)
             .build();
 
-        vacationRepository().modifyVacation(ACCOUNT_ID, vacationPatch).block();
+        vacationRepository().modifyVacation(accountId(), vacationPatch).block();
 
-        assertThat(vacationRepository().retrieveVacation(ACCOUNT_ID).block())
+        assertThat(vacationRepository().retrieveVacation(accountId()).block())
             .isEqualTo(Vacation.builder()
                 .subject(Optional.of(newSubject))
                 .enabled(false)
@@ -119,9 +123,9 @@ public interface VacationRepositoryContract {
             .textBody(newTextBody)
             .build();
 
-        vacationRepository().modifyVacation(ACCOUNT_ID, vacationPatch).block();
+        vacationRepository().modifyVacation(accountId(), vacationPatch).block();
 
-        assertThat(vacationRepository().retrieveVacation(ACCOUNT_ID).block())
+        assertThat(vacationRepository().retrieveVacation(accountId()).block())
             .isEqualTo(Vacation.builder()
                 .textBody(newTextBody)
                 .enabled(false)
@@ -135,9 +139,9 @@ public interface VacationRepositoryContract {
             .htmlBody(newHtmlBody)
             .build();
 
-        vacationRepository().modifyVacation(ACCOUNT_ID, vacationPatch).block();
+        vacationRepository().modifyVacation(accountId(), vacationPatch).block();
 
-        assertThat(vacationRepository().retrieveVacation(ACCOUNT_ID).block())
+        assertThat(vacationRepository().retrieveVacation(accountId()).block())
             .isEqualTo(Vacation.builder()
                 .enabled(false)
                 .htmlBody(newHtmlBody)
@@ -149,9 +153,9 @@ public interface VacationRepositoryContract {
         VacationPatch vacationPatch = VacationPatch.builderFrom(VACATION)
             .build();
 
-        vacationRepository().modifyVacation(ACCOUNT_ID, vacationPatch).block();
+        vacationRepository().modifyVacation(accountId(), vacationPatch).block();
 
-        assertThat(vacationRepository().retrieveVacation(ACCOUNT_ID).block())
+        assertThat(vacationRepository().retrieveVacation(accountId()).block())
             .isEqualTo(VACATION);
     }
 
@@ -160,46 +164,46 @@ public interface VacationRepositoryContract {
         VacationPatch vacationPatch = VacationPatch.builder()
             .build();
 
-        vacationRepository().modifyVacation(ACCOUNT_ID, vacationPatch).block();
+        vacationRepository().modifyVacation(accountId(), vacationPatch).block();
 
-        assertThat(vacationRepository().retrieveVacation(ACCOUNT_ID).block())
+        assertThat(vacationRepository().retrieveVacation(accountId()).block())
             .isEqualTo(VacationRepository.DEFAULT_VACATION);
     }
 
     @Test
     default void emptyUpdatesShouldNotChangeExistingVacations() {
         // Given
-        vacationRepository().modifyVacation(ACCOUNT_ID,
+        vacationRepository().modifyVacation(accountId(),
             VacationPatch.builderFrom(VACATION)
                 .build())
             .block();
 
         // When
-        vacationRepository().modifyVacation(ACCOUNT_ID, VacationPatch.builder()
+        vacationRepository().modifyVacation(accountId(), VacationPatch.builder()
             .build())
             .block();
 
         // Then
-        assertThat(vacationRepository().retrieveVacation(ACCOUNT_ID).block())
+        assertThat(vacationRepository().retrieveVacation(accountId()).block())
             .isEqualTo(VACATION);
     }
 
     @Test
     default void nullUpdateShouldResetSubject() {
         // Given
-        vacationRepository().modifyVacation(ACCOUNT_ID,
+        vacationRepository().modifyVacation(accountId(),
             VacationPatch.builderFrom(VACATION)
                 .build())
             .block();
 
         // When
-        vacationRepository().modifyVacation(ACCOUNT_ID, VacationPatch.builder()
+        vacationRepository().modifyVacation(accountId(), VacationPatch.builder()
             .subject(ValuePatch.remove())
             .build())
             .block();
 
         // Then
-        Vacation vacation = vacationRepository().retrieveVacation(ACCOUNT_ID).block();
+        Vacation vacation = vacationRepository().retrieveVacation(accountId()).block();
         assertThat(vacation.getSubject()).isEmpty();
         assertThat(vacation)
             .isEqualTo(Vacation.builder()
@@ -214,19 +218,19 @@ public interface VacationRepositoryContract {
     @Test
     default void nullUpdateShouldResetText() {
         // Given
-        vacationRepository().modifyVacation(ACCOUNT_ID,
+        vacationRepository().modifyVacation(accountId(),
             VacationPatch.builderFrom(VACATION)
                 .build())
             .block();
 
         // When
-        vacationRepository().modifyVacation(ACCOUNT_ID, VacationPatch.builder()
+        vacationRepository().modifyVacation(accountId(), VacationPatch.builder()
             .textBody(ValuePatch.remove())
             .build())
             .block();
 
         // Then
-        Vacation vacation = vacationRepository().retrieveVacation(ACCOUNT_ID).block();
+        Vacation vacation = vacationRepository().retrieveVacation(accountId()).block();
         assertThat(vacation.getTextBody()).isEmpty();
         assertThat(vacation)
             .isEqualTo(Vacation.builder()
@@ -241,19 +245,19 @@ public interface VacationRepositoryContract {
     @Test
     default void nullUpdateShouldResetHtml() {
         // Given
-        vacationRepository().modifyVacation(ACCOUNT_ID,
+        vacationRepository().modifyVacation(accountId(),
             VacationPatch.builderFrom(VACATION)
                 .build())
             .block();
 
         // When
-        vacationRepository().modifyVacation(ACCOUNT_ID, VacationPatch.builder()
+        vacationRepository().modifyVacation(accountId(), VacationPatch.builder()
             .htmlBody(ValuePatch.remove())
             .build())
             .block();
 
         // Then
-        Vacation vacation = vacationRepository().retrieveVacation(ACCOUNT_ID).block();
+        Vacation vacation = vacationRepository().retrieveVacation(accountId()).block();
         assertThat(vacation.getHtmlBody()).isEmpty();
         assertThat(vacation)
             .isEqualTo(Vacation.builder()
@@ -268,19 +272,19 @@ public interface VacationRepositoryContract {
     @Test
     default void nullUpdateShouldResetToDate() {
         // Given
-        vacationRepository().modifyVacation(ACCOUNT_ID,
+        vacationRepository().modifyVacation(accountId(),
             VacationPatch.builderFrom(VACATION)
                 .build())
             .block();
 
         // When
-        vacationRepository().modifyVacation(ACCOUNT_ID, VacationPatch.builder()
+        vacationRepository().modifyVacation(accountId(), VacationPatch.builder()
             .toDate(ValuePatch.remove())
             .build())
             .block();
 
         // Then
-        Vacation vacation = vacationRepository().retrieveVacation(ACCOUNT_ID).block();
+        Vacation vacation = vacationRepository().retrieveVacation(accountId()).block();
         assertThat(vacation.getToDate()).isEmpty();
         assertThat(vacation)
             .isEqualTo(Vacation.builder()
@@ -295,19 +299,19 @@ public interface VacationRepositoryContract {
     @Test
     default void nullUpdateShouldResetFromDate() {
         // Given
-        vacationRepository().modifyVacation(ACCOUNT_ID,
+        vacationRepository().modifyVacation(accountId(),
             VacationPatch.builderFrom(VACATION)
                 .build())
             .block();
 
         // When
-        vacationRepository().modifyVacation(ACCOUNT_ID, VacationPatch.builder()
+        vacationRepository().modifyVacation(accountId(), VacationPatch.builder()
             .fromDate(ValuePatch.remove())
             .build())
             .block();
 
         // Then
-        Vacation vacation = vacationRepository().retrieveVacation(ACCOUNT_ID).block();
+        Vacation vacation = vacationRepository().retrieveVacation(accountId()).block();
         assertThat(vacation.getFromDate()).isEmpty();
         assertThat(vacation)
             .isEqualTo(Vacation.builder()
@@ -333,31 +337,31 @@ public interface VacationRepositoryContract {
 
     @Test
     default void modifyVacationShouldThrowOnNullVacation() {
-        assertThatThrownBy(() -> vacationRepository().modifyVacation(ACCOUNT_ID, null))
+        assertThatThrownBy(() -> vacationRepository().modifyVacation(accountId(), null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void retrieveVacationShouldIgnoreCase() {
-        vacationRepository().modifyVacation(ACCOUNT_ID,
+        vacationRepository().modifyVacation(accountId(),
                 VacationPatch.builderFrom(VACATION)
                     .build())
             .block();
 
-        AccountId upperCaseAccount = AccountId.fromString(ACCOUNT_ID.getIdentifier().toUpperCase());
+        AccountId upperCaseAccount = AccountId.fromString(accountId().getIdentifier().toUpperCase());
         Vacation vacation = vacationRepository().retrieveVacation(upperCaseAccount).block();
         assertThat(vacation).isNotNull();
     }
 
     @Test
     default void modifiyVacationShouldIgnoreCase() {
-        AccountId upperCaseAccount = AccountId.fromString(ACCOUNT_ID.getIdentifier().toUpperCase());
+        AccountId upperCaseAccount = AccountId.fromString(accountId().getIdentifier().toUpperCase());
         vacationRepository().modifyVacation(upperCaseAccount,
                 VacationPatch.builderFrom(VACATION)
                     .build())
             .block();
 
-        Vacation vacation = vacationRepository().retrieveVacation(ACCOUNT_ID).block();
+        Vacation vacation = vacationRepository().retrieveVacation(accountId()).block();
         assertThat(vacation).isNotNull();
     }
 }
