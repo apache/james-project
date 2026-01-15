@@ -27,6 +27,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 import jakarta.persistence.EntityManagerFactory;
 
@@ -37,28 +38,22 @@ import org.apache.james.mailrepository.jpa.model.JPAUrl;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.user.jpa.model.JPAUser;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class JPAJamesServerTest {
 
     private GuiceJamesServer server;
     private SocketChannel socketChannel;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    public Path tempDir;
 
-    @After
-    public void teardown() {
-        server.stop();
-    }
-
-    private org.apache.james.GuiceJamesServer createJamesServer() throws IOException {
+    private org.apache.james.GuiceJamesServer createJamesServer() {
         JPAJamesConfiguration configuration = JPAJamesConfiguration.builder()
-            .workingDirectory(temporaryFolder.newFolder())
+            .workingDirectory(tempDir.toFile())
             .configurationFromClasspath()
             .usersRepository(DEFAULT)
             .build();
@@ -70,16 +65,16 @@ public class JPAJamesServerTest {
                             .toInstance(JpaTestCluster.create(JPAUser.class, JPADomain.class, JPARecipientRewrite.class, JPAUrl.class, JPAMail.class)
                                     .getEntityManagerFactory()));
     }
-    
-    @Before
+
+    @BeforeEach
     public void setup() throws Exception {
         server = createJamesServer();
         socketChannel = SocketChannel.open();
         server.start();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    public void tearDown() {
         server.stop();
     }
 

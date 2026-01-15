@@ -27,55 +27,53 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JPAJamesConfiguration;
 import org.apache.james.JPAJamesServerMain;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
+@Testcontainers
 public class JPAMariaDBJamesServerTest {
 
     private GuiceJamesServer server;
     private SocketChannel socketChannel;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    public Path tempDir;
 
-    @Rule
+    @Container
     public MariaDBContainer<?> mariaDB = new MariaDBContainer<>();
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         server = createJamesServer(mariaDB.getJdbcUrl());
         socketChannel = SocketChannel.open();
         server.start();
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         server.stop();
     }
 
-    private org.apache.james.GuiceJamesServer createJamesServer(String mariaDBUrl) throws IOException {
+    private org.apache.james.GuiceJamesServer createJamesServer(String mariaDBUrl) {
         JPAJamesConfiguration configuration = JPAJamesConfiguration.builder()
-            .workingDirectory(temporaryFolder.newFolder())
+            .workingDirectory(tempDir.toFile())
             .usersRepository(DEFAULT)
             .configurationFromClasspath()
             .build();
 
         return JPAJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJPAMariaDBConfigurationModule(mariaDBUrl));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        server.stop();
     }
 
     @Test
