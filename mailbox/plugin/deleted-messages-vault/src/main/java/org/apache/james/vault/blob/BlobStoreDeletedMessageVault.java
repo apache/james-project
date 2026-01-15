@@ -29,7 +29,6 @@ import java.util.Optional;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
@@ -261,14 +260,8 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     }
 
     private boolean isMessageFullyExpired(ZonedDateTime beginningOfRetentionPeriod, DeletedMessageWithStorageInformation deletedMessage) {
-        BlobId blobId = deletedMessage.getStorageInformation().getBlobId();
-        Optional<ZonedDateTime> maybeEndDate = blobIdTimeGenerator.blobIdEndTime(blobId);
+        ZonedDateTime deletionDate = deletedMessage.getDeletedMessage().getDeletionDate();
 
-        if (maybeEndDate.isEmpty()) {
-            LOGGER.error("Pattern used for blobId used in deletedMessageVault is invalid and end date cannot be parsed {}", blobId);
-        }
-
-        return maybeEndDate.map(endDate -> endDate.isBefore(beginningOfRetentionPeriod))
-            .orElse(false);
+        return deletionDate.isBefore(beginningOfRetentionPeriod);
     }
 }

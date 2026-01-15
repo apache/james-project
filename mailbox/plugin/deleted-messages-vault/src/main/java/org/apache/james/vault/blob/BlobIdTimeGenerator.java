@@ -20,7 +20,6 @@
 package org.apache.james.vault.blob;
 
 import java.time.Clock;
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,20 +50,6 @@ public class BlobIdTimeGenerator {
         int year = now.getYear();
 
         return new PlainBlobId(String.format(BLOB_ID_GENERATING_FORMAT, year, month, blobIdFactory.of(UUID.randomUUID().toString()).asString()));
-    }
-
-    Optional<ZonedDateTime> blobIdEndTime(BlobId blobId) {
-        return Optional.of(BLOB_ID_TIME_PATTERN.matcher(blobId.asString()))
-            .filter(Matcher::matches)
-            .map(matcher -> {
-                int year = Integer.parseInt(matcher.group(1));
-                int month = Integer.parseInt(matcher.group(2));
-                return firstDayOfNextMonth(year, month);
-            });
-    }
-
-    private ZonedDateTime firstDayOfNextMonth(int year, int month) {
-        return LocalDate.of(year, month, 1).plusMonths(1).atStartOfDay(clock.getZone());
     }
 
     public BlobId toDeletedMessageBlobId(String blobId) {
