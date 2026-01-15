@@ -19,7 +19,6 @@
 
 package org.apache.james.vault.metadata;
 
-import static org.apache.james.vault.DeletedMessageFixture.NOW;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -33,8 +32,6 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.TestMessageId;
-import org.apache.james.utils.UpdatableTickingClock;
-import org.apache.james.vault.blob.BlobIdTimeGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,7 +39,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class StorageInformationDAOTest {
     private static final BucketName BUCKET_NAME = BucketName.of("deletedMessages-2019-06-01");
     private static final BucketName BUCKET_NAME_2 = BucketName.of("deletedMessages-2019-07-01");
-    private static final BlobIdTimeGenerator BLOB_ID_TIME_GENERATOR = new BlobIdTimeGenerator(new PlainBlobId.Factory(), new UpdatableTickingClock(NOW.toInstant()));
     private static final Username OWNER = Username.of("owner");
     private static final TestMessageId MESSAGE_ID = TestMessageId.of(36);
     private static final BlobId BLOB_ID = new PlainBlobId.Factory().parse("05dcb33b-8382-4744-923a-bc593ad84d23");
@@ -57,7 +53,7 @@ class StorageInformationDAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new StorageInformationDAO(cassandra.getConf(), BLOB_ID_TIME_GENERATOR);
+        testee = new StorageInformationDAO(cassandra.getConf());
     }
 
     @Test

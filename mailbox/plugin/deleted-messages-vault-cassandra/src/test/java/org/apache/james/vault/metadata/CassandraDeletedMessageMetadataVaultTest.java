@@ -20,7 +20,6 @@
 package org.apache.james.vault.metadata;
 
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
-import static org.apache.james.vault.DeletedMessageFixture.NOW;
 import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataDataDefinition.MODULE;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.BUCKET_NAME;
@@ -33,11 +32,8 @@ import java.util.stream.Stream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.utils.UpdatableTickingClock;
-import org.apache.james.vault.blob.BlobIdTimeGenerator;
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -59,13 +55,11 @@ public class CassandraDeletedMessageMetadataVaultTest implements DeletedMessageM
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
-        BlobIdTimeGenerator blobIdTimeGenerator = new BlobIdTimeGenerator(blobIdFactory, new UpdatableTickingClock(NOW.toInstant()));
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        DeletedMessageWithStorageInformationConverter dtoConverter = new DeletedMessageWithStorageInformationConverter(blobIdTimeGenerator, messageIdFactory, new InMemoryId.Factory());
+        DeletedMessageWithStorageInformationConverter dtoConverter = new DeletedMessageWithStorageInformationConverter(messageIdFactory, new InMemoryId.Factory());
 
         metadataDAO = new MetadataDAO(cassandra.getConf(), messageIdFactory, new MetadataSerializer(dtoConverter));
-        storageInformationDAO = new StorageInformationDAO(cassandra.getConf(), blobIdTimeGenerator);
+        storageInformationDAO = new StorageInformationDAO(cassandra.getConf());
         userPerBucketDAO = new UserPerBucketDAO(cassandra.getConf());
 
         testee = new CassandraDeletedMessageMetadataVault(metadataDAO, storageInformationDAO, userPerBucketDAO);

@@ -34,9 +34,9 @@ import jakarta.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.vault.blob.BlobIdTimeGenerator;
 import org.jooq.Record;
 import org.reactivestreams.Publisher;
 
@@ -46,15 +46,12 @@ import reactor.core.publisher.Mono;
 public class PostgresDeletedMessageMetadataVault implements DeletedMessageMetadataVault {
     private final PostgresExecutor postgresExecutor;
     private final MetadataSerializer metadataSerializer;
-    private final BlobIdTimeGenerator blobIdTimeGenerator;
 
     @Inject
     public PostgresDeletedMessageMetadataVault(PostgresExecutor postgresExecutor,
-                                               MetadataSerializer metadataSerializer,
-                                               BlobIdTimeGenerator blobIdTimeGenerator) {
+                                               MetadataSerializer metadataSerializer) {
         this.postgresExecutor = postgresExecutor;
         this.metadataSerializer = metadataSerializer;
-        this.blobIdTimeGenerator = blobIdTimeGenerator;
     }
 
     @Override
@@ -93,7 +90,7 @@ public class PostgresDeletedMessageMetadataVault implements DeletedMessageMetada
     private Function<Record, StorageInformation> toStorageInformation() {
         return record -> StorageInformation.builder()
             .bucketName(BucketName.of(record.get(BUCKET_NAME)))
-            .blobId(blobIdTimeGenerator.toDeletedMessageBlobId(record.get(BLOB_ID)));
+            .blobId(new PlainBlobId(record.get(BLOB_ID)));
     }
 
     @Override

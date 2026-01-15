@@ -21,26 +21,21 @@ package org.apache.james.vault.blob;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import jakarta.inject.Inject;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 
 public class BlobIdTimeGenerator {
-    public static final String BLOB_ID_GENERATING_FORMAT = "%d/%02d/%s";
-    public static final Pattern BLOB_ID_TIME_PATTERN = Pattern.compile("^(\\d{4})/(\\d{2})/(.*)$");
+    public static final String BLOB_ID_GENERATING_FORMAT = "%d/%02d/%s/%s/%s";
 
-    private final BlobId.Factory blobIdFactory;
     private final Clock clock;
 
     @Inject
-    public BlobIdTimeGenerator(BlobId.Factory blobIdFactory, Clock clock) {
-        this.blobIdFactory = blobIdFactory;
+    public BlobIdTimeGenerator(Clock clock) {
         this.clock = clock;
     }
 
@@ -48,18 +43,9 @@ public class BlobIdTimeGenerator {
         ZonedDateTime now = ZonedDateTime.now(clock);
         int month = now.getMonthValue();
         int year = now.getYear();
+        String randomizerA = RandomStringUtils.insecure().nextAlphanumeric(1);
+        String randomizerB = RandomStringUtils.insecure().nextAlphanumeric(1);
 
-        return new PlainBlobId(String.format(BLOB_ID_GENERATING_FORMAT, year, month, blobIdFactory.of(UUID.randomUUID().toString()).asString()));
-    }
-
-    public BlobId toDeletedMessageBlobId(String blobId) {
-        return Optional.of(BLOB_ID_TIME_PATTERN.matcher(blobId))
-            .filter(Matcher::matches)
-            .map(matcher -> {
-                int year = Integer.parseInt(matcher.group(1));
-                int month = Integer.parseInt(matcher.group(2));
-                String subBlobId = matcher.group(3);
-                return (BlobId) new PlainBlobId(String.format(BLOB_ID_GENERATING_FORMAT, year, month, blobIdFactory.parse(subBlobId).asString()));
-            }).orElseGet(() -> blobIdFactory.parse(blobId));
+        return new PlainBlobId(String.format(BLOB_ID_GENERATING_FORMAT, year, month, randomizerA, randomizerB, UUID.randomUUID()));
     }
 }

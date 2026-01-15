@@ -193,7 +193,7 @@ class DeletedMessagesVaultRoutesTest {
         usersRepository = createUsersRepository();
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
             blobStore, blobStoreDAO, new BucketNameGenerator(clock), clock,
-            new BlobIdTimeGenerator(blobIdFactory, clock),
+            new BlobIdTimeGenerator(clock),
             VaultConfiguration.ENABLED_DEFAULT, usersRepository));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();
         mailboxManager = spy(inMemoryResource.getMailboxManager());

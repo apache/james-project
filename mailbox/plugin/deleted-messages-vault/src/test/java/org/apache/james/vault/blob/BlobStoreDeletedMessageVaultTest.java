@@ -94,7 +94,7 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
                 .blobIdFactory(blobIdFactory)
                 .defaultBucketName()
                 .passthrough(),
-            blobStoreDAO, new BucketNameGenerator(clock), clock, new BlobIdTimeGenerator(blobIdFactory, clock),
+            blobStoreDAO, new BucketNameGenerator(clock), clock, new BlobIdTimeGenerator(clock),
             VaultConfiguration.ENABLED_DEFAULT, usersRepository);
     }
 
