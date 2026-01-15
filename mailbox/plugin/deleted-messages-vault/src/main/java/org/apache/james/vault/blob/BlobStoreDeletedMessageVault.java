@@ -33,9 +33,11 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.vault.DeletedMessage;
@@ -75,23 +77,24 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private final BucketNameGenerator nameGenerator;
     private final Clock clock;
     private final VaultConfiguration vaultConfiguration;
-    private final BlobIdTimeGenerator blobIdTimeGenerator;
     private final UsersRepository usersRepository;
     private final BlobStoreVaultGarbageCollectionTask.Factory taskFactory;
 
     @Inject
     public BlobStoreDeletedMessageVault(MetricFactory metricFactory, DeletedMessageMetadataVault messageMetadataVault,
-                                        BlobStore blobStore, BlobStoreDAO blobStoreDAO, BucketNameGenerator nameGenerator,
-                                        Clock clock, BlobIdTimeGenerator blobIdTimeGenerator,
-                                        VaultConfiguration vaultConfiguration, UsersRepository usersRepository) {
+                                        BlobStoreDAO blobStoreDAO, BucketNameGenerator nameGenerator,
+                                        Clock clock, VaultConfiguration vaultConfiguration, UsersRepository usersRepository) {
         this.metricFactory = metricFactory;
         this.messageMetadataVault = messageMetadataVault;
-        this.blobStore = blobStore;
+        this.blobStore = BlobStoreFactory.builder()
+            .blobStoreDAO(blobStoreDAO)
+            .blobIdFactory(new PlainBlobId.Factory())
+            .defaultBucketName()
+            .passthrough();
         this.blobStoreDAO = blobStoreDAO;
         this.nameGenerator = nameGenerator;
         this.clock = clock;
         this.vaultConfiguration = vaultConfiguration;
-        this.blobIdTimeGenerator = blobIdTimeGenerator;
         this.usersRepository = usersRepository;
         this.taskFactory = new BlobStoreVaultGarbageCollectionTask.Factory(this);
     }
@@ -141,7 +144,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
 
     private BlobStore.BlobIdProvider<InputStream> withTimePrefixBlobId() {
         return data -> Mono.just(Tuples.of(
-            blobIdTimeGenerator.currentBlobId(),
+            BlobIdTimeGenerator.currentBlobId(clock),
             data));
     }
 

@@ -85,6 +85,10 @@
             <artifactId>blob-memory</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>blob-storage-strategy</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>${james.groupId}</groupId>

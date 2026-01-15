@@ -33,7 +33,7 @@ class BlobIdTimeGeneratorTest {
 
     @Test
     void currentBlobIdShouldReturnBlobIdFormattedWithYearAndMonthPrefix() {
-        String currentBlobId = new BlobIdTimeGenerator(CLOCK).currentBlobId().asString();
+        String currentBlobId = BlobIdTimeGenerator.currentBlobId(CLOCK).asString();
 
         assertThat(currentBlobId).matches("2007/07/././.*");
     }

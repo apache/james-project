@@ -112,7 +112,6 @@ import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageZipper;
 import org.apache.james.vault.VaultConfiguration;
-import org.apache.james.vault.blob.BlobIdTimeGenerator;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.blob.BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO;
 import org.apache.james.vault.blob.BucketNameGenerator;
@@ -192,8 +191,7 @@ class DeletedMessagesVaultRoutesTest {
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
         usersRepository = createUsersRepository();
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
-            blobStore, blobStoreDAO, new BucketNameGenerator(clock), clock,
-            new BlobIdTimeGenerator(clock),
+            blobStoreDAO, new BucketNameGenerator(clock), clock,
             VaultConfiguration.ENABLED_DEFAULT, usersRepository));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();
         mailboxManager = spy(inMemoryResource.getMailboxManager());

@@ -46,14 +46,11 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessage;
@@ -80,7 +77,6 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
         clock = new UpdatableTickingClock(NOW.toInstant());
         metricFactory = new RecordingMetricFactory();
         MemoryBlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
-        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
 
         DomainList domainList = mock(DomainList.class);
         Mockito.when(domainList.containsDomain(any())).thenReturn(true);
@@ -89,12 +85,7 @@ class BlobStoreDeletedMessageVaultTest implements DeletedMessageVaultContract, D
         usersRepository.addUser(USERNAME_2, PASSWORD);
 
         messageVault = new BlobStoreDeletedMessageVault(metricFactory, new MemoryDeletedMessageMetadataVault(),
-            BlobStoreFactory.builder()
-                .blobStoreDAO(blobStoreDAO)
-                .blobIdFactory(blobIdFactory)
-                .defaultBucketName()
-                .passthrough(),
-            blobStoreDAO, new BucketNameGenerator(clock), clock, new BlobIdTimeGenerator(clock),
+            blobStoreDAO, new BucketNameGenerator(clock), clock,
             VaultConfiguration.ENABLED_DEFAULT, usersRepository);
     }
 

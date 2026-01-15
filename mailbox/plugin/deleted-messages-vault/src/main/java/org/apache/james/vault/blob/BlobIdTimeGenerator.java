@@ -23,8 +23,6 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
@@ -32,14 +30,7 @@ import org.apache.james.blob.api.PlainBlobId;
 public class BlobIdTimeGenerator {
     public static final String BLOB_ID_GENERATING_FORMAT = "%d/%02d/%s/%s/%s";
 
-    private final Clock clock;
-
-    @Inject
-    public BlobIdTimeGenerator(Clock clock) {
-        this.clock = clock;
-    }
-
-    BlobId currentBlobId() {
+    static BlobId currentBlobId(Clock clock) {
         ZonedDateTime now = ZonedDateTime.now(clock);
         int month = now.getMonthValue();
         int year = now.getYear();
