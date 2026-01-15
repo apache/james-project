@@ -139,6 +139,8 @@ import reactor.core.publisher.Mono;
 
 class DeletedMessagesVaultRoutesTest {
 
+    private MemoryBlobStoreDAO blobStoreDAO;
+
     private static class NoopBlobExporting implements BlobExportMechanism {
         private Optional<BlobId> exportedBlobId = Optional.empty();
 
@@ -156,7 +158,7 @@ class DeletedMessagesVaultRoutesTest {
         }
     }
 
-    private static final ZonedDateTime NOW = ZonedDateTime.parse("2015-10-30T16:12:00Z");
+    private static final ZonedDateTime NOW = ZonedDateTime.parse("2016-10-30T16:12:00Z");
     private static final ZonedDateTime OLD_DELETION_DATE = ZonedDateTime.parse("2010-10-30T15:12:00Z");
     private static final String MATCH_ALL_QUERY = "{" +
         "\"combinator\": \"and\"," +
@@ -182,7 +184,7 @@ class DeletedMessagesVaultRoutesTest {
     @BeforeEach
     void beforeEach() throws Exception {
         blobIdFactory = new PlainBlobId.Factory();
-        MemoryBlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
+        this.blobStoreDAO = spy(new MemoryBlobStoreDAO());
         blobStore = spy(BlobStoreFactory.builder()
             .blobStoreDAO(blobStoreDAO)
             .blobIdFactory(blobIdFactory)
@@ -2044,6 +2046,11 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void oldPurgeShouldNotDeleteNotExpiredMessagesInTheVault() {
+
+            Mono.from(vault.appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+
+            clock.setInstant(NOW.toInstant());
             DeletedMessage notExpiredMessage = DeletedMessage.builder()
                 .messageId(InMemoryMessageId.of(46))
                 .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
@@ -2055,11 +2062,6 @@ class DeletedMessagesVaultRoutesTest {
                 .hasAttachment(false)
                 .size(CONTENT.length)
                 .build();
-
-            Mono.from(vault.appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-            Mono.from(vault.appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
-
-            clock.setInstant(NOW.toInstant());
 
             Mono.from(vault.appendV1(notExpiredMessage, new ByteArrayInputStream(CONTENT))).block();
 
@@ -2130,6 +2132,11 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void purgeShouldNotDeleteNotExpiredMessagesInTheVault() {
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+
+            clock.setInstant(NOW.toInstant());
+
             DeletedMessage notExpiredMessage = DeletedMessage.builder()
                 .messageId(InMemoryMessageId.of(46))
                 .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
@@ -2141,11 +2148,6 @@ class DeletedMessagesVaultRoutesTest {
                 .hasAttachment(false)
                 .size(CONTENT.length)
                 .build();
-
-            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
-
-            clock.setInstant(NOW.toInstant());
 
             Mono.from(vault.append(notExpiredMessage, new ByteArrayInputStream(CONTENT))).block();
 
@@ -2192,7 +2194,7 @@ class DeletedMessagesVaultRoutesTest {
                 Mono.from(vault.appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
                 doReturn(Mono.error(new RuntimeException("mock exception")))
-                    .when(blobStore)
+                    .when(blobStoreDAO)
                     .deleteBucket(BucketName.of("deleted-messages-2010-10-01"));
 
                 clock.setInstant(NOW.toInstant());
