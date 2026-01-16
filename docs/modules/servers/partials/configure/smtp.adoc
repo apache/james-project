@@ -111,10 +111,14 @@ can be used to enforce strong authentication mechanisms.
 | auth.oidc.scope
 | An OAuth scope that is valid to access the service (RF: RFC7628). Only configure this when you want to authenticate SMTP server using a OIDC provider.
 
+| auth.oidc.aud
+| An OAuth audience to access the service (RF: RFC7628). Only configure this when you want to authenticate IMAP server using a OIDC provider.
+
 | auth.oidc.introspection.url
 | Optional. An OAuth introspection token URL will be called to validate the token (RF: RFC7662).
 Only configure this when you want to validate the revocation token by the OIDC provider.
 Note that James always verifies the signature of the token even whether this configuration is provided or not.
+This endpoint is expected to return `aud`.
 
 | auth.oidc.introspection.auth
 | Optional. Provide Authorization in header request when introspecting token.
