@@ -29,6 +29,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import io.jsonwebtoken.Claims;
@@ -132,16 +133,28 @@ public class JwtTokenVerifier {
         }
     }
 
+    public Optional<Claims> verify(String token) {
+        try {
+            // if the token contains a kid, verify only with the corresponding key (or fail)
+            return retrieveClaims(token, kidJwtParser);
+        } catch (NullPointerException npe) { // our own key locator throws NPE when there is no kid
+            // if token does not specify kid, fallback to trying all keys
+            return jwtParsers.stream()
+                .flatMap(parser -> retrieveClaims(token, parser).stream())
+                .findFirst();
+        }
+    }
+
     private <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType, JwtParser parser) {
+        return retrieveClaims(token, parser)
+            .map(Throwing.function(claims -> Optional.ofNullable(claims.get(claimName, returnType))
+                .orElseThrow(() -> new MalformedJwtException("'" + claimName + "' field in token is mandatory"))));
+    }
+
+    private Optional<Claims> retrieveClaims(String token, JwtParser parser) {
         try {
             Jws<Claims> jws = parser.parseSignedClaims(token);
-            T claim = jws
-                .getPayload()
-                .get(claimName, returnType);
-            if (claim == null) {
-                throw new MalformedJwtException("'" + claimName + "' field in token is mandatory");
-            }
-            return Optional.of(claim);
+            return Optional.of(jws.getPayload());
         } catch (JwtException e) { // also if kid was given but our locator didn't find the corresponding key
             LOGGER.info("Failed Jwt verification", e);
             return Optional.empty();
