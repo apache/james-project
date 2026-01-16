@@ -62,6 +62,25 @@ Whether to enable Authentication PLAIN if the connection is not encrypted via SS
 | auth.oidc.scope
 | An OAuth scope that is valid to access the service (RF: RFC7628). Only configure this when you want to authenticate IMAP server using a OIDC provider.
 
+| auth.oidc.aud
+| An OAuth audience to access the service (RF: RFC7628). Only configure this when you want to authenticate IMAP server using a OIDC provider.
+
+| auth.oidc.introspection.url
+| Optional. An OAuth introspection token URL will be called to validate the token (RF: RFC7662).
+Only configure this when you want to validate the revocation token by the OIDC provider.
+Note that James always verifies the signature of the token even whether this configuration is provided or not.
+This endpoint is expected to return `aud`.
+
+| auth.oidc.introspection.auth
+| Optional. Provide Authorization in header request when introspecting token.
+Eg: `Basic xyz`
+
+| auth.oidc.userinfo.url
+| Optional. An Userinfo URL will be called to validate the token (RF: OpenId.Core https://openid.net/specs/openid-connect-core-1_0.html).
+Only configure this when you want to validate the revocation token by the OIDC provider.
+Note that James always verifies the signature of the token even whether this configuration is provided or not.
+James will ignore check token by userInfo if the `auth.oidc.introspection.url` is already configured
+
 | auth.adminUsers.adminUser
 | XML list of administrators able to impersonate any IMAP users. This is typically enable on non publicly exposed IMAP servers eg port 994 for admin support or migration.
 
