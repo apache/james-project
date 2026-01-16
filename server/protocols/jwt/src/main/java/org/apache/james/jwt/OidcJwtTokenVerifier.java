@@ -73,7 +73,10 @@ public class OidcJwtTokenVerifier {
     @VisibleForTesting
     Optional<String> verifySignatureAndExtractClaim(String jwtToken) {
         return new JwtTokenVerifier(JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL()))
-            .verifyAndExtractClaim(jwtToken, oidcSASLConfiguration.getClaim(), String.class);
+            .verify(jwtToken)
+            .filter(claims -> oidcSASLConfiguration.getAud().map(expectedAud -> claims.getAudience().contains(expectedAud))
+                .orElse(true)) // true if no aud is configured
+            .flatMap(claims -> Optional.ofNullable(claims.get(oidcSASLConfiguration.getClaim(), String.class)));
     }
 
     @VisibleForTesting
