@@ -32,6 +32,7 @@ import org.apache.mailet.base.AutomaticallySentMailDetector;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class VacationReply {
 
@@ -47,6 +48,7 @@ public class VacationReply {
         public static final boolean NOT_REPLY_TO_ALL = false;
         private final Mail originalMail;
         private MailAddress mailRecipient;
+        private MailAddress replyRecipient;
         private Vacation vacation;
 
         private Builder(Mail originalMail) {
@@ -65,18 +67,24 @@ public class VacationReply {
             return this;
         }
 
+        public Builder replyRecipient(MailAddress replyRecipient) {
+            this.replyRecipient = replyRecipient;
+            return this;
+        }
+
         public VacationReply build(MimeMessageBodyGenerator mimeMessageBodyGenerator) throws MessagingException {
             Preconditions.checkState(mailRecipient != null, "Original recipient address should not be null");
+            Preconditions.checkState(replyRecipient != null, "Reply recipient address should not be null");
             Preconditions.checkState(originalMail.hasSender(), "Original sender address should not be null");
 
-            return new VacationReply(mailRecipient, originalMail.getMaybeSender().asList(), generateMimeMessage(mimeMessageBodyGenerator));
+            return new VacationReply(mailRecipient, ImmutableList.of(replyRecipient), generateMimeMessage(mimeMessageBodyGenerator));
         }
 
         private MimeMessage generateMimeMessage(MimeMessageBodyGenerator mimeMessageBodyGenerator) throws MessagingException {
             MimeMessage reply = (MimeMessage) originalMail.getMessage().reply(NOT_REPLY_TO_ALL);
-            vacation.getSubject().ifPresent(Throwing.consumer(subjectString -> reply.setSubject(subjectString)));
+            vacation.getSubject().ifPresent(Throwing.consumer(reply::setSubject));
             reply.setHeader(FROM_HEADER, mailRecipient.toString());
-            reply.setHeader(TO_HEADER, originalMail.getMaybeSender().get().asString());
+            reply.setHeader(TO_HEADER, replyRecipient.asString());
             reply.setHeader(AutomaticallySentMailDetector.AUTO_SUBMITTED_HEADER, AutomaticallySentMailDetector.AUTO_REPLIED_VALUE);
 
             return mimeMessageBodyGenerator.from(reply, vacation.getTextBody(), vacation.getHtmlBody());

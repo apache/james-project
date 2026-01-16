@@ -4,3 +4,8 @@ This mailet uses https://jmap.io/spec-mail.html#vacation-response[JMAP VacationR
 sends back a vacation notice to the sender if needed.
 
 The `useUserAsMailFrom` property can be set to true to use the user as the transport sender instead of `MAIL FROM: <>`.
+
+The `replyMode` property determine how we compute the recipient of the vacation reply:
+ - `replyToHeader` (default mode) we lookup the `Reply-To` field of the incoming email
+ - `envelope` (legacy, here to enable backward behavioural compatibility) use the MAIL FROM of the original mail, which could
+not be faked but suffers in case of redirections, forwards and sender address rewrites.

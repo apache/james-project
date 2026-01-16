@@ -161,7 +161,34 @@ public class VacationMailetTest {
             .thenReturn(Mono.just(VACATION));
         when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
         when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
-        when(vacationService.isNotificationRegistered(ACCOUNT_ID, recipientId)).thenReturn(Mono.just(false));
+        when(vacationService.isNotificationRegistered(any(), any())).thenReturn(Mono.just(false));
+
+        testee.service(FakeMail.builder()
+            .name("name")
+            .mimeMessage(
+                MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("brokenReplyTo.eml")))
+            .sender(originalSender)
+            .recipient(originalRecipient)
+            .build());
+
+        verify(mailetContext).sendMail(eq(MailAddress.nullSender()), eq(ImmutableList.of(new MailAddress("invalid@domain.com"))), any());
+        verifyNoMoreInteractions(mailetContext);
+    }
+
+    @Test
+    public void shouldSendNotificationToMailFromWhenEnvelopeReplyMode() throws Exception {
+        when(vacationService.retrieveVacation(AccountId.fromString(USERNAME)))
+            .thenReturn(Mono.just(VACATION));
+        when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
+        when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
+        when(vacationService.isNotificationRegistered(any(), any())).thenReturn(Mono.just(false));
+
+
+        testee.init(FakeMailetConfig.builder()
+            .mailetName("vacation")
+            .mailetContext(mailetContext)
+            .setProperty("replyMode", "envelope")
+            .build());
 
         testee.service(FakeMail.builder()
             .name("name")
