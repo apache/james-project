@@ -82,7 +82,10 @@ public class OidcJwtTokenVerifier {
                 .map(kidValue -> JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL(), kidValue))
                 .orElse(JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL()));
         return new JwtTokenVerifier(jwksPublicKeyProvider)
-            .verifyAndExtractClaim(jwtToken, oidcSASLConfiguration.getClaim(), String.class);
+            .verify(jwtToken)
+            .filter(claims -> oidcSASLConfiguration.getAud().map(expectedAud -> claims.getAudience().contains(expectedAud))
+                .orElse(true)) // true if no aud is configured
+            .flatMap(claims -> Optional.ofNullable(claims.get(oidcSASLConfiguration.getClaim(), String.class)));
     }
 
     private <T> Optional<T> getClaimWithoutSignatureVerification(String token, String claimName) {
