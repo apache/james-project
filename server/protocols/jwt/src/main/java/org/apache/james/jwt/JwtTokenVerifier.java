@@ -37,7 +37,6 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Locator;
-import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.io.CompressionAlgorithm;
 
 public class JwtTokenVerifier {
@@ -121,27 +120,33 @@ public class JwtTokenVerifier {
     }
 
     public <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType) {
+        return verify(token)
+            .flatMap(claims -> {
+                try {
+                    return Optional.ofNullable(claims.get(claimName, returnType));
+                } catch (JwtException e) {
+                    LOGGER.info("Failed Jwt verification", e);
+                    return Optional.empty();
+                }
+            });
+    }
+
+    public Optional<Claims> verify(String token) {
         try {
             // if the token contains a kid, verify only with the corresponding key (or fail)
-            return verifyAndExtractClaim(token, claimName, returnType, kidJwtParser);
+            return retrieveClaims(token, kidJwtParser);
         } catch (NullPointerException npe) { // our own key locator throws NPE when there is no kid
             // if token does not specify kid, fallback to trying all keys
             return jwtParsers.stream()
-                .flatMap(parser -> verifyAndExtractClaim(token, claimName, returnType, parser).stream())
+                .flatMap(parser -> retrieveClaims(token, parser).stream())
                 .findFirst();
         }
     }
 
-    private <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType, JwtParser parser) {
+    private Optional<Claims> retrieveClaims(String token, JwtParser parser) {
         try {
             Jws<Claims> jws = parser.parseSignedClaims(token);
-            T claim = jws
-                .getPayload()
-                .get(claimName, returnType);
-            if (claim == null) {
-                throw new MalformedJwtException("'" + claimName + "' field in token is mandatory");
-            }
-            return Optional.of(claim);
+            return Optional.of(jws.getPayload());
         } catch (JwtException e) { // also if kid was given but our locator didn't find the corresponding key
             LOGGER.info("Failed Jwt verification", e);
             return Optional.empty();
