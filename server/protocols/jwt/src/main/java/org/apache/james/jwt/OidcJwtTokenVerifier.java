@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import io.jsonwebtoken.JwtException;
 import reactor.core.publisher.Mono;
 
 public class OidcJwtTokenVerifier {
@@ -72,11 +73,16 @@ public class OidcJwtTokenVerifier {
 
     @VisibleForTesting
     Optional<String> verifySignatureAndExtractClaim(String jwtToken) {
-        return new JwtTokenVerifier(JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL()))
-            .verify(jwtToken)
-            .filter(claims -> oidcSASLConfiguration.getAud().map(expectedAud -> claims.getAudience().contains(expectedAud))
-                .orElse(true)) // true if no aud is configured
-            .flatMap(claims -> Optional.ofNullable(claims.get(oidcSASLConfiguration.getClaim(), String.class)));
+        try {
+            return new JwtTokenVerifier(JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL()))
+                .verify(jwtToken)
+                .filter(claims -> oidcSASLConfiguration.getAud().map(expectedAud -> claims.getAudience().contains(expectedAud))
+                    .orElse(true)) // true if no aud is configured
+                .flatMap(claims -> Optional.ofNullable(claims.get(oidcSASLConfiguration.getClaim(), String.class)));
+        } catch (JwtException e) {
+            LOGGER.info("Failed Jwt verification", e);
+            return Optional.empty();
+        }
     }
 
     @VisibleForTesting
