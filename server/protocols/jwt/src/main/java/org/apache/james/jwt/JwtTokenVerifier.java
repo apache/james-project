@@ -25,7 +25,6 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import io.jsonwebtoken.Claims;
@@ -33,7 +32,6 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
 
 public class JwtTokenVerifier {
 
@@ -63,21 +61,21 @@ public class JwtTokenVerifier {
     }
 
     public <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType) {
-        return jwtParsers.stream()
-            .flatMap(parser -> verifyAndExtractClaim(token, claimName, returnType, parser).stream())
-            .findFirst();
+        return verify(token)
+            .flatMap(claims -> {
+                try {
+                    return Optional.ofNullable(claims.get(claimName, returnType));
+                } catch (JwtException e) {
+                    LOGGER.info("Failed Jwt verification", e);
+                    return Optional.empty();
+                }
+            });
     }
 
     public Optional<Claims> verify(String token) {
         return jwtParsers.stream()
             .flatMap(parser -> retrieveClaims(token, parser).stream())
             .findFirst();
-    }
-
-    private <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType, JwtParser parser) {
-        return retrieveClaims(token, parser)
-            .map(Throwing.function(claims -> Optional.ofNullable(claims.get(claimName, returnType))
-                .orElseThrow(() -> new MalformedJwtException("'" + claimName + "' field in token is mandatory"))));
     }
 
     private Optional<Claims> retrieveClaims(String token, JwtParser parser) {
