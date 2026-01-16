@@ -77,15 +77,20 @@ public class OidcJwtTokenVerifier {
 
     @VisibleForTesting
     Optional<String> verifySignatureAndExtractClaim(String jwtToken) {
-        Optional<String> unverifiedClaim = getClaimWithoutSignatureVerification(jwtToken, "kid");
-        PublicKeyProvider jwksPublicKeyProvider = unverifiedClaim
+        try {
+            Optional<String> unverifiedClaim = getClaimWithoutSignatureVerification(jwtToken, "kid");
+            PublicKeyProvider jwksPublicKeyProvider = unverifiedClaim
                 .map(kidValue -> JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL(), kidValue))
                 .orElse(JwksPublicKeyProvider.of(oidcSASLConfiguration.getJwksURL()));
-        return new JwtTokenVerifier(jwksPublicKeyProvider)
-            .verify(jwtToken)
-            .filter(claims -> oidcSASLConfiguration.getAud().map(expectedAud -> claims.getAudience().contains(expectedAud))
-                .orElse(true)) // true if no aud is configured
-            .flatMap(claims -> Optional.ofNullable(claims.get(oidcSASLConfiguration.getClaim(), String.class)));
+            return new JwtTokenVerifier(jwksPublicKeyProvider)
+                .verify(jwtToken)
+                .filter(claims -> oidcSASLConfiguration.getAud().map(expectedAud -> claims.getAudience().contains(expectedAud))
+                    .orElse(true)) // true if no aud is configured
+                .flatMap(claims -> Optional.ofNullable(claims.get(oidcSASLConfiguration.getClaim(), String.class)));
+        } catch (JwtException e) {
+            LOGGER.info("Failed Jwt verification", e);
+            return Optional.empty();
+        }
     }
 
     private <T> Optional<T> getClaimWithoutSignatureVerification(String token, String claimName) {
