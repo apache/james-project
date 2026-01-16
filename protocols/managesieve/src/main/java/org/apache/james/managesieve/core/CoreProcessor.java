@@ -96,6 +96,9 @@ public class CoreProcessor implements CoreCommands {
 
     private Map<Capabilities, String> computeCapabilityMap(Session session) {
         Map<Capabilities, String> capabilities = Maps.newHashMap(capabilitiesBase);
+        if (!session.isSslEnabled()) {
+            capabilities.put(Capabilities.STARTTLS, null);
+        }
         if (session.isAuthenticated()) {
             capabilities.put(Capabilities.OWNER, session.getUser().asString());
         }
@@ -345,7 +348,6 @@ public class CoreProcessor implements CoreCommands {
         Map<Capabilities, String> capabilitiesBase = new HashMap<>();
         capabilitiesBase.put(Capabilities.IMPLEMENTATION, IMPLEMENTATION_DESCRIPTION);
         capabilitiesBase.put(Capabilities.VERSION, MANAGE_SIEVE_VERSION);
-        capabilitiesBase.put(Capabilities.STARTTLS, null);
         if (!extensions.isEmpty()) {
             capabilitiesBase.put(Capabilities.SIEVE, extensions);
         }
