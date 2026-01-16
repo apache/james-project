@@ -29,7 +29,6 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import io.jsonwebtoken.Claims;
@@ -38,7 +37,6 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Locator;
-import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.io.CompressionAlgorithm;
 
 public class JwtTokenVerifier {
@@ -122,15 +120,15 @@ public class JwtTokenVerifier {
     }
 
     public <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType) {
-        try {
-            // if the token contains a kid, verify only with the corresponding key (or fail)
-            return verifyAndExtractClaim(token, claimName, returnType, kidJwtParser);
-        } catch (NullPointerException npe) { // our own key locator throws NPE when there is no kid
-            // if token does not specify kid, fallback to trying all keys
-            return jwtParsers.stream()
-                .flatMap(parser -> verifyAndExtractClaim(token, claimName, returnType, parser).stream())
-                .findFirst();
-        }
+        return verify(token)
+            .flatMap(claims -> {
+                try {
+                    return Optional.ofNullable(claims.get(claimName, returnType));
+                } catch (JwtException e) {
+                    LOGGER.info("Failed Jwt verification", e);
+                    return Optional.empty();
+                }
+            });
     }
 
     public Optional<Claims> verify(String token) {
@@ -143,12 +141,6 @@ public class JwtTokenVerifier {
                 .flatMap(parser -> retrieveClaims(token, parser).stream())
                 .findFirst();
         }
-    }
-
-    private <T> Optional<T> verifyAndExtractClaim(String token, String claimName, Class<T> returnType, JwtParser parser) {
-        return retrieveClaims(token, parser)
-            .map(Throwing.function(claims -> Optional.ofNullable(claims.get(claimName, returnType))
-                .orElseThrow(() -> new MalformedJwtException("'" + claimName + "' field in token is mandatory"))));
     }
 
     private Optional<Claims> retrieveClaims(String token, JwtParser parser) {
