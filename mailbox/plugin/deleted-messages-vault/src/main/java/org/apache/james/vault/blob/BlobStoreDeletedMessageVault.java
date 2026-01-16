@@ -198,9 +198,9 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
 
     private Mono<Void> deleteMessage(Username username, MessageId messageId) {
         return Mono.from(messageMetadataVault.retrieveStorageInformation(username, messageId))
-            .flatMap(storageInformation -> Mono.from(messageMetadataVault.remove(storageInformation.getBucketName(), username, messageId))
-                .thenReturn(storageInformation))
-            .flatMap(storageInformation -> Mono.from(blobStoreDAO.delete(storageInformation.getBucketName(), storageInformation.getBlobId())));
+            .flatMap(storageInformation -> Mono.from(blobStoreDAO.delete(storageInformation.getBucketName(), storageInformation.getBlobId()))
+                .onErrorResume(ObjectNotFoundException.class, e -> Mono.empty())
+                .then(Mono.from(messageMetadataVault.remove(storageInformation.getBucketName(), username, messageId))));
     }
 
     @Override
@@ -212,8 +212,8 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         return Flux.from(
             metricFactory.decoratePublisherWithTimerMetric(
                 DELETE_EXPIRED_MESSAGES_METRIC_NAME,
-                deletedExpiredMessagesFromOldBuckets(beginningOfRetentionPeriod, context)
-                    .then(deleteUserExpiredMessages(beginningOfRetentionPeriod, context))))
+                deleteUserExpiredMessages(beginningOfRetentionPeriod, context)
+                    .then(deletedExpiredMessagesFromOldBuckets(beginningOfRetentionPeriod, context).then())))
             .then();
     }
 
@@ -257,7 +257,9 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         return Flux.from(usersRepository.listReactive())
             .flatMap(username -> Flux.from(messageMetadataVault.listMessages(bucketName, username))
                 .filter(deletedMessage -> isMessageFullyExpired(beginningOfRetentionPeriod, deletedMessage))
-                .flatMap(deletedMessage -> Mono.from(messageMetadataVault.remove(bucketName, username, deletedMessage.getDeletedMessage().getMessageId()))
+                .flatMap(deletedMessage -> Mono.from(blobStoreDAO.delete(bucketName, deletedMessage.getStorageInformation().getBlobId()))
+                    .onErrorResume(ObjectNotFoundException.class, e -> Mono.empty())
+                    .then(Mono.from(messageMetadataVault.remove(bucketName, username, deletedMessage.getDeletedMessage().getMessageId())))
                     .doOnSuccess(any -> context.recordDeletedBlobSuccess())))
             .then();
     }
