@@ -113,10 +113,11 @@ can be used to enforce strong authentication mechanisms.
 
 | auth.oidc.aud
 | An OAuth audience to access the service (RF: RFC7628). Only configure this when you want to authenticate IMAP server using a OIDC provider.
+Compulsory but can be relaxed with `-Djames.sasl.oidc.validate.aud=false`
 
 | auth.oidc.introspection.url
 | Optional. An OAuth introspection token URL will be called to validate the token (RF: RFC7662).
-Only configure this when you want to validate the revocation token by the OIDC provider.
+Required to harden access token validation, but can be relaxed with `-Djames.sasl.oidc.force.introspect=false`
 Note that James always verifies the signature of the token even whether this configuration is provided or not.
 This endpoint is expected to return `aud`.
 
@@ -125,10 +126,8 @@ This endpoint is expected to return `aud`.
 Eg: `Basic xyz`
 
 | auth.oidc.userinfo.url
-| Optional. An Userinfo URL will be called to validate the token (RF: OpenId.Core https://openid.net/specs/openid-connect-core-1_0.html).
-Only configure this when you want to validate the revocation token by the OIDC provider.
-Note that James always verifies the signature of the token even whether this configuration is provided or not.
-James will ignore check token by userInfo if the `auth.oidc.introspection.url` is already configured
+| Optional. An Userinfo URL will be called to retrieve additional user information
+(RF: OpenId.Core https://openid.net/specs/openid-connect-core-1_0.html).
 
 | authorizedAddresses
 | Authorize specific addresses/networks.
