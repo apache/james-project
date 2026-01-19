@@ -117,9 +117,7 @@ Compulsory but can be relaxed with `-Djames.sasl.oidc.validate.aud=false`
 
 | auth.oidc.introspection.url
 | Optional. An OAuth introspection token URL will be called to validate the token (RF: RFC7662).
-Required to harden access token validation, but can be relaxed with `-Djames.sasl.oidc.force.introspect=false`
 Note that James always verifies the signature of the token even whether this configuration is provided or not.
-This endpoint is expected to return `aud`.
 
 | auth.oidc.introspection.auth
 | Optional. Provide Authorization in header request when introspecting token.
