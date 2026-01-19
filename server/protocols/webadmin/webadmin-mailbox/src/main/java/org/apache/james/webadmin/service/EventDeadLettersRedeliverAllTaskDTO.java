@@ -21,7 +21,9 @@ package org.apache.james.webadmin.service;
 import static org.apache.james.webadmin.service.EventDeadLettersRedeliverService.RunningOptions;
 
 import java.util.Optional;
+import java.util.Set;
 
+import org.apache.james.events.Group;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -30,11 +32,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class EventDeadLettersRedeliverAllTaskDTO implements TaskDTO {
 
-    public static TaskDTOModule<EventDeadLettersRedeliverAllTask, EventDeadLettersRedeliverAllTaskDTO> module(EventDeadLettersRedeliverService service) {
+    public static TaskDTOModule<EventDeadLettersRedeliverAllTask, EventDeadLettersRedeliverAllTaskDTO> module(EventDeadLettersRedeliverService service,
+                                                                                                              Set<Group> nonCriticalGroups) {
         return DTOModule
             .forDomainObject(EventDeadLettersRedeliverAllTask.class)
             .convertToDTO(EventDeadLettersRedeliverAllTaskDTO.class)
-            .toDomainObjectConverter(dto -> new EventDeadLettersRedeliverAllTask(service, dto.getRunningOptions()))
+            .toDomainObjectConverter(dto -> new EventDeadLettersRedeliverAllTask(service, dto.getRunningOptions(), nonCriticalGroups))
             .toDTOConverter((domainObject, typeName) -> new EventDeadLettersRedeliverAllTaskDTO(typeName, domainObject.getRunningOptions()))
             .typeName(EventDeadLettersRedeliverAllTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);

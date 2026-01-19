@@ -20,12 +20,15 @@
 package org.apache.james.webadmin.service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.events.Event;
 import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventDeadLettersHealthCheck;
 import org.apache.james.events.Group;
 import org.apache.james.task.Task;
 
@@ -37,12 +40,16 @@ import reactor.core.publisher.Mono;
 public class EventDeadLettersService {
     private final EventDeadLettersRedeliverService redeliverService;
     private final EventDeadLetters deadLetters;
+    private final Set<Group> nonCriticalGroups;
 
     @Inject
     @VisibleForTesting
-    public EventDeadLettersService(EventDeadLettersRedeliverService redeliverService, EventDeadLetters deadLetters) {
+    public EventDeadLettersService(EventDeadLettersRedeliverService redeliverService,
+                                   EventDeadLetters deadLetters,
+                                   @Named(EventDeadLettersHealthCheck.DEAD_LETTERS_IGNORED_GROUPS) Set<Group> nonCriticalGroups) {
         this.redeliverService = redeliverService;
         this.deadLetters = deadLetters;
+        this.nonCriticalGroups = nonCriticalGroups;
     }
 
     public List<String> listGroupsAsStrings() {
@@ -73,7 +80,7 @@ public class EventDeadLettersService {
     }
 
     public Task redeliverAllEvents(EventDeadLettersRedeliverService.RunningOptions runningOptions) {
-        return new EventDeadLettersRedeliverAllTask(redeliverService, runningOptions);
+        return new EventDeadLettersRedeliverAllTask(redeliverService, runningOptions, nonCriticalGroups);
     }
 
     public Task redeliverGroupEvents(Group group, EventDeadLettersRedeliverService.RunningOptions runningOptions) {

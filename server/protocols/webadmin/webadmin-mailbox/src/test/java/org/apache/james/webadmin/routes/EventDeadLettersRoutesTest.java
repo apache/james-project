@@ -31,6 +31,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
+import java.util.Set;
+
 import org.apache.james.core.Username;
 import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.Event;
@@ -127,7 +129,7 @@ class EventDeadLettersRoutesTest {
         eventBus1 = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.DEFAULT, deadLetters);
         eventBus2 = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.DEFAULT, deadLetters);
         EventDeadLettersRedeliverService redeliverService = new EventDeadLettersRedeliverService(ImmutableSet.of(eventBus1, eventBus2), deadLetters);
-        EventDeadLettersService service = new EventDeadLettersService(redeliverService, deadLetters);
+        EventDeadLettersService service = new EventDeadLettersService(redeliverService, deadLetters, Set.of());
 
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         webAdminServer = WebAdminUtils.createWebAdminServer(

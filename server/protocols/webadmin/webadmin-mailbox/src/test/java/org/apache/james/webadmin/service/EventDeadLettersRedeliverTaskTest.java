@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.events.EventDeadLetters;
@@ -41,7 +42,8 @@ import org.junit.jupiter.api.Test;
 class EventDeadLettersRedeliverTaskTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
     private static final EventDeadLettersRedeliverService SERVICE = mock(EventDeadLettersRedeliverService.class);
-    private static final EventDeadLettersRedeliverAllTask TASK_ALL = new EventDeadLettersRedeliverAllTask(SERVICE, EventDeadLettersRedeliverService.RunningOptions.DEFAULT);
+    private static final Set<Group> NON_CRITICAL_GROUPS = Set.of();
+    private static final EventDeadLettersRedeliverAllTask TASK_ALL = new EventDeadLettersRedeliverAllTask(SERVICE, EventDeadLettersRedeliverService.RunningOptions.DEFAULT, NON_CRITICAL_GROUPS);
     private static final EventDeadLettersRedeliverGroupTask TASK_GROUP = new EventDeadLettersRedeliverGroupTask(SERVICE, new GenericGroup("abc"), EventDeadLettersRedeliverService.RunningOptions.DEFAULT);
     private static final EventDeadLettersRedeliverOneTask TASK_ONE = new EventDeadLettersRedeliverOneTask(SERVICE, new GenericGroup("abc"), EventDeadLetters.InsertionId.of("fcbc3c92-e9a0-4ece-94ed-6e6b45045258"));
 
@@ -58,7 +60,7 @@ class EventDeadLettersRedeliverTaskTest {
 
     @Test
     void redeliverAllTaskShouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliverAllTaskDTO.module(SERVICE))
+        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliverAllTaskDTO.module(SERVICE, NON_CRITICAL_GROUPS))
             .bean(TASK_ALL)
             .json("{" +
                 "    \"type\": \"event-dead-letters-redeliver-all\"," +
@@ -66,9 +68,9 @@ class EventDeadLettersRedeliverTaskTest {
                 "}")
             .verify();
 
-        EventDeadLettersRedeliverAllTask taskAllWithLimit = new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.limit(10)));
+        EventDeadLettersRedeliverAllTask taskAllWithLimit = new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.limit(10)), NON_CRITICAL_GROUPS);
 
-        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliverAllTaskDTO.module(SERVICE))
+        JsonSerializationVerifier.dtoModule(EventDeadLettersRedeliverAllTaskDTO.module(SERVICE, NON_CRITICAL_GROUPS))
             .bean(taskAllWithLimit)
             .json("{\"type\":\"event-dead-letters-redeliver-all\", \"runningOptions\":{\"limit\": 10}}")
             .verify();
@@ -76,19 +78,19 @@ class EventDeadLettersRedeliverTaskTest {
 
     @Test
     void redeliverAllTaskShouldDeserializationSuccess() throws Exception {
-        JsonTaskSerializer serializer = JsonTaskSerializer.of(EventDeadLettersRedeliverAllTaskDTO.module(SERVICE));
+        JsonTaskSerializer serializer = JsonTaskSerializer.of(EventDeadLettersRedeliverAllTaskDTO.module(SERVICE, NON_CRITICAL_GROUPS));
 
         assertThat(serializer.deserialize("{\"type\":\"event-dead-letters-redeliver-all\", \"runningOptions\":{\"limit\": 10}}"))
             .usingRecursiveComparison()
-            .isEqualTo(new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.limit(10))));
+            .isEqualTo(new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.limit(10)), NON_CRITICAL_GROUPS));
 
         assertThat(serializer.deserialize("{\"type\":\"event-dead-letters-redeliver-all\", \"runningOptions\":{}}"))
             .usingRecursiveComparison()
-            .isEqualTo(new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.unlimited())));
+            .isEqualTo(new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.unlimited()), NON_CRITICAL_GROUPS));
 
         assertThat(serializer.deserialize("{\"type\":\"event-dead-letters-redeliver-all\"}"))
             .usingRecursiveComparison()
-            .isEqualTo(new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.unlimited())));
+            .isEqualTo(new EventDeadLettersRedeliverAllTask(SERVICE, new RunningOptions(Limit.unlimited()), NON_CRITICAL_GROUPS));
     }
 
     @Test
