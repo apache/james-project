@@ -136,14 +136,6 @@ public class OidcSASLConfiguration {
         String userInfoUrl = configuration.getString("userinfo.url", null);
         String aud = configuration.getString("aud", null);
 
-        if (introspectionUrl == null) {
-            if (Boolean.parseBoolean(System.getProperty("james.sasl.oidc.force.introspect", "true"))) {
-                throw new IllegalArgumentException("'introspection.url' is mandatory for secure set up. Disable this check with -Djames.sasl.oidc.force.introspect=false.");
-            } else {
-                LOGGER.warn("'introspection.url' is mandatory for secure set up. This check was disabled with -Djames.sasl.oidc.force.introspect=false.");
-            }
-        }
-
         if (aud == null) {
             if (Boolean.parseBoolean(System.getProperty("james.sasl.oidc.validate.aud", "true"))) {
                 throw new IllegalArgumentException("'aud' is mandatory for secure set up. Disable this check with -Djames.sasl.oidc.validate.aud=false.");
