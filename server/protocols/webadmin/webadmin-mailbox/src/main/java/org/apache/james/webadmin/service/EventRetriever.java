@@ -21,19 +21,13 @@ package org.apache.james.webadmin.service;
 
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.james.events.Event;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.Group;
-import org.reactivestreams.Publisher;
-
-import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -84,20 +78,9 @@ public interface EventRetriever {
         public Flux<Tuple3<Group, Event, EventDeadLetters.InsertionId>> retrieveEvents(EventDeadLetters deadLetters) {
             return deadLetters.groupsWithFailedEvents()
                 .collectList()
-                .flatMapMany(prioritizeCriticalGroups(deadLetters));
-        }
-
-        private Function<List<Group>, Publisher<Tuple3<Group, Event, EventDeadLetters.InsertionId>>> prioritizeCriticalGroups(EventDeadLetters deadLetters) {
-            return groups -> {
-                Map<Boolean, List<Group>> groupsByCriticality = groups.stream()
-                    .collect(Collectors.partitioningBy(group -> !this.nonCriticalGroups.contains(group)));
-
-                return Flux.concat(
-                    Flux.fromIterable(groupsByCriticality.getOrDefault(true, ImmutableList.of()))
-                        .flatMap(group -> listGroupEvents(deadLetters, group), DEFAULT_CONCURRENCY),
-                    Flux.fromIterable(groupsByCriticality.getOrDefault(false, ImmutableList.of()))
-                        .flatMap(group -> listGroupEvents(deadLetters, group), DEFAULT_CONCURRENCY));
-            };
+                .flatMapMany(groups -> Flux.fromIterable(groups)
+                    .sort(Comparator.comparing(this.nonCriticalGroups::contains))
+                    .flatMapSequential(group -> listGroupEvents(deadLetters, group), DEFAULT_CONCURRENCY));
         }
     }
 
