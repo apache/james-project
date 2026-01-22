@@ -18,6 +18,11 @@
  ****************************************************************/
 package org.apache.james.modules.server;
 
+import static org.apache.james.events.EventDeadLettersHealthCheck.DEAD_LETTERS_IGNORED_GROUPS;
+
+import java.util.Set;
+
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
@@ -52,8 +57,9 @@ import com.google.inject.name.Named;
 
 public class WebadminMailboxTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
-    public TaskDTOModule<? extends Task, ? extends TaskDTO> eventDeadLettersRedeliverAllTask(EventDeadLettersRedeliverService service) {
-        return EventDeadLettersRedeliverAllTaskDTO.module(service);
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> eventDeadLettersRedeliverAllTask(EventDeadLettersRedeliverService service,
+                                                                                             @Named(DEAD_LETTERS_IGNORED_GROUPS) Set<Group> nonCriticalGroups) {
+        return EventDeadLettersRedeliverAllTaskDTO.module(service, nonCriticalGroups);
     }
 
     @ProvidesIntoSet

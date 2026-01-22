@@ -23,8 +23,10 @@ import static org.apache.james.webadmin.service.EventDeadLettersRedeliverService
 
 import java.time.Clock;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.james.events.Group;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
@@ -39,9 +41,9 @@ public class EventDeadLettersRedeliverAllTask implements Task {
     private final AtomicLong failedRedeliveriesCount;
     private final RunningOptions runningOptions;
 
-    EventDeadLettersRedeliverAllTask(EventDeadLettersRedeliverService service, RunningOptions runningOptions) {
+    EventDeadLettersRedeliverAllTask(EventDeadLettersRedeliverService service, RunningOptions runningOptions, Set<Group> nonCriticalGroups) {
         this.service = service;
-        this.eventRetriever = EventRetriever.allEvents();
+        this.eventRetriever = EventRetriever.allEvents(nonCriticalGroups);
         this.successfulRedeliveriesCount = new AtomicLong(0L);
         this.failedRedeliveriesCount = new AtomicLong(0L);
         this.runningOptions = runningOptions;

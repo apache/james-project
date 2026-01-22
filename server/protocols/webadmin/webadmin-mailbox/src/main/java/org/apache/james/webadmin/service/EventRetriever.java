@@ -21,7 +21,9 @@ package org.apache.james.webadmin.service;
 
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.james.events.Event;
 import org.apache.james.events.EventDeadLetters;
@@ -32,8 +34,8 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple3;
 
 public interface EventRetriever {
-    static EventRetriever allEvents() {
-        return new AllEventsRetriever();
+    static EventRetriever allEvents(Set<Group> nonCriticalGroups) {
+        return new AllEventsRetriever(nonCriticalGroups);
     }
 
     static EventRetriever groupEvents(Group group) {
@@ -56,6 +58,12 @@ public interface EventRetriever {
     }
 
     class AllEventsRetriever implements EventRetriever {
+        private final Set<Group> nonCriticalGroups;
+
+        AllEventsRetriever(Set<Group> nonCriticalGroups) {
+            this.nonCriticalGroups = nonCriticalGroups;
+        }
+
         @Override
         public Optional<Group> forGroup() {
             return Optional.empty();
@@ -69,7 +77,10 @@ public interface EventRetriever {
         @Override
         public Flux<Tuple3<Group, Event, EventDeadLetters.InsertionId>> retrieveEvents(EventDeadLetters deadLetters) {
             return deadLetters.groupsWithFailedEvents()
-                .flatMap(group -> listGroupEvents(deadLetters, group), DEFAULT_CONCURRENCY);
+                .collectList()
+                .flatMapMany(groups -> Flux.fromIterable(groups)
+                    .sort(Comparator.comparing(this.nonCriticalGroups::contains))
+                    .flatMapSequential(group -> listGroupEvents(deadLetters, group), DEFAULT_CONCURRENCY));
         }
     }
 
