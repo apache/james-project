@@ -56,7 +56,7 @@ public class IndexerConfigurationBeanFactoryPostProcessor implements BeanFactory
                 reIndexer = "reindexer-impl";
             } else if (provider.equalsIgnoreCase("luceneIndex")) {
                 indexer = "luceneIndex";
-                reIndexer = "fake-reindexer";
+                reIndexer = "reindexer-impl";
             }
 
             if (indexer == null) {

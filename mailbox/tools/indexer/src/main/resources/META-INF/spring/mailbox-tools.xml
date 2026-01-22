@@ -23,9 +23,15 @@
        xsi:schemaLocation="
           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id ="reindexer-impl" class="org.apache.mailbox.tools.indexer.ReIndexerImpl" lazy-init="true">
+    <bean id="reindexer-performer" class="org.apache.mailbox.tools.indexer.ReIndexerPerformer" lazy-init="true">
         <constructor-arg index="0" ref="mailboxmanager"/>
         <constructor-arg index="1" ref="indexer"/>
+        <constructor-arg index="2" ref="messageMapperFactory"/>
+    </bean>
+
+    <bean id ="reindexer-impl" class="org.apache.mailbox.tools.indexer.ReIndexerImpl" lazy-init="true">
+        <constructor-arg index="0" ref="reindexer-performer"/>
+        <constructor-arg index="1" ref="mailboxmanager"/>
         <constructor-arg index="2" ref="messageMapperFactory"/>
     </bean>
 
