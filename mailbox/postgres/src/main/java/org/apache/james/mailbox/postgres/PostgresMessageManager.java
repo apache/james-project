@@ -76,7 +76,6 @@ public class PostgresMessageManager extends StoreMessageManager {
         this.mailbox = mailbox;
     }
 
-
     @Override
     public Flags getPermanentFlags(MailboxSession session) {
         Flags flags = super.getPermanentFlags(session);
