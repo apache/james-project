@@ -25,6 +25,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.core.Username;
 import org.apache.james.events.Event;
@@ -64,6 +65,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     private final PostgresAttachmentDAO.Factory attachmentDAOFactory;
     private final PostgresThreadDAO.Factory threadDAOFactory;
     private final EventBus contentDeletionEventBus;
+    private final PostgresConfiguration postgresConfiguration;
 
     @Inject
     public DeleteMessageListener(BlobStore blobStore,
@@ -71,13 +73,15 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                                  PostgresMessageDAO.Factory messageDAOFactory,
                                  PostgresAttachmentDAO.Factory attachmentDAOFactory,
                                  PostgresThreadDAO.Factory threadDAOFactory,
-                                 @Named(CONTENT_DELETION) EventBus contentDeletionEventBus) {
+                                 @Named(CONTENT_DELETION) EventBus contentDeletionEventBus,
+                                 PostgresConfiguration postgresConfiguration) {
         this.messageDAOFactory = messageDAOFactory;
         this.mailboxMessageDAOFactory = mailboxMessageDAOFactory;
         this.blobStore = blobStore;
         this.attachmentDAOFactory = attachmentDAOFactory;
         this.threadDAOFactory = threadDAOFactory;
         this.contentDeletionEventBus = contentDeletionEventBus;
+        this.postgresConfiguration = postgresConfiguration;
     }
 
     @Override
@@ -141,7 +145,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
             .flatMap(msgId -> postgresMessageDAO.retrieveMessage(messageId)
                 .flatMap(messageRepresentation -> dispatchMessageContentDeletionEvent(mailboxId, owner, messageRepresentation))
                 .then(deleteBodyBlob(msgId, postgresMessageDAO))
-                .then(deleteAttachment(msgId, attachmentDAO))
+                .then(deleteAttachmentIfEnabled(msgId, attachmentDAO))
                 .then(threadDAO.deleteSome(owner, msgId))
                 .then(postgresMessageDAO.deleteByMessageId(msgId)));
     }
@@ -187,5 +191,12 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         return attachmentDAO.listBlobsByMessageId(messageId)
             .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId)), ReactorUtils.DEFAULT_CONCURRENCY)
             .then();
+    }
+
+    private Mono<Void> deleteAttachmentIfEnabled(PostgresMessageId messageId, PostgresAttachmentDAO attachmentDAO) {
+        if (postgresConfiguration.isAttachmentStorageEnabled()) {
+            return deleteAttachment(messageId, attachmentDAO);
+        }
+        return Mono.empty();
     }
 }

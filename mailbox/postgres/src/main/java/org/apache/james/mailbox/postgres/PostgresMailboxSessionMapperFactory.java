@@ -65,6 +65,8 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final Clock clock;
     private final RowLevelSecurity rowLevelSecurity;
     private final AttachmentIdAssignationStrategy attachmentIdAssignationStrategy;
+    private final boolean attachmentStorageEnabled;
+    private final PostgresConfiguration postgresConfiguration;
 
     @Inject
     public PostgresMailboxSessionMapperFactory(PostgresExecutor.Factory executorFactory,
@@ -78,7 +80,9 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         this.blobIdFactory = blobIdFactory;
         this.clock = clock;
         this.rowLevelSecurity = postgresConfiguration.getRowLevelSecurity();
+        this.attachmentStorageEnabled = postgresConfiguration.isAttachmentStorageEnabled();
         this.attachmentIdAssignationStrategy = attachmentIdAssignationStrategy;
+        this.postgresConfiguration = postgresConfiguration;
     }
 
     @Override
@@ -146,14 +150,17 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         return createAttachmentMapper(session);
     }
 
+    public boolean isAttachmentStorageEnabled() {
+        return attachmentStorageEnabled;
+    }
+
     @VisibleForTesting
     protected DeleteMessageListener deleteMessageListener(EventBus contentDeletionEventBus) {
         PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(blobIdFactory, executorFactory);
         PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(executorFactory);
         PostgresAttachmentDAO.Factory attachmentDAOFactory = new PostgresAttachmentDAO.Factory(executorFactory, blobIdFactory);
         PostgresThreadDAO.Factory threadDAOFactory = new PostgresThreadDAO.Factory(executorFactory);
-
         return new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory,
-            attachmentDAOFactory, threadDAOFactory, contentDeletionEventBus);
+            attachmentDAOFactory, threadDAOFactory, contentDeletionEventBus, postgresConfiguration);
     }
 }
