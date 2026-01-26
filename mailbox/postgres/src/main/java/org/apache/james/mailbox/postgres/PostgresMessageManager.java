@@ -87,6 +87,7 @@ public class PostgresMessageManager extends StoreMessageManager {
             return new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), threadIdGuessingAlgorithm, clock);
         }
     }
+
     @Override
     public Flags getPermanentFlags(MailboxSession session) {
         Flags flags = super.getPermanentFlags(session);
