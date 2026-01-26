@@ -69,13 +69,24 @@ public class PostgresMessageManager extends StoreMessageManager {
                                   StoreRightManager storeRightManager, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
                                   Clock clock, PreDeletionHooks preDeletionHooks) {
         super(StoreMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
-            quotaManager, quotaRootResolver, batchSizes, storeRightManager, preDeletionHooks,
-            new MessageStorer.WithAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), mapperFactory, messageParser, threadIdGuessingAlgorithm, clock));
+                quotaManager, quotaRootResolver, batchSizes, storeRightManager, preDeletionHooks,
+                createMessageStorer(mapperFactory, messageIdFactory, messageParser, threadIdGuessingAlgorithm, clock));
         this.storeRightManager = storeRightManager;
         this.mapperFactory = mapperFactory;
         this.mailbox = mailbox;
     }
 
+    private static MessageStorer createMessageStorer(PostgresMailboxSessionMapperFactory mapperFactory,
+                                                     MessageId.Factory messageIdFactory,
+                                                     MessageParser messageParser,
+                                                     ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                                     Clock clock) {
+        if (mapperFactory.isAttachmentStorageEnabled()) {
+            return new MessageStorer.WithAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), mapperFactory, messageParser, threadIdGuessingAlgorithm, clock);
+        } else {
+            return new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), threadIdGuessingAlgorithm, clock);
+        }
+    }
     @Override
     public Flags getPermanentFlags(MailboxSession session) {
         Flags flags = super.getPermanentFlags(session);
