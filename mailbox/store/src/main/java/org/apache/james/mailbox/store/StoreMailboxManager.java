@@ -89,6 +89,7 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.util.AuditTrail;
 import org.apache.james.util.FunctionalUtils;
+import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -380,14 +381,14 @@ public class StoreMailboxManager implements MailboxManager {
                         .modifyErrorFilter(old -> old.and(e -> !(e instanceof MailboxException)))
                         .jitter(0.5)
                         .maxBackoff(Duration.ofSeconds(1)))
-                    .doOnSuccess(mailboxId -> AuditTrail.entry()
+                    .flatMap(mailboxId -> ReactorUtils.logAsMono(() -> AuditTrail.entry()
                         .username(() -> sanitizedMailboxPath.getUser().asString())
                         .sessionId(() -> String.valueOf(mailboxSession.getSessionId().getValue()))
                         .protocol("mailbox")
                         .action("create")
                         .parameters(Throwing.supplier(() -> ImmutableMap.of("mailboxId", mailboxId.serialize(),
                             "mailboxPath", sanitizedMailboxPath.asString())))
-                        .log("Mailbox Create"));
+                        .log("Mailbox Create")).thenReturn(mailboxId));
             } catch (MailboxNameException e) {
                 return Mono.error(e);
             }
@@ -682,7 +683,7 @@ public class StoreMailboxManager implements MailboxManager {
 
         return mapper.executeReactive(fromMailboxPublisher
             .flatMap(mailbox -> doRenameMailbox(mailbox, to, fromSession, toSession, mapper)
-                .doOnSuccess(any -> AuditTrail.entry()
+                .doOnEach(ReactorUtils.logFinally(() -> AuditTrail.entry()
                     .username(() -> fromSession.getUser().asString())
                     .sessionId(() -> String.valueOf(fromSession.getSessionId().getValue()))
                     .protocol("mailbox")
@@ -690,7 +691,7 @@ public class StoreMailboxManager implements MailboxManager {
                     .parameters(Throwing.supplier(() -> ImmutableMap.of("mailboxId", mailbox.getMailboxId().serialize(),
                         "fromMailboxPath", mailbox.generateAssociatedPath().asString(),
                         "toMailboxPath", to.asString())))
-                    .log("Mailbox Rename"))
+                    .log("Mailbox Rename")))
                 .flatMap(renamedResults -> renameSubscriptionsIfNeeded(renamedResults, option, fromSession, toSession))));
     }
 

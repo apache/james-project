@@ -746,9 +746,7 @@ class ReactorUtilsTest {
             String key = "key";
 
             Flux.just(1)
-                .doOnEach(ReactorUtils.log(() -> {
-                    assertThat(MDC.get(key)).isEqualTo(value);
-                }))
+                .doOnEach(ReactorUtils.logFinally(() -> assertThat(MDC.get(key)).isEqualTo(value)))
                 .contextWrite(ReactorUtils.context("test", MDCBuilder.ofValue(key, value)))
                 .blockLast();
         }
@@ -760,9 +758,7 @@ class ReactorUtilsTest {
             String key = "key";
 
             Flux.just(1)
-                .doOnEach(ReactorUtils.log(() -> {
-                    assertThat(MDC.get(key)).isEqualTo(value1);
-                }))
+                .doOnEach(ReactorUtils.logFinally(() -> assertThat(MDC.get(key)).isEqualTo(value1)))
                 .contextWrite(ReactorUtils.context("test", MDCBuilder.ofValue(key, value1)))
                 .contextWrite(ReactorUtils.context("test", MDCBuilder.ofValue(key, value2)))
                 .blockLast();
@@ -776,7 +772,7 @@ class ReactorUtilsTest {
             String key2 = "key2";
 
             Flux.just(1)
-                .doOnEach(ReactorUtils.log(() -> {
+                .doOnEach(ReactorUtils.logFinally(() -> {
                     assertThat(MDC.get(key1)).isEqualTo(value1);
                     assertThat(MDC.get(key2)).isEqualTo(value2);
                 }))

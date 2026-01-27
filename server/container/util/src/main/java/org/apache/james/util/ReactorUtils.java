@@ -190,8 +190,12 @@ public class ReactorUtils {
         };
     }
 
-    public static Consumer<Signal<?>> log(Runnable logStatement) {
-        return signal -> logWithContext(logStatement, signal.getContextView());
+    public static Consumer<Signal<?>> logFinally(Runnable logStatement) {
+        return signal -> {
+            if (signal.isOnComplete()) {
+                logWithContext(logStatement, signal.getContextView());
+            }
+        };
     }
 
     private static void logWithContext(Runnable logStatement, ContextView contextView) {
