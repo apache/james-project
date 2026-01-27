@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class AuthenticateTest {
+class AuthenticateTest {
     private ManageSieveClient client;
     private final ManageSieveServerTestSystem testSystem;
 
@@ -159,6 +159,7 @@ public class AuthenticateTest {
         this.client.sendCommand(command);
         ManageSieveClient.ServerResponse firstAuthenticationResponse = this.client.readResponse();
         Assertions.assertThat(firstAuthenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
+        this.client.readResponse(); // Read capabilities
 
         this.client.sendCommand(command);
         ManageSieveClient.ServerResponse secondAuthenticationResponse = this.client.readResponse();
@@ -234,5 +235,6 @@ public class AuthenticateTest {
         this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
+        this.client.readResponse(); // Read capabilities
     }
 }
