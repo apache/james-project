@@ -93,7 +93,7 @@ class ManageSieveMailetTestCase {
         initializeMailet();
         mailet.service(mail);
         ensureResponseContains("Re: CAPABILITY", "\"SIEVE\" \"a b c\"",
-            "\"IMPLEMENTATION\" \"Apache ManageSieve v1.0\"",
+            "\"IMPLEMENTATION\" \"Apache James ManageSieve 3.9.0\"",
             "\"VERSION\" \"1.0\"",
             "\"STARTTLS\"",
             "\"SASL\" \"PLAIN\"",
@@ -109,7 +109,7 @@ class ManageSieveMailetTestCase {
         mail.setAttribute(new Attribute(Mail.SMTP_AUTH_USER, AttributeValue.of("test")));
         mailet.service(mail);
         ensureResponseContains("Re: CAPABILITY", "\"SIEVE\" \"a b c\"",
-            "\"IMPLEMENTATION\" \"Apache ManageSieve v1.0\"",
+            "\"IMPLEMENTATION\" \"Apache James ManageSieve 3.9.0\"",
             "\"OWNER\" \"test@localhost\"",
             "\"VERSION\" \"1.0\"",
             "\"STARTTLS\"",
