@@ -69,6 +69,39 @@ class OidcJwtTokenVerifierTest {
     }
 
     @Test
+    void verifyAndClaimShouldAcceptValidAud() throws Exception {
+        Optional<String> emailAddress = new OidcJwtTokenVerifier(
+            OidcSASLConfiguration.builder()
+                .jwksURL(getJwksURL())
+                .scope("email")
+                .oidcConfigurationURL(new URL("https://whatever.nte"))
+                .claim("email_address")
+                .aud("account")
+                .build())
+            .verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN);
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(emailAddress.isPresent()).isTrue();
+            softly.assertThat(emailAddress.get()).isEqualTo("user@domain.org");
+        });
+    }
+
+    @Test
+    void verifyAndClaimShouldRejectInvalidAud() throws Exception {
+        Optional<String> emailAddress = new OidcJwtTokenVerifier(
+            OidcSASLConfiguration.builder()
+                .jwksURL(getJwksURL())
+                .scope("email")
+                .oidcConfigurationURL(new URL("https://whatever.nte"))
+                .claim("email_address")
+                .aud("other")
+                .build())
+            .verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN);
+
+       assertThat(emailAddress).isEmpty();
+    }
+
+    @Test
     void verifyAndClaimShouldReturnClaimValueWhenValidTokenHasKid() {
         Optional<String> emailAddress = new OidcJwtTokenVerifier(configForClaim("email_address")).verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN);
 
