@@ -121,7 +121,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                             .sneakyThrow())
                         .filter(Objects::nonNull)
                         .concatMap(range -> process(target.getId(), session.getSelected(), mailboxSession, range)
-                            .doOnNext(result -> AuditTrail.entry()
+                            .doOnEach(ReactorUtils.logFinally(() -> AuditTrail.entry()
                                 .username(() -> mailboxSession.getUser().asString())
                                 .sessionId(() -> session.sessionId().asString())
                                 .protocol("IMAP")
@@ -130,7 +130,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                                     "targetId", target.getId().serialize(),
                                     "selectedMailboxId", session.getSelected().getMailboxId().serialize(),
                                     "range", range.getUidFrom().asLong() + ":" + range.getUidTo().asLong()))
-                                .log("IMAP " + getOperationName() + " succeeded."))
+                                .log("IMAP " + getOperationName() + " succeeded.")))
                             .map(IdRange::from))
                         .collect(ImmutableList.<IdRange>toImmutableList())
                         .map(IdRange::mergeRanges)

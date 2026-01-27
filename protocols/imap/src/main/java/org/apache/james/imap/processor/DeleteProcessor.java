@@ -72,7 +72,7 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .then()
-            .doOnSuccess(any -> auditTrail(session, mailboxPath))
+            .doOnEach(ReactorUtils.logFinally(() -> auditTrail(session, mailboxPath)))
             .onErrorResume(MailboxNotFoundException.class, e -> {
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
                 return ReactorUtils.logAsMono(() -> LOGGER.debug("Delete failed for mailbox {} as it doesn't exist", mailboxPath, e));
