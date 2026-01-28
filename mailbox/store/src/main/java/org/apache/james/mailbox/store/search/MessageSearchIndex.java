@@ -52,6 +52,12 @@ public interface MessageSearchIndex {
      */
     Flux<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException;
 
+    default Flux<MessageId> searchWithCollapseThreads(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery,
+                                                      long offset, long limit) throws MailboxException {
+        return Flux.from(search(session, mailboxIds, searchQuery, offset + limit))
+            .skip(offset);
+    }
+
     EnumSet<MailboxManager.SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities);
 
     class SearchResult {

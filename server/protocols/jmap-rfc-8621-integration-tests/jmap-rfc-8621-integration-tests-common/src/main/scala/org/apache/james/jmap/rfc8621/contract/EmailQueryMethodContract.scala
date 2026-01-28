@@ -40,6 +40,7 @@ import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.mailbox.FlagsBuilder
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
@@ -54,7 +55,7 @@ import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
-import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource, ValueSource}
 import org.threeten.extra.Seconds
@@ -7752,6 +7753,152 @@ trait EmailQueryMethodContract {
            |                "position": 0,
            |                "limit": 256,
            |                "ids": ["${messageId3.serialize}", "${messageId1.serialize}"]
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+    }
+  }
+
+  @Test
+  def collapseThreadsShouldApplyOnSearchIndexPath(server: GuiceJamesServer): Unit = {
+    val thread1Message: Message = buildTestThreadMessage("thread-1", "Message-ID-1")
+    val thread2Message: Message = buildTestThreadMessage("thread-2", "Message-ID-2")
+
+    val threeDaysBefore = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
+    val twoDaysBefore = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
+    val oneDayBefore = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+
+    // Thread 1: message 1 (oldest), message 3 (newest)
+    // Thread 2: message 2
+    val messageId1: MessageId = sendMessageToBobInbox(server, thread1Message, threeDaysBefore)
+    val messageId2: MessageId = sendMessageToBobInbox(server, thread2Message, twoDaysBefore)
+    val messageId3: MessageId = sendMessageToBobInbox(server, thread1Message, oneDayBefore)
+
+    val request: String =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "inMailbox": "${mailboxId.serialize()}",
+         |        "text": "testmail"
+         |      },
+         |      "sort": [{
+         |        "property":"receivedAt",
+         |        "isAscending": false
+         |      }],
+         |      "collapseThreads": true
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [[
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState(messageId3, messageId2)}",
+           |                "canCalculateChanges": false,
+           |                "position": 0,
+           |                "limit": 256,
+           |                "ids": ["${messageId3.serialize}", "${messageId2.serialize}"]
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+    }
+  }
+
+  @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def collapseThreadsShouldApplyPaginationOnCollapsedResults(server: GuiceJamesServer): Unit = {
+    val thread1Message: Message = buildTestThreadMessage("thread-1", "Message-ID-1")
+    val thread2Message: Message = buildTestThreadMessage("thread-2", "Message-ID-2")
+    val thread3Message: Message = buildTestThreadMessage("thread-3", "Message-ID-3")
+
+    val fourDaysBefore = Date.from(ZonedDateTime.now().minusDays(4).toInstant)
+    val threeDaysBefore = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
+    val twoDaysBefore = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
+    val oneDayBefore = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+
+    // Thread 1: message 1 (oldest), message 2 (newest)
+    // Thread 2: message 3
+    // Thread 3: message 4
+    val messageId1: MessageId = sendMessageToBobInbox(server, thread1Message, twoDaysBefore)
+    val messageId2: MessageId = sendMessageToBobInbox(server, thread1Message, oneDayBefore)
+    val messageId3: MessageId = sendMessageToBobInbox(server, thread2Message, threeDaysBefore)
+    val messageId4: MessageId = sendMessageToBobInbox(server, thread3Message, fourDaysBefore)
+
+    val request: String =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "inMailbox": "${mailboxId.serialize()}",
+         |        "text": "testmail"
+         |      },
+         |      "sort": [{
+         |        "property":"receivedAt",
+         |        "isAscending": false
+         |      }],
+         |      "position": 1,
+         |      "limit": 2,
+         |      "collapseThreads": true
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response: String = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [[
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState(messageId3, messageId4)}",
+           |                "canCalculateChanges": false,
+           |                "position": 1,
+           |                "ids": ["${messageId3.serialize}", "${messageId4.serialize}"]
            |            },
            |            "c1"
            |        ]]

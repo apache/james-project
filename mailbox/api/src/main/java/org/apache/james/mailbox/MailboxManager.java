@@ -387,6 +387,20 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     Publisher<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit);
 
     /**
+     * Searches for messages matching the given query with collapse threads.
+     *
+     * @param expression
+     *            not null
+     * @param session
+     *            the context for this call, not null
+     * @param offset
+     *            offset to apply on the result set
+     * @param limit
+     *            max number of results to return
+     */
+    Publisher<MessageId> searchWithCollapseThreads(MultimailboxesSearchQuery expression, MailboxSession session, long offset, long limit);
+
+    /**
      * Returns the list of MessageId of messages belonging to that Thread
      *
      * @param threadId

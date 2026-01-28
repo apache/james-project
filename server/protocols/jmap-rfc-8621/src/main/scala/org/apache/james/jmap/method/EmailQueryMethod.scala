@@ -92,6 +92,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     }
 
   private def executeQuery(session: MailboxSession, request: EmailQueryRequest, searchQuery: MultimailboxesSearchQuery, position: Position, limit: Limit): SMono[EmailQueryResponse] = {
+    val collapseThreads: Boolean = getCollapseThreads(request)
     val ids: SMono[Seq[MessageId]] = request match {
       case request: EmailQueryRequest if matchesInMailboxSortedBySentAt(request) =>
         queryViewForListingSortedBySentAt(session, position, limit, request, searchQuery.getNamespace)
@@ -101,7 +102,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
         queryViewForContentAfterSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace)
       case request: EmailQueryRequest if matchesInMailboxBeforeSortedByReceivedAt(request) =>
         queryViewForContentBeforeSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace)
-      case _ => executeQueryAgainstSearchIndex(session, searchQuery, position, limit)
+      case _ => executeQueryAgainstSearchIndex(session, searchQuery, position, limit, collapseThreads)
     }
 
     ids.map(ids => toResponse(request, position, limit, ids))
@@ -199,13 +200,23 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
       position = position,
       limit = Some(limitToUse).filterNot(used => request.limit.map(_.value).contains(used.value)))
 
-  private def executeQueryAgainstSearchIndex(mailboxSession: MailboxSession, searchQuery: MultimailboxesSearchQuery, position: Position, limitToUse: Limit): SMono[Seq[MessageId]] =
-    SFlux.fromPublisher(mailboxManager.search(
-        searchQuery.addCriterion(SearchQuery.flagIsUnSet(DELETED)),
-        mailboxSession,
-        position.value + limitToUse))
-      .drop(position.value)
-      .collectSeq()
+  private def executeQueryAgainstSearchIndex(mailboxSession: MailboxSession, searchQuery: MultimailboxesSearchQuery,
+                                             position: Position, limitToUse: Limit, collapseThreads: Boolean): SMono[Seq[MessageId]] =
+    if (collapseThreads) {
+      SFlux.fromPublisher(mailboxManager.searchWithCollapseThreads(
+          searchQuery.addCriterion(SearchQuery.flagIsUnSet(DELETED)),
+          mailboxSession,
+          position.value,
+          limitToUse.value))
+        .collectSeq()
+    } else {
+      SFlux.fromPublisher(mailboxManager.search(
+          searchQuery.addCriterion(SearchQuery.flagIsUnSet(DELETED)),
+          mailboxSession,
+          position.value + limitToUse.value))
+        .drop(position.value)
+        .collectSeq()
+    }
 
   private def searchQueryFromRequest(request: EmailQueryRequest, capabilities: Set[CapabilityIdentifier], session: MailboxSession): Either[UnsupportedOperationException, MultimailboxesSearchQuery] = {
     val comparators: List[Comparator] = request.sort.getOrElse(Set()).toList
