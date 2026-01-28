@@ -376,6 +376,22 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     }
 
     @Override
+    public Flux<MessageId> searchWithCollapseThreads(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery,
+                                                     long offset, long limit) {
+        Preconditions.checkArgument(session != null, "'session' is mandatory");
+
+        if (mailboxIds.isEmpty()) {
+            return Flux.empty();
+        }
+
+        return searcher.searchCollapsedByThreadId(mailboxIds, searchQuery, Math.toIntExact(offset), Math.toIntExact(limit),
+                MESSAGE_ID_FIELD, !SEARCH_HIGHLIGHT)
+            .handle(this::extractMessageIdFromHit)
+            .distinct()
+            .take(limit);
+    }
+
+    @Override
     public Mono<Void> add(MailboxSession session, Mailbox mailbox, MailboxMessage message) {
         return add(session, mailbox, message, Optional.empty());
     }

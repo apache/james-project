@@ -954,6 +954,14 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public Flux<MessageId> searchWithCollapseThreads(MultimailboxesSearchQuery expression, MailboxSession session, long offset, long limit) {
+        return getInMailboxIds(expression, session)
+            .filter(id -> !expression.getNotInMailboxes().contains(id))
+            .collect(ImmutableSet.toImmutableSet())
+            .flatMapMany(Throwing.function(ids -> index.searchWithCollapseThreads(session, ids, expression.getSearchQuery(), offset, limit)));
+    }
+
+    @Override
     public Flux<MessageId> getThread(ThreadId threadId, MailboxSession session) {
         return threadIdGuessingAlgorithm.getMessageIdsInThread(threadId, session);
     }

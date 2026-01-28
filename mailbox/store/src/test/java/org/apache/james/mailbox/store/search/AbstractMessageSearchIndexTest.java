@@ -289,6 +289,10 @@ public abstract class AbstractMessageSearchIndexTest {
 
     protected abstract MessageId initOtherBasedMessageId();
 
+    protected boolean supportsThreadCollapse() {
+        return false;
+    }
+
     @Test
     void searchingMessageInMultipleMailboxShouldNotReturnTwiceTheSameMessage() throws MailboxException {
         assumeTrue(messageIdManager != null);
@@ -1692,6 +1696,71 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void searchWithCollapseThreadsShouldReturnOneMessagePerThread() throws MailboxException {
+        assumeTrue(supportsThreadCollapse(), "This test is only relevant when collapseThread is supported");
+
+        ThreadId threadId1 = ThreadId.fromBaseMessageId(newBasedMessageId);
+        ThreadId threadId2 = ThreadId.fromBaseMessageId(otherBasedMessageId);
+        MailboxMessage message1 = createMessage(quanMailbox, threadId1);
+        MailboxMessage message2 = createMessage(quanMailbox, threadId1);
+        MailboxMessage message3 = createMessage(quanMailbox, threadId2);
+
+        // Thread 1: message1 and message2
+        // Thread 2: message3
+        appendMessageThenDispatchAddedEvent(quanMailbox, message1);
+        appendMessageThenDispatchAddedEvent(quanMailbox, message2);
+        appendMessageThenDispatchAddedEvent(quanMailbox, message3);
+
+        awaitMessageCount(ImmutableList.of(quanMailbox.getMailboxId()), SearchQuery.matchAll(), 3);
+
+        List<MessageId> allCollapsedMessages = messageSearchIndex.searchWithCollapseThreads(quanSession,
+                ImmutableList.of(quanMailbox.getMailboxId()), SearchQuery.matchAll(), 0, 10)
+            .collectList().block();
+
+        assertThat(allCollapsedMessages).containsExactly(message1.getMessageId(), message3.getMessageId());
+    }
+
+    @Test
+    void searchWithCollapseThreadsShouldApplyPaginationOnCollapsedList() throws MailboxException {
+        assumeTrue(supportsThreadCollapse(), "This test is only relevant when collapseThread is supported");
+
+        ThreadId threadId1 = ThreadId.fromBaseMessageId(newBasedMessageId);
+        ThreadId threadId2 = ThreadId.fromBaseMessageId(otherBasedMessageId);
+        ThreadId threadId3 = ThreadId.fromBaseMessageId(messageIdFactory.generate());
+
+        // Thread1 has two messages; thread2 and thread3 have one each.
+        MailboxMessage thread1Older = createMessage(quanMailbox, threadId1, new Date(1000));
+        MailboxMessage thread1Newer = createMessage(quanMailbox, threadId1, new Date(3000));
+        MailboxMessage thread2Message = createMessage(quanMailbox, threadId2, new Date(2000));
+        MailboxMessage thread3Message = createMessage(quanMailbox, threadId3, new Date(500));
+
+        appendMessageThenDispatchAddedEvent(quanMailbox, thread1Older);
+        appendMessageThenDispatchAddedEvent(quanMailbox, thread1Newer);
+        appendMessageThenDispatchAddedEvent(quanMailbox, thread2Message);
+        appendMessageThenDispatchAddedEvent(quanMailbox, thread3Message);
+
+        awaitMessageCount(ImmutableList.of(quanMailbox.getMailboxId()), SearchQuery.matchAll(), 4);
+
+        SearchQuery searchQuery = SearchQuery.builder()
+            .sorts(new Sort(SortClause.Arrival, Order.REVERSE))
+            .build();
+
+        // With Arrival sort descending, the collapsed list should be ordered by:
+        // 1) thread1 (newest at date=3000), 2) thread2 (date=2000), 3) thread3 (date=500).
+        List<MessageId> allCollapsedMessages = messageSearchIndex.searchWithCollapseThreads(quanSession,
+                ImmutableList.of(quanMailbox.getMailboxId()), searchQuery, 0, 10)
+            .collectList().block();
+
+        // Request offset=1, limit=2 to fetch from the second message (thread2, thread3).
+        List<MessageId> paginatedCollapsedMessages = messageSearchIndex.searchWithCollapseThreads(quanSession,
+                ImmutableList.of(quanMailbox.getMailboxId()), searchQuery, 1, 2)
+            .collectList().block();
+
+        assertThat(allCollapsedMessages).containsExactly(thread1Newer.getMessageId(), thread2Message.getMessageId(), thread3Message.getMessageId());
+        assertThat(paginatedCollapsedMessages).containsExactly(thread2Message.getMessageId(), thread3Message.getMessageId());
+    }
+
+    @Test
     void givenNonThreadThenGetThreadShouldReturnEmptyListMessageId() throws MailboxException {
         // given non messages in thread1
         ThreadId threadId1 = ThreadId.fromBaseMessageId(newBasedMessageId);
@@ -1718,12 +1787,16 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     private SimpleMailboxMessage createMessage(Mailbox mailbox, ThreadId threadId) {
+        return createMessage(mailbox, threadId, new Date());
+    }
+
+    private SimpleMailboxMessage createMessage(Mailbox mailbox, ThreadId threadId, Date internalDate) {
         MessageId messageId = messageIdFactory.generate();
         String content = "Some content";
         int bodyStart = 16;
         return new SimpleMailboxMessage(messageId,
             threadId,
-            new Date(),
+            internalDate,
             content.length(),
             bodyStart,
             new ByteContent(content.getBytes()),

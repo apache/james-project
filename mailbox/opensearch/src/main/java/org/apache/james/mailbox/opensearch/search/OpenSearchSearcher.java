@@ -21,6 +21,7 @@ package org.apache.james.mailbox.opensearch.search;
 
 import static org.apache.james.mailbox.opensearch.search.OpenSearchSearchHighlighter.ATTACHMENT_TEXT_CONTENT_FIELD;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -104,6 +105,18 @@ public class OpenSearchSearcher {
             .searchHits();
     }
 
+    public Flux<Hit<ObjectNode>> searchCollapsedByThreadId(Collection<MailboxId> mailboxIds, SearchQuery query,
+                                                           int offset, int limit, List<String> fields,
+                                                           boolean searchHighlight) {
+        SearchRequest searchRequest = prepareCollapsedSearch(mailboxIds, query, offset, limit, fields, searchHighlight);
+        try {
+            return client.search(searchRequest)
+                .flatMapMany(response -> Flux.fromIterable(response.hits().hits()));
+        } catch (IOException e) {
+            return Flux.error(e);
+        }
+    }
+
     private SearchRequest prepareSearch(Collection<MailboxId> mailboxIds, SearchQuery query,
                                         Optional<Integer> limit, List<String> fields, boolean highlight) {
         List<SortOptions> sorts = query.getSorts()
@@ -119,6 +132,33 @@ public class OpenSearchSearcher {
             .size(computeRequiredSize(limit))
             .storedFields(fields)
             .sort(sorts);
+
+        if (highlight) {
+            request.highlight(highlightQuery);
+        }
+
+        return toRoutingKey(mailboxIds)
+            .map(request::routing)
+            .orElse(request)
+            .build();
+    }
+
+    private SearchRequest prepareCollapsedSearch(Collection<MailboxId> mailboxIds, SearchQuery query, int offset, int limit,
+                                                 List<String> fields, boolean highlight) {
+        List<SortOptions> sorts = query.getSorts()
+            .stream()
+            .flatMap(SortConverter::convertSort)
+            .map(fieldSort -> new SortOptions.Builder().field(fieldSort).build())
+            .collect(Collectors.toList());
+
+        SearchRequest.Builder request = new SearchRequest.Builder()
+            .index(aliasName.getValue())
+            .query(queryConverter.from(mailboxIds, query))
+            .from(offset)
+            .size(limit)
+            .storedFields(fields)
+            .sort(sorts)
+            .collapse(collapse -> collapse.field(JsonMessageConstants.THREAD_ID));
 
         if (highlight) {
             request.highlight(highlightQuery);

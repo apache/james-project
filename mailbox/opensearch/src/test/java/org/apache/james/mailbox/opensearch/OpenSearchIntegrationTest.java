@@ -185,6 +185,11 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         return InMemoryMessageId.of(1000);
     }
 
+    @Override
+    protected boolean supportsThreadCollapse() {
+        return true;
+    }
+
     @Test
     void theDocumentShouldBeReindexWithNewMailboxWhenMoveMessages() throws Exception {
         // Given mailboxA, mailboxB. Add message in mailboxA
