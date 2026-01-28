@@ -2,5 +2,6 @@
 :navtitle: listeners.xml
 
 :sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:pages-path: postgres
 :server-name: Postgresql James server
 include::partial$configure/listeners.adoc[]

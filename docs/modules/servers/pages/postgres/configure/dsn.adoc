@@ -4,4 +4,5 @@
 :sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
 :pages-path: distributed
 :mailet-repository-path-prefix: postgres
+:server-name: Postgresql James server
 include::partial$configure/dsn.adoc[]

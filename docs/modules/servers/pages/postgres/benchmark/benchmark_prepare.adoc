@@ -1,4 +1,5 @@
 === Postgresql prepare benchmark
+:server-name: Postgresql James server
 
 ==== Install extension pg_stat_statements
 
@@ -31,9 +32,10 @@ The response fields that we are interested in are:
 
 To view the statistics, run the following query:
 
-```sql
+[source,sql]
+----
 select query, mean_exec_time, total_exec_time, calls from pg_stat_statements order by total_exec_time desc;
-```
+----
 
 The result sample:
 

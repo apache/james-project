@@ -28,6 +28,7 @@ xref:protocols/imap.adoc[IMAP].
 The User will have no indication anywhere that the server is a James server.
 
 
+[#_operator]
 == Operator
 
 An **Operator** installs and runs James for the benefit of Users.
@@ -36,10 +37,11 @@ The Operator does not compile any Java code, and does not require any software
 development environment. 
 
 Apache James offers Operators a range of servers for various use cases, including:
+
  * A xref:servers:basic/index.adoc[Basic Server] ideal for busy Operators who
    are interested in an easy-to-use self-hosting solution, but who may not have the
    time to gain deep expertise
- * An xref:server/advanced/index.adoc[Advanced Server] well-suited for Operators with
+ * An xref:servers:extendable/index.adoc[Advanced Server] well-suited for Operators with
    advanced skills and resources who are not daunted by getting their hands dirty
    with configurations or using built-in extensions
 
@@ -49,7 +51,7 @@ Apache James offers Operators a range of servers for various use cases, includin
 
 An **Integrator** has some expertise with Java or a JVM-based language. Based 
 on this expertise the Integrator can perform more advanced server configurations and may
-develop xref:xxx.adoc[Extensions] to customize the behavior of a James server.
+develop xref:customization:index.adoc[Extensions] to customize the behavior of a James server.
 
 An Integrator does **not** need to download the source code or compile James.
 

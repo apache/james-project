@@ -3,5 +3,6 @@
 
 :server-name: Distributed James Server
 :specialized-instances-file-name: specialized-instances-distributed.png
-
+:xref-base: distributed
+:backend-name: cassandra
 include::partial$architecture/specialized-instances.adoc[]

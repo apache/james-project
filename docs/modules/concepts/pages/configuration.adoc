@@ -16,7 +16,7 @@ server to behave. It is very similar to an interface, but yet it is not quite an
 An "interface" provides a means for an Operator to interact with a server as part of the
 normal course of ongoing operations. Interfacing with the system essentially means either
 reading the server's current state, or updating the server's current state. A typical example
-would be adding a new mailbox via the xref:concepts:???.adoc[Useradmin API]. Each time the Operator
+would be adding a new mailbox via the xref:concepts:operation/webadmin.adoc#_useradmin_api[Useradmin API]. Each time the Operator
 interacts with the system via an interface, although the *state* of the system may change, 
 the *behavior* of the system is not expected to change.
 

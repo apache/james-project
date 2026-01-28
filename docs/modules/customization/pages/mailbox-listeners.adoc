@@ -9,24 +9,27 @@ To do so, extend the *GroupMailboxListener* defined in the *mailbox-api*.
 
 Here is the dependency:
 
-....
+[source,xml]
+----
 <dependency>
     <groupId>org.apache.james</groupId>
     <artifactId>apache-james-mailbox-api</artifactId>
 </dependency>
-....
+----
 
 Here are the methods you can implement:
 
-....
+[source,java]
+----
     void event(Event event) throws Exception;
-....
+----
 
 allows you to specify the business logic you want to execute upon new events generation.
 
-....
+[source,java]
+----
     boolean isHandling(Event event);
-....
+----
 
 Allows to know if this event is worth execution, and should be sent on the EventBus. This avoids execution of non
 handled events and can save some IOs.
