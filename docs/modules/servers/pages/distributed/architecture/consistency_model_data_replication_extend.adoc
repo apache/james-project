@@ -1,4 +1,6 @@
 === Cassandra consistency model
+:server-name: Distributed James Server
+:xref-base: distributed
 
 link:https://cassandra.apache.org/[Cassandra] is an
 link:https://en.wikipedia.org/wiki/Eventual_consistency[eventually consistent] data store.

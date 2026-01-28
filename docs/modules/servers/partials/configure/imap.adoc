@@ -172,7 +172,8 @@ This enables both:
 
 Example:
 
-....
+[source,xml]
+----
     <imapserver>
         <!-- ... -->
         <trafficShaping>
@@ -182,7 +183,7 @@ Example:
             <maxDelays>15000</maxDelays>
         </trafficShaping>
     </imapserver>
-....
+----
 
 Those tags maps to the corresponding Netty argument.
 
@@ -205,7 +206,8 @@ throttling on this specific entry.
 
 Sample configuration:
 
-....
+[source,xml]
+----
 <imapserver>
   <!-- ... -->
   <perSessionCommandThrottling>
@@ -224,7 +226,7 @@ Sample configuration:
     </append>
   </perSessionCommandThrottling>
 </imapserver>
-....
+----
 
 Note that commands are delayed prior the execution and thus are not subject to the IMAP upper concurrency limit until
 they are executed.
@@ -265,10 +267,11 @@ being configurable.
 
 Example:
 
-....
+[source,xml]
+----
 <imapserver>
   <partialBodyFetchCacheEnabled>true</partialBodyFetchCacheEnabled>
   <partialBodyFetchCacheDuration>2min</partialBodyFetchCacheDuration>
   <partialBodyFetchCacheSize>500 MiB</partialBodyFetchCacheSize>
 </imapserver>
-....
+----

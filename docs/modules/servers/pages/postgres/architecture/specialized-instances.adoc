@@ -3,5 +3,6 @@
 
 :server-name: Postgresql James server
 :specialized-instances-file-name: specialized-instances-postgres.png
-
+:xref-base: postgres
+:backend-name: PostgreSQL
 include::partial$architecture/specialized-instances.adoc[]

@@ -5,7 +5,8 @@ James allows defining your own handler packages.
 
 An Imap package is a simple class that bundles IMAP processing components:
 
-....
+[source,java]
+----
 public interface ImapPackage {
     Collection<ClassName> processors();
 
@@ -13,7 +14,7 @@ public interface ImapPackage {
 
     Collection<ClassName> encoders();
 }
-....
+----
 
 Processors needs to be of class `AbstractProcessor`, decoders of class `AbstractImapCommandParser`
 and encoders of class `ImapResponseEncoder`. Extensions-jar mechanism can be used to load custom classes.
@@ -29,18 +30,20 @@ See this page for xref:imap.adoc#_extending_imap[more details on configuring IMA
 James allows defining your own additional connection checks to guarantee that the connecting IP is secured.
 
 A custom connection check should implement the following functional interface:
-```
+[source,java]
+----
 @FunctionalInterface
 public interface ConnectionCheck {
     Publisher<Void> validate(InetSocketAddress remoteAddress);
 }
-```
+----
 
 - `validate` method is used to check the connecting IP is secured.
 
 Then the custom defined ConnectionCheck can be added in `imapserver.xml` file:
-```
+[source,xml]
+----
 <additionalConnectionChecks>org.apache.james.CrowdsecImapConnectionCheck</additionalConnectionChecks>
-```
+----
 
 An example for configuration is available link:https://github.com/apache/james-project/blob/master/third-party/crowdsec/sample-configuration/imapserver.xml[here].

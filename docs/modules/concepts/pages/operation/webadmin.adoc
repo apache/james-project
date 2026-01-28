@@ -1,0 +1,12 @@
+= Webadmin api
+:navtitle: Web administration API
+
+The web administration supports for now the CRUD operations on the domains, the users, their mailboxes and their quotas,
+managing mail repositories, performing database or storage migrations, and much more.
+
+This section provides an overview of the most common resources. You can refer to each xref:servers:index.adoc[servers] specific documentation for detailed actionable examples.
+
+[#_useradmin_api]
+== Useradmin API
+
+(TODO include a general description of the main web admin APIs, )

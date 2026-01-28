@@ -12,7 +12,8 @@ communicating with a distant party.
 
 IMF is very basic, and is limited to only specifying a syntax for text messages.  
 For the transmission of images, audio, or other types of data we need to make
-use of the xref:mail/messages/mime.adoc[MIME] specification. 
+
+use of the xref:concepts:messages/mime.adoc[MIME] specification.
 Although IMF forms the base standard upon which
 email is based, email today is rarely used without MIME. We therefore consider
 for practical purposes that an email message is essentially the equivalent of
@@ -38,11 +39,11 @@ a (potentially empty) sequence of lines of text.
 
 Although this sounds like an extremely simple concept, to get two completely separate systems
 to agree and understand each other is a surprisingly complex problem that most people
-today take for granted. Most of RFC822 deals with the nitty-gritty of formatting and parsing
+today take for granted. Most of <<RFC822>> deals with the nitty-gritty of formatting and parsing
 this type of text message.
 
 This specification deals with the headers, additionally relating them to the sending and
-forwarding of messages. The body content is dealt with in <<RFC2045>>
+forwarding of messages. The body content is dealt with in xref:concepts:messages/mime.adoc#_rfc2045[RFC2045]
 
 
 
@@ -53,7 +54,7 @@ obsoletes <<RFC822>>, and was obsoleted by <<RFC5322>>.
 
 The standard builds on RFC822, but limits its scope to only the sytax of the 
 message, and obsoletes much of what was defined by RFC822. The envelope was
-split into a separate specification, <<RFC2821>>.
+split into a separate specification, xref:concepts:protocols/smtp.adoc#_rfc2821[RFC2821].
 
 
 

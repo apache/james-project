@@ -27,4 +27,4 @@ The default configuration of the Basic Server includes the following features:
 We have disabled all of the insecure communications and require SSL. If you have
 a specific requirement to use an insecure protocol, or if the above list does not
 satisfy your needs, then after having successfully set up this server you may want
-to move on to the xref:extendable.adoc[Extendable Server].
+to move on to the xref:servers:extendable/extending.adoc[Extendable Server].

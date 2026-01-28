@@ -1,6 +1,7 @@
 = Building and publishing the website
+:path: src/homepage
 
-The source code of website https://james.apache.org[james.apache.org] is located in src/homepage.
+The source code of website https://james.apache.org[james.apache.org] is located in {path}.
 Here are the instructions how to publish new changes to the website.
 
 1. Install Apache Maven 3.0.2+ and make its binary 'mvn' available on your PATH.

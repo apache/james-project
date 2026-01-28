@@ -26,6 +26,7 @@ Writing xref:imap.adoc[IMAP extensions].
 
 The link:https://github.com/apache/james-project/tree/master/examples[examples] are also a good reference.
 
+[#_handling_injections_for_your_extensions]
 == Handling injections for your extensions
 
 === Injecting core components
@@ -36,7 +37,8 @@ All you need is to pass them via a constructor annotated via *@Inject*.
 
 For instance:
 
-....
+[source,java]
+----
 public class MyMailet extends GenericMailet {
     private final UsersRepository usersRepository;
 
@@ -50,7 +52,7 @@ public class MyMailet extends GenericMailet {
         // Do something
     }
 }
-....
+----
 
 === Injecting simple extension components
 
@@ -58,8 +60,8 @@ Furthermore, concrete implementation, that are part of your extension, can be in
 
 Consider the following example:
 
-....
-
+[source,java]
+----
 public class MyService {
 
 }
@@ -77,7 +79,7 @@ public class MyMailet extends GenericMailet {
         // Do something
     }
 }
-....
+----
 
 === Defining custom injections for your extensions
 
@@ -85,21 +87,24 @@ However, to inject an interface into your extension, you will need additional in
 
 To so:
 
- * 1. Given an interface defined in an additional JAR:
+* 1. Given an interface defined in an additional JAR:
 
-....
+[source,java]
+----
 public interface MyService {}
-....
+----
 
- * 2. And an implementation of that interface, in another additional JAR:
+* 2. And an implementation of that interface, in another additional JAR:
 
-....
+[source,java]
+----
 public class MyServiceImpl extends MyService {}
-....
+----
 
- * 3. We need to define a binding for MyService to be bound to MyServiceImpl
+* 3. We need to define a binding for MyService to be bound to MyServiceImpl
 
-....
+[source,java]
+----
 public class MyServiceModule extends AbstractModule {
     @Override
     protected void configure() {
@@ -107,16 +112,17 @@ public class MyServiceModule extends AbstractModule {
         bind(MyService.class).to(MyServiceImpl.class);
     }
 }
-....
+----
 
 Both *MyService*, *MyServiceImpl* and *MyServiceModule* needs to be in the *extensions-jars*
 folder (potentially different jars).
 
- * 4. *MyServiceModule* needs to be registered in xref:distributed/configure/extensions.adoc[*extensions.properties*]
+* 4. *MyServiceModule* needs to be registered in xref:servers:distributed/configure/extensions.adoc[*extensions.properties*]
 
  * 5. *MyService* can then be used as part of your extensions
 
-....
+[source,java]
+----
 public class MyMailet extends GenericMailet {
     private final MyService myService;
 
@@ -130,28 +136,30 @@ public class MyMailet extends GenericMailet {
         // Do something
     }
 }
-....
+----
 
 Note that overriding injection definitions of the Distributed Server for your injections is not supported.
 
 === Starting your components
 
-Sometimes you wish to 'start' your extensions. This can be achieved through defining your own `UserDefinedStartable`:
+Sometimes you wish to 'start' your extensions.This can be achieved through defining your own `UserDefinedStartable`:
 
-```
+[source,java]
+----
 public class MyStartable implements UserDefinedStartable {
     @Override
     public void start() {
         // Will be called
     }
 }
-```
+----
 
 Your startable then needs to be registered within `extensions.properties`:
 
-```
+[source,properties]
+----
 guice.extension.startable=com.company.MyStartable
-```
+----
 
 == Pre-packaged extensions
 

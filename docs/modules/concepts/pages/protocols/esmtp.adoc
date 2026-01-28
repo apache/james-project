@@ -37,7 +37,7 @@ and was itself obsoleted by <<RFC1869>>.
 
 https://tools.ietf.org/html/rfc1869[RFC1869] ("SMTP Service Extensions") obsoletes <<RFC1651>>, and
 is essentially the final specification in which ESMTP was defined separately from SMTP. When this
-spec was obsoleted by xref:protocols/smtp.adoc#RFC2821[RFC2821], it was incorporated into the
+spec was obsoleted by xref:protocols/smtp.adoc#_rfc2821[RFC2821], it was incorporated into the
 SMTP specification.
  
 

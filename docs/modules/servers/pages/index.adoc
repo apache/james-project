@@ -58,7 +58,7 @@ production issues.
 
 When your requirements start to get a little more serious, or you
 start to feel adventurous and want to begin your own email adventure,
-you can consider using the xref:extendable.adoc[*Extendable Server*].
+you can consider using the xref:extendable/index.adoc[*Extendable Server*].
 
 This server is intended for experts who understand the consequences of
 what they are doing. It provides extension mechanisms, configurations,

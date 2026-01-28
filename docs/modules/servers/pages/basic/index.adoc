@@ -17,5 +17,5 @@ trouble, we explain how you can get help from the James Community.
  * xref:basic/objectives.adoc[Objectives and motivation of the Basic Server]
  * xref:basic/concepts.adoc[Useful background concepts]
  * xref:basic/architecture.adoc[Overview of architecture]
- * xref:basic/conf/index.adoc[Configuration]
+ * xref:basic/configure/index.adoc[Configuration]
  * xref:basic/help.adoc[Where to go for help]
