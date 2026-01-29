@@ -51,7 +51,7 @@ Apache James offers Operators a range of servers for various use cases, includin
 
 An **Integrator** has some expertise with Java or a JVM-based language. Based 
 on this expertise the Integrator can perform more advanced server configurations and may
-develop xref:customization:index.adoc[Extensions] to customize the behavior of a James server.
+develop extensions  to customize the behavior of a xref:servers:index.adoc[James server].
 
 An Integrator does **not** need to download the source code or compile James.
 

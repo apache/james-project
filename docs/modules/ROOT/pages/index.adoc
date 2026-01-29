@@ -16,8 +16,8 @@ This Reference Book is divided into the following Parts:
 **    We provide a few out-of-the-box servers that you can 
     choose from depending on your needs. Start here if you just
     want to get up and running quickly with a working production-grade mail server.
-* xref:james-project:customization:index.adoc[Customization]
-**    Shows how you can customize any James server with the 
+* Customization
+**    Each server's documentation has a section which shows how you can customize this James server with the
     functionalities that you need.
     Check out this section if you have special business or technical
     needs and are interested in a custom solution.

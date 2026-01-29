@@ -1,0 +1,5 @@
+= Distributed James Mail Server &mdash; Extending behaviour
+:navtitle: Extending behaviour
+:pages-path: distributed
+
+include::partial$customization/index.adoc[]

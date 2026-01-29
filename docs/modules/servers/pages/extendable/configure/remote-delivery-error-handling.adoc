@@ -1,0 +1,8 @@
+= Extendable James Server &mdash; About RemoteDelivery error handling
+:navtitle: About RemoteDelivery error handling
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:pages-path: postgres
+:server-name: Postgresql James server
+:mailet-repository-path-prefix: postgres
+include::partial$configure/remote-delivery-error-handling.adoc[]

@@ -1,0 +1,5 @@
+= Custom IMAP processing
+:navtitle: Custom IMAP processing
+:pages-path: postgres
+
+include::partial$customization/imap.adoc[]

@@ -1,0 +1,5 @@
+= Custom SMTP hooks
+:navtitle: Custom SMTP hooks
+:pages-path: extendable
+
+include::partial$customization/smtp-hooks.adoc[]

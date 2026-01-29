@@ -1,0 +1,8 @@
+= Extendable James Server &mdash; SMTP Hooks
+:navtitle: SMTP Hooks
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+:pages-path: extendable
+:server-name: Extendable James server
+
+include::partial$configure/smtp-hooks.adoc[]
