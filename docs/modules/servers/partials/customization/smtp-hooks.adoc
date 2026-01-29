@@ -1,6 +1,3 @@
-= Custom SMTP hooks
-:navtitle: Custom SMTP hooks
-
 SMTP hooks enable extending capabilities of the SMTP server and are run synchronously upon email reception, before the email is
 enqueued in the MailQueue, and before any mail processing takes place.
 
@@ -53,7 +50,7 @@ The following interfaces allows interacting with the following commands:
 
 == Custom hook registration
 
-Register you hooks using xref:smtp.adoc[*smtpserver.xml*] handlerchain property.
+Register you hooks using xref:{pages-path}/configure/smtp.adoc[*smtpserver.xml*] handlerchain property.
 
 == Writing additional SMTP commands
 

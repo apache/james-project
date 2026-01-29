@@ -57,4 +57,4 @@ Recording it in extensions.properties :
 guice.extension.tasks=com.project.RspamdTaskExtensionModule
 ....
 
-Read xref:customization:index.adoc#_defining_custom_injections_for_your_extensions[this page] for more details.
+Read xref:{pages-path}/customization/index.adoc#_defining_custom_injections_for_your_extensions[this page] for more details.

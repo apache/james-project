@@ -1,6 +1,3 @@
-= Custom IMAP processing
-:navtitle: Custom IMAP processing
-
 James allows defining your own handler packages.
 
 An Imap package is a simple class that bundles IMAP processing components:
@@ -23,7 +20,7 @@ Custom configuration can be obtained through `ImapConfiguration` class via the `
 
 A full working example is available link:https://github.com/apache/james-project/tree/master/examples/custom-imap[here].
 
-See this page for xref:imap.adoc#_extending_imap[more details on configuring IMAP extensions].
+See this page for xref:{pages-path}/configure/imap.adoc#_extending_imap[more details on configuring IMAP extensions].
 
 == IMAP additional Connection Checks
 

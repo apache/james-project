@@ -1,28 +1,25 @@
-= Extending server behavior
-:navtitle: Extending server behavior
-
 == Available extension mechanisms
 
-image::james-hexagons-extensions.png[Extension mechanisms for the James Server]
+image::customization/james-hexagons-extensions.png[Extension mechanisms for the James Server]
 
 The James Server exposes several interfaces allowing the user to write custom extensions in
 order to extend the James Server behavior.
 
 Writing *Mailets* and *Matchers* allows one to supply custom components for the
-xref:mail-processing.adoc[Mail Processing] and
+xref:{pages-path}/customization/mail-processing.adoc[Mail Processing] and
 enables to take decisions, and implement your business logic at the transport level.
 
-Writing xref:mailbox-listeners.adoc[Mailbox listeners] enables to
+Writing xref:{pages-path}/customization/mailbox-listeners.adoc[Mailbox listeners] enables to
 react to your user interaction with their mailbox. This powerful tool allows build advanced features
 for mail delivery servers.
 
-Writing xref:smtp-hooks.adoc[SMTP hookd] enables to
+Writing xref:{pages-path}/customization/smtp-hooks.adoc[SMTP hookd] enables to
 add features to your SMTP server.
 
-Writing xref:webadmin-routes.adoc[WebAdmin routes] enables to
+Writing xref:{pages-path}/customization/webadmin-routes.adoc[WebAdmin routes] enables to
 add features to the WebAdmin REST API.
 
-Writing xref:imap.adoc[IMAP extensions].
+Writing xref:{pages-path}/customization/imap.adoc[IMAP extensions].
 
 The link:https://github.com/apache/james-project/tree/master/examples[examples] are also a good reference.
 

@@ -1,0 +1,5 @@
+= Postgres James Mail Server &mdash; Extending behaviour
+:navtitle: Extending behaviour
+:pages-path: extendable
+
+include::partial$customization/index.adoc[]

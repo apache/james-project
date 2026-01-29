@@ -27,5 +27,5 @@ databases.
 Furthermore, this server is intended to be easily customisable so that it can easily be adapted to ones needs.
 
 * Several packaged extensions can be xref:distributed/configure/index.adoc#_for_extensions[configured]
-* It is easy to write and load xref:customization:index.adoc[your own extensions]
+* It is easy to write and load xref:distributed/customization/index.adoc[your own extensions]
 

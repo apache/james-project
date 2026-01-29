@@ -22,5 +22,5 @@ In this section of the documentation, we will introduce you to:
 * xref:distributed/run/index.adoc[Run the Distributed Server]
 * xref:distributed/configure/index.adoc[Configure the Distributed Server]
 * xref:distributed/operate/index.adoc[Operation of the Distributed Server]
-* xref:customization:index.adoc[How to extend the server]
+* xref:distributed/customization/index.adoc[How to extend the server]
 

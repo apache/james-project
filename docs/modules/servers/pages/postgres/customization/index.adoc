@@ -1,4 +1,5 @@
 = Postgres James Mail Server &mdash; Extending behaviour
 :navtitle: Extending behaviour
+:pages-path: postgres
 
-This section can be read xref:customization:index.adoc[this page].
+include::partial$customization/index.adoc[]

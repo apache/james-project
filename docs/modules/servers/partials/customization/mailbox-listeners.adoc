@@ -1,6 +1,3 @@
-= Custom Mailbox Listeners
-:navtitle: Custom Mailbox Listeners
-
 == Writing additional listener
 
 An extension writer can write new additional mailbox listeners.
@@ -38,7 +35,7 @@ handled events and can save some IOs.
 
 Your custom additional listener needs to be in the *extensions-jars* folder.
 
-You need to register its fully qualified class name in xref:listeners.adoc[listeners.xml]
+You need to register its fully qualified class name in xref:{pages-path}/customization/[listeners.xml]
 
 == Events
 

@@ -1,0 +1,5 @@
+= Custom Mailbox Listeners
+:navtitle: Custom Mailbox Listeners
+:pages-path: postgres
+
+include::partial$customization/mailbox-listeners.adoc[]

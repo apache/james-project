@@ -1,0 +1,5 @@
+= Custom WebAdmin routes
+:navtitle: Custom WebAdmin routes
+:pages-path: extendable
+
+include::partial$customization/webadmin-routes.adoc[]

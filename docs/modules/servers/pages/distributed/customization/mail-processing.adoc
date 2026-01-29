@@ -1,0 +1,5 @@
+= Custom mail processing components
+:navtitle: Custom mail processing components
+:pages-path: distributed
+
+include::partial$customization/mail-processing.adoc[]

@@ -1,6 +1,3 @@
-= Custom WebAdmin routes
-:navtitle: Custom WebAdmin routes
-
 == Writing custom WebAdmin routes
 
 An extension writer can write additional WebAdmin routes, effectively exposed over the WebAdmin API.
@@ -35,5 +32,5 @@ public interface Routes {
 
 Your custom WebAdmin routes needs to be in the *extensions-jars* folder.
 
-You need to register its fully qualified class name in xref:webadmin.adoc[webadmin.properties]
+You need to register its fully qualified class name in xref:{pages-path}/configure/webadmin.adoc[webadmin.properties]
 using the *extensions.routes* property.

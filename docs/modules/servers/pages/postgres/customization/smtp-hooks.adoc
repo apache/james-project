@@ -1,0 +1,5 @@
+= Custom SMTP hooks
+:navtitle: Custom SMTP hooks
+:pages-path: postgres
+
+include::partial$customization/smtp-hooks.adoc[]

@@ -1,0 +1,6 @@
+= Extendable James Server &mdash; domainlist.xml
+:navtitle: domainlist.xml
+
+:sample-configuration-prefix-url: https://github.com/apache/james-project/blob/postgresql/server/apps/postgres-app/sample-configuration
+
+include::partial$configure/domainlist.adoc[]
