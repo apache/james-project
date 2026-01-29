@@ -369,10 +369,8 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
             return Flux.empty();
         }
 
-        return searcher.search(mailboxIds, searchQuery, Optional.empty(), MESSAGE_ID_FIELD, !SEARCH_HIGHLIGHT)
-            .handle(this::extractMessageIdFromHit)
-            .distinct()
-            .take(limit);
+        return searcher.searchCollapsedByMessageId(mailboxIds, searchQuery, Math.toIntExact(limit), MESSAGE_ID_FIELD, !SEARCH_HIGHLIGHT)
+            .handle(this::extractMessageIdFromHit);
     }
 
     @Override
