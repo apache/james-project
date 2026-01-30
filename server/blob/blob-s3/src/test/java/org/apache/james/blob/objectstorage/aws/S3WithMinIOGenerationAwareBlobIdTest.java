@@ -70,7 +70,7 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
         testee = createBlobStore(blobIdFactory);
 
         // Why? https://github.com/apache/james-project/pull/1981#issuecomment-2380396460
-        createBucket(testee.getDefaultBucketName().asString());
+        // createBucket(testee.getDefaultBucketName().asString());
     }
 
     @AfterEach

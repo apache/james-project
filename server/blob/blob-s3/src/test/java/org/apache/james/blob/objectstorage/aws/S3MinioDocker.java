@@ -34,13 +34,13 @@ import com.google.common.base.Preconditions;
 
 public class S3MinioDocker {
 
-    public static final DockerImageName DOCKER_IMAGE_NAME = DockerImageName.parse("minio/minio")
-        .withTag("RELEASE.2025-06-13T11-33-47Z");
+    public static final DockerImageName DOCKER_IMAGE_NAME = DockerImageName.parse("chrislusf/seaweedfs")
+        .withTag("4.07");
 
-    public static final int MINIO_PORT = 9000;
-    public static final int MINIO_WEB_ADMIN_PORT = 9090;
-    public static final String MINIO_ROOT_USER = "minio";
-    public static final String MINIO_ROOT_PASSWORD = "minio123";
+    public static final int S3_PORT = 8333;
+    public static final int S3_HTTPS_PORT = 8334;
+    public static final String S3_ACCESS_KEY = "testaccesskey";
+    public static final String S3_SECRET_KEY = "testsecretkey";
 
     private final GenericContainer<?> container;
 
@@ -55,25 +55,28 @@ public class S3MinioDocker {
 
     private GenericContainer<?> getContainer() {
         return new GenericContainer<>(DOCKER_IMAGE_NAME)
-            .withExposedPorts(MINIO_PORT, MINIO_WEB_ADMIN_PORT)
-            .withEnv("MINIO_ROOT_USER", MINIO_ROOT_USER)
-            .withEnv("MINIO_ROOT_PASSWORD", MINIO_ROOT_PASSWORD)
-            .withCommand("server", "--certs-dir", "/opt/minio/certs", "/data", "--console-address", ":" + MINIO_WEB_ADMIN_PORT)
+            .withExposedPorts(S3_PORT, S3_HTTPS_PORT)
+            .withEnv("AWS_ACCESS_KEY_ID", S3_ACCESS_KEY)
+            .withEnv("AWS_SECRET_ACCESS_KEY", S3_SECRET_KEY)
+            .withCommand("server", "-s3",
+                "-s3.cert.file", "/opt/seaweedfs/certs/public.crt",
+                "-s3.key.file", "/opt/seaweedfs/certs/private.key",
+                "-s3.port.https", String.valueOf(S3_HTTPS_PORT),
+                "-dir", "/data")
             .withClasspathResourceMapping("/minio/private.key",
-                "/opt/minio/certs/private.key",
+                "/opt/seaweedfs/certs/private.key",
                 BindMode.READ_ONLY)
             .withClasspathResourceMapping("/minio/public.crt",
-                "/opt/minio/certs/public.crt",
+                "/opt/seaweedfs/certs/public.crt",
                 BindMode.READ_ONLY)
-            .waitingFor(Wait.forLogMessage(".*MinIO Object Storage Server.*", 1)
+            .waitingFor(Wait.forLogMessage(".*Lock owner changed.*", 1)
                 .withStartupTimeout(Duration.ofMinutes(2)))
-            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-minio-s3-test-" + UUID.randomUUID()));
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-seaweedfs-s3-test-" + UUID.randomUUID()));
     }
 
     public void start() {
         if (!container.isRunning()) {
             container.start();
-            setupMC();
         }
     }
 
@@ -87,23 +90,11 @@ public class S3MinioDocker {
             .endpoint(Throwing.supplier(() -> new URIBuilder()
                 .setScheme("https")
                 .setHost(container.getHost())
-                .setPort(container.getMappedPort(MINIO_PORT))
+                .setPort(container.getMappedPort(S3_HTTPS_PORT))
                 .build()).get())
-            .accessKeyId(MINIO_ROOT_USER)
-            .secretKey(MINIO_ROOT_PASSWORD)
+            .accessKeyId(S3_ACCESS_KEY)
+            .secretKey(S3_SECRET_KEY)
             .trustAll(true)
             .build();
-    }
-
-    private void setupMC() {
-        Preconditions.checkArgument(container.isRunning(), "Container is not running");
-        Throwing.runnable(() -> container.execInContainer("mc", "alias", "set", "--insecure", "james", "https://localhost:9000", MINIO_ROOT_USER, MINIO_ROOT_PASSWORD)).run();
-    }
-
-    public void flushAll() {
-        // Remove all objects
-        Throwing.runnable(() -> container.execInContainer("mc", "--insecure", "rm", "--recursive", "--force", "--dangerous", "james/")).run();
-        // Remove all buckets
-        Throwing.runnable(() -> container.execInContainer("mc", "--insecure", "rb", "--force", "--dangerous", "james/")).run();
     }
 }
