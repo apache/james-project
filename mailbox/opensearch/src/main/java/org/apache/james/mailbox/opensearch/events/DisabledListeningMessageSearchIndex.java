@@ -39,6 +39,7 @@ import org.apache.james.mailbox.events.MailboxEvents;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -126,7 +127,7 @@ public class DisabledListeningMessageSearchIndex extends ListeningMessageSearchI
     }
     
     @Override
-    public Flux<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) {
+    public Flux<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, SearchOptions searchOptions) {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
 
         return Flux.error(new NotImplementedException());

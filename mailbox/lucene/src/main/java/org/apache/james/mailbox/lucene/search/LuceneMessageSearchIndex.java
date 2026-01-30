@@ -89,6 +89,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AttachmentCriterion;
 import org.apache.james.mailbox.model.SearchQuery.ContainsOperator;
@@ -301,18 +302,21 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public Flux<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
+    public Flux<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, SearchOptions searchOptions) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         if (mailboxIds.isEmpty()) {
             return Flux.empty();
         }
+
+        long requestedLimit = Math.addExact(searchOptions.offset().getOffset(), searchOptions.limit().getLimit().orElseThrow());
 
         return Flux.fromIterable(searchMultimap(mailboxIds, searchQuery)
             .stream()
             .filter(searchResult -> searchResult.getMessageId().isPresent())
             .map(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
-            .limit(Long.valueOf(limit).intValue())
+            .limit(requestedLimit)
+            .skip(searchOptions.offset().getOffset())
             .collect(ImmutableList.toImmutableList()));
     }
 

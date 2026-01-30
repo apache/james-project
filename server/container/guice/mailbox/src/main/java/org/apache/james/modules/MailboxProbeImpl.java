@@ -47,9 +47,11 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.probe.MailboxProbe;
+import org.apache.james.util.streams.Limit;
 import org.apache.james.utils.GuiceProbe;
 
 import com.google.common.collect.ImmutableList;
@@ -216,7 +218,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         MailboxSession mailboxSession = null;
         try {
             mailboxSession = mailboxManager.createSystemSession(Username.of(user));
-            return block(Flux.from(mailboxManager.search(expression, mailboxSession, limit)).collectList());
+            return block(Flux.from(mailboxManager.search(expression, mailboxSession, SearchOptions.limit(Limit.limit(Math.toIntExact(limit))))).collectList());
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         } finally {

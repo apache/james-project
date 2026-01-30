@@ -56,6 +56,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
@@ -76,6 +77,7 @@ import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.util.streams.Limit;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
@@ -92,7 +94,7 @@ public abstract class AbstractMessageSearchIndexTest {
             .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
             .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
             .await();
-    private static final long LIMIT = 100L;
+    private static final SearchOptions LIMIT = SearchOptions.limit(Limit.limit(100));
     private static final boolean RECENT = true;
     private static final boolean NOT_RECENT = false;
 
@@ -372,7 +374,7 @@ public abstract class AbstractMessageSearchIndexTest {
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(mailbox2.getMailboxId(), mailbox.getMailboxId()),
             searchQuery,
-            limit)
+            SearchOptions.limit(Limit.limit(limit)))
             .collectList().block();
 
         assertThat(result)
@@ -410,7 +412,7 @@ public abstract class AbstractMessageSearchIndexTest {
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(mailbox2.getMailboxId(), mailbox.getMailboxId()),
             searchQuery,
-            limit)
+            SearchOptions.limit(Limit.limit(limit)))
             .collectList().block();
 
         assertThat(result)
@@ -771,7 +773,7 @@ public abstract class AbstractMessageSearchIndexTest {
             session,
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
             searchQuery,
-            limit)
+            SearchOptions.limit(Limit.limit(Math.toIntExact(limit))))
             .collectList().block();
         // Two messages matches this query : mOther and m6
 
@@ -788,7 +790,7 @@ public abstract class AbstractMessageSearchIndexTest {
             session,
             ImmutableList.of(otherMailbox.getMailboxId()),
             searchQuery,
-            limit)
+            SearchOptions.limit(Limit.limit(Math.toIntExact(limit))))
             .collectList().block();
 
         assertThat(actual).contains(m10.getMessageId());

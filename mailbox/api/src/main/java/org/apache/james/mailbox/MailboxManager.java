@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.reactivestreams.Publisher;
@@ -383,8 +384,10 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      *            not null
      * @param session
      *            the context for this call, not null
+     * @param searchOptions
+     *            options for the search
      */
-    Publisher<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit);
+    Publisher<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, SearchOptions searchOptions);
 
     /**
      * Returns the list of MessageId of messages belonging to that Thread

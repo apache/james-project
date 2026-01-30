@@ -72,6 +72,7 @@ import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
@@ -945,11 +946,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public Flux<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) {
+    public Flux<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, SearchOptions searchOptions) {
         return getInMailboxIds(expression, session)
             .filter(id -> !expression.getNotInMailboxes().contains(id))
             .collect(ImmutableSet.toImmutableSet())
-            .flatMapMany(Throwing.function(ids -> index.search(session, ids, expression.getSearchQuery(), limit)));
+            .flatMapMany(Throwing.function(ids -> index.search(session, ids, expression.getSearchQuery(), searchOptions)));
     }
 
     @Override

@@ -33,9 +33,11 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.util.streams.Limit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -122,7 +124,7 @@ class MailboxUserDeletionTaskStepTest {
 
         Mono.from(testee.deleteUserData(ALICE)).block();
 
-        assertThat(mailboxManager.search(MultimailboxesSearchQuery.from(SearchQuery.matchAll()).build(), session, 100L)
+        assertThat(mailboxManager.search(MultimailboxesSearchQuery.from(SearchQuery.matchAll()).build(), session, SearchOptions.limit(Limit.limit(100)))
             .collectList().block())
             .isEmpty();
     }
@@ -150,7 +152,7 @@ class MailboxUserDeletionTaskStepTest {
 
         Mono.from(testee.deleteUserData(ALICE)).block();
 
-        assertThat(mailboxManager.search(MultimailboxesSearchQuery.from(SearchQuery.matchAll()).build(), session, 100L)
+        assertThat(mailboxManager.search(MultimailboxesSearchQuery.from(SearchQuery.matchAll()).build(), session, SearchOptions.limit(Limit.limit(100)))
             .collectList().block())
             .isEmpty();
     }

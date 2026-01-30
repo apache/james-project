@@ -42,6 +42,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.ConjunctionCriterion;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
@@ -212,14 +213,14 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     }
 
     @Override
-    public Flux<MessageId> search(MailboxSession session, final Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
+    public Flux<MessageId> search(MailboxSession session, final Collection<MailboxId> mailboxIds, SearchQuery searchQuery, SearchOptions searchOptions) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxMapperFactory.getMailboxMapper(session);
 
         Flux<Mailbox> filteredMailboxes =
             Flux.fromIterable(mailboxIds)
             .concatMap(mailboxMapper::findMailboxById);
 
-        return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery), limit);
+        return getAsMessageIds(searchResults(session, filteredMailboxes, searchQuery), searchOptions);
     }
 
     private Flux<? extends SearchResult> searchResults(MailboxSession session, Flux<Mailbox> mailboxes, SearchQuery query) {
@@ -239,10 +240,11 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         }
     }
 
-    private Flux<MessageId> getAsMessageIds(Flux<? extends SearchResult> temp, long limit) {
+    private Flux<MessageId> getAsMessageIds(Flux<? extends SearchResult> temp, SearchOptions searchOptions) {
         return temp.map(searchResult -> searchResult.getMessageId().get())
             .filter(SearchUtil.distinct())
-            .take(Long.valueOf(limit).intValue());
+            .skip(searchOptions.offset().getOffset())
+            .transform(searchOptions.limit()::applyOnFlux);
     }
 
 }

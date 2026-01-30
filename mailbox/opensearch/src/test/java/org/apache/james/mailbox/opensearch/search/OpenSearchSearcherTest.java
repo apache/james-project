@@ -47,6 +47,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.opensearch.DefaultMailboxMappingFactory;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
@@ -64,6 +65,7 @@ import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.util.streams.Limit;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
@@ -176,7 +178,7 @@ class OpenSearchSearcherTest {
             .stream()
             .map(ComposedMessageId::getMessageId)
             .collect(ImmutableList.toImmutableList());
-        assertThat(storeMailboxManager.search(multimailboxesSearchQuery, session, numberOfMailboxes + 1)
+        assertThat(storeMailboxManager.search(multimailboxesSearchQuery, session, SearchOptions.limit(Limit.limit(numberOfMailboxes + 1)))
             .collectList().block())
             .containsExactlyInAnyOrderElementsOf(expectedMessageIds);
     }

@@ -38,10 +38,10 @@ import org.apache.james.jmap.utils.search.MailboxFilter
 import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery.Namespace
-import org.apache.james.mailbox.model.{MailboxId, MessageId, MultimailboxesSearchQuery, SearchQuery}
+import org.apache.james.mailbox.model.{MailboxId, MessageId, MultimailboxesSearchQuery, SearchOptions, SearchQuery}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
-import org.apache.james.util.streams.{Limit => JavaLimit}
+import org.apache.james.util.streams.{Offset, Limit => JavaLimit}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
@@ -203,8 +203,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     SFlux.fromPublisher(mailboxManager.search(
         searchQuery.addCriterion(SearchQuery.flagIsUnSet(DELETED)),
         mailboxSession,
-        position.value + limitToUse))
-      .drop(position.value)
+        SearchOptions.of(Offset.from(position.value), JavaLimit.limit(limitToUse.value))))
       .collectSeq()
 
   private def searchQueryFromRequest(request: EmailQueryRequest, capabilities: Set[CapabilityIdentifier], session: MailboxSession): Either[UnsupportedOperationException, MultimailboxesSearchQuery] = {

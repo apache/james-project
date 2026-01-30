@@ -29,13 +29,14 @@ import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, Session
 import org.apache.james.jmap.json.MDNSerializer
 import org.apache.james.jmap.mail.{BlobId, BlobUnParsableException, MDNParseRequest, MDNParseResponse, MDNParseResults, MDNParsed}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers, SessionSupplier}
-import org.apache.james.mailbox.model.{MessageId, MultimailboxesSearchQuery, SearchQuery}
+import org.apache.james.mailbox.model.{MessageId, MultimailboxesSearchQuery, SearchOptions, SearchQuery}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.mdn.MDN
 import org.apache.james.mdn.fields.OriginalMessageId
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.message.DefaultMessageBuilder
+import org.apache.james.util.streams.{Limit => JavaLimit}
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -132,7 +133,7 @@ case class MDNEmailIdResolver @Inject()(mailboxManager: MailboxManager) {
   def resolveForEmailId(originalMessageId: Option[OriginalMessageId], session: MailboxSession): SMono[Option[MessageId]] =
     originalMessageId.map(originalMsg => {
       val searchByRFC822MessageId: MultimailboxesSearchQuery = MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.mimeMessageID(originalMsg.getOriginalMessageId))).build
-      SFlux.fromPublisher(mailboxManager.search(searchByRFC822MessageId, session, NUMBER_OF_ORIGINAL_MESSAGE_ID_VALID + 1)).collectSeq().map {
+      SFlux.fromPublisher(mailboxManager.search(searchByRFC822MessageId, session, SearchOptions.limit(JavaLimit.limit(NUMBER_OF_ORIGINAL_MESSAGE_ID_VALID + 1)))).collectSeq().map {
         case Seq(first) => Some(first)
         case _ => None
       }
