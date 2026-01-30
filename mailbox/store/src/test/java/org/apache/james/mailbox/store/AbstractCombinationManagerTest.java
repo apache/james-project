@@ -46,8 +46,10 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.util.streams.Limit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -60,7 +62,7 @@ import reactor.core.scheduler.Schedulers;
 
 public abstract class AbstractCombinationManagerTest {
 
-    private static final int DEFAULT_MAXIMUM_LIMIT = 256;
+    private static final SearchOptions DEFAULT_MAXIMUM_LIMIT = SearchOptions.limit(Limit.limit(256));
 
     private static final String USER_FLAGS_VALUE = "User Flags";
     private static final String ANOTHER_USER_FLAGS_VALUE = "Another User Flags";

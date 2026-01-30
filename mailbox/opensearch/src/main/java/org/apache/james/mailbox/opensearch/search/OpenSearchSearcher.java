@@ -33,6 +33,7 @@ import org.apache.james.backends.opensearch.ReadAliasName;
 import org.apache.james.backends.opensearch.RoutingKey;
 import org.apache.james.backends.opensearch.search.ScrolledSearch;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.opensearch.query.QueryConverter;
@@ -106,13 +107,9 @@ public class OpenSearchSearcher {
     }
 
     public Flux<Hit<ObjectNode>> searchCollapsedByMessageId(Collection<MailboxId> mailboxIds, SearchQuery query,
-                                                            int limit, List<String> fields,
+                                                            SearchOptions searchOptions, List<String> fields,
                                                             boolean searchHighlight) {
-        if (limit == 0) {
-            return Flux.empty();
-        }
-
-        SearchRequest searchRequest = prepareCollapsedSearchByMessageId(mailboxIds, query, 0, limit, fields, searchHighlight);
+        SearchRequest searchRequest = prepareCollapsedSearchByMessageId(mailboxIds, query, searchOptions, fields, searchHighlight);
         try {
             return client.search(searchRequest)
                 .flatMapMany(response -> Flux.fromIterable(response.hits().hits()));
@@ -148,12 +145,15 @@ public class OpenSearchSearcher {
     }
 
     private SearchRequest prepareCollapsedSearchByMessageId(Collection<MailboxId> mailboxIds, SearchQuery query,
-                                                            int from, int size, List<String> fields, boolean highlight) {
+                                                            SearchOptions searchOptions, List<String> fields, boolean highlight) {
         List<SortOptions> sorts = query.getSorts()
             .stream()
             .flatMap(SortConverter::convertSort)
             .map(fieldSort -> new SortOptions.Builder().field(fieldSort).build())
             .collect(Collectors.toList());
+
+        int from = searchOptions.offset().getOffset();
+        int size = searchOptions.limit().getLimit().orElseThrow();
 
         SearchRequest.Builder request = new SearchRequest.Builder()
             .index(aliasName.getValue())

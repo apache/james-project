@@ -34,11 +34,13 @@ import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mailbox.store.search.SearchUtil;
+import org.apache.james.util.streams.Limit;
 
 import com.google.common.collect.ImmutableList;
 
@@ -59,7 +61,7 @@ public class SearchThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorith
     public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) {
         MultimailboxesSearchQuery expression = buildSearchQuery(mimeMessageId, inReplyTo, references, subject);
 
-        return Flux.from(mailboxManager.search(expression, session, 1))
+        return Flux.from(mailboxManager.search(expression, session, SearchOptions.limit(Limit.limit(1))))
             .collectList()
             .flatMapMany(messageIds -> messageIdManager.getMessagesReactive(messageIds, FetchGroup.MINIMAL, session))
             .map(MessageResult::getThreadId)
@@ -78,7 +80,7 @@ public class SearchThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorith
             .from(searchQuery)
             .build();
 
-        return Flux.from(mailboxManager.search(expression, session, Integer.MAX_VALUE))
+        return Flux.from(mailboxManager.search(expression, session, SearchOptions.limit(Limit.limit(Integer.MAX_VALUE))))
             .switchIfEmpty(Mono.error(() -> new ThreadNotFoundException(threadId)));
     }
 

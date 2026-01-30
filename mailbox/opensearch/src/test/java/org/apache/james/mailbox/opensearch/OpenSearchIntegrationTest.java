@@ -47,6 +47,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
@@ -62,6 +63,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.util.streams.Limit;
 import org.awaitility.Awaitility;
 import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
@@ -531,7 +533,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .blockLast();
 
         MultimailboxesSearchQuery query = MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "other"))).build();
-        assertThat(Flux.from(storeMailboxManager.search(query, session, 10)).collectList().block())
+        assertThat(Flux.from(storeMailboxManager.search(query, session, SearchOptions.limit(Limit.limit(10)))).collectList().block())
             .containsOnly(messageId2.getMessageId());
     }
 
@@ -716,7 +718,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
     private void awaitUntilAsserted(MailboxId mailboxId, long expectedCountResult) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
-            .untilAsserted(() -> assertThat(messageSearchIndex.search(session, List.of(mailboxId), SearchQuery.matchAll(), 100L).toStream().count())
+            .untilAsserted(() -> assertThat(messageSearchIndex.search(session, List.of(mailboxId), SearchQuery.matchAll(), SearchOptions.limit(Limit.limit(100))).toStream().count())
                 .isEqualTo(expectedCountResult));
     }
 }

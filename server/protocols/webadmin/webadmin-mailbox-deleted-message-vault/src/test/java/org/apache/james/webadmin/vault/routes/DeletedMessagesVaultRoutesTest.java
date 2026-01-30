@@ -102,12 +102,14 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.apache.james.util.streams.Limit;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageVault;
@@ -2321,7 +2323,7 @@ class DeletedMessagesVaultRoutesTest {
         MailboxSession session = mailboxManager.createSystemSession(username);
         int limitToOneMessage = 1;
 
-        return !Flux.from(mailboxManager.search(MultimailboxesSearchQuery.from(SearchQuery.of()).build(), session, limitToOneMessage))
+        return !Flux.from(mailboxManager.search(MultimailboxesSearchQuery.from(SearchQuery.of()).build(), session, SearchOptions.limit(Limit.limit(limitToOneMessage))))
             .collectList().block()
             .isEmpty();
     }

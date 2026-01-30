@@ -45,6 +45,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -90,9 +91,9 @@ class ExpireMailboxServiceTest {
         }
 
         @Override
-        public Flux<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
+        public Flux<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, SearchOptions searchOptions) throws MailboxException {
             handleFailure();
-            return delegate.search(session, mailboxIds, searchQuery, limit);
+            return delegate.search(session, mailboxIds, searchQuery, searchOptions);
         }
 
         @Override

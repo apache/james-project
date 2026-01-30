@@ -41,6 +41,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
@@ -55,6 +56,7 @@ import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndexContract;
+import org.apache.james.util.streams.Limit;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -64,7 +66,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 class LuceneMailboxMessageSearchIndexTest {
-    static final long LIMIT = 100L;
+    static final SearchOptions LIMIT = SearchOptions.limit(Limit.limit(100));
     static final TestId TEST_ID_1 = TestId.of(0);
     static final TestId TEST_ID_2 = TestId.of(1);
     static final TestId TEST_ID_3 = TestId.of(2);
@@ -359,7 +361,7 @@ class LuceneMailboxMessageSearchIndexTest {
         SearchQuery query = SearchQuery.of(SearchQuery.all());
 
         int limit = 1;
-        List<MessageId> result = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), query, limit)
+        List<MessageId> result = index.search(session, ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), query, SearchOptions.limit(Limit.limit(1)))
             .collectList().block();
 
         assertThat(result).hasSize(limit);

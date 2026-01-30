@@ -86,12 +86,14 @@ import org.apache.james.mailbox.model.MultimailboxesSearchQuery.AccessibleNamesp
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery.PersonalNamespace;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.model.SearchOptions;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.apache.james.util.streams.Limit;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,7 +120,7 @@ import reactor.core.publisher.Mono;
 public abstract class MailboxManagerTest<T extends MailboxManager> {
     public static final Username USER_1 = Username.of("USER_1");
     public static final Username USER_2 = Username.of("USER_2");
-    private static final int DEFAULT_MAXIMUM_LIMIT = 256;
+    private static final SearchOptions DEFAULT_MAXIMUM_LIMIT = SearchOptions.limit(Limit.limit(256));
 
     protected T mailboxManager;
     private  SubscriptionManager subscriptionManager;

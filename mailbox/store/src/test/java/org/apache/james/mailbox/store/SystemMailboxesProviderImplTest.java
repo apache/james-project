@@ -32,6 +32,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
+import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -60,7 +61,7 @@ class SystemMailboxesProviderImplTest {
         when(mailboxManager.createSystemSession(MailboxFixture.ALICE)).thenReturn(mailboxSession);
         when(mailboxManager.getMailboxReactive(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession)))
             .thenReturn(Mono.error(new MailboxNotFoundException("Not found")));
-        when(mailboxManager.search(any(), any(), any())).thenReturn(Flux.empty());
+        when(mailboxManager.search(any(MailboxQuery.class), any(), any(MailboxSession.class))).thenReturn(Flux.empty());
 
         assertThat(Flux.from(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser())).toStream())
             .isEmpty();
