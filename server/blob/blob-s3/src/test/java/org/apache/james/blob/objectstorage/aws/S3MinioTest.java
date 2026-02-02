@@ -73,6 +73,8 @@ public class S3MinioTest implements BlobStoreDAOContract {
     @AfterEach
     void tearDown() throws Exception {
         testee.deleteAllBuckets().block();
+
+        Thread.sleep(1000);
     }
 
     @Override

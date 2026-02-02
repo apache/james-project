@@ -31,6 +31,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.BloomFilterGCAlgorithmContract;
 import org.apache.james.server.blob.deduplication.GenerationAwareBlobId;
 import org.apache.james.server.blob.deduplication.MinIOGenerationAwareBlobId;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -38,7 +39,7 @@ import reactor.util.retry.Retry;
 
 public class S3MinioBlobStoreGCAlgorithmTest implements BloomFilterGCAlgorithmContract {
 
-    private BlobStoreDAO blobStoreDAO;
+    private S3BlobStoreDAO blobStoreDAO;
 
     @RegisterExtension
     static S3MinioExtension minoExtension = new S3MinioExtension();
@@ -59,6 +60,13 @@ public class S3MinioBlobStoreGCAlgorithmTest implements BloomFilterGCAlgorithmCo
         BlobId.Factory plainBlobIdFactory = new PlainBlobId.Factory();
         MinIOGenerationAwareBlobId.Factory minIOGenerationAwareBlobIdFactory = new MinIOGenerationAwareBlobId.Factory(CLOCK, GenerationAwareBlobId.Configuration.DEFAULT, plainBlobIdFactory);
         blobStoreDAO = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, minIOGenerationAwareBlobIdFactory, S3RequestOption.DEFAULT);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        blobStoreDAO.deleteAllBuckets().block();
+
+        Thread.sleep(1000);
     }
 
     @Override

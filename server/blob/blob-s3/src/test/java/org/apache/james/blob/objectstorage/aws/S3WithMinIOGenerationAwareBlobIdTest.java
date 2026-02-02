@@ -68,9 +68,6 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
     void beforeEach() throws Exception {
         blobIdFactory = new MinIOGenerationAwareBlobId.Factory(clock, GenerationAwareBlobId.Configuration.DEFAULT, new PlainBlobId.Factory());
         testee = createBlobStore(blobIdFactory);
-
-        // Why? https://github.com/apache/james-project/pull/1981#issuecomment-2380396460
-        // createBucket(testee.getDefaultBucketName().asString());
     }
 
     @AfterEach
