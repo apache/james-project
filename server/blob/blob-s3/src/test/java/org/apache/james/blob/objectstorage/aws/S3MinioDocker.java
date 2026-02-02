@@ -25,7 +25,6 @@ import java.time.Duration;
 import java.util.UUID;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -61,11 +60,9 @@ public class S3MinioDocker {
             .withEnv("RUSTFS_SECRET_KEY", S3_SECRET_KEY)
             .withEnv("RUSTFS_VOLUMES", "/data/rustfs{0..3}")
             .withTmpFs(singletonMap("/data", "rw,mode=1777"))
-            //.waitingFor(Wait.forLogMessage(".*started successfully.*", 1)
             .waitingFor(Wait.forLogMessage(".*Console WebUI.*", 2)
                 .withStartupTimeout(Duration.ofMinutes(2)))
-//            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-rustfs-s3-test-" + UUID.randomUUID()));
-            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-rustfs-s3-test"));
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-rustfs-s3-test-" + UUID.randomUUID()));
     }
 
     public void start() {
