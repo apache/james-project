@@ -74,13 +74,6 @@ public class S3BlobStoreDAOWithSSECTest implements BlobStoreDAOContract, S3SSECC
         testee = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory(), s3RequestOption);
     }
 
-//    @BeforeEach
-//    void beforeEach() throws Exception {
-//        // Why? https://github.com/apache/james-project/pull/1981#issuecomment-2380396460
-//        s3ClientFactory.get().createBucket(builder -> builder.bucket(TEST_BUCKET_NAME.asString()))
-//            .get();
-//    }
-
     @Override
     public BlobStoreDAO testee() {
         return testee;

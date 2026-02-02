@@ -70,12 +70,6 @@ public class S3MinioTest implements BlobStoreDAOContract {
         s3ClientFactory.close();
     }
 
-//    @BeforeEach
-//    void beforeEach() throws Exception {
-//        // Why? https://github.com/apache/james-project/pull/1981#issuecomment-2380396460
-//        createBucket(TEST_BUCKET_NAME.asString());
-//    }
-
     @AfterEach
     void tearDown() throws Exception {
         testee.deleteAllBuckets().block();
