@@ -37,7 +37,7 @@ import org.apache.james.blob.objectstorage.aws.S3RequestOption;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -53,8 +53,8 @@ public class S3BlobStoreDAOWithSSECTest implements BlobStoreDAOContract, S3SSECC
     private static S3BlobStoreDAO testee;
     private static S3ClientFactory s3ClientFactory;
 
-    @BeforeAll
-    static void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfiguration.builder()
             .authConfiguration(minoExtension.minioDocker().getAwsS3AuthConfiguration())
             .region(Region.of(software.amazon.awssdk.regions.Region.EU_WEST_1.id()))
@@ -84,6 +84,7 @@ public class S3BlobStoreDAOWithSSECTest implements BlobStoreDAOContract, S3SSECC
     @AfterEach
     void tearDown() throws Exception {
         testee.deleteAllBuckets().block();
+        s3ClientFactory.close();
 
         Thread.sleep(1000);
     }

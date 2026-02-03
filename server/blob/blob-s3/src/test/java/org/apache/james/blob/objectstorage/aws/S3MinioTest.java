@@ -32,9 +32,8 @@ import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -50,8 +49,8 @@ public class S3MinioTest implements BlobStoreDAOContract {
     private static S3BlobStoreDAO testee;
     private static S3ClientFactory s3ClientFactory;
 
-    @BeforeAll
-    static void setUp() {
+    @BeforeEach
+    void setUp() {
         AwsS3AuthConfiguration awsS3AuthConfiguration = minoExtension.minioDocker().getAwsS3AuthConfiguration();
 
         S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfiguration.builder()
@@ -65,14 +64,10 @@ public class S3MinioTest implements BlobStoreDAOContract {
         testee = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory(), S3RequestOption.DEFAULT);
     }
 
-    @AfterAll
-    static void tearDownClass() {
-        s3ClientFactory.close();
-    }
-
     @AfterEach
     void tearDown() throws Exception {
         testee.deleteAllBuckets().block();
+        s3ClientFactory.close();
 
         Thread.sleep(1000);
     }
