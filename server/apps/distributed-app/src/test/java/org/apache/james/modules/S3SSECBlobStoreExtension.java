@@ -47,7 +47,7 @@ public class S3SSECBlobStoreExtension extends S3MinioExtension implements GuiceM
         BucketName defaultBucketName = BucketName.of(UUID.randomUUID().toString());
         AwsS3AuthConfiguration awsS3AuthConfiguration = s3MinioDocker.getAwsS3AuthConfiguration();
 
-        Region region = DockerAwsS3Container.REGION;
+        Region region = Region.of("garage");
         S3BlobStoreConfiguration configuration = S3BlobStoreConfiguration.builder()
             .authConfiguration(awsS3AuthConfiguration)
             .region(region)

@@ -23,7 +23,6 @@ import java.time.Duration;
 import java.util.UUID;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -31,16 +30,16 @@ import org.testcontainers.utility.DockerImageName;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 public class S3MinioDocker {
 
-    public static final DockerImageName DOCKER_IMAGE_NAME = DockerImageName.parse("minio/minio")
-        .withTag("RELEASE.2025-06-13T11-33-47Z");
+    public static final DockerImageName DOCKER_IMAGE_NAME = DockerImageName.parse("ghcr.io/bikeshedder/garage-single-node")
+        .withTag("v2.1.0-bs-dev");
 
-    public static final int MINIO_PORT = 9000;
-    public static final int MINIO_WEB_ADMIN_PORT = 9090;
-    public static final String MINIO_ROOT_USER = "minio";
-    public static final String MINIO_ROOT_PASSWORD = "minio123";
+    public static final int S3_PORT = 3900;
+    public static final String S3_ACCESS_KEY = "GK0f3c2715a60440468081cf3f";
+    public static final String S3_SECRET_KEY = "96045f1bb0f9c1c2077ff61bdd8be86314374c50e72b2e823be0d577fd2ce9a6";
 
     private final GenericContainer<?> container;
 
@@ -55,25 +54,21 @@ public class S3MinioDocker {
 
     private GenericContainer<?> getContainer() {
         return new GenericContainer<>(DOCKER_IMAGE_NAME)
-            .withExposedPorts(MINIO_PORT, MINIO_WEB_ADMIN_PORT)
-            .withEnv("MINIO_ROOT_USER", MINIO_ROOT_USER)
-            .withEnv("MINIO_ROOT_PASSWORD", MINIO_ROOT_PASSWORD)
-            .withCommand("server", "--certs-dir", "/opt/minio/certs", "/data", "--console-address", ":" + MINIO_WEB_ADMIN_PORT)
-            .withClasspathResourceMapping("/minio/private.key",
-                "/opt/minio/certs/private.key",
-                BindMode.READ_ONLY)
-            .withClasspathResourceMapping("/minio/public.crt",
-                "/opt/minio/certs/public.crt",
-                BindMode.READ_ONLY)
-            .waitingFor(Wait.forLogMessage(".*MinIO Object Storage Server.*", 1)
+            .withExposedPorts(S3_PORT)
+            .withEnv("GARAGE_ACCESS_KEY_ID", S3_ACCESS_KEY)
+            .withEnv("GARAGE_SECRET_ACCESS_KEY", S3_SECRET_KEY)
+            .withEnv("GARAGE_BUCKETS", "my-test-bucket:public")
+            .withTmpFs(ImmutableMap.of("/var/lib/garage/meta", "rw,mode=1777",
+                "/var/lib/garage/data", "rw,mode=1777"))
+            .waitingFor(Wait.forLogMessage(".*Bootstrapping complete.*", 1)
                 .withStartupTimeout(Duration.ofMinutes(2)))
-            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-minio-s3-test-" + UUID.randomUUID()));
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-garage-s3-test-" + UUID.randomUUID()));
     }
 
     public void start() {
         if (!container.isRunning()) {
             container.start();
-            setupMC();
+            setupKey();
         }
     }
 
@@ -85,25 +80,18 @@ public class S3MinioDocker {
         Preconditions.checkArgument(container.isRunning(), "Container is not running");
         return AwsS3AuthConfiguration.builder()
             .endpoint(Throwing.supplier(() -> new URIBuilder()
-                .setScheme("https")
+                .setScheme("http")
                 .setHost(container.getHost())
-                .setPort(container.getMappedPort(MINIO_PORT))
+                .setPort(container.getMappedPort(S3_PORT))
                 .build()).get())
-            .accessKeyId(MINIO_ROOT_USER)
-            .secretKey(MINIO_ROOT_PASSWORD)
-            .trustAll(true)
+            .accessKeyId(S3_ACCESS_KEY)
+            .secretKey(S3_SECRET_KEY)
             .build();
     }
 
-    private void setupMC() {
+    private void setupKey() {
         Preconditions.checkArgument(container.isRunning(), "Container is not running");
-        Throwing.runnable(() -> container.execInContainer("mc", "alias", "set", "--insecure", "james", "https://localhost:9000", MINIO_ROOT_USER, MINIO_ROOT_PASSWORD)).run();
-    }
-
-    public void flushAll() {
-        // Remove all objects
-        Throwing.runnable(() -> container.execInContainer("mc", "--insecure", "rm", "--recursive", "--force", "--dangerous", "james/")).run();
-        // Remove all buckets
-        Throwing.runnable(() -> container.execInContainer("mc", "--insecure", "rb", "--force", "--dangerous", "james/")).run();
+        Throwing.runnable(() -> container.execInContainer("/garage", "key", "allow", "--create-bucket", S3_ACCESS_KEY)).run();
+        Throwing.runnable(() -> container.execInContainer("/garage", "bucket", "delete", "my-test-bucket", "--yes")).run();
     }
 }
