@@ -325,7 +325,7 @@ public class IndexableMessage {
         this.sentDate = sentDate;
         this.saveDate = saveDate;
         this.size = size;
-        this.subjects = new SubjectsDto(subjects.getSubjects());
+        this.subjects = SubjectsDto.from(subjects.getSubjects());
         this.subType = subType;
         this.to = EMailersDto.from(to);
         this.uid = uid;

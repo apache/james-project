@@ -161,7 +161,9 @@
   "cc": [],
   "bcc": [],
   "subject": [
-	"libapache-mod-jk security update"
+	"libapache-mod-jk security update",
+    "SECURITY",
+    "DSA 3278-1"
   ],
   "sentDate": "2015-06-03T19:14:32+0000",
   "attachments": [],
