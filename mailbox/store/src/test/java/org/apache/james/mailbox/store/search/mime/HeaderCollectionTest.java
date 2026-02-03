@@ -85,13 +85,13 @@ class HeaderCollectionTest {
     }
 
     @Test
-    void shouldNormalizeSubject() {
+    void shouldNotNormalizeSubject() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("Subject", "Re: test"))
             .build();
 
         assertThat(headerCollection.getSubjectSet())
-            .containsOnly("test");
+            .containsOnly("Re: test");
     }
 
     @Test

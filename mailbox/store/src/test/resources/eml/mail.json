@@ -163,7 +163,8 @@
  "cc": [],
  "bcc": [],
  "subject": [
-  "[arch-general] Inkscape fails to open svg files"
+  "Inkscape fails to open svg files",
+   "arch-general"
  ],
  "sentDate": "2015-06-04T06:08:41+02:00",
  "attachments": [],
