@@ -21,9 +21,14 @@ package org.apache.james.mailbox.opensearch.json;
 
 import java.util.Optional;
 
+import org.apache.james.mailbox.store.search.mime.EMailer;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record EMailerDto(@JsonProperty(JsonMessageConstants.EMailer.NAME) Optional<String> name,
                          @JsonProperty(JsonMessageConstants.EMailer.ADDRESS) String address,
                          @JsonProperty(JsonMessageConstants.EMailer.DOMAIN) String domain) {
+    public static EMailerDto from(EMailer emailer) {
+        return new EMailerDto(emailer.getName(), emailer.getAddress(), emailer.getDomain());
+    }
 }
