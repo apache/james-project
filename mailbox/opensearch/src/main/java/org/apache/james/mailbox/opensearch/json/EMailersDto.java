@@ -30,7 +30,7 @@ public record EMailersDto(@JsonValue Set<EMailerDto> emailers) {
 
     public static EMailersDto from(EMailers eMailers) {
         return new EMailersDto(eMailers.getEmailers().stream()
-            .map(emailer -> new EMailerDto(emailer.getName(), emailer.getAddress(), emailer.getDomain()))
+            .map(EMailerDto::from)
             .collect(Collectors.toSet()));
     }
 }
