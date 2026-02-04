@@ -58,7 +58,7 @@ public class S3MinioDocker {
             .withExposedPorts(S3_PORT)
             .withEnv("RUSTFS_ACCESS_KEY", S3_ACCESS_KEY)
             .withEnv("RUSTFS_SECRET_KEY", S3_SECRET_KEY)
-            .withEnv("RUSTFS_VOLUMES", "/data/rustfs{0..3}")
+            .withEnv("RUSTFS_LOCK_ACQUIRE_TIMEOUT", "120")
             .withTmpFs(singletonMap("/data", "rw,mode=1777"))
             .waitingFor(Wait.forLogMessage(".*Console WebUI.*", 2)
                 .withStartupTimeout(Duration.ofMinutes(2)))
