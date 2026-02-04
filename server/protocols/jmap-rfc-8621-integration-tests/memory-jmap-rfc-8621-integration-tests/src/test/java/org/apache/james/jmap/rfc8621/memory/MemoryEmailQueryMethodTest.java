@@ -52,4 +52,16 @@ public class MemoryEmailQueryMethodTest extends MemoryBase implements EmailQuery
         EmailQueryMethodContract.super.shouldListMailsReceivedAfterADate(server);
     }
 
+    @Test
+    @Override
+    @Disabled("JAMES-4166 collapseThreads does not support Lucene implementation yet")
+    public void collapseThreadsShouldApplyOnSearchIndexPath(GuiceJamesServer server) {
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-4166 collapseThreads does not support Lucene implementation yet")
+    public void collapseThreadsShouldApplyPaginationOnCollapsedResults(GuiceJamesServer server) {
+    }
+
 }
