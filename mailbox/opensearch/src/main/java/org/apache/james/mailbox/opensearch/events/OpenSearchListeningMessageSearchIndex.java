@@ -370,15 +370,8 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
             return Flux.empty();
         }
 
-        return searchCollapsed(mailboxIds, searchQuery, searchOptions)
+        return searcher.search(mailboxIds, searchQuery, searchOptions, MESSAGE_ID_FIELD, !SEARCH_HIGHLIGHT)
             .handle(this::extractMessageIdFromHit);
-    }
-
-    private Flux<Hit<ObjectNode>> searchCollapsed(Collection<MailboxId> mailboxIds, SearchQuery searchQuery, SearchOptions searchOptions) {
-        if (searchQuery.shouldCollapseThreads()) {
-            return searcher.searchCollapsedByThreadId(mailboxIds, searchQuery, searchOptions, MESSAGE_ID_FIELD, !SEARCH_HIGHLIGHT);
-        }
-        return searcher.searchCollapsedByMessageId(mailboxIds, searchQuery, searchOptions, MESSAGE_ID_FIELD, !SEARCH_HIGHLIGHT);
     }
 
     @Override
