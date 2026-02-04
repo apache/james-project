@@ -53,6 +53,7 @@ public class S3MinioBlobStoreGCAlgorithmTest implements BloomFilterGCAlgorithmCo
             .region(DockerAwsS3Container.REGION)
             .uploadRetrySpec(Optional.of(Retry.backoff(3, java.time.Duration.ofSeconds(1))
                 .filter(UPLOAD_RETRY_EXCEPTION_PREDICATE)))
+            .httpConcurrency(Optional.of(200))
             .build();
 
         S3ClientFactory s3ClientFactory = new S3ClientFactory(s3Configuration, new RecordingMetricFactory(), new NoopGaugeRegistry());
