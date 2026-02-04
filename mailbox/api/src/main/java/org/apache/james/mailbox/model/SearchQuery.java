@@ -762,11 +762,13 @@ public class SearchQuery {
         private final ImmutableList.Builder<Criterion> criterias;
         private final ImmutableSet.Builder<MessageUid> recentMessageUids;
         private Optional<ImmutableList<Sort>> sorts;
+        private boolean collapseThreads;
 
         public Builder() {
             criterias = ImmutableList.builder();
             sorts = Optional.empty();
             recentMessageUids = ImmutableSet.builder();
+            collapseThreads = false;
         }
 
         public Builder andCriteria(Criterion... criteria) {
@@ -804,10 +806,16 @@ public class SearchQuery {
             return this;
         }
 
+        public Builder collapseThreads(boolean collapseThreads) {
+            this.collapseThreads = collapseThreads;
+            return this;
+        }
+
         public SearchQuery build() {
             return new SearchQuery(criterias.build(),
                 sorts.orElse(ImmutableList.of()),
-                recentMessageUids.build());
+                recentMessageUids.build(),
+                collapseThreads);
         }
     }
 
@@ -834,11 +842,13 @@ public class SearchQuery {
     private final ImmutableList<Criterion> criteria;
     private final ImmutableList<Sort> sorts;
     private final ImmutableSet<MessageUid> recentMessageUids;
+    private final boolean collapseThreads;
 
-    private SearchQuery(ImmutableList<Criterion> criteria, ImmutableList<Sort> sorts, ImmutableSet<MessageUid> recentMessageUids) {
+    private SearchQuery(ImmutableList<Criterion> criteria, ImmutableList<Sort> sorts, ImmutableSet<MessageUid> recentMessageUids, boolean collapseThreads) {
         this.criteria = criteria;
         this.sorts = sorts;
         this.recentMessageUids = recentMessageUids;
+        this.collapseThreads = collapseThreads;
     }
 
     public List<Criterion> getCriteria() {
@@ -869,6 +879,10 @@ public class SearchQuery {
         return recentMessageUids;
     }
 
+    public boolean shouldCollapseThreads() {
+        return collapseThreads;
+    }
+
     @Override
     public String toString() {
         return "Search:" + criteria.toString();
@@ -876,7 +890,7 @@ public class SearchQuery {
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(criteria, sorts, recentMessageUids);
+        return Objects.hashCode(criteria, sorts, recentMessageUids, collapseThreads);
     }
 
     @Override
@@ -886,7 +900,8 @@ public class SearchQuery {
 
             return Objects.equal(this.criteria, that.criteria)
                 && Objects.equal(this.sorts, that.sorts)
-                && Objects.equal(this.recentMessageUids, that.recentMessageUids);
+                && Objects.equal(this.recentMessageUids, that.recentMessageUids)
+                && Objects.equal(this.collapseThreads, that.collapseThreads);
         }
         return false;
     }

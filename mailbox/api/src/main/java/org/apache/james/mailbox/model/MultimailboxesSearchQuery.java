@@ -178,6 +178,7 @@ public class MultimailboxesSearchQuery {
                 .andCriteria(searchQuery.getCriteria())
                 .andCriteria(criterion)
                 .sorts(searchQuery.getSorts())
+                .collapseThreads(searchQuery.shouldCollapseThreads())
                 .build(),
             inMailboxes,
             notInMailboxes,
