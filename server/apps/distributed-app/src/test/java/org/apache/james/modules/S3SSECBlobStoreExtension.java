@@ -24,7 +24,6 @@ import java.util.UUID;
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
-import org.apache.james.blob.objectstorage.aws.DockerAwsS3Container;
 import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
 import org.apache.james.blob.objectstorage.aws.S3MinioDocker;
