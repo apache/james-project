@@ -32,6 +32,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface ThreadIdGuessingAlgorithm {
+    Flux<ThreadId> relatedThreads(MimeMessageId messageId, MailboxSession session);
+
     Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> thisMimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session);
 
     Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session);

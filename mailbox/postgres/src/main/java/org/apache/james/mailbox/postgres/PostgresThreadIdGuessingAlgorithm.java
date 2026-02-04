@@ -77,6 +77,19 @@ public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgori
     }
 
     @Override
+    public Flux<ThreadId> relatedThreads(MimeMessageId messageId, MailboxSession session) {
+        PostgresThreadDAO threadDAO = threadDAOFactory.create(session.getUser().getDomainPart());
+
+        Set<Integer> hashMimeMessageIds = buildMimeMessageIdSet(Optional.of(messageId), Optional.empty(), Optional.empty())
+            .stream()
+            .map(mimeMessageId1 -> Hashing.murmur3_32_fixed().hashBytes(mimeMessageId1.getValue().getBytes()).asInt())
+            .collect(Collectors.toSet());
+
+        return threadDAO.findThreads(session.getUser(), hashMimeMessageIds)
+            .map(Pair::getRight);
+    }
+
+    @Override
     public Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session) {
         if (DISABLE_THREADS) {
             return Flux.just(threadId.getBaseMessageId());

@@ -41,4 +41,9 @@ public class NaiveThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorithm
     public Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session) {
         return Flux.just(threadId.getBaseMessageId());
     }
+
+    @Override
+    public Flux<ThreadId> relatedThreads(MimeMessageId messageId, MailboxSession session) {
+        return Flux.empty();
+    }
 }
