@@ -32,6 +32,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 public class S3MinioDocker {
 

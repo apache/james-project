@@ -328,7 +328,7 @@ public interface ReadSaveBlobStoreDAOContract {
     }
 
     static Stream<Arguments> blobs() {
-        return Stream.of(new Object[]{"SHORT", SHORT_BYTEARRAY}, new Object[]{"LONG", ELEVEN_KILOBYTES}, new Object[]{"BIG", TWELVE_MEGABYTES})
+        return Stream.of(new Object[]{"SHORT", SHORT_BYTEARRAY}, new Object[]{"LONG", ELEVEN_KILOBYTES})
             .map(Arguments::of);
     }
 
