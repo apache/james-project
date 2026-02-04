@@ -1,11 +1,16 @@
 
 === S3 compatible BlobStores
 
-James has been tested and ensures it's been compatible with the following S3 object storages:
+James has been tested and ensures it is API compatible with the following S3 object storages:
 
 - link:https://us.ovhcloud.com/public-cloud/object-storage[OVH S3 service]
 - link:https://www.min.io[MinIO (proprietary)]
 - link:https://garagehq.deuxfleurs.fr[Garage]
+
+[.underline]#Notes#:
+
+- MinIO encodes object names as filename and thus is subject to file system limitation.
+We advise using the MinIO compatibility layer that ensures blobs are spread out across folders.
 
 === Encryption choice
 
