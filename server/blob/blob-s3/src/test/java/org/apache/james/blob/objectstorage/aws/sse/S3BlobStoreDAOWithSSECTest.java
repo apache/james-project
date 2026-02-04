@@ -19,13 +19,10 @@
 
 package org.apache.james.blob.objectstorage.aws.sse;
 
-import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
 import static org.apache.james.blob.objectstorage.aws.JamesS3MetricPublisher.DEFAULT_S3_METRICS_PREFIX;
 import static org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration.UPLOAD_RETRY_EXCEPTION_PREDICATE;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
@@ -39,13 +36,12 @@ import org.apache.james.blob.objectstorage.aws.S3MinioExtension;
 import org.apache.james.blob.objectstorage.aws.S3RequestOption;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import reactor.core.publisher.Flux;
 import reactor.util.retry.Retry;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 
@@ -57,8 +53,8 @@ public class S3BlobStoreDAOWithSSECTest implements BlobStoreDAOContract, S3SSECC
     private static S3BlobStoreDAO testee;
     private static S3ClientFactory s3ClientFactory;
 
-    @BeforeAll
-    static void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfiguration.builder()
             .authConfiguration(minoExtension.minioDocker().getAwsS3AuthConfiguration())
             .region(Region.of(software.amazon.awssdk.regions.Region.EU_WEST_1.id()))
@@ -75,13 +71,6 @@ public class S3BlobStoreDAOWithSSECTest implements BlobStoreDAOContract, S3SSECC
         testee = new S3BlobStoreDAO(s3ClientFactory, s3Configuration, new TestBlobId.Factory(), s3RequestOption);
     }
 
-    @BeforeEach
-    void beforeEach() throws Exception {
-        // Why? https://github.com/apache/james-project/pull/1981#issuecomment-2380396460
-        s3ClientFactory.get().createBucket(builder -> builder.bucket(TEST_BUCKET_NAME.asString()))
-            .get();
-    }
-
     @Override
     public BlobStoreDAO testee() {
         return testee;
@@ -92,24 +81,12 @@ public class S3BlobStoreDAOWithSSECTest implements BlobStoreDAOContract, S3SSECC
         return s3ClientFactory.get();
     }
 
-    private void deleteBucket(String bucketName) {
-        try {
-            s3ClientFactory.get().deleteBucket(builder -> builder.bucket(bucketName))
-                .get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error while deleting bucket", e);
-        }
-    }
+    @AfterEach
+    void tearDown() throws Exception {
+        testee.deleteAllBuckets().block();
+        s3ClientFactory.close();
 
-    @Test
-    @Override
-    public void listBucketsShouldReturnEmptyWhenNone() {
-        deleteBucket(TEST_BUCKET_NAME.asString());
-
-        BlobStoreDAO store = testee();
-
-        assertThat(Flux.from(store.listBuckets()).collectList().block())
-            .isEmpty();
+        Thread.sleep(1000);
     }
 
     @Test
