@@ -109,7 +109,18 @@ public class OpenSearchSearcher {
     public Flux<Hit<ObjectNode>> searchCollapsedByMessageId(Collection<MailboxId> mailboxIds, SearchQuery query,
                                                             SearchOptions searchOptions, List<String> fields,
                                                             boolean searchHighlight) {
-        SearchRequest searchRequest = prepareCollapsedSearchByMessageId(mailboxIds, query, searchOptions, fields, searchHighlight);
+        SearchRequest searchRequest = prepareCollapsedSearch(mailboxIds, query, searchOptions, fields, searchHighlight, JsonMessageConstants.MESSAGE_ID);
+        return search(searchRequest);
+    }
+
+    public Flux<Hit<ObjectNode>> searchCollapsedByThreadId(Collection<MailboxId> mailboxIds, SearchQuery query,
+                                                           SearchOptions searchOptions, List<String> fields,
+                                                           boolean searchHighlight) {
+        SearchRequest searchRequest = prepareCollapsedSearch(mailboxIds, query, searchOptions, fields, searchHighlight, JsonMessageConstants.THREAD_ID);
+        return search(searchRequest);
+    }
+
+    private Flux<Hit<ObjectNode>> search(SearchRequest searchRequest) {
         try {
             return client.search(searchRequest)
                 .flatMapMany(response -> Flux.fromIterable(response.hits().hits()));
@@ -144,8 +155,9 @@ public class OpenSearchSearcher {
             .build();
     }
 
-    private SearchRequest prepareCollapsedSearchByMessageId(Collection<MailboxId> mailboxIds, SearchQuery query,
-                                                            SearchOptions searchOptions, List<String> fields, boolean highlight) {
+    private SearchRequest prepareCollapsedSearch(Collection<MailboxId> mailboxIds, SearchQuery query,
+                                                 SearchOptions searchOptions, List<String> fields, boolean highlight,
+                                                 String collapseField) {
         List<SortOptions> sorts = query.getSorts()
             .stream()
             .flatMap(SortConverter::convertSort)
@@ -162,7 +174,7 @@ public class OpenSearchSearcher {
             .size(size)
             .storedFields(fields)
             .sort(sorts)
-            .collapse(collapse -> collapse.field(JsonMessageConstants.MESSAGE_ID));
+            .collapse(collapse -> collapse.field(collapseField));
 
         if (highlight) {
             request.highlight(highlightQuery);
