@@ -88,7 +88,7 @@ public class SearchThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorith
     public Flux<ThreadId> relatedThreads(MimeMessageId mimeMessageId, MailboxSession session) {
         MultimailboxesSearchQuery expression = buildSearchQuery(Optional.of(mimeMessageId), Optional.empty(), Optional.empty(), Optional.empty());
 
-        return Flux.from(mailboxManager.search(expression, session, 1))
+        return Flux.from(mailboxManager.search(expression, session, SearchOptions.limit(Limit.from(1))))
             .collectList()
             .flatMapMany(messageIds -> messageIdManager.getMessagesReactive(messageIds, FetchGroup.MINIMAL, session))
             .map(MessageResult::getThreadId);
