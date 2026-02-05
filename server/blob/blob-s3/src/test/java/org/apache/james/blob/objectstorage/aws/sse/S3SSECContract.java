@@ -49,7 +49,7 @@ public interface S3SSECContract {
                 .build(), AsyncResponseTransformer.toBytes())
             .thenApply(BytesWrapper::asByteArray)
             .get())
-            .hasMessageContaining("The object was stored using a form of Server Side Encryption");
+            .hasMessageContaining("Bad request: Object is encrypted");
     }
 
     @Test
@@ -64,7 +64,7 @@ public interface S3SSECContract {
                 .build(), AsyncResponseTransformer.toBytes())
             .thenApply(BytesWrapper::asByteArray)
             .get())
-            .hasMessageContaining("Requests specifying Server Side Encryption with Customer provided keys must provide a valid encryption algorithm");
+            .hasMessageContaining("Bad request: Unexpected server-side-encryption-customer-key{,-md5} header(s)");
     }
 
     @Test
@@ -84,6 +84,6 @@ public interface S3SSECContract {
                 .build(), AsyncResponseTransformer.toBytes())
             .thenApply(BytesWrapper::asByteArray)
             .get())
-            .hasMessageContaining("Access Denied");
+            .hasMessageContaining("Bad request: Invalid encryption key, could not decrypt object metadata");
     }
 }

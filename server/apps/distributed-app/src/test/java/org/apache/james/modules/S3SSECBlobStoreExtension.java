@@ -24,7 +24,6 @@ import java.util.UUID;
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
-import org.apache.james.blob.objectstorage.aws.DockerAwsS3Container;
 import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
 import org.apache.james.blob.objectstorage.aws.S3MinioDocker;
@@ -47,7 +46,7 @@ public class S3SSECBlobStoreExtension extends S3MinioExtension implements GuiceM
         BucketName defaultBucketName = BucketName.of(UUID.randomUUID().toString());
         AwsS3AuthConfiguration awsS3AuthConfiguration = s3MinioDocker.getAwsS3AuthConfiguration();
 
-        Region region = DockerAwsS3Container.REGION;
+        Region region = Region.of("garage");
         S3BlobStoreConfiguration configuration = S3BlobStoreConfiguration.builder()
             .authConfiguration(awsS3AuthConfiguration)
             .region(region)

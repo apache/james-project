@@ -68,9 +68,6 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
     void beforeEach() throws Exception {
         blobIdFactory = new MinIOGenerationAwareBlobId.Factory(clock, GenerationAwareBlobId.Configuration.DEFAULT, new PlainBlobId.Factory());
         testee = createBlobStore(blobIdFactory);
-
-        // Why? https://github.com/apache/james-project/pull/1981#issuecomment-2380396460
-        createBucket(testee.getDefaultBucketName().asString());
     }
 
     @AfterEach
@@ -89,17 +86,12 @@ public class S3WithMinIOGenerationAwareBlobIdTest implements BlobStoreContract {
         return blobIdFactory;
     }
 
-    private void createBucket(String bucketName) throws Exception {
-        s3ClientFactory.get().createBucket(builder -> builder.bucket(bucketName))
-            .get();
-    }
-
     public BlobStore createBlobStore(BlobId.Factory blobIdFactory) {
         AwsS3AuthConfiguration awsS3AuthConfiguration = minoExtension.minioDocker().getAwsS3AuthConfiguration();
 
         S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfiguration.builder()
             .authConfiguration(awsS3AuthConfiguration)
-            .region(DockerAwsS3Container.REGION)
+            .region(Region.of("garage"))
             .uploadRetrySpec(Optional.of(Retry.backoff(3, java.time.Duration.ofSeconds(1))
                 .filter(UPLOAD_RETRY_EXCEPTION_PREDICATE)))
             .build();
