@@ -10,7 +10,12 @@ James has been tested and ensures it is API compatible with the following S3 obj
 [.underline]#Notes#:
 
 - MinIO encodes object names as filename and thus is subject to file system limitation.
-We advise using the MinIO compatibility layer that ensures blobs are spread out across folders.
+We advise using the MinIO compatibility layer that ensures blobs are spread out across folders by using prefix-based
+object organization to avoid performance bottlenecks from storing too many objects in a single directory.
+
+_References_:
+- link:https://blog.min.io/prefix-vs-folder[MinIO: Prefix vs folder]
+- link:https://docs.min.io/enterprise/aistor-object-store/administration/objects-and-versioning/#object-organization-and-planning[MinIO: Object organization and planning]
 
 === Encryption choice
 
