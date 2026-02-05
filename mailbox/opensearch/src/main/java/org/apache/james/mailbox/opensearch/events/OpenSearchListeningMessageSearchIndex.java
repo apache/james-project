@@ -370,7 +370,7 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
             return Flux.empty();
         }
 
-        return searcher.searchCollapsedByMessageId(mailboxIds, searchQuery, searchOptions, MESSAGE_ID_FIELD, !SEARCH_HIGHLIGHT)
+        return searcher.search(mailboxIds, searchQuery, searchOptions, MESSAGE_ID_FIELD, !SEARCH_HIGHLIGHT)
             .handle(this::extractMessageIdFromHit);
     }
 

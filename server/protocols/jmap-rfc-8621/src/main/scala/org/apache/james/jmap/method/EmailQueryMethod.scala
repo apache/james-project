@@ -214,6 +214,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
       .flatMap(sorts => for {
         queryFilter <- QueryFilter.buildQuery(request)
       } yield {
+        queryFilter.collapseThreads(getCollapseThreads(request))
         if (sorts.isEmpty) {
           queryFilter
             .build()

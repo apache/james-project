@@ -820,4 +820,9 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .untilAsserted(() -> assertThat(messageSearchIndex.search(session, List.of(mailboxId), SearchQuery.matchAll(), SearchOptions.limit(Limit.limit(100))).toStream().count())
                 .isEqualTo(expectedCountResult));
     }
+
+    @Override
+    protected boolean supportsCollapseThreads() {
+        return true;
+    }
 }
