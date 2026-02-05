@@ -22,7 +22,7 @@ SUB {
 S: "SASL" "PLAIN"
 S: "SIEVE" ".*"
 S: "STARTTLS"
-S: "IMPLEMENTATION" "Apache ManageSieve v1.0"
+S: "IMPLEMENTATION" "Apache James ManageSieve"
 S: "VERSION" "1.0"
 }
 S: OK
@@ -32,7 +32,7 @@ SUB {
 S: "SASL" "PLAIN"
 S: "SIEVE" ".*"
 S: "STARTTLS"
-S: "IMPLEMENTATION" "Apache ManageSieve v1.0"
+S: "IMPLEMENTATION" "Apache James ManageSieve"
 S: "VERSION" "1.0"
 }
 S: OK
@@ -48,7 +48,7 @@ S: "OWNER" "user"
 S: "SASL" "PLAIN"
 S: "SIEVE" ".*"
 S: "STARTTLS"
-S: "IMPLEMENTATION" "Apache ManageSieve v1.0"
+S: "IMPLEMENTATION" "Apache James ManageSieve"
 S: "VERSION" "1.0"
 }
 S: OK
