@@ -21,6 +21,7 @@ package org.apache.james.jmap.method
 
 import java.io.InputStream
 
+import com.google.common.collect.ImmutableList
 import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
@@ -29,15 +30,19 @@ import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, Session
 import org.apache.james.jmap.json.MDNSerializer
 import org.apache.james.jmap.mail.{BlobId, BlobUnParsableException, MDNParseRequest, MDNParseResponse, MDNParseResults, MDNParsed}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers, SessionSupplier}
-import org.apache.james.mailbox.model.{MessageId, MultimailboxesSearchQuery, SearchOptions, SearchQuery}
-import org.apache.james.mailbox.{MailboxManager, MailboxSession}
+import org.apache.james.mailbox.model.{FetchGroup, Headers, MessageId}
+import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm
+import org.apache.james.mailbox.store.mail.model.MimeMessageId
+import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageIdManager}
 import org.apache.james.mdn.MDN
 import org.apache.james.mdn.fields.OriginalMessageId
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.message.DefaultMessageBuilder
-import org.apache.james.util.streams.{Limit => JavaLimit}
+import org.apache.james.util.ReactorUtils
+import org.apache.james.util.streams.Iterators
 import play.api.libs.json.JsObject
+import reactor.core.publisher.Flux
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.OptionConverters._
@@ -123,19 +128,24 @@ class MDNParseMethod @Inject()(serializer: MDNSerializer,
   }
 }
 
-object MDNEmailIdResolver {
-  val NUMBER_OF_ORIGINAL_MESSAGE_ID_VALID: Int = 1
-}
-
-case class MDNEmailIdResolver @Inject()(mailboxManager: MailboxManager) {
-  import MDNEmailIdResolver.NUMBER_OF_ORIGINAL_MESSAGE_ID_VALID
+case class MDNEmailIdResolver @Inject()(mailboxManager: MailboxManager,
+                                        messageIdManager: MessageIdManager,
+                                        threadIdGuessingAlgorithm: ThreadIdGuessingAlgorithm) {
 
   def resolveForEmailId(originalMessageId: Option[OriginalMessageId], session: MailboxSession): SMono[Option[MessageId]] =
-    originalMessageId.map(originalMsg => {
-      val searchByRFC822MessageId: MultimailboxesSearchQuery = MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.mimeMessageID(originalMsg.getOriginalMessageId))).build
-      SFlux.fromPublisher(mailboxManager.search(searchByRFC822MessageId, session, SearchOptions.limit(JavaLimit.limit(NUMBER_OF_ORIGINAL_MESSAGE_ID_VALID + 1)))).collectSeq().map {
-        case Seq(first) => Some(first)
-        case _ => None
-      }
-    }).getOrElse(SMono.just(None))
+    originalMessageId.map(originalMsg => SMono.fromPublisher(
+      Flux.from(threadIdGuessingAlgorithm.relatedThreads(new MimeMessageId(originalMsg.getOriginalMessageId), session))
+        .flatMap(threadId => threadIdGuessingAlgorithm.getMessageIdsInThread(threadId, session), ReactorUtils.LOW_CONCURRENCY)
+        .distinct()
+        .flatMap(id => Flux.from(messageIdManager.getMessagesReactive(ImmutableList.of(id), FetchGroup.HEADERS, session)))
+        .filter(message => hasMessageId(originalMsg)(message.getHeaders))
+        .map(m => m.getMessageId)
+        .next())
+        .map(Some(_)))
+        .getOrElse(SMono.just(None))
+
+  def hasMessageId(originalMessageId: OriginalMessageId)(headers: Headers): Boolean =
+    Iterators.toStream(headers.headers())
+      .filter(h => h.getName.equalsIgnoreCase("Message-ID"))
+      .anyMatch(h => h.getValue.contains(originalMessageId.getOriginalMessageId))
 }
