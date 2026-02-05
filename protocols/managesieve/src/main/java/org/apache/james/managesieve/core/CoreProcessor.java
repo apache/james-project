@@ -64,7 +64,7 @@ public class CoreProcessor implements CoreCommands {
         String execute() throws ManageSieveException, SieveRepositoryException, IOException;
     }
 
-    public static final String IMPLEMENTATION_DESCRIPTION = "Apache James ManageSieve 3.9.0";
+    public static final String IMPLEMENTATION_DESCRIPTION = "Apache James ManageSieve";
     public static final String MANAGE_SIEVE_VERSION = "1.0";
 
     private final SieveRepository sieveRepository;
