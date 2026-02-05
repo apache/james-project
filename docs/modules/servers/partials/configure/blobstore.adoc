@@ -6,6 +6,8 @@ James has been tested and ensures it is API compatible with the following S3 obj
 - link:https://us.ovhcloud.com/public-cloud/object-storage[OVH S3 service]
 - link:https://www.min.io[MinIO (proprietary)]
 - link:https://garagehq.deuxfleurs.fr[Garage]
+- link:https://seaweedfs.github.io[SeaweedFS]: compatible but showed limitations on storing big blobs with SSEC
+(cf https://github.com/seaweedfs/seaweedfs/issues/8215)
 
 [.underline]#Notes#:
 
