@@ -96,6 +96,11 @@ class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
         return InMemoryMessageId.of(1000);
     }
 
+    @Override
+    protected boolean supportsCollapseThreads() {
+        return true;
+    }
+
     @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void uidShouldreturnEveryThing() {

@@ -102,16 +102,4 @@ public class MemoryEmailQueryMethodNoViewTest implements EmailQueryMethodContrac
     public void inMailboxBeforeSortedByReceivedAtShouldCollapseThreads(GuiceJamesServer server) {
     }
 
-    @Test
-    @Override
-    @Disabled("JAMES-4166 collapseThreads does not support Lucene implementation yet")
-    public void collapseThreadsShouldApplyOnSearchIndexPath(GuiceJamesServer server) {
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-4166 collapseThreads does not support Lucene implementation yet")
-    public void collapseThreadsShouldApplyPaginationOnCollapsedResults(GuiceJamesServer server) {
-    }
-
 }

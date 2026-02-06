@@ -131,7 +131,12 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
+import org.apache.lucene.search.grouping.GroupDocs;
+import org.apache.lucene.search.grouping.GroupingSearch;
+import org.apache.lucene.search.grouping.TermGroupSelector;
+import org.apache.lucene.search.grouping.TopGroups;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.util.BytesRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -308,6 +313,13 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return Flux.empty();
         }
 
+        if (searchQuery.shouldCollapseThreads()) {
+            return searchCollapseThreads(mailboxIds, searchQuery, searchOptions);
+        }
+        return searchWithoutCollapseThreads(mailboxIds, searchQuery, searchOptions);
+    }
+
+    private Flux<MessageId> searchWithoutCollapseThreads(Collection<MailboxId> mailboxIds, SearchQuery searchQuery, SearchOptions searchOptions) throws MailboxException {
         long requestedLimit = Math.addExact(searchOptions.offset().getOffset(), searchOptions.limit().getLimit().orElseThrow());
 
         return Flux.fromIterable(searchMultimap(mailboxIds, searchQuery)
@@ -318,6 +330,36 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             .limit(requestedLimit)
             .skip(searchOptions.offset().getOffset())
             .collect(ImmutableList.toImmutableList()));
+    }
+
+    private Flux<MessageId> searchCollapseThreads(Collection<MailboxId> mailboxIds, SearchQuery searchQuery, SearchOptions searchOptions) throws MailboxException {
+        Query query = buildQuery(mailboxIds, searchQuery);
+
+        try (IndexReader reader = DirectoryReader.open(writer)) {
+            IndexSearcher searcher = new IndexSearcher(reader);
+
+            GroupingSearch groupingSearch = new GroupingSearch(new TermGroupSelector(THREAD_ID_FIELD));
+            Sort sort = createSort(searchQuery.getSorts());
+            groupingSearch.setGroupSort(sort);
+            groupingSearch.setSortWithinGroup(sort);
+            // get the first message of each thread group
+            groupingSearch.setGroupDocsOffset(0);
+            groupingSearch.setGroupDocsLimit(1);
+
+            int groupOffset = Math.toIntExact(searchOptions.offset().getOffset());
+            int topNGroups = Math.toIntExact(searchOptions.limit().getLimit().orElseThrow());
+
+            TopGroups<BytesRef> topGroups = groupingSearch.search(searcher, query, groupOffset, topNGroups);
+            List<MessageId> result = new ArrayList<>(topGroups.groups.length);
+            for (GroupDocs<BytesRef> group : topGroups.groups) {
+                ScoreDoc[] scoreDocs = group.scoreDocs();
+                Document document = searcher.storedFields().document(scoreDocs[0].doc);
+                documentToSearchResult(document).getMessageId().ifPresent(result::add);
+            }
+            return Flux.fromIterable(result);
+        } catch (IOException e) {
+            throw new MailboxException("Unable to search the mailbox", e);
+        }
     }
 
     private List<SearchResult> searchMultimap(Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {
@@ -336,22 +378,12 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     public List<Document> searchDocument(Collection<MailboxId> mailboxIds, SearchQuery searchQuery, int maxQueryResults) throws MailboxException {
-        Query inMailboxes = buildQueryFromMailboxes(mailboxIds);
-
         try (IndexReader reader = DirectoryReader.open(writer)) {
             IndexSearcher searcher = new IndexSearcher(reader);
-            BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
-            queryBuilder.add(inMailboxes, BooleanClause.Occur.MUST);
-            // Not return flags documents
-            queryBuilder.add(new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST_NOT);
-
-            List<Criterion> crits = searchQuery.getCriteria();
-            for (Criterion crit : crits) {
-                queryBuilder.add(createQuery(crit, inMailboxes, searchQuery.getRecentMessageUids()), BooleanClause.Occur.MUST);
-            }
+            Query query = buildQuery(mailboxIds, searchQuery);
 
             // query for all the documents sorted as specified in the SearchQuery
-            TopDocs docs = searcher.search(queryBuilder.build(), maxQueryResults, createSort(searchQuery.getSorts()));
+            TopDocs docs = searcher.search(query, maxQueryResults, createSort(searchQuery.getSorts()));
 
             return Stream.of(docs.scoreDocs)
                 .map(Throwing.function(sDoc -> searcher.storedFields().document(sDoc.doc)))
@@ -366,6 +398,20 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         for (MailboxId id: mailboxIds) {
             String idAsString = id.serialize();
             queryBuilder.add(new TermQuery(new Term(MAILBOX_ID_FIELD, idAsString)), BooleanClause.Occur.SHOULD);
+        }
+        return queryBuilder.build();
+    }
+
+    private Query buildQuery(Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {
+        Query inMailboxes = buildQueryFromMailboxes(mailboxIds);
+        BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
+        queryBuilder.add(inMailboxes, BooleanClause.Occur.MUST);
+        // Not return flags documents
+        queryBuilder.add(new PrefixQuery(new Term(FLAGS_FIELD, "")), BooleanClause.Occur.MUST_NOT);
+
+        List<Criterion> crits = searchQuery.getCriteria();
+        for (Criterion crit : crits) {
+            queryBuilder.add(createQuery(crit, inMailboxes, searchQuery.getRecentMessageUids()), BooleanClause.Occur.MUST);
         }
         return queryBuilder.build();
     }
