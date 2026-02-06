@@ -39,11 +39,6 @@ public class S3MinioExtension implements GuiceModuleTestExtension {
     }
 
     @Override
-    public void afterEach(ExtensionContext extensionContext) {
-        s3MinioDocker.flushAll();
-    }
-
-    @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return parameterContext.getParameter().getType() == S3MinioDocker.class;
     }
