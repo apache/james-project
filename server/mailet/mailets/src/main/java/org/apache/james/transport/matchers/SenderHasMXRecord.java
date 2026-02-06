@@ -78,6 +78,7 @@ public class SenderHasMXRecord extends GenericMatcher {
             ImmutableList<String> mxRecords = dnsService.findMXRecords(address.getDomain().asString())
                 .stream()
                 .sorted()
+                .distinct()
                 .collect(ImmutableList.toImmutableList());
 
             return expectedMxRecords.equals(mxRecords);
