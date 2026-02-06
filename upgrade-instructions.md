@@ -17,6 +17,19 @@ Changes to apply between 3.9.x and 3.10.0 will be reported here.
 Change list:
  - [Adding thread_id column to Cassandra email_query_view_sent_at and email_query_view_received_at tables](#adding-thread_id-column-to-cassandra-email_query_view_sent_at-and-email_query_view_received_at-tables)
  - [Adding thread_id column to Postgresql email_query_view table](#adding-thread_id-column-to-postgresql-email_query_view-table)
+ - [Lucene mailbox index schema update for collapseThreads support](#lucene-mailbox-index-schema-update-for-collapsethreads-support)
+
+### Lucene mailbox index schema update for collapseThreads support
+
+Date: 06/02/2026
+
+Concerned products: James apps relying on Lucene as the search index
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-4166
+
+James now requires the `threadId` field to be indexed as a SortedDocValuesField to support `collapseThreads` on mailbox search.
+
+After upgrading, you need to rebuild the Lucene mailbox index by [reindexing all mails](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails).
 
 ### Adding thread_id column to Cassandra email_query_view_sent_at and email_query_view_received_at tables
 

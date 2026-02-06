@@ -88,6 +88,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.NumericDocValuesField;
+import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
@@ -143,7 +144,10 @@ public class LuceneIndexableDocument {
         Optional.ofNullable(SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message))
             .ifPresent(serializedMessageId -> doc.add(new StringField(MESSAGE_ID_FIELD, serializedMessageId, Field.Store.YES)));
         Optional.ofNullable(SearchUtil.getSerializedThreadIdIfSupportedByUnderlyingStorageOrNull(message))
-            .ifPresent(serializedThreadId -> doc.add(new StringField(THREAD_ID_FIELD, serializedThreadId, Field.Store.YES)));
+            .ifPresent(serializedThreadId -> {
+                doc.add(new StringField(THREAD_ID_FIELD, serializedThreadId, Field.Store.YES));
+                doc.add(new SortedDocValuesField(THREAD_ID_FIELD, new BytesRef(serializedThreadId)));
+            });
 
         HeaderCollection headerCollection = mimePartExtracted.getHeaderCollection();
 
