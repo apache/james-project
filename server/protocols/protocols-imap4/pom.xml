@@ -119,10 +119,6 @@
             <artifactId>protocols-netty</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jzlib</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.github.hakky54</groupId>
             <artifactId>ayza-for-pem</artifactId>
             <scope>test</scope>
@@ -148,12 +144,6 @@
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-netty</artifactId>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.jcraft</groupId>
-                    <artifactId>jzlib</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>

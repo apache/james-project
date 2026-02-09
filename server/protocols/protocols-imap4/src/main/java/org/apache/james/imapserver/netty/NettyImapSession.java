@@ -47,8 +47,8 @@ import org.apache.james.util.MDCBuilder;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.handler.codec.compression.JZlibDecoder;
-import io.netty.handler.codec.compression.JZlibEncoder;
+import io.netty.handler.codec.compression.JdkZlibDecoder;
+import io.netty.handler.codec.compression.JdkZlibEncoder;
 import io.netty.handler.codec.compression.ZlibDecoder;
 import io.netty.handler.codec.compression.ZlibEncoder;
 import io.netty.handler.codec.compression.ZlibWrapper;
@@ -280,8 +280,8 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
         executeSafely(() -> {
             runnable.run();
-            ZlibDecoder decoder = new JZlibDecoder(ZlibWrapper.NONE);
-            ZlibEncoder encoder = new JZlibEncoder(ZlibWrapper.NONE, 5);
+            ZlibDecoder decoder = new JdkZlibDecoder(ZlibWrapper.NONE);
+            ZlibEncoder encoder = new JdkZlibEncoder(ZlibWrapper.NONE, 5);
 
             // Check if we have the SslHandler in the pipeline already
             // if so we need to move the compress encoder and decoder
