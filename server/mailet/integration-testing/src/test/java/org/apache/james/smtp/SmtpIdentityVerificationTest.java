@@ -83,6 +83,31 @@ class SmtpIdentityVerificationTest {
     }
 
     @Test
+    void remoteUserCanSendEmailsToLocalUsersWhenLocalNetwork(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .withAutorizedAddresses("127.0.0.0/8")
+            .verifyIdentity()
+            .forbidUnauthenticatedSenders());
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage("other@domain.tld", USER);
+    }
+
+    @Test
+    void remoteUserCannotSendEmailsToLocalUsersWhenUnauthorizedSendersAreRejected(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity()
+            .forbidUnauthenticatedSenders());
+
+        assertThatThrownBy(() -> messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage("other@domain.tld", USER))
+            .isInstanceOf(SMTPSendingException.class)
+            .hasMessageContaining("530 5.7.1 Authentication Required");
+    }
+
+    @Test
     void relaxedShouldAcceptEmailsFromMXWhenLocalUsers(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .relaxedIdentityVerification());

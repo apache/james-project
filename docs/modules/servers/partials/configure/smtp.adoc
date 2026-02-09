@@ -99,6 +99,16 @@ channels.
 | This is an optional tag, defaults to true. If false, AUTH PLAIN and AUTH LOGIN will not be exposed. This setting
 can be used to enforce strong authentication mechanisms.
 
+| auth.required
+| Authentication is required to send emails. Adapted for submission ports.
+
+Note that if false (legacy value and default for backward compatibility) then unauthenticated senders are allowed but
+limited by sender verification (prevent spoofing) and relaying limits (must be authenticated to relay).
+
+We encourage setting this value to true on submission ports (465 + 587).
+
+Please note that `authorizedAddresses` are considered authenticated.
+
 | auth.oidc.oidcConfigurationURL
 | Provide OIDC url address for information to user. Only configure this when you want to authenticate SMTP server using a OIDC provider.
 
@@ -164,6 +174,8 @@ Backward compatibility is provided and thus the following values are supported:
 
  - `true`: act as `strict`
  - `false`: act as `disabled`
+
+Please note that this parameter only intend to prevent spoofing, and still allow unauthenticated remote users (that do not use local identity) to send email to local users.
 
 | maxmessagesize
 | This is an optional tag with a non-negative integer body.  It specifies the maximum
