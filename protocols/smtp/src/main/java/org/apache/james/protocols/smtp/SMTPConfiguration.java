@@ -37,12 +37,15 @@ import com.google.common.collect.ImmutableSet;
  *
  */
 public interface SMTPConfiguration extends ProtocolConfiguration {
+    record SenderVerificationConfiguration(SenderVerificationMode mode, boolean allowUnauthenticatedSender) {
+
+    }
+
     enum SenderVerificationMode {
         STRICT,
         RELAXED,
         DISABLED;
 
-        // TODO unit tests
         public static SenderVerificationMode parse(String value) {
             return switch (value.toLowerCase(Locale.US).trim()) {
                 case "true", "strict" -> STRICT;
@@ -77,7 +80,7 @@ public interface SMTPConfiguration extends ProtocolConfiguration {
      */
     boolean isAuthAnnounced(String remoteIP, boolean tlsStarted);
 
-    SenderVerificationMode verifyIdentity();
+    SenderVerificationConfiguration senderVerificationConfiguration();
     
     /**
      * Returns whether the remote server needs to send a HELO/EHLO

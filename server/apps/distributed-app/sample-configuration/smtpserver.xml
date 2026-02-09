@@ -89,6 +89,7 @@
             <announce>forUnauthorizedAddresses</announce>
             <requireSSL>true</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
+            <required>true</required>
             <!-- Sample OIDC configuration -->
             <!--
             <oidc>
@@ -136,6 +137,7 @@
             <announce>forUnauthorizedAddresses</announce>
             <requireSSL>true</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
+            <required>true</required>
             <!-- Sample OIDC configuration -->
             <!--
             <oidc>

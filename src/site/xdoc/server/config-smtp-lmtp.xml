@@ -109,6 +109,15 @@
 
             Please note that emails are only relayed if, and only if, the user did authenticate, or is in an authorized network,
             regardless of this option.</dd>
+        <dt><strong>auth.required</strong></dt>
+        <dd>Authentication is required to send emails. Adapted for submission ports.<br/>
+
+            Note that if false (legacy value and default for backward compatibility) then unauthenticated senders are allowed but
+            limited by sender verification (prevent spoofing) and relaying limits (must be authenticated to relay).<br/>
+
+            We encourage setting this value to true on submission ports (465 + 587).<br/>
+
+            Please note that `authorizedAddresses` are considered authenticated.</dd>
         <dt><strong>auth.requireSSL</strong></dt>
         <dd>This is an optional tag, defaults to true. If true, authentication is not advertised via capabilities on unencrypted
             channels.</dd>

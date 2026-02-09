@@ -39,8 +39,9 @@ public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements 
     }
 
     @Override
-    public SenderVerificationMode verifyIdentity() {
-        return SenderVerificationMode.STRICT;
+    public SenderVerificationConfiguration senderVerificationConfiguration() {
+        boolean allowUnauthenticatedSender = true;
+        return new SenderVerificationConfiguration(SenderVerificationMode.STRICT, allowUnauthenticatedSender);
     }
 
     @Override

@@ -73,6 +73,7 @@ public class SmtpConfiguration implements SerializableAsXml {
         private Optional<Boolean> startTls;
         private Optional<String> maxMessageSize;
         private Optional<SMTPConfiguration.SenderVerificationMode> verifyIndentity;
+        private Optional<Boolean> allowUnauthenticatedSender;
         private Optional<Boolean> bracketEnforcement;
         private Optional<String> authorizedAddresses;
         private final ImmutableList.Builder<HookConfigurationEntry> additionalHooks;
@@ -84,6 +85,7 @@ public class SmtpConfiguration implements SerializableAsXml {
             verifyIndentity = Optional.empty();
             maxMessageSize = Optional.empty();
             bracketEnforcement = Optional.empty();
+            allowUnauthenticatedSender = Optional.empty();
             additionalHooks = ImmutableList.builder();
         }
 
@@ -123,6 +125,11 @@ public class SmtpConfiguration implements SerializableAsXml {
             return this;
         }
 
+        public Builder forbidUnauthenticatedSenders() {
+            this.allowUnauthenticatedSender = Optional.of(false);
+            return this;
+        }
+
         public Builder doNotVerifyIdentity() {
             this.verifyIndentity = Optional.of(SMTPConfiguration.SenderVerificationMode.DISABLED);
             return this;
@@ -148,6 +155,7 @@ public class SmtpConfiguration implements SerializableAsXml {
                     authRequired.orElse(!AUTH_REQUIRED),
                     startTls.orElse(false),
                     bracketEnforcement.orElse(true),
+                    allowUnauthenticatedSender.orElse(true),
                     verifyIndentity.orElse(SMTPConfiguration.SenderVerificationMode.DISABLED),
                     maxMessageSize.orElse(DEFAULT_DISABLED),
                     additionalHooks.build());
@@ -162,6 +170,7 @@ public class SmtpConfiguration implements SerializableAsXml {
     private final boolean authRequired;
     private final boolean startTls;
     private final boolean bracketEnforcement;
+    private final boolean allowUnauthenticatedSenders;
     private final SMTPConfiguration.SenderVerificationMode verifyIndentity;
     private final String maxMessageSize;
     private final ImmutableList<HookConfigurationEntry> additionalHooks;
@@ -170,6 +179,7 @@ public class SmtpConfiguration implements SerializableAsXml {
                               boolean authRequired,
                               boolean startTls,
                               boolean bracketEnforcement,
+                              boolean allowUnauthenticatedSenders,
                               SMTPConfiguration.SenderVerificationMode verifyIndentity,
                               String maxMessageSize,
                               ImmutableList<HookConfigurationEntry> additionalHooks) {
@@ -177,6 +187,7 @@ public class SmtpConfiguration implements SerializableAsXml {
         this.authRequired = authRequired;
         this.bracketEnforcement = bracketEnforcement;
         this.verifyIndentity = verifyIndentity;
+        this.allowUnauthenticatedSenders = allowUnauthenticatedSenders;
         this.maxMessageSize = maxMessageSize;
         this.startTls = startTls;
         this.additionalHooks = additionalHooks;
@@ -189,6 +200,7 @@ public class SmtpConfiguration implements SerializableAsXml {
         authorizedAddresses.ifPresent(value -> scopes.put("authorizedAddresses", value));
         scopes.put("authRequired", authRequired);
         scopes.put("verifyIdentity", verifyIndentity.toString());
+        scopes.put("forbidUnauthenticatedSenders", Boolean.toString(!allowUnauthenticatedSenders));
         scopes.put("maxmessagesize", maxMessageSize);
         scopes.put("bracketEnforcement", bracketEnforcement);
         scopes.put("startTls", startTls);
