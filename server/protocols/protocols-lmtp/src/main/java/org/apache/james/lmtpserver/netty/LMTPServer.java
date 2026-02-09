@@ -102,10 +102,11 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
         protected LMTPConfigurationImpl() {
             super("JAMES Protocols Server");
         }
-        
+
         @Override
-        public SenderVerificationMode verifyIdentity() {
-            return SenderVerificationMode.DISABLED;
+        public SenderVerificationConfiguration senderVerificationConfiguration() {
+            boolean allowUnauthenticatedSender = true;
+            return new SenderVerificationConfiguration(SenderVerificationMode.DISABLED, allowUnauthenticatedSender);
         }
 
         @Override

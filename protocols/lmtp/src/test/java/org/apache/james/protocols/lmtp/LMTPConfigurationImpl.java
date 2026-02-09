@@ -31,8 +31,9 @@ public class LMTPConfigurationImpl extends LMTPConfiguration {
     }
 
     @Override
-    public SenderVerificationMode verifyIdentity() {
-        return SenderVerificationMode.DISABLED;
+    public SenderVerificationConfiguration senderVerificationConfiguration() {
+        boolean allowUnauthenticatedSender = true;
+        return new SenderVerificationConfiguration(SenderVerificationMode.DISABLED, allowUnauthenticatedSender);
     }
 
     @Override
