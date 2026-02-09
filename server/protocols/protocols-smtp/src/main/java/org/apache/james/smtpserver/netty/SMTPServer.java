@@ -206,7 +206,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
     private boolean addressBracketsEnforcement = true;
 
-    private SMTPConfiguration.SenderVerificationMode verifyIdentity;
+    private SMTPConfiguration.SenderVerificationConfiguration senderVerificationConfiguration;
 
     private DNSService dns;
     private String authorizedAddresses;
@@ -267,7 +267,9 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
             addressBracketsEnforcement = configuration.getBoolean("addressBracketsEnforcement", true);
 
-            verifyIdentity = SMTPConfiguration.SenderVerificationMode.parse(configuration.getString("verifyIdentity", "strict"));
+            senderVerificationConfiguration = new SMTPConfiguration.SenderVerificationConfiguration(
+                SMTPConfiguration.SenderVerificationMode.parse(configuration.getString("verifyIdentity", "strict")),
+                !configuration.getBoolean("auth.required", false));
 
             disabledFeatures = ImmutableSet.copyOf(configuration.getStringArray("disabledFeatures"));
         }
@@ -340,12 +342,8 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
                 .orElse(true);
         }
 
-        /**
-         * Return true if the username and mail from must match for a authorized
-         * user
-         */
-        public SenderVerificationMode verifyIdentity() {
-            return SMTPServer.this.verifyIdentity;
+        public SenderVerificationConfiguration senderVerificationConfiguration() {
+            return senderVerificationConfiguration;
         }
 
         @Override

@@ -38,6 +38,7 @@
         <authorizedAddresses>{{authorizedAddresses}}</authorizedAddresses>
 {{/hasAuthorizedAddresses}}
         <auth>
+            <required>{{forbidUnauthenticatedSenders}}</required>
             <requireSSL>false</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
@@ -79,6 +80,7 @@
         <authorizedAddresses>{{authorizedAddresses}}</authorizedAddresses>
         {{/hasAuthorizedAddresses}}
         <auth>
+            <required>{{forbidUnauthenticatedSenders}}</required>
             <requireSSL>true</requireSSL>
             <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
