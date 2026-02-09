@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.junit.jupiter.api.AfterEach;
@@ -102,6 +103,16 @@ class DNSJavaServiceTest {
         Collection<String> records = dnsServer.findMXRecords("nomx.dnstest.com.");
         assertThat(records.size()).isEqualTo(1);
         assertThat(records.iterator().next()).isEqualTo("nomx.dnstest.com.");
+    }
+
+    @Test
+    void test() throws Exception {
+        DNSJavaService dnsJavaService = new DNSJavaService(new RecordingMetricFactory());
+        dnsJavaService.configure(new BaseHierarchicalConfiguration());
+        dnsJavaService.init();
+        Collection<String> txtRecords = dnsJavaService.findTXTRecords("twake1._domainkey.vetixa.tn");
+
+        txtRecords.forEach(System.out::println);
     }
 
     @Test

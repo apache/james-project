@@ -28,6 +28,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
+import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.ParsedAttachment;
@@ -81,6 +82,7 @@ public class MessageParserImpl implements MessageParser {
     }
 
     public ParsingResult retrieveAttachments(InputStream fullContent) throws IOException {
+        Disposable.LeakAware.track();
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
         defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
         defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT);
