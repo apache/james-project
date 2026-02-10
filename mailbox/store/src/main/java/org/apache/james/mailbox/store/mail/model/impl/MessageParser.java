@@ -42,7 +42,9 @@ public interface MessageParser {
         }
 
         public static final ParsingResult EMPTY = new ParsingResult(
-            new Resource(ImmutableList.of(), () -> {}));
+            new Resource(ImmutableList.of(), () -> {
+
+            }));
 
         public ParsingResult(Resource resource) {
             super(resource);
