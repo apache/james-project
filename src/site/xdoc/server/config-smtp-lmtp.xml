@@ -115,7 +115,7 @@
             Note that if false (legacy value and default for backward compatibility) then unauthenticated senders are allowed but
             limited by sender verification (prevent spoofing) and relaying limits (must be authenticated to relay).<br/>
 
-            We encourage setting this value to true on submission ports (465 + 587).<br/>
+            We encourage setting this value to true on submission ports (465 + 587). MUST be set to false on port 25 or for any port with MX external mail receival role.<br/>
 
             Please note that `authorizedAddresses` are considered authenticated.</dd>
         <dt><strong>auth.requireSSL</strong></dt>
