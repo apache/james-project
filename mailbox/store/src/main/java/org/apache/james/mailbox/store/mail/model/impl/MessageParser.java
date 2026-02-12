@@ -23,31 +23,39 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mime4j.dom.Message;
 
 import com.google.common.collect.ImmutableList;
 
 public interface MessageParser {
-    class ParsingResult {
-        public static final MessageParser.ParsingResult EMPTY = new MessageParser.ParsingResult(ImmutableList.of(), () -> {
+    class ParsingResult extends Disposable.LeakAware<ParsingResult.Resource> {
 
-        });
+        static class Resource extends Disposable.LeakAware.Resource {
+            private final List<ParsedAttachment> attachments;
 
-        private final List<ParsedAttachment> attachments;
-        private final Runnable dispose;
+            Resource(List<ParsedAttachment> attachments, Disposable cleanup) {
+                super(cleanup);
+                this.attachments = attachments;
+            }
+        }
 
-        public ParsingResult(List<ParsedAttachment> attachments, Runnable dispose) {
-            this.attachments = attachments;
-            this.dispose = dispose;
+        public static final ParsingResult EMPTY = new ParsingResult(
+            new Resource(ImmutableList.of(), () -> {
+
+            }));
+
+        public ParsingResult(Resource resource) {
+            super(resource);
+        }
+
+        public ParsingResult(List<ParsedAttachment> attachments, Disposable cleanup) {
+            this(new Resource(attachments, cleanup));
         }
 
         public List<ParsedAttachment> getAttachments() {
-            return attachments;
-        }
-
-        public void dispose() {
-            dispose.run();
+            return getResource().attachments;
         }
     }
 
