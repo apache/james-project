@@ -48,6 +48,7 @@
         <auth>
             <announce>never</announce>
             <requireSSL>false</requireSSL>
+            <required>false</required>
             <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
