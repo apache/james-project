@@ -134,7 +134,7 @@ public class VacationRoutes implements Routes {
         try {
             return usersRepository.contains(username);
         } catch (UsersRepositoryException e) {
-            return false;
+            throw new RuntimeException(e);
         }
     }
 
