@@ -74,10 +74,6 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
     @Override
     public HookResult doCheck(SMTPSession session, MaybeSender sender) {
         ExtendedSMTPSession nSession = (ExtendedSMTPSession) session;
-        if (!session.isRelayingAllowed() && !nSession.senderVerificationConfiguration().allowUnauthenticatedSender()) {
-            LOGGER.info("Authentication is required for sending email (sender: {})", sender.asString());
-            return AUTH_REQUIRED;
-        }
         if (nSession.senderVerificationConfiguration().mode() == SMTPConfiguration.SenderVerificationMode.STRICT) {
             return super.doCheck(session, sender);
         } else if (nSession.senderVerificationConfiguration().mode() == SMTPConfiguration.SenderVerificationMode.RELAXED) {

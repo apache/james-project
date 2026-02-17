@@ -64,6 +64,7 @@ public class CoreCmdHandlerLoader implements HandlersPackage {
             UsersRepositoryAuthHook.class.getName(),
             AuthRequiredToRelayRcptHook.class.getName(),
             SenderAuthIdentifyVerificationHook.class.getName(),
+            AuthRequiredHook.class.getName(),
             PostmasterAbuseRcptHook.class.getName(),
             ReceivedDataLineFilter.class.getName(),
             DataLineJamesMessageHookHandler.class.getName(),
