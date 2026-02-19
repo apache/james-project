@@ -31,7 +31,8 @@ This had been repleaced by the Guice DropList extension.
 Please use RFC-8621 implementation rather than this outdated draft.
 
  - JAMES-4065 drop habeas warrant mark mailet
- - [DROP] Remove Linshare third party connector (#2613
+ - [DROP] Remove Linshare third party connector (#2613)
+ - [DROP] End depreciation cycle for JDBCMailRepository, use JPAMailRepository instead ([mailing list announcement](https://www.mail-archive.com/server-dev@james.apache.org/msg72460.html)) 
 
 ### Security
 
