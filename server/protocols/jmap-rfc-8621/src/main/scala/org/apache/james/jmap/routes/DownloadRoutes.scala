@@ -129,17 +129,29 @@ case class AttachmentBlob(attachmentMetadata: AttachmentMetadata, fileContent: I
 }
 
 case class EmailBodyPartBlob(blobId: BlobId, part: MinimalEmailBodyPart) extends Blob {
-  override def size: Try[Size] = part.size
-
-  override def contentType: ContentType = ContentType.of(part.`type`.value)
-
-  override def content: InputStream = part.entity.getBody match {
-    case body: SingleBody => body.getInputStream
+  private lazy val writtenBodyContent: Option[UnsynchronizedByteArrayOutputStream] = part.entity.getBody match {
+    case _: SingleBody => None
     case body =>
       val writer = new DefaultMessageWriter
       val outputStream = new UnsynchronizedByteArrayOutputStream()
       writer.writeBody(body, outputStream)
-      outputStream.toInputStream
+      Some(outputStream)
+  }
+
+  override def size: Try[Size] = writtenBodyContent match {
+    case Some(outputStream) =>
+      refineV[NonNegative](outputStream.size().toLong) match {
+        case Left(e) => Failure(new IllegalArgumentException(e))
+        case Right(s) => Success(s)
+      }
+    case None => part.size
+  }
+
+  override def contentType: ContentType = ContentType.of(part.`type`.value)
+
+  override def content: InputStream = writtenBodyContent match {
+    case Some(outputStream) => outputStream.toInputStream
+    case None => part.entity.getBody.asInstanceOf[SingleBody].getInputStream
   }
 }
 
