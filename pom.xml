@@ -623,21 +623,24 @@
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
         <activemq.version>6.1.6</activemq.version>
         <apache-mime4j.version>0.8.13</apache-mime4j.version>
-        <apache.openjpa.version>4.1.1</apache.openjpa.version>
+        <apache.openjpa.version>4.1.1</apache.openjpa.version><!-- Align with EE10 Persistence 3.1 & Transactions 2.0: https://openjpa.apache.org/ -->
         <h2.version>2.3.232</h2.version>
         <log4j2.version>2.24.3</log4j2.version>
+
+        <!-- Align with Jakarta EE 10
+             https://jakarta.ee/release/10/ -->
         <jakarta.inject-api.version>2.0.1</jakarta.inject-api.version>
-        <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
-        <jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
+        <jakarta.annotation-api.version>2.1.1</jakarta.annotation-api.version>
+        <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
+        <jakarta.activation-api.version>2.1.3</jakarta.activation-api.version>
+
         <jsieve.version>0.8</jsieve.version>
         <spring.version>6.2.8</spring.version>
         <activmq-artemis.version>2.41.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.5</apache-jspf-resolver.version>
-        <angus-mail.version>2.0.3</angus-mail.version>
-        <angus-activation.version>2.0.2</angus-activation.version>
-        <jakarta.activation-api.version>2.1.3</jakarta.activation-api.version>
+        <angus-mail.version>2.0.3</angus-mail.version><!-- Align with EE10 Mail 2.1: https://eclipse-ee4j.github.io/angus-mail/ -->
+        <angus-activation.version>2.0.2</angus-activation.version><!-- Align with EE10 Activation 2.1: https://eclipse-ee4j.github.io/angus-activation/ -->
         <slf4j.version>2.0.17</slf4j.version>
-
         <circe.version>0.14.14</circe.version>
         <dnsjava.version>3.6.3</dnsjava.version>
         <junit.jupiter.version>5.13.1</junit.jupiter.version>
@@ -646,7 +649,6 @@
         <concurrent.version>1.3.4</concurrent.version>
         <netty.version>4.1.126.Final</netty.version>
         <cucumber.version>7.23.0</cucumber.version>
-
         <jackson.version>2.19.1</jackson.version>
         <jackson.databind.version>2.19.1</jackson.databind.version>
         <feign.version>13.6</feign.version>
@@ -657,9 +659,9 @@
         <testcontainers.modules.version>1.21.1</testcontainers.modules.version>
         <es-reporter.version>6.0.0-RC3</es-reporter.version>
         <guava.version>33.4.8-jre</guava.version>
-
         <jutf7.version>1.0.0</jutf7.version>
         <apache.httpcomponents.version>4.5.14</apache.httpcomponents.version>
+
         <!-- maven-mailetdocs-plugin artifacts -->
         <maven-artifact.version>3.0-alpha-1</maven-artifact.version>
         <maven-plugin-annotations.version>3.15.1</maven-plugin-annotations.version>
@@ -668,6 +670,7 @@
         <maven-reporting-api.version>3.1.1</maven-reporting-api.version>
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
         <maven-enforcer-plugin.version>3.5.0</maven-enforcer-plugin.version>
+
         <qdox.version>2.2.0</qdox.version>
         <jaxb.version>4.0.5</jaxb.version>
         <lucene.version>10.2.1</lucene.version>
@@ -678,9 +681,7 @@
         <lettuce.core.version>6.7.1.RELEASE</lettuce.core.version>
         <io.micrometer.core.version>1.15.1</io.micrometer.core.version>
         <io.micrometer.tracing.version>1.5.1</io.micrometer.tracing.version>
-
         <bouncycastle.version>1.82</bouncycastle.version>
-
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.16</scala.version>
         <doclint>none</doclint>
@@ -4295,7 +4296,7 @@
                                         <requireEnvironmentVariable>
                                             <variableName>JAMES_PARTIAL_BUILD_BASE_BRANCH</variableName>
                                             <message>When using 'partial-build' profile, you need to define the 'JAMES_PARTIAL_BUILD_BASE_BRANCH'
-                                            environment variable defining which branch should be taken as a reference to detect changes.</message>
+                                                environment variable defining which branch should be taken as a reference to detect changes.</message>
                                         </requireEnvironmentVariable>
                                     </rules>
                                 </configuration>
