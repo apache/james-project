@@ -33,6 +33,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.events.MailboxEvents;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxACLUpdated;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -130,8 +131,8 @@ public class PropagateLookupRightListener implements EventListener.ReactiveGroup
             .then();
     }
 
-    private MailboxSession createMailboxSession(Event event) {
-        return mailboxManager.createSystemSession(event.getUsername());
+    private MailboxSession createMailboxSession(MailboxEvents.MailboxEvent event) {
+        return mailboxManager.createSystemSession(event.getMailboxPath().getUser());
     }
 
     private Mono<Void> applyLookupRight(MailboxSession session, MailboxPath mailboxPath, MailboxACL.EntryKey entryKey) {
