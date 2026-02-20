@@ -97,7 +97,8 @@ public class SubAddressing extends GenericMailet {
                         getPathWithCorrectCase(recipient, targetFolder)))));
     }
 
-    private Optional<MailboxPath> getPathWithCorrectCase(MailAddress recipient, String encodedTargetFolder) throws UsersRepositoryException, MailboxException {
+    // protected for being extended by extensions that provides non #private email-addressable entities
+    protected Optional<MailboxPath> getPathWithCorrectCase(MailAddress recipient, String encodedTargetFolder) throws UsersRepositoryException, MailboxException {
         Username recipientUsername = usersRepository.getUsername(recipient);
         MailboxSession session = mailboxManager.createSystemSession(recipientUsername);
         String decodedTargetFolder = URLDecoder.decode(encodedTargetFolder, StandardCharsets.UTF_8);
