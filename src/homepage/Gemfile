@@ -21,6 +21,7 @@ source 'https://rubygems.org'
 ruby RUBY_VERSION
 
 gem 'jekyll'
+gem 'webrick'
 
 #source "https://rubygems.org"
 

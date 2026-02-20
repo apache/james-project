@@ -4,49 +4,108 @@
 The source code of website https://james.apache.org[james.apache.org] is located in {path}.
 Here are the instructions how to publish new changes to the website.
 
-1. Install Apache Maven 3.0.2+ and make its binary 'mvn' available on your PATH.
-See http://maven.apache.org/download.html#Installation.
-2. run "mvn clean site"
-3. Test the built site in your browser from the {path}/target/site folder
-4. If everything looks OK, deploy the site using "mvn clean site-deploy".
-5. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as
-a proxy to review the changes (described here: http://www.apache.org/dev/project-site.html)
+The website is currently composed of the output of
 
-To deploy the technical reports use the "-Psite-reports" profile.
+- The homepage build
+- The maven site
 
-For wagon-ssh-external configuration see
-http://maven.apache.org/plugins/maven-deploy-plugin/examples/deploy-ssh-external.html
+[WARNING]
+.https://issues.apache.org/jira/browse/JAMES-3187[Documentation migration]
+====
+We are migrating the content of the maven site to use antora documentation instead.
 
-You can alternatively use a docker container to build the website :
+Most of the useful content has been migrated but the new documentation is not yet published to the main site. It can be found on the https://james.staged.apache.org[staging version] of the website.
+====
 
-You need to build the homepage by:
+== Building the homepage
+You can use jekyll to build the website. Go into `{path}` and run the following command
 
-    $ docker build -t james/homepage src/homepage-docker
-    $ docker run -v $PWD:/origin -v $PWD/site:/destination james/homepage master
+[,shell]
+----
+$ docker run --rm -v="$PWD:/srv/jekyll:Z" -it jekyll/jekyll:$JEKYLL_VERSION  jekyll build
+----
+
+The resulting deployable content will be available in the `{path}/_site/` directory.
 
 In order to test the homepage, you can use this command:
+[,shell]
+----
+$ docker run --rm -v $PWD/site:/srv/jekyll  -p 4000:4000 -it jekyll/jekyll jekyll serve
+----
+The site will be available at http://localhost:4000/
 
-    $ docker run --rm -v $PWD/site:/srv/jekyll  -p 4000:4000 -it jekyll/minimal:3.8.3 jekyll serve
-
-the site will be available at http://localhost:4000/
-
-Then you build the other pages by:
-
-    $ docker build -t james/site src/site-docker
-    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master
 
 If you need to update the current site, checkout the branch asf-site from Apache git:
-
-    $ git clone https://git-wip-us.apache.org/repos/asf/james-site.git
-    $ cd james-site
-    $ git checkout origin/asf-site -b asf-site
+[,shell]
+----
+$ git clone https://git-wip-us.apache.org/repos/asf/james-site.git
+$ cd james-site
+$ git checkout origin/asf-site -b asf-site
+----
 
 And replace in the previous commands `$PWD/site` by `<james-site-clone-directory>/content`, for example:
 
-    $ docker run -v $PWD:/origin -v $PWD/../james-site/content:/destination james/homepage master
-    $ docker run -v $PWD/.m2:/root/.m2 -v $PWD/../james-site/content:/origin -v $PWD/site:/destination james/site master
+[,shell]
+----
+$ docker run -v $PWD:/origin -v $PWD/../james-site/content:/destination james/homepage master
+$ docker run -v $PWD/.m2:/root/.m2 -v $PWD/../james-site/content:/origin -v $PWD/site:/destination james/site master
+----
 
 Then just push the new site:
+[,shell]
+----
+$ cd ../james-site
+$ git push origin asf-site
+----
 
-    $ cd ../james-site
-    $ git push origin asf-site
+## Maven site
+
+The maven site deploy phase uses and requires locally configuring credentials to enable ssh access. See
+http://maven.apache.org/plugins/maven-deploy-plugin/examples/deploy-ssh-external.html[maven-deploy-plugin's documentation] for more details on achieving this.
+
+### Manually
+
+1. Install Apache Maven 3.0.2+ and make its binary 'mvn' available on your PATH.
+See http://maven.apache.org/download.html#Installation.
+2. run `mvn clean site`
+3. Test the built site in your browser from the `{path}/target/site` folder
+4. If everything looks OK, deploy the site using `mvn clean site-deploy`.
+5. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as
+a proxy to review the changes (described here: http://www.apache.org/dev/project-site.html)
+
+### Docker
+
+Can be used only to build the site locally
+
+[WARNING]
+.Contribution welcome
+====
+The docker file in `src/site-docker` is currently broken:
+
+- outdated JDK (11 instead of 21)
+- "manual" download of maven from a link which doesn't resolve anymore
+
+prepare for some tinkering before building using this method.
+====
+
+[,shell]
+----
+$ docker build -t james/site src/site-docker
+$ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master
+----
+
+### nix development shell
+
+Enter the xref:contributing.adoc#_experimental_nix_support[james experimental development shell]
+
+1. run `mvn clean site`
+2. Test the built site in your browser from the `{path}/target/site` folder
+3. If everything looks OK, deploy the site using `mvn clean site-deploy`.
+4. Wait for the changes to replicate to the Apache web server or setup 140.211.11.10:80 as
+a proxy to review the changes (described here: http://www.apache.org/dev/project-site.html)
+
+### Technical reports
+
+To deploy the technical reports use any of the 3 ways above adding the `-Psite-reports` profile.
+
+

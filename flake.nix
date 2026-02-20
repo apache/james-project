@@ -28,6 +28,7 @@
         default = pkgs.mkShell {
           packages = with pkgs; [
             antora  # build documentation
+            bundler # homepage and blog
             cacert  # ssl certificate management
             dive    # explore generated docker images
             git     # version control
