@@ -46,7 +46,9 @@ import org.junit.Test;
 public class PropagateLookupRightListenerTest {
     private static final Username OWNER_USER = Username.of("user");
     private static final Username SHARED_USER = Username.of("sharee");
+    private static final Username SHARED_USER_2 = Username.of("sharee");
     private static final EntryKey SHARED_USER_KEY = EntryKey.createUserEntryKey(SHARED_USER);
+    private static final EntryKey SHARED_USER_KEY_2 = EntryKey.createUserEntryKey(SHARED_USER);
 
     private static final MailboxPath PARENT_MAILBOX = MailboxPath.forUser(OWNER_USER, "shared");
     private static final MailboxPath CHILD_MAILBOX = MailboxPath.forUser(OWNER_USER, "shared.sub1");
@@ -192,6 +194,34 @@ public class PropagateLookupRightListenerTest {
             new MailboxACL(
                 new Entry(SHARED_USER_KEY, new Rfc4314Rights(Right.Lookup))),
             mailboxSession);
+
+        MailboxACL actualParentACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getACL();
+
+        MailboxACL actualChildACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
+            .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
+            .getACL();
+
+        assertThat(actualParentACL.getEntries())
+            .contains(lookupEntry);
+        assertThat(actualChildACL.getEntries())
+            .contains(lookupEntry);
+    }
+
+    @Test
+    public void eventShouldUpdateAllParentWhenDelegateUpdateLookupRight() throws Exception {
+        storeRightManager.setRights(
+            GRAND_CHILD_MAILBOX,
+            new MailboxACL(
+                new Entry(SHARED_USER_KEY, MailboxACL.FULL_RIGHTS)),
+            mailboxSession);
+
+        storeRightManager.setRights(
+            GRAND_CHILD_MAILBOX,
+            new MailboxACL(
+                new Entry(SHARED_USER_KEY_2, new Rfc4314Rights(Right.Lookup))),
+            MailboxSessionUtil.create(SHARED_USER_2));
 
         MailboxACL actualParentACL = storeMailboxManager.getMailbox(parentMailboxId, mailboxSession)
             .getMetaData(IGNORE, mailboxSession, MessageManager.MailboxMetaData.FetchGroup.NO_COUNT)
