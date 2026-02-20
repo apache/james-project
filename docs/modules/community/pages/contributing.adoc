@@ -189,3 +189,15 @@ will solve the problem. Note any bug numbers your patch addresses.
 The reason for these rules is so that committers can easily see what you are trying to achieve, it is their
 responsibility to manage the code and review submissions, if you make it easy for them to see what you are doing your
 patch is more likely to be committed quickly.
+
+=== Experimental nix support
+
+There is work in progress to support a more reproductible dev environment so you don't have to figure out what to install or how.
+
+If you already have the nix package manager installed you should be able to use the following command to enter the predefined build env :
+
+```
+nix develop --no-update-lock-file
+```
+
+If you encounter an issue, leave a comment on the corresponding jira issue https://issues.apache.org/jira/browse/JAMES-4175[JAMES-4175] or create a bug and link it as related to https://issues.apache.org/jira/browse/JAMES-4175[JAMES-4175]
