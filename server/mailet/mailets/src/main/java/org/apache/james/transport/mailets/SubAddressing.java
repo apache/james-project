@@ -118,7 +118,7 @@ public class SubAddressing extends GenericMailet {
                 });
     }
 
-    private void postIfHasRight(Mail mail, MailAddress recipient, Optional<MailboxPath> targetFolderPath) throws UsersRepositoryException, MailboxException {
+    protected void postIfHasRight(Mail mail, MailAddress recipient, Optional<MailboxPath> targetFolderPath) throws UsersRepositoryException, MailboxException {
         if (hasPostRight(mail, recipient, targetFolderPath)) {
             StorageDirective.builder().targetFolders(ImmutableList.of(targetFolderPath.get().getName())).build()
                 .encodeAsAttributes(usersRepository.getUsername(recipient))
@@ -129,7 +129,7 @@ public class SubAddressing extends GenericMailet {
         }
     }
 
-    private Boolean hasPostRight(Mail mail, MailAddress recipient, Optional<MailboxPath> targetFolderPath) throws MailboxException, UsersRepositoryException {
+    protected Boolean hasPostRight(Mail mail, MailAddress recipient, Optional<MailboxPath> targetFolderPath) throws MailboxException, UsersRepositoryException {
         try {
             return targetFolderPath.isPresent() && resolvePostRight(retrieveMailboxACL(recipient, targetFolderPath.get()), mail.getMaybeSender(), recipient);
         } catch (MailboxNotFoundException e) {
