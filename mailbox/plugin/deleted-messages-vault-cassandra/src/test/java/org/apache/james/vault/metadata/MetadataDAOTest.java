@@ -31,7 +31,6 @@ import java.util.stream.Stream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;
@@ -49,7 +48,8 @@ class MetadataDAOTest {
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         DeletedMessageWithStorageInformationConverter dtoConverter = new DeletedMessageWithStorageInformationConverter(
-            new PlainBlobId.Factory(), new InMemoryMessageId.Factory(), new InMemoryId.Factory());
+            new InMemoryMessageId.Factory(),
+            new InMemoryId.Factory());
 
         testee = new MetadataDAO(cassandra.getConf(), new InMemoryMessageId.Factory(),
             new MetadataSerializer(dtoConverter));

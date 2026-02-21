@@ -24,6 +24,7 @@ import static org.apache.james.vault.DeletedMessageFixture.DELIVERY_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.INTERNAL_DATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.mock;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -31,6 +32,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.MailAddress;
@@ -52,7 +54,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.server.blob.deduplication.BlobStoreFactory;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
 import org.apache.james.vault.blob.BucketNameGenerator;
 import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
@@ -115,13 +117,13 @@ class DeletedMessageVaultHookTest {
     void setUp() throws Exception {
         clock = Clock.fixed(DELETION_DATE.toInstant(), ZoneOffset.UTC);
         MemoryBlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
+        BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
+
+        UsersRepository usersRepository = mock(UsersRepository.class);
+
         messageVault = new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
-            BlobStoreFactory.builder()
-                .blobStoreDAO(blobStoreDAO)
-                .blobIdFactory(new PlainBlobId.Factory())
-                .defaultBucketName()
-                .passthrough(), blobStoreDAO, new BucketNameGenerator(clock), clock,
-            VaultConfiguration.ENABLED_DEFAULT);
+            blobStoreDAO, new BucketNameGenerator(clock), clock,
+            VaultConfiguration.ENABLED_DEFAULT, usersRepository);
 
         DeletedMessageConverter deletedMessageConverter = new DeletedMessageConverter();
 
