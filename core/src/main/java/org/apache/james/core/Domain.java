@@ -20,6 +20,7 @@
 package org.apache.james.core;
 
 import java.io.Serializable;
+import java.net.IDN;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -54,9 +55,16 @@ public class Domain implements Serializable {
         Preconditions.checkArgument(domain.length() <= MAXIMUM_DOMAIN_LENGTH,
             "Domain name length should not exceed %s characters", MAXIMUM_DOMAIN_LENGTH);
 
-        String domainWithoutBrackets = removeBrackets(domain);
+        String domainWithoutBrackets = IDN.toASCII(removeBrackets(domain), IDN.ALLOW_UNASSIGNED);
         Preconditions.checkArgument(PART_CHAR_MATCHER.matchesAllOf(domainWithoutBrackets),
-            "Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in %s", domain);
+                                    "Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in %s", domain);
+
+        if (domainWithoutBrackets.startsWith("xn--") ||
+            domainWithoutBrackets.contains(".xn--")) {
+            domainWithoutBrackets = IDN.toUnicode(domainWithoutBrackets);
+            Preconditions.checkArgument(!domainWithoutBrackets.startsWith("xn--") &&
+                                        !domainWithoutBrackets.contains(".xn--"));
+        }
 
         int pos = 0;
         int nextDot = domainWithoutBrackets.indexOf('.');
