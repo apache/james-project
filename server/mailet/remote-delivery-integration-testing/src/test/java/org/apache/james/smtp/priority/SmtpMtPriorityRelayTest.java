@@ -134,7 +134,7 @@ class SmtpMtPriorityRelayTest {
                 .mailet(RemoteDelivery.class)
                 .matcher(All.class)
                 .addProperty("usePriority", usePriority.toString())
-                .addProperty("outgoingQueue", "outgoing")
+                .addProperty("outgoing", "outgoing")
                 .addProperty("delayTime", "3 * 10 ms")
                 .addProperty("maxRetries", "3")
                 .addProperty("deliveryThreads", "2")

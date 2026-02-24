@@ -67,7 +67,7 @@
                 <errorProcessor>rrt-error</errorProcessor>
             </mailet>
             <mailet match="All" class="RemoteDelivery">
-                <outgoingQueue>outgoing</outgoingQueue>
+                <outgoing>outgoing</outgoing>
                 <delayTime>10 seconds</delayTime>
                 <delayTime>30 seconds</delayTime>
 

@@ -145,7 +145,7 @@ class SmtpRequireTlsRelayTest {
                         .mailet(RemoteDelivery.class)
                         .matcher(All.class)
                         .addProperty("usePriority", usePriority.toString())
-                        .addProperty("outgoingQueue", "outgoing")
+                        .addProperty("outgoing", "outgoing")
                         .addProperty("delayTime", "3 * 10 ms")
                         .addProperty("maxRetries", "1")
                         .addProperty("maxDnsProblemRetries", "0")

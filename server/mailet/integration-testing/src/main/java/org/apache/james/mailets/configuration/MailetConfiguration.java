@@ -112,7 +112,7 @@ public class MailetConfiguration implements SerializableAsXml {
     public static MailetConfiguration.Builder remoteDeliveryBuilderNoBounces() {
         return MailetConfiguration.builder()
             .mailet(RemoteDelivery.class)
-            .addProperty("outgoingQueue", "outgoing")
+            .addProperty("outgoing", "outgoing")
             .addProperty("delayTime", "5000, 100000, 500000")
             .addProperty("maxRetries", "2")
             .addProperty("maxDnsProblemRetries", "0")

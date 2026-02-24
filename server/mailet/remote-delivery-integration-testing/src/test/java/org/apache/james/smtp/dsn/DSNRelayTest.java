@@ -399,7 +399,7 @@ class DSNRelayTest {
             .addMailet(MailetConfiguration.builder()
                 .mailet(RemoteDelivery.class)
                 .matcher(All.class)
-                .addProperty("outgoingQueue", "outgoing")
+                .addProperty("outgoing", "outgoing")
                 .addProperty("delayTime", "3 * 10 ms")
                 .addProperty("maxRetries", "3")
                 .addProperty("maxDnsProblemRetries", "0")

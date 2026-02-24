@@ -56,7 +56,7 @@
         <notice>550 - Requested action not taken: no such user here</notice>
       </mailet>
       <mailet match="All" class="RemoteDelivery">
-        <outgoingQueue>outgoing</outgoingQueue>
+        <outgoing>outgoing</outgoing>
         <delayTime>5 minutes</delayTime>
         <delayTime>10 minutes</delayTime>
         <delayTime>45 minutes</delayTime>

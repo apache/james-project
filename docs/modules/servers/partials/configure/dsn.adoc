@@ -99,7 +99,7 @@ not imply they read it.</messageString>
         <processor state="relay" enableJmx="true">
             <!-- Perform at most 5 RemoteDelivery attempts -->
             <mailet match="AtMost=5" class="RemoteDelivery">
-                <outgoingQueue>outgoing</outgoingQueue>
+                <outgoing>outgoing</outgoingQueue>
                 <maxRetries>0</maxRetries>
                 <maxDnsProblemRetries>0</maxDnsProblemRetries>
                 <deliveryThreads>10</deliveryThreads>

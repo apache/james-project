@@ -78,7 +78,7 @@
             </mailet>
 
             <mailet match="relay-allowed" class="RemoteDelivery">
-                <outgoingQueue>outgoing</outgoingQueue>
+                <outgoing>outgoing</outgoing>
                 <delayTime>5000, 100000, 500000</delayTime>
                 <maxRetries>3</maxRetries>
                 <maxDnsProblemRetries>0</maxDnsProblemRetries>
