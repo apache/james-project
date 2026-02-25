@@ -40,8 +40,8 @@ import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.MappingsImpl;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;

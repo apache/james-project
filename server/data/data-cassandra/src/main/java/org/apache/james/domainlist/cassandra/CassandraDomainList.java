@@ -39,8 +39,8 @@ import org.apache.james.domainlist.lib.AbstractDomainList;
 import org.apache.james.util.ReactorUtils;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 
 import reactor.core.publisher.Mono;

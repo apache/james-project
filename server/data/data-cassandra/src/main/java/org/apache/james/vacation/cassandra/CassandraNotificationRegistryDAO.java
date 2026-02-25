@@ -36,8 +36,8 @@ import org.apache.james.vacation.api.RecipientId;
 import org.apache.james.vacation.cassandra.tables.CassandraNotificationTable;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.querybuilder.insert.RegularInsert;
 
 import reactor.core.publisher.Mono;

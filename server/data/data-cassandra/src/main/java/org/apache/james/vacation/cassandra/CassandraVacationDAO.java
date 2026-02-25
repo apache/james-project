@@ -43,9 +43,9 @@ import org.apache.james.vacation.api.VacationPatch;
 import org.apache.james.vacation.cassandra.tables.CassandraVacationTable;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.type.UserDefinedType;
 import com.datastax.oss.driver.api.querybuilder.insert.RegularInsert;
 import com.google.common.collect.ImmutableList;

@@ -35,8 +35,8 @@ import org.apache.james.mailbox.cassandra.table.CassandraACLV2Table;
 import org.apache.james.mailbox.model.MailboxACL;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;

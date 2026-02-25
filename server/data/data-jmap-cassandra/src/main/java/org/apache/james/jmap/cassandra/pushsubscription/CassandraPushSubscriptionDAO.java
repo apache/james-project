@@ -56,10 +56,10 @@ import org.apache.james.jmap.api.model.TypeName;
 import org.apache.james.jmap.api.model.VerificationCode;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;

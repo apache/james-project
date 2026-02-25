@@ -51,9 +51,9 @@ import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.util.DurationParser;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.querybuilder.insert.RegularInsert;
 import com.google.common.base.Preconditions;
 
