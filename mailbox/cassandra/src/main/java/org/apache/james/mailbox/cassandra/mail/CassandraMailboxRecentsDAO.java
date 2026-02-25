@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxRecentsTable;
@@ -43,6 +44,7 @@ import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.google.common.collect.Lists;
 
@@ -59,6 +61,8 @@ public class CassandraMailboxRecentsDAO {
     private final PreparedStatement deleteAllStatement;
     private final PreparedStatement addStatement;
     private final ProtocolVersion protocolVersion;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraMailboxRecentsDAO(CqlSession session) {
@@ -68,6 +72,8 @@ public class CassandraMailboxRecentsDAO {
         deleteAllStatement = createDeleteAllStatement(session);
         addStatement = createAddStatement(session);
         protocolVersion = session.getContext().getProtocolVersion();
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "RECENTS");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "RECENTS");
     }
 
     private PreparedStatement createReadStatement(CqlSession session) {

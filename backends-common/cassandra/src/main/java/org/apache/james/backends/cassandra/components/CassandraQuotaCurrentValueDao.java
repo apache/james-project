@@ -33,6 +33,7 @@ import static org.apache.james.backends.cassandra.components.CassandraQuotaCurre
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCurrentValue;
 import org.apache.james.core.quota.QuotaType;
@@ -42,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.querybuilder.delete.Delete;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
 import com.datastax.oss.driver.api.querybuilder.update.Update;
@@ -59,6 +61,8 @@ public class CassandraQuotaCurrentValueDao {
     private final PreparedStatement getQuotaCurrentValueStatement;
     private final PreparedStatement getQuotasByComponentStatement;
     private final PreparedStatement deleteQuotaCurrentValueStatement;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraQuotaCurrentValueDao(CqlSession session) {
@@ -68,6 +72,8 @@ public class CassandraQuotaCurrentValueDao {
         this.getQuotaCurrentValueStatement = session.prepare(getQuotaCurrentValueStatement().build());
         this.getQuotasByComponentStatement = session.prepare(getQuotasByComponentStatement().build());
         this.deleteQuotaCurrentValueStatement = session.prepare(deleteQuotaCurrentValueStatement().build());
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "CURRENT-QUOTA");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "CURRENT-QUOTA");
     }
 
     public Mono<Void> increase(QuotaCurrentValue.Key quotaKey, long amount) {
@@ -75,7 +81,8 @@ public class CassandraQuotaCurrentValueDao {
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier())
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue())
-            .setLong(CURRENT_VALUE, amount))
+            .setLong(CURRENT_VALUE, amount)
+                .setExecutionProfile(writeProfile))
             .onErrorResume(ex -> {
                 LOGGER.warn("Failure when increasing {} {} quota for {}. Quota current value is thus not updated and needs recomputation",
                     quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier(), ex);
@@ -88,7 +95,8 @@ public class CassandraQuotaCurrentValueDao {
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier())
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue())
-            .setLong(CURRENT_VALUE, amount))
+            .setLong(CURRENT_VALUE, amount)
+            .setExecutionProfile(writeProfile))
             .onErrorResume(ex -> {
                 LOGGER.warn("Failure when decreasing {} {} quota for {}. Quota current value is thus not updated and needs recomputation",
                     quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier(), ex);
@@ -100,22 +108,25 @@ public class CassandraQuotaCurrentValueDao {
         return queryExecutor.executeSingleRow(getQuotaCurrentValueStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier())
-            .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue()))
-            .map(row -> convertRowToModel(row));
+            .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue())
+            .setExecutionProfile(readProfile))
+            .map(this::convertRowToModel);
     }
 
     public Mono<Void> deleteQuotaCurrentValue(QuotaCurrentValue.Key quotaKey) {
         return queryExecutor.executeVoid(deleteQuotaCurrentValueStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier())
-            .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue()));
+            .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue())
+            .setExecutionProfile(writeProfile));
     }
 
     public Flux<QuotaCurrentValue> getQuotasByComponent(QuotaComponent quotaComponent, String identifier) {
         return queryExecutor.executeRows(getQuotasByComponentStatement.bind()
                 .setString(QUOTA_COMPONENT, quotaComponent.getValue())
-                .setString(IDENTIFIER, identifier))
-            .map(row -> convertRowToModel(row));
+                .setString(IDENTIFIER, identifier)
+                .setExecutionProfile(readProfile))
+            .map(this::convertRowToModel);
     }
 
     private Update increaseStatement() {

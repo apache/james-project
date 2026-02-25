@@ -59,6 +59,7 @@ import jakarta.mail.Flags.Flag;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -96,7 +97,6 @@ public class CassandraMessageIdToImapUidDAO {
     private final BlobId.Factory blobIdFactory;
     private final PreparedStatement delete;
     private final PreparedStatement insert;
-    private final PreparedStatement insertForced;
     private final PreparedStatement update;
     private final PreparedStatement selectAll;
     private final PreparedStatement select;
@@ -104,6 +104,8 @@ public class CassandraMessageIdToImapUidDAO {
     private final CassandraConfiguration cassandraConfiguration;
     private final CqlSession session;
     private final DriverExecutionProfile lwtProfile;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraMessageIdToImapUidDAO(CqlSession session, BlobId.Factory blobIdFactory,
@@ -114,12 +116,13 @@ public class CassandraMessageIdToImapUidDAO {
         this.cassandraConfiguration = cassandraConfiguration;
         this.delete = prepareDelete();
         this.insert = prepareInsert();
-        this.insertForced = prepareInsertForced();
         this.update = prepareUpdate();
         this.selectAll = prepareSelectAll();
         this.select = prepareSelect();
         this.listStatement = prepareList();
         this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "IMAP-UID-TABLE");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "IMAP-UID-TABLE");
     }
 
     private PreparedStatement prepareDelete() {
@@ -175,28 +178,6 @@ public class CassandraMessageIdToImapUidDAO {
         }
     }
 
-    private PreparedStatement prepareInsertForced() {
-        Insert insert = insertInto(TABLE_NAME)
-            .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-            .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
-            .value(IMAP_UID, bindMarker(IMAP_UID))
-            .value(MOD_SEQ, bindMarker(MOD_SEQ))
-            .value(ANSWERED, bindMarker(ANSWERED))
-            .value(DELETED, bindMarker(DELETED))
-            .value(DRAFT, bindMarker(DRAFT))
-            .value(FLAGGED, bindMarker(FLAGGED))
-            .value(RECENT, bindMarker(RECENT))
-            .value(SEEN, bindMarker(SEEN))
-            .value(USER, bindMarker(USER))
-            .value(USER_FLAGS, bindMarker(USER_FLAGS))
-            .value(INTERNAL_DATE, bindMarker(INTERNAL_DATE))
-            .value(SAVE_DATE, bindMarker(SAVE_DATE))
-            .value(BODY_START_OCTET, bindMarker(BODY_START_OCTET))
-            .value(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS))
-            .value(HEADER_CONTENT, bindMarker(HEADER_CONTENT));
-        return session.prepare(insert.build());
-    }
-
     private PreparedStatement prepareUpdate() {
         Update update = QueryBuilder.update(TABLE_NAME)
             .set(setColumn(MOD_SEQ, bindMarker(MOD_SEQ)),
@@ -242,7 +223,8 @@ public class CassandraMessageIdToImapUidDAO {
     public Mono<Void> delete(CassandraMessageId messageId, CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeVoid(delete.bind()
             .setUuid(MESSAGE_ID, messageId.get())
-            .setUuid(MAILBOX_ID, mailboxId.asUuid()));
+            .setUuid(MAILBOX_ID, mailboxId.asUuid())
+            .setExecutionProfile(writeProfile));
     }
 
     public Mono<Void> insert(CassandraMessageMetadata metadata) {
@@ -275,30 +257,8 @@ public class CassandraMessageIdToImapUidDAO {
             .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
             .setLong(FULL_CONTENT_OCTETS, metadata.getSize().get())
             .setString(HEADER_CONTENT, metadata.getHeaderContent().get().asString())
+            .setExecutionProfile(writeProfile)
             .build());
-    }
-
-    public Mono<Void> insertForce(CassandraMessageMetadata metadata) {
-        ComposedMessageId composedMessageId = metadata.getComposedMessageId().getComposedMessageId();
-        Flags flags = metadata.getComposedMessageId().getFlags();
-        return cassandraAsyncExecutor.executeVoid(insertForced.bind()
-            .set(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get(), TypeCodecs.TIMEUUID)
-            .set(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid(), TypeCodecs.TIMEUUID)
-            .setLong(IMAP_UID, composedMessageId.getUid().asLong())
-            .setLong(MOD_SEQ, metadata.getComposedMessageId().getModSeq().asLong())
-            .setBoolean(ANSWERED, flags.contains(Flag.ANSWERED))
-            .setBoolean(DELETED, flags.contains(Flag.DELETED))
-            .setBoolean(DRAFT, flags.contains(Flag.DRAFT))
-            .setBoolean(FLAGGED, flags.contains(Flag.FLAGGED))
-            .setBoolean(RECENT, flags.contains(Flag.RECENT))
-            .setBoolean(SEEN, flags.contains(Flag.SEEN))
-            .setBoolean(USER, flags.contains(Flag.USER))
-            .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()), String.class)
-            .setInstant(INTERNAL_DATE, metadata.getInternalDate().get().toInstant())
-            .setInstant(SAVE_DATE, metadata.getSaveDate().map(Date::toInstant).orElse(null))
-            .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
-            .setLong(FULL_CONTENT_OCTETS, metadata.getSize().get())
-            .setString(HEADER_CONTENT, metadata.getHeaderContent().get().asString()));
     }
 
     public Mono<Boolean> updateMetadata(ComposedMessageId id, UpdatedFlags updatedFlags, ModSeq previousModeq) {
@@ -432,7 +392,7 @@ public class CassandraMessageIdToImapUidDAO {
         if (consistencyChoice.equals(STRONG)) {
             return statement.setExecutionProfile(lwtProfile);
         } else {
-            return statement;
+            return statement.setExecutionProfile(readProfile);
         }
     }
 
@@ -466,6 +426,7 @@ public class CassandraMessageIdToImapUidDAO {
             .setInt(BODY_START_OCTET, 0)
             .setLong(FULL_CONTENT_OCTETS, 0)
             .setString(HEADER_CONTENT, null)
+            .setExecutionProfile(writeProfile)
             .build());
     }
 }

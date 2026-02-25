@@ -39,6 +39,7 @@ import java.util.Optional;
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -53,6 +54,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -78,6 +80,8 @@ public class CassandraUsersDAO implements UsersDAO {
     private final PreparedStatement getDelegatedToUsersStatement;
     private final PreparedStatement addDelegatedToUsersStatement;
     private final PreparedStatement removeDelegatedToUsersStatement;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     private final Algorithm preferredAlgorithm;
     private final HashingMode fallbackHashingMode;
@@ -156,6 +160,9 @@ public class CassandraUsersDAO implements UsersDAO {
             .remove(DELEGATED_USERS, bindMarker(DELEGATED_USERS))
             .whereColumn(NAME).isEqualTo(bindMarker(NAME))
             .build());
+
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "USER");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "USER");
     }
 
     @VisibleForTesting
@@ -172,7 +179,8 @@ public class CassandraUsersDAO implements UsersDAO {
     private Mono<DefaultUser> getUserByNameReactive(Username name) {
         return executor.executeSingleRow(
                 getUserStatement.bind()
-                    .setString(NAME, name.asString()))
+                    .setString(NAME, name.asString())
+                    .setExecutionProfile(readProfile))
             .filter(row -> row.getString(ALGORITHM) != null)
             .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD),
                 Algorithm.of(row.getString(ALGORITHM), fallbackHashingMode), preferredAlgorithm));
@@ -180,7 +188,8 @@ public class CassandraUsersDAO implements UsersDAO {
 
     public Mono<Boolean> exist(Username name) {
         return executor.executeReturnExists(getUserStatement.bind()
-            .setString(NAME, name.asString()));
+            .setString(NAME, name.asString())
+            .setExecutionProfile(readProfile));
     }
 
     @Override
@@ -192,7 +201,8 @@ public class CassandraUsersDAO implements UsersDAO {
                     .setString(REALNAME, defaultUser.getUserName().asString())
                     .setString(PASSWORD, defaultUser.getHashedPassword())
                     .setString(ALGORITHM, defaultUser.getHashAlgorithm().asString())
-                    .setString(NAME, defaultUser.getUserName().asString()))
+                    .setString(NAME, defaultUser.getUserName().asString())
+                    .setExecutionProfile(writeProfile))
             .block();
 
         if (!executed) {
@@ -204,11 +214,13 @@ public class CassandraUsersDAO implements UsersDAO {
         BatchStatementBuilder batchBuilder = new BatchStatementBuilder(BatchType.LOGGED);
         batchBuilder.addStatement(addAuthorizedUsersStatement.bind()
             .setString(NAME, baseUser.asString())
-            .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class));
+            .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class)
+            .setExecutionProfile(writeProfile));
         if (targetUserExists) {
             batchBuilder.addStatement(addDelegatedToUsersStatement.bind()
                 .setString(NAME, userWithAccess.asString())
-                .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class));
+                .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class)
+                .setExecutionProfile(writeProfile));
         }
 
         return executor.executeVoid(batchBuilder.build());
@@ -218,10 +230,12 @@ public class CassandraUsersDAO implements UsersDAO {
         return executor.executeVoid(new BatchStatementBuilder(BatchType.LOGGED)
             .addStatement(removeAuthorizedUsersStatement.bind()
                 .setString(NAME, baseUser.asString())
-                .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class))
+                .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class)
+                .setExecutionProfile(writeProfile))
             .addStatement(removeDelegatedToUsersStatement.bind()
                 .setString(NAME, userWithAccess.asString())
-                .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class))
+                .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class)
+                .setExecutionProfile(writeProfile))
             .build());
     }
 
@@ -233,9 +247,11 @@ public class CassandraUsersDAO implements UsersDAO {
                 authorizedList.forEach(username -> batch.addStatement(
                     removeDelegatedToUsersStatement.bind()
                         .setString(NAME, username.asString())
-                        .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class)));
+                        .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class))
+                        .setExecutionProfile(writeProfile));
                 batch.addStatement(removeAllAuthorizedUsersStatement.bind()
-                    .setString(NAME, baseUser.asString()));
+                    .setString(NAME, baseUser.asString())
+                    .setExecutionProfile(writeProfile));
                 return batch.build();
             })
             .flatMap(executor::executeVoid);
@@ -244,7 +260,8 @@ public class CassandraUsersDAO implements UsersDAO {
     public Flux<Username> getAuthorizedUsers(Username name) {
         return executor.executeSingleRow(
                 getAuthorizedUsersStatement.bind()
-                    .setString(NAME, name.asString()))
+                    .setString(NAME, name.asString())
+                    .setExecutionProfile(readProfile))
             .mapNotNull(row -> row.getSet(AUTHORIZED_USERS, String.class))
             .flatMapIterable(set -> set)
             .map(Username::of);
@@ -254,17 +271,20 @@ public class CassandraUsersDAO implements UsersDAO {
         return executor.executeVoid(new BatchStatementBuilder(BatchType.LOGGED)
             .addStatement(removeAuthorizedUsersStatement.bind()
                 .setString(NAME, delegatedToUser.asString())
-                .setSet(AUTHORIZED_USERS, ImmutableSet.of(baseUser.asString()), String.class))
+                .setSet(AUTHORIZED_USERS, ImmutableSet.of(baseUser.asString()), String.class)
+                .setExecutionProfile(writeProfile))
             .addStatement(removeDelegatedToUsersStatement.bind()
                 .setString(NAME, baseUser.asString())
-                .setSet(DELEGATED_USERS, ImmutableSet.of(delegatedToUser.asString()), String.class))
+                .setSet(DELEGATED_USERS, ImmutableSet.of(delegatedToUser.asString()), String.class)
+                .setExecutionProfile(writeProfile))
             .build());
     }
 
     public Flux<Username> getDelegatedToUsers(Username name) {
         return executor.executeSingleRow(
                 getDelegatedToUsersStatement.bind()
-                    .setString(NAME, name.asString()))
+                    .setString(NAME, name.asString())
+                    .setExecutionProfile(readProfile))
             .mapNotNull(row -> row.getSet(DELEGATED_USERS, String.class))
             .flatMapIterable(set -> set)
             .map(Username::of);
@@ -274,7 +294,8 @@ public class CassandraUsersDAO implements UsersDAO {
     public void removeUser(Username name) throws UsersRepositoryException {
         boolean executed = executor.executeReturnApplied(
                 removeUserStatement.bind()
-                    .setString(NAME, name.asString()))
+                    .setString(NAME, name.asString())
+                    .setExecutionProfile(writeProfile))
             .block();
 
         if (!executed) {
@@ -294,7 +315,8 @@ public class CassandraUsersDAO implements UsersDAO {
 
     @Override
     public int countUsers() {
-        return executor.executeSingleRow(countUserStatement.bind())
+        return executor.executeSingleRow(countUserStatement.bind()
+                .setExecutionProfile(readProfile))
             .map(row -> Ints.checkedCast(row.getLong(0)))
             .block();
     }
@@ -323,7 +345,8 @@ public class CassandraUsersDAO implements UsersDAO {
                     .setString(NAME, user.getUserName().asString())
                     .setString(REALNAME, user.getUserName().asString())
                     .setString(PASSWORD, user.getHashedPassword())
-                    .setString(ALGORITHM, user.getHashAlgorithm().asString()))
+                    .setString(ALGORITHM, user.getHashAlgorithm().asString())
+                    .setExecutionProfile(writeProfile))
             .block();
 
         if (!executed) {

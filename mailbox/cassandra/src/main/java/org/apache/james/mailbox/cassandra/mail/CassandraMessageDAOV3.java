@@ -65,7 +65,10 @@ import jakarta.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -88,6 +91,7 @@ import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.data.UdtValue;
 import com.datastax.oss.driver.api.core.type.UserDefinedType;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
@@ -114,13 +118,17 @@ public class CassandraMessageDAOV3 {
     private final PreparedStatement delete;
     private final PreparedStatement select;
     private final PreparedStatement listBlobs;
+    private final CassandraConfiguration configuration;
     private final Cid.CidParser cidParser;
     private final UserDefinedType attachmentsType;
     private final TypeCodec<List<UdtValue>> attachmentCodec;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
+    private final DriverExecutionProfile optimisticConsistencyLevelProfile;
 
     @Inject
     public CassandraMessageDAOV3(CqlSession session, CassandraTypesProvider typesProvider, BlobStore blobStore,
-                                 BlobId.Factory blobIdFactory) {
+                                 BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
@@ -129,9 +137,14 @@ public class CassandraMessageDAOV3 {
         this.delete = prepareDelete(session);
         this.select = prepareSelect(session);
         this.listBlobs = prepareSelectBlobs(session);
+        this.configuration = cassandraConfiguration;
         this.cidParser = Cid.parser().relaxed();
         this.attachmentsType = typesProvider.getDefinedUserType(ATTACHMENTS.asCql(true));
         this.attachmentCodec = CodecRegistry.DEFAULT.codecFor(listOf(attachmentsType));
+
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "MESSAGEV3");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "MESSAGEV3");
+        this.optimisticConsistencyLevelProfile = JamesExecutionProfiles.getOptimisticConsistencyLevelProfile(session);
     }
 
     private PreparedStatement prepareSelect(CqlSession session) {
@@ -262,7 +275,8 @@ public class CassandraMessageDAOV3 {
             .setString(CONTENT_LOCATION, message.getProperties().getContentLocation())
             .set(CONTENT_LANGUAGE, message.getProperties().getContentLanguage(), LIST_OF_STRINGS_CODEC)
             .set(CONTENT_DISPOSITION_PARAMETERS, message.getProperties().getContentDispositionParameters(), MAP_OF_STRINGS_CODEC)
-            .set(CONTENT_TYPE_PARAMETERS, message.getProperties().getContentTypeParameters(), MAP_OF_STRINGS_CODEC);
+            .set(CONTENT_TYPE_PARAMETERS, message.getProperties().getContentTypeParameters(), MAP_OF_STRINGS_CODEC)
+            .setExecutionProfile(writeProfile);
 
         if (message.getAttachments().isEmpty()) {
             return boundStatement.unset(ATTACHMENTS);
@@ -321,14 +335,20 @@ public class CassandraMessageDAOV3 {
     }
 
     public Mono<MessageRepresentation> retrieveMessage(CassandraMessageId cassandraMessageId, FetchType fetchType) {
-        return retrieveRow(cassandraMessageId)
+        if (configuration.isOptimisticConsistencyLevel()) {
+            return retrieveRow(cassandraMessageId, optimisticConsistencyLevelProfile)
+                .switchIfEmpty(Mono.defer(() -> retrieveRow(cassandraMessageId, readProfile)))
+                .flatMap(row -> message(row, cassandraMessageId, fetchType));
+        }
+        return retrieveRow(cassandraMessageId, readProfile)
             .flatMap(row -> message(row, cassandraMessageId, fetchType));
     }
 
-    private Mono<Row> retrieveRow(CassandraMessageId messageId) {
+    private Mono<Row> retrieveRow(CassandraMessageId messageId, DriverExecutionProfile driverExecutionProfile) {
         return cassandraAsyncExecutor.executeSingleRow(select
             .bind()
-            .set(MESSAGE_ID, messageId.get(), TypeCodecs.TIMEUUID));
+            .set(MESSAGE_ID, messageId.get(), TypeCodecs.TIMEUUID)
+            .setExecutionProfile(driverExecutionProfile));
     }
 
     private Mono<MessageRepresentation> message(Row row, CassandraMessageId cassandraMessageId, FetchType fetchType) {
@@ -389,7 +409,8 @@ public class CassandraMessageDAOV3 {
 
     public Mono<Void> delete(CassandraMessageId messageId) {
         return cassandraAsyncExecutor.executeVoid(delete.bind()
-            .setUuid(MESSAGE_ID, messageId.get()));
+            .setUuid(MESSAGE_ID, messageId.get())
+            .setExecutionProfile(writeProfile));
     }
 
     private Mono<Content> buildContentRetriever(FetchType fetchType, BlobId headerId, BlobId bodyId) {

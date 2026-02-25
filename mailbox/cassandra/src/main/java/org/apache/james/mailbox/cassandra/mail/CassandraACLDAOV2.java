@@ -29,12 +29,14 @@ import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraACLV2Table;
 import org.apache.james.mailbox.model.MailboxACL;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
@@ -49,10 +51,14 @@ public class CassandraACLDAOV2 {
     private final PreparedStatement replaceRights;
     private final PreparedStatement delete;
     private final PreparedStatement read;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraACLDAOV2(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "ACLV2");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "ACLV2");
         this.insertRights = prepareInsertRights(session);
         this.removeRights = prepareRemoveRights(session);
         this.replaceRights = prepareReplaceRights(session);
@@ -100,13 +106,15 @@ public class CassandraACLDAOV2 {
     public Mono<Void> delete(CassandraId cassandraId) {
         return executor.executeVoid(
             delete.bind()
-                .setUuid(CassandraACLV2Table.ID, cassandraId.asUuid()));
+                .setUuid(CassandraACLV2Table.ID, cassandraId.asUuid())
+                .setExecutionProfile(writeProfile));
     }
 
     public Mono<MailboxACL> getACL(CassandraId cassandraId) {
         return executor.executeRows(
                 read.bind()
-                    .set(CassandraACLV2Table.ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
+                    .set(CassandraACLV2Table.ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID)
+                    .setExecutionProfile(readProfile))
             .map(Throwing.function(row -> {
                 MailboxACL.EntryKey entryKey = MailboxACL.EntryKey.deserialize(row.getString(CassandraACLV2Table.KEY));
                 MailboxACL.Rfc4314Rights rights = row.getSet(CassandraACLV2Table.RIGHTS, String.class)
@@ -125,17 +133,20 @@ public class CassandraACLDAOV2 {
                 return executor.executeVoid(insertRights.bind()
                     .setUuid(CassandraACLV2Table.ID, cassandraId.asUuid())
                     .setString(CassandraACLV2Table.KEY, command.getEntryKey().serialize())
-                    .setSet(CassandraACLV2Table.RIGHTS, ImmutableSet.copyOf(rightStrings), String.class));
+                    .setSet(CassandraACLV2Table.RIGHTS, ImmutableSet.copyOf(rightStrings), String.class)
+                    .setExecutionProfile(writeProfile));
             case REMOVE:
                 return executor.executeVoid(removeRights.bind()
                     .setUuid(CassandraACLV2Table.ID, cassandraId.asUuid())
                     .setString(CassandraACLV2Table.KEY, command.getEntryKey().serialize())
-                    .setSet(CassandraACLV2Table.RIGHTS, ImmutableSet.copyOf(rightStrings), String.class));
+                    .setSet(CassandraACLV2Table.RIGHTS, ImmutableSet.copyOf(rightStrings), String.class)
+                    .setExecutionProfile(writeProfile));
             case REPLACE:
                 return executor.executeVoid(replaceRights.bind()
                     .setUuid(CassandraACLV2Table.ID, cassandraId.asUuid())
                     .setString(CassandraACLV2Table.KEY, command.getEntryKey().serialize())
-                    .setSet(CassandraACLV2Table.RIGHTS, rightStrings, String.class));
+                    .setSet(CassandraACLV2Table.RIGHTS, rightStrings, String.class)
+                    .setExecutionProfile(writeProfile));
             default:
                 throw new NotImplementedException(command.getEditMode() + "is not supported");
         }

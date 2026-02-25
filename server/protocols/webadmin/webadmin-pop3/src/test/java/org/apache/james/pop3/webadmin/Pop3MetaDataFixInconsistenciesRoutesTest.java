@@ -186,7 +186,8 @@ class Pop3MetaDataFixInconsistenciesRoutesTest {
             cassandra.getTypesProvider(),
             CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .passthrough(),
-            new PlainBlobId.Factory());
+            new PlainBlobId.Factory(),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
         MetaDataFixInconsistenciesService fixInconsistenciesService = new MetaDataFixInconsistenciesService(imapUidDAO, pop3MetadataStore, cassandraMessageDAOV3);
 
         taskManager = new MemoryTaskManager(new Hostname("foo"));

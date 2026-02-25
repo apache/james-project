@@ -34,12 +34,14 @@ import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.MappingsImpl;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -51,6 +53,8 @@ public class CassandraRecipientRewriteTableDAO {
     private final PreparedStatement deleteStatement;
     private final PreparedStatement retrieveMappingStatement;
     private final PreparedStatement retrieveAllMappingsStatement;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraRecipientRewriteTableDAO(CqlSession session) {
@@ -76,26 +80,31 @@ public class CassandraRecipientRewriteTableDAO {
             .whereColumn(DOMAIN).isEqualTo(bindMarker(DOMAIN))
             .whereColumn(MAPPING).isEqualTo(bindMarker(MAPPING))
             .build());
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "RRT");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "RRT");
     }
 
     public Mono<Void> addMapping(MappingSource source, Mapping mapping) {
         return executor.executeVoid(insertStatement.bind()
             .setString(USER, source.getFixedUser())
             .setString(DOMAIN, source.getFixedDomain())
-            .setString(MAPPING, mapping.asString()));
+            .setString(MAPPING, mapping.asString())
+            .setExecutionProfile(writeProfile));
     }
 
     Mono<Void> removeMapping(MappingSource source, Mapping mapping) {
         return executor.executeVoid(deleteStatement.bind()
             .setString(USER, source.getFixedUser())
             .setString(DOMAIN, source.getFixedDomain())
-            .setString(MAPPING, mapping.asString()));
+            .setString(MAPPING, mapping.asString())
+            .setExecutionProfile(writeProfile));
     }
 
     Mono<MappingsImpl> retrieveMappings(MappingSource source) {
         return executor.executeRows(retrieveMappingStatement.bind()
                 .setString(USER, source.getFixedUser())
-                .setString(DOMAIN, source.getFixedDomain()))
+                .setString(DOMAIN, source.getFixedDomain())
+                .setExecutionProfile(readProfile))
             .mapNotNull(row -> row.getString(MAPPING))
             .collect(ImmutableList.toImmutableList())
             .map(MappingsImpl::fromCollection)

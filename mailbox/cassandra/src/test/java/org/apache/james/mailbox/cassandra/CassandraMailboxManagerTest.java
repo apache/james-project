@@ -832,7 +832,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 cassandraCluster.getConf(),
                 cassandraCluster.getTypesProvider(),
                 mock(BlobStore.class),
-                new PlainBlobId.Factory());
+                new PlainBlobId.Factory(),
+                CassandraConfiguration.DEFAULT_CONFIGURATION);
         }
 
         private CassandraThreadDAO threadDAO(CassandraCluster cassandraCluster) {

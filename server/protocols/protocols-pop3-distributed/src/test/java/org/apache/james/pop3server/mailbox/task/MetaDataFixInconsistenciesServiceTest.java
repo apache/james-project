@@ -169,7 +169,8 @@ public class MetaDataFixInconsistenciesServiceTest {
             cassandra.getTypesProvider(),
             CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .passthrough(),
-            new PlainBlobId.Factory());
+            new PlainBlobId.Factory(),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
         testee = new MetaDataFixInconsistenciesService(imapUidDAO, pop3MetadataStore, cassandraMessageDAOV3);
     }
 

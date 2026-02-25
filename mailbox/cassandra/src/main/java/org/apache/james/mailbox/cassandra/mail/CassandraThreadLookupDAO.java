@@ -37,6 +37,7 @@ import java.util.Set;
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
@@ -45,6 +46,7 @@ import org.apache.james.mailbox.model.ThreadId;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
@@ -61,6 +63,8 @@ public class CassandraThreadLookupDAO {
     private final PreparedStatement select;
     private final PreparedStatement selectAll;
     private final PreparedStatement delete;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraThreadLookupDAO(CqlSession session) {
@@ -88,6 +92,10 @@ public class CassandraThreadLookupDAO {
             .where(column(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID)),
                 column(THREAD_ID).isEqualTo(bindMarker(THREAD_ID)))
             .build());
+
+
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "THREAD-LOOKUP");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "THREAD-LOOKUP");
     }
 
     public Mono<Void> insert(MessageId messageId, ThreadId threadId, Username username, Set<Integer> hashMimeMessageIds) {
@@ -95,13 +103,15 @@ public class CassandraThreadLookupDAO {
             .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID)
             .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID)
             .set(USERNAME, username.asString(), TypeCodecs.TEXT)
-            .set(MIME_MESSAGE_IDS, hashMimeMessageIds, SET_OF_INTS_CODEC));
+            .set(MIME_MESSAGE_IDS, hashMimeMessageIds, SET_OF_INTS_CODEC)
+            .setExecutionProfile(writeProfile));
     }
 
     public Flux<MessageId> selectAll(ThreadId threadId) {
         return executor.executeRows(
                 selectAll.bind()
-                    .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID))
+                    .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID)
+                    .setExecutionProfile(readProfile))
             .map(row -> CassandraMessageId.of(row.get(MESSAGE_ID, TypeCodecs.TIMEUUID)));
     }
 
@@ -109,14 +119,16 @@ public class CassandraThreadLookupDAO {
         return executor.executeSingleRow(
                 select.bind()
                     .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID)
-                    .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID))
+                    .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID)
+                    .setExecutionProfile(readProfile))
             .map(this::readRow);
     }
 
     public Mono<Void> deleteOneRow(ThreadId threadId, MessageId messageId) {
         return executor.executeVoid(delete.bind()
             .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID)
-            .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID));
+            .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID)
+            .setExecutionProfile(writeProfile));
     }
 
     private ThreadTablePartitionKey readRow(Row row) {

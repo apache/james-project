@@ -30,12 +30,14 @@ import java.util.Optional;
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.vacation.api.AccountId;
 import org.apache.james.vacation.api.RecipientId;
 import org.apache.james.vacation.cassandra.tables.CassandraNotificationTable;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.querybuilder.insert.RegularInsert;
 
 import reactor.core.publisher.Mono;
@@ -48,6 +50,8 @@ public class CassandraNotificationRegistryDAO {
     private final PreparedStatement registerWithTTLStatement;
     private final PreparedStatement isRegisteredStatement;
     private final PreparedStatement flushStatement;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraNotificationRegistryDAO(CqlSession session) {
@@ -66,6 +70,8 @@ public class CassandraNotificationRegistryDAO {
         this.flushStatement = session.prepare(deleteFrom(CassandraNotificationTable.TABLE_NAME)
             .whereColumn(CassandraNotificationTable.ACCOUNT_ID).isEqualTo(bindMarker(CassandraNotificationTable.ACCOUNT_ID))
             .build());
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "VACATION-REGISTRY");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "VACATION-REGISTRY");
     }
 
     private RegularInsert createInsert() {
@@ -80,20 +86,23 @@ public class CassandraNotificationRegistryDAO {
                 .map(value -> registerWithTTLStatement.bind().setInt(TTL, value))
                 .orElse(registerStatement.bind())
                 .setString(CassandraNotificationTable.ACCOUNT_ID, accountId.getIdentifier())
-                .setString(CassandraNotificationTable.RECIPIENT_ID, recipientId.getAsString()));
+                .setString(CassandraNotificationTable.RECIPIENT_ID, recipientId.getAsString())
+                .setExecutionProfile(writeProfile));
     }
 
     public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
         return cassandraAsyncExecutor.executeSingleRowOptional(
                 isRegisteredStatement.bind()
                     .setString(CassandraNotificationTable.ACCOUNT_ID, accountId.getIdentifier())
-                    .setString(CassandraNotificationTable.RECIPIENT_ID, recipientId.getAsString()))
+                    .setString(CassandraNotificationTable.RECIPIENT_ID, recipientId.getAsString())
+                    .setExecutionProfile(readProfile))
             .map(Optional::isPresent);
     }
 
     public Mono<Void> flush(AccountId accountId) {
         return cassandraAsyncExecutor.executeVoid(
             flushStatement.bind()
-                .setString(CassandraNotificationTable.ACCOUNT_ID, accountId.getIdentifier()));
+                .setString(CassandraNotificationTable.ACCOUNT_ID, accountId.getIdentifier())
+                .setExecutionProfile(writeProfile));
     }
 }

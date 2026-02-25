@@ -39,6 +39,7 @@ import jakarta.inject.Inject;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -92,6 +93,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     private final RetryBackoffSpec retrySpec;
     private final DriverExecutionProfile lwtProfile;
     private final CassandraConfiguration cassandraConfiguration;
+    private final DriverExecutionProfile readProfile;
 
     @Inject
     public CassandraModSeqProvider(CqlSession session, CassandraConfiguration cassandraConfiguration) {
@@ -104,6 +106,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
         this.retrySpec = Retry.backoff(cassandraConfiguration.getModSeqMaxRetry(), firstBackoff)
             .scheduler(Schedulers.parallel());
         this.cassandraConfiguration = cassandraConfiguration;
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "MODSEQ");
     }
 
     private PreparedStatement prepareInsert(CqlSession session) {
@@ -151,9 +154,15 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     @Override
     public ModSeq highestModSeq(MailboxId mailboxId) throws MailboxException {
         return unbox(() -> findHighestModSeq((CassandraId) mailboxId,
-            Optional.of(lwtProfile).filter(any -> cassandraConfiguration.isUidReadStrongConsistency()))
+            locateReadProfile())
             .block().orElse(ModSeq.first()))
             .add(cassandraConfiguration.getUidModseqIncrement());
+    }
+
+    private Optional<DriverExecutionProfile> locateReadProfile() {
+        return Optional.of(lwtProfile)
+            .filter(any -> cassandraConfiguration.isUidReadStrongConsistency())
+            .or(() -> Optional.of(readProfile));
     }
 
     private Mono<Optional<ModSeq>> findHighestModSeq(CassandraId mailboxId, Optional<DriverExecutionProfile> executionProfile) {
@@ -207,7 +216,7 @@ public class CassandraModSeqProvider implements ModSeqProvider {
 
     @Override
     public Mono<ModSeq> highestModSeqReactive(Mailbox mailbox) {
-        return findHighestModSeq((CassandraId) mailbox.getMailboxId(), Optional.empty())
+        return findHighestModSeq((CassandraId) mailbox.getMailboxId(), locateReadProfile())
             .map(optional -> optional.orElse(ModSeq.first()))
             .map(modSeq -> modSeq.add(cassandraConfiguration.getUidModseqIncrement()));
     }

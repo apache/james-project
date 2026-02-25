@@ -36,6 +36,7 @@ import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.acl.PositiveUserACLDiff;
@@ -47,6 +48,7 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
@@ -59,6 +61,8 @@ public class CassandraUserMailboxRightsDAO {
     private final PreparedStatement insert;
     private final PreparedStatement select;
     private final PreparedStatement selectUser;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraUserMailboxRightsDAO(CqlSession session) {
@@ -67,6 +71,9 @@ public class CassandraUserMailboxRightsDAO {
         this.insert = prepareInsert(session);
         this.select = prepareSelect(session);
         this.selectUser = prepareSelectAllForUser(session);
+
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "USER_ACL");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "USER_ACL");
     }
 
     private PreparedStatement prepareDelete(CqlSession session) {
@@ -113,7 +120,8 @@ public class CassandraUserMailboxRightsDAO {
             .flatMap(entry -> cassandraAsyncExecutor.executeVoid(
                     delete.bind()
                         .setString(USER_NAME, entry.getKey().getName())
-                        .setUuid(MAILBOX_ID, cassandraId.asUuid())),
+                        .setUuid(MAILBOX_ID, cassandraId.asUuid())
+                        .setExecutionProfile(writeProfile)),
                 DEFAULT_CONCURRENCY);
     }
 
@@ -123,7 +131,8 @@ public class CassandraUserMailboxRightsDAO {
                     insert.bind()
                         .setString(USER_NAME, entry.getKey().getName())
                         .setUuid(MAILBOX_ID, cassandraId.asUuid())
-                        .setString(RIGHTS, entry.getValue().serialize())),
+                        .setString(RIGHTS, entry.getValue().serialize())
+                        .setExecutionProfile(writeProfile)),
                 DEFAULT_CONCURRENCY);
     }
 
@@ -131,7 +140,8 @@ public class CassandraUserMailboxRightsDAO {
         return cassandraAsyncExecutor.executeSingleRowOptional(
                 select.bind()
                     .setString(USER_NAME, userName.asString())
-                    .setUuid(MAILBOX_ID, mailboxId.asUuid()))
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .setExecutionProfile(readProfile))
             .map(rowOptional ->
                 rowOptional.map(Throwing.function(row -> Rfc4314Rights.fromSerializedRfc4314Rights(row.getString(RIGHTS)))));
     }
@@ -139,7 +149,8 @@ public class CassandraUserMailboxRightsDAO {
     public Flux<Pair<CassandraId, Rfc4314Rights>> listRightsForUser(Username userName) {
         return cassandraAsyncExecutor.executeRows(
                 selectUser.bind()
-                    .setString(USER_NAME, userName.asString()))
+                    .setString(USER_NAME, userName.asString())
+                    .setExecutionProfile(readProfile))
             .map(Throwing.function(this::toPair));
     }
 

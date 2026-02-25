@@ -39,6 +39,7 @@ import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
@@ -47,6 +48,7 @@ import org.apache.james.mailbox.model.ThreadId;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 
 import reactor.core.publisher.Flux;
@@ -56,6 +58,8 @@ public class CassandraThreadDAO {
     private final PreparedStatement insertOne;
     private final PreparedStatement selectOne;
     private final PreparedStatement deleteOne;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraThreadDAO(CqlSession session) {
@@ -79,6 +83,10 @@ public class CassandraThreadDAO {
             .where(column(USERNAME).isEqualTo(bindMarker(USERNAME)),
                 column(MIME_MESSAGE_ID).isEqualTo(bindMarker(MIME_MESSAGE_ID)))
             .build());
+
+
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "THREAD");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "THREAD");
     }
 
     public Flux<Void> insertSome(Username username, Set<Integer> hashMimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Integer> hashBaseSubject) {
@@ -88,7 +96,8 @@ public class CassandraThreadDAO {
                 .set(MIME_MESSAGE_ID, mimeMessageId, TypeCodecs.INT)
                 .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID)
                 .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID)
-                .set(BASE_SUBJECT, hashBaseSubject.orElse(null), TypeCodecs.INT)), DEFAULT_CONCURRENCY);
+                .set(BASE_SUBJECT, hashBaseSubject.orElse(null), TypeCodecs.INT)
+                .setExecutionProfile(writeProfile)), DEFAULT_CONCURRENCY);
     }
 
     public Flux<Pair<Optional<Integer>, ThreadId>> selectSome(Username username, Set<Integer> hashMimeMessageIds) {
@@ -96,7 +105,8 @@ public class CassandraThreadDAO {
             .flatMap(mimeMessageId -> executor
                 .executeSingleRow(selectOne.bind()
                     .set(USERNAME, username.asString(), TypeCodecs.TEXT)
-                    .set(MIME_MESSAGE_ID, mimeMessageId, TypeCodecs.INT))
+                    .set(MIME_MESSAGE_ID, mimeMessageId, TypeCodecs.INT)
+                    .setExecutionProfile(readProfile))
                 .map(this::readRow), DEFAULT_CONCURRENCY)
             .distinct();
     }
@@ -105,7 +115,8 @@ public class CassandraThreadDAO {
         return Flux.fromIterable(hashMimeMessageIds)
             .flatMap(mimeMessageId -> executor.executeVoid(deleteOne.bind()
                 .set(USERNAME, username.asString(), TypeCodecs.TEXT)
-                .set(MIME_MESSAGE_ID, mimeMessageId, TypeCodecs.INT)));
+                .set(MIME_MESSAGE_ID, mimeMessageId, TypeCodecs.INT)
+                .setExecutionProfile(writeProfile)));
     }
 
     public Pair<Optional<Integer>, ThreadId> readRow(Row row) {

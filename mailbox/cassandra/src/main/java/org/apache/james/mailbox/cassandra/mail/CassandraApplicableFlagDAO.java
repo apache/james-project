@@ -33,11 +33,13 @@ import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.Flag;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 
 import reactor.core.publisher.Mono;
@@ -47,6 +49,8 @@ public class CassandraApplicableFlagDAO {
     private final PreparedStatement select;
     private final PreparedStatement update;
     private final PreparedStatement delete;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraApplicableFlagDAO(CqlSession session) {
@@ -54,6 +58,8 @@ public class CassandraApplicableFlagDAO {
         this.select = prepareSelect(session);
         this.delete = prepareDelete(session);
         this.update = prepareUpdate(session);
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "APPLICABLE-FLAGS");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "APPLICABLE-FLAGS");
     }
 
     private PreparedStatement prepareSelect(CqlSession session) {
@@ -79,13 +85,15 @@ public class CassandraApplicableFlagDAO {
     public Mono<Void> delete(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeVoid(
             delete.bind()
-                .setUuid(MAILBOX_ID, mailboxId.asUuid()));
+                .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                .setExecutionProfile(writeProfile));
     }
 
     public Mono<Flags> retrieveApplicableFlag(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeSingleRow(
                 select.bind()
-                    .setUuid(MAILBOX_ID, mailboxId.asUuid()))
+                    .setUuid(MAILBOX_ID, mailboxId.asUuid())
+                    .setExecutionProfile(readProfile))
             .map(FlagsExtractor::getApplicableFlags);
     }
 
@@ -95,6 +103,7 @@ public class CassandraApplicableFlagDAO {
         }
         return cassandraAsyncExecutor.executeVoid(update.bind()
             .setUuid(MAILBOX_ID, cassandraId.asUuid())
-            .setSet(USER_FLAGS, toBeAdded, String.class));
+            .setSet(USER_FLAGS, toBeAdded, String.class)
+            .setExecutionProfile(writeProfile));
     }
 }

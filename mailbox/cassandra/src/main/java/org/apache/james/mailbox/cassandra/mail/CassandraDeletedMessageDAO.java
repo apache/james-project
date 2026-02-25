@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MessageRange;
@@ -45,6 +46,7 @@ import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.google.common.collect.Lists;
 
@@ -66,6 +68,8 @@ public class CassandraDeletedMessageDAO {
     private final PreparedStatement selectBetweenUidStatement;
     private final PreparedStatement selectFromUidStatement;
     private final ProtocolVersion protocolVersion;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraDeletedMessageDAO(CqlSession session) {
@@ -78,6 +82,8 @@ public class CassandraDeletedMessageDAO {
         this.selectBetweenUidStatement = prepareBetweenUidStatement(session);
         this.selectFromUidStatement = prepareFromUidStatement(session);
         this.protocolVersion = session.getContext().getProtocolVersion();
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "MARKED_AS_DELETED");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "MARKED_AS_DELETED");
     }
 
     private PreparedStatement prepareAllUidStatement(CqlSession session) {
@@ -136,7 +142,8 @@ public class CassandraDeletedMessageDAO {
         return cassandraAsyncExecutor.executeVoid(
             addStatement.bind()
                 .setUuid(MAILBOX_ID, cassandraId.asUuid())
-                .setLong(UID, uid.asLong()));
+                .setLong(UID, uid.asLong())
+                .setExecutionProfile(writeProfile));
     }
 
     public Mono<Void> addDeleted(CassandraId cassandraId, List<MessageUid> uids) {
@@ -144,7 +151,8 @@ public class CassandraDeletedMessageDAO {
             return cassandraAsyncExecutor.executeVoid(
                 addStatement.bind()
                     .setUuid(MAILBOX_ID, cassandraId.asUuid())
-                    .setLong(UID, uids.iterator().next().asLong()));
+                    .setLong(UID, uids.iterator().next().asLong())
+                    .setExecutionProfile(writeProfile));
         } else {
             Stream<BatchStatement> batches = Lists.partition(uids, BATCH_STATEMENT_WINDOW)
                 .stream()
@@ -164,14 +172,16 @@ public class CassandraDeletedMessageDAO {
     public Mono<Void> removeDeleted(CassandraId cassandraId, MessageUid uid) {
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUuid(MAILBOX_ID, cassandraId.asUuid())
-            .setLong(UID, uid.asLong()));
+            .setLong(UID, uid.asLong())
+            .setExecutionProfile(writeProfile));
     }
 
     public Mono<Void> removeDeleted(CassandraId cassandraId, List<MessageUid> uids) {
         if (uids.size() == 1) {
             return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
                 .setUuid(MAILBOX_ID, cassandraId.asUuid())
-                .setLong(UID, uids.iterator().next().asLong()));
+                .setLong(UID, uids.iterator().next().asLong())
+                .setExecutionProfile(writeProfile));
         } else {
             Stream<BatchStatement> batches = Lists.partition(uids, BATCH_STATEMENT_WINDOW)
                 .stream()
@@ -179,7 +189,8 @@ public class CassandraDeletedMessageDAO {
                     BatchStatementBuilder batch = new BatchStatementBuilder(BatchType.UNLOGGED);
                     uidBatch.forEach(uid -> batch.addStatement(deleteStatement.bind()
                         .setUuid(MAILBOX_ID, cassandraId.asUuid())
-                        .setLong(UID, uid.asLong())));
+                        .setLong(UID, uid.asLong()))
+                        .setExecutionProfile(writeProfile));
                     return batch.build();
                 });
             return Flux.fromStream(batches)
@@ -190,7 +201,8 @@ public class CassandraDeletedMessageDAO {
 
     public Mono<Void> removeAll(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeVoid(deleteAllStatement.bind()
-            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID));
+            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID)
+            .setExecutionProfile(writeProfile));
     }
 
     public Flux<MessageUid> retrieveDeletedMessage(CassandraId cassandraId, MessageRange range) {
@@ -216,14 +228,16 @@ public class CassandraDeletedMessageDAO {
     private Flux<Row> retrieveAllDeleted(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeRows(
             selectAllUidStatement.bind()
-                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID));
+                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID)
+                .setExecutionProfile(readProfile));
     }
 
     private Flux<Row> retrieveOneDeleted(CassandraId cassandraId, MessageUid uid) {
         return cassandraAsyncExecutor.executeRows(
             selectOneUidStatement.bind()
                 .setUuid(MAILBOX_ID, cassandraId.asUuid())
-                .setLong(UID, uid.asLong()));
+                .setLong(UID, uid.asLong())
+                .setExecutionProfile(readProfile));
     }
 
     private Flux<Row> retrieveDeletedBetween(CassandraId cassandraId, MessageUid from, MessageUid to) {
@@ -231,14 +245,16 @@ public class CassandraDeletedMessageDAO {
             selectBetweenUidStatement.bind()
                 .setUuid(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID_FROM, from.asLong())
-                .setLong(UID_TO, to.asLong()));
+                .setLong(UID_TO, to.asLong())
+                .setExecutionProfile(readProfile));
     }
 
     private Flux<Row> retrieveDeletedAfter(CassandraId cassandraId, MessageUid from) {
         return cassandraAsyncExecutor.executeRows(
             selectFromUidStatement.bind()
                 .setUuid(MAILBOX_ID, cassandraId.asUuid())
-                .setLong(UID_FROM, from.asLong()));
+                .setLong(UID_FROM, from.asLong())
+                .setExecutionProfile(readProfile));
     }
 
     private MessageUid asMessageUid(Row row) {

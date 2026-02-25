@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MessageRange;
@@ -45,6 +46,7 @@ import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.google.common.collect.Lists;
@@ -69,6 +71,8 @@ public class CassandraFirstUnseenDAO {
     private final PreparedStatement selectBetweenUidStatement;
     private final PreparedStatement selectFromUidStatement;
     private final ProtocolVersion protocolVersion;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraFirstUnseenDAO(CqlSession session) {
@@ -82,6 +86,8 @@ public class CassandraFirstUnseenDAO {
         this.selectOneUidStatement = prepareOneUidStatement(session);
         this.selectBetweenUidStatement = prepareBetweenUidStatement(session);
         this.selectFromUidStatement = prepareFromUidStatement(session);
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "FIRST_UNSEEN");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "FIRST_UNSEEN");
     }
 
     private PreparedStatement prepareOneUidStatement(CqlSession session) {
@@ -150,7 +156,8 @@ public class CassandraFirstUnseenDAO {
         return cassandraAsyncExecutor.executeVoid(
             addStatement.bind()
                 .setUuid(MAILBOX_ID, cassandraId.asUuid())
-                .setLong(UID, uid.asLong()));
+                .setLong(UID, uid.asLong())
+                .setExecutionProfile(writeProfile));
     }
 
     public Mono<Void> addUnread(CassandraId mailboxId, List<MessageUid> uids) {
@@ -158,7 +165,8 @@ public class CassandraFirstUnseenDAO {
             return cassandraAsyncExecutor.executeVoid(
                 addStatement.bind()
                     .setUuid(MAILBOX_ID, mailboxId.asUuid())
-                    .setLong(UID, uids.iterator().next().asLong()));
+                    .setLong(UID, uids.iterator().next().asLong())
+                    .setExecutionProfile(writeProfile));
         } else {
             Stream<BatchStatement> batches = Lists.partition(uids, BATCH_STATEMENT_WINDOW)
                 .stream()
@@ -178,14 +186,16 @@ public class CassandraFirstUnseenDAO {
     public Mono<Void> removeUnread(CassandraId cassandraId, MessageUid uid) {
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUuid(MAILBOX_ID, cassandraId.asUuid())
-            .setLong(UID, uid.asLong()));
+            .setLong(UID, uid.asLong())
+            .setExecutionProfile(writeProfile));
     }
 
     public Mono<Void> removeUnread(CassandraId mailboxId, List<MessageUid> uids) {
         if (uids.size() == 1) {
             return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
                 .setUuid(MAILBOX_ID, mailboxId.asUuid())
-                .setLong(UID, uids.iterator().next().asLong()));
+                .setLong(UID, uids.iterator().next().asLong())
+                .setExecutionProfile(writeProfile));
         } else {
             Stream<BatchStatement> batches = Lists.partition(uids, BATCH_STATEMENT_WINDOW)
                 .stream()
@@ -193,7 +203,8 @@ public class CassandraFirstUnseenDAO {
                     BatchStatementBuilder batch = new BatchStatementBuilder(BatchType.UNLOGGED);
                     uidBatch.forEach(uid -> batch.addStatement(deleteStatement.bind()
                         .setUuid(MAILBOX_ID, mailboxId.asUuid())
-                        .setLong(UID, uid.asLong())));
+                        .setLong(UID, uid.asLong()))
+                        .setExecutionProfile(writeProfile));
                     return batch.build();
                 });
             return Flux.fromStream(batches)
@@ -204,20 +215,23 @@ public class CassandraFirstUnseenDAO {
 
     public Mono<Void> removeAll(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeVoid(deleteAllStatement.bind()
-            .setUuid(MAILBOX_ID, cassandraId.asUuid()));
+            .setUuid(MAILBOX_ID, cassandraId.asUuid())
+            .setExecutionProfile(writeProfile));
     }
 
     public Mono<MessageUid> retrieveFirstUnread(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeSingleRow(
                 readStatement.bind()
-                    .setUuid(MAILBOX_ID, cassandraId.asUuid()))
+                    .setUuid(MAILBOX_ID, cassandraId.asUuid())
+                    .setExecutionProfile(readProfile))
             .map(this::asMessageUid);
     }
 
     public Flux<MessageUid> listUnseen(CassandraId cassandraId) {
         return cassandraAsyncExecutor.executeRows(
                 listStatement.bind()
-                    .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
+                    .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID)
+                    .setExecutionProfile(readProfile))
             .map(this::asMessageUid);
     }
 
@@ -229,20 +243,23 @@ public class CassandraFirstUnseenDAO {
                 return cassandraAsyncExecutor.executeRows(
                     selectFromUidStatement.bind()
                         .setLong(UID_FROM, range.getUidFrom().asLong())
-                        .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
+                        .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID)
+                        .setExecutionProfile(readProfile))
                     .map(this::asMessageUid);
             case RANGE:
                 return cassandraAsyncExecutor.executeRows(
                     selectBetweenUidStatement.bind()
                         .setLong(UID_FROM, range.getUidFrom().asLong())
                         .setLong(UID_TO, range.getUidTo().asLong())
-                        .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
+                        .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID)
+                        .setExecutionProfile(readProfile))
                     .map(this::asMessageUid);
             case ONE:
                 return cassandraAsyncExecutor.executeRows(
                     selectOneUidStatement.bind()
                         .setLong(UID, range.getUidFrom().asLong())
-                        .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
+                        .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID)
+                        .setExecutionProfile(readProfile))
                     .map(this::asMessageUid);
             default:
                 throw new RuntimeException("Unsupported range type " + range.getType());

@@ -43,6 +43,7 @@ import java.util.Set;
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.change.TypeStateFactory;
 import org.apache.james.jmap.api.model.DeviceClientId;
@@ -58,6 +59,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
@@ -74,6 +76,8 @@ public class CassandraPushSubscriptionDAO {
     private final PreparedStatement selectAll;
     private final PreparedStatement deleteOne;
     private final PreparedStatement deleteAll;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraPushSubscriptionDAO(CqlSession session, TypeStateFactory typeStateFactory) {
@@ -106,6 +110,9 @@ public class CassandraPushSubscriptionDAO {
             .build());
 
         this.typeStateFactory = typeStateFactory;
+
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "PUSH-SUBSCRIPTION");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "PUSH-SUBSCRIPTION");
     }
 
     public Mono<PushSubscription> insert(Username username, PushSubscription subscription) {
@@ -128,24 +135,26 @@ public class CassandraPushSubscriptionDAO {
             .ifPresent(keys -> insertSubscription.setString(ENCRYPT_PUBLIC_KEY, keys.p256dh())
                 .setString(ENCRYPT_AUTH_SECRET, keys.auth()));
 
-        return executor.executeVoid(insertSubscription.build())
+        return executor.executeVoid(insertSubscription.build().setExecutionProfile(writeProfile))
             .thenReturn(subscription);
     }
 
     public Flux<PushSubscription> selectAll(Username username) {
-        return executor.executeRows(selectAll.bind().setString(USER, username.asString()))
+        return executor.executeRows(selectAll.bind().setString(USER, username.asString()).setExecutionProfile(readProfile))
             .map(this::toPushSubscription);
     }
 
     public Mono<Void> deleteOne(Username username, String deviceClientId) {
         return executor.executeVoid(deleteOne.bind()
             .setString(USER, username.asString())
-            .setString(DEVICE_CLIENT_ID, deviceClientId));
+            .setString(DEVICE_CLIENT_ID, deviceClientId)
+            .setExecutionProfile(writeProfile));
     }
 
     public Mono<Void> deleteAll(Username username) {
         return executor.executeVoid(deleteAll.bind()
-            .setString(USER, username.asString()));
+            .setString(USER, username.asString())
+            .setExecutionProfile(writeProfile));
     }
 
     private PushSubscription toPushSubscription(Row row) {

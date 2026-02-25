@@ -38,6 +38,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
@@ -49,6 +50,7 @@ import org.apache.james.mailbox.model.UidValidity;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.data.UdtValue;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodec;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
@@ -68,6 +70,8 @@ public class CassandraMailboxDAO {
     private final PreparedStatement updateUidValidityStatement;
     private final CqlSession session;
     private final TypeCodec<UdtValue> mailboxBaseTypeCodec;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraMailboxDAO(CqlSession session, CassandraTypesProvider typesProvider) {
@@ -82,6 +86,8 @@ public class CassandraMailboxDAO {
         this.readStatement = prepareRead();
 
         this.mailboxBaseTypeCodec = CodecRegistry.DEFAULT.codecFor(typesProvider.getDefinedUserType(MAILBOX_BASE.asCql(true)));
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "MAILBOX");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "MAILBOX");
     }
 
     private PreparedStatement prepareInsert() {
@@ -133,24 +139,28 @@ public class CassandraMailboxDAO {
             .setUuid(ID, cassandraId.asUuid())
             .setString(NAME, mailbox.getName())
             .setLong(UIDVALIDITY, mailbox.getUidValidity().asLong())
-            .setUdtValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailbox.getNamespace(), mailbox.getUser())));
+            .setUdtValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailbox.getNamespace(), mailbox.getUser()))
+            .setExecutionProfile(writeProfile));
     }
 
     public Mono<Void> updatePath(CassandraId mailboxId, MailboxPath mailboxPath) {
         return executor.executeVoid(updateStatement.bind()
             .setUuid(ID, mailboxId.asUuid())
             .setString(NAME, mailboxPath.getName())
-            .setUdtValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser())));
+            .setUdtValue(MAILBOX_BASE, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser()))
+            .setExecutionProfile(writeProfile));
     }
 
     public Mono<Void> delete(CassandraId mailboxId) {
         return executor.executeVoid(deleteStatement.bind()
-            .setUuid(ID, mailboxId.asUuid()));
+            .setUuid(ID, mailboxId.asUuid())
+            .setExecutionProfile(writeProfile));
     }
 
     public Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
         return executor.executeSingleRow(readStatement.bind()
-                .set(ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID))
+                .set(ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
+                .setExecutionProfile(readProfile))
             .flatMap(row -> mailboxFromRow(row, mailboxId));
     }
 
@@ -185,7 +195,8 @@ public class CassandraMailboxDAO {
     private Mono<Void> updateUidValidity(CassandraId cassandraId, UidValidity uidValidity) {
         return executor.executeVoid(updateUidValidityStatement.bind()
             .setUuid(ID, cassandraId.asUuid())
-            .setLong(UIDVALIDITY, uidValidity.asLong()));
+            .setLong(UIDVALIDITY, uidValidity.asLong())
+            .setExecutionProfile(writeProfile));
     }
 
     public Flux<Mailbox> retrieveAllMailboxes() {

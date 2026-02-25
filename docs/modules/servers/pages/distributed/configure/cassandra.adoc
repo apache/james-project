@@ -163,3 +163,58 @@ features to your users, you can consider disabling them in order to improve perf
 consistency even when consensus of Lightweight Transactions is broken, exemple during a disaster recovery process.
 
 |===
+
+== Extra execution profiles
+
+Operators can specify fin grain execution profiles. This allows setting per-dao request settings - like consistency levels.
+
+DAO would try to select at start time the most specific profile and fallback to `READ` and `WRITE` profiles.
+
+Profiles include:
+
+ - READ-ACLV2
+ - WRITE-ACLV2
+ - READ-APPLICABLE-FLAGS
+ - WRITE-APPLICABLE-FLAGS
+ - READ-ATTACHMENTV2
+ - WRITE-ATTACHMENTV2
+ - READ-MAILBOX
+ - WRITE-MAILBOX
+ - READ-MAILBOXPATHV3
+ - WRITE-MAILBOXPATHV3
+ - READ-THREAD
+ - WRITE-THREAD
+ - READ-THREAD-LOOKUP
+ - WRITE-THREAD-LOOKUP
+ - READ-UID (only used for IMAP STATUS/SELECT)
+ - READ-MODSEQ (only used for IMAP STATUS/SELECT)
+ - READ-MESSAGEV3
+ - WRITE-MESSAGEV3
+ - READ-RECENTS
+ - WRITE-RECENTS
+ - READ-IMAP-UID-TABLE
+ - WRITE-IMAP-UID-TABLE
+ - READ-FIRST-UNSEEN
+ - WRITE-FIRST-UNSEEN
+ - READ-MARKED-AS-DELETED
+ - WRITE-MARKED-AS-DELETED
+ - READ-VACATION
+ - WRITE-VACATION
+ - READ-VACATION-REGISTRY
+ - WRITE-VACATION-REGISTRY
+ - READ-USER
+ - WRITE-USER
+ - READ-RRT
+ - WRITE-RRT
+ - READ-RRT-SOURCE
+ - WRITE-RRT-SOURCE
+ - READ-DOMAIN
+ - WRITE-DOMAIN
+ - READ-CURRENT-QUOTA
+ - WRITE-CURRENT-QUOTA
+ - READ-QUOTA-LIMITS
+ - WRITE-QUOTA-LIMITS
+ - READ-PUSH-SUBSCRIPTION
+ - WRITE-PUSH-SUBSCRIPTION
+ - READ-USER-ACL
+ - WRITE-USER-ACL

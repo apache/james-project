@@ -32,11 +32,13 @@ import static org.apache.james.rrt.cassandra.tables.CassandraMappingsSourcesTabl
 import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -47,6 +49,8 @@ public class CassandraMappingsSourcesDAO {
     private final PreparedStatement deleteStatement;
     private final PreparedStatement retrieveSourcesStatement;
     private final PreparedStatement truncateStatement;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraMappingsSourcesDAO(CqlSession session) {
@@ -70,26 +74,31 @@ public class CassandraMappingsSourcesDAO {
             .build());
 
         this.truncateStatement = session.prepare(truncate(TABLE_NAME).build());
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "RRT-SOURCE");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "RRT-SOURCE");
     }
 
     public Mono<Void> addMapping(Mapping mapping, MappingSource source) {
         return executor.executeVoid(insertStatement.bind()
             .setString(MAPPING_TYPE, mapping.getType().asPrefix())
             .setString(MAPPING_VALUE, mapping.getMappingValue())
-            .setString(SOURCE, source.asMailAddressString()));
+            .setString(SOURCE, source.asMailAddressString())
+            .setExecutionProfile(writeProfile));
     }
 
     Mono<Void> removeMapping(Mapping mapping, MappingSource source) {
         return executor.executeVoid(deleteStatement.bind()
             .setString(MAPPING_TYPE, mapping.getType().asPrefix())
             .setString(MAPPING_VALUE, mapping.getMappingValue())
-            .setString(SOURCE, source.asMailAddressString()));
+            .setString(SOURCE, source.asMailAddressString())
+            .setExecutionProfile(writeProfile));
     }
 
     public Flux<MappingSource> retrieveSources(Mapping mapping) {
         return executor.executeRows(retrieveSourcesStatement.bind()
                 .setString(MAPPING_TYPE, mapping.getType().asPrefix())
-                .setString(MAPPING_VALUE, mapping.getMappingValue()))
+                .setString(MAPPING_VALUE, mapping.getMappingValue())
+                .setExecutionProfile(readProfile))
             .map(row -> MappingSource.parse(row.getString(SOURCE)));
     }
 

@@ -33,6 +33,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.PlainBlobId;
@@ -101,7 +102,8 @@ class CassandraMessageDAOV3Test {
             cassandra.getConf(),
             cassandra.getTypesProvider(),
             blobStore,
-            blobIdFactory);
+            blobIdFactory,
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
 
         messageIdWithMetadata = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(MAILBOX_ID, messageId, messageUid))

@@ -38,6 +38,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.GhostMailbox;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -67,6 +68,8 @@ public class CassandraMailboxPathV3DAO {
     private final PreparedStatement selectAll;
     private final CqlSession session;
     private final DriverExecutionProfile lwtProfile;
+    private final DriverExecutionProfile readProfile;
+    private final DriverExecutionProfile writeProfile;
 
     @Inject
     public CassandraMailboxPathV3DAO(CqlSession session) {
@@ -78,6 +81,8 @@ public class CassandraMailboxPathV3DAO {
         this.selectUser = prepareSelectUser();
         this.selectAll = prepareSelectAll();
         this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "MAILBOXPATHV3");
+        this.writeProfile = ProfileLocator.WRITE.locateProfile(session, "MAILBOXPATHV3");
     }
 
     private PreparedStatement prepareDelete() {
@@ -146,6 +151,8 @@ public class CassandraMailboxPathV3DAO {
 
         if (consistencyChoice.equals(STRONG)) {
             statementBuilder.setExecutionProfile(lwtProfile);
+        } else {
+            statementBuilder.setExecutionProfile(readProfile);
         }
 
         return cassandraAsyncExecutor.executeRows(statementBuilder.build())
@@ -240,7 +247,7 @@ public class CassandraMailboxPathV3DAO {
         if (consistencyChoice.equals(STRONG)) {
             return statement.setExecutionProfile(lwtProfile);
         } else {
-            return statement;
+            return statement.setExecutionProfile(readProfile);
         }
     }
 }

@@ -39,6 +39,7 @@ import jakarta.inject.Inject;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -68,6 +69,7 @@ public class CassandraUidProvider implements UidProvider {
     private final DriverExecutionProfile lwtProfile;
     private final RetryBackoffSpec retrySpec;
     private final CassandraConfiguration cassandraConfiguration;
+    private final DriverExecutionProfile readProfile;
 
     @Inject
     public CassandraUidProvider(CqlSession session, CassandraConfiguration cassandraConfiguration) {
@@ -80,6 +82,7 @@ public class CassandraUidProvider implements UidProvider {
         this.retrySpec = Retry.backoff(cassandraConfiguration.getUidMaxRetry(), firstBackoff)
             .scheduler(Schedulers.parallel());
         this.cassandraConfiguration = cassandraConfiguration;
+        this.readProfile = ProfileLocator.READ.locateProfile(session, "UID");
     }
 
     private PreparedStatement prepareSelect(CqlSession session) {
@@ -157,14 +160,20 @@ public class CassandraUidProvider implements UidProvider {
 
     @Override
     public Optional<MessageUid> lastUid(Mailbox mailbox) {
-        return findHighestUid((CassandraId) mailbox.getMailboxId(), Optional.of(lwtProfile).filter(any -> cassandraConfiguration.isUidReadStrongConsistency()))
+        return findHighestUid((CassandraId) mailbox.getMailboxId(), locateReadProfile())
             .blockOptional()
             .map(uid -> uid.add(cassandraConfiguration.getUidModseqIncrement()));
     }
 
+    private Optional<DriverExecutionProfile> locateReadProfile() {
+        return Optional.of(lwtProfile)
+            .filter(any -> cassandraConfiguration.isUidReadStrongConsistency())
+            .or(() -> Optional.of(readProfile));
+    }
+
     @Override
     public Mono<Optional<MessageUid>> lastUidReactive(Mailbox mailbox) {
-        return findHighestUid((CassandraId) mailbox.getMailboxId(), Optional.of(lwtProfile).filter(any -> cassandraConfiguration.isUidReadStrongConsistency()))
+        return findHighestUid((CassandraId) mailbox.getMailboxId(), locateReadProfile())
             .map(uid -> uid.add(cassandraConfiguration.getUidModseqIncrement()))
             .map(Optional::of)
             .switchIfEmpty(Mono.just(Optional.empty()));
