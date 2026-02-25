@@ -53,7 +53,10 @@ object PushClientConfiguration {
 
 case class PushClientConfiguration(maxTimeoutSeconds: Option[Int],
                                    maxConnections: Option[Int],
-                                   preventServerSideRequestForgery: Boolean = true)
+                                   preventServerSideRequestForgery: Boolean = true,
+                                   vapidAuthEnabled: Boolean = false,
+                                   vapidPrivateKey: Option[String] = None,
+                                   vapidPublicKey: Option[String] = None)
 
 object WebPushClientHeader {
   val TIME_TO_LIVE: String = "TTL"

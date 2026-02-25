@@ -45,6 +45,9 @@ object JmapConfigProperties {
   val WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY: String = "webpush.maxTimeoutSeconds"
   val WEB_PUSH_MAX_CONNECTIONS_PROPERTY: String = "webpush.maxConnections"
   val WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY: String = "webpush.prevent.server.side.request.forgery"
+  val WEB_PUSH_VAPID_AUTH_ENABLED_PROPERTY: String = "webpush.vapid.auth.enabled"
+  val WEB_PUSH_VAPID_PRIVATE_KEY_PROPERTY: String = "webpush.vapid.private.key"
+  val WEB_PUSH_VAPID_PUBLIC_KEY_PROPERTY: String = "webpush.vapid.public.key"
   val DYNAMIC_JMAP_PREFIX_RESOLUTION_ENABLED_PROPERTY: String = "dynamic.jmap.prefix.resolution.enabled"
   val DELAY_SENDS_ENABLED: String = "delay.sends.enabled"
   val AUTHENTICATION_STRATEGIES: String = "authentication.strategy.rfc8621"
@@ -107,6 +110,9 @@ object JmapRfc8621Configuration {
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
       maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala,
       preventServerSideRequestForgery = Optional.ofNullable(configuration.getBoolean(WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY, null)).orElse(true),
+      vapidAuthEnabled = Optional.ofNullable(configuration.getBoolean(WEB_PUSH_VAPID_AUTH_ENABLED_PROPERTY, null)).orElse(false),
+      vapidPrivateKey = Optional.ofNullable(configuration.getString(WEB_PUSH_VAPID_PRIVATE_KEY_PROPERTY, null)).toScala,
+      vapidPublicKey = Optional.ofNullable(configuration.getString(WEB_PUSH_VAPID_PUBLIC_KEY_PROPERTY, null)).toScala,
       authenticationStrategies = Optional.ofNullable(configuration.getList(classOf[String], AUTHENTICATION_STRATEGIES, null)).toScala,
       disabledCapabilities = Optional.ofNullable(configuration.getList(classOf[String], DISABLED_CAPABILITIES, null))
         .orElse(ImmutableList.of())
@@ -131,12 +137,18 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
                                     maxConnections: Option[Int] = None,
                                     authenticationStrategies: Option[java.util.List[String]] = None,
                                     preventServerSideRequestForgery: Boolean = true,
+                                    vapidAuthEnabled: Boolean = false,
+                                    vapidPrivateKey: Option[String] = None,
+                                    vapidPublicKey: Option[String] = None,
                                     disabledCapabilities: Set[CapabilityIdentifier] = Set()) {
 
   val webPushConfiguration: PushClientConfiguration = PushClientConfiguration(
     maxTimeoutSeconds = maxTimeoutSeconds,
     maxConnections = maxConnections,
-    preventServerSideRequestForgery = preventServerSideRequestForgery)
+    preventServerSideRequestForgery = preventServerSideRequestForgery,
+    vapidAuthEnabled = vapidAuthEnabled,
+    vapidPrivateKey = vapidPrivateKey,
+    vapidPublicKey = vapidPublicKey)
 
   def urlPrefixes(): UrlPrefixes = UrlPrefixes(new URI(urlPrefixString), new URI(websocketPrefixString))
 
