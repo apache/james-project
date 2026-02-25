@@ -24,9 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.jmap.send.MailMetadata;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
+import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -52,7 +52,7 @@ public class SentByJmapTest {
         FakeMail fakeMail = FakeMail.builder()
             .name("name")
             .recipient(recipient)
-            .attribute(new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of("true")))
+            .attribute(new Attribute(Mail.JMAP_AUTH_USER, AttributeValue.of("true")))
             .build();
 
         Collection<MailAddress> results =  testee.match(fakeMail);
@@ -89,7 +89,7 @@ public class SentByJmapTest {
         FakeMail fakeMail = FakeMail.builder()
             .name("name")
             .recipients()
-            .attribute(new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of("true")))
+            .attribute(new Attribute(Mail.JMAP_AUTH_USER, AttributeValue.of("true")))
             .build();
 
         Collection<MailAddress> results =  testee.match(fakeMail);

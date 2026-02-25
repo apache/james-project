@@ -21,6 +21,7 @@ package org.apache.james.mailetcontainer.impl;
 import java.io.Closeable;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.mailetcontainer.lib.MailProcessingErrorHandlingConfiguration;
@@ -48,12 +49,10 @@ public class ProcessorImpl {
     private final List<MailetProcessorListener> listeners;
     private final Mailet mailet;
 
-    public ProcessorImpl(
-            MetricFactory metricFactory,
-            Mailet mailet,
-            MailProcessingErrorHandlingConfiguration processingErrorHandlingConfiguration,
-            List<MailetProcessorListener> listeners
-    ) {
+    public ProcessorImpl(MetricFactory metricFactory,
+                         Mailet mailet,
+                         MailProcessingErrorHandlingConfiguration processingErrorHandlingConfiguration,
+                         List<MailetProcessorListener> listeners) {
         this.metricFactory = metricFactory;
         this.processingErrorHandlingConfiguration = processingErrorHandlingConfiguration;
         this.listeners = listeners;
@@ -67,22 +66,8 @@ public class ProcessorImpl {
         long start = System.currentTimeMillis();
         TimeMetric timeMetric = metricFactory.timer(mailet.getClass().getSimpleName());
         Throwable ex = null;
-        String smtpSessionID = mail.getAttribute(Mail.SMTP_SESSION_ID)
-            .map(Attribute::getValue)
-            .map(AttributeValue::value)
-            .map(String.class::cast)
-            .orElse(null);
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addToContext(MDCBuilder.PROTOCOL, "MAILET")
-                     .addToContext(MDCBuilder.ACTION, "MAILET")
-                     .addToContext(MDCBuilder.HOST, mail.getRemoteHost())
-                     .addToContext(MDCBuilder.SESSION_ID, smtpSessionID)
-                     .addToContext("state", mail.getState())
+        try (Closeable closeable = mdcBase(mail)
                      .addToContext("mailet", mailet.getClass().getSimpleName())
-                     .addToContext("mail", mail.getName())
-                     .addToContext("recipients", ImmutableList.copyOf(mail.getRecipients()).toString())
-                     .addToContext("sender", mail.getMaybeSender().asString())
                      .build()) {
             MailetPipelineLogging.logBeginOfMailetProcess(mailet, mail);
             mailet.service(mail);
@@ -113,6 +98,32 @@ public class ProcessorImpl {
                 listener.afterMailet(mailet, mail.getName(), mail.getState(), complete, ex);
             }
         }
+    }
+
+    static MDCBuilder mdcBase(Mail mail) {
+        Optional<String> smtpSessionID = mail.getAttribute(Mail.SMTP_SESSION_ID)
+            .map(Attribute::getValue)
+            .map(AttributeValue::value)
+            .map(String.class::cast);
+
+        return MDCBuilder.create()
+            .addToContext(MDCBuilder.PROTOCOL, "MAILET")
+            .addToContext(MDCBuilder.ACTION, "MAILET")
+            .addToContext(MDCBuilder.HOST, mail.getRemoteHost())
+            .addToContextIfPresent(MDCBuilder.SESSION_ID, smtpSessionID)
+            .addToContext("state", mail.getState())
+            .addToContext("mail", mail.getName())
+            .addToContext("recipients", ImmutableList.copyOf(mail.getRecipients()).toString())
+            .addToContext("sender", mail.getMaybeSender().asString())
+            .addToContextIfPresent("loggedInUser", loggedInUser(mail));
+    }
+
+    static Optional<String> loggedInUser(Mail mail) {
+        return mail.getAttribute(Mail.SMTP_AUTH_USER)
+            .or(() -> mail.getAttribute(Mail.JMAP_AUTH_USER))
+            .map(attribute -> attribute.getValue().value())
+            .filter(String.class::isInstance)
+            .map(String.class::cast);
     }
 
     public String mailetName() {

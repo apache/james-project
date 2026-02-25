@@ -76,7 +76,7 @@ public class PostDequeueDecoratorTest {
     private static final MessageUid UID = MessageUid.of(1);
     private static final MailboxPath OUTBOX_MAILBOX_PATH = MailboxPath.forUser(USERNAME, OUTBOX);
     private static final MailboxPath SENT_MAILBOX_PATH = MailboxPath.forUser(USERNAME, SENT);
-    private static final Attribute USERNAME_ATTRIBUTE = new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(RAW_USERNAME));
+    private static final Attribute USERNAME_ATTRIBUTE = new Attribute(Mail.JMAP_AUTH_USER, AttributeValue.of(RAW_USERNAME));
 
     private StoreMailboxManager mailboxManager;
     private MailQueueItem mockedMailQueueItem;

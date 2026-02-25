@@ -32,7 +32,7 @@ import org.apache.james.jmap.json.MDNSerializer
 import org.apache.james.jmap.mail.MDN._
 import org.apache.james.jmap.mail.MDNSend.MDN_ALREADY_SENT_FLAG
 import org.apache.james.jmap.mail._
-import org.apache.james.jmap.method.EmailSubmissionSetMethod.{LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE}
+import org.apache.james.jmap.method.EmailSubmissionSetMethod.LOGGER
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
 import org.apache.james.mailbox.model.{FetchGroup, MessageResult}
@@ -48,7 +48,7 @@ import org.apache.james.mime4j.stream.MimeConfig
 import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.server.core.MailImpl
-import org.apache.mailet.{Attribute, AttributeValue}
+import org.apache.mailet.{Attribute, AttributeValue, Mail}
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -209,7 +209,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
       .sender(sender)
       .addRecipient(recipient)
       .mimeMessage(mimeMessage)
-      .addAttribute(new Attribute(MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(mailboxSession.getUser.asString())))
+      .addAttribute(new Attribute(Mail.JMAP_AUTH_USER, AttributeValue.of(mailboxSession.getUser.asString())))
       .build()
     mailImpl -> mimeMessage
   }

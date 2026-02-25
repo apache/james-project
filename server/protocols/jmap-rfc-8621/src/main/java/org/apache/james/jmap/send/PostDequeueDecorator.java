@@ -101,7 +101,7 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
     }
 
     private Optional<String> retrieveUsername() {
-        return AttributeUtils.getValueAndCastFromMail(getMail(), MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, String.class);
+        return AttributeUtils.getValueAndCastFromMail(getMail(), Mail.JMAP_AUTH_USER, String.class);
     }
 
     private boolean mandatoryJmapMetaDataIsPresent() {
