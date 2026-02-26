@@ -1,0 +1,60 @@
+== Building the next gen documentation
+:page-partial:
+
+The old maven site is quite painful to maintain and doesn't allow for
+versionning of the content per releases which motivated the
+https://issues.apache.org/jira/browse/JAMES-3187[migration effort].
+
+Most of the maven site content has been migrated to asciidoc files assembled by
+antora. You can preview the content at https://james.staged.apache.org, this
+documentation is published automatically by the james CI.
+
+This new documentation root is located in the `docs` directory and includes
+these build instructions.
+
+=== Executing within source code
+
+(Clone `https://github.com/apache/james-project` locally, go into `docs` folder)
+
+. https://docs.antora.org/antora/latest/install-and-run-quickstart/[Install Antora]
+
+. Build the Antora content locally
++
+[,shell]
+----
+ $ antora antora-playbook-local.yml
+----
++
+. Open `build/site/index.html` in your browser.
+
+=== Building with Dockerfile
+
+To build the document from apache-james repository, you can use the Dockerfile provided in this folder.
+
+Build the Docker image:
+
+----
+docker build --build-arg JAMES_CHECKOUT=master -f Dockerfile -t james-site-antora .
+----
+
+Then run the Docker image:
+
+----
+docker run -p 80:80 james-site-antora
+----
+
+Go to `http://localhost` in your browser.
+
+=== Build with the nix enviroment
+
+Enter the xref:contributing.adoc#_experimental_nix_support[james experimental
+development shell]
+
+. Build the Antora content locally
++
+[,shell]
+----
+ $ antora antora-playbook-local.yml
+----
++
+. Open `build/site/index.html` in your browser.
