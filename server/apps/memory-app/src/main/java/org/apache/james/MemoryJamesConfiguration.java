@@ -41,6 +41,7 @@ public class MemoryJamesConfiguration implements Configuration {
         private Optional<ConfigurationPath> configurationPath;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<Boolean> jmapEnabled;
+        private Optional<Boolean> vapidEnabled;
         private Optional<Boolean> dropListsEnabled;
 
         private Builder() {
@@ -48,6 +49,7 @@ public class MemoryJamesConfiguration implements Configuration {
             configurationPath = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
             jmapEnabled = Optional.empty();
+            vapidEnabled = Optional.empty();
             dropListsEnabled = Optional.empty();
         }
 
@@ -89,6 +91,11 @@ public class MemoryJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder enableVapid() {
+            this.vapidEnabled = Optional.of(true);
+            return this;
+        }
+
         public Builder enableDropLists() {
             this.dropListsEnabled = Optional.of(true);
             return this;
@@ -108,8 +115,8 @@ public class MemoryJamesConfiguration implements Configuration {
             UsersRepositoryModuleChooser.Implementation usersRepositoryChoice = usersRepositoryImplementation.orElseGet(
                 () -> UsersRepositoryModuleChooser.Implementation.parse(configurationProvider));
 
+            PropertiesProvider propertiesProvider = new PropertiesProvider(fileSystem, configurationPath);
             boolean jmapEnabled = this.jmapEnabled.orElseGet(() -> {
-                PropertiesProvider propertiesProvider = new PropertiesProvider(fileSystem, configurationPath);
                 try {
                     return JMAPModule.parseConfiguration(propertiesProvider).isEnabled();
                 } catch (FileNotFoundException e) {
@@ -119,8 +126,17 @@ public class MemoryJamesConfiguration implements Configuration {
                 }
             });
 
+            boolean vapidEnabled = this.vapidEnabled.orElseGet(() -> {
+                try {
+                    return propertiesProvider.getConfiguration("jmap").getBoolean("webpush.vapid.auth.enabled", false);
+                } catch (FileNotFoundException e) {
+                    return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
             boolean dropListsEnabled = this.dropListsEnabled.orElseGet(() -> {
-                PropertiesProvider propertiesProvider = new PropertiesProvider(fileSystem, configurationPath);
                 try {
                     return propertiesProvider.getConfiguration("droplists").getBoolean("enabled", false);
                 } catch (FileNotFoundException e) {
@@ -134,7 +150,7 @@ public class MemoryJamesConfiguration implements Configuration {
             return new MemoryJamesConfiguration(
                 configurationPath,
                 directories,
-                usersRepositoryChoice, jmapEnabled, dropListsEnabled);
+                usersRepositoryChoice, jmapEnabled, vapidEnabled, dropListsEnabled);
         }
     }
 
@@ -146,15 +162,17 @@ public class MemoryJamesConfiguration implements Configuration {
     private final JamesDirectoriesProvider directories;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
     private final boolean jmapEnabled;
+    private final boolean vapidEnabled;
     private final boolean dropListsEnabled;
 
     public MemoryJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories,
                                     UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation,
-                                    boolean jmapEnabled, boolean dropListsEnabled) {
+                                    boolean jmapEnabled, boolean vapidEnabled, boolean dropListsEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
         this.jmapEnabled = jmapEnabled;
+        this.vapidEnabled = vapidEnabled;
         this.dropListsEnabled = dropListsEnabled;
     }
 
@@ -174,6 +192,10 @@ public class MemoryJamesConfiguration implements Configuration {
 
     public boolean isJmapEnabled() {
         return jmapEnabled;
+    }
+
+    public boolean isVapidEnabled() {
+        return vapidEnabled;
     }
 
     public boolean isDropListsEnabled() {

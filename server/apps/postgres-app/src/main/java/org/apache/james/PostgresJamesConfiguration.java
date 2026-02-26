@@ -75,6 +75,7 @@ public class PostgresJamesConfiguration implements Configuration {
         private Optional<EventBusImpl> eventBusImpl;
         private Optional<VaultConfiguration> deletedMessageVaultConfiguration;
         private Optional<Boolean> jmapEnabled;
+        private Optional<Boolean> vapidEnabled;
         private Optional<Boolean> dropListsEnabled;
         private Optional<Boolean> rlsEnabled;
 
@@ -87,6 +88,7 @@ public class PostgresJamesConfiguration implements Configuration {
             eventBusImpl = Optional.empty();
             deletedMessageVaultConfiguration = Optional.empty();
             jmapEnabled = Optional.empty();
+            vapidEnabled = Optional.empty();
             dropListsEnabled = Optional.empty();
             rlsEnabled = Optional.empty();
         }
@@ -149,6 +151,11 @@ public class PostgresJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder enableVapid() {
+            this.vapidEnabled = Optional.of(true);
+            return this;
+        }
+
         public Builder enableDropLists() {
             this.dropListsEnabled = Optional.of(true);
             return this;
@@ -206,6 +213,16 @@ public class PostgresJamesConfiguration implements Configuration {
                 }
             });
 
+            boolean vapidEnabled = this.vapidEnabled.orElseGet(() -> {
+                try {
+                    return propertiesProvider.getConfiguration("jmap").getBoolean("webpush.vapid.auth.enabled", false);
+                } catch (FileNotFoundException e) {
+                    return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
             boolean dropListsEnabled = this.dropListsEnabled.orElseGet(() -> {
                 try {
                     return configurationProvider.getConfiguration("droplists").getBoolean("enabled", false);
@@ -224,6 +241,7 @@ public class PostgresJamesConfiguration implements Configuration {
                 eventBusImpl,
                 deletedMessageVaultConfiguration,
                 jmapEnabled,
+                vapidEnabled,
                 dropListsEnabled,
                 rlsEnabled);
         }
@@ -251,6 +269,7 @@ public class PostgresJamesConfiguration implements Configuration {
     private final EventBusImpl eventBusImpl;
     private final VaultConfiguration deletedMessageVaultConfiguration;
     private final boolean jmapEnabled;
+    private final boolean vapidEnabled;
     private final boolean dropListsEnabled;
     private final boolean rlsEnabled;
 
@@ -262,6 +281,7 @@ public class PostgresJamesConfiguration implements Configuration {
                                        EventBusImpl eventBusImpl,
                                        VaultConfiguration deletedMessageVaultConfiguration,
                                        boolean jmapEnabled,
+                                       boolean vapidEnabled,
                                        boolean dropListsEnabled,
                                        boolean rlsEnabled) {
         this.configurationPath = configurationPath;
@@ -272,6 +292,7 @@ public class PostgresJamesConfiguration implements Configuration {
         this.eventBusImpl = eventBusImpl;
         this.deletedMessageVaultConfiguration = deletedMessageVaultConfiguration;
         this.jmapEnabled = jmapEnabled;
+        this.vapidEnabled = vapidEnabled;
         this.dropListsEnabled = dropListsEnabled;
         this.rlsEnabled = rlsEnabled;
     }
@@ -308,6 +329,10 @@ public class PostgresJamesConfiguration implements Configuration {
 
     public boolean isJmapEnabled() {
         return jmapEnabled;
+    }
+
+    public boolean isVapidEnabled() {
+        return vapidEnabled;
     }
 
     public boolean isDropListsEnabled() {

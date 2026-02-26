@@ -24,13 +24,20 @@ import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 
+import eu.timepit.refined.auto._
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpResponseStatus
 import jakarta.inject.Inject
+import org.apache.james.core.Username
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.{Capability, CapabilityFactory, CapabilityProperties, JmapRfc8621Configuration, UrlPrefixes}
+import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.pushsubscription.DefaultWebPushClient.{PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH, buildHttpClient}
+import org.apache.james.jmap.pushsubscription.PushClientConfiguration.JMAP_VAPID
 import org.apache.james.jmap.pushsubscription.WebPushClientHeader.{CONTENT_ENCODING, DEFAULT_TIMEOUT, MESSAGE_URGENCY, TIME_TO_LIVE, TOPIC}
 import org.reactivestreams.Publisher
+import play.api.libs.json.JsObject
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
@@ -49,6 +56,8 @@ object PushClientConfiguration {
     maxTimeoutSeconds = Some(10),
     maxConnections = Some(10),
     preventServerSideRequestForgery = false)
+
+  val JMAP_VAPID: CapabilityIdentifier = "urn:ietf:params:jmap:webpush-vapid"
 }
 
 case class PushClientConfiguration(maxTimeoutSeconds: Option[Int],
@@ -57,6 +66,22 @@ case class PushClientConfiguration(maxTimeoutSeconds: Option[Int],
                                    vapidAuthEnabled: Boolean = false,
                                    vapidPrivateKey: Option[String] = None,
                                    vapidPublicKey: Option[String] = None)
+
+case class ApplicationServerKey(value: Option[String])
+
+final case class VapidCapabilityProperties(applicationServerKey: ApplicationServerKey) extends CapabilityProperties {
+  override def jsonify(): JsObject = ResponseSerializer.vapidCapabilityWrites.writes(this)
+}
+
+final case class VapidCapability(properties: VapidCapabilityProperties,
+                                 identifier: CapabilityIdentifier = JMAP_VAPID) extends Capability
+
+case class VapidCapabilityFactory(configuration: JmapRfc8621Configuration) extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = JMAP_VAPID
+
+  override def create(urlPrefixes: UrlPrefixes, username: Username): Capability = VapidCapability(VapidCapabilityProperties(
+    ApplicationServerKey(configuration.vapidPublicKey)))
+}
 
 object WebPushClientHeader {
   val TIME_TO_LIVE: String = "TTL"
