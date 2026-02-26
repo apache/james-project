@@ -34,6 +34,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
+import org.apache.james.core.Username;
 import org.apache.mailet.PerRecipientHeaders.Header;
 
 import com.google.common.collect.ImmutableMap;
@@ -453,5 +454,14 @@ public interface Mail extends Serializable, Cloneable {
         dsnParameters.toAttributes()
             .asAttributes()
             .forEach(this::setAttribute);
+    }
+
+    default Optional<Username> loggedInUser() {
+        return getAttribute(Mail.SMTP_AUTH_USER)
+            .or(() -> getAttribute(Mail.JMAP_AUTH_USER))
+            .map(attribute -> attribute.getValue().value())
+            .filter(String.class::isInstance)
+            .map(String.class::cast)
+            .map(Username::of);
     }
 }

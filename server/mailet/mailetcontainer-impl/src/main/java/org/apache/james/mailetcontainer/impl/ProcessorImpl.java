@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.mailetcontainer.lib.MailProcessingErrorHandlingConfiguration;
 import org.apache.james.metrics.api.MetricFactory;
@@ -115,15 +116,7 @@ public class ProcessorImpl {
             .addToContext("mail", mail.getName())
             .addToContext("recipients", ImmutableList.copyOf(mail.getRecipients()).toString())
             .addToContext("sender", mail.getMaybeSender().asString())
-            .addToContextIfPresent("loggedInUser", loggedInUser(mail));
-    }
-
-    static Optional<String> loggedInUser(Mail mail) {
-        return mail.getAttribute(Mail.SMTP_AUTH_USER)
-            .or(() -> mail.getAttribute(Mail.JMAP_AUTH_USER))
-            .map(attribute -> attribute.getValue().value())
-            .filter(String.class::isInstance)
-            .map(String.class::cast);
+            .addToContextIfPresent("loggedInUser", mail.loggedInUser().map(Username::asString));
     }
 
     public String mailetName() {
