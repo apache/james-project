@@ -2358,6 +2358,207 @@ class MailRepositoriesRoutesTest {
             .body("status", is("failed"));
     }
 
+    @Test
+    void moveAllMailsShouldReturn404WhenSourceRepositoryDoesNotExist() {
+        given()
+            .body("{\"mailRepository\": \"myTargetRepo\"}")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .body("statusCode", is(404))
+            .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()));
+    }
+
+    @Test
+    void moveAllMailsShouldReturn400WhenTargetRepositoryDoesNotExist() throws Exception {
+        mailRepositoryStore.create(URL_MY_REPO);
+
+        given()
+            .body("{\"mailRepository\": \"nonExistingTarget\"}")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("The target repository 'nonExistingTarget' does not exist"));
+    }
+
+    @Test
+    void moveAllMailsShouldReturn400WhenMailRepositoryFieldIsMissing() throws Exception {
+        mailRepositoryStore.create(URL_MY_REPO);
+
+        given()
+            .body("{}")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("'mailRepository' field is mandatory in request body"));
+    }
+
+    @Test
+    void moveAllMailsShouldReturn400WhenBodyIsInvalidJson() throws Exception {
+        mailRepositoryStore.create(URL_MY_REPO);
+
+        given()
+            .body("not-json")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("Invalid JSON body"));
+    }
+
+    @Test
+    void moveAllMailsShouldMoveMailsFromSourceToTarget() throws Exception {
+        MailRepository sourceRepo = mailRepositoryStore.create(URL_MY_REPO);
+        MailRepository targetRepo = mailRepositoryStore.create(MailRepositoryUrl.from("memory://myTargetRepo"));
+
+        sourceRepo.store(FakeMail.builder().name(NAME_1).build());
+        sourceRepo.store(FakeMail.builder().name(NAME_2).build());
+
+        given()
+            .body("{\"mailRepository\": \"myTargetRepo\"}")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(sourceRepo.list()).toIterable().isEmpty();
+        assertThat(targetRepo.list()).toIterable()
+            .containsExactlyInAnyOrder(new MailKey(NAME_1), new MailKey(NAME_2));
+    }
+
+    @Test
+    void moveAllMailsShouldReturn204WhenSourceRepositoryIsEmpty() throws Exception {
+        mailRepositoryStore.create(URL_MY_REPO);
+        mailRepositoryStore.create(MailRepositoryUrl.from("memory://myTargetRepo"));
+
+        given()
+            .body("{\"mailRepository\": \"myTargetRepo\"}")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
+    @Test
+    void moveOneMailShouldReturn404WhenSourceRepositoryDoesNotExist() {
+        given()
+            .body("{\"mailRepository\": \"myTargetRepo\"}")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .body("statusCode", is(404))
+            .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()));
+    }
+
+    @Test
+    void moveOneMailShouldReturn400WhenTargetRepositoryDoesNotExist() throws Exception {
+        MailRepository sourceRepo = mailRepositoryStore.create(URL_MY_REPO);
+        sourceRepo.store(FakeMail.builder().name(NAME_1).build());
+
+        given()
+            .body("{\"mailRepository\": \"nonExistingTarget\"}")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("The target repository 'nonExistingTarget' does not exist"));
+    }
+
+    @Test
+    void moveOneMailShouldReturn400WhenMailRepositoryFieldIsMissing() throws Exception {
+        MailRepository sourceRepo = mailRepositoryStore.create(URL_MY_REPO);
+        sourceRepo.store(FakeMail.builder().name(NAME_1).build());
+
+        given()
+            .body("{}")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("'mailRepository' field is mandatory in request body"));
+    }
+
+    @Test
+    void moveOneMailShouldReturn400WhenBodyIsInvalidJson() throws Exception {
+        MailRepository sourceRepo = mailRepositoryStore.create(URL_MY_REPO);
+        sourceRepo.store(FakeMail.builder().name(NAME_1).build());
+
+        given()
+            .body("not-json")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("Invalid JSON body"));
+    }
+
+    @Test
+    void moveOneMailShouldMoveMailFromSourceToTarget() throws Exception {
+        MailRepository sourceRepo = mailRepositoryStore.create(URL_MY_REPO);
+        MailRepository targetRepo = mailRepositoryStore.create(MailRepositoryUrl.from("memory://myTargetRepo"));
+
+        sourceRepo.store(FakeMail.builder().name(NAME_1).build());
+        sourceRepo.store(FakeMail.builder().name(NAME_2).build());
+
+        given()
+            .body("{\"mailRepository\": \"myTargetRepo\"}")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(sourceRepo.list()).toIterable()
+            .containsOnly(new MailKey(NAME_2));
+        assertThat(targetRepo.list()).toIterable()
+            .containsOnly(new MailKey(NAME_1));
+    }
+
+    @Test
+    void moveOneMailShouldReturn204WhenMailKeyDoesNotExist() throws Exception {
+        MailRepository sourceRepo = mailRepositoryStore.create(URL_MY_REPO);
+        mailRepositoryStore.create(MailRepositoryUrl.from("memory://myTargetRepo"));
+
+        sourceRepo.store(FakeMail.builder().name(NAME_1).build());
+
+        given()
+            .body("{\"mailRepository\": \"myTargetRepo\"}")
+            .contentType(io.restassured.http.ContentType.JSON)
+        .when()
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/unknown")
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(sourceRepo.list()).toIterable()
+            .containsOnly(new MailKey(NAME_1));
+    }
+
     private void createMailRepositoryStore() throws Exception {
         MemoryMailRepositoryUrlStore urlStore = new MemoryMailRepositoryUrlStore();
         MailRepositoryStoreConfiguration configuration = MailRepositoryStoreConfiguration.forItems(
