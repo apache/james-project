@@ -29,11 +29,11 @@
           packages = with pkgs; [
             antora  # build documentation
             bundler # homepage and blog
+            bundix
             cacert  # ssl certificate management
             dive    # explore generated docker images
             git     # version control
             jdk     # build and run james
-            jekyll  # homepage and blog
             maven   # build james
           ];
           MAVEN_OPTS = "-Djna.library.path="  + pkgs.lib.makeLibraryPath [pkgs.udev];

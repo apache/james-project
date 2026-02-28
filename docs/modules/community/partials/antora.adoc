@@ -48,7 +48,7 @@ Go to `http://localhost` in your browser.
 === Build with the nix enviroment
 
 Enter the xref:contributing.adoc#_experimental_nix_support[james experimental
-development shell]
+development shell] with `nix develop`
 
 . Build the Antora content locally
 +

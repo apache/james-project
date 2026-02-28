@@ -22,48 +22,91 @@ https://james.staged.apache.org[staging version] of the website.
 ====
 
 == Building the homepage
+
 You can use jekyll to build the website. Go into `{path}` and run the following command
 
-[,shell]
+=== Docker
+
+[WARNING]
+====
+The official docker image `jekyll/jekyll` is unmaintained and is not compatible with jekyll version beyond 4.2.2.
+In this documentation we suggest a replacement `jvconseil/jekyll-docker` but note that this is not an official image.
+Use at your own risks.
+====
+
+[source,shell]
 ----
-$ docker run --rm -v="$PWD:/srv/jekyll:Z" -it jekyll/jekyll:$JEKYLL_VERSION  jekyll build
+$ docker run --rm -v="$PWD:/srv/jekyll:Z" -it jvconseil/jekyll-docker:4 jekyll build
 ----
 
 The resulting deployable content will be available in the `{path}/_site/`
 directory.
 
 In order to test the homepage, you can use this command:
-[,shell]
+[source,shell]
 ----
-$ docker run --rm -v $PWD/site:/srv/jekyll  -p 4000:4000 -it jekyll/jekyll jekyll serve
+$ docker run --rm -v $PWD/site:/srv/jekyll -p 4000:4000 -it jvconseil/jekyll-docker:4 jekyll serve
 ----
 The site will be available at http://localhost:4000/
 
 
 If you need to update the current site, checkout the branch asf-site from
 Apache git:
-[,shell]
+[source,shell]
 ----
 $ git clone https://git-wip-us.apache.org/repos/asf/james-site.git
 $ cd james-site
 $ git checkout origin/asf-site -b asf-site
 ----
 
-And replace in the previous commands `$PWD/site` by
-`<james-site-clone-directory>/content`, for example:
+make sure to build the site then copy the output to
 
-[,shell]
+[source,shell]
 ----
-$ docker run -v $PWD:/origin -v $PWD/../james-site/content:/destination james/homepage master
-$ docker run -v $PWD/.m2:/root/.m2 -v $PWD/../james-site/content:/origin -v $PWD/site:/destination james/site master
+$ docker run --rm -v="$PWD:/srv/jekyll:Z" -it jvconseil/jekyll-docker:4 jekyll build
+$ cp  ../james-site/content
 ----
 
 Then just push the new site:
-[,shell]
+[source,shell]
 ----
 $ cd ../james-site
 $ git push origin asf-site
 ----
+
+=== Experimental nix environment
+
+From the root of the repository checkout, you can use the flake's devshell
+
+[source,shell]
+----
+$ cd src/homepage
+$ nix develop
+----
+
+Then use jekyll directly
+
+[source,shell]
+----
+$ jekyll serve
+# or
+$ jekyll build
+----
+
+==== Gemset update for nix
+
+Updating the gemset to track the gemfile updates is a bit involved :
+
+. ensure you are out of all nix devshell (check using `echo $SHLVL` it should be 1)
+. create a temporary shell for gem manipulation `nix-shell -p ruby -p bundix`
+. update the gemfile then run
++
+[,shell]
+----
+BUNDLE_FORCE_RUBY_PLATFORM="true" bundle lock --update
+bundix -l
+----
+. exit the temporary shell and enter the devShell again `nix develop`
 
 == Maven site
 
@@ -100,7 +143,7 @@ The docker file in `src/site-docker` is currently broken:
 prepare for some tinkering before building using this method.
 ====
 
-[,shell]
+[source,shell]
 ----
 $ docker build -t james/site src/site-docker
 $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master
@@ -109,7 +152,7 @@ $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination jam
 === Nix development shell
 
 Enter the xref:contributing.adoc#_experimental_nix_support[james experimental
-development shell]
+development shell] with `nix develop`.
 
 1. run `mvn clean package site -Djib.skip`
 2. Test the built site in your browser from the `{path}/target/site` folder
