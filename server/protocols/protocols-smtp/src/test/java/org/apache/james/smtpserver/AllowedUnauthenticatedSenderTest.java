@@ -23,11 +23,15 @@ import static org.apache.james.smtpserver.SMTPServerTestSystem.BOB;
 import static org.apache.james.smtpserver.SMTPServerTestSystem.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Base64;
 
-import org.apache.commons.net.smtp.SMTPClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -51,73 +55,45 @@ class AllowedUnauthenticatedSenderTest {
 
         @Test
         void unauthenticatedSenderShouldBeAcceptedWhenInAllowedList() throws Exception {
-            SMTPClient smtpProtocol = new SMTPClient();
-            InetSocketAddress bindedAddress = testSystem.getBindedAddress();
-            smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-
-            smtpProtocol.sendCommand("EHLO localhost");
-            smtpProtocol.sendCommand("MAIL FROM: <allowed@example.com>");
-
-            assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+            try (SmtpClient client = SmtpClient.connectWithProxy(testSystem.getBindedAddress(), "127.0.0.1")) {
+                client.sendCommand("EHLO localhost");
+                assertThat(client.sendCommand("MAIL FROM: <allowed@example.com>")).isEqualTo(250);
+            }
         }
 
         @Test
         void unauthenticatedSenderShouldBeRejectedWhenNotInAllowedList() throws Exception {
-            SMTPClient smtpProtocol = new SMTPClient();
-            InetSocketAddress bindedAddress = testSystem.getBindedAddress();
-            smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-
-            smtpProtocol.sendCommand("EHLO localhost");
-            smtpProtocol.sendCommand("MAIL FROM: <forbidden@example.com>");
-
-            assertThat(smtpProtocol.getReplyCode()).isEqualTo(550);
+            try (SmtpClient client = SmtpClient.connectWithProxy(testSystem.getBindedAddress(), "127.0.0.1")) {
+                client.sendCommand("EHLO localhost");
+                assertThat(client.sendCommand("MAIL FROM: <forbidden@example.com>")).isEqualTo(550);
+            }
         }
 
         @Test
         void unauthenticatedSenderWithIpRestrictionShouldBeRejectedFromWrongIp() throws Exception {
             // ip-restricted@example.com is only allowed from 172.34.56.0/24
-            // but we are connecting from 127.0.0.1
-            SMTPClient smtpProtocol = new SMTPClient();
-            InetSocketAddress bindedAddress = testSystem.getBindedAddress();
-            smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-
-            smtpProtocol.sendCommand("EHLO localhost");
-            smtpProtocol.sendCommand("MAIL FROM: <ip-restricted@example.com>");
-
-            assertThat(smtpProtocol.getReplyCode()).isEqualTo(550);
+            // Proxy simulates connection from 127.0.0.1 which is not in that range
+            try (SmtpClient client = SmtpClient.connectWithProxy(testSystem.getBindedAddress(), "127.0.0.1")) {
+                client.sendCommand("EHLO localhost");
+                assertThat(client.sendCommand("MAIL FROM: <ip-restricted@example.com>")).isEqualTo(550);
+            }
         }
 
         @Test
         void nullSenderShouldBeRejectedWhenAllowNullSenderIsFalse() throws Exception {
-            SMTPClient smtpProtocol = new SMTPClient();
-            InetSocketAddress bindedAddress = testSystem.getBindedAddress();
-            smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-
-            smtpProtocol.sendCommand("EHLO localhost");
-            smtpProtocol.sendCommand("MAIL FROM: <>");
-
-            assertThat(smtpProtocol.getReplyCode()).isEqualTo(550);
+            try (SmtpClient client = SmtpClient.connectWithProxy(testSystem.getBindedAddress(), "127.0.0.1")) {
+                client.sendCommand("EHLO localhost");
+                assertThat(client.sendCommand("MAIL FROM: <>")).isEqualTo(550);
+            }
         }
 
         @Test
         void authenticatedUserShouldBypassAllowedSenderRestriction() throws Exception {
-            SMTPClient smtpProtocol = new SMTPClient();
-            InetSocketAddress bindedAddress = testSystem.getBindedAddress();
-            smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-            authenticate(smtpProtocol);
-
-            smtpProtocol.sendCommand("EHLO localhost");
-            smtpProtocol.sendCommand("MAIL FROM: <forbidden@example.com>");
-
-            assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
-        }
-
-        private void authenticate(SMTPClient smtpProtocol) throws IOException {
-            smtpProtocol.sendCommand("AUTH PLAIN");
-            smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + BOB.asString() + "\0" + PASSWORD + "\0").getBytes(UTF_8)));
-            assertThat(smtpProtocol.getReplyCode())
-                .as("authenticated")
-                .isEqualTo(235);
+            try (SmtpClient client = SmtpClient.connectWithProxy(testSystem.getBindedAddress(), "127.0.0.1")) {
+                client.authenticate();
+                client.sendCommand("EHLO localhost");
+                assertThat(client.sendCommand("MAIL FROM: <forbidden@example.com>")).isEqualTo(250);
+            }
         }
     }
 
@@ -137,26 +113,77 @@ class AllowedUnauthenticatedSenderTest {
 
         @Test
         void nullSenderShouldBeAcceptedWhenAllowNullSenderIsTrue() throws Exception {
-            SMTPClient smtpProtocol = new SMTPClient();
-            InetSocketAddress bindedAddress = testSystem.getBindedAddress();
-            smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-
-            smtpProtocol.sendCommand("EHLO localhost");
-            smtpProtocol.sendCommand("MAIL FROM: <>");
-
-            assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
+            try (SmtpClient client = SmtpClient.connectWithProxy(testSystem.getBindedAddress(), "127.0.0.1")) {
+                client.sendCommand("EHLO localhost");
+                assertThat(client.sendCommand("MAIL FROM: <>")).isEqualTo(250);
+            }
         }
 
         @Test
         void nonNullSenderShouldStillBeCheckedAgainstAllowedList() throws Exception {
-            SMTPClient smtpProtocol = new SMTPClient();
-            InetSocketAddress bindedAddress = testSystem.getBindedAddress();
-            smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+            try (SmtpClient client = SmtpClient.connectWithProxy(testSystem.getBindedAddress(), "127.0.0.1")) {
+                client.sendCommand("EHLO localhost");
+                assertThat(client.sendCommand("MAIL FROM: <forbidden@example.com>")).isEqualTo(550);
+            }
+        }
+    }
 
-            smtpProtocol.sendCommand("EHLO localhost");
-            smtpProtocol.sendCommand("MAIL FROM: <forbidden@example.com>");
+    private static class SmtpClient implements Closeable {
+        private final Socket socket;
+        private final BufferedReader reader;
+        private final OutputStream out;
 
-            assertThat(smtpProtocol.getReplyCode()).isEqualTo(550);
+        private SmtpClient(Socket socket) throws IOException {
+            this.socket = socket;
+            this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), UTF_8));
+            this.out = socket.getOutputStream();
+        }
+
+        static SmtpClient connectWithProxy(InetSocketAddress serverAddress, String sourceIp) throws IOException {
+            Socket socket = new Socket(serverAddress.getAddress(), serverAddress.getPort());
+            socket.setSoTimeout(5000);
+            SmtpClient client = new SmtpClient(socket);
+            client.readResponse(); // consume greeting
+            client.sendRaw("PROXY TCP4 " + sourceIp + " 127.0.0.1 12345 25");
+            return client;
+        }
+
+        int sendCommand(String command) throws IOException {
+            sendRaw(command);
+            return Integer.parseInt(readResponse().substring(0, 3));
+        }
+
+        void authenticate() throws IOException {
+            sendCommand("AUTH PLAIN");
+            int code = sendCommand(Base64.getEncoder().encodeToString(("\0" + BOB.asString() + "\0" + PASSWORD + "\0").getBytes(UTF_8)));
+            assertThat(code).as("authenticated").isEqualTo(235);
+        }
+
+        private void sendRaw(String line) throws IOException {
+            out.write((line + "\r\n").getBytes(UTF_8));
+            out.flush();
+        }
+
+        private String readResponse() throws IOException {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+                // A final response line has a space after the 3-digit code (not a dash)
+                if (line.length() >= 4
+                        && Character.isDigit(line.charAt(0))
+                        && Character.isDigit(line.charAt(1))
+                        && Character.isDigit(line.charAt(2))
+                        && line.charAt(3) == ' ') {
+                    break;
+                }
+            }
+            return sb.toString();
+        }
+
+        @Override
+        public void close() throws IOException {
+            socket.close();
         }
     }
 }

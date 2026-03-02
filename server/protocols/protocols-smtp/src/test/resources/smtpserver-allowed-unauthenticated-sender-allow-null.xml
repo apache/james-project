@@ -52,4 +52,5 @@
         <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
     </handlerchain>
     <gracefulShutdown>false</gracefulShutdown>
+    <proxyRequired>true</proxyRequired>
 </smtpserver>
