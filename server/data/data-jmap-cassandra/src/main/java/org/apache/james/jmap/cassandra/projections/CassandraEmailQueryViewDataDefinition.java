@@ -26,9 +26,7 @@ import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQu
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MAILBOX_ID;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MESSAGE_ID;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.RECEIVED_AT;
-import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.SENT_AT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.TABLE_NAME_RECEIVED_AT;
-import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.TABLE_NAME_SENT_AT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.THREAD_ID;
 
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
@@ -36,18 +34,7 @@ import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 
 public interface CassandraEmailQueryViewDataDefinition {
-    CassandraDataDefinition MODULE = CassandraDataDefinition.table(TABLE_NAME_SENT_AT)
-        .comment("Storing the JMAP projections for list of emails within a mailbox to not rely on OpenSearch for basic Email/query (sorts sentAt).")
-        .options(options -> options
-            .withClusteringOrder(SENT_AT, DESC)
-            .withCaching(true, rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> types -> statement
-            .withPartitionKey(MAILBOX_ID, DataTypes.UUID)
-            .withClusteringColumn(SENT_AT, DataTypes.TIMESTAMP)
-            .withClusteringColumn(MESSAGE_ID, DataTypes.UUID)
-            .withColumn(THREAD_ID, DataTypes.UUID))
-
-        .table(TABLE_NAME_RECEIVED_AT)
+    CassandraDataDefinition MODULE = CassandraDataDefinition.table(TABLE_NAME_RECEIVED_AT)
         .comment("Storing the JMAP projections for list of emails within a mailbox to not rely on OpenSearch for basic Email/query (sorts and filter on receivedAt).")
         .options(options -> options
             .withClusteringOrder(RECEIVED_AT, DESC)
@@ -56,7 +43,6 @@ public interface CassandraEmailQueryViewDataDefinition {
             .withPartitionKey(MAILBOX_ID, DataTypes.UUID)
             .withClusteringColumn(RECEIVED_AT, DataTypes.TIMESTAMP)
             .withClusteringColumn(MESSAGE_ID, DataTypes.UUID)
-            .withColumn(SENT_AT, DataTypes.TIMESTAMP)
             .withColumn(THREAD_ID, DataTypes.UUID))
 
         .table(DATE_LOOKUP_TABLE)
@@ -66,7 +52,6 @@ public interface CassandraEmailQueryViewDataDefinition {
         .statement(statement -> types -> statement
             .withPartitionKey(MAILBOX_ID, DataTypes.UUID)
             .withClusteringColumn(MESSAGE_ID, DataTypes.UUID)
-            .withColumn(SENT_AT, DataTypes.TIMESTAMP)
             .withColumn(RECEIVED_AT, DataTypes.TIMESTAMP))
 
         .build();

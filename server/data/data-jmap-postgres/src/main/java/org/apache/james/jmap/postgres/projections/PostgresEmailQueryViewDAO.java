@@ -23,7 +23,6 @@ import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewD
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MESSAGE_ID;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.PK_CONSTRAINT_NAME;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.RECEIVED_AT;
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.SENT_AT;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.TABLE_NAME;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.THREAD_ID;
 
@@ -58,16 +57,6 @@ public class PostgresEmailQueryViewDAO {
         this.postgresExecutor = postgresExecutor;
     }
 
-    public Flux<MessageId> listMailboxContentSortedBySentAt(PostgresMailboxId mailboxId, Limit limit, boolean collapseThreads) {
-        return EmailQueryViewUtils.QueryViewExtender.of(limit, collapseThreads)
-            .resolve(backendFetchLimit -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, SENT_AT, THREAD_ID)
-                    .from(TABLE_NAME)
-                    .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                    .orderBy(SENT_AT.desc())
-                    .limit(backendFetchLimit.getLimit().get())))
-                .map(asEmailEntry(SENT_AT)));
-    }
-
     public Flux<MessageId> listMailboxContentSortedByReceivedAt(PostgresMailboxId mailboxId, Limit limit, boolean collapseThreads) {
         return EmailQueryViewUtils.QueryViewExtender.of(limit, collapseThreads)
             .resolve(backendFetchLimit -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, RECEIVED_AT, THREAD_ID)
@@ -100,17 +89,6 @@ public class PostgresEmailQueryViewDAO {
                 .map(asEmailEntry(RECEIVED_AT)));
     }
 
-    public Flux<MessageId> listMailboxContentSinceSentAt(PostgresMailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
-        return EmailQueryViewUtils.QueryViewExtender.of(limit, collapseThreads)
-            .resolve(backendFetchLimit -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID, SENT_AT, THREAD_ID)
-                    .from(TABLE_NAME)
-                    .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                    .and(SENT_AT.greaterOrEqual(since.toOffsetDateTime()))
-                    .orderBy(SENT_AT.desc())
-                    .limit(backendFetchLimit.getLimit().get())))
-                .map(asEmailEntry(SENT_AT)));
-    }
-
     private Function<Record, EmailEntry> asEmailEntry(Field<OffsetDateTime> dateField) {
         return (Record record) -> {
             PostgresMessageId messageId = PostgresMessageId.Factory.of(record.get(MESSAGE_ID));
@@ -133,11 +111,10 @@ public class PostgresEmailQueryViewDAO {
             .where(MAILBOX_ID.eq(mailboxId.asUuid()))));
     }
 
-    public Mono<Void> save(PostgresMailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, PostgresMessageId messageId, ThreadId threadId) {
+    public Mono<Void> save(PostgresMailboxId mailboxId, ZonedDateTime receivedAt, PostgresMessageId messageId, ThreadId threadId) {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
             .set(MAILBOX_ID, mailboxId.asUuid())
             .set(MESSAGE_ID, messageId.asUuid())
-            .set(SENT_AT, sentAt.toOffsetDateTime())
             .set(RECEIVED_AT, receivedAt.toOffsetDateTime())
             .set(THREAD_ID, ((PostgresMessageId) threadId.getBaseMessageId()).asUuid())
             .onConflictOnConstraint(PK_CONSTRAINT_NAME)

@@ -138,7 +138,7 @@ class PopulateEmailQueryViewListenerTest {
                 .build(emptyMessage(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant()))),
             mailboxSession).getId();
 
-        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedByReceivedAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
             .containsOnly(composedId.getMessageId());
     }
 
@@ -151,7 +151,7 @@ class PopulateEmailQueryViewListenerTest {
                 .build(emptyMessage(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant()))),
             mailboxSession).getId();
 
-        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedByReceivedAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
@@ -190,7 +190,7 @@ class PopulateEmailQueryViewListenerTest {
 
         Mono.from(queryViewListener.reactiveEvent(addedOutDatedEvent)).block();
 
-        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(outboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedByReceivedAt(outboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
@@ -206,7 +206,7 @@ class PopulateEmailQueryViewListenerTest {
 
         inboxMessageManager.setFlags(new Flags(), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession);
 
-        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedByReceivedAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
             .containsOnly(composedId.getMessageId());
     }
 
@@ -220,7 +220,7 @@ class PopulateEmailQueryViewListenerTest {
 
         inboxMessageManager.setFlags(new Flags(DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession);
 
-        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedByReceivedAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
@@ -234,7 +234,7 @@ class PopulateEmailQueryViewListenerTest {
 
         mailboxManager.deleteMailbox(inboxId, mailboxSession);
 
-        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedByReceivedAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
@@ -248,7 +248,7 @@ class PopulateEmailQueryViewListenerTest {
 
         inboxMessageManager.delete(ImmutableList.of(composedMessageId.getUid()), mailboxSession);
 
-        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedByReceivedAt(inboxId, Limit.limit(12), NO_COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 

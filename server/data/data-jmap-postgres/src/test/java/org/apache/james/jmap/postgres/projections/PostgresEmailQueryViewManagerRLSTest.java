@@ -39,7 +39,6 @@ public class PostgresEmailQueryViewManagerRLSTest {
     public static final PostgresMessageId.Factory MESSAGE_ID_FACTORY = new PostgresMessageId.Factory();
     public static final PostgresMessageId MESSAGE_ID_1 = MESSAGE_ID_FACTORY.generate();
     public static final ThreadId THREAD_ID_1 = ThreadId.fromBaseMessageId(MESSAGE_ID_FACTORY.generate());
-    private static final ZonedDateTime DATE_1 = ZonedDateTime.parse("2010-10-30T15:12:00Z");
     private static final ZonedDateTime DATE_2 = ZonedDateTime.parse("2010-10-30T16:12:00Z");
     private static final boolean NO_COLLAPSE_THREAD = false;
 
@@ -57,7 +56,7 @@ public class PostgresEmailQueryViewManagerRLSTest {
     void emailQueryViewCanBeAccessedAtTheDataLevelByMembersOfTheSameDomain() {
         Username username = Username.of("alice@domain1");
 
-        emailQueryViewManager.getEmailQueryView(username).save(MAILBOX_ID_1, DATE_1, DATE_2, MESSAGE_ID_1, THREAD_ID_1).block();
+        emailQueryViewManager.getEmailQueryView(username).save(MAILBOX_ID_1, DATE_2, MESSAGE_ID_1, THREAD_ID_1).block();
 
         assertThat(emailQueryViewManager.getEmailQueryView(username).listMailboxContentSortedByReceivedAt(MAILBOX_ID_1, Limit.limit(1), NO_COLLAPSE_THREAD).collectList().block())
             .isNotEmpty();
@@ -68,7 +67,7 @@ public class PostgresEmailQueryViewManagerRLSTest {
         Username username = Username.of("alice@domain1");
         Username username2 = Username.of("bob@domain2");
 
-        emailQueryViewManager.getEmailQueryView(username).save(MAILBOX_ID_1, DATE_1, DATE_2, MESSAGE_ID_1, THREAD_ID_1).block();
+        emailQueryViewManager.getEmailQueryView(username).save(MAILBOX_ID_1, DATE_2, MESSAGE_ID_1, THREAD_ID_1).block();
 
         assertThat(emailQueryViewManager.getEmailQueryView(username2).listMailboxContentSortedByReceivedAt(MAILBOX_ID_1, Limit.limit(1), NO_COLLAPSE_THREAD).collectList().block())
             .isEmpty();

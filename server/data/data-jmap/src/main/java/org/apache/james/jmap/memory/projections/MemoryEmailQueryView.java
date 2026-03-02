@@ -48,32 +48,9 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
-        Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
-
-        Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values());
-
-        return maybeCollapseThreads(Entry::getSentAt, collapseThreads).apply(baseEntries)
-            .sort(Comparator.comparing(Entry::getSentAt).reversed())
-            .map(Entry::getMessageId)
-            .take(limit.getLimit().get());
-    }
-
-    @Override
-    public Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
-        Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
-
-        Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values())
-            .filter(e -> e.getSentAt().isAfter(since) || e.getSentAt().isEqual(since));
-
-        return maybeCollapseThreads(Entry::getSentAt, collapseThreads).apply(baseEntries)
-            .sort(Comparator.comparing(Entry::getSentAt).reversed())
-            .map(Entry::getMessageId)
-            .take(limit.getLimit().get());
-    }
-
-    @Override
     public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
+        Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
+
         Flux<Entry> baseEntries = Flux.fromIterable(entries.row(mailboxId).values());
 
         return maybeCollapseThreads(Entry::getReceivedAt, collapseThreads).apply(baseEntries)
@@ -126,7 +103,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, MessageId messageId, ThreadId threadId) {
-        return Mono.fromRunnable(() -> entries.put(mailboxId, messageId, new Entry(mailboxId, messageId, sentAt, receivedAt, threadId)));
+    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime receivedAt, MessageId messageId, ThreadId threadId) {
+        return Mono.fromRunnable(() -> entries.put(mailboxId, messageId, new Entry(mailboxId, messageId, receivedAt, threadId)));
     }
 }

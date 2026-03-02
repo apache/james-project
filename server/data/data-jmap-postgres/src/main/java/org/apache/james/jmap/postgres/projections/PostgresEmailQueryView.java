@@ -43,11 +43,6 @@ public class PostgresEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
-        return emailQueryViewDAO.listMailboxContentSortedBySentAt(PostgresMailboxId.class.cast(mailboxId), limit, collapseThreads);
-    }
-
-    @Override
     public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit, boolean collapseThreads) {
         return emailQueryViewDAO.listMailboxContentSortedByReceivedAt(PostgresMailboxId.class.cast(mailboxId), limit, collapseThreads);
     }
@@ -63,11 +58,6 @@ public class PostgresEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads) {
-        return emailQueryViewDAO.listMailboxContentSinceSentAt(PostgresMailboxId.class.cast(mailboxId), since, limit, collapseThreads);
-    }
-
-    @Override
     public Mono<Void> delete(MailboxId mailboxId, MessageId messageId) {
         return emailQueryViewDAO.delete(PostgresMailboxId.class.cast(mailboxId), PostgresMessageId.class.cast(messageId));
     }
@@ -78,7 +68,7 @@ public class PostgresEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, MessageId messageId, ThreadId threadId) {
-        return emailQueryViewDAO.save(PostgresMailboxId.class.cast(mailboxId), sentAt, receivedAt, PostgresMessageId.class.cast(messageId), threadId);
+    public Mono<Void> save(MailboxId mailboxId, ZonedDateTime receivedAt, MessageId messageId, ThreadId threadId) {
+        return emailQueryViewDAO.save(PostgresMailboxId.class.cast(mailboxId), receivedAt, PostgresMessageId.class.cast(messageId), threadId);
     }
 }

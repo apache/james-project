@@ -22,12 +22,9 @@ package org.apache.james.webadmin.data.jmap;
 import static jakarta.mail.Flags.Flag.DELETED;
 import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Date;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.inject.Inject;
@@ -45,9 +42,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.search.MailboxQuery;
-import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.message.DefaultMessageBuilder;
-import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.task.Task;
 import org.apache.james.task.Task.Result;
 import org.apache.james.user.api.UsersRepository;
@@ -155,14 +149,9 @@ public class EmailQueryViewPopulator {
             MessageId messageId = messageResult.getMessageId();
             ThreadId threadId = messageResult.getThreadId();
             ZonedDateTime receivedAt = ZonedDateTime.ofInstant(messageResult.getInternalDate().toInstant(), ZoneOffset.UTC);
-            Message mime4JMessage = parseMessage(messageResult);
-            Date sentAtDate = Optional.ofNullable(mime4JMessage.getDate()).orElse(messageResult.getInternalDate());
-            ZonedDateTime sentAt = ZonedDateTime.ofInstant(sentAtDate.toInstant(), ZoneOffset.UTC);
-            mime4JMessage.dispose();
-
-            return new EmailQueryView.Entry(mailboxId, messageId, sentAt, receivedAt, threadId);
+            return new EmailQueryView.Entry(mailboxId, messageId, receivedAt, threadId);
         })
-            .flatMap(entry -> emailQueryView.save(entry.getMailboxId(), entry.getSentAt(), entry.getReceivedAt(), entry.getMessageId(), entry.getThreadId()))
+            .flatMap(entry -> emailQueryView.save(entry.getMailboxId(), entry.getReceivedAt(), entry.getMessageId(), entry.getThreadId()))
             .thenReturn(Result.COMPLETED)
             .doOnSuccess(any -> progress.incrementProcessedMessageCount())
             .onErrorResume(e -> {
@@ -196,9 +185,4 @@ public class EmailQueryViewPopulator {
         return Flux.from(messageManager.getMessagesReactive(MessageRange.all(), FetchGroup.HEADERS, session));
     }
 
-    private Message parseMessage(MessageResult messageResult) throws IOException, MailboxException {
-        DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
-        defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
-        return defaultMessageBuilder.parseMessage(messageResult.getFullContent().getInputStream());
-    }
 }
