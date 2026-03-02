@@ -34,14 +34,12 @@ public interface EmailQueryView {
     class Entry {
         private final MailboxId mailboxId;
         private final MessageId messageId;
-        private final ZonedDateTime sentAt;
         private final ZonedDateTime receivedAt;
         private final ThreadId threadId;
 
-        public Entry(MailboxId mailboxId, MessageId messageId, ZonedDateTime sentAt, ZonedDateTime receivedAt, ThreadId threadId) {
+        public Entry(MailboxId mailboxId, MessageId messageId, ZonedDateTime receivedAt, ThreadId threadId) {
             this.mailboxId = mailboxId;
             this.messageId = messageId;
-            this.sentAt = sentAt;
             this.receivedAt = receivedAt;
             this.threadId = threadId;
         }
@@ -52,10 +50,6 @@ public interface EmailQueryView {
 
         public MessageId getMessageId() {
             return messageId;
-        }
-
-        public ZonedDateTime getSentAt() {
-            return sentAt;
         }
 
         public ZonedDateTime getReceivedAt() {
@@ -73,7 +67,6 @@ public interface EmailQueryView {
 
                 return Objects.equals(this.mailboxId, entry.mailboxId)
                     && Objects.equals(this.messageId, entry.messageId)
-                    && Objects.equals(this.sentAt, entry.sentAt)
                     && Objects.equals(this.receivedAt, entry.receivedAt)
                     && Objects.equals(this.threadId, entry.threadId);
             }
@@ -82,36 +75,9 @@ public interface EmailQueryView {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(mailboxId, messageId, sentAt, receivedAt, threadId);
+            return Objects.hash(mailboxId, messageId, receivedAt, threadId);
         }
     }
-
-    /**
-     *
-     * Sample JMAP requests:
-     *
-     *    - RFC-8621:
-     *
-     *    ["Email/query",
-     *     {
-     *       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-     *       "filter: {
-     *           "inMailbox":"abcd"
-     *       }
-     *       "sort": [{
-     *         "property":"sentAt",
-     *         "isAscending": false
-     *       }]
-     *     },
-     *     "c1"]
-     *
-     *   - Draft
-     *
-     *   [["getMessageList", {"filter":{"inMailboxes": ["abcd"]}, "sort": ["date desc"]}, "#0"]]
-     *
-     * @return messageIds of the messages in this mailbox, sorted by sentAt.
-     */
-    Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit, boolean collapseThreads);
 
     /**
      *
@@ -182,20 +148,9 @@ public interface EmailQueryView {
      */
     Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads);
 
-    /**
-     *  Sample JMAP requests:
-     *
-     *   - Draft
-     *
-     *   [["getMessageList", {"filter":{"after":"aDate", "inMailboxes": ["abcd"]}, "sort": ["date desc"]}, "#0"]]
-     *
-     * @return messageIds of the messages in this mailbox, sorted by sentAt, since being sentAt
-     */
-    Flux<MessageId> listMailboxContentSinceSentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads);
-
     Mono<Void> delete(MailboxId mailboxId, MessageId messageId);
 
     Mono<Void> delete(MailboxId mailboxId);
 
-    Mono<Void> save(MailboxId mailboxId, ZonedDateTime sentAt, ZonedDateTime receivedAt, MessageId messageId, ThreadId threadId);
+    Mono<Void> save(MailboxId mailboxId, ZonedDateTime receivedAt, MessageId messageId, ThreadId threadId);
 }

@@ -267,7 +267,7 @@ class PopulateEmailQueryViewRequestToTaskTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(view.listMailboxContentSortedByReceivedAt(messageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
             .containsOnly(messageId.getMessageId());
     }
 
@@ -289,7 +289,7 @@ class PopulateEmailQueryViewRequestToTaskTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(view.listMailboxContentSortedByReceivedAt(messageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
             .isEmpty();
     }
 
@@ -317,7 +317,7 @@ class PopulateEmailQueryViewRequestToTaskTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId2 + "/await");
 
-        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
+        assertThat(view.listMailboxContentSortedByReceivedAt(messageId.getMailboxId(), Limit.from(12), NO_COLLAPSE_THREAD).collectList().block())
             .containsOnly(messageId.getMessageId());
     }
 }

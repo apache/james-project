@@ -21,7 +21,6 @@ package org.apache.james.jmap.postgres.projections;
 
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MAILBOX_ID_INDEX;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MAILBOX_ID_RECEIVED_AT_INDEX;
-import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.MAILBOX_ID_SENT_AT_INDEX;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewDataDefinition.PostgresEmailQueryViewTable.TABLE;
 
 import java.time.OffsetDateTime;
@@ -45,7 +44,6 @@ public interface PostgresEmailQueryViewDataDefinition {
         Field<UUID> MAILBOX_ID = DSL.field("mailbox_id", SQLDataType.UUID.notNull());
         Field<UUID> MESSAGE_ID = PostgresMessageDataDefinition.MESSAGE_ID;
         Field<OffsetDateTime> RECEIVED_AT = DSL.field("received_at", SQLDataType.TIMESTAMPWITHTIMEZONE.notNull());
-        Field<OffsetDateTime> SENT_AT = DSL.field("sent_at", SQLDataType.TIMESTAMPWITHTIMEZONE.notNull());
         Field<UUID> THREAD_ID = PostgresMessageDataDefinition.MessageToMailboxTable.THREAD_ID;
 
         Name PK_CONSTRAINT_NAME = DSL.name("email_query_view_pkey");
@@ -55,7 +53,6 @@ public interface PostgresEmailQueryViewDataDefinition {
                 .column(MAILBOX_ID)
                 .column(MESSAGE_ID)
                 .column(RECEIVED_AT)
-                .column(SENT_AT)
                 .column(THREAD_ID)
                 .constraint(DSL.constraint(PK_CONSTRAINT_NAME).primaryKey(MAILBOX_ID, MESSAGE_ID))))
             .supportsRowLevelSecurity()
@@ -69,15 +66,11 @@ public interface PostgresEmailQueryViewDataDefinition {
             .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, MAILBOX_ID, RECEIVED_AT));
 
-        PostgresIndex MAILBOX_ID_SENT_AT_INDEX = PostgresIndex.name("email_query_view_mailbox_id_sent_at_index")
-            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
-                .on(TABLE_NAME, MAILBOX_ID, SENT_AT));
     }
 
     PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
         .addTable(TABLE)
         .addIndex(MAILBOX_ID_INDEX)
         .addIndex(MAILBOX_ID_RECEIVED_AT_INDEX)
-        .addIndex(MAILBOX_ID_SENT_AT_INDEX)
         .build();
 }

@@ -22,10 +22,8 @@ package org.apache.james.jmap.event;
 import static jakarta.mail.Flags.Flag.DELETED;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
-import java.io.IOException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
@@ -43,19 +41,12 @@ import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.james.mime4j.codec.DecodeMonitor;
-import org.apache.james.mime4j.dom.Header;
-import org.apache.james.mime4j.dom.field.DateTimeField;
-import org.apache.james.mime4j.field.DateTimeFieldLenientImpl;
-import org.apache.james.mime4j.message.DefaultMessageBuilder;
-import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.util.FunctionalUtils;
 import org.reactivestreams.Publisher;
 
@@ -181,23 +172,8 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
 
     public Mono<Void> handleAdded(MailboxId mailboxId, MessageResult messageResult, Username username) {
         ZonedDateTime receivedAt = ZonedDateTime.ofInstant(messageResult.getInternalDate().toInstant(), ZoneOffset.UTC);
-
-        return Mono.fromCallable(() -> parseMessage(messageResult))
-            .map(header -> date(header).orElse(messageResult.getInternalDate()))
-            .map(date -> ZonedDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC))
-            .flatMap(sentAt -> viewManager.getEmailQueryView(username).save(mailboxId, sentAt, receivedAt, messageResult.getMessageId(), messageResult.getThreadId()))
+        return viewManager.getEmailQueryView(username)
+            .save(mailboxId, receivedAt, messageResult.getMessageId(), messageResult.getThreadId())
             .then();
-    }
-
-    private Header parseMessage(MessageResult messageResult) throws IOException, MailboxException {
-        DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
-        defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
-        return defaultMessageBuilder.parseHeader(messageResult.getFullContent().getInputStream());
-    }
-
-    private Optional<Date> date(Header header) {
-        return Optional.ofNullable(header.getField("Date"))
-            .map(field -> DateTimeFieldLenientImpl.PARSER.parse(field, DecodeMonitor.SILENT))
-            .map(DateTimeField::getDate);
     }
 }
