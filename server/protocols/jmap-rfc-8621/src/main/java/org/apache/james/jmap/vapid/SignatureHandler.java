@@ -17,32 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap;
+package org.apache.james.jmap.vapid;
 
-import org.apache.james.jmap.core.CapabilityFactory;
-import org.apache.james.jmap.core.JmapRfc8621Configuration;
-import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
-import org.apache.james.jmap.pushsubscription.VapidCapabilityFactory;
-import org.apache.james.jmap.vapid.SecurityKeyLoader;
-import org.apache.james.jmap.vapid.SignatureHandler;
-import org.apache.james.jmap.vapid.VapidSignatureHandler;
+public interface SignatureHandler {
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.ProvidesIntoSet;
+    void create() throws Exception;
 
-public class JMAPVapidModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(VapidSignatureHandler.class).in(Scopes.SINGLETON);
-        bind(SecurityKeyLoader.class).in(Scopes.SINGLETON);
+    String sign(String source);
 
-        bind(SignatureHandler.class).to(VapidSignatureHandler.class);
-    }
+    boolean verify(String source, String signature);
 
-
-    @ProvidesIntoSet
-    CapabilityFactory vapidCapability(PushClientConfiguration configuration) {
-        return new VapidCapabilityFactory(configuration);
-    }
 }

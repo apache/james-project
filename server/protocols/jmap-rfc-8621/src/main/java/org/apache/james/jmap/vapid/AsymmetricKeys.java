@@ -17,32 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap;
+package org.apache.james.jmap.vapid;
 
-import org.apache.james.jmap.core.CapabilityFactory;
-import org.apache.james.jmap.core.JmapRfc8621Configuration;
-import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
-import org.apache.james.jmap.pushsubscription.VapidCapabilityFactory;
-import org.apache.james.jmap.vapid.SecurityKeyLoader;
-import org.apache.james.jmap.vapid.SignatureHandler;
-import org.apache.james.jmap.vapid.VapidSignatureHandler;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.ProvidesIntoSet;
+public class AsymmetricKeys {
+    private final PrivateKey privateKey;
+    private final PublicKey publicKey;
 
-public class JMAPVapidModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(VapidSignatureHandler.class).in(Scopes.SINGLETON);
-        bind(SecurityKeyLoader.class).in(Scopes.SINGLETON);
-
-        bind(SignatureHandler.class).to(VapidSignatureHandler.class);
+    AsymmetricKeys(PrivateKey privateKey, PublicKey publicKey) {
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
     }
 
+    PrivateKey getPrivateKey() {
+        return privateKey;
+    }
 
-    @ProvidesIntoSet
-    CapabilityFactory vapidCapability(PushClientConfiguration configuration) {
-        return new VapidCapabilityFactory(configuration);
+    PublicKey getPublicKey() {
+        return publicKey;
     }
 }
