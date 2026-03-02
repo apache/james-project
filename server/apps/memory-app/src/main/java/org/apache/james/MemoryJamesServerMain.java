@@ -23,6 +23,7 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.jmap.JMAPListenerModule;
 import org.apache.james.jmap.JMAPModule;
+import org.apache.james.jmap.JMAPVapidModule;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
 import org.apache.james.jmap.memory.identity.MemoryCustomIdentityDAO;
 import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionModule;
@@ -179,12 +180,22 @@ public class MemoryJamesServerMain implements JamesServerMain {
             .combineWith(new UsersRepositoryModuleChooser(new MemoryUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .combineWith(chooseJmapModule(configuration))
+            .combineWith(chooseVapid(configuration))
             .combineWith(chooseDropListsModule(configuration));
     }
 
     private static Module chooseJmapModule(MemoryJamesConfiguration configuration) {
         if (configuration.isJmapEnabled()) {
             return new JMAPListenerModule();
+        }
+        return binder -> {
+
+        };
+    }
+
+    private static Module chooseVapid(MemoryJamesConfiguration configuration) {
+        if (configuration.isVapidEnabled()) {
+            return new JMAPVapidModule();
         }
         return binder -> {
 

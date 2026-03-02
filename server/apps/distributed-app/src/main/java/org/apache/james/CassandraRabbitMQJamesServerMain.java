@@ -26,6 +26,7 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
 import org.apache.james.jmap.JMAPListenerModule;
 import org.apache.james.jmap.JMAPModule;
+import org.apache.james.jmap.JMAPVapidModule;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -215,6 +216,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
             .combineWith(chooseDeletedMessageVault(configuration.getVaultConfiguration()))
             .combineWith(chooseQuotaModule(configuration))
             .overrideWith(chooseJmapModules(configuration))
+            .overrideWith(chooseVapid(configuration))
             .overrideWith(chooseDropListsModule(configuration));
     }
 
@@ -246,6 +248,15 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
     private static Module chooseJmapModules(CassandraRabbitMQJamesConfiguration configuration) {
         if (configuration.isJmapEnabled()) {
             return Modules.combine(new JMAPEventBusModule(), new JMAPListenerModule());
+        }
+        return binder -> {
+
+        };
+    }
+
+    private static Module chooseVapid(CassandraRabbitMQJamesConfiguration configuration) {
+        if (configuration.isVapidEnabled()) {
+            return new JMAPVapidModule();
         }
         return binder -> {
 

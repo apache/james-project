@@ -51,6 +51,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<VaultConfiguration> vaultConfiguration;
         private Optional<Boolean> jmapEnabled;
+        private Optional<Boolean> vapidEnabled;
         private Optional<Boolean> quotaCompatibilityMode;
         private Optional<Boolean> dropListsEnabled;
 
@@ -64,6 +65,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             mailQueueChoice = Optional.empty();
             vaultConfiguration = Optional.empty();
             jmapEnabled = Optional.empty();
+            vapidEnabled = Optional.empty();
             quotaCompatibilityMode = Optional.empty();
             dropListsEnabled = Optional.empty();
         }
@@ -131,6 +133,11 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder enableVapid() {
+            this.vapidEnabled = Optional.of(true);
+            return this;
+        }
+
         public Builder quotaCompatibilityModeEnabled(boolean value) {
             this.quotaCompatibilityMode = Optional.of(value);
             return this;
@@ -187,6 +194,16 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                 }
             });
 
+            boolean vapidEnabled = this.vapidEnabled.orElseGet(() -> {
+                try {
+                    return propertiesProvider.getConfiguration("jmap").getBoolean("webpush.vapid.auth.enabled", false);
+                } catch (FileNotFoundException e) {
+                    return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
             boolean quotaCompatibilityMode = this.quotaCompatibilityMode.orElseGet(() -> {
                 try {
                     return propertiesProvider.getConfiguration("cassandra").getBoolean("quota.compatibility.mode", false);
@@ -216,6 +233,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                 mailQueueChoice,
                 mailQueueViewChoice, vaultConfiguration,
                 jmapEnabled,
+                vapidEnabled,
                 quotaCompatibilityMode,
                 dropListsEnabled);
         }
@@ -234,6 +252,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
     private final MailQueueViewChoice mailQueueViewChoice;
     private final VaultConfiguration vaultConfiguration;
     private final boolean jmapEnabled;
+    private final boolean vapidEnabled;
     private final boolean quotaCompatibilityMode;
     private final boolean dropListsEnabled;
 
@@ -241,7 +260,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                                                BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration,
                                                UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, MailQueueChoice mailQueueChoice,
                                                MailQueueViewChoice mailQueueViewChoice, VaultConfiguration vaultConfiguration,
-                                               boolean jmapEnabled, boolean quotaCompatibilityMode, boolean dropListsEnabled) {
+                                               boolean jmapEnabled, boolean vapidEnabled, boolean quotaCompatibilityMode, boolean dropListsEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.blobStoreConfiguration = blobStoreConfiguration;
@@ -251,6 +270,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         this.mailQueueViewChoice = mailQueueViewChoice;
         this.vaultConfiguration = vaultConfiguration;
         this.jmapEnabled = jmapEnabled;
+        this.vapidEnabled = vapidEnabled;
         this.quotaCompatibilityMode = quotaCompatibilityMode;
         this.dropListsEnabled = dropListsEnabled;
     }
@@ -291,6 +311,10 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
 
     public boolean isJmapEnabled() {
         return jmapEnabled;
+    }
+
+    public boolean isVapidEnabled() {
+        return vapidEnabled;
     }
 
     public boolean isQuotaCompatibilityMode() {

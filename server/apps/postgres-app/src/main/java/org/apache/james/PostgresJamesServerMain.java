@@ -29,6 +29,7 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
 import org.apache.james.jmap.JMAPListenerModule;
 import org.apache.james.jmap.JMAPModule;
+import org.apache.james.jmap.JMAPVapidModule;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -196,6 +197,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
             .combineWith(chooseDeletedMessageVaultModules(configuration.getDeletedMessageVaultConfiguration()))
             .combineWith(chooseRLSSupportPostgresMailboxModule(configuration))
             .overrideWith(chooseJmapModules(configuration))
+            .overrideWith(chooseVapid(configuration))
             .overrideWith(chooseTaskManagerModules(configuration))
             .overrideWith(chooseDropListsModule(configuration));
     }
@@ -262,6 +264,15 @@ public class PostgresJamesServerMain implements JamesServerMain {
             return new JMAPListenerModule();
         }
         return binder -> {
+        };
+    }
+
+    private static Module chooseVapid(PostgresJamesConfiguration configuration) {
+        if (configuration.isVapidEnabled()) {
+            return new JMAPVapidModule();
+        }
+        return binder -> {
+
         };
     }
 
