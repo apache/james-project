@@ -2,6 +2,59 @@ This documentation page lists and documents SMTP hooks that can be used within t
 {server-name} SMTP protocol stack in order to customize the way your SMTP server
 behaves without of the box components.
 
+== AllowedUnauthenticatedSender
+
+Some third-party devices and applications — printers, scanners, legacy apps — cannot easily support SMTP
+authentication. A common workaround is to whitelist their IP addresses via `<authorizedAddresses>` so they
+can relay without credentials. The downside is that any sender address is then accepted from those IPs.
+
+`AllowedUnauthenticatedSender` closes this gap: it restricts which `MAIL FROM` addresses may be used by
+unauthenticated connections that benefit from the IP whitelist. It has no effect on authenticated sessions.
+
+The hook activates only when both conditions are true:
+
+* relaying is allowed for the remote IP (i.e. the IP is in `<authorizedAddresses>`)
+* no user is authenticated on the session
+
+Configuration options:
+
+* *allowNullSender* (optional, default `false`): whether to accept `MAIL FROM: <>` (null sender, used for
+bounce messages). Set to `true` if the whitelisted devices need to send delivery status notifications.
+* *allowedSenders*: list of `<allowedSender>` elements.
+** The element value is the email address that is permitted.
+** The optional *fromIps* attribute further restricts which source IPs may use that sender address.
+   It accepts a comma-separated list of CIDR ranges (e.g. `192.168.1.0/24,10.0.0.5/32`).
+   When omitted, the sender is allowed from any whitelisted IP.
+
+Example configuration:
+
+[source,xml]
+....
+<smtpserver enabled="true">
+    <...> <!-- The rest of your SMTP configuration -->
+    <authorizedAddresses>127.0.0.0/8,192.168.1.0/24</authorizedAddresses>
+    <handlerchain>
+        <handler class="org.apache.james.smtpserver.fastfail.AllowedUnauthenticatedSender">
+            <allowNullSender>false</allowNullSender>
+            <allowedSenders>
+                <!-- allowed from any whitelisted IP -->
+                <allowedSender>printer@example.com</allowedSender>
+                <!-- allowed only from a specific subnet -->
+                <allowedSender fromIps="192.168.1.0/24">scanner@example.com</allowedSender>
+                <!-- allowed from several specific ranges -->
+                <allowedSender fromIps="172.34.56.0/24,172.34.53.123/32">app@example.com</allowedSender>
+            </allowedSenders>
+        </handler>
+        <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+    </handlerchain>
+</smtpserver>
+....
+
+Connections from a non-whitelisted IP are not affected by this hook and follow the normal relay rules.
+
+Unauthenticated connections from a whitelisted IP that present a sender address not covered by any
+`<allowedSender>` entry receive a permanent `550` rejection.
+
 == DNSRBLHandler
 
 This command handler check against https://www.wikiwand.com/en/Domain_Name_System-based_Blackhole_List[RBL-Lists]
