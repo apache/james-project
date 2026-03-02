@@ -4136,6 +4136,61 @@ the following `additionalInformation`:
 }
 ....
 
+=== Moving mails from a mail repository to another
+
+To move all mails from one repository to another:
+
+....
+curl -XPATCH http://ip:port/mailRepositories/{encodedPathOfTheRepository}/mails \
+  -d '{"mailRepository": "/var/mail/error-saved"}' \
+  -H "Content-Type: application/json"
+....
+
+Resource name `encodedPathOfTheRepository` should be the URL-encoded path of an existing mail
+repository. The request body must contain the path of an existing target mail repository.
+
+For instance:
+
+....
+curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails \
+  -d '{"mailRepository": "var/mail/error-saved"}' \
+  -H "Content-Type: application/json"
+....
+
+Response codes:
+
+* 204: Mails were successfully moved.
+* 400: The target repository does not exist, or the request body is invalid.
+* 404: The source repository does not exist.
+
+=== Moving a specific mail to another repository
+
+To move a specific mail from one repository to another:
+
+....
+curl -XPATCH http://ip:port/mailRepositories/{encodedPathOfTheRepository}/mails/{mailKey} \
+  -d '{"mailRepository": "/var/mail/error-saved"}' \
+  -H "Content-Type: application/json"
+....
+
+Resource name `encodedPathOfTheRepository` should be the URL-encoded path of an existing mail
+repository. Resource name `mailKey` should be the key of a mail stored in that repository.
+The request body must contain the path of an existing target mail repository.
+
+For instance:
+
+....
+curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails/name1 \
+  -d '{"mailRepository": "var/mail/error-saved"}' \
+  -H "Content-Type: application/json"
+....
+
+Response codes:
+
+* 204: The mail was successfully moved (or the mail key was not found, in which case nothing is done).
+* 400: The target repository does not exist, or the request body is invalid.
+* 404: The source repository does not exist.
+
 == Administrating mail queues
 
 === Listing mail queues
