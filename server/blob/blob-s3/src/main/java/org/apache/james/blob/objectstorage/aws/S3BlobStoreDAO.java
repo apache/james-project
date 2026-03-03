@@ -136,14 +136,14 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
-        return ReactorUtils.toInputStream(getObject(resolvedBucketName, blobId)
+        return InputStreamBlob.of(ReactorUtils.toInputStream(getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
             .block()
-            .flux);
+            .flux));
     }
 
     @Override

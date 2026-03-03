@@ -143,7 +143,7 @@ public interface ReadSaveBlobStoreDAOContract {
     default void readStreamShouldThrowWhenNotExisting() {
         BlobStoreDAO store = testee();
 
-        assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, new TestBlobId("unknown")).read())
+        assertThatThrownBy(() -> store.readBlob(TEST_BUCKET_NAME, new TestBlobId("unknown")).payload().read())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
@@ -154,7 +154,7 @@ public interface ReadSaveBlobStoreDAOContract {
         Mono.from(store.saveBlob(nonExisting, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
         //read for a non-existing bucket would throw
-        assertThatCode(() -> store.read(nonExisting, TEST_BLOB_ID))
+        assertThatCode(() -> store.readBlob(nonExisting, TEST_BLOB_ID))
             .doesNotThrowAnyException();
     }
 
@@ -163,7 +163,7 @@ public interface ReadSaveBlobStoreDAOContract {
         BlobStoreDAO store = testee();
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
-        InputStream read = store.read(TEST_BUCKET_NAME, TEST_BLOB_ID);
+        InputStream read = store.readBlob(TEST_BUCKET_NAME, TEST_BLOB_ID).payload();
 
         assertThat(read).hasSameContentAs(SHORT_BYTEARRAY.asInputStream().payload());
     }
@@ -173,7 +173,7 @@ public interface ReadSaveBlobStoreDAOContract {
         BlobStoreDAO store = testee();
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
 
-        InputStream read = store.read(TEST_BUCKET_NAME, TEST_BLOB_ID);
+        InputStream read = store.readBlob(TEST_BUCKET_NAME, TEST_BLOB_ID).payload();
 
         assertThat(read).hasSameContentAs(ELEVEN_KILOBYTES.asInputStream().payload());
     }
@@ -183,7 +183,7 @@ public interface ReadSaveBlobStoreDAOContract {
         BlobStoreDAO store = testee();
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
 
-        InputStream read = store.read(TEST_BUCKET_NAME, TEST_BLOB_ID);
+        InputStream read = store.readBlob(TEST_BUCKET_NAME, TEST_BLOB_ID).payload();
 
         assertThat(read).hasSameContentAs(TWELVE_MEGABYTES.asInputStream().payload());
     }

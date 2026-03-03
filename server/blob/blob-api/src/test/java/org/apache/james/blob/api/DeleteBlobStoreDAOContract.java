@@ -81,7 +81,7 @@ public interface DeleteBlobStoreDAOContract {
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID,  SHORT_BYTEARRAY)).block();
         Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
 
-        assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, TEST_BLOB_ID).read())
+        assertThatThrownBy(() -> store.readBlob(TEST_BUCKET_NAME, TEST_BLOB_ID).payload().read())
             .isInstanceOf(ObjectStoreException.class);
     }
 
@@ -105,7 +105,7 @@ public interface DeleteBlobStoreDAOContract {
 
         Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
 
-        InputStream read = store.read(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID);
+        InputStream read = store.readBlob(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID).payload();
 
         assertThat(read).hasSameContentAs(ELEVEN_KILOBYTES.asInputStream().payload());
     }
@@ -120,9 +120,9 @@ public interface DeleteBlobStoreDAOContract {
         Mono.from(store.delete(TEST_BUCKET_NAME, ImmutableList.of(TEST_BLOB_ID, OTHER_TEST_BLOB_ID))).block();
 
         SoftAssertions.assertSoftly(soft -> {
-            soft.assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, TEST_BLOB_ID).read())
+            soft.assertThatThrownBy(() -> store.readBlob(TEST_BUCKET_NAME, TEST_BLOB_ID).payload().read())
                 .isInstanceOf(ObjectStoreException.class);
-            soft.assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID).read())
+            soft.assertThatThrownBy(() -> store.readBlob(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID).payload().read())
                 .isInstanceOf(ObjectStoreException.class);
         });
     }
@@ -156,7 +156,7 @@ public interface DeleteBlobStoreDAOContract {
 
         Mono.from(store.delete(CUSTOM_BUCKET_NAME, OTHER_TEST_BLOB_ID)).block();
 
-        InputStream read = store.read(TEST_BUCKET_NAME, TEST_BLOB_ID);
+        InputStream read = store.readBlob(TEST_BUCKET_NAME, TEST_BLOB_ID).payload();
 
         assertThat(read).hasSameContentAs(SHORT_BYTEARRAY.asInputStream().payload());
     }
@@ -170,7 +170,7 @@ public interface DeleteBlobStoreDAOContract {
 
         Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
 
-        InputStream read = store.read(CUSTOM_BUCKET_NAME, TEST_BLOB_ID);
+        InputStream read = store.readBlob(CUSTOM_BUCKET_NAME, TEST_BLOB_ID).payload();
 
         assertThat(read).hasSameContentAs(SHORT_BYTEARRAY.asInputStream().payload());
     }
@@ -184,7 +184,7 @@ public interface DeleteBlobStoreDAOContract {
         ConcurrentTestRunner.builder()
             .operation(((threadNumber, step) -> {
                 try {
-                    InputStream read = store.read(TEST_BUCKET_NAME, TEST_BLOB_ID);
+                    InputStream read = store.readBlob(TEST_BUCKET_NAME, TEST_BLOB_ID).payload();
 
                     String string = IOUtils.toString(read, StandardCharsets.UTF_8);
                     if (!string.equals(TWELVE_MEGABYTES_STRING)) {

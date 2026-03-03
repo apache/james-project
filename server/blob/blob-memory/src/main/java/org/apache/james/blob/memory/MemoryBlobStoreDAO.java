@@ -50,9 +50,9 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return readBytes(bucketName, blobId)
-            .map(ByteArrayInputStream::new)
+    public InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+        return Mono.from(readBytesBlob(bucketName, blobId))
+            .map(BytesBlob::asInputStream)
             .block();
     }
 
@@ -60,11 +60,6 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
     public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
         return Mono.from(readBytesBlob(bucketName, blobId))
             .map(BytesBlob::asInputStream);
-    }
-
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return Mono.fromCallable(() -> blobs.get(bucketName, blobId))
-            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException(String.format("blob '%s' not found in bucket '%s'", blobId.asString(), bucketName.asString()))));
     }
 
     @Override

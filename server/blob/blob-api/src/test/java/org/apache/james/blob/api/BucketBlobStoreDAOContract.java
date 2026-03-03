@@ -56,7 +56,7 @@ public interface BucketBlobStoreDAOContract {
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
         Mono.from(store.deleteBucket(TEST_BUCKET_NAME)).block();
 
-        assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, TEST_BLOB_ID).read())
+        assertThatThrownBy(() -> store.readBlob(TEST_BUCKET_NAME, TEST_BLOB_ID).payload().read())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
@@ -100,7 +100,7 @@ public interface BucketBlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
-        assertThatThrownBy(() -> store.read(null, TEST_BLOB_ID))
+        assertThatThrownBy(() -> store.readBlob(null, TEST_BLOB_ID))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -118,7 +118,7 @@ public interface BucketBlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
-        assertThatThrownBy(() -> store.read(CUSTOM_BUCKET_NAME, TEST_BLOB_ID).read())
+        assertThatThrownBy(() -> store.readBlob(CUSTOM_BUCKET_NAME, TEST_BLOB_ID).payload().read())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 

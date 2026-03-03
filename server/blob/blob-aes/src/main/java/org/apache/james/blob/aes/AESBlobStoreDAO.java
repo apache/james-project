@@ -93,9 +93,9 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         try {
-            return decrypt(underlying.read(bucketName, blobId));
+            return InputStreamBlob.of(decrypt(underlying.readBlob(bucketName, blobId).payload()));
         } catch (IOException e) {
             throw new ObjectStoreIOException("Error reading blob " + blobId.asString(), e);
         }
