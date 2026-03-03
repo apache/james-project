@@ -76,6 +76,10 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
+    public Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId) {
+        return readBytes(bucketName, blobId).map(BytesBlob::of);
+    }
+
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(DATA)
                 .from(TABLE_NAME)

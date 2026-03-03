@@ -207,8 +207,6 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
                 .switchIfEmpty(Mono.error(() -> new ObjectStoreIOException("Request was unexpectedly canceled, no GetObjectResponse"))));
     }
 
-
-    @Override
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
@@ -218,6 +216,11 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
                 .publishOn(Schedulers.parallel())
                 .map(BytesWrapper::asByteArrayUnsafe)
                 .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause);
+    }
+
+    @Override
+    public Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId) {
+        return readBytes(bucketName, blobId).map(BytesBlob::of);
     }
 
     private Mono<ResponseBytes<GetObjectResponse>> getObjectBytes(BucketName bucketName, BlobId blobId) {

@@ -103,15 +103,15 @@ public class S3MinioTest implements BlobStoreDAOContract {
     @Test
     void saveWillThrowWhenBlobIdHasSlashCharacters() {
         BlobId invalidBlobId = new TestBlobId("test-blob//id");
-        assertThatThrownBy(() -> Mono.from(testee.save(TEST_BUCKET_NAME, invalidBlobId, SHORT_BYTEARRAY)).block())
+        assertThatThrownBy(() -> Mono.from(testee.saveBlob(TEST_BUCKET_NAME, invalidBlobId, SHORT_BYTEARRAY)).block())
             .isInstanceOf(S3Exception.class)
             .hasMessageContaining("Object name contains unsupported characters");
     }
 
     @Test
     void saveShouldWorkWhenValidBlobId() {
-        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
-        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block()).isEqualTo(SHORT_BYTEARRAY);
+        Mono.from(testee.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        assertThat(Mono.from(testee.readBytesBlob(TEST_BUCKET_NAME, TEST_BLOB_ID)).block()).isEqualTo(SHORT_BYTEARRAY);
     }
 
     @Test

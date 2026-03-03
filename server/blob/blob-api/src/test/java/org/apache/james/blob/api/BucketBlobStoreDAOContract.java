@@ -109,7 +109,7 @@ public interface BucketBlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
-        assertThatThrownBy(() -> Mono.from(store.readBytes(null, TEST_BLOB_ID)).block())
+        assertThatThrownBy(() -> Mono.from(store.readBytesBlob(null, TEST_BLOB_ID)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -128,7 +128,7 @@ public interface BucketBlobStoreDAOContract {
 
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
-        assertThatThrownBy(() -> Mono.from(store.readBytes(CUSTOM_BUCKET_NAME, TEST_BLOB_ID)).block())
+        assertThatThrownBy(() -> Mono.from(store.readBytesBlob(CUSTOM_BUCKET_NAME, TEST_BLOB_ID)).block())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
@@ -139,8 +139,8 @@ public interface BucketBlobStoreDAOContract {
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
         Mono.from(store.saveBlob(CUSTOM_BUCKET_NAME, OTHER_TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
-        byte[] bytesDefault = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
-        byte[] bytesCustom = Mono.from(store.readBytes(CUSTOM_BUCKET_NAME, OTHER_TEST_BLOB_ID)).block();
+        byte[] bytesDefault = Mono.from(store.readBytesBlob(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
+        byte[] bytesCustom = Mono.from(store.readBytesBlob(CUSTOM_BUCKET_NAME, OTHER_TEST_BLOB_ID)).block().payload();
 
         assertThat(bytesDefault).isEqualTo(bytesCustom);
     }

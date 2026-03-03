@@ -127,7 +127,8 @@ public class InMemoryUploadRepository implements UploadRepository {
     }
 
     private Mono<Upload> retrieveUpload(UploadMetaData uploadMetaData) {
-        return Mono.from(blobStoreDAO.readBytes(bucketName, uploadMetaData.blobId()))
+        return Mono.from(blobStoreDAO.readBytesBlob(bucketName, uploadMetaData.blobId()))
+            .map(BlobStoreDAO.BytesBlob::payload)
             .map(content -> Upload.from(uploadMetaData, () -> new ByteArrayInputStream(content)));
     }
 }
