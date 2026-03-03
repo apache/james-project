@@ -104,6 +104,14 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
+    public Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob) {
+        return switch (blob) {
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload());
+        };
+    }
+
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
         Preconditions.checkNotNull(data);
 
@@ -116,7 +124,6 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
             .then();
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(inputStream);
         return Mono.fromRunnable(() -> {
@@ -158,7 +165,6 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
         }
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         return Mono.fromCallable(() -> {
                 try {

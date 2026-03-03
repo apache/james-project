@@ -122,6 +122,14 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
+    public Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob) {
+        return switch (blob) {
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload());
+        };
+    }
+
     public Publisher<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(blobId);
@@ -130,7 +138,6 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
         return save(bucketName, blobId, new ByteArrayInputStream(data));
     }
 
-    @Override
     public Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(blobId);
@@ -138,14 +145,14 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
 
         return Mono.usingWhen(
                 Mono.fromCallable(() -> encrypt(inputStream)),
-                pair -> Mono.from(underlying.save(bucketName, blobId, byteSourceWithSize(pair.getLeft().asByteSource(), pair.getRight()))),
+                pair -> Mono.from(underlying.saveBlob(bucketName, blobId, byteSourceWithSize(pair.getLeft().asByteSource(), pair.getRight()))),
                 Throwing.function(pair -> Mono.fromRunnable(Throwing.runnable(pair.getLeft()::reset)).subscribeOn(Schedulers.boundedElastic())))
             .subscribeOn(Schedulers.boundedElastic())
             .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving bytearray", e));
     }
 
-    private ByteSource byteSourceWithSize(ByteSource byteSource, long size) {
-        return new ByteSource() {
+    private ByteSourceBlob byteSourceWithSize(ByteSource byteSource, long size) {
+        return ByteSourceBlob.of(new ByteSource() {
             @Override
             public InputStream openStream() throws IOException {
                 return byteSource.openStream();
@@ -160,10 +167,9 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
             public long size() {
                 return size;
             }
-        };
+        });
     }
 
-    @Override
     public Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(blobId);

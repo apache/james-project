@@ -69,6 +69,14 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
+    public Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob) {
+        return switch (blob) {
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload());
+        };
+    }
+
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
         return Mono.fromRunnable(() -> {
             synchronized (blobs) {
@@ -77,7 +85,6 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
         });
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(inputStream);
         return Mono.fromCallable(() -> {
@@ -90,7 +97,6 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
             .flatMap(bytes -> save(bucketName, blobId, bytes));
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         return Mono.fromCallable(() -> {
                 try {

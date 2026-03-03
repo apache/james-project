@@ -114,6 +114,14 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
+    public Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob) {
+        return switch (blob) {
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload());
+        };
+    }
+
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
         Preconditions.checkNotNull(data);
 
@@ -121,7 +129,6 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
             .flatMap(chunks -> save(bucketName, blobId, chunks));
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(inputStream);
@@ -132,7 +139,6 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
             .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving input stream", e));
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         return Mono.using(content::openBufferedStream,
             stream -> save(bucketName, blobId, stream),

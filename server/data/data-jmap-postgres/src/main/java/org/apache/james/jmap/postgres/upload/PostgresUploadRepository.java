@@ -74,7 +74,7 @@ public class PostgresUploadRepository implements UploadRepository {
         PostgresUploadDAO uploadDAO = uploadDAOFactory.create(user.getDomainPart());
 
         return Mono.fromCallable(() -> new CountingInputStream(data))
-            .flatMap(countingInputStream -> Mono.from(blobStoreDAO.save(UPLOAD_BUCKET, blobId, countingInputStream))
+            .flatMap(countingInputStream -> Mono.from(blobStoreDAO.saveBlob(UPLOAD_BUCKET, blobId, BlobStoreDAO.InputStreamBlob.of(countingInputStream)))
                     .thenReturn(countingInputStream))
                 .map(countingInputStream -> UploadMetaData.from(uploadId, contentType, countingInputStream.getCount(), blobId, clock.instant()))
                 .flatMap(uploadMetaData -> uploadDAO.insert(uploadMetaData, user));
