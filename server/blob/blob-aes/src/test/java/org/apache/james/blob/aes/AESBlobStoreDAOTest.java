@@ -56,27 +56,27 @@ class AESBlobStoreDAOTest implements BlobStoreDAOContract {
 
     @Test
     void underlyingDataShouldBeEncrypted() {
-        Mono.from(testee.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
-        byte[] bytes = Mono.from(underlying.readBytesBlob(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
+        byte[] bytes = Mono.from(underlying.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
 
         assertThat(bytes).isNotEqualTo(SHORT_BYTEARRAY);
     }
 
     @Test
     void underlyingDataShouldBeEncryptedWhenUsingStream() {
-        Mono.from(testee.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY.asInputStream())).block();
+        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY.asInputStream())).block();
 
-        byte[] bytes = Mono.from(underlying.readBytesBlob(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
+        byte[] bytes = Mono.from(underlying.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
 
         assertThat(bytes).isNotEqualTo(SHORT_BYTEARRAY);
     }
 
     @Test
     void underlyingDataShouldBeEncryptedWhenUsingByteSource() {
-        Mono.from(testee.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY.asByteSource())).block();
+        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY.asByteSource())).block();
 
-        byte[] bytes = Mono.from(underlying.readBytesBlob(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
+        byte[] bytes = Mono.from(underlying.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
 
         assertThat(bytes).isNotEqualTo(SHORT_BYTEARRAY);
     }

@@ -97,28 +97,25 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         return InputStreamBlob.of(ReactorUtils.toInputStream(readBlobParts(bucketName, blobId)));
     }
 
     @Override
-    public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.just(readBlob(bucketName, blobId));
+    public Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.just(read(bucketName, blobId));
     }
 
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+    @Override
+    public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
         return readBlobParts(bucketName, blobId)
             .collectList()
-            .map(this::byteBuffersToBytesArray);
+            .map(this::byteBuffersToBytesArray)
+            .map(BytesBlob::of);
     }
 
     @Override
-    public Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId) {
-        return readBytes(bucketName, blobId).map(BytesBlob::of);
-    }
-
-    @Override
-    public Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob) {
+    public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
         return switch (blob) {
             case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
             case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());

@@ -86,7 +86,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     Preconditions.checkNotNull(data)
     SMono(blobIdProvider.apply(data))
       .map(_.getT1)
-      .flatMap(blobId => SMono(blobStoreDAO.saveBlob(bucketName, blobId, BytesBlob.of(data)))
+      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, BytesBlob.of(data)))
       .`then`(SMono.just(blobId)))
   }
 
@@ -96,7 +96,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
 
     SMono(blobIdProvider.apply(data))
       .map(_.getT1)
-      .flatMap(blobId => SMono(blobStoreDAO.saveBlob(bucketName, blobId, ByteSourceBlob.of(data)))
+      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, ByteSourceBlob.of(data)))
           .`then`(SMono.just(blobId)))
       .subscribeOn(Schedulers.boundedElastic())
   }
@@ -155,7 +155,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
 
     Mono.from(blobIdProvider(data)).subscribeOn(Schedulers.boundedElastic())
       .flatMap { tuple =>
-        SMono(blobStoreDAO.saveBlob(bucketName, tuple.getT1, InputStreamBlob.of(tuple.getT2)))
+        SMono(blobStoreDAO.save(bucketName, tuple.getT1, InputStreamBlob.of(tuple.getT2)))
           .`then`(SMono.just(tuple.getT1)).asJava()
       }
   }
@@ -163,19 +163,19 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   override def readBytes(bucketName: BucketName, blobId: BlobId): Publisher[Array[Byte]] = {
     Preconditions.checkNotNull(bucketName)
 
-    SMono(blobStoreDAO.readBytesBlob(bucketName, blobId)).map(_.payload())
+    SMono(blobStoreDAO.readBytes(bucketName, blobId)).map(_.payload())
   }
 
   override def read(bucketName: BucketName, blobId: BlobId): InputStream = {
     Preconditions.checkNotNull(bucketName)
 
-    blobStoreDAO.readBlob(bucketName, blobId).payload()
+    blobStoreDAO.read(bucketName, blobId).payload()
   }
 
   override def readReactive(bucketName: BucketName, blobId: BlobId): Publisher[InputStream] = {
     Preconditions.checkNotNull(bucketName)
 
-    SMono(blobStoreDAO.readBlobReactive(bucketName, blobId)).map(_.payload())
+    SMono(blobStoreDAO.readReactive(bucketName, blobId)).map(_.payload())
   }
 
   override def getDefaultBucketName: BucketName = defaultBucketName

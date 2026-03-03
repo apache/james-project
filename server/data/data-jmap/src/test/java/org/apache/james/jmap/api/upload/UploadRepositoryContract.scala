@@ -230,7 +230,7 @@
 
      SMono(testee.deleteByUploadDateBefore(Duration.ofDays(7))).block();
 
-     assertThatThrownBy(() => blobStoreDAO.readBlob(UPLOAD_BUCKET, blobId).payload())
+     assertThatThrownBy(() => blobStoreDAO.read(UPLOAD_BUCKET, blobId).payload())
        .isInstanceOf(classOf[ObjectNotFoundException])
    }
  }

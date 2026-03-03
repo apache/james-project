@@ -93,25 +93,25 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         try {
-            return InputStreamBlob.of(decrypt(underlying.readBlob(bucketName, blobId).payload()));
+            return InputStreamBlob.of(decrypt(underlying.read(bucketName, blobId).payload()));
         } catch (IOException e) {
             throw new ObjectStoreIOException("Error reading blob " + blobId.asString(), e);
         }
     }
 
     @Override
-    public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.from(underlying.readBlobReactive(bucketName, blobId))
+    public Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.from(underlying.readReactive(bucketName, blobId))
             .map(InputStreamBlob::payload)
             .map(Throwing.function(this::decrypt))
             .map(InputStreamBlob::of);
     }
 
     @Override
-    public Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId) {
-        return Mono.from(underlying.readBytesBlob(bucketName, blobId))
+    public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
+        return Mono.from(underlying.readBytes(bucketName, blobId))
             .map(Throwing.function(bytesBlob -> {
                 InputStream inputStream = decrypt(new ByteArrayInputStream(bytesBlob.payload()));
                 try (UnsynchronizedByteArrayOutputStream outputStream = UnsynchronizedByteArrayOutputStream.builder()
@@ -124,7 +124,7 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob) {
+    public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
         return switch (blob) {
             case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
             case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
@@ -147,7 +147,7 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
 
         return Mono.usingWhen(
                 Mono.fromCallable(() -> encrypt(inputStream)),
-                pair -> Mono.from(underlying.saveBlob(bucketName, blobId, byteSourceWithSize(pair.getLeft().asByteSource(), pair.getRight()))),
+                pair -> Mono.from(underlying.save(bucketName, blobId, byteSourceWithSize(pair.getLeft().asByteSource(), pair.getRight()))),
                 Throwing.function(pair -> Mono.fromRunnable(Throwing.runnable(pair.getLeft()::reset)).subscribeOn(Schedulers.boundedElastic())))
             .subscribeOn(Schedulers.boundedElastic())
             .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving bytearray", e));

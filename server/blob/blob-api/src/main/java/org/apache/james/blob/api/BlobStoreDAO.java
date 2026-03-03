@@ -133,13 +133,13 @@ public interface BlobStoreDAO {
         }
     }
 
-    InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
+    InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
 
-    Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId);
+    Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId);
 
-    Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId);
+    Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId);
 
-    Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob);
+    Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob);
 
     /**
      * Remove a Blob based on its BucketName and its BlobId.
