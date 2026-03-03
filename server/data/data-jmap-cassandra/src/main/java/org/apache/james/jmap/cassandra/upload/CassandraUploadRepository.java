@@ -66,7 +66,7 @@ public class CassandraUploadRepository implements UploadRepository {
         BlobId blobId = blobIdFactory.of(uploadId.asString());
 
         return Mono.fromCallable(() -> new CountingInputStream(data))
-            .flatMap(countingInputStream -> Mono.from(blobStoreDAO.save(UPLOAD_BUCKET, blobId, countingInputStream))
+            .flatMap(countingInputStream -> Mono.from(blobStoreDAO.saveBlob(UPLOAD_BUCKET, blobId, BlobStoreDAO.InputStreamBlob.of(countingInputStream)))
                     .thenReturn(countingInputStream))
                 .map(countingInputStream -> new UploadDAO.UploadRepresentation(uploadId, blobId, contentType, countingInputStream.getCount(), user,
                     clock.instant().truncatedTo(ChronoUnit.MILLIS)))

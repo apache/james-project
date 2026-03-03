@@ -19,16 +19,119 @@
 
 package org.apache.james.blob.api;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Map;
 
 import org.reactivestreams.Publisher;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSource;
+import com.google.common.io.FileBackedOutputStream;
 
 public interface BlobStoreDAO {
+    record BlobMetadataName(String name) {
 
+    }
+    record BlobMetadataValue(String value) {
+
+    }
+
+    sealed interface Blob {
+        Map<BlobMetadataName, BlobMetadataValue> metadata();
+
+        // Have the POJOs encode some conversions ?
+        InputStreamBlob asInputStream() throws IOException;
+
+        BytesBlob asBytes() throws IOException;
+
+        ByteSourceBlob asByteSource() throws IOException;
+    }
+
+    record BytesBlob(byte[] payload,  Map<BlobMetadataName, BlobMetadataValue> metadata) implements Blob {
+        public static BytesBlob of(byte[] payload) {
+            return of(payload, ImmutableMap.of());
+        }
+
+        public static BytesBlob of(String payload) {
+            return of(payload.getBytes(StandardCharsets.UTF_8), ImmutableMap.of());
+        }
+
+        public static BytesBlob of(byte[] payload,  Map<BlobMetadataName, BlobMetadataValue> metadata) {
+            return new BytesBlob(payload, metadata);
+        }
+
+        @Override
+        public InputStreamBlob asInputStream() {
+            return new InputStreamBlob(new ByteArrayInputStream(payload), metadata);
+        }
+
+        @Override
+        public BytesBlob asBytes() {
+            return this;
+        }
+
+        @Override
+        public ByteSourceBlob asByteSource() {
+            return new ByteSourceBlob(ByteSource.wrap(payload), metadata);
+        }
+    }
+
+    record InputStreamBlob(InputStream payload,  Map<BlobMetadataName, BlobMetadataValue> metadata) implements Blob {
+        public static InputStreamBlob of(InputStream payload) {
+            return of(payload, ImmutableMap.of());
+        }
+
+        public static InputStreamBlob of(InputStream payload, Map<BlobMetadataName, BlobMetadataValue> metadata) {
+            return new InputStreamBlob(payload, metadata);
+        }
+
+        @Override
+        public InputStreamBlob asInputStream() {
+            return this;
+        }
+
+        @Override
+        public BytesBlob asBytes() throws IOException {
+            return new BytesBlob(payload.readAllBytes(), metadata);
+        }
+
+        @Override
+        public ByteSourceBlob asByteSource() throws IOException {
+            try (FileBackedOutputStream fileBackedOutputStream = new FileBackedOutputStream(100 * 1024)) {
+                payload.transferTo(fileBackedOutputStream);
+                return new ByteSourceBlob(fileBackedOutputStream.asByteSource(), metadata);
+            }
+        }
+    }
+
+    record ByteSourceBlob(ByteSource payload, Map<BlobMetadataName, BlobMetadataValue> metadata) implements Blob {
+        public static ByteSourceBlob of(ByteSource payload) {
+            return of(payload, ImmutableMap.of());
+        }
+
+        public static ByteSourceBlob of(ByteSource payload, Map<BlobMetadataName, BlobMetadataValue> metadata) {
+            return new ByteSourceBlob(payload, metadata);
+        }
+
+        @Override
+        public InputStreamBlob asInputStream() throws IOException {
+            return new InputStreamBlob(payload.openStream(), metadata);
+        }
+
+        @Override
+        public BytesBlob asBytes() throws IOException {
+            return new BytesBlob(payload.read(), metadata);
+        }
+
+        @Override
+        public ByteSourceBlob asByteSource() {
+            return this;
+        }
+    }
 
     /**
      * Reads a Blob based on its BucketName and its BlobId.
@@ -49,37 +152,7 @@ public interface BlobStoreDAO {
      */
     Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId);
 
-
-    /**
-     * Save the blob with the provided blob id, and overwrite the previous blob with the same id if it already exists
-     * The bucket is created if it not already exists.
-     * This operation should be atomic and isolated
-     * Two blobs having the same blobId must have the same content
-     * @return an empty Mono when the save succeed,
-     *  otherwise an IOObjectStoreException in its error channel
-     */
-    Publisher<Void> save(BucketName bucketName, BlobId blobId, byte[] data);
-
-    /**
-     * @see #save(BucketName, BlobId, byte[])
-     *
-     * The InputStream should be closed after the call to this method
-     */
-    Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream);
-
-    /**
-     * @see #save(BucketName, BlobId, byte[])
-     */
-    Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSource content);
-
-    /**
-     * @see #save(BucketName, BlobId, byte[])
-     *
-     * The String is stored as UTF-8.
-     */
-    default Publisher<Void> save(BucketName bucketName, BlobId blobId, String data) {
-        return save(bucketName, blobId, data.getBytes(StandardCharsets.UTF_8));
-    }
+    Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob);
 
     /**
      * Remove a Blob based on its BucketName and its BlobId.

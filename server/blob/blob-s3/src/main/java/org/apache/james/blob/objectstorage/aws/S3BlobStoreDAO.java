@@ -255,6 +255,14 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
+    public Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob) {
+        return switch (blob) {
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload());
+        };
+    }
+
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
@@ -266,7 +274,6 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .then();
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(inputStream);
 
@@ -285,7 +292,6 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .publishOn(Schedulers.parallel());
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 

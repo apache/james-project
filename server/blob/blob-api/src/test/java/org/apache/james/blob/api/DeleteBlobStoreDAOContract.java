@@ -31,7 +31,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -79,7 +78,7 @@ public interface DeleteBlobStoreDAOContract {
     default void deleteShouldDeleteExistingBlobData() {
         BlobStoreDAO store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID,  SHORT_BYTEARRAY)).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID,  SHORT_BYTEARRAY)).block();
         Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
 
         assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, TEST_BLOB_ID).read())
@@ -90,7 +89,7 @@ public interface DeleteBlobStoreDAOContract {
     default void deleteShouldBeIdempotent() {
         BlobStoreDAO store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
         Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
 
         assertThatCode(() -> Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block())
@@ -101,22 +100,22 @@ public interface DeleteBlobStoreDAOContract {
     default void deleteShouldNotDeleteOtherBlobs() {
         BlobStoreDAO store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
-        Mono.from(store.save(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
 
         Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
 
         InputStream read = store.read(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID);
 
-        assertThat(read).hasSameContentAs(new ByteArrayInputStream(ELEVEN_KILOBYTES));
+        assertThat(read).hasSameContentAs(ELEVEN_KILOBYTES.asInputStream().payload());
     }
 
     @Test
     default void deleteSeveralShouldDeleteAll() {
         BlobStoreDAO store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
-        Mono.from(store.save(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
 
         Mono.from(store.delete(TEST_BUCKET_NAME, ImmutableList.of(TEST_BLOB_ID, OTHER_TEST_BLOB_ID))).block();
 
@@ -132,7 +131,7 @@ public interface DeleteBlobStoreDAOContract {
     default void deleteConcurrentlyShouldNotFail() throws Exception {
         BlobStoreDAO store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
 
         ConcurrentTestRunner.builder()
             .operation(((threadNumber, step) -> Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block()))
@@ -152,35 +151,35 @@ public interface DeleteBlobStoreDAOContract {
     default void deleteShouldNotDeleteFromOtherBucket() {
         BlobStoreDAO store = testee();
 
-        Mono.from(store.save(CUSTOM_BUCKET_NAME, OTHER_TEST_BLOB_ID, "custom")).block();
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(store.saveBlob(CUSTOM_BUCKET_NAME, OTHER_TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of("custom"))).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
         Mono.from(store.delete(CUSTOM_BUCKET_NAME, OTHER_TEST_BLOB_ID)).block();
 
         InputStream read = store.read(TEST_BUCKET_NAME, TEST_BLOB_ID);
 
-        assertThat(read).hasSameContentAs(new ByteArrayInputStream(SHORT_BYTEARRAY));
+        assertThat(read).hasSameContentAs(SHORT_BYTEARRAY.asInputStream().payload());
     }
 
     @Test
     default void deleteShouldNotDeleteFromOtherBucketWhenSameBlobId() {
         BlobStoreDAO store = testee();
 
-        Mono.from(store.save(CUSTOM_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(store.saveBlob(CUSTOM_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
         Mono.from(store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
 
         InputStream read = store.read(CUSTOM_BUCKET_NAME, TEST_BLOB_ID);
 
-        assertThat(read).hasSameContentAs(new ByteArrayInputStream(SHORT_BYTEARRAY));
+        assertThat(read).hasSameContentAs(SHORT_BYTEARRAY.asInputStream().payload());
     }
 
     @Test
     default void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() throws Exception {
         BlobStoreDAO store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
 
         ConcurrentTestRunner.builder()
             .operation(((threadNumber, step) -> {
@@ -206,7 +205,7 @@ public interface DeleteBlobStoreDAOContract {
     default void readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() throws Exception {
         BlobStoreDAO store = testee();
 
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
 
         ConcurrentTestRunner.builder()
             .operation(((threadNumber, step) -> {
@@ -230,10 +229,10 @@ public interface DeleteBlobStoreDAOContract {
     @Test
     default void mixingSaveReadAndDeleteShouldReturnConsistentState() throws ExecutionException, InterruptedException {
         BlobStoreDAO store = testee();
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
+        Mono.from(store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
         ConcurrentTestRunner.builder()
             .randomlyDistributedReactorOperations(
-                (thread, iteration) -> store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES),
+                (thread, iteration) -> store.saveBlob(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES),
                 (thread, iteration) -> store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID),
                 (thread, iteration) -> checkConcurrentMixedOperation()
             )
@@ -246,7 +245,7 @@ public interface DeleteBlobStoreDAOContract {
         return
             Mono.from(testee().readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID))
                 //assertj is very cpu-intensive, let's compute the assertion only when arrays are different
-                .filter(bytes -> !Arrays.equals(bytes, TWELVE_MEGABYTES))
+                .filter(bytes -> !Arrays.equals(bytes, TWELVE_MEGABYTES.payload()))
                 .doOnNext(bytes -> assertThat(bytes).isEqualTo(TWELVE_MEGABYTES))
                 .onErrorResume(ObjectNotFoundException.class, throwable -> Mono.empty())
                 .then();

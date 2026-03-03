@@ -25,6 +25,7 @@ import com.google.common.io.{BaseEncoding, ByteSource, FileBackedOutputStream}
 import jakarta.inject.{Inject, Named}
 import org.apache.commons.io.IOUtils
 import org.apache.james.blob.api.BlobStore.BlobIdProvider
+import org.apache.james.blob.api.BlobStoreDAO.{ByteSourceBlob, BytesBlob, InputStreamBlob}
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore.THREAD_SWITCH_THRESHOLD
 import org.reactivestreams.Publisher
@@ -85,7 +86,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     Preconditions.checkNotNull(data)
     SMono(blobIdProvider.apply(data))
       .map(_.getT1)
-      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, data))
+      .flatMap(blobId => SMono(blobStoreDAO.saveBlob(bucketName, blobId, BytesBlob.of(data)))
       .`then`(SMono.just(blobId)))
   }
 
@@ -95,7 +96,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
 
     SMono(blobIdProvider.apply(data))
       .map(_.getT1)
-      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, data))
+      .flatMap(blobId => SMono(blobStoreDAO.saveBlob(bucketName, blobId, ByteSourceBlob.of(data)))
           .`then`(SMono.just(blobId)))
       .subscribeOn(Schedulers.boundedElastic())
   }
@@ -154,7 +155,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
 
     Mono.from(blobIdProvider(data)).subscribeOn(Schedulers.boundedElastic())
       .flatMap { tuple =>
-        SMono(blobStoreDAO.save(bucketName, tuple.getT1, tuple.getT2))
+        SMono(blobStoreDAO.saveBlob(bucketName, tuple.getT1, InputStreamBlob.of(tuple.getT2)))
           .`then`(SMono.just(tuple.getT1)).asJava()
       }
   }
