@@ -115,7 +115,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
 
         assertThatCode(() -> IntStream.range(0, 256)
             .forEach(i -> {
-                InputStream inputStream = store.read(TEST_BUCKET_NAME, blobId);
+                InputStream inputStream = store.readBlob(TEST_BUCKET_NAME, blobId).payload();
                 // Close the stream without reading it
                 try {
                     inputStream.close();
@@ -132,7 +132,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         TestBlobId blobId = new TestBlobId("id");
         Mono.from(store.saveBlob(fallbackBucket, blobId, ELEVEN_KILOBYTES)).block();
 
-        InputStream read = store.read(BucketName.DEFAULT, blobId);
+        InputStream read = store.readBlob(BucketName.DEFAULT, blobId).payload();
 
         assertThat(read).hasSameContentAs(ELEVEN_KILOBYTES.asInputStream().payload());
     }
@@ -168,7 +168,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         TestBlobId blobId = new TestBlobId("id");
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, blobId, ELEVEN_KILOBYTES)).block();
 
-        assertThatThrownBy(() -> store.read(BucketName.DEFAULT, blobId))
+        assertThatThrownBy(() -> store.readBlob(BucketName.DEFAULT, blobId))
             .isExactlyInstanceOf(ObjectNotFoundException.class);
     }
 

@@ -133,13 +133,7 @@ public interface BlobStoreDAO {
         }
     }
 
-    /**
-     * Reads a Blob based on its BucketName and its BlobId.
-     *
-     * @throws ObjectNotFoundException when the blobId or the bucket is not found
-     * @throws ObjectStoreIOException when an unexpected IO error occurs
-     */
-    InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
+    InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
 
     Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId);
 

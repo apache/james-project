@@ -63,10 +63,9 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         return Mono.from(readBlobReactive(bucketName, blobId))
-            .block()
-            .payload();
+            .block();
     }
 
     @Override

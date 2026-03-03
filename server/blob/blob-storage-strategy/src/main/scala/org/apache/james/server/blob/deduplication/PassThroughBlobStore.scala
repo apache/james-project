@@ -103,7 +103,7 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   override def read(bucketName: BucketName, blobId: BlobId): InputStream = {
     Preconditions.checkNotNull(bucketName)
 
-    blobStoreDAO.read(bucketName, blobId)
+    blobStoreDAO.readBlob(bucketName, blobId).payload()
   }
 
   override def readReactive(bucketName: BucketName, blobId: BlobId): Publisher[InputStream] = {

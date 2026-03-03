@@ -65,11 +65,11 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         File bucketRoot = getBucketRoot(bucketName);
         File blob = new File(bucketRoot, blobId.asString());
         try {
-            return new FileInputStream(blob);
+            return InputStreamBlob.of(new FileInputStream(blob));
         } catch (FileNotFoundException e) {
             throw new ObjectNotFoundException(String.format("Cannot locate %s within %s", blobId.asString(), bucketName.asString()), e);
         }
@@ -89,8 +89,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.fromCallable(() -> read(bucketName, blobId))
-            .map(InputStreamBlob::of)
+        return Mono.fromCallable(() -> readBlob(bucketName, blobId))
             .subscribeOn(Schedulers.boundedElastic());
     }
 

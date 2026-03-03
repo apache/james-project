@@ -97,13 +97,13 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return ReactorUtils.toInputStream(readBlobParts(bucketName, blobId));
+    public InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+        return InputStreamBlob.of(ReactorUtils.toInputStream(readBlobParts(bucketName, blobId)));
     }
 
     @Override
     public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.just(read(bucketName, blobId)).map(InputStreamBlob::of);
+        return Mono.just(readBlob(bucketName, blobId));
     }
 
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
