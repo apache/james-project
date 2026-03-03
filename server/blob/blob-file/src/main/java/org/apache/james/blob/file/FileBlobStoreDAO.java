@@ -65,7 +65,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         File bucketRoot = getBucketRoot(bucketName);
         File blob = new File(bucketRoot, blobId.asString());
         try {
@@ -88,28 +88,24 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.fromCallable(() -> readBlob(bucketName, blobId))
+    public Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.fromCallable(() -> read(bucketName, blobId))
             .subscribeOn(Schedulers.boundedElastic());
     }
 
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+    @Override
+    public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.fromCallable(() -> {
-            File bucketRoot = getBucketRoot(bucketName);
-            File blob = new File(bucketRoot, blobId.asString());
-            return FileUtils.readFileToByteArray(blob);
-        }).onErrorResume(NoSuchFileException.class, e -> Mono.error(new ObjectNotFoundException(String.format("Cannot locate %s within %s", blobId.asString(), bucketName.asString()), e)))
-            .subscribeOn(Schedulers.boundedElastic());
-    }
-
-
-    @Override
-    public Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId) {
-        return readBytes(bucketName, blobId).map(BytesBlob::of);
+                File bucketRoot = getBucketRoot(bucketName);
+                File blob = new File(bucketRoot, blobId.asString());
+                return FileUtils.readFileToByteArray(blob);
+            }).onErrorResume(NoSuchFileException.class, e -> Mono.error(new ObjectNotFoundException(String.format("Cannot locate %s within %s", blobId.asString(), bucketName.asString()), e)))
+            .subscribeOn(Schedulers.boundedElastic())
+            .map(BytesBlob::of);
     }
 
     @Override
-    public Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob) {
+    public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
         return switch (blob) {
             case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
             case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());

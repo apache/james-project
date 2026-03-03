@@ -19,7 +19,6 @@
 
 package org.apache.james.blob.memory;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -50,27 +49,27 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return Mono.from(readBytesBlob(bucketName, blobId))
+    public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+        return Mono.from(readBytes(bucketName, blobId))
             .map(BytesBlob::asInputStream)
             .block();
     }
 
     @Override
-    public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.from(readBytesBlob(bucketName, blobId))
+    public Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.from(readBytes(bucketName, blobId))
             .map(BytesBlob::asInputStream);
     }
 
     @Override
-    public Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId) {
+    public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.fromCallable(() -> blobs.get(bucketName, blobId))
             .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException(String.format("blob '%s' not found in bucket '%s'", blobId.asString(), bucketName.asString()))))
             .map(BytesBlob::of);
     }
 
     @Override
-    public Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob) {
+    public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
         return switch (blob) {
             case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
             case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());

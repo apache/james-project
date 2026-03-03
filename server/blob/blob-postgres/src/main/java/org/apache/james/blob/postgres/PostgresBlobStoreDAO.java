@@ -63,33 +63,30 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStreamBlob readBlob(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return Mono.from(readBlobReactive(bucketName, blobId))
+    public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+        return Mono.from(readReactive(bucketName, blobId))
             .block();
     }
 
     @Override
-    public Mono<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.from(readBytesBlob(bucketName, blobId))
+    public Mono<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.from(readBytes(bucketName, blobId))
             .map(BytesBlob::asInputStream);
     }
 
     @Override
-    public Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId) {
-        return readBytes(bucketName, blobId).map(BytesBlob::of);
-    }
-
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+    public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(DATA)
                 .from(TABLE_NAME)
                 .where(BUCKET_NAME.eq(bucketName.asString()))
                 .and(BLOB_ID.eq(blobId.asString()))))
             .map(record -> record.get(DATA))
-            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException("Blob " + blobId + " does not exist in bucket " + bucketName)));
+            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException("Blob " + blobId + " does not exist in bucket " + bucketName)))
+            .map(BytesBlob::of);
     }
 
     @Override
-    public Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob) {
+    public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
         return switch (blob) {
             case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
             case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
