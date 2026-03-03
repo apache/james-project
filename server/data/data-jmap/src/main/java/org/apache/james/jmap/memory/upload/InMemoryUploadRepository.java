@@ -78,12 +78,12 @@ public class InMemoryUploadRepository implements UploadRepository {
         BlobId blobId = blobIdFactory.of(uploadId.asString());
 
         return Mono.fromCallable(() -> new CountingInputStream(data))
-            .flatMap(dataAsByte -> Mono.from(blobStoreDAO.save(bucketName, blobId, dataAsByte))
-                    .thenReturn(dataAsByte))
-                .map(dataAsByte -> {
+            .flatMap(countedData -> Mono.from(blobStoreDAO.save(bucketName, blobId, BlobStoreDAO.InputStreamBlob.of(countedData)))
+                    .thenReturn(countedData.getCount()))
+                .map(count -> {
                     Instant uploadDate = clock.instant();
-                    uploadStore.put(uploadId, new ImmutablePair<>(user, UploadMetaData.from(uploadId, contentType, dataAsByte.getCount(), blobId, uploadDate)));
-                    return UploadMetaData.from(uploadId, contentType, dataAsByte.getCount(), blobId, uploadDate);
+                    uploadStore.put(uploadId, new ImmutablePair<>(user, UploadMetaData.from(uploadId, contentType, count, blobId, uploadDate)));
+                    return UploadMetaData.from(uploadId, contentType, count, blobId, uploadDate);
                 });
     }
 
@@ -128,6 +128,7 @@ public class InMemoryUploadRepository implements UploadRepository {
 
     private Mono<Upload> retrieveUpload(UploadMetaData uploadMetaData) {
         return Mono.from(blobStoreDAO.readBytes(bucketName, uploadMetaData.blobId()))
+            .map(BlobStoreDAO.BytesBlob::payload)
             .map(content -> Upload.from(uploadMetaData, () -> new ByteArrayInputStream(content)));
     }
 }

@@ -19,19 +19,20 @@
 
 package org.apache.james.server.blob.deduplication
 
+import java.io.InputStream
+import java.util.UUID
 import com.google.common.base.Preconditions
+import com.google.common.collect.ImmutableMap
 import com.google.common.io.ByteSource
 import jakarta.inject.{Inject, Named}
 import org.apache.james.blob.api.BlobStore.BlobIdProvider
+import org.apache.james.blob.api.BlobStoreDAO.{ByteSourceBlob, BytesBlob, InputStreamBlob}
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
-import reactor.core.scala.publisher.{SMono, tupleTwo2ScalaTuple2}
+import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
-import reactor.util.function.{Tuple2, Tuples}
-
-import java.io.{ByteArrayInputStream, InputStream}
-import java.util.UUID
+import reactor.util.function.Tuples
 
 class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
                                      @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) defaultBucketName: BucketName,
@@ -54,7 +55,7 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     Preconditions.checkNotNull(data)
     SMono(blobIdProvider.apply(data))
       .map(_.getT1)
-      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, data))
+      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, BytesBlob.of(data)))
         .`then`(SMono.just(blobId)))
   }
 
@@ -64,7 +65,7 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
 
     SMono(blobIdProvider.apply(data))
       .map(_.getT1)
-      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, data))
+      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, ByteSourceBlob.of(data)))
         .`then`(SMono.just(blobId)))
       .subscribeOn(Schedulers.boundedElastic())
   }
@@ -79,10 +80,11 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
 
     SMono(blobIdProvider(data))
       .subscribeOn(Schedulers.boundedElastic())
-      .flatMap { tuple =>
-        SMono(blobStoreDAO.save(bucketName, tuple.getT1, tuple.getT2))
+      .flatMap { tuple => {
+        val blob: InputStreamBlob = new InputStreamBlob(tuple.getT2, ImmutableMap.of())
+        SMono(blobStoreDAO.save(bucketName, tuple.getT1, blob))
           .`then`(SMono.just(tuple.getT1))
-      }
+      }}
   }
 
   private def withBlobId: BlobIdProvider[InputStream] = data =>
@@ -95,19 +97,19 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   override def readBytes(bucketName: BucketName, blobId: BlobId): Publisher[Array[Byte]] = {
     Preconditions.checkNotNull(bucketName)
 
-    blobStoreDAO.readBytes(bucketName, blobId)
+    SMono(blobStoreDAO.readBytes(bucketName, blobId)).map(_.payload())
   }
 
   override def read(bucketName: BucketName, blobId: BlobId): InputStream = {
     Preconditions.checkNotNull(bucketName)
 
-    blobStoreDAO.read(bucketName, blobId)
+    blobStoreDAO.read(bucketName, blobId).payload()
   }
 
   override def readReactive(bucketName: BucketName, blobId: BlobId): Publisher[InputStream] = {
     Preconditions.checkNotNull(bucketName)
 
-    blobStoreDAO.readReactive(bucketName, blobId)
+    SMono(blobStoreDAO.readReactive(bucketName, blobId)).map(_.payload())
   }
 
   override def getDefaultBucketName: BucketName = defaultBucketName

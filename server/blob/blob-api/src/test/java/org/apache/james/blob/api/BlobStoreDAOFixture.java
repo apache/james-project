@@ -29,9 +29,9 @@ public interface BlobStoreDAOFixture {
     BlobId OTHER_TEST_BLOB_ID = new TestBlobId("other-test-blob-id");
     String SHORT_STRING = "toto";
     byte[] EMPTY_BYTEARRAY = {};
-    byte[] SHORT_BYTEARRAY = SHORT_STRING.getBytes(StandardCharsets.UTF_8);
-    byte[] ELEVEN_KILOBYTES = Strings.repeat("2103456789\n", 1000).getBytes(StandardCharsets.UTF_8);
+    BlobStoreDAO.BytesBlob SHORT_BYTEARRAY = BlobStoreDAO.BytesBlob.of(SHORT_STRING.getBytes(StandardCharsets.UTF_8));
+    BlobStoreDAO.BytesBlob ELEVEN_KILOBYTES = BlobStoreDAO.BytesBlob.of(Strings.repeat("2103456789\n", 1000));
     String TWELVE_MEGABYTES_STRING = Strings.repeat("7893456789\r\n", 1024 * 1024);
-    byte[] TWELVE_MEGABYTES = TWELVE_MEGABYTES_STRING.getBytes(StandardCharsets.UTF_8);
+    BlobStoreDAO.BytesBlob TWELVE_MEGABYTES = BlobStoreDAO.BytesBlob.of(TWELVE_MEGABYTES_STRING);
 
 }

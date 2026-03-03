@@ -29,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.ByteArrayInputStream;
 import java.time.Duration;
 
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -57,7 +56,7 @@ public interface BucketBlobStoreDAOContract {
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
         Mono.from(store.deleteBucket(TEST_BUCKET_NAME)).block();
 
-        assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, TEST_BLOB_ID).read())
+        assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, TEST_BLOB_ID).payload().read())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
@@ -76,7 +75,7 @@ public interface BucketBlobStoreDAOContract {
     default void saveBytesShouldThrowWhenNullBucketName() {
         BlobStoreDAO store = testee();
 
-        assertThatThrownBy(() -> Mono.from(store.save(null, TEST_BLOB_ID, SHORT_BYTEARRAY)).block())
+        assertThatThrownBy(() -> Mono.from(store.save(null, TEST_BLOB_ID, SHORT_BYTEARRAY.asInputStream())).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -84,15 +83,15 @@ public interface BucketBlobStoreDAOContract {
     default void saveStringShouldThrowWhenNullBucketName() {
         BlobStoreDAO store = testee();
 
-        assertThatThrownBy(() -> Mono.from(store.save(null, TEST_BLOB_ID, SHORT_STRING)).block())
+        assertThatThrownBy(() -> Mono.from(store.save(null, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(SHORT_STRING))).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    default void saveInputStreamShouldThrowWhenNullBucketName() {
+    default void saveInputStreamShouldThrowWhenNullBucketName() throws Exception {
         BlobStoreDAO store = testee();
 
-        assertThatThrownBy(() -> Mono.from(store.save(null, TEST_BLOB_ID, new ByteArrayInputStream(SHORT_BYTEARRAY))).block())
+        assertThatThrownBy(() -> Mono.from(store.save(null, TEST_BLOB_ID, SHORT_BYTEARRAY.asInputStream())).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -119,7 +118,7 @@ public interface BucketBlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
-        assertThatThrownBy(() -> store.read(CUSTOM_BUCKET_NAME, TEST_BLOB_ID).read())
+        assertThatThrownBy(() -> store.read(CUSTOM_BUCKET_NAME, TEST_BLOB_ID).payload().read())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
@@ -140,8 +139,8 @@ public interface BucketBlobStoreDAOContract {
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
         Mono.from(store.save(CUSTOM_BUCKET_NAME, OTHER_TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
-        byte[] bytesDefault = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
-        byte[] bytesCustom = Mono.from(store.readBytes(CUSTOM_BUCKET_NAME, OTHER_TEST_BLOB_ID)).block();
+        byte[] bytesDefault = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
+        byte[] bytesCustom = Mono.from(store.readBytes(CUSTOM_BUCKET_NAME, OTHER_TEST_BLOB_ID)).block().payload();
 
         assertThat(bytesDefault).isEqualTo(bytesCustom);
     }
@@ -155,7 +154,7 @@ public interface BucketBlobStoreDAOContract {
                 Mono.from(store.save(
                     TEST_BUCKET_NAME,
                     new TestBlobId("id-" + threadNumber + step),
-                    SHORT_STRING + threadNumber + step)).block()))
+                    BlobStoreDAO.BytesBlob.of(SHORT_STRING + threadNumber + step))).block()))
             .threadCount(10)
             .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));

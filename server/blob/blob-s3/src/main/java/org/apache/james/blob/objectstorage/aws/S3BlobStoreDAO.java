@@ -136,25 +136,25 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
-        return ReactorUtils.toInputStream(getObject(resolvedBucketName, blobId)
+        return InputStreamBlob.of(ReactorUtils.toInputStream(getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
             .block()
-            .flux);
+            .flux));
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
+    public Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
             .publishOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-            .map(res -> ReactorUtils.toInputStream(res.flux));
+            .map(res -> InputStreamBlob.of(ReactorUtils.toInputStream(res.flux)));
     }
 
     private static class FluxResponse {
@@ -207,17 +207,17 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
                 .switchIfEmpty(Mono.error(() -> new ObjectStoreIOException("Request was unexpectedly canceled, no GetObjectResponse"))));
     }
 
-
     @Override
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+    public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return getObjectBytes(resolvedBucketName, blobId)
-                .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
-                .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
-                .publishOn(Schedulers.parallel())
-                .map(BytesWrapper::asByteArrayUnsafe)
-                .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause);
+            .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
+            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
+            .publishOn(Schedulers.parallel())
+            .map(BytesWrapper::asByteArrayUnsafe)
+            .onErrorMap(e -> e.getCause() instanceof OutOfMemoryError, Throwable::getCause)
+            .map(BytesBlob::of);
     }
 
     private Mono<ResponseBytes<GetObjectResponse>> getObjectBytes(BucketName bucketName, BlobId blobId) {
@@ -255,6 +255,14 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
+    public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
+        return switch (blob) {
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload());
+        };
+    }
+
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
@@ -266,7 +274,6 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .then();
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(inputStream);
 
@@ -285,7 +292,6 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
             .publishOn(Schedulers.parallel());
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 

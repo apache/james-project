@@ -93,35 +93,45 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         try {
-            return decrypt(underlying.read(bucketName, blobId));
+            return InputStreamBlob.of(decrypt(underlying.read(bucketName, blobId).payload()));
         } catch (IOException e) {
             throw new ObjectStoreIOException("Error reading blob " + blobId.asString(), e);
         }
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
+    public Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
         return Mono.from(underlying.readReactive(bucketName, blobId))
-            .map(Throwing.function(this::decrypt));
+            .map(InputStreamBlob::payload)
+            .map(Throwing.function(this::decrypt))
+            .map(InputStreamBlob::of);
     }
 
     @Override
-    public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+    public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.from(underlying.readBytes(bucketName, blobId))
-            .map(Throwing.function(bytes -> {
-                InputStream inputStream = decrypt(new ByteArrayInputStream(bytes));
+            .map(Throwing.function(bytesBlob -> {
+                InputStream inputStream = decrypt(new ByteArrayInputStream(bytesBlob.payload()));
                 try (UnsynchronizedByteArrayOutputStream outputStream = UnsynchronizedByteArrayOutputStream.builder()
-                    .setBufferSize(bytes.length + PBKDF2StreamingAeadFactory.SEGMENT_SIZE)
+                    .setBufferSize(bytesBlob.payload().length + PBKDF2StreamingAeadFactory.SEGMENT_SIZE)
                     .get()) {
                     IOUtils.copy(inputStream, outputStream);
-                    return outputStream.toByteArray();
+                    return BytesBlob.of(outputStream.toByteArray(), bytesBlob.metadata());
                 }
             }));
     }
 
     @Override
+    public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
+        return switch (blob) {
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload());
+        };
+    }
+
     public Publisher<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(blobId);
@@ -130,7 +140,6 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
         return save(bucketName, blobId, new ByteArrayInputStream(data));
     }
 
-    @Override
     public Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(blobId);
@@ -144,8 +153,8 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
             .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving bytearray", e));
     }
 
-    private ByteSource byteSourceWithSize(ByteSource byteSource, long size) {
-        return new ByteSource() {
+    private ByteSourceBlob byteSourceWithSize(ByteSource byteSource, long size) {
+        return ByteSourceBlob.of(new ByteSource() {
             @Override
             public InputStream openStream() throws IOException {
                 return byteSource.openStream();
@@ -160,10 +169,9 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
             public long size() {
                 return size;
             }
-        };
+        });
     }
 
-    @Override
     public Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(blobId);

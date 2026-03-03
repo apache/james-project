@@ -19,7 +19,6 @@
 
 package org.apache.james.blob.memory;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -50,25 +49,34 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return readBytes(bucketName, blobId)
-            .map(ByteArrayInputStream::new)
+    public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+        return Mono.from(readBytes(bucketName, blobId))
+            .map(BytesBlob::asInputStream)
             .block();
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return readBytes(bucketName, blobId)
-            .map(ByteArrayInputStream::new);
+    public Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.from(readBytes(bucketName, blobId))
+            .map(BytesBlob::asInputStream);
     }
 
     @Override
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+    public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.fromCallable(() -> blobs.get(bucketName, blobId))
-            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException(String.format("blob '%s' not found in bucket '%s'", blobId.asString(), bucketName.asString()))));
+            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException(String.format("blob '%s' not found in bucket '%s'", blobId.asString(), bucketName.asString()))))
+            .map(BytesBlob::of);
     }
 
     @Override
+    public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
+        return switch (blob) {
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload());
+        };
+    }
+
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
         return Mono.fromRunnable(() -> {
             synchronized (blobs) {
@@ -77,7 +85,6 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
         });
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(inputStream);
         return Mono.fromCallable(() -> {
@@ -90,7 +97,6 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
             .flatMap(bytes -> save(bucketName, blobId, bytes));
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         return Mono.fromCallable(() -> {
                 try {
