@@ -83,8 +83,8 @@ public class PostgresUploadRepository implements UploadRepository {
     @Override
     public Mono<Upload> retrieve(UploadId id, Username user) {
         return uploadDAOFactory.create(user.getDomainPart()).get(id, user)
-            .flatMap(upload -> Mono.from(blobStoreDAO.readReactive(UPLOAD_BUCKET, upload.blobId()))
-                .map(inputStream -> Upload.from(upload, () -> inputStream)))
+            .flatMap(upload -> Mono.from(blobStoreDAO.readBlobReactive(UPLOAD_BUCKET, upload.blobId()))
+                .map(inputStream -> Upload.from(upload, inputStream::payload)))
             .switchIfEmpty(Mono.error(() -> new UploadNotFoundException(id)));
     }
 

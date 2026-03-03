@@ -102,8 +102,8 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.just(read(bucketName, blobId));
+    public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.just(read(bucketName, blobId)).map(InputStreamBlob::of);
     }
 
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {

@@ -77,8 +77,8 @@ public class CassandraUploadRepository implements UploadRepository {
     @Override
     public Mono<Upload> retrieve(UploadId id, Username user) {
         return uploadDAO.retrieve(user, id)
-            .flatMap(upload -> Mono.from(blobStoreDAO.readReactive(UPLOAD_BUCKET, upload.getBlobId()))
-                .map(inputStream -> Upload.from(upload.toUploadMetaData(), () -> inputStream)))
+            .flatMap(upload -> Mono.from(blobStoreDAO.readBlobReactive(UPLOAD_BUCKET, upload.getBlobId()))
+                .map(inputStream -> Upload.from(upload.toUploadMetaData(), inputStream::payload)))
             .switchIfEmpty(Mono.error(() -> new UploadNotFoundException(id)));
     }
 

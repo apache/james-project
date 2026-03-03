@@ -44,8 +44,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import com.google.common.io.ByteSource;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -146,7 +144,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         TestBlobId blobId = new TestBlobId("id");
         Mono.from(store.saveBlob(fallbackBucket, blobId, ELEVEN_KILOBYTES)).block();
 
-        InputStream read = Mono.from(store.readReactive(BucketName.DEFAULT, blobId)).block();
+        InputStream read = Mono.from(store.readBlobReactive(BucketName.DEFAULT, blobId)).block().payload();
 
         assertThat(read).hasSameContentAs(ELEVEN_KILOBYTES.asInputStream().payload());
     }
@@ -181,7 +179,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         TestBlobId blobId = new TestBlobId("id");
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, blobId, ELEVEN_KILOBYTES)).block();
 
-        assertThatThrownBy(() -> Mono.from(store.readReactive(BucketName.DEFAULT, blobId)).block())
+        assertThatThrownBy(() -> Mono.from(store.readBlobReactive(BucketName.DEFAULT, blobId)).block().payload())
             .isExactlyInstanceOf(ObjectNotFoundException.class);
     }
 

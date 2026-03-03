@@ -88,8 +88,9 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Mono<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
+    public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
         return Mono.fromCallable(() -> read(bucketName, blobId))
+            .map(InputStreamBlob::of)
             .subscribeOn(Schedulers.boundedElastic());
     }
 
