@@ -143,14 +143,7 @@ public interface BlobStoreDAO {
 
     Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId);
 
-    /**
-     * Reads a Blob based on its BucketName and its BlobId
-     *
-     * @return a Mono containing the content of the blob or
-     *  an ObjectNotFoundException in its error channel when the blobId or the bucket is not found
-     *  or an IOObjectStoreException when an unexpected IO error occurs
-     */
-    Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId);
+    Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId);
 
     Publisher<Void> saveBlob(BucketName bucketName, BlobId blobId, Blob blob);
 

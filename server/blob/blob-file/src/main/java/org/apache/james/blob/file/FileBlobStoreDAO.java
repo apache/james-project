@@ -93,7 +93,6 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
             .subscribeOn(Schedulers.boundedElastic());
     }
 
-    @Override
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.fromCallable(() -> {
             File bucketRoot = getBucketRoot(bucketName);
@@ -101,6 +100,12 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
             return FileUtils.readFileToByteArray(blob);
         }).onErrorResume(NoSuchFileException.class, e -> Mono.error(new ObjectNotFoundException(String.format("Cannot locate %s within %s", blobId.asString(), bucketName.asString()), e)))
             .subscribeOn(Schedulers.boundedElastic());
+    }
+
+
+    @Override
+    public Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId) {
+        return readBytes(bucketName, blobId).map(BytesBlob::of);
     }
 
     @Override

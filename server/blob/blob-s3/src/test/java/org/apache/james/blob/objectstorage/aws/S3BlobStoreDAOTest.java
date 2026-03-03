@@ -158,7 +158,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         TestBlobId blobId = new TestBlobId("id");
         Mono.from(store.saveBlob(fallbackBucket, blobId, ELEVEN_KILOBYTES)).block();
 
-        byte[] bytes = Mono.from(store.readBytes(BucketName.DEFAULT, blobId)).block();
+        byte[] bytes = Mono.from(store.readBytesBlob(BucketName.DEFAULT, blobId)).block().payload();
 
         assertThat(bytes).isEqualTo(ELEVEN_KILOBYTES.asBytes());
     }
@@ -192,7 +192,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         TestBlobId blobId = new TestBlobId("id");
         Mono.from(store.saveBlob(TEST_BUCKET_NAME, blobId, ELEVEN_KILOBYTES)).block();
 
-        assertThatThrownBy(() -> Mono.from(store.readBytes(BucketName.DEFAULT, blobId)).block())
+        assertThatThrownBy(() -> Mono.from(store.readBytesBlob(BucketName.DEFAULT, blobId)).block().payload())
             .isExactlyInstanceOf(ObjectNotFoundException.class);
     }
 }

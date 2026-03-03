@@ -108,15 +108,15 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return Mono.from(underlying.readBytes(bucketName, blobId))
-            .map(Throwing.function(bytes -> {
-                InputStream inputStream = decrypt(new ByteArrayInputStream(bytes));
+    public Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId) {
+        return Mono.from(underlying.readBytesBlob(bucketName, blobId))
+            .map(Throwing.function(bytesBlob -> {
+                InputStream inputStream = decrypt(new ByteArrayInputStream(bytesBlob.payload()));
                 try (UnsynchronizedByteArrayOutputStream outputStream = UnsynchronizedByteArrayOutputStream.builder()
-                    .setBufferSize(bytes.length + PBKDF2StreamingAeadFactory.SEGMENT_SIZE)
+                    .setBufferSize(bytesBlob.payload().length + PBKDF2StreamingAeadFactory.SEGMENT_SIZE)
                     .get()) {
                     IOUtils.copy(inputStream, outputStream);
-                    return outputStream.toByteArray();
+                    return BytesBlob.of(outputStream.toByteArray(), bytesBlob.metadata());
                 }
             }));
     }

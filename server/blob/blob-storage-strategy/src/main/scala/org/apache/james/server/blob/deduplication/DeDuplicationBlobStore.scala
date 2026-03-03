@@ -163,7 +163,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   override def readBytes(bucketName: BucketName, blobId: BlobId): Publisher[Array[Byte]] = {
     Preconditions.checkNotNull(bucketName)
 
-    blobStoreDAO.readBytes(bucketName, blobId)
+    SMono(blobStoreDAO.readBytesBlob(bucketName, blobId)).map(_.payload())
   }
 
   override def read(bucketName: BucketName, blobId: BlobId): InputStream = {

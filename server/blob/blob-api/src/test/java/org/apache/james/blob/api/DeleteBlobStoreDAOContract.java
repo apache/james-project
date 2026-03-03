@@ -210,7 +210,7 @@ public interface DeleteBlobStoreDAOContract {
         ConcurrentTestRunner.builder()
             .operation(((threadNumber, step) -> {
                 try {
-                    byte[] read = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
+                    byte[] read = Mono.from(store.readBytesBlob(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
                     String string = IOUtils.toString(read, StandardCharsets.UTF_8.displayName());
                     if (!string.equals(TWELVE_MEGABYTES_STRING)) {
                         throw new RuntimeException("Should not read partial blob when an other thread is deleting it. Size : " + string.length());
@@ -243,10 +243,10 @@ public interface DeleteBlobStoreDAOContract {
 
     default Mono<Void> checkConcurrentMixedOperation() {
         return
-            Mono.from(testee().readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID))
+            Mono.from(testee().readBytesBlob(TEST_BUCKET_NAME, TEST_BLOB_ID))
                 //assertj is very cpu-intensive, let's compute the assertion only when arrays are different
-                .filter(bytes -> !Arrays.equals(bytes, TWELVE_MEGABYTES.payload()))
-                .doOnNext(bytes -> assertThat(bytes).isEqualTo(TWELVE_MEGABYTES))
+                .filter(bytes -> !Arrays.equals(bytes.payload(), TWELVE_MEGABYTES.payload()))
+                .doOnNext(bytes -> assertThat(bytes.payload()).isEqualTo(TWELVE_MEGABYTES.payload()))
                 .onErrorResume(ObjectNotFoundException.class, throwable -> Mono.empty())
                 .then();
     }
