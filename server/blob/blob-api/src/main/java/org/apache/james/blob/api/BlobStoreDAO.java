@@ -34,7 +34,7 @@ import com.google.common.io.FileBackedOutputStream;
 
 public interface BlobStoreDAO {
     record BlobMetadataName(String name) {
-
+        // TODO validation (a-z,A-Z,0-9 -_) &length 128 char & non empty
     }
     record BlobMetadataValue(String value) {
 
