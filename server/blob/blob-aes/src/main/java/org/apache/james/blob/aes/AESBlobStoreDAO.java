@@ -102,9 +102,11 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.from(underlying.readReactive(bucketName, blobId))
-            .map(Throwing.function(this::decrypt));
+    public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.from(underlying.readBlobReactive(bucketName, blobId))
+            .map(InputStreamBlob::payload)
+            .map(Throwing.function(this::decrypt))
+            .map(InputStreamBlob::of);
     }
 
     @Override

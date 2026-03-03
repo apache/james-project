@@ -25,7 +25,6 @@ import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.P
 import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.SIZE;
 import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.TABLE_NAME;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -65,14 +64,15 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return Mono.from(readReactive(bucketName, blobId))
-            .block();
+        return Mono.from(readBlobReactive(bucketName, blobId))
+            .block()
+            .payload();
     }
 
     @Override
-    public Mono<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.from(readBytes(bucketName, blobId))
-            .map(ByteArrayInputStream::new);
+    public Mono<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.from(readBytesBlob(bucketName, blobId))
+            .map(BytesBlob::asInputStream);
     }
 
     @Override

@@ -57,9 +57,9 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return readBytes(bucketName, blobId)
-            .map(ByteArrayInputStream::new);
+    public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.from(readBytesBlob(bucketName, blobId))
+            .map(BytesBlob::asInputStream);
     }
 
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {

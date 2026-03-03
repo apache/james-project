@@ -141,7 +141,7 @@ public interface BlobStoreDAO {
      */
     InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
 
-    Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId);
+    Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId);
 
     Publisher<BytesBlob> readBytesBlob(BucketName bucketName, BlobId blobId);
 

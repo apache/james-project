@@ -147,14 +147,14 @@ public class S3BlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
+    public Publisher<InputStreamBlob> readBlobReactive(BucketName bucketName, BlobId blobId) {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
             .publishOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-            .map(res -> ReactorUtils.toInputStream(res.flux));
+            .map(res -> InputStreamBlob.of(ReactorUtils.toInputStream(res.flux)));
     }
 
     private static class FluxResponse {
