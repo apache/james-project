@@ -3629,7 +3629,7 @@
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
-                    <version>4.9.6</version>
+                    <version>4.9.10</version>
                     <configuration>
                         <recompileMode>all</recompileMode>
                         <source>${target.jdk}</source>
@@ -3652,7 +3652,7 @@
                             <compilerPlugin>
                                 <groupId>org.scalameta</groupId>
                                 <artifactId>semanticdb-scalac_${scala.version}</artifactId>
-                                <version>4.9.6</version>
+                                <version>4.15.2</version>
                             </compilerPlugin>
                         </compilerPlugins>
                     </configuration>
