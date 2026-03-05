@@ -62,9 +62,11 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.streams.Limit;
 import org.reactivestreams.Publisher;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
@@ -208,6 +210,15 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     }
 
     private Mono<Void> dispatchMessageContentDeletionEvent(MailboxId mailboxId, Username owner, MessageRepresentation message) {
+        AuditTrail.entry()
+            .action("DELETION")
+            .username(owner::asString)
+            .parameters(() -> ImmutableMap.of(
+                "mailboxId", mailboxId.serialize(),
+                "messageId", message.getMessageId().serialize(),
+                "size", Long.toString(message.getSize())))
+            .log("Message deleted");
+
         return Mono.from(contentDeletionEventBus.dispatch(EventFactory.messageContentDeleted()
             .randomEventId()
             .user(owner)
