@@ -25,6 +25,7 @@ import static io.restassured.RestAssured.with;
 import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
+import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_OTHER_USER;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_GENERATOR;
 import static org.apache.james.vault.DeletedMessageFixture.DELETION_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.DELIVERY_DATE;
@@ -2361,5 +2362,117 @@ class DeletedMessagesVaultRoutesTest {
     private void storeDeletedMessage(DeletedMessage deletedMessage) {
         Mono.from(Mono.from(vault.append(deletedMessage, new ByteArrayInputStream(CONTENT))))
             .block();
+    }
+
+    @Nested
+    class BrowseMessagesTest {
+
+        private static final String BOB_MESSAGES_PATH = BOB_PATH + SEPARATOR + MESSAGE_PATH_PARAM;
+
+        @Test
+        void browseMessagesShouldReturn404WhenUserDoesNotExist() {
+            given()
+                .body(MATCH_ALL_QUERY)
+            .when()
+                .post(USERS + SEPARATOR + "unknown@apache.org" + SEPARATOR + MESSAGE_PATH_PARAM)
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
+        void browseMessagesShouldReturn400WhenQueryBodyIsInvalid() {
+            given()
+                .body("{\"invalid\": \"json query\"}")
+            .when()
+                .post(BOB_MESSAGES_PATH)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400);
+        }
+
+        @Test
+        void browseMessagesShouldReturnEmptyListWhenVaultIsEmpty() {
+            given()
+                .body(MATCH_ALL_QUERY)
+            .when()
+                .post(BOB_MESSAGES_PATH)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .body("", hasSize(0));
+        }
+
+        @Test
+        void browseMessagesShouldReturnStoredMessages() {
+            storeDeletedMessage(DELETED_MESSAGE);
+            storeDeletedMessage(DELETED_MESSAGE_2);
+
+            given()
+                .body(MATCH_ALL_QUERY)
+            .when()
+                .post(BOB_MESSAGES_PATH)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .body("", hasSize(2));
+        }
+
+        @Test
+        void browseMessagesShouldReturnMessageFields() {
+            storeDeletedMessage(DELETED_MESSAGE);
+
+            given()
+                .body(MATCH_ALL_QUERY)
+            .when()
+                .post(BOB_MESSAGES_PATH)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .body("[0].messageId", is(MESSAGE_ID.serialize()))
+                .body("[0].owner", is(USERNAME.asString()))
+                .body("[0].hasAttachment", is(false))
+                .body("[0].size", is((int) CONTENT.length))
+                .body("[0].deliveryDate", is(notNullValue()))
+                .body("[0].deletionDate", is(notNullValue()))
+                .body("[0].originMailboxes", hasSize(2))
+                .body("[0].recipients", hasSize(2));
+        }
+
+        @Test
+        void browseMessagesShouldNotReturnMessagesFromOtherUsers() {
+            storeDeletedMessage(DELETED_MESSAGE);
+            Mono.from(vault.append(DELETED_MESSAGE_OTHER_USER, new ByteArrayInputStream(CONTENT))).block();
+
+            given()
+                .body(MATCH_ALL_QUERY)
+            .when()
+                .post(BOB_MESSAGES_PATH)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .body("", hasSize(1))
+                .body("[0].messageId", is(MESSAGE_ID.serialize()));
+        }
+
+        @Test
+        void browseMessagesShouldFilterByCriteria() {
+            storeDeletedMessage(DELETED_MESSAGE);
+            storeDeletedMessage(DELETED_MESSAGE_2);
+
+            String subjectQuery = "{" +
+                "\"combinator\": \"and\"," +
+                "\"criteria\": [{" +
+                "  \"fieldName\": \"subject\"," +
+                "  \"operator\": \"equals\"," +
+                "  \"value\": \"" + SUBJECT + "\"" +
+                "}]}";
+
+            DeletedMessage messageWithSubject = FINAL_STAGE.get().subject(SUBJECT).build();
+            storeDeletedMessage(messageWithSubject);
+
+            given()
+                .body(subjectQuery)
+            .when()
+                .post(BOB_MESSAGES_PATH)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .body("", hasSize(1))
+                .body("[0].messageId", is(MESSAGE_ID.serialize()));
+        }
     }
 }
