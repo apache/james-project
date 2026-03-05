@@ -143,6 +143,15 @@ trait EmailQueryMethodContract {
       .build
   }
 
+  private def buildTestMessage(sentAt: Date): Message = {
+    Message.Builder
+      .of
+      .setDate(sentAt)
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+  }
+
   @Test
   def hasAttachmentShouldKeepMessageWithAttachmentWhenTrue(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
@@ -5018,21 +5027,20 @@ trait EmailQueryMethodContract {
   @Test
   def combiningSortPositionAndLimitShouldYieldExpectedResult(server: GuiceJamesServer): Unit = {
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val message: Message = buildTestMessage
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
         .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
-        .build(message))
+        .build(buildTestMessage(Date.from(ZonedDateTime.now().minusDays(3).toInstant))))
       .getMessageId
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
         .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
-        .build(message))
+        .build(buildTestMessage(Date.from(ZonedDateTime.now().minusDays(2).toInstant))))
       .getMessageId
     val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
         .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
-        .build(message))
+        .build(buildTestMessage(Date.from(ZonedDateTime.now().minusDays(1).toInstant))))
       .getMessageId
 
     val request =
