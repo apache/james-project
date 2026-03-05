@@ -168,7 +168,8 @@ public class QueryTranslator {
             .put(FieldName.SUBJECT, EQUALS, testedValue -> CriterionFactory.subject().equals(STRING_PARSER.parse(testedValue)))
             .put(FieldName.SUBJECT, EQUALS_IGNORE_CASE, testedValue -> CriterionFactory.subject().equalsIgnoreCase(STRING_PARSER.parse(testedValue)))
             .put(FieldName.SUBJECT, CONTAINS, testedValue -> CriterionFactory.subject().contains(STRING_PARSER.parse(testedValue)))
-            .put(FieldName.SUBJECT, CONTAINS_IGNORE_CASE, testedValue -> CriterionFactory.subject().containsIgnoreCase(STRING_PARSER.parse(testedValue)));
+            .put(FieldName.SUBJECT, CONTAINS_IGNORE_CASE, testedValue -> CriterionFactory.subject().containsIgnoreCase(STRING_PARSER.parse(testedValue)))
+            .put(FieldName.MESSAGE_ID, EQUALS, testedValue -> CriterionFactory.messageId().equals(STRING_PARSER.parse(testedValue)));
     }
 
     private Criterion<?> translate(CriterionDTO dto) throws QueryTranslatorException {

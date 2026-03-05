@@ -4595,6 +4595,21 @@ curl -XPOST http://ip:port/deletedMessages/users/user@domain.ext/messages
 }
 ....
 
+To retrieve a specific message by its id:
+
+....
+{
+  "combinator": "and",
+  "criteria": [
+    {
+      "fieldName": "messageId",
+      "operator": "equals",
+      "value": "3294a976-ce63-491e-bd52-1b6f465ed7a2"
+    }
+  ]
+}
+....
+
 The query body follows the same structure as link:#_restore_deleted_messages[Restore Deleted Messages].
 Pass an empty criteria list to retrieve all deleted messages:
 
@@ -4738,6 +4753,10 @@ field matching. Tested value is a string serialized of mailbox id.
 Supports list mailbox id operators:
 ** contains: does the tested deleted message’s originMailbox ids contain
 tested mailbox id ?
+* messageId: represents for deleted message `messageId` field matching.
+Tested value is a string serialized message id. Supports string operator:
+** equals: does the tested deleted message’s messageId equal the tested
+value?
 
 Messages in the Deleted Messages Vault of a specified user that are
 matched with Query Json Object in the body will be appended to his

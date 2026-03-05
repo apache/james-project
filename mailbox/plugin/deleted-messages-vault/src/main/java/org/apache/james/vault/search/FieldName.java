@@ -25,7 +25,8 @@ public enum FieldName {
     SENDER("sender"),
     HAS_ATTACHMENT("hasAttachment"),
     ORIGIN_MAILBOXES("originMailboxes"),
-    SUBJECT("subject");
+    SUBJECT("subject"),
+    MESSAGE_ID("messageId");
 
     private final String value;
 

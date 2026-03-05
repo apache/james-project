@@ -22,6 +22,7 @@ package org.apache.james.vault.search;
 import static org.apache.james.vault.search.DeletedMessageField.DELETION_DATE;
 import static org.apache.james.vault.search.DeletedMessageField.DELIVERY_DATE;
 import static org.apache.james.vault.search.DeletedMessageField.HAS_ATTACHMENT;
+import static org.apache.james.vault.search.DeletedMessageField.MESSAGE_ID;
 import static org.apache.james.vault.search.DeletedMessageField.ORIGIN_MAILBOXES;
 import static org.apache.james.vault.search.DeletedMessageField.RECIPIENTS;
 import static org.apache.james.vault.search.DeletedMessageField.SENDER;
@@ -117,6 +118,10 @@ public interface CriterionFactory {
 
     static StringCriterionFactory subject() {
         return new StringCriterionFactory(Criterion.Builder.forField(SUBJECT));
+    }
+
+    static StringCriterionFactory messageId() {
+        return new StringCriterionFactory(Criterion.Builder.forField(MESSAGE_ID));
     }
 
     static Criterion<Collection<MailboxId>> containsOriginMailbox(MailboxId mailboxId) {

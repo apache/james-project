@@ -40,8 +40,6 @@ import org.apache.james.vault.dto.query.QueryTranslator;
 import org.apache.james.vault.search.Query;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
-
-import reactor.core.publisher.Flux;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -52,6 +50,7 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import reactor.core.publisher.Flux;
 import spark.Request;
 import spark.Route;
 import spark.Service;
