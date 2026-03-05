@@ -5029,17 +5029,14 @@ trait EmailQueryMethodContract {
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
         .build(buildTestMessage(Date.from(ZonedDateTime.now().minusDays(3).toInstant))))
       .getMessageId
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
         .build(buildTestMessage(Date.from(ZonedDateTime.now().minusDays(2).toInstant))))
       .getMessageId
     val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
-        .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
         .build(buildTestMessage(Date.from(ZonedDateTime.now().minusDays(1).toInstant))))
       .getMessageId
 
