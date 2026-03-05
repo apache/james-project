@@ -4576,6 +4576,68 @@ _restore_ users deleted messages or export them in an archive.
 To move deleted messages in the vault, you need to specifically
 configure the DeletedMessageVault PreDeletionHook.
 
+=== Browse Deleted Messages
+
+Deleted messages of a specific user can be listed by calling the following endpoint:
+
+....
+curl -XPOST http://ip:port/deletedMessages/users/user@domain.ext/messages
+
+{
+  "combinator": "and",
+  "criteria": [
+    {
+      "fieldName": "subject",
+      "operator": "containsIgnoreCase",
+      "value": "Apache James"
+    }
+  ]
+}
+....
+
+The query body follows the same structure as link:#_restore_deleted_messages[Restore Deleted Messages].
+Pass an empty criteria list to retrieve all deleted messages:
+
+....
+{
+  "combinator": "and",
+  "criteria": []
+}
+....
+
+Response code:
+
+* 200: List of deleted messages matching the query
+* 400: Bad request:
+** user parameter is invalid
+** can not parse the JSON body
+** Json query object contains unsupported operator, fieldName
+** Json query object values violate parsing rules
+* 404: User not found
+
+Response body is a JSON array:
+
+....
+[
+  {
+    "messageId": "3294a976-ce63-491e-bd52-1b6f465ed7a2",
+    "originMailboxes": [
+      "02874f7c-d10e-102f-acda-0015176f7922"
+    ],
+    "owner": "user@domain.ext",
+    "deliveryDate": "2014-10-30T14:12:00Z",
+    "deletionDate": "2015-10-20T09:08:00Z",
+    "sender": "sender@apache.org",
+    "recipients": [
+      "recipient@james.org"
+    ],
+    "subject": "Apache James",
+    "hasAttachment": false,
+    "size": 1234
+  }
+]
+....
+
 === Restore Deleted Messages
 
 Deleted messages of a specific user can be restored by calling the
