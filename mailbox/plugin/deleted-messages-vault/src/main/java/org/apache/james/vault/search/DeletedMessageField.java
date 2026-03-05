@@ -22,6 +22,7 @@ package org.apache.james.vault.search;
 import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.DELETION_DATE_EXTRACTOR;
 import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.DELIVERY_DATE_EXTRACTOR;
 import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.HAS_ATTACHMENT_EXTRACTOR;
+import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.MESSAGE_ID_EXTRACTOR;
 import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.ORIGIN_MAILBOXES_EXTRACTOR;
 import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.RECIPIENTS_EXTRACTOR;
 import static org.apache.james.vault.search.DeletedMessageField.ValueExtractor.SENDER_EXTRACTOR;
@@ -63,6 +64,7 @@ public class DeletedMessageField<T> {
         ValueExtractor<Boolean> HAS_ATTACHMENT_EXTRACTOR = deletedMessage -> Optional.of(deletedMessage.hasAttachment());
         ValueExtractor<Collection<MailboxId>> ORIGIN_MAILBOXES_EXTRACTOR = deletedMessage -> Optional.of(deletedMessage.getOriginMailboxes());
         ValueExtractor<String> SUBJECT_EXTRACTOR = DeletedMessage::getSubject;
+        ValueExtractor<String> MESSAGE_ID_EXTRACTOR = deletedMessage -> Optional.of(deletedMessage.getMessageId().serialize());
     }
 
     static final DeletedMessageField<ZonedDateTime> DELETION_DATE = new DeletedMessageField<>(FieldName.DELETION_DATE, DELETION_DATE_EXTRACTOR);
@@ -72,5 +74,6 @@ public class DeletedMessageField<T> {
     static final DeletedMessageField<Boolean> HAS_ATTACHMENT = new DeletedMessageField<>(FieldName.HAS_ATTACHMENT, HAS_ATTACHMENT_EXTRACTOR);
     static final DeletedMessageField<Collection<MailboxId>> ORIGIN_MAILBOXES = new DeletedMessageField<>(FieldName.ORIGIN_MAILBOXES, ORIGIN_MAILBOXES_EXTRACTOR);
     static final DeletedMessageField<String> SUBJECT = new DeletedMessageField<>(FieldName.SUBJECT, SUBJECT_EXTRACTOR);
+    static final DeletedMessageField<String> MESSAGE_ID = new DeletedMessageField<>(FieldName.MESSAGE_ID, MESSAGE_ID_EXTRACTOR);
 
 }
