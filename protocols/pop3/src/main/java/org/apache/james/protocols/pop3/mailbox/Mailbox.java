@@ -34,6 +34,15 @@ public interface Mailbox {
     InputStream getMessage(String uid) throws IOException;
 
     /**
+     * Return only the headers as {@link InputStream} for the given <code>uid</code>.
+     * Implementations may override this for better performance (e.g. using FetchGroup.HEADERS).
+     * @exception IOException If message can not be found or is inaccessible
+     */
+    default InputStream getMessageHeaders(String uid) throws IOException {
+        return getMessage(uid);
+    }
+
+    /**
      * Return a immutable {@link List} which holds the {@link MessageMetaData}
      * for all messages in the {@link Mailbox}
      */
