@@ -21,6 +21,7 @@ package org.apache.james.imap.processor;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -31,12 +32,14 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 
@@ -56,6 +59,16 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
             .flatMap(Throwing.function(mailbox -> {
                 if (getMailboxManager().hasRight(mailbox.getMailboxEntity(), MailboxACL.Right.PerformExpunge, mailboxSession)) {
                     return mailbox.expungeReactive(MessageRange.all(), mailboxSession)
+                        .count()
+                        .flatMap(count -> ReactorUtils.logAsMono(() -> AuditTrail.entry()
+                            .username(() -> mailboxSession.getUser().asString())
+                            .sessionId(() -> session.sessionId().asString())
+                            .protocol("IMAP")
+                            .action("CLOSE")
+                            .parameters(() -> ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
+                                "mailboxId", mailbox.getId().serialize()))
+                            .log(String.format("IMAP CLOSE succeeded. %d message expunged.", count)))
+                            .thenReturn(count))
                         .then(session.deselect())
                         // Don't send HIGHESTMODSEQ when close. Like correct in the ERRATA of RFC5162
                         // See http://www.rfc-editor.org/errata_search.php?rfc=5162
