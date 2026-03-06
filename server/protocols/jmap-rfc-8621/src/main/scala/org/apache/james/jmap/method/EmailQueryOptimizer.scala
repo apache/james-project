@@ -42,29 +42,30 @@ class EmailQueryViewOptimizer @Inject() (mailboxManager: MailboxManager,
                                          val configuration: JMAPConfiguration,
                                          val emailQueryViewManager: EmailQueryViewManager) extends EmailQueryOptimizer {
   override def apply(request: EmailQueryRequest, session: MailboxSession, searchQuery: MultimailboxesSearchQuery, position: Position, limit: Limit): Option[SFlux[MessageId]] =
-    request match {
-      case request: EmailQueryRequest if matchesInMailboxSortedByReceivedAt(request) =>
-        Some(queryViewForListingSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace))
-      case request: EmailQueryRequest if matchesInMailboxAfterSortedByReceivedAt(request) =>
-        Some(queryViewForContentAfterSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace))
-      case request: EmailQueryRequest if matchesInMailboxBeforeSortedByReceivedAt(request) =>
-        Some(queryViewForContentBeforeSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace))
-      case _ => None
+    if (configuration.isEmailQueryViewEnabled) {
+      request match {
+        case request: EmailQueryRequest if matchesInMailboxSortedByReceivedAt(request) =>
+          Some(queryViewForListingSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace))
+        case request: EmailQueryRequest if matchesInMailboxAfterSortedByReceivedAt(request) =>
+          Some(queryViewForContentAfterSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace))
+        case request: EmailQueryRequest if matchesInMailboxBeforeSortedByReceivedAt(request) =>
+          Some(queryViewForContentBeforeSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace))
+        case _ => None
+      }
+    } else {
+      None
     }
 
   private def matchesInMailboxSortedByReceivedAt(request: EmailQueryRequest): Boolean =
-    configuration.isEmailQueryViewEnabled &&
-      request.filter.exists(_.inMailboxFilterOnly) &&
+    request.filter.exists(_.inMailboxFilterOnly) &&
       request.sort.contains(Set(Comparator.RECEIVED_AT_DESC))
 
   private def matchesInMailboxAfterSortedByReceivedAt(request: EmailQueryRequest): Boolean =
-    configuration.isEmailQueryViewEnabled &&
-      request.filter.exists(_.inMailboxAndAfterFilterOnly) &&
+    request.filter.exists(_.inMailboxAndAfterFilterOnly) &&
       request.sort.contains(Set(Comparator.RECEIVED_AT_DESC))
 
   private def matchesInMailboxBeforeSortedByReceivedAt(request: EmailQueryRequest): Boolean =
-    configuration.isEmailQueryViewEnabled &&
-      request.filter.exists(_.inMailboxAndBeforeFilterOnly) &&
+    request.filter.exists(_.inMailboxAndBeforeFilterOnly) &&
       request.sort.contains(Set(Comparator.RECEIVED_AT_DESC))
 
   private def queryViewForListingSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SFlux[MessageId] = {
