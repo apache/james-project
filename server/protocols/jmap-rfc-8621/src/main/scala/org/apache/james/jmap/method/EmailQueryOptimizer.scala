@@ -22,6 +22,7 @@ package org.apache.james.jmap.method
 import java.time.ZonedDateTime
 
 import jakarta.inject.Inject
+import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.projections.EmailQueryViewManager
 import org.apache.james.jmap.core.Limit.Limit
 import org.apache.james.jmap.core.Position.Position
@@ -38,6 +39,7 @@ trait EmailQueryOptimizer {
 }
 
 class EmailQueryViewOptimizer @Inject() (mailboxManager: MailboxManager,
+                                         val configuration: JMAPConfiguration,
                                          val emailQueryViewManager: EmailQueryViewManager) extends EmailQueryOptimizer {
   override def apply(request: EmailQueryRequest, session: MailboxSession, searchQuery: MultimailboxesSearchQuery, position: Position, limit: Limit): Option[SFlux[MessageId]] =
     request match {
@@ -51,15 +53,18 @@ class EmailQueryViewOptimizer @Inject() (mailboxManager: MailboxManager,
     }
 
   private def matchesInMailboxSortedByReceivedAt(request: EmailQueryRequest): Boolean =
-    request.filter.exists(_.inMailboxFilterOnly) &&
+    configuration.isEmailQueryViewEnabled &&
+      request.filter.exists(_.inMailboxFilterOnly) &&
       request.sort.contains(Set(Comparator.RECEIVED_AT_DESC))
 
   private def matchesInMailboxAfterSortedByReceivedAt(request: EmailQueryRequest): Boolean =
-    request.filter.exists(_.inMailboxAndAfterFilterOnly) &&
+    configuration.isEmailQueryViewEnabled &&
+      request.filter.exists(_.inMailboxAndAfterFilterOnly) &&
       request.sort.contains(Set(Comparator.RECEIVED_AT_DESC))
 
   private def matchesInMailboxBeforeSortedByReceivedAt(request: EmailQueryRequest): Boolean =
-    request.filter.exists(_.inMailboxAndBeforeFilterOnly) &&
+    configuration.isEmailQueryViewEnabled &&
+      request.filter.exists(_.inMailboxAndBeforeFilterOnly) &&
       request.sort.contains(Set(Comparator.RECEIVED_AT_DESC))
 
   private def queryViewForListingSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SFlux[MessageId] = {

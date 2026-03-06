@@ -22,7 +22,6 @@ import cats.implicits._
 import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import jakarta.mail.Flags.Flag.DELETED
-import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.Limit.Limit
@@ -46,7 +45,6 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier,
                                   val sessionTranslator: SessionTranslator,
-                                  val configuration: JMAPConfiguration,
                                   val javaEmailQueryOptimizers: java.util.Set[EmailQueryOptimizer]) extends MethodRequiringAccountId[EmailQueryRequest] {
   private val emailQueryOptimizers: Set[EmailQueryOptimizer] = javaEmailQueryOptimizers.asScala.toSet
 
@@ -97,13 +95,9 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   }
 
   private def executeQueryOptimizers(session: MailboxSession, request: EmailQueryRequest, searchQuery: MultimailboxesSearchQuery, position: Position, limit: Limit): Option[SFlux[MessageId]] =
-    if (configuration.isEmailQueryViewEnabled) {
-      emailQueryOptimizers.iterator
-        .map(_.apply(request, session, searchQuery, position, limit))
-        .collectFirst { case Some(result) => result }
-    } else {
-      None
-    }
+    emailQueryOptimizers.iterator
+      .map(_.apply(request, session, searchQuery, position, limit))
+      .collectFirst { case Some(result) => result }
 
   private def getCollapseThreads(request: EmailQueryRequest): Boolean =
     request.collapseThreads match {
