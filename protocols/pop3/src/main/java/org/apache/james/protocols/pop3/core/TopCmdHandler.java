@@ -60,8 +60,9 @@ public class TopCmdHandler extends AbstractPOP3CommandHandler implements CapaCap
                 if (args.getLineCount().isEmpty()) {
                     return handleSyntaxError();
                 }
-                InputStream content = getMessageContent(session, data);
-                InputStream in = new CountingBodyInputStream(new CRLFTerminatedInputStream(new ExtraDotInputStream(content)), args.getLineCount().get());
+                int lineCount = args.getLineCount().get();
+                InputStream content = lineCount == 0 ? getMessageHeaders(session, data) : getMessageContent(session, data);
+                InputStream in = new CountingBodyInputStream(new CRLFTerminatedInputStream(new ExtraDotInputStream(content)), lineCount);
                 return new POP3StreamResponse(POP3Response.OK_RESPONSE, "Message follows", in);
             }
 
@@ -93,6 +94,10 @@ public class TopCmdHandler extends AbstractPOP3CommandHandler implements CapaCap
 
     protected InputStream getMessageContent(POP3Session session, MessageMetaData data) throws IOException {
         return session.getUserMailbox().getMessage(data.getUid());
+    }
+
+    protected InputStream getMessageHeaders(POP3Session session, MessageMetaData data) throws IOException {
+        return session.getUserMailbox().getMessageHeaders(data.getUid());
     }
 
     @Override
