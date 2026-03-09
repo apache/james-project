@@ -74,6 +74,7 @@ class MessageUtils {
 
             updatedFlags.add(UpdatedFlags.builder()
                 .uid(member.getUid())
+                .internalDate(member.getInternalDate())
                 .modSeq(member.getModSeq())
                 .newFlags(newFlags)
                 .oldFlags(originalFlags)

@@ -127,6 +127,7 @@ public class SolveMessageInconsistenciesService {
                         .modSeq(id.getModSeq())
                         .messageId(id.getComposedMessageId().getMessageId())
                         .uid(id.getComposedMessageId().getUid())
+                        .internalDate(messageFromImapUid.getInternalDate())
                         .build())
                 .doOnSuccess(any -> notifySuccess(context))
                 .thenReturn(Task.Result.COMPLETED)

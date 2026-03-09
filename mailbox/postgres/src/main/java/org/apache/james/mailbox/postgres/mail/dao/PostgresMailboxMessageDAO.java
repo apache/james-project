@@ -21,6 +21,7 @@ package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
 import static org.apache.james.backends.postgres.PostgresCommons.IN_CLAUSE_MAX_SIZE;
+import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
 import static org.apache.james.backends.postgres.PostgresCommons.UNNEST_FIELD;
 import static org.apache.james.backends.postgres.PostgresCommons.tableField;
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.EAGER_FETCH;
@@ -49,7 +50,9 @@ import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageD
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_MESSAGE_METADATA_FUNCTION;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_MESSAGE_UID_FUNCTION;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -675,6 +678,15 @@ public class PostgresMailboxMessageDAO {
                 .where(MESSAGE_ID.eq(messageId.asUuid()))
                 .and(MAILBOX_ID.eq(mailboxId.asUuid()))), EAGER_FETCH)
             .map(RECORD_TO_COMPOSED_MESSAGE_ID_WITH_META_DATA_FUNCTION);
+    }
+
+    public Mono<Optional<Date>> retrieveInternalDate(PostgresMailboxId mailboxId, MessageUid uid) {
+        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(INTERNAL_DATE)
+                .from(TABLE_NAME)
+                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
+                .and(MESSAGE_UID.eq(uid.asLong()))))
+            .map(record -> Optional.of(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(INTERNAL_DATE, LocalDateTime.class))))
+            .defaultIfEmpty(Optional.empty());
     }
 
 }

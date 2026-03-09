@@ -301,10 +301,12 @@ public class PostgresMessageMapper implements MessageMapper {
                                            ModSeq newModSeq) {
         Flags oldFlags = currentMetaData.getFlags();
         ComposedMessageId composedMessageId = currentMetaData.getComposedMessageId();
+        Mono<Optional<Date>> internalDate = mailboxMessageDAO.retrieveInternalDate((PostgresMailboxId) composedMessageId.getMailboxId(), composedMessageId.getUid());
 
         if (oldFlags.equals(flagsUpdateCalculator.buildNewFlags(oldFlags))) {
-            return Mono.just(UpdatedFlags.builder()
+            return internalDate.map(date -> UpdatedFlags.builder()
                 .messageId(composedMessageId.getMessageId())
+                .internalDate(date)
                 .oldFlags(oldFlags)
                 .newFlags(oldFlags)
                 .uid(composedMessageId.getUid())
@@ -323,13 +325,15 @@ public class PostgresMessageMapper implements MessageMapper {
                         default:
                             return Mono.error(() -> new RuntimeException("Unknown MessageRange type " + mode));
                     }
-                }).map(updatedFlags -> UpdatedFlags.builder()
-                    .messageId(composedMessageId.getMessageId())
-                    .oldFlags(oldFlags)
-                    .newFlags(updatedFlags)
-                    .uid(composedMessageId.getUid())
-                    .modSeq(newModSeq)
-                    .build());
+                }).flatMap(updatedFlags -> internalDate
+                    .map(date -> UpdatedFlags.builder()
+                        .messageId(composedMessageId.getMessageId())
+                        .internalDate(date)
+                        .oldFlags(oldFlags)
+                        .newFlags(updatedFlags)
+                        .uid(composedMessageId.getUid())
+                        .modSeq(newModSeq)
+                        .build()));
         }
     }
 
@@ -353,6 +357,7 @@ public class PostgresMessageMapper implements MessageMapper {
                 .flatMapMany(newModSeq -> mailboxMessageDAO.resetRecentFlag(mailboxId, List.copyOf(uidMapping.keySet()), newModSeq))
                 .map(newMetaData -> UpdatedFlags.builder()
                     .messageId(newMetaData.getMessageId())
+                    .internalDate(newMetaData.getInternalDate())
                     .modSeq(newMetaData.getModSeq())
                     .oldFlags(uidMapping.get(newMetaData.getUid()).getFlags())
                     .newFlags(newMetaData.getFlags())
