@@ -40,9 +40,6 @@ import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 import com.google.common.collect.ImmutableList;
 
 public class MailboxAdapter implements Mailbox {
-    private static final FetchGroup FULL_GROUP = FetchGroup.FULL_CONTENT;
-    private static final FetchGroup METADATA_GROUP = FetchGroup.MINIMAL;
-
     private final MessageManager manager;
     private final MailboxSession session;
 
@@ -58,7 +55,7 @@ public class MailboxAdapter implements Mailbox {
     public InputStream getMessage(String uid) throws IOException {
         try {
             mailboxManager.startProcessingRequest(session);
-            Iterator<MessageResult> results = manager.getMessages(MessageUid.of(Long.parseLong(uid)).toRange(), FULL_GROUP, session);
+            Iterator<MessageResult> results = manager.getMessages(MessageUid.of(Long.parseLong(uid)).toRange(), FetchGroup.FULL_CONTENT, session);
             if (results.hasNext()) {
                 return results.next().getFullContent().getInputStream();
             } else {
@@ -72,10 +69,27 @@ public class MailboxAdapter implements Mailbox {
     }
 
     @Override
+    public InputStream getMessageHeaders(String uid) throws IOException {
+        try {
+            mailboxManager.startProcessingRequest(session);
+            Iterator<MessageResult> results = manager.getMessages(MessageUid.of(Long.parseLong(uid)).toRange(), FetchGroup.HEADERS, session);
+            if (results.hasNext()) {
+                return results.next().getHeaders().getInputStream();
+            } else {
+                throw new IOException("Message does not exist for uid " + uid);
+            }
+        } catch (MailboxException e) {
+            throw new IOException("Unable to retrieve message headers for uid " + uid, e);
+        } finally {
+            mailboxManager.endProcessingRequest(session);
+        }
+    }
+
+    @Override
     public List<MessageMetaData> getMessages() throws IOException {
         try {
             mailboxManager.startProcessingRequest(session);
-            Iterator<MessageResult> results = manager.getMessages(MessageRange.all(), METADATA_GROUP, session);
+            Iterator<MessageResult> results = manager.getMessages(MessageRange.all(), FetchGroup.MINIMAL, session);
             List<MessageMetaData> mList = new ArrayList<>();
             while (results.hasNext()) {
                 MessageResult result = results.next();

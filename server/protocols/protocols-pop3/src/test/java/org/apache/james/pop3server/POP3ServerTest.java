@@ -550,6 +550,44 @@ public class POP3ServerTest {
     }
 
     @Test
+    void topWithZeroLinesShouldReturnOnlyHeaders() throws Exception {
+        finishSetUp(pop3Configuration);
+
+        pop3Client = new POP3Client();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        Username username = Username.of("topzero");
+        usersRepository.addUser(username, "password");
+
+        MailboxPath mailboxPath = MailboxPath.inbox(username);
+        MailboxSession session = mailboxManager.authenticate(username, "password").withoutDelegation();
+        mailboxManager.createMailbox(mailboxPath, session);
+        setupTestMails(session, mailboxManager.getMailbox(mailboxPath, session));
+
+        pop3Client.login("topzero", "password");
+        POP3MessageInfo[] entries = pop3Client.listMessages();
+
+        Reader reader = pop3Client.retrieveMessageTop(entries[0].number, 0);
+        assertThat(reader).isNotNull();
+
+        StringBuilder responseBody = new StringBuilder();
+        char[] buffer = new char[1024];
+        int n;
+        while ((n = reader.read(buffer)) != -1) {
+            responseBody.append(buffer, 0, n);
+        }
+        reader.close();
+
+        String response = responseBody.toString();
+        assertThat(response).contains("Return-path: return@test.com");
+        assertThat(response).contains("Subject: test");
+        assertThat(response).doesNotContain("Body Text POP3ServerTest.setupTestMails");
+
+        mailboxManager.deleteMailbox(mailboxPath, session);
+    }
+
+    @Test
     void pop3SessionShouldTolerateConcurrentDeletes() throws Exception {
         finishSetUp(pop3Configuration);
 

@@ -115,6 +115,24 @@ public class DistributedMailboxAdapter implements Mailbox {
     }
 
     @Override
+    public InputStream getMessageHeaders(String uid) throws IOException {
+        try {
+            MessageId messageId = messageIdFactory.fromString(uid);
+            Iterator<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.HEADERS, session).iterator();
+            if (messages.hasNext()) {
+                return messages.next().getHeaders().getInputStream();
+            } else {
+                LOGGER.warn("Removing {} from {} POP3 projection for user {} as it is not backed by a MailboxMessage",
+                    uid, mailbox.getId().serialize(), session.getUser().asString());
+                Mono.from(metadataStore.remove(mailbox.getId(), messageId)).block();
+                throw new IOException("Message does not exist for uid " + uid);
+            }
+        } catch (MailboxException e) {
+            throw new IOException("Unable to retrieve message headers for uid " + uid, e);
+        }
+    }
+
+    @Override
     public List<MessageMetaData> getMessages() {
         return Flux.from(metadataStore.stat(mailbox.getId()))
             .map(message -> new MessageMetaData(message.getMessageId().serialize(), message.getSize()))
