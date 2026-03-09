@@ -22,6 +22,7 @@ package org.apache.james.jmap.event;
 import static jakarta.mail.Flags.Flag.DELETED;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -110,8 +111,9 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
 
     private Publisher<Void> handleExpunged(Expunged expunged) {
         return Flux.fromStream(expunged.getUids().stream()
-            .map(uid -> expunged.getMetaData(uid).getMessageId()))
-            .concatMap(messageId -> viewManager.getEmailQueryView(expunged.getUsername()).delete(expunged.getMailboxId(), messageId))
+            .map(expunged::getMetaData))
+            .concatMap(metaData -> viewManager.getEmailQueryView(expunged.getUsername())
+                .delete(expunged.getMailboxId(), toReceivedAt(metaData.getInternalDate().toInstant()), metaData.getMessageId()))
             .then();
     }
 
@@ -121,9 +123,7 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
 
         Mono<Void> removeMessagesMarkedAsDeleted = Flux.fromIterable(flagsUpdated.getUpdatedFlags())
             .filter(updatedFlags -> updatedFlags.isModifiedToSet(DELETED))
-            .map(UpdatedFlags::getMessageId)
-            .handle(publishIfPresent())
-            .concatMap(messageId -> viewManager.getEmailQueryView(flagsUpdated.getUsername()).delete(flagsUpdated.getMailboxId(), messageId))
+            .concatMap(updatedFlags -> deleteViewForMessageMarkedAsDeleted(flagsUpdated, session, updatedFlags))
             .then();
 
         Mono<Void> addMessagesNoLongerMarkedAsDeleted = Flux.fromIterable(flagsUpdated.getUpdatedFlags())
@@ -171,9 +171,28 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
     }
 
     public Mono<Void> handleAdded(MailboxId mailboxId, MessageResult messageResult, Username username) {
-        ZonedDateTime receivedAt = ZonedDateTime.ofInstant(messageResult.getInternalDate().toInstant(), ZoneOffset.UTC);
+        ZonedDateTime receivedAt = toReceivedAt(messageResult.getInternalDate().toInstant());
         return viewManager.getEmailQueryView(username)
             .save(mailboxId, receivedAt, messageResult.getMessageId(), messageResult.getThreadId())
             .then();
+    }
+
+    private Mono<Void> deleteViewForMessageMarkedAsDeleted(FlagsUpdated flagsUpdated, MailboxSession session, UpdatedFlags updatedFlags) {
+        return Mono.justOrEmpty(updatedFlags.getMessageId())
+            .flatMap(messageId -> resolveReceivedAt(updatedFlags, messageId, session)
+                .flatMap(receivedAt -> viewManager.getEmailQueryView(flagsUpdated.getUsername())
+                    .delete(flagsUpdated.getMailboxId(), receivedAt, messageId)))
+            .then();
+    }
+
+    private Mono<ZonedDateTime> resolveReceivedAt(UpdatedFlags updatedFlags, MessageId messageId, MailboxSession session) {
+        return Mono.justOrEmpty(updatedFlags.getInternalDate().map(date -> toReceivedAt(date.toInstant())))
+            .switchIfEmpty(Flux.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.HEADERS, session))
+                .next()
+                .map(messageResult -> toReceivedAt(messageResult.getInternalDate().toInstant())));
+    }
+
+    private ZonedDateTime toReceivedAt(Instant internalDate) {
+        return ZonedDateTime.ofInstant(internalDate, ZoneOffset.UTC);
     }
 }

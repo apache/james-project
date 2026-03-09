@@ -93,7 +93,17 @@ public interface EmailQueryViewContract {
 
     @Test
     default void deleteShouldNotFailWhenEmpty() {
-        assertThatCode(() -> testee().delete(mailboxId1(), messageId4()).block()).doesNotThrowAnyException();
+        assertThatCode(() -> testee().delete(mailboxId1(), DATE_4, messageId4()).block()).doesNotThrowAnyException();
+    }
+
+    @Test
+    default void deleteShouldRemoveSavedEntry() {
+        testee().save(mailboxId1(), DATE_4, messageId1(), threadId1()).block();
+
+        testee().delete(mailboxId1(), DATE_4, messageId1()).block();
+
+        assertThat(testee().listMailboxContentSortedByReceivedAt(mailboxId1(), Limit.limit(12), !COLLAPSE_THREAD).collectList().block())
+            .isEmpty();
     }
 
     @Test

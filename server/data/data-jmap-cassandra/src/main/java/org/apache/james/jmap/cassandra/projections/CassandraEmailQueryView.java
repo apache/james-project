@@ -24,7 +24,6 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
-import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.DATE_LOOKUP_TABLE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MAILBOX_ID;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MESSAGE_ID;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.RECEIVED_AT;
@@ -55,7 +54,6 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
-import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -67,13 +65,9 @@ public class CassandraEmailQueryView implements EmailQueryView {
     private final PreparedStatement listMailboxContentByReceivedAt;
     private final PreparedStatement listMailboxContentSinceReceivedAt;
     private final PreparedStatement listMailboxContentBeforeReceivedAt;
-    private final PreparedStatement insertInLookupTable;
     private final PreparedStatement insertReceivedAt;
-    private final PreparedStatement deleteLookupRecord;
     private final PreparedStatement deleteReceivedAt;
-    private final PreparedStatement deleteAllLookupRecords;
     private final PreparedStatement deleteAllReceivedAt;
-    private final PreparedStatement lookupDate;
 
     @Inject
     public CassandraEmailQueryView(CqlSession session) {
@@ -102,12 +96,6 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .limit(bindMarker(LIMIT_MARKER))
             .build());
 
-        insertInLookupTable = session.prepare(insertInto(DATE_LOOKUP_TABLE)
-            .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
-            .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-            .value(RECEIVED_AT, bindMarker(RECEIVED_AT))
-            .build());
-
         insertReceivedAt = session.prepare(insertInto(TABLE_NAME_RECEIVED_AT)
             .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
             .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
@@ -115,29 +103,14 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .value(THREAD_ID, bindMarker(THREAD_ID))
             .build());
 
-        deleteLookupRecord = session.prepare(deleteFrom(DATE_LOOKUP_TABLE)
-            .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
-            .whereColumn(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID))
-            .build());
-
-        deleteReceivedAt = session.prepare(QueryBuilder.deleteFrom(TABLE_NAME_RECEIVED_AT)
+        deleteReceivedAt = session.prepare(deleteFrom(TABLE_NAME_RECEIVED_AT)
             .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
             .whereColumn(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID))
             .whereColumn(RECEIVED_AT).isEqualTo(bindMarker(RECEIVED_AT))
             .build());
 
-        deleteAllLookupRecords = session.prepare(QueryBuilder.deleteFrom(DATE_LOOKUP_TABLE)
+        deleteAllReceivedAt = session.prepare(deleteFrom(TABLE_NAME_RECEIVED_AT)
             .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
-            .build());
-
-        deleteAllReceivedAt = session.prepare(QueryBuilder.deleteFrom(TABLE_NAME_RECEIVED_AT)
-            .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
-            .build());
-
-        lookupDate = session.prepare(selectFrom(DATE_LOOKUP_TABLE)
-            .all()
-            .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
-            .whereColumn(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID))
             .build());
     }
 
@@ -188,26 +161,14 @@ public class CassandraEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Mono<Void> delete(MailboxId mailboxId, MessageId messageId) {
+    public Mono<Void> delete(MailboxId mailboxId, ZonedDateTime receivedAt, MessageId messageId) {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
         CassandraId cassandraId = (CassandraId) mailboxId;
 
-        return executor.executeSingleRow(lookupDate.bind()
-            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-            .setUuid(MESSAGE_ID, cassandraMessageId.get()))
-            .flatMap(row -> doDelete(cassandraMessageId, cassandraId, row));
-    }
-
-    public Mono<? extends Void> doDelete(CassandraMessageId cassandraMessageId, CassandraId cassandraId, Row row) {
-        Instant receivedAt = row.getInstant(RECEIVED_AT);
-
         return executor.executeVoid(deleteReceivedAt.bind()
-                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-                .setUuid(MESSAGE_ID, cassandraMessageId.get())
-                .setInstant(RECEIVED_AT, receivedAt))
-            .then(executor.executeVoid(deleteLookupRecord.bind()
-                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-                .setUuid(MESSAGE_ID, cassandraMessageId.get())));
+            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
+            .setUuid(MESSAGE_ID, cassandraMessageId.get())
+            .setInstant(RECEIVED_AT, receivedAt.toInstant()));
     }
 
     @Override
@@ -215,9 +176,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
         CassandraId cassandraId = (CassandraId) mailboxId;
 
         return executor.executeVoid(deleteAllReceivedAt.bind()
-                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID))
-            .then(executor.executeVoid(deleteAllLookupRecords.bind()
-                .setUuid(MAILBOX_ID, ((CassandraId) mailboxId).asUuid())));
+            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID));
     }
 
     @Override
@@ -225,14 +184,10 @@ public class CassandraEmailQueryView implements EmailQueryView {
         CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
         CassandraId cassandraId = (CassandraId) mailboxId;
 
-        return executor.executeVoid(insertInLookupTable.bind()
+        return executor.executeVoid(insertReceivedAt.bind()
             .setUuid(MESSAGE_ID, cassandraMessageId.get())
             .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-            .setInstant(RECEIVED_AT, receivedAt.toInstant()))
-            .then(executor.executeVoid(insertReceivedAt.bind()
-                .setUuid(MESSAGE_ID, cassandraMessageId.get())
-                .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
-                .setInstant(RECEIVED_AT, receivedAt.toInstant())
-                .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())));
+            .setInstant(RECEIVED_AT, receivedAt.toInstant())
+            .setUuid(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get()));
     }
 }

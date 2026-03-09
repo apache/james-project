@@ -93,7 +93,7 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
-    public Mono<Void> delete(MailboxId mailboxId, MessageId messageId) {
+    public Mono<Void> delete(MailboxId mailboxId, ZonedDateTime receivedAt, MessageId messageId) {
         return Mono.fromRunnable(() -> entries.remove(mailboxId, messageId));
     }
 
