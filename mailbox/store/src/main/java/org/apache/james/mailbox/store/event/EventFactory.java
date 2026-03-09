@@ -29,6 +29,8 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.Function;
 
+import jakarta.mail.Flags;
+
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
@@ -206,6 +208,11 @@ public class EventFactory {
     @FunctionalInterface
     public interface RequireSize<T> {
         T size(long size);
+    }
+
+    @FunctionalInterface
+    public interface RequireFlags<T> {
+        T flags(Flags flags);
     }
 
     @FunctionalInterface
@@ -548,6 +555,7 @@ public class EventFactory {
         private final MessageId messageId;
         private final long size;
         private final Instant internalDate;
+        private final Flags flags;
         private final boolean hasAttachments;
         private final String bodyBlobId;
         private Optional<String> headerBlobId;
@@ -559,6 +567,7 @@ public class EventFactory {
                                          MessageId messageId,
                                          long size,
                                          Instant internalDate,
+                                         Flags flags,
                                          boolean hasAttachments,
                                          String bodyBlobId) {
             this.eventId = eventId;
@@ -567,6 +576,7 @@ public class EventFactory {
             this.messageId = messageId;
             this.size = size;
             this.internalDate = internalDate;
+            this.flags = flags;
             this.hasAttachments = hasAttachments;
             this.bodyBlobId = bodyBlobId;
             this.headerBlobId = Optional.empty();
@@ -589,6 +599,7 @@ public class EventFactory {
             Preconditions.checkNotNull(mailboxId);
             Preconditions.checkNotNull(messageId);
             Preconditions.checkNotNull(internalDate);
+            Preconditions.checkNotNull(flags);
             Preconditions.checkNotNull(bodyBlobId);
             Preconditions.checkArgument(headerBlobId.isPresent() || headerContent.isPresent(), "Either headerBlobId or headerContent must be present");
 
@@ -599,6 +610,7 @@ public class EventFactory {
                 messageId,
                 size,
                 internalDate,
+                flags,
                 hasAttachments,
                 headerBlobId,
                 headerContent,
@@ -692,9 +704,9 @@ public class EventFactory {
         return eventId -> user -> quotaRoot -> quotaCount -> quotaSize -> instant -> new QuotaUsageUpdatedFinalStage(eventId, user, quotaRoot, quotaCount, quotaSize, instant);
     }
 
-    public static RequireEventId<RequireUser<RequireMailboxId<RequireMessageId<RequireSize<RequireInstant<RequireHasAttachments<RequireBodyBlobId<MessageContentDeletionFinalStage>>>>>>>> messageContentDeleted() {
-        return eventId -> user -> mailboxId -> messageId -> size -> instant -> hasAttachments -> bodyBlobId ->
-            new MessageContentDeletionFinalStage(eventId, user, mailboxId, messageId, size, instant, hasAttachments, bodyBlobId);
+    public static RequireEventId<RequireUser<RequireMailboxId<RequireMessageId<RequireSize<RequireInstant<RequireFlags<RequireHasAttachments<RequireBodyBlobId<MessageContentDeletionFinalStage>>>>>>>>> messageContentDeleted() {
+        return eventId -> user -> mailboxId -> messageId -> size -> instant -> flags -> hasAttachments -> bodyBlobId ->
+            new MessageContentDeletionFinalStage(eventId, user, mailboxId, messageId, size, instant, flags, hasAttachments, bodyBlobId);
     }
 
     public static RequireMailboxEvent<MailboxSubscribedFinalStage> mailboxSubscribed() {

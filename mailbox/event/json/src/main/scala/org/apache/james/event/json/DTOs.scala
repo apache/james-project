@@ -114,6 +114,7 @@ object DTOs {
   case class Flags(systemFlags: Seq[SystemFlag], userFlags: Seq[UserFlag])
 
   object Flags {
+    val empty: Flags = Flags(Seq.empty, Seq.empty)
 
     def toJavaFlags(scalaFlags: Flags): JavaMailFlags = {
       new FlagsBuilder { builder =>
