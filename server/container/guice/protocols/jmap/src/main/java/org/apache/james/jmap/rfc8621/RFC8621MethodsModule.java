@@ -63,6 +63,8 @@ import org.apache.james.jmap.method.EmailGetMethod;
 import org.apache.james.jmap.method.EmailImportMethod;
 import org.apache.james.jmap.method.EmailParseMethod;
 import org.apache.james.jmap.method.EmailQueryMethod;
+import org.apache.james.jmap.method.EmailQueryOptimizer;
+import org.apache.james.jmap.method.EmailQueryViewOptimizer;
 import org.apache.james.jmap.method.EmailSetMethod;
 import org.apache.james.jmap.method.EmailSubmissionSetMethod;
 import org.apache.james.jmap.method.IdentityChangesMethod;
@@ -204,6 +206,9 @@ public class RFC8621MethodsModule extends AbstractModule {
         Multibinder<ConnectionDescriptionSupplier> connectionDescriptionSupplierMultibinder = Multibinder.newSetBinder(binder(), ConnectionDescriptionSupplier.class);
         connectionDescriptionSupplierMultibinder.addBinding().to(WebSocketRoutes.class);
         connectionDescriptionSupplierMultibinder.addBinding().to(EventSourceRoutes.class);
+
+        Multibinder<EmailQueryOptimizer> emailQueryOptimizerMultibinder = Multibinder.newSetBinder(binder(), EmailQueryOptimizer.class);
+        emailQueryOptimizerMultibinder.addBinding().to(EmailQueryViewOptimizer.class);
     }
 
     @ProvidesIntoSet
