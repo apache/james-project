@@ -193,18 +193,22 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
                 return Mono.empty();
             })
             .flatMapIterable(Function.identity())
-            .map(pair -> buildUpdatedFlags(pair.getRight(), pair.getLeft()));
+            .flatMap(pair -> buildUpdatedFlags(pair.getRight(), pair.getLeft()));
     }
 
-    private Pair<MailboxId, UpdatedFlags> buildUpdatedFlags(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, Flags oldFlags) {
-        return Pair.of(composedMessageIdWithMetaData.getComposedMessageId().getMailboxId(),
-            UpdatedFlags.builder()
-                .uid(composedMessageIdWithMetaData.getComposedMessageId().getUid())
-                .messageId(composedMessageIdWithMetaData.getComposedMessageId().getMessageId())
-                .modSeq(composedMessageIdWithMetaData.getModSeq())
-                .oldFlags(oldFlags)
-                .newFlags(composedMessageIdWithMetaData.getFlags())
-                .build());
+    private Mono<Pair<MailboxId, UpdatedFlags>> buildUpdatedFlags(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, Flags oldFlags) {
+        PostgresMailboxId mailboxId = (PostgresMailboxId) composedMessageIdWithMetaData.getComposedMessageId().getMailboxId();
+
+        return mailboxMessageDAO.retrieveInternalDate(mailboxId, composedMessageIdWithMetaData.getComposedMessageId().getUid())
+            .map(internalDate -> Pair.of(composedMessageIdWithMetaData.getComposedMessageId().getMailboxId(),
+                UpdatedFlags.builder()
+                    .uid(composedMessageIdWithMetaData.getComposedMessageId().getUid())
+                    .messageId(composedMessageIdWithMetaData.getComposedMessageId().getMessageId())
+                    .internalDate(internalDate)
+                    .modSeq(composedMessageIdWithMetaData.getModSeq())
+                    .oldFlags(oldFlags)
+                    .newFlags(composedMessageIdWithMetaData.getFlags())
+                    .build()));
     }
 
     private Mono<List<Pair<Flags, ComposedMessageIdWithMetaData>>> updateFlags(MailboxId mailboxId, MessageId messageId, Flags newState, MessageManager.FlagsUpdateMode updateMode) {

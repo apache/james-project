@@ -25,6 +25,8 @@ import static org.apache.james.event.json.SerializerFixture.EVENT_SERIALIZER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -176,6 +178,9 @@ class FlagsUpdatedSerializationTest {
 
     @Nested
     class WithMessageId {
+        private static final Date INTERNAL_DATE_1 = Date.from(Instant.parse("2024-01-01T01:02:03.000Z"));
+        private static final Date INTERNAL_DATE_2 = Date.from(Instant.parse("2024-01-02T01:02:03.000Z"));
+
         private final MessageId messageId1 = TestMessageId.of(23456);
         private final MessageId messageId2 = TestMessageId.of(78901);
 
@@ -185,6 +190,7 @@ class FlagsUpdatedSerializationTest {
             .modSeq(MOD_SEQ_1)
             .oldFlags(OLD_FLAGS_1)
             .newFlags(NEW_FLAGS_1)
+            .internalDate(INTERNAL_DATE_1)
             .build();
         private final UpdatedFlags updatedFlagsWithMessageId2 = UpdatedFlags.builder()
             .uid(MESSAGE_UID_2)
@@ -192,6 +198,7 @@ class FlagsUpdatedSerializationTest {
             .modSeq(MOD_SEQ_2)
             .oldFlags(OLD_FLAGS_2)
             .newFlags(NEW_FLAGS_2)
+            .internalDate(INTERNAL_DATE_2)
             .build();
 
         private final List<UpdatedFlags> updatedFlagsListWithMessageIds = ImmutableList.of(updatedFlagsWithMessageId1, updatedFlagsWithMessageId2);
@@ -200,6 +207,39 @@ class FlagsUpdatedSerializationTest {
             MAILBOX_PATH, MAILBOX_ID, updatedFlagsListWithMessageIds, EVENT_ID);
 
         private static final String EVENT_WITH_MESSAGE_IDS_JSON =
+            "{" +
+                "  \"FlagsUpdated\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+                "    \"path\": {" +
+                "      \"namespace\": \"#private\"," +
+                "      \"user\": \"user\"," +
+                "      \"name\": \"mailboxName\"" +
+                "    }," +
+                "    \"mailboxId\": \"18\"," +
+                "    \"sessionId\": 42," +
+                "    \"updatedFlags\": [" +
+                "      {" +
+                "        \"uid\": 123456," +
+                "        \"messageId\": \"23456\"," +
+                "        \"modSeq\": 35," +
+                "        \"internalDate\": \"2024-01-01T01:02:03Z\"," +
+                "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
+                "      }," +
+                "      {" +
+                "        \"uid\": 654321," +
+                "        \"messageId\": \"78901\"," +
+                "        \"modSeq\": 36," +
+                "        \"internalDate\": \"2024-01-02T01:02:03Z\"," +
+                "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
+                "      }" +
+                "    ]," +
+                "    \"user\": \"user\"" +
+                "  }" +
+                "}";
+
+        private static final String EVENT_WITH_MESSAGE_IDS_WITHOUT_INTERNAL_DATE_JSON =
             "{" +
                 "  \"FlagsUpdated\": {" +
                 "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
@@ -241,6 +281,29 @@ class FlagsUpdatedSerializationTest {
         void flagsUpdatedShouldBeWellDeSerialized() {
             assertThat(EVENT_SERIALIZER.fromJson(EVENT_WITH_MESSAGE_IDS_JSON).get())
                 .isEqualTo(eventWithMessageIds);
+        }
+
+        @Test
+        void flagsUpdatedShouldDeserializeWhenInternalDateIsMissing() {
+            UpdatedFlags updatedFlagsWithoutInternalDate1 = UpdatedFlags.builder()
+                .uid(MESSAGE_UID_1)
+                .messageId(messageId1)
+                .modSeq(MOD_SEQ_1)
+                .oldFlags(OLD_FLAGS_1)
+                .newFlags(NEW_FLAGS_1)
+                .build();
+            UpdatedFlags updatedFlagsWithoutInternalDate2 = UpdatedFlags.builder()
+                .uid(MESSAGE_UID_2)
+                .messageId(messageId2)
+                .modSeq(MOD_SEQ_2)
+                .oldFlags(OLD_FLAGS_2)
+                .newFlags(NEW_FLAGS_2)
+                .build();
+            FlagsUpdated eventWithoutInternalDate = new FlagsUpdated(SESSION_ID, USERNAME,
+                MAILBOX_PATH, MAILBOX_ID, ImmutableList.of(updatedFlagsWithoutInternalDate1, updatedFlagsWithoutInternalDate2), EVENT_ID);
+
+            assertThat(EVENT_SERIALIZER.fromJson(EVENT_WITH_MESSAGE_IDS_WITHOUT_INTERNAL_DATE_JSON).get())
+                .isEqualTo(eventWithoutInternalDate);
         }
     }
 

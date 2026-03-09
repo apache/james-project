@@ -153,6 +153,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
                     .modSeq(message.getModSeq())
                     .uid(message.getUid())
                     .messageId(message.getMessageId())
+                    .internalDate(message.getInternalDate())
                     .oldFlags(message.createFlags())
                     .newFlags(newState)
                     .build();

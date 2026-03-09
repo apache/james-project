@@ -299,11 +299,13 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .map(pair -> buildUpdatedFlags(pair.getRight(), pair.getLeft()));
     }
 
-    private Pair<MailboxId, UpdatedFlags> buildUpdatedFlags(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, Flags oldFlags) {
+    private Pair<MailboxId, UpdatedFlags> buildUpdatedFlags(CassandraMessageMetadata metadata, Flags oldFlags) {
+        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = metadata.getComposedMessageId();
         return Pair.of(composedMessageIdWithMetaData.getComposedMessageId().getMailboxId(),
                 UpdatedFlags.builder()
                     .uid(composedMessageIdWithMetaData.getComposedMessageId().getUid())
                     .messageId(composedMessageIdWithMetaData.getComposedMessageId().getMessageId())
+                    .internalDate(metadata.getInternalDate())
                     .modSeq(composedMessageIdWithMetaData.getModSeq())
                     .oldFlags(oldFlags)
                     .newFlags(composedMessageIdWithMetaData.getFlags())
@@ -316,19 +318,19 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .thenReturn(pair);
     }
 
-    private Mono<List<Pair<Flags, ComposedMessageIdWithMetaData>>> updateFlags(MailboxId mailboxId, MessageId messageId, Flags newState, MessageManager.FlagsUpdateMode updateMode) {
+    private Mono<List<Pair<Flags, CassandraMessageMetadata>>> updateFlags(MailboxId mailboxId, MessageId messageId, Flags newState, MessageManager.FlagsUpdateMode updateMode) {
         CassandraId cassandraId = (CassandraId) mailboxId;
         return imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.of(cassandraId), chooseReadConsistencyUponWrites())
-            .map(CassandraMessageMetadata::getComposedMessageId)
-            .flatMap(oldComposedId -> updateFlags(newState, updateMode, cassandraId, oldComposedId), ReactorUtils.DEFAULT_CONCURRENCY)
+            .flatMap(oldMetadata -> updateFlags(newState, updateMode, cassandraId, oldMetadata), ReactorUtils.DEFAULT_CONCURRENCY)
             .switchIfEmpty(Mono.error(MailboxDeleteDuringUpdateException::new))
             .collectList();
     }
 
-    private Mono<Pair<Flags, ComposedMessageIdWithMetaData>> updateFlags(Flags newState, MessageManager.FlagsUpdateMode updateMode, CassandraId cassandraId, ComposedMessageIdWithMetaData oldComposedId) {
+    private Mono<Pair<Flags, CassandraMessageMetadata>> updateFlags(Flags newState, MessageManager.FlagsUpdateMode updateMode, CassandraId cassandraId, CassandraMessageMetadata oldMetadata) {
+        ComposedMessageIdWithMetaData oldComposedId = oldMetadata.getComposedMessageId();
         Flags newFlags = new FlagsUpdateCalculator(newState, updateMode).buildNewFlags(oldComposedId.getFlags());
         if (identicalFlags(oldComposedId, newFlags)) {
-            return Mono.just(Pair.of(oldComposedId.getFlags(), oldComposedId));
+            return Mono.just(Pair.of(oldComposedId.getFlags(), oldMetadata));
         } else {
             return modSeqProvider.nextModSeqReactive(cassandraId)
                 .map(modSeq -> new ComposedMessageIdWithMetaData(
@@ -336,7 +338,15 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                     newFlags,
                     modSeq,
                     oldComposedId.getThreadId()))
-            .flatMap(newComposedId -> updateFlags(oldComposedId, newComposedId));
+                .map(newComposedId -> CassandraMessageMetadata.builder()
+                    .ids(newComposedId)
+                    .internalDate(oldMetadata.getInternalDate())
+                    .saveDate(oldMetadata.getSaveDate())
+                    .bodyStartOctet(oldMetadata.getBodyStartOctet())
+                    .size(oldMetadata.getSize())
+                    .headerContent(oldMetadata.getHeaderContent())
+                    .build())
+                .flatMap(newMetadata -> updateFlags(oldMetadata, newMetadata));
         }
     }
 
@@ -344,7 +354,9 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         return oldComposedId.getFlags().equals(newFlags);
     }
 
-    private Mono<Pair<Flags, ComposedMessageIdWithMetaData>> updateFlags(ComposedMessageIdWithMetaData oldComposedId, ComposedMessageIdWithMetaData newComposedId) {
+    private Mono<Pair<Flags, CassandraMessageMetadata>> updateFlags(CassandraMessageMetadata oldMetadata, CassandraMessageMetadata newMetadata) {
+        ComposedMessageIdWithMetaData oldComposedId = oldMetadata.getComposedMessageId();
+        ComposedMessageIdWithMetaData newComposedId = newMetadata.getComposedMessageId();
         ComposedMessageId composedMessageId = newComposedId.getComposedMessageId();
         ModSeq previousModseq = oldComposedId.getModSeq();
         UpdatedFlags updatedFlags = UpdatedFlags.builder()
@@ -353,12 +365,13 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .oldFlags(oldComposedId.getFlags())
             .newFlags(newComposedId.getFlags())
             .uid(composedMessageId.getUid())
+            .internalDate(newMetadata.getInternalDate())
             .build();
 
         return imapUidDAO.updateMetadata(composedMessageId, updatedFlags, previousModseq)
             .filter(FunctionalUtils.identityPredicate())
             .flatMap(any -> messageIdDAO.updateMetadata(composedMessageId, updatedFlags)
-                .thenReturn(Pair.of(oldComposedId.getFlags(), newComposedId)))
+                .thenReturn(Pair.of(oldComposedId.getFlags(), newMetadata)))
             .single();
     }
 }

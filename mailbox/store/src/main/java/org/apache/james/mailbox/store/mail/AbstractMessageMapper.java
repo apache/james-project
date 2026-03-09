@@ -106,6 +106,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
             updatedFlags.add(UpdatedFlags.builder()
                 .uid(member.getUid())
                 .messageId(member.getMessageId())
+                .internalDate(member.getInternalDate())
                 .modSeq(member.getModSeq())
                 .newFlags(newFlags)
                 .oldFlags(originalFlags)

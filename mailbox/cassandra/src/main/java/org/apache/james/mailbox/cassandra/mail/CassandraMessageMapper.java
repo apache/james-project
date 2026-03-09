@@ -652,29 +652,34 @@ public class CassandraMessageMapper implements MessageMapper {
         Flags oldFlags = oldMetaData.getFlags();
         Flags newFlags = flagUpdateCalculator.buildNewFlags(oldFlags);
 
-        if (identicalFlags(oldFlags, newFlags)) {
-            return Mono.just(FlagsUpdateStageResult.success(UpdatedFlags.builder()
-                .uid(oldMetaData.getComposedMessageId().getUid())
-                .messageId(oldMetaData.getComposedMessageId().getMessageId())
-                .modSeq(oldMetaData.getModSeq())
-                .oldFlags(oldFlags)
-                .newFlags(newFlags)
-                .build()));
-        }
-
-        return updateFlags(oldMetaData, newFlags, newModSeq)
-            .map(success -> {
-                if (success) {
-                    return FlagsUpdateStageResult.success(UpdatedFlags.builder()
+        return retrieveInternalDate(oldMetaData)
+            .flatMap(internalDate -> {
+                if (identicalFlags(oldFlags, newFlags)) {
+                    return Mono.just(FlagsUpdateStageResult.success(UpdatedFlags.builder()
                         .uid(oldMetaData.getComposedMessageId().getUid())
                         .messageId(oldMetaData.getComposedMessageId().getMessageId())
-                        .modSeq(newModSeq)
+                        .internalDate(internalDate)
+                        .modSeq(oldMetaData.getModSeq())
                         .oldFlags(oldFlags)
                         .newFlags(newFlags)
-                        .build());
-                } else {
-                    return FlagsUpdateStageResult.fail(oldMetaData.getComposedMessageId());
+                        .build()));
                 }
+
+                return updateFlags(oldMetaData, newFlags, newModSeq, internalDate)
+                    .map(success -> {
+                        if (success) {
+                            return FlagsUpdateStageResult.success(UpdatedFlags.builder()
+                                .uid(oldMetaData.getComposedMessageId().getUid())
+                                .messageId(oldMetaData.getComposedMessageId().getMessageId())
+                                .internalDate(internalDate)
+                                .modSeq(newModSeq)
+                                .oldFlags(oldFlags)
+                                .newFlags(newFlags)
+                                .build());
+                        } else {
+                            return FlagsUpdateStageResult.fail(oldMetaData.getComposedMessageId());
+                        }
+                    });
             });
     }
 
@@ -682,7 +687,14 @@ public class CassandraMessageMapper implements MessageMapper {
         return oldFlags.equals(newFlags);
     }
 
-    private Mono<Boolean> updateFlags(ComposedMessageIdWithMetaData oldMetadata, Flags newFlags, ModSeq newModSeq) {
+    private Mono<Optional<Date>> retrieveInternalDate(ComposedMessageIdWithMetaData oldMetaData) {
+        CassandraId mailboxId = (CassandraId) oldMetaData.getComposedMessageId().getMailboxId();
+        MessageUid uid = oldMetaData.getComposedMessageId().getUid();
+        return messageIdDAO.retrieve(mailboxId, uid)
+            .map(cassandraMessageMetadata -> cassandraMessageMetadata.flatMap(CassandraMessageMetadata::getInternalDate));
+    }
+
+    private Mono<Boolean> updateFlags(ComposedMessageIdWithMetaData oldMetadata, Flags newFlags, ModSeq newModSeq, Optional<Date> internalDate) {
         ComposedMessageIdWithMetaData newMetadata = ComposedMessageIdWithMetaData.builder()
             .composedMessageId(oldMetadata.getComposedMessageId())
             .modSeq(newModSeq)
@@ -694,6 +706,7 @@ public class CassandraMessageMapper implements MessageMapper {
         ModSeq previousModseq = oldMetadata.getModSeq();
         UpdatedFlags updatedFlags = UpdatedFlags.builder()
             .messageId(composedMessageId.getMessageId())
+            .internalDate(internalDate)
             .modSeq(newMetadata.getModSeq())
             .oldFlags(oldMetadata.getFlags())
             .newFlags(newMetadata.getFlags())

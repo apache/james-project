@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.model;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -50,6 +51,7 @@ public class UpdatedFlags {
         private Flags oldFlags;
         private Flags newFlags;
         private Optional<ModSeq> modSeq = Optional.empty();
+        private Optional<Date> internalDate = Optional.empty();
 
         private Builder() {
         }
@@ -84,12 +86,22 @@ public class UpdatedFlags {
             return this;
         }
 
+        public Builder internalDate(Date internalDate) {
+            this.internalDate = Optional.of(internalDate);
+            return this;
+        }
+
+        public Builder internalDate(Optional<Date> internalDate) {
+            this.internalDate = internalDate;
+            return this;
+        }
+
         public UpdatedFlags build() {
             Preconditions.checkNotNull(uid);
             Preconditions.checkNotNull(newFlags);
             Preconditions.checkNotNull(oldFlags);
             Preconditions.checkState(modSeq.isPresent());
-            return new UpdatedFlags(uid, messageId, modSeq.get(), oldFlags, newFlags);
+            return new UpdatedFlags(uid, messageId, modSeq.get(), oldFlags, newFlags, internalDate);
         }
     }
 
@@ -146,13 +158,18 @@ public class UpdatedFlags {
     private final Flags newFlags;
     private final Flags modifiedFlags;
     private final ModSeq modSeq;
+    /**
+     * The usage of Optional here is for backward compatibility (to be able to still dequeue older events)
+     */
+    private final Optional<Date> internalDate;
 
-    private UpdatedFlags(MessageUid uid, Optional<MessageId> messageId, ModSeq modSeq, Flags oldFlags, Flags newFlags) {
+    private UpdatedFlags(MessageUid uid, Optional<MessageId> messageId, ModSeq modSeq, Flags oldFlags, Flags newFlags, Optional<Date> internalDate) {
        this.uid = uid;
-       this.messageId = messageId;
+       this.messageId = Optional.ofNullable(messageId).orElse(Optional.empty());
        this.modSeq = modSeq;
        this.oldFlags = oldFlags;
        this.newFlags = newFlags;
+       this.internalDate = Optional.ofNullable(internalDate).orElse(Optional.empty());
        this.modifiedFlags = new Flags();
        addModifiedSystemFlags(oldFlags, newFlags, modifiedFlags);
        addModifiedUserFlags(oldFlags, newFlags, modifiedFlags);
@@ -201,6 +218,10 @@ public class UpdatedFlags {
      */
     public Optional<MessageId> getMessageId() {
         return messageId;
+    }
+
+    public Optional<Date> getInternalDate() {
+        return internalDate;
     }
 
     /**
@@ -272,12 +293,13 @@ public class UpdatedFlags {
                 Objects.equals(messageId, that.messageId) &&
                 Objects.equals(oldFlags, that.oldFlags) &&
                 Objects.equals(newFlags, that.newFlags) &&
-                Objects.equals(modSeq, that.modSeq);
+                Objects.equals(modSeq, that.modSeq) &&
+                Objects.equals(internalDate, that.internalDate);
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(uid, messageId, oldFlags, newFlags, modSeq);
+        return Objects.hash(uid, messageId, oldFlags, newFlags, modSeq, internalDate);
     }
     
     @Override
@@ -288,6 +310,7 @@ public class UpdatedFlags {
             .add("oldFlags", oldFlags)
             .add("newFlags", newFlags)
             .add("modSeq", modSeq)
+            .add("internalDate", internalDate)
             .toString();
     }
 }
