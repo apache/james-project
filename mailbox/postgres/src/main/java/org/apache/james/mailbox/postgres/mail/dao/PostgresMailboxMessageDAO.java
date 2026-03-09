@@ -236,11 +236,11 @@ public class PostgresMailboxMessageDAO {
         }
     }
 
-    public Flux<PostgresMessageId> deleteByMailboxId(PostgresMailboxId mailboxId) {
+    public Flux<MessageMetaData> deleteByMailboxId(PostgresMailboxId mailboxId) {
         return postgresExecutor.executeDeleteAndReturnList(dslContext -> dslContext.deleteFrom(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .returning(MESSAGE_ID))
-            .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)))
+                .returning(MESSAGE_METADATA_FIELDS_REQUIRE))
+            .map(RECORD_TO_MESSAGE_METADATA_FUNCTION)
             .collectList()
             .flatMapMany(Flux::fromIterable);
     }

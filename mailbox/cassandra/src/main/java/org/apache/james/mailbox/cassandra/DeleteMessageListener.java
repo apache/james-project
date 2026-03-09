@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.mail.Flags;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
@@ -169,7 +170,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         return Flux.mergeDelayError(prefetch,
                 messageIdDAO.retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited())
                     .concatMap(metadata -> handleMessageDeletionAsPartOfMailboxDeletion((CassandraMessageId) metadata.getComposedMessageId().getComposedMessageId().getMessageId(),
-                            metadata.getComposedMessageId().getThreadId(), mailboxId, path.getUser())
+                            metadata.getComposedMessageId().getThreadId(), metadata.getComposedMessageId().getFlags(), mailboxId, path.getUser())
                         .then(imapUidDAO.delete((CassandraMessageId) metadata.getComposedMessageId().getComposedMessageId().getMessageId(), mailboxId))
                         .then(messageIdDAO.delete(mailboxId, metadata.getComposedMessageId().getComposedMessageId().getUid()))),
                 deleteAcl(mailboxId),
@@ -184,7 +185,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     private Mono<Void> handleMessageDeletion(Expunged expunged) {
         return Flux.fromIterable(expunged.getExpunged().values())
             .concatMap(metaData -> handleMessageDeletion((CassandraMessageId) metaData.getMessageId(),
-                expunged.getMailboxId(), metaData.getThreadId(), expunged.getMailboxPath().getUser()))
+                expunged.getMailboxId(), metaData.getThreadId(), metaData.getFlags(), expunged.getMailboxPath().getUser()))
             .then();
     }
 
@@ -194,11 +195,11 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                 .then(aclMapper.delete(mailboxId)));
     }
 
-    private Mono<Void> handleMessageDeletion(CassandraMessageId messageId, MailboxId mailboxId, ThreadId threadId, Username owner) {
+    private Mono<Void> handleMessageDeletion(CassandraMessageId messageId, MailboxId mailboxId, ThreadId threadId, Flags flags, Username owner) {
         return Mono.just(messageId)
             .filterWhen(this::isReferenced)
             .flatMap(id -> readMessage(id)
-                .flatMap(message -> dispatchMessageContentDeletionEvent(mailboxId, owner, message)
+                .flatMap(message -> dispatchMessageContentDeletionEvent(mailboxId, owner, flags, message)
                     .thenReturn(message))
                 .flatMap(message -> deleteUnreferencedAttachments(message).thenReturn(message))
                 .flatMap(this::deleteMessageBlobs)
@@ -209,7 +210,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                 .then(threadLookupDAO.deleteOneRow(threadId, messageId)));
     }
 
-    private Mono<Void> dispatchMessageContentDeletionEvent(MailboxId mailboxId, Username owner, MessageRepresentation message) {
+    private Mono<Void> dispatchMessageContentDeletionEvent(MailboxId mailboxId, Username owner, Flags flags, MessageRepresentation message) {
         AuditTrail.entry()
             .action("DELETION")
             .username(owner::asString)
@@ -226,6 +227,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
             .messageId(message.getMessageId())
             .size(message.getSize())
             .instant(message.getInternalDate().toInstant())
+            .flags(flags)
             .hasAttachments(!message.getAttachments().isEmpty())
             .bodyBlobId(message.getBodyId().asString())
             .headerBlobId(message.getHeaderId().asString())
@@ -233,11 +235,11 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
             ImmutableSet.of()));
     }
 
-    private Mono<Void> handleMessageDeletionAsPartOfMailboxDeletion(CassandraMessageId messageId, ThreadId threadId, CassandraId excludedId, Username owner) {
+    private Mono<Void> handleMessageDeletionAsPartOfMailboxDeletion(CassandraMessageId messageId, ThreadId threadId, Flags flags, CassandraId excludedId, Username owner) {
         return Mono.just(messageId)
             .filterWhen(id -> isReferenced(id, excludedId))
             .flatMap(id -> readMessage(id)
-                .flatMap(message -> dispatchMessageContentDeletionEvent(excludedId, owner, message)
+                .flatMap(message -> dispatchMessageContentDeletionEvent(excludedId, owner, flags, message)
                     .thenReturn(message)))
                 .flatMap(message -> deleteUnreferencedAttachments(message).thenReturn(message))
                 .flatMap(this::deleteMessageBlobs)

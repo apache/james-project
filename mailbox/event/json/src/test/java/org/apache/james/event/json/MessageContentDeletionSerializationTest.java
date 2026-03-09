@@ -27,7 +27,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
 import java.util.Optional;
 
+import jakarta.mail.Flags;
+
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.events.MailboxEvents.MessageContentDeletionEvent;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -41,6 +44,10 @@ class MessageContentDeletionSerializationTest {
     private static final MessageId MESSAGE_ID = TestMessageId.of(42);
     private static final long SIZE = 12345L;
     private static final Instant INTERNAL_DATE = Instant.parse("2024-12-15T08:23:45Z");
+    private static final Flags FLAGS = new FlagsBuilder()
+        .add(Flags.Flag.FLAGGED)
+        .add("$Forwarded")
+        .build();
     private static final boolean HAS_ATTACHMENTS = true;
     private static final Optional<String> HEADER_BLOB_ID = Optional.of("header-blob-id");
     private static final Optional<String> HEADER_CONTENT = Optional.of("Header: value");
@@ -54,6 +61,7 @@ class MessageContentDeletionSerializationTest {
         MESSAGE_ID,
         SIZE,
         INTERNAL_DATE,
+        FLAGS,
         HAS_ATTACHMENTS,
         HEADER_BLOB_ID,
         HEADER_CONTENT,
@@ -66,6 +74,7 @@ class MessageContentDeletionSerializationTest {
         MESSAGE_ID,
         SIZE,
         INTERNAL_DATE,
+        FLAGS,
         HAS_ATTACHMENTS,
         HEADER_BLOB_ID,
         EMPTY_HEADER_CONTENT,
@@ -79,11 +88,31 @@ class MessageContentDeletionSerializationTest {
                 "size": 12345,
                 "hasAttachments": true,
                 "internalDate": "2024-12-15T08:23:45Z",
+                "flags": {
+                    "systemFlags": ["Flagged"],
+                    "userFlags": ["$Forwarded"]
+                },
                 "mailboxId": "18",
                 "headerBlobId": "header-blob-id",
                 "messageId": "42",
                 "bodyBlobId": "body-blob-id",
                 "headerContent": "Header: value"
+            }
+        }
+        """;
+
+    private static final String JSON_WITHOUT_FLAGS = """
+        {
+            "MessageContentDeletionEvent": {
+                "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
+                "username": "user@domain.tld",
+                "size": 12345,
+                "hasAttachments": true,
+                "internalDate": "2024-12-15T08:23:45Z",
+                "mailboxId": "18",
+                "headerBlobId": "header-blob-id",
+                "messageId": "42",
+                "bodyBlobId": "body-blob-id"
             }
         }
         """;
@@ -96,6 +125,10 @@ class MessageContentDeletionSerializationTest {
                 "size": 12345,
                 "hasAttachments": true,
                 "internalDate": "2024-12-15T08:23:45Z",
+                "flags": {
+                    "systemFlags": ["Flagged"],
+                    "userFlags": ["$Forwarded"]
+                },
                 "mailboxId": "18",
                 "headerBlobId": "header-blob-id",
                 "messageId": "42",
@@ -114,6 +147,23 @@ class MessageContentDeletionSerializationTest {
     void messageContentDeletionEventShouldBeWellDeserialized() {
         assertThat(EVENT_SERIALIZER.fromJson(JSON).get()).isEqualTo(EVENT);
         assertThat(EVENT_SERIALIZER.fromJson(JSON_WITHOUT_HEADER_CONTENT).get()).isEqualTo(EVENT_WITHOUT_HEADER_CONTENT);
+    }
+
+    @Test
+    void messageContentDeletionEventWithoutFlagsShouldBeWellDeserialized() {
+        assertThat(EVENT_SERIALIZER.fromJson(JSON_WITHOUT_FLAGS).get())
+            .isEqualTo(new MessageContentDeletionEvent(
+                EVENT_ID,
+                USERNAME,
+                MAILBOX_ID,
+                MESSAGE_ID,
+                SIZE,
+                INTERNAL_DATE,
+                new Flags(),
+                HAS_ATTACHMENTS,
+                HEADER_BLOB_ID,
+                EMPTY_HEADER_CONTENT,
+                BODY_BLOB_ID));
     }
 
 }

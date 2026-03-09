@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.postgres.PostgresConfiguration;
@@ -36,7 +37,6 @@ import org.apache.james.mailbox.events.MailboxEvents;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.postgres.mail.MessageRepresentation;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
@@ -114,7 +114,8 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         PostgresThreadDAO threadDAO = threadDAOFactory.create(event.getUsername().getDomainPart());
 
         return postgresMailboxMessageDAO.deleteByMailboxId((PostgresMailboxId) event.getMailboxId())
-            .flatMap(msgId -> handleMessageDeletion(postgresMessageDAO, postgresMailboxMessageDAO, attachmentDAO, threadDAO, msgId, event.getMailboxId(), event.getMailboxPath().getUser()),
+            .flatMap(metaData -> handleMessageDeletion(postgresMessageDAO, postgresMailboxMessageDAO, attachmentDAO, threadDAO,
+                    (PostgresMessageId) metaData.getMessageId(), event.getMailboxId(), event.getMailboxPath().getUser(), metaData.getFlags()),
                 LOW_CONCURRENCY)
             .then();
     }
@@ -127,9 +128,8 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
 
         return Flux.fromIterable(event.getExpunged()
                 .values())
-            .map(MessageMetaData::getMessageId)
-            .map(PostgresMessageId.class::cast)
-            .flatMap(msgId -> handleMessageDeletion(postgresMessageDAO, postgresMailboxMessageDAO, attachmentDAO, threadDAO, msgId, event.getMailboxId(), event.getMailboxPath().getUser()), LOW_CONCURRENCY)
+            .flatMap(metaData -> handleMessageDeletion(postgresMessageDAO, postgresMailboxMessageDAO, attachmentDAO, threadDAO,
+                (PostgresMessageId) metaData.getMessageId(), event.getMailboxId(), event.getMailboxPath().getUser(), metaData.getFlags()), LOW_CONCURRENCY)
             .then();
     }
 
@@ -139,25 +139,26 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                                              PostgresThreadDAO threadDAO,
                                              PostgresMessageId messageId,
                                              MailboxId mailboxId,
-                                             Username owner) {
+                                             Username owner,
+                                             Flags flags) {
         return Mono.just(messageId)
             .filterWhen(msgId -> isUnreferenced(msgId, postgresMailboxMessageDAO))
             .flatMap(msgId -> postgresMessageDAO.retrieveMessage(messageId)
-                .flatMap(messageRepresentation -> dispatchMessageContentDeletionEvent(mailboxId, owner, messageRepresentation))
+                .flatMap(messageRepresentation -> dispatchMessageContentDeletionEvent(mailboxId, owner, flags, messageRepresentation))
                 .then(deleteBodyBlob(msgId, postgresMessageDAO))
                 .then(deleteAttachmentIfEnabled(msgId, attachmentDAO))
                 .then(threadDAO.deleteSome(owner, msgId))
                 .then(postgresMessageDAO.deleteByMessageId(msgId)));
     }
 
-    private Mono<Void> dispatchMessageContentDeletionEvent(MailboxId mailboxId, Username owner, MessageRepresentation message) {
+    private Mono<Void> dispatchMessageContentDeletionEvent(MailboxId mailboxId, Username owner, Flags flags, MessageRepresentation message) {
         return Mono.fromCallable(() -> IOUtils.toString(message.getHeaderContent().getInputStream(), StandardCharsets.UTF_8))
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-            .flatMap(headerContent -> Mono.from(contentDeletionEventBus.dispatch(messageContentDeletionEvent(mailboxId, owner, message, headerContent),
+            .flatMap(headerContent -> Mono.from(contentDeletionEventBus.dispatch(messageContentDeletionEvent(mailboxId, owner, flags, message, headerContent),
                 ImmutableSet.of())));
     }
 
-    private MailboxEvents.MessageContentDeletionEvent messageContentDeletionEvent(MailboxId mailboxId, Username owner, MessageRepresentation message, String headerContent) {
+    private MailboxEvents.MessageContentDeletionEvent messageContentDeletionEvent(MailboxId mailboxId, Username owner, Flags flags, MessageRepresentation message, String headerContent) {
         return EventFactory.messageContentDeleted()
             .randomEventId()
             .user(owner)
@@ -165,6 +166,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
             .messageId(message.getMessageId())
             .size(message.getSize())
             .instant(message.getInternalDate().toInstant())
+            .flags(flags)
             .hasAttachments(!message.getAttachments().isEmpty())
             .bodyBlobId(message.getBodyBlobId().asString())
             .headerContent(headerContent)
