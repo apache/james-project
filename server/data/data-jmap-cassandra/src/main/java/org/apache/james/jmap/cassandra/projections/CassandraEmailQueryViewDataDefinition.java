@@ -22,7 +22,6 @@ package org.apache.james.jmap.cassandra.projections;
 import static com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder.DESC;
 import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
 import static org.apache.james.backends.cassandra.utils.CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION;
-import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.DATE_LOOKUP_TABLE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MAILBOX_ID;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MESSAGE_ID;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.RECEIVED_AT;
@@ -44,15 +43,5 @@ public interface CassandraEmailQueryViewDataDefinition {
             .withClusteringColumn(RECEIVED_AT, DataTypes.TIMESTAMP)
             .withClusteringColumn(MESSAGE_ID, DataTypes.UUID)
             .withColumn(THREAD_ID, DataTypes.UUID))
-
-        .table(DATE_LOOKUP_TABLE)
-        .comment("Given a MailboxId+MessageId lookup the dates of a message to delete it.")
-        .options(options -> options
-            .withCaching(true, rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> types -> statement
-            .withPartitionKey(MAILBOX_ID, DataTypes.UUID)
-            .withClusteringColumn(MESSAGE_ID, DataTypes.UUID)
-            .withColumn(RECEIVED_AT, DataTypes.TIMESTAMP))
-
         .build();
 }

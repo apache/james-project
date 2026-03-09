@@ -23,7 +23,6 @@ import com.datastax.oss.driver.api.core.CqlIdentifier;
 
 public interface CassandraEmailQueryViewTable {
     String TABLE_NAME_RECEIVED_AT = "email_query_view_received_at";
-    String DATE_LOOKUP_TABLE = "email_query_view_date_lookup";
 
     CqlIdentifier MAILBOX_ID = CqlIdentifier.fromCql("mailboxId");
     CqlIdentifier MESSAGE_ID = CqlIdentifier.fromCql("messageId");

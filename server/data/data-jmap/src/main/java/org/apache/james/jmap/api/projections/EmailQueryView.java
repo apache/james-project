@@ -148,7 +148,7 @@ public interface EmailQueryView {
      */
     Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit, boolean collapseThreads);
 
-    Mono<Void> delete(MailboxId mailboxId, MessageId messageId);
+    Mono<Void> delete(MailboxId mailboxId, ZonedDateTime receivedAt, MessageId messageId);
 
     Mono<Void> delete(MailboxId mailboxId);
 
