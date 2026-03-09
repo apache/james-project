@@ -8,4 +8,3 @@ dockerfiles/run/**/glowroot
 test-run.log
 build
 .mvn/.develocity
-.idea/
