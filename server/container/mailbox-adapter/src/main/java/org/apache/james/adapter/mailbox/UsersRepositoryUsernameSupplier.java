@@ -21,6 +21,7 @@ package org.apache.james.adapter.mailbox;
 
 import jakarta.inject.Inject;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.store.quota.DefaultQuotaChangeNotifier;
 import org.apache.james.user.api.UsersRepository;
@@ -38,5 +39,10 @@ public class UsersRepositoryUsernameSupplier implements DefaultQuotaChangeNotifi
     @Override
     public Flux<Username> get() {
         return Flux.from(usersRepository.listReactive());
+    }
+
+    @Override
+    public Flux<Username> getUsersForDomain(Domain domain) {
+        return Flux.from(usersRepository.listUsersOfADomainReactive(domain));
     }
 }

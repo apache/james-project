@@ -22,6 +22,7 @@ package org.apache.james.user.lib;
 import java.util.Iterator;
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -62,6 +63,13 @@ public interface UsersDAO {
                 throw new RuntimeException(e);
             }
         }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    default Publisher<Username> listUsersOfADomainReactive(Domain domain) {
+        return Flux.from(listReactive())
+            .filter(username -> username.getDomainPart()
+                .map(domain::equals)
+                .orElse(false));
     }
 
     void addUser(Username username, String password) throws UsersRepositoryException;

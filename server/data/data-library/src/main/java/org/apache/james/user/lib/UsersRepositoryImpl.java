@@ -52,6 +52,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository, Configurable {
@@ -260,6 +261,14 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
     @Override
     public Publisher<Username> listReactive() {
         return usersDAO.listReactive();
+    }
+
+    @Override
+    public Publisher<Username> listUsersOfADomainReactive(Domain domain) {
+        if (!virtualHosting) {
+            return Flux.error(new IllegalStateException("listUsersOfADomainReactive is not supported when virtual hosting is disabled"));
+        }
+        return usersDAO.listUsersOfADomainReactive(domain);
     }
 
     @Override

@@ -188,6 +188,13 @@ public interface UsersRepository {
     }
 
     default Publisher<Username> listUsersOfADomainReactive(Domain domain) {
+        try {
+            if (!supportVirtualHosting()) {
+                return Flux.error(new IllegalStateException("listUsersOfADomainReactive is not supported when virtual hosting is disabled"));
+            }
+        } catch (UsersRepositoryException e) {
+            return Flux.error(e);
+        }
         return Flux.from(listReactive())
             .filter(username -> username.getDomainPart()
                 .map(domain::equals)

@@ -60,6 +60,9 @@ import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
 
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
+
 public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUsersDAO.class);
 
@@ -337,6 +340,49 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         }
     }
 
+
+    @Override
+    public Flux<Username> listUsersOfADomainReactive(Domain domain) {
+        return Flux.fromStream(() -> {
+                try {
+                    return getUsernamesForDomain(domain);
+                } catch (LDAPException e) {
+                    throw new RuntimeException(e);
+                }
+            })
+            .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    private Stream<Username> getUsernamesForDomain(Domain domain) throws LDAPException {
+        if (!ldapConfiguration.getRestriction().isActivated()) {
+            return getUnrestrictedUsernamesForDomain(domain);
+        }
+        return buildUserCollection(getValidUserDNs()).stream()
+            .map(ReadOnlyLDAPUser::getUserName)
+            .filter(username -> username.getDomainPart().map(domain::equals).orElse(false))
+            .distinct();
+    }
+
+    private Stream<Username> getUnrestrictedUsernamesForDomain(Domain domain) throws LDAPException {
+        String usernameAttribute = ldapConfiguration.getUsernameAttribute().orElse(ldapConfiguration.getUserIdAttribute());
+        Filter domainFilter = Filter.createSubstringFilter(usernameAttribute, null, null, "@" + domain.asString());
+        SearchRequest searchRequest = new SearchRequest(userBase(domain), SearchScope.SUB,
+            Filter.createANDFilter(listingFilter, domainFilter), usernameAttribute);
+        return ldapConnectionPool.search(searchRequest)
+            .getSearchEntries().stream()
+            .flatMap(entry -> Optional.ofNullable(entry.getAttribute(usernameAttribute)).stream())
+            .map(Attribute::getValue)
+            .flatMap(name -> {
+                try {
+                    return Stream.of(Username.of(name));
+                } catch (Exception e) {
+                    LOGGER.warn("Invalid username in the LDAP: {}", name, e);
+                    return Stream.empty();
+                }
+            })
+            .filter(username -> username.getDomainPart().map(domain::equals).orElse(false))
+            .distinct();
+    }
 
     private Collection<DN> getValidUserDNs() throws LDAPException {
         Set<DN> userDNs = getAllUsersDNFromLDAP();

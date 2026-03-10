@@ -38,6 +38,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -143,6 +144,16 @@ public class PostgresUsersDAO implements UsersDAO {
     public Flux<Username> listReactive() {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(USERNAME)
                 .from(TABLE_NAME)), EAGER_FETCH)
+            .map(record -> Username.of(record.get(USERNAME)));
+    }
+
+    @Override
+    public Flux<Username> listUsersOfADomainReactive(Domain domain) {
+        String domainPattern = "%@" + domain.asString();
+        return postgresExecutor.executeRows(dslContext -> Flux.from(
+                dslContext.select(USERNAME)
+                    .from(TABLE_NAME)
+                    .where(USERNAME.like(domainPattern))), EAGER_FETCH)
             .map(record -> Username.of(record.get(USERNAME)));
     }
 

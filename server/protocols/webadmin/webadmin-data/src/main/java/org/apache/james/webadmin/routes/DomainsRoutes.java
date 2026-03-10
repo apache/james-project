@@ -21,11 +21,13 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 
 import org.apache.james.core.Domain;
+import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.AutoDetectedDomainRemovalException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -33,6 +35,7 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.task.TaskManager;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.DomainAliasResponse;
 import org.apache.james.webadmin.service.DeleteUserDataService;
@@ -51,6 +54,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Flux;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
@@ -67,6 +71,8 @@ public class DomainsRoutes implements Routes {
     private static final String SPECIFIC_DOMAIN = DOMAINS + SEPARATOR + DOMAIN_NAME;
     private static final String ALIASES = "aliases";
     private static final String DOMAIN_ALIASES = SPECIFIC_DOMAIN + SEPARATOR + ALIASES;
+    private static final String USERS = "users";
+    private static final String DOMAIN_USERS = SPECIFIC_DOMAIN + SEPARATOR + USERS;
     private static final String DELETE_ALL_USERS_DATA_OF_A_DOMAIN_PATH = "/domains/:domainName";
     private static final String SPECIFIC_ALIAS = DOMAINS + SEPARATOR + DESTINATION_DOMAIN + SEPARATOR + ALIASES + SEPARATOR + SOURCE_DOMAIN;
     private static final TaskRegistrationKey DELETE_USERS_DATA = TaskRegistrationKey.of("deleteData");
@@ -108,6 +114,7 @@ public class DomainsRoutes implements Routes {
         defineListAliases(service);
         defineAddAlias(service);
         defineRemoveAlias(service);
+        defineListUsersOfDomain(service);
 
         // delete data of all users of a domain
         service.post(DELETE_ALL_USERS_DATA_OF_A_DOMAIN_PATH, deleteAllUsersData(), jsonTransformer);
@@ -146,6 +153,28 @@ public class DomainsRoutes implements Routes {
 
     public void defineListAliases(Service service) {
         service.get(DOMAIN_ALIASES, this::listDomainAliases, jsonTransformer);
+    }
+
+    public void defineListUsersOfDomain(Service service) {
+        service.get(DOMAIN_USERS, this::listUsersOfDomain, jsonTransformer);
+    }
+
+    private List<String> listUsersOfDomain(Request request, Response response) throws UsersRepositoryException, DomainListException {
+        if (!usersRepository.supportVirtualHosting()) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405)
+                .type(ErrorType.WRONG_STATE)
+                .message("Virtual hosting must be enabled to list users by domain")
+                .haltError();
+        }
+        Domain domain = checkValidDomain(request.params(DOMAIN_NAME));
+        if (!domainList.containsDomain(domain)) {
+            throw domainNotFound(domain);
+        }
+        return Flux.from(usersRepository.listUsersOfADomainReactive(domain))
+            .map(Username::asString)
+            .collectList()
+            .block();
     }
 
     public void defineRemoveAlias(Service service) {

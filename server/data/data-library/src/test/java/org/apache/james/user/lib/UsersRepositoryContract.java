@@ -583,6 +583,28 @@ public interface UsersRepositoryContract {
         }
 
         @Test
+        default void listUsersOfADomainShouldReturnEmptyWhenNoneInDomain(TestSystem testSystem) throws Exception {
+            testSystem.domainList.addDomain(Domain.of("empty.tld"));
+
+            assertThat(Flux.from(testee().listUsersOfADomainReactive(Domain.of("empty.tld")))
+                .collectList()
+                .block())
+                .isEmpty();
+        }
+
+        @Test
+        default void listUsersOfADomainShouldReturnAllUsersOfDomain(TestSystem testSystem) throws Exception {
+            testSystem.domainList.addDomain(Domain.of("domain.tld"));
+            testee().addUser(Username.of("alice@domain.tld"), "password");
+            testee().addUser(Username.of("bob@domain.tld"), "password");
+
+            assertThat(Flux.from(testee().listUsersOfADomainReactive(Domain.of("domain.tld")))
+                .collectList()
+                .block())
+                .containsExactlyInAnyOrder(Username.of("alice@domain.tld"), Username.of("bob@domain.tld"));
+        }
+
+        @Test
         default void addUserShouldThrowWhenUserDoesNotBelongToDomainList(TestSystem testSystem) {
             assertThatThrownBy(() -> testee().addUser(testSystem.userWithUnknownDomain, "password"))
                 .isInstanceOf(InvalidUsernameException.class)
@@ -759,6 +781,15 @@ public interface UsersRepositoryContract {
 
             assertThatCode(() -> testee().assertValid(withOutDomainPart))
                 .doesNotThrowAnyException();
+        }
+
+        @Test
+        default void listUsersOfADomainShouldFailWhenVirtualHostingIsDisabled(TestSystem testSystem) {
+            assertThatThrownBy(() -> Flux.from(testee().listUsersOfADomainReactive(TestSystem.DOMAIN))
+                .collectList()
+                .block())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("listUsersOfADomainReactive is not supported when virtual hosting is disabled");
         }
     }
 

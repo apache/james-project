@@ -107,6 +107,20 @@ class DomainsRoutesTest {
     private WebAdminServer webAdminServer;
     private MemoryUsersRepository usersRepository;
 
+    private void createServerWithoutVirtualHosting(DomainList domainList) {
+        MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
+        DomainAliasService domainAliasService = new DomainAliasService(new MemoryRecipientRewriteTable(), domainList);
+        usersRepository = MemoryUsersRepository.withoutVirtualHosting(domainList);
+        webAdminServer = WebAdminUtils.createWebAdminServer(new DomainsRoutes(domainList, domainAliasService, new JsonTransformer(),
+                    new DeleteUserDataService(Set.of()), usersRepository, taskManager))
+            .start();
+
+        RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
+            .setBasePath(DomainsRoutes.DOMAINS)
+            .setUrlEncodingEnabled(false)
+            .build();
+    }
+
     private void createServer(DomainList domainList) {
         MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         DomainAliasService domainAliasService = new DomainAliasService(new MemoryRecipientRewriteTable(), domainList);
@@ -746,6 +760,74 @@ class DomainsRoutesTest {
             }
         }
 
+        @Nested
+        class DomainUsers {
+
+            @Test
+            void getUsersOfDomainShouldReturnEmptyWhenNone() {
+                with().put(DOMAIN);
+
+                when()
+                    .get(DOMAIN + "/users")
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                    .body(".", hasSize(0));
+            }
+
+            @Test
+            void getUsersOfDomainShouldReturnUsersWhenSomeExist() throws Exception {
+                with().put(DOMAIN);
+                usersRepository.addUser(Username.of("user1@" + DOMAIN), "password");
+                usersRepository.addUser(Username.of("user2@" + DOMAIN), "password");
+
+                when()
+                    .get(DOMAIN + "/users")
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                    .body(".", containsInAnyOrder("user1@" + DOMAIN, "user2@" + DOMAIN));
+            }
+
+            @Test
+            void getUsersOfDomainShouldNotReturnUsersOfOtherDomain() throws Exception {
+                with().put(DOMAIN);
+                with().put(ALIAS_DOMAIN);
+                usersRepository.addUser(Username.of("user1@" + DOMAIN), "password");
+                usersRepository.addUser(Username.of("user2@" + ALIAS_DOMAIN), "password");
+
+                when()
+                    .get(DOMAIN + "/users")
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                    .body(".", containsInAnyOrder("user1@" + DOMAIN));
+            }
+
+            @Test
+            void getUsersOfDomainShouldReturnNotFoundWhenDomainDoesNotExist() {
+                when()
+                    .get(DOMAIN + "/users")
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                    .body("type", is("InvalidArgument"))
+                    .body("message", is("The domain list does not contain: " + DOMAIN));
+            }
+
+            @Test
+            void getUsersOfDomainShouldReturnBadRequestWhenDomainIsInvalid() {
+                when()
+                    .get("invalid@domain/users")
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                    .body("type", is("InvalidArgument"));
+            }
+        }
+
     }
 
     @Nested
@@ -841,6 +923,37 @@ class DomainsRoutesTest {
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
+    }
+
+    @Nested
+    class DomainUsersWithoutVirtualHosting {
+
+        @BeforeEach
+        void setUp() throws Exception {
+            DNSService dnsService = mock(DNSService.class);
+            when(dnsService.getHostName(any())).thenReturn("localhost");
+            when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("localhost"));
+
+            MemoryDomainList domainList = new MemoryDomainList(dnsService);
+            domainList.configure(DomainListConfiguration.builder()
+                .autoDetect(false)
+                .autoDetectIp(false)
+                .build());
+            domainList.addDomain(Domain.of(DOMAIN));
+            createServerWithoutVirtualHosting(domainList);
+        }
+
+        @Test
+        void getUsersOfDomainShouldReturn405WhenVirtualHostingDisabled() {
+            when()
+                .get(DOMAIN + "/users")
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405)
+                .body("statusCode", is(HttpStatus.METHOD_NOT_ALLOWED_405))
+                .body("type", is("WrongState"))
+                .body("message", is("Virtual hosting must be enabled to list users by domain"));
+        }
     }
 
     @Nested

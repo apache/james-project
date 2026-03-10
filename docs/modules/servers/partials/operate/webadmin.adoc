@@ -460,6 +460,28 @@ Response codes:
 
 * 200: The domain list was successfully retrieved
 
+=== Get the list of users for a domain
+
+....
+curl -XGET http://ip:port/domains/domain.tld/users
+....
+
+Will return the list of users for this domain:
+
+....
+[
+  "btellier@domain.tld",
+  ...
+]
+....
+
+* 200: The domain aliases was successfully retrieved
+* 400: domain.tld has an invalid syntax
+* 404: domain.tld is not part of handled domains and does
+not have local domains as aliases.
+
+Only supported when virtualHosting is enabled.
+
 === Get the list of aliases for a domain
 
 ....

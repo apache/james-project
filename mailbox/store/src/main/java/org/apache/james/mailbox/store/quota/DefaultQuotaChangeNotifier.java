@@ -43,7 +43,10 @@ import reactor.core.publisher.Mono;
 public class DefaultQuotaChangeNotifier implements QuotaChangeNotifier {
     @FunctionalInterface
     public interface UsernameSupplier extends Supplier<Flux<Username>> {
-
+        default Flux<Username> getUsersForDomain(Domain domain) {
+            return get()
+                .filter(username -> username.getDomainPart().map(domain::equals).orElse(false));
+        }
     }
 
     private static final ImmutableSet<RegistrationKey> NO_REGISTRATION_KEYS = ImmutableSet.of();
@@ -80,9 +83,8 @@ public class DefaultQuotaChangeNotifier implements QuotaChangeNotifier {
 
     @Override
     public Publisher<Void> notifyUpdate(Domain domain) {
-        return usernameSupplier.get()
+        return usernameSupplier.getUsersForDomain(domain)
             .map(quotaRootResolver::forUser)
-            .filter(user -> user.getDomain().map(domain::equals).orElse(false))
             .concatMap(this::notifyUpdate)
             .then();
     }
