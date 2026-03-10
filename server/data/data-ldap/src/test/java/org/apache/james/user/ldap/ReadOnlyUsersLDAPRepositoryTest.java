@@ -35,6 +35,7 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConversionException;
 import org.apache.commons.configuration2.plist.PropertyListConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
@@ -55,6 +56,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.unboundid.ldap.sdk.LDAPException;
+
+import reactor.core.publisher.Flux;
 
 class ReadOnlyUsersLDAPRepositoryTest {
 
@@ -347,6 +350,22 @@ class ReadOnlyUsersLDAPRepositoryTest {
             assertThat(usersRepository.contains(usersRepository.getUsername(JAMES_USER_MAIL.asMailAddress()))).isTrue();
         }
 
+        @Test
+        void listUsersOfADomainReactiveShouldReturnUsersOfDomain() throws Exception {
+            assertThat(Flux.from(usersRepository.listUsersOfADomainReactive(Domain.of(DOMAIN)))
+                .collectList()
+                .block())
+                .containsOnly(JAMES_USER_MAIL);
+        }
+
+        @Test
+        void listUsersOfADomainReactiveShouldReturnEmptyForUnknownDomain() throws Exception {
+            assertThat(Flux.from(usersRepository.listUsersOfADomainReactive(Domain.of("other.org")))
+                .collectList()
+                .block())
+                .isEmpty();
+        }
+
         @Disabled("JAMES-3088 Users are provisioned by default from Dockerfile, cannot setup this test case," +
             "See @link{ReadOnlyUsersLDAPRepositoryEmptyListTest}")
         @Override
@@ -580,6 +599,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         PropertyListConfiguration configuration = baseConfiguration(ldapContainer);
         configuration.addProperty("[@userIdAttribute]", "mail");
         configuration.addProperty("supportsVirtualHosting", true);
+        configuration.addProperty("enableVirtualHosting", true);
         administrator.ifPresent(username -> configuration.addProperty("[@administratorId]", username.asString()));
         return configuration;
     }
