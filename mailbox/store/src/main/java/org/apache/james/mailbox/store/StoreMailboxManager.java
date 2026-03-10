@@ -819,6 +819,28 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public Flux<MessageRange> moveMessagesReactive(List<MessageRange> sets, MailboxId from, MailboxId to, MailboxSession session) {
+        return Mono.zip(Mono.from(getMailboxReactive(from, session)), Mono.from(getMailboxReactive(to, session)))
+            .flatMapMany(fromTo -> {
+                StoreMessageManager fromMessageManager = (StoreMessageManager) fromTo.getT1();
+                StoreMessageManager toMessageManager = (StoreMessageManager) fromTo.getT2();
+
+                return fromMessageManager.moveTo(sets, toMessageManager, session);
+            });
+    }
+
+    @Override
+    public Flux<MessageRange> copyMessagesReactive(List<MessageRange> sets, MailboxId from, MailboxId to, MailboxSession session) {
+        return Mono.zip(Mono.from(getMailboxReactive(from, session)), Mono.from(getMailboxReactive(to, session)))
+            .flatMapMany(fromTo -> {
+                StoreMessageManager fromMessageManager = (StoreMessageManager) fromTo.getT1();
+                StoreMessageManager toMessageManager = (StoreMessageManager) fromTo.getT2();
+
+                return fromMessageManager.copyTo(sets, toMessageManager, session);
+            });
+    }
+
+    @Override
     public Flux<MailboxMetaData> search(MailboxQuery expression, MailboxSearchFetchType fetchType, MailboxSession session) {
         Mono<List<Mailbox>> mailboxesMono = searchMailboxes(expression, session, Right.Lookup).collectList();
 

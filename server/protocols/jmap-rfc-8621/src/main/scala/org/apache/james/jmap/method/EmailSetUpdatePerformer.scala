@@ -159,11 +159,11 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
                                  metaData: Map[MessageId, Iterable[ComposedMessageIdWithMetaData]],
                                  updateMode: FlagsUpdateMode,
                                  session: MailboxSession): SMono[Seq[EmailUpdateResult]] = {
-    val mailboxMono: SMono[MessageManager] = SMono(mailboxManager.getMailboxReactive(mailboxId, session))
-
-    mailboxMono.flatMap(mailbox => updateByRange(ranges, metaData,
-
-      range => SMono(mailbox.setFlagsReactive(flags, updateMode, range, session)).`then`()))
+    val messageIds = metaData.keys.toSeq
+    SMono(mailboxManager.getMailboxReactive(mailboxId, session))
+      .flatMap(mailbox => SMono(mailbox.setFlagsReactive(flags, updateMode, ranges.asJava, session)).`then`())
+      .`then`(SMono.just(messageIds.map(EmailUpdateSuccess)))
+      .onErrorResume(e => SMono.just(messageIds.map(id => EmailUpdateFailure(EmailSet.asUnparsed(id), e))))
   }
 
   private def moveByRange(mailboxId: MailboxId,
@@ -172,9 +172,11 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
                           metaData: Map[MessageId, Iterable[ComposedMessageIdWithMetaData]],
                           session: MailboxSession): SMono[Seq[EmailUpdateResult]] = {
     val targetId: MailboxId = update.update.mailboxIds.get.value.headOption.get
+    val messageIds = metaData.keys.toSeq
 
-    updateByRange(ranges, metaData,
-      range => SMono(mailboxManager.moveMessagesReactive(range, mailboxId, targetId, session)).`then`())
+    SMono(mailboxManager.moveMessagesReactive(ranges.asJava, mailboxId, targetId, session)).`then`()
+      .`then`(SMono.just(messageIds.map(EmailUpdateSuccess)))
+      .onErrorResume(e => SMono.just(messageIds.map(id => EmailUpdateFailure(EmailSet.asUnparsed(id), e))))
   }
 
   private def updateByRange(ranges: List[MessageRange],

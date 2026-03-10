@@ -358,6 +358,16 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
             .flatMapIterable(Function.identity());
     }
 
+    default Publisher<MessageRange> moveMessagesReactive(List<MessageRange> sets, MailboxId from, MailboxId to, MailboxSession session) {
+        return Flux.fromIterable(sets)
+            .concatMap(set -> moveMessagesReactive(set, from, to, session));
+    }
+
+    default Publisher<MessageRange> copyMessagesReactive(List<MessageRange> sets, MailboxId from, MailboxId to, MailboxSession session) {
+        return Flux.fromIterable(sets)
+            .concatMap(set -> copyMessagesReactive(set, from, to, session));
+    }
+
     enum MailboxSearchFetchType {
         Minimal,
         Counters

@@ -764,6 +764,36 @@ public class StoreMessageManager implements MessageManager {
             });
     }
 
+    @Override
+    public Publisher<Map<MessageUid, Flags>> setFlagsReactive(Flags flags, FlagsUpdateMode flagsUpdateMode, List<MessageRange> sets, MailboxSession mailboxSession) {
+        return ensureFlagsWrite(flags, flagsUpdateMode, mailboxSession)
+            .map(Mono::<Map<MessageUid, Flags>>error)
+            .orElseGet(() -> {
+                trimFlags(flags, mailboxSession);
+                MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
+                FlagsUpdateCalculator calculator = new FlagsUpdateCalculator(flags, flagsUpdateMode);
+
+                return Flux.fromIterable(sets)
+                    .concatMap(set -> messageMapper.executeReactive(messageMapper.updateFlagsReactive(getMailboxEntity(), calculator, set)))
+                    .collectList()
+                    .flatMap(allUpdatedFlagsPerRange -> {
+                        ImmutableList<UpdatedFlags> allUpdatedFlags = allUpdatedFlagsPerRange.stream()
+                            .flatMap(List::stream)
+                            .collect(ImmutableList.toImmutableList());
+                        return eventBus.dispatch(EventFactory.flagsUpdated()
+                                    .randomEventId()
+                                    .mailboxSession(mailboxSession)
+                                    .mailbox(getMailboxEntity())
+                                    .updatedFlags(allUpdatedFlags)
+                                    .build(),
+                                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                            .thenReturn(allUpdatedFlags.stream().collect(ImmutableMap.toImmutableMap(
+                                UpdatedFlags::getUid,
+                                UpdatedFlags::getNewFlags)));
+                    });
+            });
+    }
+
     /**
      * Copy the {@link MessageRange} to the {@link StoreMessageManager}
      */
@@ -779,6 +809,66 @@ public class StoreMessageManager implements MessageManager {
             copy(set, toMailbox, session)
                 .flatMapIterable(map -> MessageRange.toRanges(new ArrayList<>(map.keySet()))),
             MailboxPathLocker.LockType.Write));
+    }
+
+    public Flux<MessageRange> copyTo(List<MessageRange> sets, StoreMessageManager toMailbox, MailboxSession session) {
+        if (!toMailbox.isWriteable(session)) {
+            return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
+        }
+        if (!storeRightManager.myRights(toMailbox.mailbox, session).contains(MailboxACL.Right.Insert)) {
+            return Flux.error(new InsufficientRightsException("Append messages requires 'i' right"));
+        }
+        return Flux.from(locker.executeReactiveWithLockReactive(toMailbox.getMailboxPath(),
+            copyAll(sets, toMailbox, session)
+                .flatMapIterable(map -> MessageRange.toRanges(new ArrayList<>(map.keySet()))),
+            MailboxPathLocker.LockType.Write));
+    }
+
+    private Mono<SortedMap<MessageUid, MessageMetaData>> copyAll(List<MessageRange> sets, StoreMessageManager to, MailboxSession session) {
+        return Flux.fromIterable(sets)
+            .concatMap(set -> retrieveOriginalRows(set, session))
+            .window(batchSizes.getCopyBatchSize().orElse(Integer.MAX_VALUE))
+            .concatMap(window -> window.collectList()
+                .flatMap(originalRows -> to.copy(originalRows, session).collectList()
+                    .map(copyResult -> Pair.of(
+                        collectMetadata(copyResult.iterator()),
+                        originalRows.stream()
+                            .map(org.apache.james.mailbox.store.mail.model.Message::getMessageId)
+                            .collect(ImmutableList.toImmutableList())))))
+            .collectList()
+            .flatMap(allResults -> {
+                if (allResults.isEmpty()) {
+                    return Mono.just(ImmutableSortedMap.of());
+                }
+                SortedMap<MessageUid, MessageMetaData> allCopiedUids = new TreeMap<>();
+                List<MessageId> allMessageIds = new ArrayList<>();
+                for (Pair<SortedMap<MessageUid, MessageMetaData>, ImmutableList<MessageId>> result : allResults) {
+                    allCopiedUids.putAll(result.getLeft());
+                    allMessageIds.addAll(result.getRight());
+                }
+                MessageMoves messageMoves = MessageMoves.builder()
+                    .previousMailboxIds(getMailboxEntity().getMailboxId())
+                    .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
+                    .build();
+                EventBus.EventWithRegistrationKey added = new EventBus.EventWithRegistrationKey(
+                    EventFactory.added()
+                        .randomEventId()
+                        .mailboxSession(session)
+                        .mailbox(to.getMailboxEntity())
+                        .metaData(allCopiedUids)
+                        .isDelivery(!IS_DELIVERY)
+                        .isAppended(!IS_APPENDED)
+                        .build(),
+                    ImmutableSet.of(new MailboxIdRegistrationKey(to.getMailboxEntity().getMailboxId())));
+                EventBus.EventWithRegistrationKey moved = new EventBus.EventWithRegistrationKey(
+                    EventFactory.moved()
+                        .messageMoves(messageMoves)
+                        .messageId(allMessageIds)
+                        .session(session)
+                        .build(),
+                    messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(ImmutableSet.toImmutableSet()));
+                return Mono.from(eventBus.dispatch(ImmutableList.of(added, moved))).thenReturn(allCopiedUids);
+            });
     }
 
     /**
@@ -802,6 +892,86 @@ public class StoreMessageManager implements MessageManager {
             move(set, toMailbox, session)
                 .flatMapIterable(map -> MessageRange.toRanges(new ArrayList<>(map.keySet()))),
             MailboxPathLocker.LockType.Write));
+    }
+
+    public Flux<MessageRange> moveTo(List<MessageRange> sets, StoreMessageManager toMailbox, MailboxSession session) {
+        if (!isWriteable(session)) {
+            return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
+        }
+        if (!storeRightManager.myRights(mailbox, session).contains(MailboxACL.Right.PerformExpunge)) {
+            return Flux.error(new InsufficientRightsException("Deleting messages requires 'e' right"));
+        }
+        if (!toMailbox.isWriteable(session)) {
+            return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
+        }
+        if (!storeRightManager.myRights(toMailbox.mailbox, session).contains(MailboxACL.Right.Insert)) {
+            return Flux.error(new InsufficientRightsException("Append messages requires 'i' right"));
+        }
+        return Flux.from(locker.executeReactiveWithLockReactive(toMailbox.getMailboxPath(),
+            moveAll(sets, toMailbox, session)
+                .flatMapIterable(map -> MessageRange.toRanges(new ArrayList<>(map.keySet()))),
+            MailboxPathLocker.LockType.Write));
+    }
+
+    private Mono<SortedMap<MessageUid, MessageMetaData>> moveAll(List<MessageRange> sets, StoreMessageManager to, MailboxSession session) {
+        return Flux.fromIterable(sets)
+            .concatMap(set -> retrieveOriginalRows(set, session))
+            .window(batchSizes.getCopyBatchSize().orElse(Integer.MAX_VALUE))
+            .concatMap(window -> window
+                .collectList()
+                .flatMap(originalRows -> to.move(originalRows, session)
+                    .map(moveResult -> Pair.of(moveResult, originalRows))))
+            .collectList()
+            .flatMap(allResults -> {
+                if (allResults.isEmpty()) {
+                    return Mono.just(ImmutableSortedMap.of());
+                }
+
+                SortedMap<MessageUid, MessageMetaData> allMoveUids = new TreeMap<>();
+                List<MessageMetaData> allOriginalMessages = new ArrayList<>();
+                List<MessageId> allMessageIds = new ArrayList<>();
+
+                for (Pair<MoveResult, List<MailboxMessage>> result : allResults) {
+                    allMoveUids.putAll(collectMetadata(result.getLeft().getMovedMessages().iterator()));
+                    allOriginalMessages.addAll(result.getLeft().getOriginalMessages());
+                    result.getRight().stream()
+                        .map(org.apache.james.mailbox.store.mail.model.Message::getMessageId)
+                        .forEach(allMessageIds::add);
+                }
+
+                MessageMoves messageMoves = MessageMoves.builder()
+                    .previousMailboxIds(getMailboxEntity().getMailboxId())
+                    .targetMailboxIds(to.getMailboxEntity().getMailboxId())
+                    .build();
+
+                EventBus.EventWithRegistrationKey added = new EventBus.EventWithRegistrationKey(EventFactory.added()
+                    .randomEventId()
+                    .mailboxSession(session)
+                    .mailbox(to.getMailboxEntity())
+                    .metaData(allMoveUids)
+                    .isDelivery(!IS_DELIVERY)
+                    .isAppended(!IS_APPENDED)
+                    .movedFrom(getId())
+                    .build(),
+                    ImmutableSet.of(new MailboxIdRegistrationKey(to.getMailboxEntity().getMailboxId())));
+                EventBus.EventWithRegistrationKey expunged = new EventBus.EventWithRegistrationKey(EventFactory.expunged()
+                    .randomEventId()
+                    .mailboxSession(session)
+                    .mailbox(getMailboxEntity())
+                    .addMetaData(allOriginalMessages)
+                    .movedTo(to.getId())
+                    .build(),
+                    ImmutableSet.of(new MailboxIdRegistrationKey(mailbox.getMailboxId())));
+                EventBus.EventWithRegistrationKey moved = new EventBus.EventWithRegistrationKey(EventFactory.moved()
+                    .messageMoves(messageMoves)
+                    .messageId(allMessageIds)
+                    .session(session)
+                    .build(),
+                    messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(ImmutableSet.toImmutableSet()));
+
+                return Mono.from(eventBus.dispatch(ImmutableList.of(added, expunged, moved)))
+                    .thenReturn(allMoveUids);
+            });
     }
 
     @Override

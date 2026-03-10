@@ -163,6 +163,13 @@ public interface MessageManager {
         return Mono.fromCallable(() -> setFlags(flags, flagsUpdateMode, set, mailboxSession));
     }
 
+    default Publisher<Map<MessageUid, Flags>> setFlagsReactive(Flags flags, FlagsUpdateMode flagsUpdateMode, List<MessageRange> sets, MailboxSession mailboxSession) {
+        return Flux.fromIterable(sets)
+            .concatMap(set -> Mono.from(setFlagsReactive(flags, flagsUpdateMode, set, mailboxSession)))
+            .flatMapIterable(Map::entrySet)
+            .collectMap(Map.Entry::getKey, Map.Entry::getValue);
+    }
+
     class AppendResult {
         private final ComposedMessageId id;
         private final Long size;

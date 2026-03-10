@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import java.util.List;
+
 import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.message.IdRange;
@@ -54,6 +56,14 @@ public class CopyProcessor extends AbstractMessageRangeProcessor<CopyRequest> {
                                          MailboxSession mailboxSession,
                                          MessageRange messageSet) {
         return Flux.from(getMailboxManager().copyMessagesReactive(messageSet, currentMailbox.getMailboxId(), targetMailbox, mailboxSession));
+    }
+
+    @Override
+    protected Flux<MessageRange> processAll(MailboxId targetMailbox,
+                                            SelectedMailbox currentMailbox,
+                                            MailboxSession mailboxSession,
+                                            List<MessageRange> messageSets) {
+        return Flux.from(getMailboxManager().copyMessagesReactive(messageSets, currentMailbox.getMailboxId(), targetMailbox, mailboxSession));
     }
 
     @Override
