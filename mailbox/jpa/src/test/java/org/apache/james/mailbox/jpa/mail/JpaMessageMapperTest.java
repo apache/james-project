@@ -71,6 +71,7 @@ class JpaMessageMapperTest extends MessageMapperTest {
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD)))
             .contains(UpdatedFlags.builder()
                 .uid(message1.getUid())
+                .internalDate(message1.getInternalDate())
                 .modSeq(modSeq.next())
                 .oldFlags(new Flags(Flags.Flag.FLAGGED))
                 .newFlags(new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build())
@@ -89,6 +90,7 @@ class JpaMessageMapperTest extends MessageMapperTest {
         assertThat(updatedFlags)
             .contains(UpdatedFlags.builder()
                 .uid(message1.getUid())
+                .internalDate(message1.getInternalDate())
                 .modSeq(modSeq.next())
                 .oldFlags(new Flags())
                 .newFlags(new Flags(Flags.Flag.FLAGGED))
@@ -107,6 +109,7 @@ class JpaMessageMapperTest extends MessageMapperTest {
             .contains(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
+                    .internalDate(message1.getInternalDate())
                     .modSeq(modSeq.next())
                     .oldFlags(new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build())
                     .newFlags(new Flags(Flags.Flag.FLAGGED))
@@ -124,6 +127,7 @@ class JpaMessageMapperTest extends MessageMapperTest {
             .contains(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
+                    .internalDate(message1.getInternalDate())
                     .modSeq(modSeq.next())
                     .oldFlags(new Flags())
                     .newFlags(new Flags(USER_FLAG))
@@ -142,6 +146,7 @@ class JpaMessageMapperTest extends MessageMapperTest {
             .contains(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
+                    .internalDate(message1.getInternalDate())
                     .modSeq(message1.getModSeq())
                     .oldFlags(new Flags())
                     .newFlags(new Flags())
