@@ -500,6 +500,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         UpdatedFlags updatedFlags = UpdatedFlags.builder()
             .uid(messageUid)
             .messageId(messageId)
+            .internalDate(messageResult.getInternalDate())
             .modSeq(modSeq)
             .oldFlags(FLAGS)
             .newFlags(newFlags)
