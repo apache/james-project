@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.configuration2.XMLConfiguration;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
 import org.apache.commons.net.pop3.POP3Reply;
@@ -561,7 +560,7 @@ public class POP3ServerTest {
         usersRepository.addUser(username, "password");
 
         MailboxPath mailboxPath = MailboxPath.inbox(username);
-        MailboxSession session = mailboxManager.authenticate(username, "password").withoutDelegation();
+        MailboxSession session = mailboxManager.login(username, "password");
         mailboxManager.createMailbox(mailboxPath, session);
         setupTestMails(session, mailboxManager.getMailbox(mailboxPath, session));
 
