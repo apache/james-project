@@ -582,6 +582,160 @@ trait WebSocketContract {
 
   @Test
   @Timeout(180)
+  def bulkMoveWithNonContiguousUidsShouldGenerateSingleStateChange(server: GuiceJamesServer): Unit = {
+    // Moving N emails with non-contiguous UIDs (gap in the UID sequence) should
+    // still produce only ONE state change, not one per UID range.
+    val bobPath = MailboxPath.inbox(BOB)
+    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val mailboxId = mailboxProbe.createMailbox(bobPath)
+    val mailboxId2 = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "destination"))
+
+    // Append 5 messages (UIDs will be 1, 2, 3, 4, 5)
+    val message1 = mailboxProbe.appendMessage(BOB.asString(), bobPath, AppendCommand.from(Message.Builder.of().setSubject("test1").setBody("body1", StandardCharsets.UTF_8).build()))
+    val message2 = mailboxProbe.appendMessage(BOB.asString(), bobPath, AppendCommand.from(Message.Builder.of().setSubject("test2").setBody("body2", StandardCharsets.UTF_8).build()))
+    mailboxProbe.appendMessage(BOB.asString(), bobPath, AppendCommand.from(Message.Builder.of().setSubject("test3").setBody("body3", StandardCharsets.UTF_8).build())) // UID 3 intentionally NOT moved
+    val message4 = mailboxProbe.appendMessage(BOB.asString(), bobPath, AppendCommand.from(Message.Builder.of().setSubject("test4").setBody("body4", StandardCharsets.UTF_8).build()))
+    val message5 = mailboxProbe.appendMessage(BOB.asString(), bobPath, AppendCommand.from(Message.Builder.of().setSubject("test5").setBody("body5", StandardCharsets.UTF_8).build()))
+
+    // Move messages 1, 2, 4, 5 — skipping UID 3 — producing 2 UID ranges: [1,2] and [4,5]
+    val messageId1 = message1.getMessageId.serialize()
+    val messageId2 = message2.getMessageId.serialize()
+    val messageId4 = message4.getMessageId.serialize()
+    val messageId5 = message5.getMessageId.serialize()
+
+    Thread.sleep(100)
+
+    val response: Either[String, List[String]] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, List[String]] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": ["Mailbox", "Email"]
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            ws.send(WebSocketFrame.text(
+              s"""{
+                 |  "@type": "Request",
+                 |  "id": "req-bulk-move",
+                 |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                 |  "methodCalls": [
+                 |    ["Email/set", {
+                 |      "accountId": "$ACCOUNT_ID",
+                 |      "update": {
+                 |        "$messageId1": {"mailboxIds": {"${mailboxId2.serialize}": true}},
+                 |        "$messageId2": {"mailboxIds": {"${mailboxId2.serialize}": true}},
+                 |        "$messageId4": {"mailboxIds": {"${mailboxId2.serialize}": true}},
+                 |        "$messageId5": {"mailboxIds": {"${mailboxId2.serialize}": true}}
+                 |      }
+                 |    }, "c1"]]
+                 |}""".stripMargin))
+
+            // Expect: 1 API response + 1 state change (not 2 state changes for 2 UID ranges)
+            val payload1 = ws.receive().asPayload
+            val payload2 = ws.receive().asPayload
+            List(payload1, payload2)
+        })
+        .send(backend)
+        .body
+
+    Thread.sleep(1000)
+
+    val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
+    val emailState: State = jmapGuiceProbe.getLatestEmailState(accountId)
+    val mailboxState: State = jmapGuiceProbe.getLatestMailboxState(accountId)
+
+    val globalState: String = PushState.fromOption(Some(UuidState.fromJava(mailboxState)), Some(UuidState.fromJava(emailState))).get.value
+    val stateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"${emailState.getValue}","Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState"}""".stripMargin
+
+    assertThat(response.toOption.get.asJava)
+      .hasSize(2) // 1 state change notification + 1 API response (not 2 state changes)
+      .contains(stateChange)
+  }
+
+  @Test
+  @Timeout(180)
+  def bulkFlagUpdateWithNonContiguousUidsShouldGenerateSingleStateChange(server: GuiceJamesServer): Unit = {
+    // Flagging N emails with non-contiguous UIDs (gap in the UID sequence) should
+    // still produce only ONE state change, not one per UID range.
+    // The optimization path (updateFlagsByRange) is triggered when sameUpdate && singleMailbox && size > RANGE_THRESHOLD (3).
+    val bobPath = MailboxPath.inbox(BOB)
+    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(bobPath)
+
+    // Append 5 messages (UIDs will be 1, 2, 3, 4, 5)
+    val message1 = mailboxProbe.appendMessage(BOB.asString(), bobPath, AppendCommand.from(Message.Builder.of().setSubject("test1").setBody("body1", StandardCharsets.UTF_8).build()))
+    val message2 = mailboxProbe.appendMessage(BOB.asString(), bobPath, AppendCommand.from(Message.Builder.of().setSubject("test2").setBody("body2", StandardCharsets.UTF_8).build()))
+    mailboxProbe.appendMessage(BOB.asString(), bobPath, AppendCommand.from(Message.Builder.of().setSubject("test3").setBody("body3", StandardCharsets.UTF_8).build())) // UID 3 intentionally NOT flagged
+    val message4 = mailboxProbe.appendMessage(BOB.asString(), bobPath, AppendCommand.from(Message.Builder.of().setSubject("test4").setBody("body4", StandardCharsets.UTF_8).build()))
+    val message5 = mailboxProbe.appendMessage(BOB.asString(), bobPath, AppendCommand.from(Message.Builder.of().setSubject("test5").setBody("body5", StandardCharsets.UTF_8).build()))
+
+    // Flag messages 1, 2, 4, 5 — skipping UID 3 — producing 2 UID ranges: [1,2] and [4,5]
+    val messageId1 = message1.getMessageId.serialize()
+    val messageId2 = message2.getMessageId.serialize()
+    val messageId4 = message4.getMessageId.serialize()
+    val messageId5 = message5.getMessageId.serialize()
+
+    Thread.sleep(100)
+
+    val response: Either[String, List[String]] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, List[String]] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": ["Mailbox", "Email"]
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            ws.send(WebSocketFrame.text(
+              s"""{
+                 |  "@type": "Request",
+                 |  "id": "req-bulk-flag",
+                 |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                 |  "methodCalls": [
+                 |    ["Email/set", {
+                 |      "accountId": "$ACCOUNT_ID",
+                 |      "update": {
+                 |        "$messageId1": {"keywords/$$seen": true},
+                 |        "$messageId2": {"keywords/$$seen": true},
+                 |        "$messageId4": {"keywords/$$seen": true},
+                 |        "$messageId5": {"keywords/$$seen": true}
+                 |      }
+                 |    }, "c1"]]
+                 |}""".stripMargin))
+
+            // Expect: 1 API response + 1 state change (not 2 state changes for 2 UID ranges)
+            val payload1 = ws.receive().asPayload
+            val payload2 = ws.receive().asPayload
+            List(payload1, payload2)
+        })
+        .send(backend)
+        .body
+
+    Thread.sleep(1000)
+
+    val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
+    val emailState: State = jmapGuiceProbe.getLatestEmailState(accountId)
+    val mailboxState: State = jmapGuiceProbe.getLatestMailboxState(accountId)
+
+    val globalState: String = PushState.fromOption(Some(UuidState.fromJava(mailboxState)), Some(UuidState.fromJava(emailState))).get.value
+    val stateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"${emailState.getValue}","Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState"}""".stripMargin
+
+    assertThat(response.toOption.get.asJava)
+      .hasSize(2) // 1 state change notification + 1 API response (not 2 state changes)
+      .contains(stateChange)
+  }
+
+  @Test
+  @Timeout(180)
   def shouldPushChangesToDelegatedUser(server: GuiceJamesServer): Unit = {
     val davidPath = MailboxPath.inbox(DAVID)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(davidPath)

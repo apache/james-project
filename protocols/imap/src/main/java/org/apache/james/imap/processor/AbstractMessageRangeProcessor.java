@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.apache.james.core.Username;
@@ -67,6 +68,14 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                                                   SelectedMailbox currentMailbox,
                                                   MailboxSession mailboxSession,
                                                   MessageRange messageSet);
+
+    protected Flux<MessageRange> processAll(MailboxId targetMailbox,
+                                            SelectedMailbox currentMailbox,
+                                            MailboxSession mailboxSession,
+                                            List<MessageRange> messageSets) {
+        return Flux.fromIterable(messageSets)
+            .concatMap(set -> process(targetMailbox, currentMailbox, mailboxSession, set));
+    }
 
     protected abstract String getOperationName();
 
@@ -120,7 +129,8 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                                 .orElseThrow(() -> new MessageRangeException(range.getFormattedString() + " is an invalid range")))
                             .sneakyThrow())
                         .filter(Objects::nonNull)
-                        .concatMap(range -> process(target.getId(), session.getSelected(), mailboxSession, range)
+                        .collectList()
+                        .flatMapMany(ranges -> processAll(target.getId(), session.getSelected(), mailboxSession, ranges)
                             .doOnEach(ReactorUtils.logFinally(() -> AuditTrail.entry()
                                 .username(() -> mailboxSession.getUser().asString())
                                 .sessionId(() -> session.sessionId().asString())
@@ -128,8 +138,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                                 .action(getOperationName())
                                 .parameters(() -> ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
                                     "targetId", target.getId().serialize(),
-                                    "selectedMailboxId", session.getSelected().getMailboxId().serialize(),
-                                    "range", range.getUidFrom().asLong() + ":" + range.getUidTo().asLong()))
+                                    "selectedMailboxId", session.getSelected().getMailboxId().serialize()))
                                 .log("IMAP " + getOperationName() + " succeeded.")))
                             .map(IdRange::from))
                         .collect(ImmutableList.<IdRange>toImmutableList())

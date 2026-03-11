@@ -98,8 +98,15 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 .map(Throwing.<IdRange, MessageRange>function(idRange -> messageRange(selected, idRange, request.isUseUids())
                     .orElseThrow(() -> new MessageRangeException(idRange.getFormattedString() + " is an invalid range")))
                     .sneakyThrow())
-                .concatMap(messageSet -> handleRange(request, session, responder, selected, mailbox, mailboxSession, failed, failedMsns, userFlags, messageSet))
-                .then())
+                .collectList()
+                .flatMap(messageSets -> {
+                    if (request.getUnchangedSince() != -1) {
+                        return Flux.fromIterable(messageSets)
+                            .concatMap(messageSet -> handleRange(request, session, responder, selected, mailbox, mailboxSession, failed, failedMsns, userFlags, messageSet))
+                            .then();
+                    }
+                    return setFlagsAll(request, session, responder, selected, mailbox, mailboxSession, messageSets);
+                }))
             .then(unsolicitedResponses(session, responder, omitExpunged, request.isUseUids()))
             .doOnSuccess(any -> {
                 // check if we had some failed uids which didn't pass the UNCHANGEDSINCE filter
@@ -214,16 +221,45 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     }
 
     /**
-     * Set the flags for given messages
+     * Set the flags for given messages (single range)
      */
     private Mono<Void> setFlags(StoreRequest request, MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, ImapSession session, Responder responder) {
         boolean silent = request.isSilent();
         long unchangedSince = request.getUnchangedSince();
-        
+
         SelectedMailbox selected = session.getSelected();
         return Mono.from(mailbox.setFlagsReactive(request.getFlags(), request.getFlagsUpdateMode(), messageSet, mailboxSession))
             .doOnNext(flagsByUid -> handlePermanentFlagChanges(mailboxSession, mailbox, responder, selected))
             .flatMap(flagsByUid -> handleCondstore(request, mailboxSession, mailbox, messageSet, session, responder, silent, unchangedSince, selected, flagsByUid));
+    }
+
+    /**
+     * Set the flags for all message ranges in a single batched operation, dispatching a single event.
+     * Only used when UNCHANGEDSINCE == -1 (no CONDSTORE filtering needed).
+     */
+    private Mono<Void> setFlagsAll(StoreRequest request, ImapSession session, Responder responder,
+                                    SelectedMailbox selected, MessageManager mailbox,
+                                    MailboxSession mailboxSession, List<MessageRange> messageSets) {
+        boolean silent = request.isSilent();
+        Set<Capability> enabled = EnableProcessor.getEnabledCapabilities(session);
+        boolean qresyncEnabled = enabled.contains(ImapConstants.SUPPORTS_QRESYNC);
+        boolean condstoreEnabled = enabled.contains(ImapConstants.SUPPORTS_CONDSTORE);
+
+        return Mono.from(mailbox.setFlagsReactive(request.getFlags(), request.getFlagsUpdateMode(), messageSets, mailboxSession))
+            .doOnNext(flagsByUid -> handlePermanentFlagChanges(mailboxSession, mailbox, responder, selected))
+            .flatMap(flagsByUid -> {
+                if (!silent || qresyncEnabled || condstoreEnabled) {
+                    Mono<Map<MessageUid, ModSeq>> modSeqsMono = (qresyncEnabled || condstoreEnabled)
+                        ? Flux.fromIterable(messageSets)
+                            .concatMap(set -> Flux.from(mailbox.listMessagesMetadata(set, mailboxSession)))
+                            .collectMap(r -> r.getComposedMessageId().getUid(), ComposedMessageIdWithMetaData::getModSeq)
+                        : Mono.just(ImmutableMap.of());
+                    return modSeqsMono
+                        .doOnNext(modSeqs -> sendFetchResponses(responder, request.isUseUids(), silent, -1L, selected, flagsByUid, qresyncEnabled, condstoreEnabled, modSeqs))
+                        .then();
+                }
+                return Mono.empty();
+            });
     }
 
     private Mono<Void> handleCondstore(StoreRequest request, MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, ImapSession session, Responder responder, boolean silent, long unchangedSince, SelectedMailbox selected, Map<MessageUid, Flags> flagsByUid) {

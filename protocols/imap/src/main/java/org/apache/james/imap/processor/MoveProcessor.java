@@ -60,6 +60,12 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
     }
 
     @Override
+    protected Flux<MessageRange> processAll(MailboxId targetMailbox, SelectedMailbox currentMailbox,
+                                            MailboxSession mailboxSession, List<MessageRange> messageSets) {
+        return Flux.from(getMailboxManager().moveMessagesReactive(messageSets, currentMailbox.getMailboxId(), targetMailbox, mailboxSession));
+    }
+
+    @Override
     protected String getOperationName() {
         return "Move";
     }
