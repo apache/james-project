@@ -465,20 +465,24 @@ public class CassandraMessageIdDAO {
     }
 
     public Flux<ComposedMessageIdWithMetaData> listMessagesMetadata(CassandraId mailboxId, MessageRange range) {
+        MemoizedSupplier<FlagsExtractor.Optimized> memoizedReader = new MemoizedSupplier<>();
+
         return cassandraAsyncExecutor.executeRows(selectMetadataRange.bind()
                 .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
                 .setLong(IMAP_UID_GTE, range.getUidFrom().asLong())
                 .setLong(IMAP_UID_LTE, range.getUidTo().asLong())
                 .setExecutionProfile(readProfile))
             .map(row -> {
-                CassandraMessageId messageId = CassandraMessageId.Factory.of(row.get(MESSAGE_ID, TypeCodecs.TIMEUUID));
+                FlagsExtractor.Optimized reader = memoizedReader.get(() -> FlagsExtractor.Optimized.of(row));
+                CassandraMessageId messageId = CassandraMessageId.Factory.of(reader.getMessageId(row));
+
                 return ComposedMessageIdWithMetaData.builder()
-                    .modSeq(ModSeq.of(TypeCodecs.BIGINT.decodePrimitive(row.getBytesUnsafe(MOD_SEQ), protocolVersion)))
-                    .threadId(getThreadIdFromRow(row, messageId))
-                    .flags(FlagsExtractor.getFlags(row))
+                    .modSeq(ModSeq.of(reader.getModSeq(row)))
+                    .threadId(asThreadId(messageId, reader.getThreadId(row)))
+                    .flags(reader.getFlags(row))
                     .composedMessageId(new ComposedMessageId(mailboxId,
                         messageId,
-                        MessageUid.of(TypeCodecs.BIGINT.decodePrimitive(row.getBytesUnsafe(IMAP_UID), protocolVersion))))
+                        MessageUid.of(reader.getImapUid(row))))
                     .build();
             });
     }
@@ -609,6 +613,10 @@ public class CassandraMessageIdDAO {
 
     private ThreadId getThreadIdFromRow(Row row, MessageId messageId) {
         UUID threadIdUUID = row.get(THREAD_ID, TypeCodecs.TIMEUUID);
+        return asThreadId(messageId, threadIdUUID);
+    }
+
+    private static ThreadId asThreadId(MessageId messageId, UUID threadIdUUID) {
         if (threadIdUUID == null) {
             return ThreadId.fromBaseMessageId(messageId);
         }
