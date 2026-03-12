@@ -31,7 +31,6 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
@@ -97,11 +96,7 @@ public class DomainQuotaRoutes implements Routes {
     }
 
     public boolean isVirtualHostingSupported() {
-        try {
-            return usersRepository.supportVirtualHosting();
-        } catch (UsersRepositoryException e) {
-            throw new RuntimeException(e);
-        }
+        return usersRepository.supportVirtualHosting();
     }
 
     public void defineUpdateQuota() {
