@@ -123,10 +123,6 @@ public class UsersRepositoryManagement extends StandardMBean implements UsersRep
 
     @Override
     public boolean getVirtualHostingEnabled() throws Exception {
-        try {
-            return usersRepository.supportVirtualHosting();
-        } catch (UsersRepositoryException e) {
-            throw new Exception(e.getMessage());
-        }
+        return usersRepository.supportVirtualHosting();
     }
 }

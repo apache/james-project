@@ -142,7 +142,7 @@ public interface UsersRepository {
      * 
      * @return true or false
      */
-    boolean supportVirtualHosting() throws UsersRepositoryException;
+    boolean supportVirtualHosting();
 
     /**
      * Returns username to be used for a given MailAddress
