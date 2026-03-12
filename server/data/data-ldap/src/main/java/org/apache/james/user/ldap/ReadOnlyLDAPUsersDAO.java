@@ -342,7 +342,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
 
     @Override
-    public Flux<Username> listUsersOfADomainReactive(Domain domain) {
+    public Flux<Username> listUsersOfADomainReactive(Domain domain, boolean supportsVirtualHosting) {
         return Flux.fromStream(() -> {
                 try {
                     return getUsernamesForDomain(domain);
@@ -359,7 +359,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         }
         return buildUserCollection(getValidUserDNs()).stream()
             .map(ReadOnlyLDAPUser::getUserName)
-            .filter(username -> username.getDomainPart().map(domain::equals).orElse(false))
+            .filter(username -> username.getDomainPart().map(domain::equals).orElse(!ldapConfiguration.supportsVirtualHosting()))
             .distinct();
     }
 
@@ -380,7 +380,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
                     return Stream.empty();
                 }
             })
-            .filter(username -> username.getDomainPart().map(domain::equals).orElse(false))
+            .filter(username -> username.getDomainPart().map(domain::equals).orElse(!ldapConfiguration.supportsVirtualHosting()))
             .distinct();
     }
 

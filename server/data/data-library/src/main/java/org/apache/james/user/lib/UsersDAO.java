@@ -65,11 +65,11 @@ public interface UsersDAO {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    default Publisher<Username> listUsersOfADomainReactive(Domain domain) {
+    default Publisher<Username> listUsersOfADomainReactive(Domain domain, boolean supportsVirtualHosting) {
         return Flux.from(listReactive())
             .filter(username -> username.getDomainPart()
                 .map(domain::equals)
-                .orElse(false));
+                .orElse(!supportsVirtualHosting));
     }
 
     void addUser(Username username, String password) throws UsersRepositoryException;

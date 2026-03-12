@@ -148,7 +148,10 @@ public class PostgresUsersDAO implements UsersDAO {
     }
 
     @Override
-    public Flux<Username> listUsersOfADomainReactive(Domain domain) {
+    public Flux<Username> listUsersOfADomainReactive(Domain domain, boolean supportsVirtualHosting) {
+        if (!supportsVirtualHosting) {
+            return listReactive();
+        }
         String domainPattern = "%@" + domain.asString();
         return postgresExecutor.executeRows(dslContext -> Flux.from(
                 dslContext.select(USERNAME)

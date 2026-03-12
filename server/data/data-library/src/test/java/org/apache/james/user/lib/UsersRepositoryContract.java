@@ -782,20 +782,22 @@ public interface UsersRepositoryContract {
             assertThatCode(() -> testee().assertValid(withOutDomainPart))
                 .doesNotThrowAnyException();
         }
-
-        @Test
-        default void listUsersOfADomainShouldFailWhenVirtualHostingIsDisabled(TestSystem testSystem) {
-            assertThatThrownBy(() -> Flux.from(testee().listUsersOfADomainReactive(TestSystem.DOMAIN))
-                .collectList()
-                .block())
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("listUsersOfADomainReactive is not supported when virtual hosting is disabled");
-        }
     }
 
     interface WithVirtualHostingContract extends WithVirtualHostingReadOnlyContract, WithVirtualHostingReadWriteContract {
     }
 
     interface WithOutVirtualHostingContract extends WithOutVirtualHostingReadOnlyContract, ReadWriteContract {
+        @Test
+        default void listUsersOfADomainShouldReturnAllUsers(TestSystem testSystem) throws Exception {
+            testSystem.domainList.addDomain(Domain.of("domain1.tld"));
+            testee().addUser(Username.of("user1"), "password");
+            testee().addUser(Username.of("user2"), "password");
+
+            assertThat(Flux.from(testee().listUsersOfADomainReactive(Domain.of("domain1.tld")))
+                .collectList()
+                .block())
+                .containsOnly(Username.of("user1"), Username.of("user2"));
+        }
     }
 }

@@ -35,7 +35,6 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.task.TaskManager;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.DomainAliasResponse;
 import org.apache.james.webadmin.service.DeleteUserDataService;
@@ -146,8 +145,10 @@ public class DomainsRoutes implements Routes {
 
     public void defineGetDomains() {
         service.get(DOMAINS,
-            (request, response) ->
-                domainList.getDomains().stream().map(Domain::name).collect(Collectors.toList()),
+            (request, response) -> domainList.getDomains()
+                .stream()
+                .map(Domain::name)
+                .collect(Collectors.toList()),
             jsonTransformer);
     }
 
@@ -159,14 +160,7 @@ public class DomainsRoutes implements Routes {
         service.get(DOMAIN_USERS, this::listUsersOfDomain, jsonTransformer);
     }
 
-    private List<String> listUsersOfDomain(Request request, Response response) throws UsersRepositoryException, DomainListException {
-        if (!usersRepository.supportVirtualHosting()) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405)
-                .type(ErrorType.WRONG_STATE)
-                .message("Virtual hosting must be enabled to list users by domain")
-                .haltError();
-        }
+    private List<String> listUsersOfDomain(Request request, Response response) throws DomainListException {
         Domain domain = checkValidDomain(request.params(DOMAIN_NAME));
         if (!domainList.containsDomain(domain)) {
             throw domainNotFound(domain);
