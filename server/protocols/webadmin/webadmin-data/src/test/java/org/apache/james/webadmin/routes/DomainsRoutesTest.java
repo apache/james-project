@@ -944,15 +944,16 @@ class DomainsRoutesTest {
         }
 
         @Test
-        void getUsersOfDomainShouldReturn405WhenVirtualHostingDisabled() {
+        void getUsersOfDomainShouldReturnAllUsers() throws Exception {
+            usersRepository.addUser(Username.of("user1"), "password");
+            usersRepository.addUser(Username.of("user2"), "password");
+
             when()
                 .get(DOMAIN + "/users")
             .then()
                 .contentType(ContentType.JSON)
-                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405)
-                .body("statusCode", is(HttpStatus.METHOD_NOT_ALLOWED_405))
-                .body("type", is("WrongState"))
-                .body("message", is("Virtual hosting must be enabled to list users by domain"));
+                .statusCode(HttpStatus.OK_200)
+                .body(".", containsInAnyOrder("user1", "user2"));
         }
     }
 
