@@ -27,6 +27,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.MailboxAnnotationManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.ReadOnlyAnnotationPredicate;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -49,24 +50,37 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
     private final StoreRightManager rightManager;
     private final int limitOfAnnotations;
     private final int limitAnnotationSize;
+    private final ReadOnlyAnnotationPredicate readOnlyPredicate;
 
     @Inject
     public StoreMailboxAnnotationManager(MailboxSessionMapperFactory mailboxSessionMapperFactory,
-                                         StoreRightManager rightManager) {
+                                         StoreRightManager rightManager,
+                                         ReadOnlyAnnotationPredicate readOnlyPredicate) {
         this(mailboxSessionMapperFactory,
             rightManager,
             MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
-            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE,
+            readOnlyPredicate);
     }
 
     public StoreMailboxAnnotationManager(MailboxSessionMapperFactory mailboxSessionMapperFactory,
                                          StoreRightManager rightManager,
                                          int limitOfAnnotations,
                                          int limitAnnotationSize) {
+        this(mailboxSessionMapperFactory, rightManager, limitOfAnnotations, limitAnnotationSize,
+            ReadOnlyAnnotationPredicate.ALLOW_ALL);
+    }
+
+    public StoreMailboxAnnotationManager(MailboxSessionMapperFactory mailboxSessionMapperFactory,
+                                         StoreRightManager rightManager,
+                                         int limitOfAnnotations,
+                                         int limitAnnotationSize,
+                                         ReadOnlyAnnotationPredicate readOnlyPredicate) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.rightManager = rightManager;
         this.limitOfAnnotations = limitOfAnnotations;
         this.limitAnnotationSize = limitAnnotationSize;
+        this.readOnlyPredicate = readOnlyPredicate;
     }
 
     @Override
@@ -114,6 +128,9 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
                 .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
             .flatMapMany(mailboxId -> Flux.fromIterable(mailboxAnnotations)
                 .concatMap(annotation -> {
+                    if (readOnlyPredicate.isReadOnly(annotation.getKey())) {
+                        return Mono.error(new AnnotationException("annotation is read-only: " + annotation.getKey().asString()));
+                    }
                     if (annotation.isNil()) {
                         return Mono.from(annotationMapper.deleteAnnotationReactive(mailboxId, annotation.getKey()));
                     }
