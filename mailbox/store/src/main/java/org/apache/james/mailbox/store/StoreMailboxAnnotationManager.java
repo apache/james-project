@@ -63,6 +63,10 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
             readOnlyPredicate);
     }
 
+    public StoreMailboxAnnotationManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, StoreRightManager rightManager) {
+        this(mailboxSessionMapperFactory, rightManager, ReadOnlyAnnotationPredicate.ALLOW_ALL);
+    }
+
     public StoreMailboxAnnotationManager(MailboxSessionMapperFactory mailboxSessionMapperFactory,
                                          StoreRightManager rightManager,
                                          int limitOfAnnotations,
