@@ -47,9 +47,15 @@
      -->
     <bean id="messageParser" class="org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl"/>
 
+    <bean id="allowAllReadOnlyAnnotationPredicate"
+          class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField" value="org.apache.james.mailbox.ReadOnlyAnnotationPredicate.ALLOW_ALL"/>
+    </bean>
+
     <bean id="storeMailboxAnnotationManager" class="org.apache.james.mailbox.store.StoreMailboxAnnotationManager">
         <constructor-arg index="0" ref="messageMapperFactory" />
         <constructor-arg index="1" ref="storeRightManager" />
+        <constructor-arg index="2" ref="allowAllReadOnlyAnnotationPredicate" />
     </bean>
 
     <bean id="storeRightManager" class="org.apache.james.mailbox.store.StoreRightManager" >
