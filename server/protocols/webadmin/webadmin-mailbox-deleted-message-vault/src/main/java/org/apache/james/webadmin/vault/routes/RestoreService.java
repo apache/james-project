@@ -125,7 +125,7 @@ public class RestoreService {
     }
 
     private MessageManager createRestoreMailbox(MailboxSession session, MailboxPath restoreMailbox) throws MailboxException {
-        return mailboxManager.createMailbox(restoreMailbox, session)
+        return mailboxManager.createMailbox(restoreMailbox, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, session)
             .map(Throwing.<MailboxId, MessageManager>function(mailboxId -> mailboxManager.getMailbox(mailboxId, session)).sneakyThrow())
             .orElseThrow(() -> new RuntimeException("createMailbox " + restoreMailbox.asString() + " returns an empty mailboxId"));
     }
