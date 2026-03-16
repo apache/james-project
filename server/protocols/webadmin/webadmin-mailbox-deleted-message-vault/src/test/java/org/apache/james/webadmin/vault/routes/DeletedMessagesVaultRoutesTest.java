@@ -88,6 +88,7 @@ import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.DefaultMailboxes;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -1618,7 +1619,7 @@ class DeletedMessagesVaultRoutesTest {
 
                 doThrow(new RuntimeException("mock exception"))
                     .when(mailboxManager)
-                    .createMailbox(any(MailboxPath.class), any(MailboxSession.class));
+                    .createMailbox(any(MailboxPath.class), any(MailboxManager.CreateOption.class), any(MailboxSession.class));
 
                 String taskId =
                     given()
