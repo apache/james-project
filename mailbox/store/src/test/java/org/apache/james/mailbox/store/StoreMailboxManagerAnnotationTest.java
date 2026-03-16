@@ -34,6 +34,8 @@ import java.util.Set;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
+import org.apache.james.mailbox.ReadOnlyAnnotationPredicate;
+import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -58,6 +60,7 @@ import reactor.core.publisher.Mono;
 class StoreMailboxManagerAnnotationTest {
     static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
     static final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
+    static final MailboxAnnotationKey SERVER_KEY = new MailboxAnnotationKey("/shared/vendor/server/quota");
 
     static final MailboxAnnotation PRIVATE_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_KEY, "My comment");
     static final MailboxAnnotation SHARED_ANNOTATION =  MailboxAnnotation.newInstance(SHARED_KEY, "My shared comment");
@@ -102,7 +105,11 @@ class StoreMailboxManagerAnnotationTest {
             .thenReturn(Mono.just(true));
 
         annotationManager = spy(new StoreMailboxAnnotationManager(mailboxSessionMapperFactory,
-            storeRightManager));
+            storeRightManager, AggregatedReadOnlyAnnotationPredicate.ALLOW_ALL));
+    }
+
+    private StoreMailboxAnnotationManager managerWithReadOnly(ReadOnlyAnnotationPredicate predicate) {
+        return new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager, predicate);
     }
 
     @Test
@@ -171,5 +178,35 @@ class StoreMailboxManagerAnnotationTest {
         when(annotationMapper.getAnnotationsByKeysReactive(eq(mailboxId), eq(KEYS))).thenReturn(Flux.fromIterable(ANNOTATIONS));
 
         assertThat(annotationManager.getAnnotationsByKeys(mailboxPath, session, KEYS)).isEqualTo(ANNOTATIONS);
+    }
+
+    @Test
+    void updateAnnotationsShouldRejectReadOnlyKey() {
+        StoreMailboxAnnotationManager manager = managerWithReadOnly(key -> key.equals(SERVER_KEY));
+        MailboxAnnotation serverAnnotation = MailboxAnnotation.newInstance(SERVER_KEY, "42");
+
+        assertThatThrownBy(() -> manager.updateAnnotations(mailboxPath, session, ImmutableList.of(serverAnnotation)))
+            .isInstanceOf(AnnotationException.class)
+            .hasMessageContaining("read-only");
+    }
+
+    @Test
+    void updateAnnotationsShouldRejectReadOnlyKeyEvenWhenNil() {
+        StoreMailboxAnnotationManager manager = managerWithReadOnly(key -> key.equals(SERVER_KEY));
+
+        assertThatThrownBy(() -> manager.updateAnnotations(mailboxPath, session, ImmutableList.of(MailboxAnnotation.nil(SERVER_KEY))))
+            .isInstanceOf(AnnotationException.class)
+            .hasMessageContaining("read-only");
+    }
+
+    @Test
+    void updateAnnotationsShouldAllowWritableKeysWhenReadOnlyPredicateIsRegistered() throws MailboxException {
+        StoreMailboxAnnotationManager manager = managerWithReadOnly(key -> key.equals(SERVER_KEY));
+        when(annotationMapper.existReactive(eq(mailboxId), any())).thenReturn(Mono.just(true));
+        when(annotationMapper.insertAnnotationReactive(eq(mailboxId), any())).thenReturn(Mono.empty());
+
+        manager.updateAnnotations(mailboxPath, session, ImmutableList.of(PRIVATE_ANNOTATION));
+
+        verify(annotationMapper, times(1)).insertAnnotationReactive(eq(mailboxId), eq(PRIVATE_ANNOTATION));
     }
 }

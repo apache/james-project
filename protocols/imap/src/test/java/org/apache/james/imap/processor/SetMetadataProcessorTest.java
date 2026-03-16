@@ -163,6 +163,20 @@ class SetMetadataProcessorTest {
         verify(mockStatusResponseFactory, times(1)).taggedNo(any(Tag.class), any(ImapCommand.class), humanTextCaptor.capture());
 
         assertThat(humanTextCaptor.getAllValues().get(FIRST_ELEMENT_INDEX).getKey()).isEqualTo(HumanReadableText.MAILBOX_ANNOTATION_KEY);
+    }
 
+    @Test
+    void processShouldResponseNoWithReadOnlyMessageWhenManagerThrowsReadOnlyAnnotationException() {
+        MailboxAnnotationKey readOnlyKey = new MailboxAnnotationKey("/private/key");
+        when(mockMailboxManager.updateAnnotationsReactive(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations)))
+            .thenReturn(Mono.error(new AnnotationException("annotation is read-only: " + readOnlyKey.asString())));
+
+        processor.process(request, mockResponder, imapSession);
+
+        verify(mockStatusResponseFactory, times(1)).taggedNo(any(Tag.class), any(ImapCommand.class), humanTextCaptor.capture());
+
+        HumanReadableText humanReadableText = humanTextCaptor.getAllValues().get(FIRST_ELEMENT_INDEX);
+        assertThat(humanReadableText.getKey()).isEqualTo(HumanReadableText.MAILBOX_ANNOTATION_KEY);
+        assertThat(humanReadableText.getDefaultValue()).contains("read-only").contains(readOnlyKey.asString());
     }
 }

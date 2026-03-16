@@ -16,40 +16,33 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules;
 
-import org.apache.james.mailbox.SystemMailboxesProvider;
-import org.apache.james.mailbox.acl.MailboxACLResolver;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.store.SystemMailboxesProviderImpl;
-import org.apache.james.modules.mailbox.AnnotationModule;
-import org.apache.james.modules.mailbox.MailReceptionHealthCheckModule;
-import org.apache.james.modules.mailbox.PreDeletionHookModule;
-import org.apache.james.utils.GuiceProbe;
+package org.apache.james.modules.mailbox;
+
+import org.apache.james.mailbox.ReadOnlyAnnotationPredicate;
+import org.apache.james.mailbox.store.AggregatedReadOnlyAnnotationPredicate;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 
-public class MailboxModule extends AbstractModule {
+/**
+ * Wires the read-only annotation extension point.
+ *
+ * Other modules can contribute read-only keys by adding bindings to the
+ * {@code Set<ReadOnlyAnnotationPredicate>} multibinder, for example:
+ *
+ * <pre>
+ * Multibinder.newSetBinder(binder(), ReadOnlyAnnotationPredicate.class)
+ *     .addBinding().toInstance(key -> key.asString().startsWith("/shared/vendor/mymodule/"));
+ * </pre>
+ */
+public class AnnotationModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new PreDeletionHookModule());
-        install(new MailReceptionHealthCheckModule());
-        install(new AnnotationModule());
-
-        Multibinder<GuiceProbe> probeMultiBinder = Multibinder.newSetBinder(binder(), GuiceProbe.class);
-        probeMultiBinder.addBinding().to(MailboxProbeImpl.class);
-        probeMultiBinder.addBinding().to(QuotaProbesImpl.class);
-        probeMultiBinder.addBinding().to(ACLProbeImpl.class);
-        probeMultiBinder.addBinding().to(ConfigurationProbe.class);
-
-        bind(UnionMailboxACLResolver.class).in(Scopes.SINGLETON);
-        bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
-
-        bind(SystemMailboxesProviderImpl.class).in(Scopes.SINGLETON);
-        bind(SystemMailboxesProvider.class).to(SystemMailboxesProviderImpl.class);
+        Multibinder.newSetBinder(binder(), ReadOnlyAnnotationPredicate.class);
+        bind(AggregatedReadOnlyAnnotationPredicate.class).in(Scopes.SINGLETON);
+        bind(ReadOnlyAnnotationPredicate.class).to(AggregatedReadOnlyAnnotationPredicate.class);
     }
-
 }
