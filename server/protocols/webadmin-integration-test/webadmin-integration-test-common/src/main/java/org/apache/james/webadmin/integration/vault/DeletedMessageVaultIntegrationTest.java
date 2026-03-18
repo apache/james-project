@@ -56,13 +56,15 @@ import java.util.Map;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.GuiceModuleTestExtension;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.backup.ZipAssert;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.probe.MailboxProbe;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.probe.DataProbe;
@@ -128,6 +130,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
     private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(TWO_MINUTES);
     private static final String SUBJECT = "This mail will be restored from the vault!!";
     private static final String MAILBOX_NAME = "toBeDeleted";
+    private static final String OWNER_ONLY_MAILBOX_NAME = "ownerOnly";
     private static final String MATCH_ALL_QUERY = "{" +
         "\"combinator\": \"and\"," +
         "\"criteria\": []" +
@@ -144,6 +147,8 @@ public abstract class DeletedMessageVaultIntegrationTest {
     private TestIMAPClient testIMAPClient;
     private RequestSpecification webAdminApi;
     private MailboxId otherMailboxId;
+    private MailboxId ownerOnlyMailboxId;
+    private MailboxProbeImpl mailboxProbe;
 
     private UserCredential homerCredential;
     private UserCredential bartCredential;
@@ -151,7 +156,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
     @BeforeEach
     void setup(GuiceJamesServer jmapServer) throws Throwable {
-        MailboxProbe mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
+        mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
 
         Port jmapPort = jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort();
@@ -167,6 +172,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         dataProbe.addUser(JACK, PASSWORD);
         mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
         otherMailboxId = mailboxProbe.createMailbox("#private", HOMER, MAILBOX_NAME);
+        ownerOnlyMailboxId = mailboxProbe.createMailbox("#private", HOMER, OWNER_ONLY_MAILBOX_NAME);
 
         homerCredential = getUserCredential(HOMER, PASSWORD);
         bartCredential = getUserCredential(BART, BOB_PASSWORD);
@@ -436,6 +442,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
     @Test
     void vaultEndpointShouldNotRestoreMessageForSharee() {
+        // GIVEN a message in Homer's mailbox shared with Bart
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(bartCredential)).hasSize(1));
@@ -445,9 +452,11 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         homerSharesHisMailboxWithBart();
 
+        // WHEN Bart deletes the shared message
         bartDeletesMessages(ImmutableList.of(messageId));
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(0));
 
+        // THEN Bart should not restore anything from his own DMV
         restoreMessagesFor(BART);
         awaitSearchUpToDate();
 
@@ -458,6 +467,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
     @Test
     void vaultEndpointShouldRestoreMessageForSharer() {
+        // GIVEN a message in Homer's mailbox shared with Bart
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
 
@@ -466,15 +476,123 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
         homerSharesHisMailboxWithBart();
 
+        // WHEN Bart deletes the shared message
         bartDeletesMessages(ImmutableList.of(messageId));
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(0));
 
+        // THEN Homer should be able to restore it from his DMV
         restoreAllMessagesOfHomer();
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
 
         String newMessageId = listMessageIdsForAccount(homerCredential).get(0);
 
         assertThat(getMessageContent(homerCredential, newMessageId)
+            .getString("methodResponses[0][1].list[0].subject")).isEqualTo(SUBJECT);
+    }
+
+    @Test
+    void vaultEndpointShouldRestoreMessageForOwnerWhenShareeCopiedSharedMessageToOwnMailbox() {
+        // GIVEN a message in Homer's mailbox shared with Bart
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
+
+        String messageId = listMessageIdsForAccount(homerCredential).get(0);
+        homerMovesTheMailInAnotherMailbox(messageId);
+        homerSharesHisMailboxWithBart();
+
+        bartCopiesSharedMessageToOwnInbox();
+
+        // WHEN Homer deletes the original shared-mailbox reference
+        homerDeletesMessages(ImmutableList.of(messageId));
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(0));
+
+        // THEN Homer should still get a DMV entry for the message he lost access to
+        restoreAllMessagesOfHomer();
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
+
+        String restoredMessageId = getLatestMessageId(homerCredential, Role.RESTORED_MESSAGES);
+        assertThat(getMessageContent(homerCredential, restoredMessageId)
+            .getString("methodResponses[0][1].list[0].subject")).isEqualTo(SUBJECT);
+    }
+
+    @Test
+    void vaultEndpointShouldNotRestoreMessageForOwnerWhenOwnerStillHasAnotherReference() {
+        // GIVEN a message in Homer's mailbox shared with Bart
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
+
+        String messageId = listMessageIdsForAccount(homerCredential).get(0);
+        homerMovesTheMailInAnotherMailbox(messageId);
+        homerSharesHisMailboxWithBart();
+
+        // Homer copies the shared message to his own mailbox
+        homerCopiesSharedMessageToOwnerOnlyMailbox();
+
+        // WHEN Bart deletes the shared message
+        bartDeletesMessages(ImmutableList.of(messageId));
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsInMailbox(homerCredential, ownerOnlyMailboxId.serialize())).hasSize(1));
+
+        // THEN neither Homer nor Bart should restore anything from DMV
+        restoreAllMessagesOfHomer();
+        restoreMessagesFor(BART);
+        awaitSearchUpToDate();
+
+        assertThat(restoredMessagesCount(homerCredential)).isEqualTo(0);
+        assertThat(restoredMessagesCount(bartCredential)).isEqualTo(0);
+    }
+
+    @Test
+    void vaultEndpointShouldRestoreMailboxDeletionMessagesForOwnerAndNotForSharee(GuiceJamesServer jmapServer) throws Exception {
+        // GIVEN a message in Homer's mailbox shared with Bart
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
+
+        String messageId = listMessageIdsForAccount(homerCredential).get(0);
+        homerMovesTheMailInAnotherMailbox(messageId);
+        homerSharesHisMailboxWithBart();
+
+        // WHEN Homer deletes the shared mailbox
+        homerDeletesMailbox(jmapServer);
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(0));
+
+        // THEN Homer should be able to restore the message, but Bart should not
+        restoreAllMessagesOfHomer();
+        restoreMessagesFor(BART);
+        awaitSearchUpToDate();
+
+        assertThat(restoredMessagesCount(homerCredential)).isEqualTo(1);
+        assertThat(restoredMessagesCount(bartCredential)).isEqualTo(0);
+
+        String restoredMessageId = getLatestMessageId(homerCredential, Role.RESTORED_MESSAGES);
+        assertThat(getMessageContent(homerCredential, restoredMessageId)
+            .getString("methodResponses[0][1].list[0].subject")).isEqualTo(SUBJECT);
+    }
+
+    @Test
+    void vaultEndpointShouldRestoreMailboxDeletionMessageForOwnerWhenShareeStillHasAnotherReference(GuiceJamesServer jmapServer) throws Exception {
+        // GIVEN a message in Homer's mailbox shared with Bart
+        bartSendMessageToHomer();
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(1));
+
+        String messageId = listMessageIdsForAccount(homerCredential).get(0);
+        homerMovesTheMailInAnotherMailbox(messageId);
+        homerSharesHisMailboxWithBart();
+        bartCopiesSharedMessageToOwnInbox();
+
+        // WHEN Homer deletes the shared mailbox
+        homerDeletesMailbox(jmapServer);
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerCredential)).hasSize(0));
+
+        // THEN Homer should be able to restore the message, but Bart should not
+        restoreAllMessagesOfHomer();
+        restoreMessagesFor(BART);
+        awaitSearchUpToDate();
+
+        assertThat(restoredMessagesCount(homerCredential)).isEqualTo(1);
+        assertThat(restoredMessagesCount(bartCredential)).isEqualTo(0);
+
+        String restoredMessageId = getLatestMessageId(homerCredential, Role.RESTORED_MESSAGES);
+        assertThat(getMessageContent(homerCredential, restoredMessageId)
             .getString("methodResponses[0][1].list[0].subject")).isEqualTo(SUBJECT);
     }
 
@@ -1040,6 +1158,38 @@ public abstract class DeletedMessageVaultIntegrationTest {
         restoreMessagesForUserWithQuery(webAdminApi, user, MATCH_ALL_QUERY);
     }
 
+    private int restoredMessagesCount(UserCredential credential) {
+        return getAllMailboxesIds(credential).stream()
+            .filter(mailbox -> Role.RESTORED_MESSAGES.serialize().equals(mailbox.get("role")))
+            .findFirst()
+            .map(mailbox -> listMessageIdsInMailbox(credential, mailbox.get("id")).size())
+            .orElse(0);
+    }
+
+    private void bartCopiesSharedMessageToOwnInbox() {
+        try {
+            mailboxProbe.copy(
+                Username.of(BART),
+                new MailboxPath("#private", Username.of(HOMER), MAILBOX_NAME),
+                MailboxPath.forUser(Username.of(BART), DefaultMailboxes.INBOX),
+                MessageUid.of(1));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to copy shared message to Bart inbox", e);
+        }
+    }
+
+    private void homerCopiesSharedMessageToOwnerOnlyMailbox() {
+        try {
+            mailboxProbe.copy(
+                Username.of(HOMER),
+                new MailboxPath("#private", Username.of(HOMER), MAILBOX_NAME),
+                new MailboxPath("#private", Username.of(HOMER), OWNER_ONLY_MAILBOX_NAME),
+                MessageUid.of(1));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to copy shared message to Homer owner-only mailbox", e);
+        }
+    }
+
     private void homerMovesTheMailInAnotherMailbox(String messageId) {
         given()
             .auth().basic(homerCredential.username().asString(), homerCredential.password())
@@ -1061,6 +1211,14 @@ public abstract class DeletedMessageVaultIntegrationTest {
         .then()
             .statusCode(200)
             .contentType(JSON);
+    }
+
+    private void homerDeletesMailbox(GuiceJamesServer jmapServer) throws Exception {
+        testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(HOMER, PASSWORD)
+            .select(TestIMAPClient.INBOX);
+
+        testIMAPClient.delete(MAILBOX_NAME);
     }
 
 
