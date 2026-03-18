@@ -32,6 +32,8 @@ import jakarta.mail.Flags;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.events.MailboxEvents.MessageContentDeletionEvent;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
@@ -39,11 +41,21 @@ import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Test;
 
 class MessageContentDeletionSerializationTest {
+    private static MailboxACL asMailboxACL(Username username, MailboxACL.Right right) {
+        try {
+            return new MailboxACL()
+                .union(MailboxACL.EntryKey.createUserEntryKey(username), new MailboxACL.Rfc4314Rights(right));
+        } catch (UnsupportedRightException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static final Username USERNAME = Username.of("user@domain.tld");
     private static final MailboxId MAILBOX_ID = TestId.of(18);
     private static final MessageId MESSAGE_ID = TestMessageId.of(42);
     private static final long SIZE = 12345L;
     private static final Instant INTERNAL_DATE = Instant.parse("2024-12-15T08:23:45Z");
+    private static final MailboxACL MAILBOX_ACL = asMailboxACL(Username.of("bob@domain.tld"), MailboxACL.Right.Read);
     private static final Flags FLAGS = new FlagsBuilder()
         .add(Flags.Flag.FLAGGED)
         .add("$Forwarded")
@@ -59,6 +71,7 @@ class MessageContentDeletionSerializationTest {
         EVENT_ID,
         USERNAME,
         MAILBOX_ID,
+        MAILBOX_ACL,
         MESSAGE_ID,
         SIZE,
         INTERNAL_DATE,
@@ -82,6 +95,11 @@ class MessageContentDeletionSerializationTest {
                     "userFlags": ["$Forwarded"]
                 },
                 "mailboxId": "18",
+                "mailboxACL": {
+                    "entries": {
+                        "bob@domain.tld": "r"
+                    }
+                },
                 "headerBlobId": "header-blob-id",
                 "messageId": "42",
                 "bodyBlobId": "body-blob-id",
@@ -95,6 +113,7 @@ class MessageContentDeletionSerializationTest {
         EVENT_ID,
         USERNAME,
         MAILBOX_ID,
+        MAILBOX_ACL,
         MESSAGE_ID,
         SIZE,
         INTERNAL_DATE,
@@ -109,6 +128,7 @@ class MessageContentDeletionSerializationTest {
         EVENT_ID,
         USERNAME,
         MAILBOX_ID,
+        MAILBOX_ACL,
         MESSAGE_ID,
         SIZE,
         INTERNAL_DATE,
@@ -132,6 +152,11 @@ class MessageContentDeletionSerializationTest {
                     "userFlags": ["$Forwarded"]
                 },
                 "mailboxId": "18",
+                "mailboxACL": {
+                    "entries": {
+                        "bob@domain.tld": "r"
+                    }
+                },
                 "headerBlobId": "header-blob-id",
                 "messageId": "42",
                 "bodyBlobId": "body-blob-id",
@@ -149,9 +174,35 @@ class MessageContentDeletionSerializationTest {
                 "hasAttachments": true,
                 "internalDate": "2024-12-15T08:23:45Z",
                 "mailboxId": "18",
+                "mailboxACL": {
+                    "entries": {
+                        "bob@domain.tld": "r"
+                    }
+                },
                 "headerBlobId": "header-blob-id",
                 "messageId": "42",
                 "bodyBlobId": "body-blob-id"
+            }
+        }
+        """;
+
+    private static final String LEGACY_JSON_WITHOUT_MAILBOX_ACL = """
+        {
+            "MessageContentDeletionEvent": {
+                "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
+                "username": "user@domain.tld",
+                "size": 12345,
+                "hasAttachments": true,
+                "internalDate": "2024-12-15T08:23:45Z",
+                "flags": {
+                    "systemFlags": ["Flagged"],
+                    "userFlags": ["$Forwarded"]
+                },
+                "mailboxId": "18",
+                "headerBlobId": "header-blob-id",
+                "messageId": "42",
+                "bodyBlobId": "body-blob-id",
+                "headerContent": "Header: value"
             }
         }
         """;
@@ -169,6 +220,11 @@ class MessageContentDeletionSerializationTest {
                     "userFlags": ["$Forwarded"]
                 },
                 "mailboxId": "18",
+                "mailboxACL": {
+                    "entries": {
+                        "bob@domain.tld": "r"
+                    }
+                },
                 "headerBlobId": "header-blob-id",
                 "messageId": "42",
                 "bodyBlobId": "body-blob-id"
@@ -205,6 +261,7 @@ class MessageContentDeletionSerializationTest {
                 EVENT_ID,
                 USERNAME,
                 MAILBOX_ID,
+                MAILBOX_ACL,
                 MESSAGE_ID,
                 SIZE,
                 INTERNAL_DATE,
@@ -212,6 +269,25 @@ class MessageContentDeletionSerializationTest {
                 HAS_ATTACHMENTS,
                 HEADER_BLOB_ID,
                 EMPTY_HEADER_CONTENT,
+                BODY_BLOB_ID,
+                Optional.empty()));
+    }
+
+    @Test
+    void legacyMessageContentDeletionEventWithoutMailboxACLShouldBeWellDeserialized() {
+        assertThat(EVENT_SERIALIZER.fromJson(LEGACY_JSON_WITHOUT_MAILBOX_ACL).get())
+            .isEqualTo(new MessageContentDeletionEvent(
+                EVENT_ID,
+                USERNAME,
+                MAILBOX_ID,
+                MailboxACL.EMPTY,
+                MESSAGE_ID,
+                SIZE,
+                INTERNAL_DATE,
+                FLAGS,
+                HAS_ATTACHMENTS,
+                HEADER_BLOB_ID,
+                HEADER_CONTENT,
                 BODY_BLOB_ID,
                 Optional.empty()));
     }

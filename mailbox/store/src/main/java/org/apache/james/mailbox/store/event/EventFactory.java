@@ -552,6 +552,7 @@ public class EventFactory {
         private final Event.EventId eventId;
         private final Username username;
         private final MailboxId mailboxId;
+        private final MailboxACL mailboxACL;
         private final MessageId messageId;
         private final long size;
         private final Instant internalDate;
@@ -565,6 +566,7 @@ public class EventFactory {
         MessageContentDeletionFinalStage(Event.EventId eventId,
                                          Username username,
                                          MailboxId mailboxId,
+                                         MailboxACL mailboxACL,
                                          MessageId messageId,
                                          long size,
                                          Instant internalDate,
@@ -574,6 +576,7 @@ public class EventFactory {
             this.eventId = eventId;
             this.username = username;
             this.mailboxId = mailboxId;
+            this.mailboxACL = mailboxACL;
             this.messageId = messageId;
             this.size = size;
             this.internalDate = internalDate;
@@ -604,6 +607,7 @@ public class EventFactory {
             Preconditions.checkNotNull(eventId);
             Preconditions.checkNotNull(username);
             Preconditions.checkNotNull(mailboxId);
+            Preconditions.checkNotNull(mailboxACL);
             Preconditions.checkNotNull(messageId);
             Preconditions.checkNotNull(internalDate);
             Preconditions.checkNotNull(flags);
@@ -614,6 +618,7 @@ public class EventFactory {
                 eventId,
                 username,
                 mailboxId,
+                mailboxACL,
                 messageId,
                 size,
                 internalDate,
@@ -712,9 +717,9 @@ public class EventFactory {
         return eventId -> user -> quotaRoot -> quotaCount -> quotaSize -> instant -> new QuotaUsageUpdatedFinalStage(eventId, user, quotaRoot, quotaCount, quotaSize, instant);
     }
 
-    public static RequireEventId<RequireUser<RequireMailboxId<RequireMessageId<RequireSize<RequireInstant<RequireFlags<RequireHasAttachments<RequireBodyBlobId<MessageContentDeletionFinalStage>>>>>>>>> messageContentDeleted() {
-        return eventId -> user -> mailboxId -> messageId -> size -> instant -> flags -> hasAttachments -> bodyBlobId ->
-            new MessageContentDeletionFinalStage(eventId, user, mailboxId, messageId, size, instant, flags, hasAttachments, bodyBlobId);
+    public static RequireEventId<RequireUser<RequireMailboxId<RequireMailboxACL<RequireMessageId<RequireSize<RequireInstant<RequireFlags<RequireHasAttachments<RequireBodyBlobId<MessageContentDeletionFinalStage>>>>>>>>>> messageContentDeleted() {
+        return eventId -> user -> mailboxId -> mailboxACL -> messageId -> size -> instant -> flags -> hasAttachments -> bodyBlobId ->
+            new MessageContentDeletionFinalStage(eventId, user, mailboxId, mailboxACL, messageId, size, instant, flags, hasAttachments, bodyBlobId);
     }
 
     public static RequireMailboxEvent<MailboxSubscribedFinalStage> mailboxSubscribed() {
