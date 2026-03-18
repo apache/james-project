@@ -137,6 +137,7 @@ private object DTO {
   case class MessageContentDeletionEvent(eventId: EventId,
                                          username: Username,
                                          mailboxId: MailboxId,
+                                         mailboxACL: Option[MailboxACL],
                                          messageId: MessageId,
                                          size: Long,
                                          internalDate: Instant,
@@ -146,7 +147,7 @@ private object DTO {
                                          headerContent: Option[String],
                                          bodyBlobId: String,
                                          mailboxPath: Option[String] = None) extends Event {
-    override def toJava: JavaEvent = new JavaMessageContentDeletionEvent(eventId, username, mailboxId, messageId, size, internalDate, DTOs.Flags.toJavaFlags(flags.getOrElse(DTOs.Flags.empty)), hasAttachments, headerBlobId.toJava, headerContent.toJava, bodyBlobId, mailboxPath.toJava)
+    override def toJava: JavaEvent = new JavaMessageContentDeletionEvent(eventId, username, mailboxId, mailboxACL.map(_.toJava).getOrElse(new JavaMailboxACL()), messageId, size, internalDate, DTOs.Flags.toJavaFlags(flags.getOrElse(DTOs.Flags.empty)), hasAttachments, headerBlobId.toJava, headerContent.toJava, bodyBlobId, mailboxPath.toJava)
   }
 }
 
@@ -246,6 +247,7 @@ private object ScalaConverter {
       eventId = event.getEventId,
       username = event.getUsername,
       mailboxId = event.mailboxId(),
+      mailboxACL = MailboxACL.fromJava(event.mailboxACL()),
       messageId = event.messageId(),
       size = event.size(),
       internalDate = event.internalDate(),
@@ -468,4 +470,3 @@ class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, mess
 
   override def asEvent(serialized: String): JavaEvent = fromJson(serialized).get
 }
-
