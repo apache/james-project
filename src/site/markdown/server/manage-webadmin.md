@@ -4682,7 +4682,7 @@ Here are the following actions available on the 'Deleted Messages Vault'
 Deleted messages of a specific user can be restored by calling the following endpoint:
 
 ```
-curl -XPOST http://ip:port/deletedMessages/users/userToRestore@domain.ext?action=restore
+curl -XPOST http://ip:port/deletedMessages/users/userToRestore@domain.ext?action=restore[&force=true]
 
 {
   "combinator": "and",
@@ -4794,20 +4794,23 @@ Messages in the Deleted Messages Vault of a specified user that are matched with
 }
 ```
 
-**Warning**: Current web-admin uses `US` locale as the default. Therefore, there might be some conflicts when using String `containsIgnoreCase` comparators to apply 
-on the String data of other special locales stored in the Vault. More details at [JIRA](https://issues.apache.org/jira/browse/MAILBOX-384) 
+**Warning**: Current web-admin uses `US` locale as the default. Therefore, there might be some conflicts when using String `containsIgnoreCase` comparators to apply
+on the String data of other special locales stored in the Vault. More details at [JIRA](https://issues.apache.org/jira/browse/MAILBOX-384)
+
+**Note**: The optional `force` query parameter (`&force=true`) bypasses the user existence check.
+This is useful for restoring the vault of a deleted user or a virtual user.
 
 Response code:
 
  - 201: Task for restoring deleted has been created
- - 400: Bad request: 
+ - 400: Bad request:
    - action query param is not present
    - action query param is not a valid action
    - user parameter is invalid
    - can not parse the JSON body
    - Json query object contains unsupported operator, fieldName
-   - Json query object values violate parsing rules 
- - 404: User not found
+   - Json query object values violate parsing rules
+ - 404: User not found (bypassed when `force=true`)
  
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
@@ -4832,16 +4835,19 @@ while:
 Retrieve deleted messages matched with requested query from an user then share the content to a targeted mail address (exportTo)
 
 ```
-curl -XPOST 'http://ip:port/deletedMessages/users/userExportFrom@domain.ext?action=export&exportTo=userReceiving@domain.ext'
+curl -XPOST 'http://ip:port/deletedMessages/users/userExportFrom@domain.ext?action=export&exportTo=userReceiving@domain.ext[&force=true]'
 
 BODY: is the json query has the same structure with Restore Deleted Messages section
 ```
 **Note**: Json query passing into the body follows the same rules & restrictions like in [Restore Deleted Messages](#Restore_deleted_messages)
 
+**Note**: The optional `force` query parameter (`&force=true`) bypasses the user existence check.
+This is useful for exporting the vault of a deleted user or a virtual user.
+
 Response code:
 
  - 201: Task for exporting has been created
- - 400: Bad request: 
+ - 400: Bad request:
    - exportTo query param is not present
    - exportTo query param is not a valid mail address
    - action query param is not present
@@ -4849,8 +4855,8 @@ Response code:
    - user parameter is invalid
    - can not parse the JSON body
    - Json query object contains unsupported operator, fieldName
-   - Json query object values violate parsing rules 
- - 404: User not found
+   - Json query object values violate parsing rules
+ - 404: User not found (bypassed when `force=true`)
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
@@ -4895,18 +4901,21 @@ You may want to call this endpoint on a regular basis.
 Delete a Deleted Message with `MessageId`
 
 ```
-curl -XDELETE http://ip:port/deletedMessages/users/user@domain.ext/messages/3294a976-ce63-491e-bd52-1b6f465ed7a2
+curl -XDELETE http://ip:port/deletedMessages/users/user@domain.ext/messages/3294a976-ce63-491e-bd52-1b6f465ed7a2[?force=true]
 ```
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
+**Note**: The optional `force` query parameter (`?force=true`) bypasses the user existence check.
+This is useful for removing a message from the vault of a deleted user or a virtual user.
+
 Response code:
 
  - 201: Task for deleting message has been created
- - 400: Bad request: 
+ - 400: Bad request:
    - user parameter is invalid
    - messageId parameter is invalid
- - 404: User not found
+ - 404: User not found (bypassed when `force=true`)
  
 The scheduled task will have the following type `deleted-messages-delete` and the following `additionalInformation`:
  

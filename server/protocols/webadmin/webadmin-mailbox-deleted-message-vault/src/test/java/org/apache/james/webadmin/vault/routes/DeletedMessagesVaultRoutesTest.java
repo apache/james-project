@@ -396,6 +396,19 @@ class DeletedMessagesVaultRoutesTest {
                 .body("message", is(notNullValue()));
         }
 
+        @Test
+        void restoreShouldBypassUserExistenceCheckWhenForceIsTrue() {
+            given()
+                .queryParam("action", "restore")
+                .queryParam("force", "true")
+                .body(MATCH_ALL_QUERY)
+            .when()
+                .post(USERS + SEPARATOR + USERNAME_2.asString())
+            .then()
+                .statusCode(HttpStatus.CREATED_201)
+                .body("taskId", is(notNullValue()));
+        }
+
         @ParameterizedTest
         @ValueSource(strings = {"restore", "export"})
         void userVaultAPIShouldReturnNotFoundWhenNoUserPathParameter(String action) {
@@ -2308,6 +2321,15 @@ class DeletedMessagesVaultRoutesTest {
             }
 
             @Test
+            void deleteShouldBypassUserExistenceCheckWhenForceIsTrue() {
+                when()
+                    .delete(USERS + SEPARATOR + USERNAME_2.asString() + SEPARATOR + DELETED_MESSAGE_PARAM_PATH + "?force=true")
+                .then()
+                    .statusCode(HttpStatus.CREATED_201)
+                    .body("taskId", is(notNullValue()));
+            }
+
+            @Test
             void deleteShouldReturnInvalidWhenMessageIdIsInvalid() {
                 when()
                     .delete(BOB_PATH + SEPARATOR + MESSAGE_PATH_PARAM + SEPARATOR + "invalid")
@@ -2377,6 +2399,17 @@ class DeletedMessagesVaultRoutesTest {
                 .post(USERS + SEPARATOR + "unknown@apache.org" + SEPARATOR + MESSAGE_PATH_PARAM)
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
+        void browseMessagesShouldBypassUserExistenceCheckWhenForceIsTrue() {
+            given()
+                .queryParam("force", "true")
+                .body(MATCH_ALL_QUERY)
+            .when()
+                .post(USERS + SEPARATOR + "unknown@apache.org" + SEPARATOR + MESSAGE_PATH_PARAM)
+            .then()
+                .statusCode(HttpStatus.OK_200);
         }
 
         @Test

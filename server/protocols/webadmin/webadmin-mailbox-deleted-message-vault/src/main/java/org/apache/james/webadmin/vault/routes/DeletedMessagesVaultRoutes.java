@@ -70,6 +70,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
     private static final String DELETE_PATH = MESSAGES_PATH + SEPARATOR + MESSAGE_ID_PARAM;
     private static final String SCOPE_QUERY_PARAM = "scope";
     private static final String EXPORT_TO_QUERY_PARAM = "exportTo";
+    private static final String FORCE_QUERY_PARAM = "force";
 
     private final RestoreService vaultRestore;
     private final ExportService vaultExport;
@@ -121,13 +122,13 @@ public class DeletedMessagesVaultRoutes implements Routes {
 
     private Task export(Request request) throws JsonExtractException {
         Username username = extractUser(request);
-        validateUserExist(username);
+        validateUserExist(request, username);
         return new DeletedMessagesVaultExportTask(vaultExport, username, extractQuery(request), extractMailAddress(request));
     }
 
     private Object browseMessages(Request request, spark.Response response) throws JsonExtractException {
         Username username = extractUser(request);
-        validateUserExist(username);
+        validateUserExist(request, username);
         Query query = extractQuery(request);
         return Flux.from(deletedMessageVault.search(username, query))
             .map(DeletedMessageDTO::from)
@@ -137,7 +138,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
 
     private Task restore(Request request) throws JsonExtractException {
         Username username = extractUser(request);
-        validateUserExist(username);
+        validateUserExist(request, username);
         return new DeletedMessagesVaultRestoreTask(vaultRestore, username, extractQuery(request));
     }
 
@@ -150,13 +151,16 @@ public class DeletedMessagesVaultRoutes implements Routes {
 
     private Task deleteMessage(Request request) {
         Username username = extractUser(request);
-        validateUserExist(username);
+        validateUserExist(request, username);
         MessageId messageId = parseMessageId(request);
 
         return new DeletedMessagesVaultDeleteTask(deletedMessageVault, username, messageId);
     }
 
-    private void validateUserExist(Username username) {
+    private void validateUserExist(Request request, Username username) {
+        if (Boolean.parseBoolean(request.queryParams(FORCE_QUERY_PARAM))) {
+            return;
+        }
         try {
             if (!usersRepository.contains(username)) {
                 throw ErrorResponder.builder()
