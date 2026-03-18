@@ -144,8 +144,9 @@ private object DTO {
                                          hasAttachments: Boolean,
                                          headerBlobId: Option[String],
                                          headerContent: Option[String],
-                                         bodyBlobId: String) extends Event {
-    override def toJava: JavaEvent = new JavaMessageContentDeletionEvent(eventId, username, mailboxId, messageId, size, internalDate, DTOs.Flags.toJavaFlags(flags.getOrElse(DTOs.Flags.empty)), hasAttachments, headerBlobId.toJava, headerContent.toJava, bodyBlobId)
+                                         bodyBlobId: String,
+                                         mailboxPath: Option[String] = None) extends Event {
+    override def toJava: JavaEvent = new JavaMessageContentDeletionEvent(eventId, username, mailboxId, messageId, size, internalDate, DTOs.Flags.toJavaFlags(flags.getOrElse(DTOs.Flags.empty)), hasAttachments, headerBlobId.toJava, headerContent.toJava, bodyBlobId, mailboxPath.toJava)
   }
 }
 
@@ -252,7 +253,8 @@ private object ScalaConverter {
       hasAttachments = event.hasAttachments,
       headerBlobId = event.headerBlobId().toScala,
       bodyBlobId = event.bodyBlobId(),
-      headerContent = event.headerContent().toScala)
+      headerContent = event.headerContent().toScala,
+      mailboxPath = event.mailboxPath().toScala)
 
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
     case e: JavaAdded => toScala(e)
