@@ -54,7 +54,7 @@ import reactor.core.publisher.Mono;
 
 public class RestoreService {
 
-    enum RestoreResult {
+    public enum RestoreResult {
         RESTORE_SUCCEED,
         RESTORE_FAILED
     }
@@ -68,8 +68,8 @@ public class RestoreService {
     private final VaultConfiguration vaultConfiguration;
 
     @Inject
-    RestoreService(DeletedMessageVault deletedMessageVault, MailboxManager mailboxManager,
-                   VaultConfiguration vaultConfiguration) {
+    public RestoreService(DeletedMessageVault deletedMessageVault, MailboxManager mailboxManager,
+                          VaultConfiguration vaultConfiguration) {
         this.deletedMessageVault = deletedMessageVault;
         this.mailboxManager = mailboxManager;
         this.vaultConfiguration = vaultConfiguration;
@@ -114,7 +114,7 @@ public class RestoreService {
             });
     }
 
-    private MessageManager restoreMailboxManager(MailboxSession session) throws MailboxException {
+    protected MessageManager restoreMailboxManager(MailboxSession session) throws MailboxException {
         MailboxPath restoreMailbox = MailboxPath.forUser(session.getUser(), vaultConfiguration.getRestoreLocation());
         try {
             return mailboxManager.getMailbox(restoreMailbox, session);
