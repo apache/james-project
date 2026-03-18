@@ -560,6 +560,7 @@ public class EventFactory {
         private final String bodyBlobId;
         private Optional<String> headerBlobId;
         private Optional<String> headerContent;
+        private Optional<String> mailboxPath;
 
         MessageContentDeletionFinalStage(Event.EventId eventId,
                                          Username username,
@@ -581,6 +582,7 @@ public class EventFactory {
             this.bodyBlobId = bodyBlobId;
             this.headerBlobId = Optional.empty();
             this.headerContent = Optional.empty();
+            this.mailboxPath = Optional.empty();
         }
 
         public MessageContentDeletionFinalStage headerBlobId(String headerBlobId) {
@@ -590,6 +592,11 @@ public class EventFactory {
 
         public MessageContentDeletionFinalStage headerContent(String headerContent) {
             this.headerContent = Optional.ofNullable(headerContent);
+            return this;
+        }
+
+        public MessageContentDeletionFinalStage mailboxPath(String mailboxPath) {
+            this.mailboxPath = Optional.ofNullable(mailboxPath);
             return this;
         }
 
@@ -614,7 +621,8 @@ public class EventFactory {
                 hasAttachments,
                 headerBlobId,
                 headerContent,
-                bodyBlobId);
+                bodyBlobId,
+                mailboxPath);
         }
     }
 

@@ -53,6 +53,43 @@ class MessageContentDeletionSerializationTest {
     private static final Optional<String> HEADER_CONTENT = Optional.of("Header: value");
     private static final Optional<String> EMPTY_HEADER_CONTENT = Optional.empty();
     private static final String BODY_BLOB_ID = "body-blob-id";
+    private static final Optional<String> MAILBOX_PATH = Optional.of("#TeamMailbox:team-mailbox@domain.tld:sales");
+
+    private static final MessageContentDeletionEvent EVENT_WITH_MAILBOX_PATH = new MessageContentDeletionEvent(
+        EVENT_ID,
+        USERNAME,
+        MAILBOX_ID,
+        MESSAGE_ID,
+        SIZE,
+        INTERNAL_DATE,
+        FLAGS,
+        HAS_ATTACHMENTS,
+        HEADER_BLOB_ID,
+        HEADER_CONTENT,
+        BODY_BLOB_ID,
+        MAILBOX_PATH);
+
+    private static final String JSON_WITH_MAILBOX_PATH = """
+        {
+            "MessageContentDeletionEvent": {
+                "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
+                "username": "user@domain.tld",
+                "size": 12345,
+                "hasAttachments": true,
+                "internalDate": "2024-12-15T08:23:45Z",
+                "flags": {
+                    "systemFlags": ["Flagged"],
+                    "userFlags": ["$Forwarded"]
+                },
+                "mailboxId": "18",
+                "headerBlobId": "header-blob-id",
+                "messageId": "42",
+                "bodyBlobId": "body-blob-id",
+                "headerContent": "Header: value",
+                "mailboxPath": "#TeamMailbox:team-mailbox@domain.tld:sales"
+            }
+        }
+        """;
 
     private static final MessageContentDeletionEvent EVENT = new MessageContentDeletionEvent(
         EVENT_ID,
@@ -65,7 +102,8 @@ class MessageContentDeletionSerializationTest {
         HAS_ATTACHMENTS,
         HEADER_BLOB_ID,
         HEADER_CONTENT,
-        BODY_BLOB_ID);
+        BODY_BLOB_ID,
+        Optional.empty());
 
     private static final MessageContentDeletionEvent EVENT_WITHOUT_HEADER_CONTENT = new MessageContentDeletionEvent(
         EVENT_ID,
@@ -78,7 +116,8 @@ class MessageContentDeletionSerializationTest {
         HAS_ATTACHMENTS,
         HEADER_BLOB_ID,
         EMPTY_HEADER_CONTENT,
-        BODY_BLOB_ID);
+        BODY_BLOB_ID,
+        Optional.empty());
 
     private static final String JSON = """
         {
@@ -150,6 +189,16 @@ class MessageContentDeletionSerializationTest {
     }
 
     @Test
+    void messageContentDeletionEventWithMailboxPathShouldBeWellSerialized() {
+        assertThatJson(EVENT_SERIALIZER.toJson(EVENT_WITH_MAILBOX_PATH)).isEqualTo(JSON_WITH_MAILBOX_PATH);
+    }
+
+    @Test
+    void messageContentDeletionEventWithMailboxPathShouldBeWellDeserialized() {
+        assertThat(EVENT_SERIALIZER.fromJson(JSON_WITH_MAILBOX_PATH).get()).isEqualTo(EVENT_WITH_MAILBOX_PATH);
+    }
+
+    @Test
     void messageContentDeletionEventWithoutFlagsShouldBeWellDeserialized() {
         assertThat(EVENT_SERIALIZER.fromJson(JSON_WITHOUT_FLAGS).get())
             .isEqualTo(new MessageContentDeletionEvent(
@@ -163,7 +212,8 @@ class MessageContentDeletionSerializationTest {
                 HAS_ATTACHMENTS,
                 HEADER_BLOB_ID,
                 EMPTY_HEADER_CONTENT,
-                BODY_BLOB_ID));
+                BODY_BLOB_ID,
+                Optional.empty()));
     }
 
 }
