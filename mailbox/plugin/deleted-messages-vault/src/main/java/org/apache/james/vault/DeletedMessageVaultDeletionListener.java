@@ -39,6 +39,9 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.MailboxEvents.MessageContentDeletionEvent;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mime4j.MimeIOException;
@@ -68,14 +71,19 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
     private final DeletedMessageVault deletedMessageVault;
     private final BlobStore blobStore;
     private final Clock clock;
+    private final MessageIdManager messageIdManager;
+    private final SessionProvider sessionProvider;
 
     @Inject
     public DeletedMessageVaultDeletionListener(BlobId.Factory blobIdFactory, DeletedMessageVault deletedMessageVault,
-                                               BlobStore blobStore, Clock clock) {
+                                               BlobStore blobStore, Clock clock, MessageIdManager messageIdManager,
+                                               SessionProvider sessionProvider) {
         this.blobIdFactory = blobIdFactory;
         this.deletedMessageVault = deletedMessageVault;
         this.blobStore = blobStore;
         this.clock = clock;
+        this.messageIdManager = messageIdManager;
+        this.sessionProvider = sessionProvider;
     }
 
     @Override
@@ -98,7 +106,9 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
     }
 
     public Mono<Void> forMessage(MessageContentDeletionEvent messageContentDeletionEvent) {
-        return fetchMessageHeaderBytes(messageContentDeletionEvent)
+        return hasLostAccess(messageContentDeletionEvent)
+            .filter(Boolean::booleanValue)
+            .flatMap(any -> fetchMessageHeaderBytes(messageContentDeletionEvent))
             .flatMap(bytes -> {
                 Optional<Message> mimeMessage = parseMessage(new ByteArrayInputStream(bytes), messageContentDeletionEvent.messageId());
                 DeletedMessage deletedMessage = DeletedMessage.builder()
@@ -117,7 +127,15 @@ public class DeletedMessageVaultDeletionListener implements EventListener.Reacti
                 return Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), blobIdFactory.parse(messageContentDeletionEvent.bodyBlobId()), BlobStore.StoragePolicy.LOW_COST))
                     .map(bodyStream -> new SequenceInputStream(new ByteArrayInputStream(bytes), bodyStream))
                     .flatMap(bodyStream -> Mono.from(deletedMessageVault.append(deletedMessage, bodyStream)));
-            });
+            })
+            .then();
+    }
+
+    private Mono<Boolean> hasLostAccess(MessageContentDeletionEvent messageContentDeletionEvent) {
+        MailboxSession session = sessionProvider.createSystemSession(messageContentDeletionEvent.getUsername());
+
+        return Mono.from(messageIdManager.accessibleMessagesReactive(ImmutableSet.of(messageContentDeletionEvent.messageId()), session))
+            .map(accessibleMessages -> !accessibleMessages.contains(messageContentDeletionEvent.messageId()));
     }
 
     private Mono<byte[]> fetchMessageHeaderBytes(MessageContentDeletionEvent messageContentDeletionEvent) {
