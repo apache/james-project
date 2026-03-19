@@ -21,12 +21,12 @@ package org.apache.james.server.blob.deduplication
 
 import java.io.InputStream
 import java.util.UUID
+
 import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableMap
 import com.google.common.io.ByteSource
 import jakarta.inject.{Inject, Named}
 import org.apache.james.blob.api.BlobStore.BlobIdProvider
-import org.apache.james.blob.api.BlobStoreDAO.{ByteSourceBlob, BytesBlob, InputStreamBlob}
+import org.apache.james.blob.api.BlobStoreDAO.{BlobMetadata, ByteSourceBlob, BytesBlob, InputStreamBlob}
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
@@ -81,7 +81,7 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     SMono(blobIdProvider(data))
       .subscribeOn(Schedulers.boundedElastic())
       .flatMap { tuple => {
-        val blob: InputStreamBlob = new InputStreamBlob(tuple.getT2, ImmutableMap.of())
+        val blob: InputStreamBlob = new InputStreamBlob(tuple.getT2, BlobMetadata.empty())
         SMono(blobStoreDAO.save(bucketName, tuple.getT1, blob))
           .`then`(SMono.just(tuple.getT1))
       }}

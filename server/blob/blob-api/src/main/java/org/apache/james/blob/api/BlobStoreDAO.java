@@ -25,23 +25,77 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 import org.reactivestreams.Publisher;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSource;
 import com.google.common.io.FileBackedOutputStream;
 
 public interface BlobStoreDAO {
     record BlobMetadataName(String name) {
-        // TODO validation (a-z,A-Z,0-9 -_) &length 128 char & non empty
+        private static final CharMatcher CHAR_MATCHER = CharMatcher.inRange('a', 'z')
+            .or(CharMatcher.inRange('A', 'Z'))
+            .or(CharMatcher.inRange('0', '9'))
+            .or(CharMatcher.is('-'));
+
+        public BlobMetadataName {
+            Preconditions.checkArgument(CHAR_MATCHER.matchesAllOf(name), "Invalid char in metadata name. Must be a-z,A-Z,0-9 or - got " + name);
+            Preconditions.checkArgument(name.length() < 128, "Metadata name is too long. Size exceed 128 chars");
+        }
     }
+
     record BlobMetadataValue(String value) {
+        public BlobMetadataValue {
+            Preconditions.checkArgument(value.length() < 128, "Metadata value is too long. Size exceed 128 chars");
+        }
+    }
+
+    record ContentTransferEncoding(String value) {
+        public static BlobMetadataName NAME = new BlobMetadataName("content-transfer-encoding");
+        public static ContentTransferEncoding ZSTD = new ContentTransferEncoding("zstd");
+
+        public static ContentTransferEncoding fromValue(BlobMetadataValue value) {
+            return new ContentTransferEncoding(value.value());
+        }
+
+        public ContentTransferEncoding {
+            Preconditions.checkArgument(value.length() < 128, "ContentTransferEncoding value is too long. Size exceed 128 chars");
+        }
+
+        public BlobMetadataValue asValue() {
+            return new BlobMetadataValue(value);
+        }
 
     }
+
+    record BlobMetadata(Map<BlobMetadataName, BlobMetadataValue> metadata) {
+        public static BlobMetadata empty() {
+            return new BlobMetadata(ImmutableMap.of());
+        }
+
+        public BlobMetadata withMetadata(BlobMetadataName name, BlobMetadataValue value) {
+            return new BlobMetadata(ImmutableMap.<BlobMetadataName, BlobMetadataValue>builder()
+                .putAll(metadata)
+                .put(name, value)
+                .build());
+        }
+
+        public Optional<ContentTransferEncoding> contentTransferEncoding() {
+            return Optional.ofNullable(metadata.get(ContentTransferEncoding.NAME)).map(ContentTransferEncoding::fromValue);
+        }
+
+        public BlobMetadata withContentTransferEncoding(ContentTransferEncoding contentTransferEncoding) {
+            return withMetadata(ContentTransferEncoding.NAME, contentTransferEncoding.asValue());
+        }
+    }
+
 
     sealed interface Blob {
-        Map<BlobMetadataName, BlobMetadataValue> metadata();
+        BlobMetadata metadata();
 
         // Have the POJOs encode some conversions ?
         InputStreamBlob asInputStream() throws IOException;
@@ -51,16 +105,16 @@ public interface BlobStoreDAO {
         ByteSourceBlob asByteSource() throws IOException;
     }
 
-    record BytesBlob(byte[] payload,  Map<BlobMetadataName, BlobMetadataValue> metadata) implements Blob {
+    record BytesBlob(byte[] payload,  BlobMetadata metadata) implements Blob {
         public static BytesBlob of(byte[] payload) {
-            return of(payload, ImmutableMap.of());
+            return of(payload, BlobMetadata.empty());
         }
 
         public static BytesBlob of(String payload) {
-            return of(payload.getBytes(StandardCharsets.UTF_8), ImmutableMap.of());
+            return of(payload.getBytes(StandardCharsets.UTF_8), BlobMetadata.empty());
         }
 
-        public static BytesBlob of(byte[] payload,  Map<BlobMetadataName, BlobMetadataValue> metadata) {
+        public static BytesBlob of(byte[] payload,  BlobMetadata metadata) {
             return new BytesBlob(payload, metadata);
         }
 
@@ -80,12 +134,12 @@ public interface BlobStoreDAO {
         }
     }
 
-    record InputStreamBlob(InputStream payload,  Map<BlobMetadataName, BlobMetadataValue> metadata) implements Blob {
+    record InputStreamBlob(InputStream payload,  BlobMetadata metadata) implements Blob {
         public static InputStreamBlob of(InputStream payload) {
-            return of(payload, ImmutableMap.of());
+            return of(payload, BlobMetadata.empty());
         }
 
-        public static InputStreamBlob of(InputStream payload, Map<BlobMetadataName, BlobMetadataValue> metadata) {
+        public static InputStreamBlob of(InputStream payload, BlobMetadata metadata) {
             return new InputStreamBlob(payload, metadata);
         }
 
@@ -108,12 +162,12 @@ public interface BlobStoreDAO {
         }
     }
 
-    record ByteSourceBlob(ByteSource payload, Map<BlobMetadataName, BlobMetadataValue> metadata) implements Blob {
+    record ByteSourceBlob(ByteSource payload, BlobMetadata metadata) implements Blob {
         public static ByteSourceBlob of(ByteSource payload) {
-            return of(payload, ImmutableMap.of());
+            return of(payload, BlobMetadata.empty());
         }
 
-        public static ByteSourceBlob of(ByteSource payload, Map<BlobMetadataName, BlobMetadataValue> metadata) {
+        public static ByteSourceBlob of(ByteSource payload, BlobMetadata metadata) {
             return new ByteSourceBlob(payload, metadata);
         }
 
