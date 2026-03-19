@@ -24,6 +24,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import jakarta.inject.Inject;
 
@@ -38,6 +39,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.util.FunctionalUtils;
 import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
@@ -115,6 +117,7 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
         Preconditions.checkNotNull(deleteOperation);
 
         return groupMetadataByOwnerAndMessageId(deleteOperation)
+            .filterWhen(this::isUnreferencedByOwner)
             .flatMap(this::appendToTheVault, CONCURRENCY)
             .then();
     }
@@ -129,6 +132,18 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
                     ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC)))))
             .flatMap(pairs -> Mono.fromCallable(() -> pairs.getLeft().getFullContent())
                 .flatMap(fullContent -> Mono.from(deletedMessageVault.append(pairs.getRight(), fullContent))));
+    }
+
+    private Mono<Boolean> isUnreferencedByOwner(DeletedMessageMailboxContext deletedMessageMailboxContext) {
+        return mapperFactory.getMessageIdMapper(session).findMailboxesReactive(deletedMessageMailboxContext.getMessageId())
+            .filter(excludeDeletingMailbox(deletedMessageMailboxContext))
+            .flatMap(this::retrieveMailboxUser, CONCURRENCY)
+            .any(owner -> owner.equals(deletedMessageMailboxContext.getOwner()))
+            .map(FunctionalUtils.negate());
+    }
+
+    private Predicate<MailboxId> excludeDeletingMailbox(DeletedMessageMailboxContext deletedMessageMailboxContext) {
+        return mailboxId -> !deletedMessageMailboxContext.getOwnerMailboxes().contains(mailboxId);
     }
 
     private Flux<DeletedMessageMailboxContext> groupMetadataByOwnerAndMessageId(DeleteOperation deleteOperation) {
