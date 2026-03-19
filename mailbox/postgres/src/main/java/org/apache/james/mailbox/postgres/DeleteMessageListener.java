@@ -121,11 +121,10 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         PostgresAttachmentDAO attachmentDAO = attachmentDAOFactory.create(event.getUsername().getDomainPart());
         PostgresThreadDAO threadDAO = threadDAOFactory.create(event.getUsername().getDomainPart());
 
-        return mailboxACL(event.getMailboxPath().getUser(), event.getMailboxId())
-            .flatMapMany(mailboxACL -> postgresMailboxMessageDAO.deleteByMailboxId((PostgresMailboxId) event.getMailboxId())
-                .flatMap(metaData -> handleMessageDeletion(postgresMessageDAO, postgresMailboxMessageDAO, attachmentDAO, threadDAO,
-                        (PostgresMessageId) metaData.getMessageId(), event.getMailboxId(), event.getMailboxPath().getUser(), metaData.getFlags(), event.getMailboxPath(), mailboxACL),
-                    LOW_CONCURRENCY))
+        return postgresMailboxMessageDAO.deleteByMailboxId((PostgresMailboxId) event.getMailboxId())
+            .flatMap(metaData -> handleMessageDeletion(postgresMessageDAO, postgresMailboxMessageDAO, attachmentDAO, threadDAO,
+                    (PostgresMessageId) metaData.getMessageId(), event.getMailboxId(), event.getMailboxPath().getUser(), metaData.getFlags(), event.getMailboxPath(), event.getMailboxACL()),
+                LOW_CONCURRENCY)
             .then();
     }
 
@@ -151,11 +150,11 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                                              Username owner,
                                              Flags flags,
                                              MailboxPath mailboxPath) {
-        return Mono.just(messageId)
+        return Mono.zip(postgresMessageDAO.retrieveMessage(messageId), mailboxACL(owner, mailboxId))
+            .flatMap(tuple -> dispatchMessageContentDeletionEvent(mailboxId, owner, tuple.getT2(), flags, tuple.getT1(), mailboxPath)
+                .thenReturn(messageId))
             .filterWhen(msgId -> isUnreferenced(msgId, postgresMailboxMessageDAO))
-            .flatMap(msgId -> Mono.zip(postgresMessageDAO.retrieveMessage(messageId), mailboxACL(owner, mailboxId))
-                .flatMap(tuple -> dispatchMessageContentDeletionEvent(mailboxId, owner, tuple.getT2(), flags, tuple.getT1(), mailboxPath)))
-                .then(deleteBodyBlob(msgId, postgresMessageDAO))
+            .flatMap(msgId -> deleteBodyBlob(msgId, postgresMessageDAO)
                 .then(deleteAttachmentIfEnabled(msgId, attachmentDAO))
                 .then(threadDAO.deleteSome(owner, msgId))
                 .then(postgresMessageDAO.deleteByMessageId(msgId)));
@@ -171,14 +170,14 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                                              Flags flags,
                                              MailboxPath mailboxPath,
                                              MailboxACL mailboxACL) {
-        return Mono.just(messageId)
+        return postgresMessageDAO.retrieveMessage(messageId)
+            .flatMap(messageRepresentation -> dispatchMessageContentDeletionEvent(mailboxId, owner, mailboxACL, flags, messageRepresentation, mailboxPath)
+                .thenReturn(messageId))
             .filterWhen(msgId -> isUnreferenced(msgId, postgresMailboxMessageDAO))
-            .flatMap(msgId -> postgresMessageDAO.retrieveMessage(messageId)
-                .flatMap(messageRepresentation -> dispatchMessageContentDeletionEvent(mailboxId, owner, mailboxACL, flags, messageRepresentation, mailboxPath))
-                .then(deleteBodyBlob(msgId, postgresMessageDAO))
-                .then(deleteAttachmentIfEnabled(msgId, attachmentDAO))
-                .then(threadDAO.deleteSome(owner, msgId))
-                .then(postgresMessageDAO.deleteByMessageId(msgId)));
+            .flatMap(msgId -> deleteBodyBlob(msgId, postgresMessageDAO)
+                .then(deleteAttachmentIfEnabled(messageId, attachmentDAO))
+                .then(threadDAO.deleteSome(owner, messageId))
+                .then(postgresMessageDAO.deleteByMessageId(messageId)));
     }
 
     private Mono<Void> dispatchMessageContentDeletionEvent(MailboxId mailboxId, Username owner, MailboxACL mailboxACL, Flags flags, MessageRepresentation message, MailboxPath mailboxPath) {
