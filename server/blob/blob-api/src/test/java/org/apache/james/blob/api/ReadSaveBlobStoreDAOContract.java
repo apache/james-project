@@ -114,7 +114,7 @@ public interface ReadSaveBlobStoreDAOContract {
 
         byte[] bytes = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
 
-        assertThat(bytes).isEqualTo(SHORT_BYTEARRAY);
+        assertThat(bytes).isEqualTo(SHORT_BYTEARRAY.payload());
     }
 
     @Test
@@ -125,7 +125,7 @@ public interface ReadSaveBlobStoreDAOContract {
 
         byte[] bytes = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
 
-        assertThat(bytes).isEqualTo(ELEVEN_KILOBYTES);
+        assertThat(bytes).isEqualTo(ELEVEN_KILOBYTES.payload());
     }
 
     @Test
@@ -136,7 +136,7 @@ public interface ReadSaveBlobStoreDAOContract {
 
         byte[] bytes = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
 
-        assertThat(bytes).isEqualTo(TWELVE_MEGABYTES);
+        assertThat(bytes).isEqualTo(TWELVE_MEGABYTES.payload());
     }
 
     @Test
@@ -190,38 +190,38 @@ public interface ReadSaveBlobStoreDAOContract {
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("blobs")
-    default void saveBytesShouldBeIdempotent(String description, byte[] bytes) {
+    default void saveBytesShouldBeIdempotent(String description, BlobStoreDAO.BytesBlob bytes) {
         BlobStoreDAO store = testee();
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes))).block();
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes))).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes)).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes)).block();
 
         byte[] read = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
 
-        assertThat(read).isEqualTo(bytes);
+        assertThat(read).isEqualTo(bytes.payload());
     }
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("blobs")
-    default void saveByteSourceShouldBeIdempotent(String description, byte[] bytes) {
+    default void saveByteSourceShouldBeIdempotent(String description, BlobStoreDAO.BytesBlob bytes) {
         BlobStoreDAO store = testee();
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes).asByteSource())).block();
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes).asByteSource())).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes.asByteSource())).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes.asByteSource())).block();
 
         byte[] read = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
 
-        assertThat(read).isEqualTo(bytes);
+        assertThat(read).isEqualTo(bytes.payload());
     }
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("blobs")
-    default void saveInputStreamShouldBeIdempotent(String description, byte[] bytes) {
+    default void saveInputStreamShouldBeIdempotent(String description, BlobStoreDAO.BytesBlob bytes) {
         BlobStoreDAO store = testee();
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes).asInputStream())).block();
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes).asInputStream())).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes.asInputStream())).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes.asInputStream())).block();
 
         byte[] read = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
 
-        assertThat(read).isEqualTo(bytes);
+        assertThat(read).isEqualTo(bytes.payload());
     }
 
     @Test
@@ -234,7 +234,7 @@ public interface ReadSaveBlobStoreDAOContract {
 
         byte[] read = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
 
-        assertThat(read).isEqualTo(ELEVEN_KILOBYTES);
+        assertThat(read).isEqualTo(ELEVEN_KILOBYTES.payload());
     }
 
     @Test
@@ -251,7 +251,7 @@ public interface ReadSaveBlobStoreDAOContract {
 
         byte[] read = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().payload();
 
-        assertThat(read).isEqualTo(ELEVEN_KILOBYTES);
+        assertThat(read).isEqualTo(ELEVEN_KILOBYTES.payload());
     }
 
     @Test
@@ -302,12 +302,12 @@ public interface ReadSaveBlobStoreDAOContract {
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource(value = "blobs")
-    default void concurrentSaveBytesShouldReturnConsistentValues(String description, byte[] bytes) throws ExecutionException, InterruptedException {
-        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes))).block();
+    default void concurrentSaveBytesShouldReturnConsistentValues(String description, BlobStoreDAO.BytesBlob bytes) throws ExecutionException, InterruptedException {
+        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes)).block();
         ConcurrentTestRunner.builder()
             .randomlyDistributedReactorOperations(
-                (threadNumber, step) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes)),
-                (threadNumber, step) -> checkConcurrentSaveOperation(bytes)
+                (threadNumber, step) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes),
+                (threadNumber, step) -> checkConcurrentSaveOperation(bytes.payload())
             )
             .threadCount(10)
             .operationCount(20)
@@ -316,12 +316,12 @@ public interface ReadSaveBlobStoreDAOContract {
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("blobs")
-    default void concurrentSaveInputStreamShouldReturnConsistentValues(String description, byte[] bytes) throws ExecutionException, InterruptedException {
-        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes))).block();
+    default void concurrentSaveInputStreamShouldReturnConsistentValues(String description, BlobStoreDAO.BytesBlob bytes) throws ExecutionException, InterruptedException {
+        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes)).block();
         ConcurrentTestRunner.builder()
             .randomlyDistributedReactorOperations(
-                (threadNumber, step) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes).asInputStream()),
-                (threadNumber, step) -> checkConcurrentSaveOperation(bytes)
+                (threadNumber, step) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes.asInputStream()),
+                (threadNumber, step) -> checkConcurrentSaveOperation(bytes.payload())
             )
             .threadCount(10)
             .operationCount(20)
@@ -330,12 +330,12 @@ public interface ReadSaveBlobStoreDAOContract {
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("blobs")
-    default void concurrentSaveByteSourceShouldReturnConsistentValues(String description, byte[] bytes) throws ExecutionException, InterruptedException {
-        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes))).block();
+    default void concurrentSaveByteSourceShouldReturnConsistentValues(String description, BlobStoreDAO.BytesBlob bytes) throws ExecutionException, InterruptedException {
+        Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes)).block();
         ConcurrentTestRunner.builder()
             .randomlyDistributedReactorOperations(
-                (threadNumber, step) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, BlobStoreDAO.BytesBlob.of(bytes)),
-                (threadNumber, step) -> checkConcurrentSaveOperation(bytes)
+                (threadNumber, step) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes),
+                (threadNumber, step) -> checkConcurrentSaveOperation(bytes.payload())
             )
             .threadCount(10)
             .operationCount(20)
