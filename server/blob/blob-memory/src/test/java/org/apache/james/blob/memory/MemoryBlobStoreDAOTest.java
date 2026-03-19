@@ -21,10 +21,11 @@ package org.apache.james.blob.memory;
 
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
+import org.apache.james.blob.api.MetadataAwareBlobStoreDAOContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 
-class MemoryBlobStoreDAOTest implements BlobStoreDAOContract {
+class MemoryBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract {
 
     private MemoryBlobStoreDAO blobStore;
 
