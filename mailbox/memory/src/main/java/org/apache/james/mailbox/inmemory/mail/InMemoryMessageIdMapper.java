@@ -93,10 +93,15 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
 
     @Override
     public List<MailboxId> findMailboxes(MessageId messageId) {
-        return find(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA)
-            .stream()
-            .map(MailboxMessage::getMailboxId)
-            .collect(ImmutableList.toImmutableList());
+        return findMailboxesReactive(messageId)
+            .collectList()
+            .block();
+    }
+
+    @Override
+    public Flux<MailboxId> findMailboxesReactive(MessageId messageId) {
+        return findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.METADATA)
+            .map(MailboxMessage::getMailboxId);
     }
 
     @Override

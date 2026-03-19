@@ -163,12 +163,17 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     @Override
     public List<MailboxId> findMailboxes(MessageId messageId) {
+        return findMailboxesReactive(messageId)
+            .collectList()
+            .block();
+    }
+
+    @Override
+    public Flux<MailboxId> findMailboxesReactive(MessageId messageId) {
         return imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty(), chooseReadConsistency())
             .map(CassandraMessageMetadata::getComposedMessageId)
             .map(ComposedMessageIdWithMetaData::getComposedMessageId)
-            .map(ComposedMessageId::getMailboxId)
-            .collectList()
-            .block();
+            .map(ComposedMessageId::getMailboxId);
     }
 
     public JamesExecutionProfiles.ConsistencyChoice chooseReadConsistency() {

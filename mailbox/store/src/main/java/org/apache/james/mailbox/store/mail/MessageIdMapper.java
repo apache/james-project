@@ -54,6 +54,8 @@ public interface MessageIdMapper {
 
     List<MailboxId> findMailboxes(MessageId messageId);
 
+    Flux<MailboxId> findMailboxesReactive(MessageId messageId);
+
     void save(MailboxMessage mailboxMessage) throws MailboxNotFoundException, MailboxException;
 
     void copyInMailbox(MailboxMessage mailboxMessage, Mailbox mailbox) throws MailboxException;
