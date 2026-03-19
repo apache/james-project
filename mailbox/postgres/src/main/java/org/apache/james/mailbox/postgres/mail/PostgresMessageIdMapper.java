@@ -141,6 +141,11 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
+    public Flux<MailboxId> findMailboxesReactive(MessageId messageId) {
+        return mailboxMessageDAO.findMailboxes(PostgresMessageId.class.cast(messageId));
+    }
+
+    @Override
     public void save(MailboxMessage mailboxMessage) throws MailboxException {
         PostgresMailboxId mailboxId = PostgresMailboxId.class.cast(mailboxMessage.getMailboxId());
         mailboxMessage.setSaveDate(Date.from(clock.instant()));

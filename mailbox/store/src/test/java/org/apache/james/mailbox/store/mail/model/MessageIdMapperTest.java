@@ -146,6 +146,13 @@ public abstract class MessageIdMapperTest {
     }
 
     @Test
+    void findMailboxesReactiveShouldReturnOneMailboxWhenMessageExistsInOneMailbox() throws MailboxException {
+        saveMessages();
+        List<MailboxId> mailboxes = sut.findMailboxesReactive(message1.getMessageId()).collectList().block();
+        assertThat(mailboxes).containsOnly(benwaInboxMailbox.getMailboxId());
+    }
+
+    @Test
     void findMailboxesShouldReturnTwoMailboxesWhenMessageExistsInTwoMailboxes() throws MailboxException {
         saveMessages();
 
