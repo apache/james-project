@@ -477,12 +477,23 @@ public class StoreMailboxManager implements MailboxManager {
     private Mono<Void> inheritRightsReactive(MailboxSession mailboxSession, MailboxPath path) {
         return nearestExistingParent(mailboxSession, path)
             .flatMap(parent -> Mono.from(listRightsReactive(parent, mailboxSession)))
+            .map(this::filterLookupOnlyEntries)
             .flatMap(acl -> {
                 if (acl.getEntries().isEmpty()) {
                     return Mono.empty();
                 }
                 return storeRightManager.setRightsReactiveWithoutAccessControl(path, acl, mailboxSession);
             });
+    }
+
+    private MailboxACL filterLookupOnlyEntries(MailboxACL acl) {
+        return new MailboxACL(acl.getEntries().entrySet().stream()
+            .filter(entry -> !isLookupOnly(entry.getValue()))
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)));
+    }
+
+    private boolean isLookupOnly(Rfc4314Rights rights) {
+        return rights.equals(new Rfc4314Rights(Right.Lookup));
     }
 
     @Override

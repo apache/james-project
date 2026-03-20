@@ -364,6 +364,58 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void createMailboxShouldNotPropagateParentLookupOnlyRightsToSibling() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            session = mailboxManager.createSystemSession(USER_1);
+            // Create a.b - this also creates intermediate "a"
+            MailboxPath childPath1 = MailboxPath.forUser(USER_1, "a.b");
+            mailboxManager.createMailbox(childPath1, session);
+
+            // Give USER_2 only Lookup right on "a" (simulating the right derived from PropagateLookupRightListener)
+            MailboxPath parentPath = MailboxPath.forUser(USER_1, "a");
+            mailboxManager.applyRightsCommand(parentPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_2))
+                    .rights(MailboxACL.Right.Lookup)
+                    .asAddition(), session);
+
+            // Create a.c (sibling of a.b)
+            MailboxPath childPath2 = MailboxPath.forUser(USER_1, "a.c");
+            mailboxManager.createMailbox(childPath2, session);
+
+            // USER_2 should NOT have rights on a.c - Lookup-only from parent should not propagate to siblings
+            assertThat(mailboxManager.getMailbox(childPath2, session)
+                .getMailboxEntity().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(USER_2)))
+                .isNull();
+        }
+
+        @Test
+        void createMailboxShouldPropagateParentNonLookupOnlyRightsToSibling() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            session = mailboxManager.createSystemSession(USER_1);
+            // Create a.b - this also creates intermediate "a"
+            MailboxPath childPath1 = MailboxPath.forUser(USER_1, "a.b");
+            mailboxManager.createMailbox(childPath1, session);
+
+            // Give USER_2 Read+Lookup rights on "a" (substantive rights, not just derived lookup)
+            MailboxPath parentPath = MailboxPath.forUser(USER_1, "a");
+            mailboxManager.applyRightsCommand(parentPath,
+                MailboxACL.command()
+                    .key(MailboxACL.EntryKey.createUserEntryKey(USER_2))
+                    .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read)
+                    .asAddition(), session);
+
+            // Create a.c (sibling of a.b)
+            MailboxPath childPath2 = MailboxPath.forUser(USER_1, "a.c");
+            mailboxManager.createMailbox(childPath2, session);
+
+            // USER_2 SHOULD have rights on a.c (non-lookup-only rights from parent should still propagate)
+            assertThat(mailboxManager.getMailbox(childPath2, session)
+                .getMailboxEntity().getACL().getEntries().get(MailboxACL.EntryKey.createUserEntryKey(USER_2)))
+                .isEqualTo(MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("lr"));
+        }
+
+        @Test
         void creatingMixedCaseINBOXShouldCreateItAsINBOX() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
             mailboxManager.startProcessingRequest(session);
