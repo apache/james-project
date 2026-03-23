@@ -32,6 +32,7 @@ import org.apache.james.mailbox.MessageManager.FlagsUpdateMode
 import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaException}
 import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, MailboxId, MessageId, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageIdManager, MessageManager}
+import org.apache.james.util.AuditTrail
 import org.slf4j.LoggerFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -176,6 +177,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
 
     SMono(mailboxManager.moveMessagesReactive(ranges.asJava, mailboxId, targetId, session)).`then`()
       .`then`(SMono.just(messageIds.map(EmailUpdateSuccess)))
+      .doOnSuccess(_ => auditMove(messageIds, Seq(mailboxId), Seq(targetId), session))
       .onErrorResume(e => SMono.just(messageIds.map(id => EmailUpdateFailure(EmailSet.asUnparsed(id), e))))
   }
 
@@ -222,6 +224,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
           .asFlagsWithRecentAndDeletedFrom(originalFlags)
         SMono(messageIdManager.updateEmail(messageId, targetIds.value.asJava, newFlags, FlagsUpdateMode.REPLACE, session))
           .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
+          .doOnSuccess(_ => auditMove(Seq(messageId), mailboxIds.value, targetIds.value, session))
           .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
           .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
       } else {
@@ -241,11 +244,28 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
       val targetIds = update.mailboxIdsTransformation.apply(mailboxIds)
       SMono(messageIdManager.setInMailboxesReactive(messageId, targetIds.value.asJava, session))
         .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
+        .doOnSuccess(_ => auditMove(Seq(messageId), mailboxIds.value, targetIds.value, session))
         .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
         .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
     } else {
       SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId))
     }
+
+  private def auditMove(messageIds: Iterable[MessageId], fromIds: Iterable[MailboxId], toIds: Iterable[MailboxId], session: MailboxSession): Unit = {
+    val from = fromIds.map(_.serialize()).mkString(", ")
+    val to = toIds.map(_.serialize()).mkString(", ")
+    messageIds.foreach { msgId =>
+      AuditTrail.entry()
+        .username(() => session.getUser.asString())
+        .protocol("JMAP")
+        .action("Email/set move")
+        .parameters(() => com.google.common.collect.ImmutableMap.of(
+          "messageId", msgId.serialize(),
+          "from", from,
+          "to", to))
+        .log("Email moved between mailboxes")
+    }
+  }
 
   private def updateFlags(messageId: MessageId, update: ValidatedEmailSetUpdate, mailboxIds: MailboxIds, storedMetaData: List[ComposedMessageIdWithMetaData], session: MailboxSession): SMono[EmailUpdateResult] =
     if (update.update.isFlagUpdate) {
