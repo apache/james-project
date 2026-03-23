@@ -140,9 +140,10 @@ public class ProtocolSessionBuilder {
      *            The ProtocolSession to add elements to.
      */
     public void addProtocolLines(String scriptName, InputStream is, ProtocolInteractor session) throws Exception {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
         
-        doAddProtocolLines(session, scriptName, reader);
+                    doAddProtocolLines(session, scriptName, reader);
+        }
     }
 
     /**
