@@ -50,6 +50,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,7 @@ import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
@@ -560,7 +562,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         restoreMessagesFor(BART);
         awaitSearchUpToDate();
 
-        assertThat(restoredMessagesCount(homerCredential)).isEqualTo(1);
+        awaitRestoredMessagesCount(homerCredential, 1);
         assertThat(restoredMessagesCount(bartCredential)).isEqualTo(0);
 
         String restoredMessageId = getLatestMessageId(homerCredential, Role.RESTORED_MESSAGES);
@@ -588,7 +590,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         restoreMessagesFor(BART);
         awaitSearchUpToDate();
 
-        assertThat(restoredMessagesCount(homerCredential)).isEqualTo(1);
+        awaitRestoredMessagesCount(homerCredential, 1);
         assertThat(restoredMessagesCount(bartCredential)).isEqualTo(0);
 
         String restoredMessageId = getLatestMessageId(homerCredential, Role.RESTORED_MESSAGES);
@@ -1164,6 +1166,13 @@ public abstract class DeletedMessageVaultIntegrationTest {
             .findFirst()
             .map(mailbox -> listMessageIdsInMailbox(credential, mailbox.get("id")).size())
             .orElse(0);
+    }
+
+    private void awaitRestoredMessagesCount(UserCredential credential, int expectedCount) {
+        Awaitility.await()
+            .atMost(Duration.ofMinutes(1))
+            .pollInterval(Duration.ofMillis(100))
+            .untilAsserted(() -> assertThat(restoredMessagesCount(credential)).isEqualTo(expectedCount));
     }
 
     private void bartCopiesSharedMessageToOwnInbox() {
