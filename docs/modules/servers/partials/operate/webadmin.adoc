@@ -5251,6 +5251,7 @@ Will return a description and statistics for channels of a user:
 ]
 ....
 
+The same optional query parameters as `GET /servers/channels` are supported (see below).
 
 === Listing all channels
 
@@ -5289,3 +5290,25 @@ Will return a description and statistics for channels of all users:
 ....
 
 Be warned that the output can be very large if a significant count of channels is opened.
+
+The following optional query parameters are supported to sort and paginate results:
+
+[cols="~,~,~", options="header"]
+|===
+| Parameter | Default | Description
+| `limit` | unlimited | Maximum number of results to return.
+| `offset` | `0` | Number of results to skip before returning.
+| `sortBy` | none (no sort) | JSON path of the field to sort by. Supports top-level fields (`protocol`, `endpoint`, `remoteAddress`, `connectionDate`, `isActive`, `isOpen`, `isWritable`, `isEncrypted`, `username`) and nested keys inside `protocolSpecificInformation` using dot notation (e.g. `protocolSpecificInformation.cumulativeWrittenBytes`). Unknown paths are treated as an empty value without error.
+| `sortDirection` | `asc` | Sort direction. Accepted values: `asc`, `desc` (case-insensitive). Only applied when `sortBy` is set.
+| `sortType` | `alphabetical` | How to compare values. `alphabetical` uses natural string order; `numerical` parses values as long integers (non-numeric values sort as `0`). Only applied when `sortBy` is set.
+|===
+
+Example — list the 10 most data-hungry IMAP connections:
+
+....
+curl -XGET "/servers/channels?sortBy=protocolSpecificInformation.cumulativeWrittenBytes&sortType=numerical&sortDirection=desc&limit=10"
+....
+
+Return codes:
+
+- 200: the list of channels, possibly empty
