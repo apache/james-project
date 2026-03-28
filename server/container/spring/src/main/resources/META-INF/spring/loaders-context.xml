@@ -121,6 +121,10 @@
     <!--<bean id="filesystem" class="org.apache.james.container.spring.filesystem.FileSystemImpl" autowire="byName"/>-->
     <bean id="filesystem" class="org.apache.james.container.spring.filesystem.ResourceLoaderFileSystem"/>
 
+    <bean id="encryptionFactory" class="org.apache.james.protocols.lib.LegacyJavaEncryptionFactory">
+        <constructor-arg ref="filesystem"/>
+    </bean>
+
     <bean id="sieveparser" class="org.apache.james.managesieve.jsieve.Parser"/>
 
 </beans>

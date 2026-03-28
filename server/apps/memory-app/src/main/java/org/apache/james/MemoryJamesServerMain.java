@@ -29,6 +29,7 @@ import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionModul
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
+import org.apache.james.modules.LegacyEncryptionModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
@@ -111,6 +112,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
 
     public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
+        new LegacyEncryptionModule(),
         new LMTPServerModule(),
         new ManageSieveServerModule(),
         new POP3ServerModule(),
@@ -140,6 +142,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
 
     public static final Module SMTP_ONLY_MODULE = Modules.combine(
         MemoryJamesServerMain.IN_MEMORY_SERVER_MODULE,
+        new LegacyEncryptionModule(),
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         new RawPostDequeueDecoratorModule(),

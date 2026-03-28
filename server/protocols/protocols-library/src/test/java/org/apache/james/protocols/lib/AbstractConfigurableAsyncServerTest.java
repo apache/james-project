@@ -134,6 +134,7 @@ class AbstractConfigurableAsyncServerTest {
     private void initTestServer(String configFile) throws Exception {
         testServer = new TestableConfigurableAsyncServer();
         testServer.setFileSystem(memoryFileSystem);
+        testServer.setEncryptionFactory(new LegacyJavaEncryptionFactory(memoryFileSystem));
         testServer.configure(ConfigLoader.getConfig(ClassLoader.getSystemResourceAsStream(configFile)));
     }
 

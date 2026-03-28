@@ -35,7 +35,7 @@ import io.netty.handler.ssl.SslHandler;
 public interface Encryption {
 
     interface Factory {
-        Encryption create() throws Exception;
+        Encryption create(SslConfig conf) throws Exception;
     }
 
     @VisibleForTesting

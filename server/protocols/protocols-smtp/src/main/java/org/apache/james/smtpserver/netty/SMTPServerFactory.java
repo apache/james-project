@@ -38,6 +38,7 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
+import org.apache.james.protocols.netty.Encryption;
 
 public class SMTPServerFactory extends AbstractServerFactory implements Disconnector, ConnectionDescriptionSupplier {
 
@@ -45,6 +46,7 @@ public class SMTPServerFactory extends AbstractServerFactory implements Disconne
     protected final ProtocolHandlerLoader loader;
     protected final FileSystem fileSystem;
     protected final SmtpMetricsImpl smtpMetrics;
+    protected Encryption.Factory encryptionFactory;
 
     @Inject
     public SMTPServerFactory(DNSService dns, ProtocolHandlerLoader loader, FileSystem fileSystem,
@@ -53,6 +55,11 @@ public class SMTPServerFactory extends AbstractServerFactory implements Disconne
         this.loader = loader;
         this.fileSystem = fileSystem;
         this.smtpMetrics = new SmtpMetricsImpl(metricFactory);
+    }
+
+    @Inject
+    public void setEncryptionFactory(Encryption.Factory encryptionFactory) {
+        this.encryptionFactory = encryptionFactory;
     }
 
     protected SMTPServer createServer() {
@@ -70,6 +77,7 @@ public class SMTPServerFactory extends AbstractServerFactory implements Disconne
             server.setDnsService(dns);
             server.setProtocolHandlerLoader(loader);
             server.setFileSystem(fileSystem);
+            server.setEncryptionFactory(encryptionFactory);
             server.configure(serverConfig);
             servers.add(server);
         }

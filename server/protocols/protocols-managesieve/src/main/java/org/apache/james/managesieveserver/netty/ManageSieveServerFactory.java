@@ -34,12 +34,14 @@ import org.apache.james.managesieve.transcode.ArgumentParser;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
+import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
 
 public class ManageSieveServerFactory extends AbstractServerFactory {
 
     private FileSystem fileSystem;
+    private Encryption.Factory encryptionFactory;
     private ManageSieveProcessor manageSieveProcessor;
     private SieveRepository sieveRepository;
     private UsersRepository usersRepository;
@@ -48,6 +50,11 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
     @Inject
     public void setFileSystem(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
+    }
+
+    @Inject
+    public void setEncryptionFactory(Encryption.Factory encryptionFactory) {
+        this.encryptionFactory = encryptionFactory;
     }
 
     @Inject
@@ -81,6 +88,7 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
             ManageSieveServer server = new ManageSieveServer(8000, manageSieveProcessor);
             server.setFileSystem(fileSystem);
+            server.setEncryptionFactory(encryptionFactory);
             server.configure(serverConfig);
             servers.add(server);
         }

@@ -65,6 +65,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.rrt.api.AliasReverseResolver;
@@ -167,6 +168,7 @@ class LmtpServerTest {
 
     private LMTPServerFactory createLMTPServer(MockProtocolHandlerLoader loader, String configuration) throws Exception {
         LMTPServerFactory lmtpServerFactory = new LMTPServerFactory(loader, fileSystem, new RecordingMetricFactory());
+        lmtpServerFactory.setEncryptionFactory(new LegacyJavaEncryptionFactory(fileSystem));
         lmtpServerFactory.configure(ConfigLoader.getConfig(ClassLoader.getSystemResourceAsStream(configuration)));
         lmtpServerFactory.init();
         return lmtpServerFactory;
