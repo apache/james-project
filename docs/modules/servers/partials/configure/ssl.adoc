@@ -105,6 +105,32 @@ Please note `JKS` keystore format is also supported (default value if no keystor
 ....
 
 
+=== TLS session cache
+
+TLS session resumption allows clients to reconnect without performing a full TLS handshake, reducing CPU usage and connection latency.
+
+James caches completed TLS sessions server-side using the JDK `SSLSessionContext`. The cache size can be configured with `sessionCacheSize`:
+
+[source,xml]
+....
+<tls socketTLS="false" startTLS="true">
+  <keystore>file://conf/keystore</keystore>
+  <keystoreType>PKCS12</keystoreType>
+  <secret>yoursecret</secret>
+
+ <sessionCache>
+  <size>1024</size>
+  <timeout>600s</timeout>
+ </sessionCache>
+</tls>
+....
+
+When a cached session is found, the client and server skip the asymmetric key exchange and certificate verification,
+reusing the previously negotiated symmetric keys. This is particularly effective for mail clients that open many
+short-lived connections (e.g. mobile push sync).
+
+The `timeout` is expressed in seconds (`s`), minutes (`m`), or hours (`h`). If `sessionCache` is omitted, the JDK defaults are used.
+
 === Client authentication via certificates
 
 When you enable TLS, you may also configure the server to require a client certificate for authentication:

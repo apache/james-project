@@ -19,10 +19,14 @@
 
 package org.apache.james.protocols.netty;
 
+import java.time.Duration;
+import java.util.Optional;
+
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.protocols.api.ClientAuth;
+import org.apache.james.util.DurationParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +64,9 @@ public class SslConfig {
             String truststoreType = config.getString("tls.clientAuth.truststoreType", "JKS");
             char[] truststoreSecret = config.getString("tls.clientAuth.truststoreSecret", "").toCharArray();
             boolean enableOCSPCRLChecks = config.getBoolean("tls.enableOCSPCRLChecks", false);
+            Optional<Integer> sessionCacheSize = Optional.ofNullable(config.getInteger("tls.sessionCache.size", null));
+            Optional<Duration> sessionCacheTimeout = Optional.ofNullable(config.getString("tls.sessionCache.timeout", null))
+                .map(DurationParser::parse);
 
             if (useSSL) {
                 LOGGER.info("SSL enabled with keystore({}) at {}, certificates {}", keystoreType, keystore, certificates);
@@ -67,9 +74,9 @@ public class SslConfig {
                 LOGGER.info("TLS enabled with auth {} using truststore {}", clientAuth, truststore);
             }
 
-            return new SslConfig(useStartTLS, useSSL, clientAuth, keystore, keystoreType, privateKey, certificates, secret, truststore, truststoreType, enabledCipherSuites, enabledProtocols, truststoreSecret, enableOCSPCRLChecks);
+            return new SslConfig(useStartTLS, useSSL, clientAuth, keystore, keystoreType, privateKey, certificates, secret, truststore, truststoreType, enabledCipherSuites, enabledProtocols, truststoreSecret, enableOCSPCRLChecks, sessionCacheSize, sessionCacheTimeout);
         } else {
-            return new SslConfig(useStartTLS, useSSL, clientAuth, null, null, null, null, null, null, null, null, null, null, false);
+            return new SslConfig(useStartTLS, useSSL, clientAuth, null, null, null, null, null, null, null, null, null, null, false, Optional.empty(), Optional.empty());
         }
     }
 
@@ -87,10 +94,12 @@ public class SslConfig {
     private final String[] enabledProtocols;
     private final char[] truststoreSecret;
     private final boolean enableOCSPCRLChecks;
+    private final Optional<Integer> sessionCacheSize;
+    private final Optional<Duration> sessionCacheTimeout;
 
     public SslConfig(boolean useStartTLS, boolean useSSL, ClientAuth clientAuth, String keystore, String keystoreType, String privateKey,
                      String certificates, String secret, String truststore, String truststoreType, String[] enabledCipherSuites, String[] enabledProtocols,
-                     char[] truststoreSecret, boolean enableOCSPCRLChecks) {
+                     char[] truststoreSecret, boolean enableOCSPCRLChecks, Optional<Integer> sessionCacheSize, Optional<Duration> sessionCacheTimeout) {
         this.useStartTLS = useStartTLS;
         this.useSSL = useSSL;
         this.clientAuth = clientAuth;
@@ -105,6 +114,8 @@ public class SslConfig {
         this.enabledProtocols = enabledProtocols;
         this.truststoreSecret = truststoreSecret;
         this.enableOCSPCRLChecks = enableOCSPCRLChecks;
+        this.sessionCacheSize = sessionCacheSize;
+        this.sessionCacheTimeout = sessionCacheTimeout;
     }
 
     public ClientAuth getClientAuth() {
@@ -161,5 +172,13 @@ public class SslConfig {
 
     public boolean ocspCRLChecksEnabled() {
         return enableOCSPCRLChecks;
+    }
+
+    public Optional<Integer> getSessionCacheSize() {
+        return sessionCacheSize;
+    }
+
+    public Optional<Duration> getSessionCacheTimeout() {
+        return sessionCacheTimeout;
     }
 }

@@ -24,6 +24,7 @@ import java.security.cert.CertPathBuilder;
 import java.security.cert.PKIXBuilderParameters;
 import java.security.cert.PKIXRevocationChecker;
 import java.security.cert.X509CertSelector;
+import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Optional;
 
@@ -96,6 +97,9 @@ public class LegacyJavaEncryptionFactory implements Encryption.Factory {
         }
 
         SSLContext context = sslFactoryBuilder.build().getSslContext();
+
+        sslConfig.getSessionCacheSize().ifPresent(size -> context.getServerSessionContext().setSessionCacheSize(size));
+        sslConfig.getSessionCacheTimeout().map(Duration::toSeconds).map(Math::toIntExact).ifPresent(timeout -> context.getServerSessionContext().setSessionTimeout(timeout));
 
         if (sslConfig.useStartTLS()) {
             return Encryption.createStartTls(context, sslConfig.getEnabledCipherSuites(), sslConfig.getEnabledProtocols(), sslConfig.getClientAuth());
