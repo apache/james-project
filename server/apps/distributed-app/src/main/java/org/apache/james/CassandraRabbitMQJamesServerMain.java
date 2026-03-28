@@ -32,6 +32,7 @@ import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.CassandraConsistencyTaskSerializationModule;
 import org.apache.james.modules.DistributedTaskManagerModule;
 import org.apache.james.modules.DistributedTaskSerializationModule;
+import org.apache.james.modules.LegacyEncryptionModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
@@ -133,6 +134,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new CassandraJmapModule(),
         new CassandraVacationModule(),
         new IMAPServerModule(),
+        new LegacyEncryptionModule(),
         new LMTPServerModule(),
         new ManageSieveServerModule(),
         new POP3ServerModule(),

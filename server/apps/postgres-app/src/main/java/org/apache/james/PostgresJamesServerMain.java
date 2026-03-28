@@ -33,6 +33,7 @@ import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.DistributedTaskSerializationModule;
+import org.apache.james.modules.LegacyEncryptionModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
@@ -130,6 +131,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
 
     private static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
+        new LegacyEncryptionModule(),
         new LMTPServerModule(),
         new ManageSieveServerModule(),
         new POP3ServerModule(),

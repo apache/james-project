@@ -73,6 +73,7 @@ import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.netty.CertificateReloadable;
+import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ClassName;
 import org.apache.james.utils.GuiceLoader;
@@ -132,8 +133,11 @@ public class IMAPServerModule extends AbstractModule {
                                            StatusResponseFactory statusResponseFactory,
                                            MetricFactory metricFactory,
                                            GaugeRegistry gaugeRegistry,
-                                           ConnectionCheckFactory connectionCheckFactory) {
-        return new IMAPServerFactory(fileSystem, imapSuiteLoader(guiceLoader, statusResponseFactory), metricFactory, gaugeRegistry, connectionCheckFactory);
+                                           ConnectionCheckFactory connectionCheckFactory,
+                                           Encryption.Factory encryptionFactory) {
+        IMAPServerFactory factory = new IMAPServerFactory(fileSystem, imapSuiteLoader(guiceLoader, statusResponseFactory), metricFactory, gaugeRegistry, connectionCheckFactory);
+        factory.setEncryptionFactory(encryptionFactory);
+        return factory;
     }
 
     DefaultProcessor provideClassImapProcessors(ImapPackage imapPackage, GuiceLoader guiceLoader, StatusResponseFactory statusResponseFactory) {

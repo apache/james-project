@@ -39,6 +39,7 @@ import org.apache.james.modules.CassandraConsistencyTaskSerializationModule;
 import org.apache.james.modules.DistributedPop3Module;
 import org.apache.james.modules.DistributedTaskManagerModule;
 import org.apache.james.modules.DistributedTaskSerializationModule;
+import org.apache.james.modules.LegacyEncryptionModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.Pop3FixInconsistenciesWebAdminModule;
@@ -126,6 +127,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new UserIdentityModule());
 
     public static final Module PROTOCOLS = Modules.combine(
+        new LegacyEncryptionModule(),
         new LMTPServerModule(),
         new JMAPServerModule(),
         JMAPModule.INSTANCE,

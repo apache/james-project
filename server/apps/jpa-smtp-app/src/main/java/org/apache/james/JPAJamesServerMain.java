@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import org.apache.james.data.UsersRepositoryModuleChooser;
+import org.apache.james.modules.LegacyEncryptionModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.JPAAuthorizatorModule;
@@ -46,6 +47,7 @@ import com.google.inject.util.Modules;
 public class JPAJamesServerMain implements JamesServerMain {
 
     private static final Module PROTOCOLS = Modules.combine(
+        new LegacyEncryptionModule(),
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         new WebAdminServerModule(),

@@ -29,6 +29,7 @@ import org.apache.james.mailrepository.api.MailRepositoryFactory;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.postgres.PostgresMailRepositoryFactory;
 import org.apache.james.mailrepository.postgres.PostgresMailRepositoryUrlStore;
+import org.apache.james.modules.LegacyEncryptionModule;
 import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.MemoryDelegationStoreModule;
 import org.apache.james.modules.data.PostgresCommonModule;
@@ -70,6 +71,7 @@ public class Main implements JamesServerMain {
             new WebAdminServerModule(),
             new WebAdminMailOverWebModule());
     public static final Module PROTOCOLS = Modules.combine(
+            new LegacyEncryptionModule(),
             new SMTPServerModule(),
             new ProtocolHandlerModule());
     private static final Module BLOB_MODULE = Modules.combine(

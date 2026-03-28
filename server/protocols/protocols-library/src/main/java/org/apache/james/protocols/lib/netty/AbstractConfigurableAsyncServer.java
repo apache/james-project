@@ -41,14 +41,13 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
-import org.apache.james.protocols.lib.SslConfig;
 import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AbstractSSLAwareChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.Encryption;
+import org.apache.james.protocols.netty.SslConfig;
 import org.apache.james.util.Size;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.slf4j.Logger;
@@ -96,6 +95,8 @@ public abstract class AbstractConfigurableAsyncServer
 
     private FileSystem fileSystem;
 
+    private Encryption.Factory encryptionFactory;
+
     private boolean enabled;
 
     protected boolean proxyRequired;
@@ -121,6 +122,11 @@ public abstract class AbstractConfigurableAsyncServer
     @Inject
     public final void setFileSystem(FileSystem filesystem) {
         this.fileSystem = filesystem;
+    }
+
+    @Inject
+    public final void setEncryptionFactory(Encryption.Factory encryptionFactory) {
+        this.encryptionFactory = encryptionFactory;
     }
 
     protected void registerMBean() {
@@ -387,8 +393,7 @@ public abstract class AbstractConfigurableAsyncServer
      */
     protected void buildSSLContext() throws Exception {
         if (sslConfig.useSSL() || sslConfig.useStartTLS()) {
-            encryption = new LegacyJavaEncryptionFactory(fileSystem, sslConfig)
-                .create();
+            encryption = encryptionFactory.create(sslConfig);
         }
     }
 

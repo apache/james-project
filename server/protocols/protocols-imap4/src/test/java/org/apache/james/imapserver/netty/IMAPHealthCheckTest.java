@@ -40,6 +40,7 @@ import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.ClassLoaderUtils;
@@ -93,6 +94,8 @@ public class IMAPHealthCheckTest {
             new RecordingMetricFactory(),
             new NoopGaugeRegistry(),
             new DefaultConnectionCheckFactory());
+
+        imapServerFactory.setEncryptionFactory(new LegacyJavaEncryptionFactory(FileSystemImpl.forTestingWithConfigurationFromClasspath()));
 
         HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("imapServerHealthCheck.xml"));
         imapServerFactory.configure(config);

@@ -103,6 +103,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.OIDCSASLHelper;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
+import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.ClassLoaderUtils;
@@ -188,6 +189,7 @@ class IMAPServerTest {
 
         FileSystemImpl fileSystem = FileSystemImpl.forTestingWithConfigurationFromClasspath();
         imapServer.setFileSystem(fileSystem);
+        imapServer.setEncryptionFactory(new LegacyJavaEncryptionFactory(fileSystem));
 
         imapServer.configure(config);
         imapServer.init();

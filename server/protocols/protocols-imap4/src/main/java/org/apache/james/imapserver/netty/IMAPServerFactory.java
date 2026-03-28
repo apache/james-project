@@ -41,6 +41,7 @@ import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
+import org.apache.james.protocols.netty.Encryption;
 
 import com.github.fge.lambdas.functions.ThrowingFunction;
 
@@ -51,6 +52,7 @@ public class IMAPServerFactory extends AbstractServerFactory implements Disconne
     protected final ImapMetrics imapMetrics;
     protected final GaugeRegistry gaugeRegistry;
     protected final ConnectionCheckFactory connectionCheckFactory;
+    protected Encryption.Factory encryptionFactory;
 
     @Inject
     @Deprecated
@@ -72,6 +74,11 @@ public class IMAPServerFactory extends AbstractServerFactory implements Disconne
         this.connectionCheckFactory = connectionCheckFactory;
     }
 
+    @Inject
+    public void setEncryptionFactory(Encryption.Factory encryptionFactory) {
+        this.encryptionFactory = encryptionFactory;
+    }
+
     protected IMAPServer createServer(HierarchicalConfiguration<ImmutableNode> config) {
         ImapSuite imapSuite = imapSuiteProvider.apply(config);
 
@@ -86,6 +93,7 @@ public class IMAPServerFactory extends AbstractServerFactory implements Disconne
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
             IMAPServer server = createServer(serverConfig);
             server.setFileSystem(fileSystem);
+            server.setEncryptionFactory(encryptionFactory);
             server.configure(serverConfig);
             servers.add(server);
         }

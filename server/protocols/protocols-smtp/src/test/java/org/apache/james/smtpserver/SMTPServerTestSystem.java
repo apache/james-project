@@ -50,6 +50,7 @@ import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
+import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
@@ -147,6 +148,7 @@ class SMTPServerTestSystem {
         smtpServer = createSMTPServer(smtpMetrics);
         smtpServer.setDnsService(dnsServer);
         smtpServer.setFileSystem(fileSystem);
+        smtpServer.setEncryptionFactory(new LegacyJavaEncryptionFactory(fileSystem));
         smtpServer.setProtocolHandlerLoader(chain);
     }
 

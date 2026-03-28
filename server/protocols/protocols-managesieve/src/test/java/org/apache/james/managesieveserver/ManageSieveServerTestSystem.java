@@ -32,6 +32,7 @@ import org.apache.james.managesieve.transcode.ArgumentParser;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.managesieveserver.netty.ManageSieveServer;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
+import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.sieverepository.file.SieveFileRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -70,6 +71,7 @@ class ManageSieveServerTestSystem {
             this.manageSieveProcessor
         );
         this.manageSieveServer.setFileSystem(this.fileSystem);
+        this.manageSieveServer.setEncryptionFactory(new LegacyJavaEncryptionFactory(this.fileSystem));
         this.manageSieveServer.configure(configuration);
         this.manageSieveServer.init();
     }

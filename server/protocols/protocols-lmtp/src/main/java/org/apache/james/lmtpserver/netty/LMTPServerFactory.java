@@ -30,18 +30,25 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
+import org.apache.james.protocols.netty.Encryption;
 
 public class LMTPServerFactory extends AbstractServerFactory {
 
     private final ProtocolHandlerLoader loader;
     private final FileSystem fileSystem;
     protected final LMTPMetricsImpl lmtpMetrics;
+    private Encryption.Factory encryptionFactory;
 
     @Inject
     public LMTPServerFactory(ProtocolHandlerLoader loader, FileSystem fileSystem, MetricFactory metricFactory) {
         this.loader = loader;
         this.fileSystem = fileSystem;
         this.lmtpMetrics = new LMTPMetricsImpl(metricFactory);
+    }
+
+    @Inject
+    public void setEncryptionFactory(Encryption.Factory encryptionFactory) {
+        this.encryptionFactory = encryptionFactory;
     }
 
     protected LMTPServer createServer() {
@@ -56,6 +63,7 @@ public class LMTPServerFactory extends AbstractServerFactory {
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
             LMTPServer server = createServer();
             server.setFileSystem(fileSystem);
+            server.setEncryptionFactory(encryptionFactory);
             server.setProtocolHandlerLoader(loader);
             server.configure(serverConfig);
             servers.add(server);
