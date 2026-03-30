@@ -42,7 +42,7 @@ import reactor.rabbitmq.QueueSpecification;
 
 class RabbitMQEventBusDeadLetterQueueUpgradeTest {
     private static final GroupA REGISTERED_GROUP = new GroupA();
-    public static final NamingStrategy NAMING_STRATEGY = new NamingStrategy(new EventBusName("test"));
+    public static final NamingStrategy NAMING_STRATEGY = new DefaultNamingStrategy(new EventBusName("test"));
     private static final WorkQueueName WORK_QUEUE_NAME = NAMING_STRATEGY.workQueue(REGISTERED_GROUP);
 
     @RegisterExtension
