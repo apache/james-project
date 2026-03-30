@@ -53,7 +53,7 @@ class RabbitMQMailboxEventBusDeadLetterQueueHealthCheckTest {
         .isolationPolicy(RabbitMQExtension.IsolationPolicy.STRONG);
 
     public static final ImmutableMap<String, Object> NO_QUEUE_DECLARE_ARGUMENTS = ImmutableMap.of();
-    public static final NamingStrategy MAILBOX_EVENTS_NAMING_STRATEGY = new NamingStrategy(new EventBusName("mailboxEvents"));
+    public static final NamingStrategy MAILBOX_EVENTS_NAMING_STRATEGY = new DefaultNamingStrategy(new EventBusName("mailboxEvents"));
     public static final String ROUTING_KEY_MAILBOX_EVENTS_EVENT_BUS = "mailboxEventsRoutingKey";
 
     private Connection connection;

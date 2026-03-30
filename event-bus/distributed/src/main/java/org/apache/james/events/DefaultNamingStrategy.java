@@ -21,25 +21,39 @@ package org.apache.james.events;
 
 import reactor.rabbitmq.QueueSpecification;
 
-public interface NamingStrategy {
-    EventBusName JMAP_EVENT_BUS_NAME = new EventBusName("jmapEvent");
-    EventBusName MAILBOX_EVENT_BUS_NAME = new EventBusName("mailboxEvent");
-    EventBusName CONTENT_DELETION_EVENT_BUS_NAME = new EventBusName("contentDeletionEvent");
-    NamingStrategy JMAP_NAMING_STRATEGY = new DefaultNamingStrategy(JMAP_EVENT_BUS_NAME);
-    NamingStrategy MAILBOX_EVENT_NAMING_STRATEGY = new DefaultNamingStrategy(MAILBOX_EVENT_BUS_NAME);
-    NamingStrategy CONTENT_DELETION_NAMING_STRATEGY = new DefaultNamingStrategy(CONTENT_DELETION_EVENT_BUS_NAME);
+public record DefaultNamingStrategy(EventBusName eventBusName) implements NamingStrategy {
+    @Override
+    public RegistrationQueueName queueName(EventBusId eventBusId) {
+        return new RegistrationQueueName(eventBusName.value() + "-eventbus-" + eventBusId.asString());
+    }
 
-    RegistrationQueueName queueName(EventBusId eventBusId);
+    @Override
+    public QueueSpecification deadLetterQueue() {
+        return QueueSpecification.queue(eventBusName.value() + "-dead-letter-queue");
+    }
 
-    QueueSpecification deadLetterQueue();
+    @Override
+    public String exchange() {
+        return eventBusName.value() + "-exchange";
+    }
 
-    String exchange();
+    @Override
+    public String deadLetterExchange() {
+        return eventBusName.value() + "-dead-letter-exchange";
+    }
 
-    String deadLetterExchange();
+    @Override
+    public GroupConsumerRetry.RetryExchangeName retryExchange(Group group) {
+        return new GroupConsumerRetry.RetryExchangeName(eventBusName.value(), group);
+    }
 
-    GroupConsumerRetry.RetryExchangeName retryExchange(Group group);
+    @Override
+    public GroupRegistration.WorkQueueName workQueue(Group group) {
+        return new GroupRegistration.WorkQueueName(eventBusName.value(), group);
+    }
 
-    GroupRegistration.WorkQueueName workQueue(Group group);
-
-    EventBusName getEventBusName();
+    @Override
+    public EventBusName getEventBusName() {
+        return eventBusName;
+    }
 }

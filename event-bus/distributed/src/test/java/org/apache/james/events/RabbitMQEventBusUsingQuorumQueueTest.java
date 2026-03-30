@@ -43,7 +43,7 @@ class RabbitMQEventBusUsingQuorumQueueTest implements GroupContract.SingleEventB
     ErrorHandlingContract {
     
     static EventBusName TEST_EVENT_BUS = new EventBusName("test-quorum");
-    static NamingStrategy TEST_NAMING_STRATEGY = new NamingStrategy(TEST_EVENT_BUS);
+    static NamingStrategy TEST_NAMING_STRATEGY = new DefaultNamingStrategy(TEST_EVENT_BUS);
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
