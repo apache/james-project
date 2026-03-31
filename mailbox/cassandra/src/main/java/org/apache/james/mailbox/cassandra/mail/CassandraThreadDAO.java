@@ -52,6 +52,7 @@ import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
+import com.datastax.oss.driver.api.querybuilder.insert.RegularInsert;
 
 import reactor.core.publisher.Flux;
 
@@ -71,21 +72,17 @@ public class CassandraThreadDAO {
     public CassandraThreadDAO(CqlSession session) {
         executor = new CassandraAsyncExecutor(session);
 
-        insertOne = THREAD_TTL.map(ttl -> session.prepare(insertInto(TABLE_NAME)
-                .value(USERNAME, bindMarker(USERNAME))
-                .value(MIME_MESSAGE_ID, bindMarker(MIME_MESSAGE_ID))
-                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-                .value(THREAD_ID, bindMarker(THREAD_ID))
-                .value(BASE_SUBJECT, bindMarker(BASE_SUBJECT))
-                .usingTtl((int) ttl.getSeconds())
-                .build()))
-            .orElseGet(() -> session.prepare(insertInto(TABLE_NAME)
-                .value(USERNAME, bindMarker(USERNAME))
-                .value(MIME_MESSAGE_ID, bindMarker(MIME_MESSAGE_ID))
-                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-                .value(THREAD_ID, bindMarker(THREAD_ID))
-                .value(BASE_SUBJECT, bindMarker(BASE_SUBJECT))
-                .build()));
+        RegularInsert insert = insertInto(TABLE_NAME)
+            .value(USERNAME, bindMarker(USERNAME))
+            .value(MIME_MESSAGE_ID, bindMarker(MIME_MESSAGE_ID))
+            .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
+            .value(THREAD_ID, bindMarker(THREAD_ID))
+            .value(BASE_SUBJECT, bindMarker(BASE_SUBJECT));
+
+        insertOne = session.prepare(
+            THREAD_TTL.map(ttl -> insert.usingTtl((int) ttl.toSeconds()))
+                .orElse(insert)
+                .build());
 
         selectOne = session.prepare(selectFrom(TABLE_NAME)
             .columns(BASE_SUBJECT, THREAD_ID)
