@@ -110,10 +110,10 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
         mayRemoveItems = MayRemoveItems(rights.contains(Right.DeleteMessages)),
         maySetSeen = MaySetSeen(rights.contains(Right.Seen)),
         maySetKeywords = MaySetKeywords(rights.contains(Right.Write)),
-        mayCreateChild = MayCreateChild(false),
+        mayCreateChild = MayCreateChild(rights.contains(Right.CreateMailbox)),
         mayRename = MayRename(rights.contains(Right.DeleteMailbox)),
         mayDelete = MayDelete(rights.contains(Right.DeleteMailbox)),
-        maySubmit = MaySubmit(false))
+        maySubmit = MaySubmit(rights.contains(Right.Post)))
   }
 
   def create(mailboxMetaData: MailboxMetaData,
