@@ -31,6 +31,7 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.vault.VaultConfiguration;
+import org.apache.james.webadmin.integration.probe.DeletedMessageVaultProbeModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQPostgresDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegrationTest {
@@ -53,7 +54,8 @@ class RabbitMQPostgresDeletedMessageVaultIntegrationTest extends DeletedMessageV
                 .noCryptoConfig())
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule()))
+            .overrideWith(new TestJMAPServerModule())
+            .overrideWith(new DeletedMessageVaultProbeModule()))
         .extension(PostgresExtension.empty())
         .extension(new ClockExtension())
         .extension(rabbitMQExtension)
