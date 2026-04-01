@@ -26,11 +26,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import java.util.List;
 import java.util.Optional;
 
-import jakarta.mail.Address;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
-
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MaybeSender;
