@@ -37,70 +37,34 @@ public class EventSerializersAggregator implements EventSerializer {
     }
 
     @Override
-    public String toJson(Event event) {
+    public Optional<String> toJson(Event event) {
         return allEventSerializers.stream()
-            .map(eventSerializer -> serialize(event, eventSerializer))
+            .map(eventSerializer -> eventSerializer.toJson(event))
             .flatMap(Optional::stream)
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Could not serialize event: " + event));
+            .findFirst();
     }
 
     @Override
-    public Event asEvent(String serialized) {
+    public Optional<Event> asEvent(String serialized) {
         return allEventSerializers.stream()
-            .map(eventSerializer -> deserialize(serialized, eventSerializer))
+            .map(eventSerializer -> eventSerializer.asEvent(serialized))
             .flatMap(Optional::stream)
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Could not deserialize event: " + serialized));
+            .findFirst();
     }
 
     @Override
-    public String toJson(Collection<Event> events) {
+    public Optional<String> toJson(Collection<Event> events) {
         return allEventSerializers.stream()
-            .map(eventSerializer -> serialize(events, eventSerializer))
+            .map(eventSerializer -> eventSerializer.toJson(events))
             .flatMap(Optional::stream)
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Could not serialize event: " + events));
+            .findFirst();
     }
 
     @Override
-    public List<Event> asEvents(String serialized) {
+    public Optional<List<Event>> asEvents(String serialized) {
         return allEventSerializers.stream()
-            .map(eventSerializer -> deserializeEvents(serialized, eventSerializer))
+            .map(eventSerializer -> eventSerializer.asEvents(serialized))
             .flatMap(Optional::stream)
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Could not deserialize event: " + serialized));
-    }
-
-    private Optional<String> serialize(Event event, EventSerializer eventSerializer) {
-        try {
-            return Optional.of(eventSerializer.toJson(event));
-        } catch (Exception ex) {
-            return Optional.empty();
-        }
-    }
-
-    private Optional<String> serialize(Collection<Event> event, EventSerializer eventSerializer) {
-        try {
-            return Optional.of(eventSerializer.toJson(event));
-        } catch (Exception ex) {
-            return Optional.empty();
-        }
-    }
-
-    private Optional<Event> deserialize(String json, EventSerializer eventSerializer) {
-        try {
-            return Optional.of(eventSerializer.asEvent(json));
-        } catch (Exception ex) {
-            return Optional.empty();
-        }
-    }
-
-    private Optional<List<Event>> deserializeEvents(String json, EventSerializer eventSerializer) {
-        try {
-            return Optional.of(eventSerializer.asEvents(json));
-        } catch (Exception ex) {
-            return Optional.empty();
-        }
+            .findFirst();
     }
 }

@@ -85,20 +85,21 @@ case class JmapEventSerializer @Inject()(stateChangeEventDTOFactory: StateChange
     .forModules(stateChangeEventDTOFactory.dtoModule.asInstanceOf[EventDTOModule[Event, EventDTO]])
     .withoutNestedType()
 
-  override def toJson(event: Event): String = genericSerializer.serialize(event)
+  override def toJson(event: Event): Optional[String] = genericSerializer.maybeSerialize(event)
 
-  override def asEvent(serialized: String): Event = genericSerializer.deserialize(serialized)
+  override def asEvent(serialized: String): Optional[Event] = genericSerializer.maybeDeserialize(serialized)
 
-  override def toJsonBytes(event: Event): Array[Byte] =  genericSerializer.serializeToBytes(event)
+  override def toJsonBytes(event: Event): Optional[Array[Byte]] = genericSerializer.maybeSerializeToBytes(event)
 
-  override def fromBytes(serialized: Array[Byte]): Event = genericSerializer.deserializeFromBytes(serialized)
+  override def fromBytes(serialized: Array[Byte]): Optional[Event] = genericSerializer.maybeDeserializeFromBytes(serialized)
 
-  override def toJson(event: util.Collection[Event]): String = {
+  override def toJson(event: util.Collection[Event]): Optional[String] = {
     if (event.size() != 1) {
-      throw new IllegalArgumentException("Not supported for multiple events, please serialize separately")
+      Optional.empty()
     }
     toJson(event.iterator().next())
   }
 
-  override def asEvents(serialized: String): util.List[Event] = ImmutableList.of(asEvent(serialized))
+  override def asEvents(serialized: String): Optional[util.List[Event]] =
+    asEvent(serialized).map(event => ImmutableList.of(event))
 }

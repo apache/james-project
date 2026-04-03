@@ -139,7 +139,7 @@ class MailboxDeletionSerializationTest {
 
     @Test
     void mailboxDeletionShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_MAILBOX_DELETION_EVENT))
+        assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_MAILBOX_DELETION_EVENT).get())
             .isEqualTo(DEFAULT_EVENT_JSON);
     }
 
@@ -151,7 +151,7 @@ class MailboxDeletionSerializationTest {
 
     @Test
     void mailboxDeletionWithEmptyACLShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(EMPTY_ACL_MAILBOX_DELETION_EVENT))
+        assertThatJson(EVENT_SERIALIZER.toJson(EMPTY_ACL_MAILBOX_DELETION_EVENT).get())
             .isEqualTo(EVENT_WITH_EMPTY_ACL_JSON);
     }
 

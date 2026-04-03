@@ -21,7 +21,7 @@ package org.apache.james.event.json
 
 import java.time.Instant
 import java.util
-import java.util.{TreeMap => JavaTreeMap}
+import java.util.{Optional, TreeMap => JavaTreeMap}
 
 import jakarta.inject.Inject
 import julienrf.json.derived
@@ -456,17 +456,31 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
 class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) extends EventSerializer {
   private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory, quotaRootDeserializer)
 
-  override def toJson(event: JavaEvent): String = jsonSerialize.toJson(event)
+  override def toJson(event: JavaEvent): Optional[String] = Optional.of(jsonSerialize.toJson(event))
 
-  override def toJsonBytes(event: JavaEvent): Array[Byte] = jsonSerialize.toJsonBytes(event)
+  override def toJsonBytes(event: JavaEvent): Optional[Array[Byte]] = Optional.of(jsonSerialize.toJsonBytes(event))
 
-  override def toJsonBytes(event: util.Collection[JavaEvent]): Array[Byte] = jsonSerialize.toJsonBytes(event)
+  override def toJsonBytes(event: util.Collection[JavaEvent]): Optional[Array[Byte]] = Optional.of(jsonSerialize.toJsonBytes(event))
 
   def fromJson(json: String): JsResult[JavaEvent] = jsonSerialize.fromJson(json)
 
-  override def toJson(event: util.Collection[JavaEvent]): String = jsonSerialize.toJson(event)
+  override def toJson(event: util.Collection[JavaEvent]): Optional[String] = Optional.of(jsonSerialize.toJson(event))
 
-  override def asEvents(serialized: String): util.List[JavaEvent] = jsonSerialize.fromJsonAsEvents(serialized).get.asJava
+  override def asEvents(serialized: String): Optional[util.List[JavaEvent]] = {
+    val result = jsonSerialize.fromJsonAsEvents(serialized)
+    if (result.isError) {
+      Optional.empty()
+    } else {
+      Optional.of(result.get.asJava)
+    }
+  }
 
-  override def asEvent(serialized: String): JavaEvent = fromJson(serialized).get
+  override def asEvent(serialized: String): Optional[JavaEvent] = {
+    val result = fromJson(serialized)
+    if (result.isError) {
+      Optional.empty()
+    } else {
+      Optional.of(result.get)
+    }
+  }
 }

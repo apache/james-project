@@ -22,6 +22,7 @@ package org.apache.james.json;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -36,6 +37,7 @@ import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -122,22 +124,46 @@ public class JsonGenericSerializer<T, U extends DTO> {
         return objectMapper.writeValueAsString(dto);
     }
 
-    public byte[] serializeToBytes(T domainObject) throws JsonProcessingException {
-        U dto = dtoConverter.toDTO(domainObject)
-            .orElseThrow(() -> new UnknownTypeException("unknown type " + domainObject.getClass()));
-        return objectMapper.writeValueAsBytes(dto);
+    public Optional<String> maybeSerialize(T domainObject) {
+        try {
+            return dtoConverter.toDTO(domainObject)
+                .map(Throwing.function(objectMapper::writeValueAsString).sneakyThrow());
+        } catch (Exception exception) {
+            return Optional.empty();
+        }
     }
 
-    public T deserializeFromBytes(byte[] value) throws IOException {
-        U dto = jsonToDTO(value);
-        return dtoConverter.toDomainObject(dto)
-            .orElseThrow(() -> new UnknownTypeException("unknown type " + dto.getType()));
+    public Optional<byte[]> maybeSerializeToBytes(T domainObject) {
+        try {
+            return dtoConverter.toDTO(domainObject)
+                .map(Throwing.function(objectMapper::writeValueAsBytes).sneakyThrow());
+        } catch (Exception exception) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<T> maybeDeserializeFromBytes(byte[] value) {
+        try {
+            U dto = jsonToDTO(value);
+            return dtoConverter.toDomainObject(dto);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     public T deserialize(String value) throws IOException {
         U dto = jsonToDTO(value);
         return dtoConverter.toDomainObject(dto)
             .orElseThrow(() -> new UnknownTypeException("unknown type " + dto.getType()));
+    }
+
+    public Optional<T> maybeDeserialize(String value) {
+        try {
+            U dto = jsonToDTO(value);
+            return dtoConverter.toDomainObject(dto);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     private U jsonToDTO(String value) throws IOException {
