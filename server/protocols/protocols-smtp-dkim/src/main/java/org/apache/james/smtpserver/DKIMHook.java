@@ -51,6 +51,7 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -111,7 +112,7 @@ public class DKIMHook implements JamesMessageHook {
                 try {
                     return StreamUtils.ofNullable(mail.getMessage().getFrom())
                         .distinct()
-                        .flatMap(DKIMCheckNeeded::parseMailAddress)
+                        .flatMap(Throwing.function(DKIMCheckNeeded::parseMailAddress).sneakyThrow())
                         .findFirst()
                         .map(MailAddress::getDomain)
                         .map(domain::equals)
@@ -127,13 +128,13 @@ public class DKIMHook implements JamesMessageHook {
             };
         }
 
-        private static Stream<MailAddress> parseMailAddress(Address from) {
+        private static Stream<MailAddress> parseMailAddress(Address from) throws MessagingException {
             if (from instanceof InternetAddress internetAddress) {
                 try {
                     return Stream.of(new MailAddress(internetAddress.getAddress()));
                 } catch (AddressException e) {
-                    // Never happens as valid InternetAddress are valid MailAddress
-                    throw new RuntimeException(e);
+                    // Can happen when InternetAddress.getAddress() returns a malformed value (e.g. "addr>")
+                    throw new MessagingException("Failed parsing mail address", e);
                 }
             }
             return Stream.empty();

@@ -21,6 +21,7 @@ package org.apache.james.smtpserver;
 
 import static org.apache.james.smtpserver.DKIMHook.Config.DEFAULT_VALIDATED_ENTITIES;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.List;
 import java.util.Optional;
@@ -114,6 +115,50 @@ class DKIMHookTest {
                     .sender("bob@other.com")
                     .build()))
                 .isTrue();
+        }
+
+        @Test
+        void onlyForHeaderFromDomainShouldNotThrowWhenFromAddressIsMalformed() throws Exception {
+            // Reproduces a production error: with lenient address parsing (mail.mime.address.strict=false),
+            // InternetAddress.getAddress() can return "offers@fedex.com>" which is rejected by MailAddress.
+            System.setProperty("mail.mime.address.strict", "false");
+            try {
+                var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("This is my email")
+                    .build();
+                mimeMessage.setHeader("From", "offers@fedex.com>");
+
+                assertThatCode(() -> DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.of("fedex.com"))
+                    .test(FakeMail.builder()
+                        .name("mail")
+                        .sender("offers@fedex.com")
+                        .mimeMessage(mimeMessage)
+                        .build()))
+                    .doesNotThrowAnyException();
+            } finally {
+                System.clearProperty("mail.mime.address.strict");
+            }
+        }
+
+        @Test
+        void onlyForHeaderFromDomainShouldReturnFalseWhenFromAddressIsMalformed() throws Exception {
+            System.setProperty("mail.mime.address.strict", "false");
+            try {
+                var mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("This is my email")
+                    .build();
+                mimeMessage.setHeader("From", "offers@fedex.com>");
+
+                assertThat(DKIMHook.DKIMCheckNeeded.onlyForHeaderFromDomain(Domain.of("fedex.com"))
+                    .test(FakeMail.builder()
+                        .name("mail")
+                        .sender("offers@fedex.com")
+                        .mimeMessage(mimeMessage)
+                        .build()))
+                    .isFalse();
+            } finally {
+                System.clearProperty("mail.mime.address.strict");
+            }
         }
     }
 
