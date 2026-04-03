@@ -1116,6 +1116,114 @@ trait MailboxGetMethodContract {
   }
 
   @Test
+  def getMailboxesShouldReturnMayCreateChildTrueWhenDelegatedWithCreateMailboxRight(server: GuiceJamesServer): Unit = {
+    val sharedMailboxName: String = "AndreShared"
+    val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.CreateMailbox))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.list", hasSize(1))
+      .body(s"$FIRST_MAILBOX.myRights.mayCreateChild", equalTo(true))
+      .body(s"$FIRST_MAILBOX.myRights.maySubmit", equalTo(false))
+  }
+
+  @Test
+  def getMailboxesShouldReturnMaySubmitTrueWhenDelegatedWithPostRight(server: GuiceJamesServer): Unit = {
+    val sharedMailboxName: String = "AndreShared"
+    val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Post))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.list", hasSize(1))
+      .body(s"$FIRST_MAILBOX.myRights.mayCreateChild", equalTo(false))
+      .body(s"$FIRST_MAILBOX.myRights.maySubmit", equalTo(true))
+  }
+
+  @Test
+  def getMailboxesShouldIncludeCreateMailboxRightInRightsFieldWhenSet(server: GuiceJamesServer): Unit = {
+    val sharedMailboxName: String = "AndreShared"
+    val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.CreateMailbox))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.list", hasSize(1))
+      .body(s"$FIRST_MAILBOX.rights['${BOB.asString}']", containsInAnyOrder(
+        Right.Lookup.asCharacter.toString,
+        Right.Read.asCharacter.toString,
+        Right.CreateMailbox.asCharacter.toString))
+      .body(s"$FIRST_MAILBOX.myRights.mayCreateChild", equalTo(true))
+  }
+
+  @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def getMailboxesShouldNotReturnInboxRoleToShareeWhenDelegatedInbox(server: GuiceJamesServer): Unit = {
     val andreMailboxPath = MailboxPath.forUser(ANDRE, DefaultMailboxes.INBOX)

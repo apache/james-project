@@ -58,7 +58,7 @@ class RightsTest extends AnyWordSpec with Matchers {
       Right.forChar('p') must be(Some(Right.Post))
     }
     "return empty when unknown" in {
-      Right.forChar('k') must be(None)
+      Right.forChar('b') must be(None)
     }
   }
   "From ACL" should  {
@@ -84,7 +84,7 @@ class RightsTest extends AnyWordSpec with Matchers {
       val acl = new JavaMailboxACL(Map(
         USER_ENTRYKEY -> JavaRfc4314Rights.fromSerializedRfc4314Rights("aetxk")).asJava)
 
-      Rights.fromACL(MailboxACL.fromJava(acl)) must be(Rights.of(USER_ENTRYKEY, Seq(Right.Administer, Right.Expunge, Right.DeleteMessages, Right.DeleteMailbox)))
+      Rights.fromACL(MailboxACL.fromJava(acl)) must be(Rights.of(USER_ENTRYKEY, Seq(Right.Administer, Right.Expunge, Right.CreateMailbox, Right.DeleteMessages, Right.DeleteMailbox)))
     }
   }
   "To ACL" should  {
