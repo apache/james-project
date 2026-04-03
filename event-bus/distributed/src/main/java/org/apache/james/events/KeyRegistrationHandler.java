@@ -26,6 +26,7 @@ import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateExclusive;
 import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -218,14 +219,12 @@ class KeyRegistrationHandler {
         byte[] bodyAsBytes = deliver.getBody();
         // if the json is an array, we have multiple events
         if (bodyAsBytes != null && bodyAsBytes.length > 0 && bodyAsBytes[0] == '[') {
-            return eventSerializer.asEventsFromBytes(bodyAsBytes);
+            return deserializeEvents(bodyAsBytes);
         }
 
-        try {
-            return List.of(eventSerializer.fromBytes(bodyAsBytes));
-        } catch (RuntimeException exception) {
-            return eventSerializer.asEventsFromBytes(bodyAsBytes);
-        }
+        return eventSerializer.fromBytes(bodyAsBytes)
+            .map(List::of)
+            .orElse(deserializeEvents(bodyAsBytes));
     }
 
     private StructuredLogger structuredLogger(List<Event> events, RegistrationKey key) {
@@ -240,5 +239,10 @@ class KeyRegistrationHandler {
                 .map(e -> e.getUsername().asString())
                 .collect(Collectors.joining(",")))
             .field(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key.asString());
+    }
+
+    private List<Event> deserializeEvents(byte[] bodyAsBytes) {
+        return eventSerializer.asEventsFromBytes(bodyAsBytes)
+            .orElseThrow(() -> new RuntimeException("Could not deserialize events: " + new String(bodyAsBytes, StandardCharsets.UTF_8)));
     }
 }

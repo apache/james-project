@@ -106,8 +106,10 @@ public class EventDeadLettersRoutes implements Routes {
         EventDeadLetters.InsertionId insertionId = parseInsertionId(request);
 
         return eventDeadLettersService.getEvent(group, insertionId)
-            .map(eventSerializer::toJson)
-            .switchIfEmpty(Mono.fromRunnable(() ->  response.status(HttpStatus.NOT_FOUND_404)))
+            .flatMap(event -> eventSerializer.toJson(event)
+                .map(Mono::just)
+                .orElseGet(Mono::empty))
+            .switchIfEmpty(Mono.fromRunnable(() -> response.status(HttpStatus.NOT_FOUND_404)))
             .block();
     }
 

@@ -152,7 +152,9 @@ public class GroupRegistrationHandler {
     }
 
     private Mono<List<Event>> deserializeEvents(byte[] eventAsBytes) {
-        return Mono.fromCallable(() -> eventSerializer.asEventsFromBytes(eventAsBytes));
+        return Mono.fromCallable(() ->
+            eventSerializer.asEventsFromBytes(eventAsBytes)
+                .orElseThrow(() -> new RuntimeException("Could not deserialize events")));
     }
 
     void stop() {

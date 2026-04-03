@@ -180,7 +180,7 @@ public class EventDispatcher {
             .flatMap(event -> event.keys().stream())
             .collect(ImmutableSet.toImmutableSet());
 
-        return Mono.fromCallable(() -> eventSerializer.toJsonBytes(underlyingEvents))
+        return Mono.fromCallable(() -> serializeEvents(underlyingEvents))
             .flatMap(serializedEvent -> Mono.zipDelayError(
                 remoteGroupsDispatch(serializedEvent, underlyingEvents),
                 remoteKeysDispatch(serializedEvent, keys)))
@@ -258,6 +258,12 @@ public class EventDispatcher {
     }
 
     private byte[] serializeEvent(Event event) {
-        return eventSerializer.toJsonBytes(event);
+        return eventSerializer.toJsonBytes(event)
+            .orElseThrow(() -> new RuntimeException("Could not serialize event: " + event));
+    }
+
+    private byte[] serializeEvents(Collection<Event> event) {
+        return eventSerializer.toJsonBytes(event)
+            .orElseThrow(() -> new RuntimeException("Could not serialize events"));
     }
 }

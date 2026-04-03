@@ -75,7 +75,7 @@ class MailboxACLUpdatedEventSerializationTest {
 
     @Test
     void mailboxACLUpdatedShouldBeSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(MAILBOX_ACL_UPDATED))
+        assertThatJson(EVENT_SERIALIZER.toJson(MAILBOX_ACL_UPDATED).get())
             .isEqualTo(MAILBOX_ACL_UPDATED_JSON);
     }
 
