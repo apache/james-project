@@ -20,15 +20,6 @@
 package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DESCRIPTION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DISPOSITION_PARAMETERS;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DISPOSITION_TYPE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_LANGUAGE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_LOCATION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_MD5;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_TRANSFER_ENCODING;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_TYPE_PARAMETERS;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.INTERNAL_DATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.SIZE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.IS_ANSWERED;
@@ -48,7 +39,6 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefiniti
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -65,11 +55,8 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
-import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.impl.Properties;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.jooq.Field;
 import org.jooq.Record;
 
@@ -140,27 +127,6 @@ interface PostgresMailboxMessageDAOUtils {
         .flags(RECORD_TO_FLAGS_FUNCTION.apply(record))
         .modSeq(ModSeq.of(record.get(MOD_SEQ)))
         .build();
-
-    Function<Record, Properties> RECORD_TO_PROPERTIES_FUNCTION = record -> {
-        PropertyBuilder property = new PropertyBuilder();
-
-        property.setMediaType(record.get(PostgresMessageDataDefinition.MessageTable.MIME_TYPE));
-        property.setSubType(record.get(PostgresMessageDataDefinition.MessageTable.MIME_SUBTYPE));
-        property.setTextualLineCount(Optional.ofNullable(record.get(PostgresMessageDataDefinition.MessageTable.TEXTUAL_LINE_COUNT))
-            .map(Long::valueOf)
-            .orElse(null));
-
-        property.setContentDescription(record.get(CONTENT_DESCRIPTION));
-        property.setContentDispositionType(record.get(CONTENT_DISPOSITION_TYPE));
-        property.setContentID(record.get(CONTENT_ID));
-        property.setContentMD5(record.get(CONTENT_MD5));
-        property.setContentTransferEncoding(record.get(CONTENT_TRANSFER_ENCODING));
-        property.setContentLocation(record.get(CONTENT_LOCATION));
-        property.setContentLanguage(Optional.ofNullable(record.get(CONTENT_LANGUAGE)).map(List::of).orElse(null));
-        property.setContentDispositionParameters(record.get(CONTENT_DISPOSITION_PARAMETERS).data());
-        property.setContentTypeParameters(record.get(CONTENT_TYPE_PARAMETERS).data());
-        return property.build();
-    };
 
     Function<byte[], Content> BYTE_TO_CONTENT_FUNCTION = contentAsBytes -> new Content() {
         @Override

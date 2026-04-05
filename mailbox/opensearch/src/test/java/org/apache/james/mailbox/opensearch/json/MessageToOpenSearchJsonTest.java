@@ -47,7 +47,6 @@ import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaExtension;
@@ -71,7 +70,6 @@ class MessageToOpenSearchJsonTest {
 
     TextExtractor textExtractor;
     Date date;
-    PropertyBuilder propertyBuilder;
 
     @RegisterExtension
     static TikaExtension tika = new TikaExtension();
@@ -85,11 +83,6 @@ class MessageToOpenSearchJsonTest {
                 .build()));
         // 2015/06/07 00:00:00 0200 (Paris time zone)
         date = new Date(1433628000000L);
-        propertyBuilder = new PropertyBuilder();
-        propertyBuilder.setMediaType("plain");
-        propertyBuilder.setSubType("text");
-        propertyBuilder.setTextualLineCount(18L);
-        propertyBuilder.setContentDescription("An e-mail");
     }
 
     @Test
@@ -104,7 +97,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/spamMail.eml"))),
                 new Flags(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
@@ -125,7 +117,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/alternative.eml"))),
                 new Flags(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
@@ -148,7 +139,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/alternative_simple.eml"))),
                 new Flags(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
@@ -171,7 +161,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/james-3901.eml"))),
                 new Flags(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
@@ -193,7 +182,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/spamMail.eml"))),
                 new Flags(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
@@ -214,7 +202,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml"))),
                 new Flags(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         mail.setUid(UID);
         mail.setModSeq(MOD_SEQ);
@@ -236,7 +223,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/invalidCharset.eml"))),
                 new Flags(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
@@ -259,7 +245,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/htmlMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("social", "pocket-money").build(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         htmlMail.setModSeq(MOD_SEQ);
         htmlMail.setUid(UID);
@@ -280,7 +265,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/pgpSignedMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         pgpSignedMail.setModSeq(MOD_SEQ);
         pgpSignedMail.setUid(UID);
@@ -301,7 +285,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         mail.setModSeq(MOD_SEQ);
         mail.setUid(UID);
@@ -322,7 +305,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         recursiveMail.setModSeq(MOD_SEQ);
         recursiveMail.setUid(UID);
@@ -343,7 +325,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         mailWithNoInternalDate.setModSeq(MOD_SEQ);
         mailWithNoInternalDate.setUid(UID);
@@ -363,7 +344,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         mailWithNoInternalDate.setModSeq(MOD_SEQ);
         mailWithNoInternalDate.setUid(UID);
@@ -392,7 +372,6 @@ class MessageToOpenSearchJsonTest {
                 BODY_START_OCTET,
                 new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder.build(),
                 MAILBOX_ID);
         mailWithNoInternalDate.setModSeq(MOD_SEQ);
         mailWithNoInternalDate.setUid(UID);
@@ -421,7 +400,6 @@ class MessageToOpenSearchJsonTest {
             BODY_START_OCTET,
             new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"))),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-            propertyBuilder.build(),
             null);
         mailWithNoMailboxId.setModSeq(MOD_SEQ);
         mailWithNoMailboxId.setUid(UID);
@@ -473,7 +451,6 @@ class MessageToOpenSearchJsonTest {
             BODY_START_OCTET,
             new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nonTextual.eml"))),
             new Flags(),
-            propertyBuilder.build(),
             MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
@@ -501,7 +478,6 @@ class MessageToOpenSearchJsonTest {
             BODY_START_OCTET,
             new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nonTextual.eml"))),
             new Flags(),
-            propertyBuilder.build(),
             MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
@@ -521,7 +497,6 @@ class MessageToOpenSearchJsonTest {
             BODY_START_OCTET,
             new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithNonIndexableAttachment.eml"))),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-            propertyBuilder.build(),
             MAILBOX_ID);
         message.setModSeq(MOD_SEQ);
         message.setUid(UID);
@@ -550,7 +525,6 @@ class MessageToOpenSearchJsonTest {
             BODY_START_OCTET,
             new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithNonIndexableAttachment.eml"))),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-            propertyBuilder.build(),
             MAILBOX_ID);
         message.setModSeq(MOD_SEQ);
         message.setUid(UID);
@@ -583,7 +557,6 @@ class MessageToOpenSearchJsonTest {
             BODY_START_OCTET,
             new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml"))),
             new Flags(),
-            propertyBuilder.build(),
             MAILBOX_ID);
         mail.setUid(UID);
         mail.setModSeq(MOD_SEQ);

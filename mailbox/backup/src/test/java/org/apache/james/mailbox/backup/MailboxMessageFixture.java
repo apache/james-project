@@ -42,7 +42,6 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 import com.google.common.collect.ImmutableList;
@@ -132,7 +131,6 @@ public interface MailboxMessageFixture {
         .internalDate(new Date(DATE_1.toEpochSecond()))
         .bodyStartOctet(0)
         .flags(flags1)
-        .properties(new PropertyBuilder())
         .mailboxId(MAILBOX_ID_1)
         .build();
 
@@ -145,7 +143,6 @@ public interface MailboxMessageFixture {
         .internalDate(new Date(DATE_1.toEpochSecond()))
         .bodyStartOctet(0)
         .flags(flags1)
-        .properties(new PropertyBuilder())
         .mailboxId(MAILBOX_ID_11)
         .build();
 
@@ -158,7 +155,6 @@ public interface MailboxMessageFixture {
         .internalDate(new Date(DATE_2.toEpochSecond()))
         .bodyStartOctet(0)
         .flags(new Flags())
-        .properties(new PropertyBuilder())
         .mailboxId(MAILBOX_ID_1)
         .build();
 }

@@ -30,7 +30,6 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefiniti
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable.SAVE_DATE;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.BYTE_TO_CONTENT_FUNCTION;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_FLAGS_FUNCTION;
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_PROPERTIES_FUNCTION;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_THREAD_ID_FUNCTION;
 
 import java.time.LocalDateTime;
@@ -44,7 +43,6 @@ import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageToMailboxTable;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -77,10 +75,7 @@ public interface PostgresMailboxMessageFetchStrategy {
             tableField(MessageTable.TABLE_NAME, MessageTable.INTERNAL_DATE).as(MessageTable.INTERNAL_DATE),
             tableField(MessageTable.TABLE_NAME, MessageTable.SIZE).as(MessageTable.SIZE),
             MessageTable.BODY_BLOB_ID,
-            MessageTable.MIME_TYPE,
-            MessageTable.MIME_SUBTYPE,
             MessageTable.BODY_START_OCTET,
-            MessageTable.TEXTUAL_LINE_COUNT,
             MessageTable.ATTACHMENT_METADATA,
             MessageToMailboxTable.MAILBOX_ID,
             MessageToMailboxTable.MESSAGE_UID,
@@ -99,8 +94,6 @@ public interface PostgresMailboxMessageFetchStrategy {
     class MetaData implements PostgresMailboxMessageFetchStrategy {
         public static final Field<?>[] FETCH_FIELDS = fetchFieldsMetadata();
         public static final Content EMPTY_CONTENT = BYTE_TO_CONTENT_FUNCTION.apply(new byte[0]);
-        public static final PropertyBuilder EMPTY_PROPERTY_BUILDER = new PropertyBuilder();
-
 
         @Override
         public Field<?>[] fetchFields() {
@@ -111,25 +104,14 @@ public interface PostgresMailboxMessageFetchStrategy {
         public Function<Record, SimpleMailboxMessage.Builder> toMessageBuilder() {
             return record -> toMessageBuilderMetadata()
                 .apply(record)
-                .content(EMPTY_CONTENT)
-                .properties(EMPTY_PROPERTY_BUILDER);
+                .content(EMPTY_CONTENT);
         }
     }
 
     class Full implements PostgresMailboxMessageFetchStrategy {
 
         public static final Field<?>[] FETCH_FIELDS = ArrayUtils.addAll(fetchFieldsMetadata(),
-            MessageTable.HEADER_CONTENT,
-            MessageTable.TEXTUAL_LINE_COUNT,
-            MessageTable.CONTENT_DESCRIPTION,
-            MessageTable.CONTENT_LOCATION,
-            MessageTable.CONTENT_TRANSFER_ENCODING,
-            MessageTable.CONTENT_DISPOSITION_TYPE,
-            MessageTable.CONTENT_ID,
-            MessageTable.CONTENT_MD5,
-            MessageTable.CONTENT_LANGUAGE,
-            MessageTable.CONTENT_TYPE_PARAMETERS,
-            MessageTable.CONTENT_DISPOSITION_PARAMETERS);
+            MessageTable.HEADER_CONTENT);
 
         @Override
         public Field<?>[] fetchFields() {
@@ -140,8 +122,7 @@ public interface PostgresMailboxMessageFetchStrategy {
         public Function<Record, SimpleMailboxMessage.Builder> toMessageBuilder() {
             return record -> toMessageBuilderMetadata()
                 .apply(record)
-                .content(BYTE_TO_CONTENT_FUNCTION.apply(record.get(HEADER_CONTENT)))
-                .properties(RECORD_TO_PROPERTIES_FUNCTION.apply(record));
+                .content(BYTE_TO_CONTENT_FUNCTION.apply(record.get(HEADER_CONTENT)));
         }
     }
 

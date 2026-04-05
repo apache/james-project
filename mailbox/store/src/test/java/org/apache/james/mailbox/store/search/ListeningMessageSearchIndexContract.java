@@ -35,7 +35,6 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.Test;
 
@@ -55,7 +54,6 @@ public interface ListeningMessageSearchIndexContract {
         .internalDate(new Date(1433628000000L))
         .size(SIZE)
         .content(new ByteContent("message".getBytes(StandardCharsets.UTF_8)))
-        .properties(new PropertyBuilder())
         .modseq(MOD_SEQ);
     
     ListeningMessageSearchIndex testee();

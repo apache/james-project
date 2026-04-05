@@ -50,7 +50,6 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.james.utils.UpdatableTickingClock;
@@ -101,10 +100,10 @@ public abstract class MessageIdMapperTest {
         benwaInboxMailbox = createMailbox(MailboxPath.forUser(BENWA, "INBOX"));
         benwaWorkMailbox = createMailbox(MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "work"));
 
-        message1 = createMessage(benwaInboxMailbox, "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
-        message2 = createMessage(benwaInboxMailbox, "Subject: Test2 \n\nBody2\n.\n", BODY_START, new PropertyBuilder());
-        message3 = createMessage(benwaInboxMailbox, "Subject: Test3 \n\nBody3\n.\n", BODY_START, new PropertyBuilder());
-        message4 = createMessage(benwaWorkMailbox, "Subject: Test4 \n\nBody4\n.\n", BODY_START, new PropertyBuilder());
+        message1 = createMessage(benwaInboxMailbox, "Subject: Test1 \n\nBody1\n.\n", BODY_START);
+        message2 = createMessage(benwaInboxMailbox, "Subject: Test2 \n\nBody2\n.\n", BODY_START);
+        message3 = createMessage(benwaInboxMailbox, "Subject: Test3 \n\nBody3\n.\n", BODY_START);
+        message4 = createMessage(benwaWorkMailbox, "Subject: Test4 \n\nBody4\n.\n", BODY_START);
     }
 
     @Test
@@ -177,7 +176,7 @@ public abstract class MessageIdMapperTest {
     @Test
     void saveShouldThrowWhenMailboxDoesntExist() throws Exception {
         Mailbox notPersistedMailbox = new Mailbox(MailboxPath.forUser(BENWA, "mybox"), UID_VALIDITY, mapperProvider.generateId());
-        SimpleMailboxMessage message = createMessage(notPersistedMailbox, "Subject: Test \n\nBody\n.\n", BODY_START, new PropertyBuilder());
+        SimpleMailboxMessage message = createMessage(notPersistedMailbox, "Subject: Test \n\nBody\n.\n", BODY_START);
         message.setUid(mapperProvider.generateMessageUid(notPersistedMailbox));
         message.setModSeq(mapperProvider.generateModSeq(notPersistedMailbox));
 
@@ -1065,17 +1064,16 @@ public abstract class MessageIdMapperTest {
         message1.setModSeq(mapperProvider.generateModSeq(mailbox));
     }
 
-    private SimpleMailboxMessage createMessage(Mailbox mailbox, String content, int bodyStart, PropertyBuilder propertyBuilder) {
+    private SimpleMailboxMessage createMessage(Mailbox mailbox, String content, int bodyStart) {
         MessageId messageId = mapperProvider.generateMessageId();
         ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
         return new SimpleMailboxMessage(messageId,
                 threadId,
-                new Date(), 
-                content.length(), 
-                bodyStart, 
+                new Date(),
+                content.length(),
+                bodyStart,
                 new ByteContent(content.getBytes()),
-                new Flags(), 
-                propertyBuilder.build(),
+                new Flags(),
                 mailbox.getMailboxId());
     }
 }

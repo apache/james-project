@@ -34,7 +34,6 @@ import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
-import org.jooq.postgres.extensions.types.Hstore;
 
 public interface PostgresMessageDataDefinition {
 
@@ -46,23 +45,10 @@ public interface PostgresMessageDataDefinition {
         Table<Record> TABLE_NAME = DSL.table("message");
         Field<UUID> MESSAGE_ID = PostgresMessageDataDefinition.MESSAGE_ID;
         Field<String> BODY_BLOB_ID = DSL.field("body_blob_id", SQLDataType.VARCHAR(200).notNull());
-        Field<String> MIME_TYPE = DSL.field("mime_type", SQLDataType.VARCHAR(200));
-        Field<String> MIME_SUBTYPE = DSL.field("mime_subtype", SQLDataType.VARCHAR(200));
         Field<LocalDateTime> INTERNAL_DATE = PostgresMessageDataDefinition.INTERNAL_DATE;
         Field<Long> SIZE = PostgresMessageDataDefinition.SIZE;
         Field<Integer> BODY_START_OCTET = DSL.field("body_start_octet", SQLDataType.INTEGER.notNull());
         Field<byte[]> HEADER_CONTENT = DSL.field("header_content", SQLDataType.BLOB.notNull());
-        Field<Integer> TEXTUAL_LINE_COUNT = DSL.field("textual_line_count", SQLDataType.INTEGER);
-
-        Field<String> CONTENT_DESCRIPTION = DSL.field("content_description", SQLDataType.VARCHAR(200));
-        Field<String> CONTENT_LOCATION = DSL.field("content_location", SQLDataType.VARCHAR(200));
-        Field<String> CONTENT_TRANSFER_ENCODING = DSL.field("content_transfer_encoding", SQLDataType.VARCHAR(200));
-        Field<String> CONTENT_DISPOSITION_TYPE = DSL.field("content_disposition_type", SQLDataType.VARCHAR(200));
-        Field<String> CONTENT_ID = DSL.field("content_id", SQLDataType.VARCHAR(200));
-        Field<String> CONTENT_MD5 = DSL.field("content_md5", SQLDataType.VARCHAR(200));
-        Field<String[]> CONTENT_LANGUAGE = DSL.field("content_language", DataTypes.STRING_ARRAY);
-        Field<Hstore> CONTENT_TYPE_PARAMETERS = DSL.field("content_type_parameters", DataTypes.HSTORE);
-        Field<Hstore> CONTENT_DISPOSITION_PARAMETERS = DSL.field("content_disposition_parameters", DataTypes.HSTORE);
         Field<AttachmentsDTO> ATTACHMENT_METADATA = DSL.field("attachment_metadata",
             SQLDataType.JSONB
                 .asConvertedDataType(new AttachmentsDTO.AttachmentsDTOBinding()));
@@ -72,22 +58,10 @@ public interface PostgresMessageDataDefinition {
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(MESSAGE_ID)
                 .column(BODY_BLOB_ID)
-                .column(MIME_TYPE)
-                .column(MIME_SUBTYPE)
                 .column(INTERNAL_DATE)
                 .column(SIZE)
                 .column(BODY_START_OCTET)
                 .column(HEADER_CONTENT)
-                .column(TEXTUAL_LINE_COUNT)
-                .column(CONTENT_DESCRIPTION)
-                .column(CONTENT_LOCATION)
-                .column(CONTENT_TRANSFER_ENCODING)
-                .column(CONTENT_DISPOSITION_TYPE)
-                .column(CONTENT_ID)
-                .column(CONTENT_MD5)
-                .column(CONTENT_LANGUAGE)
-                .column(CONTENT_TYPE_PARAMETERS)
-                .column(CONTENT_DISPOSITION_PARAMETERS)
                 .column(ATTACHMENT_METADATA)
                 .constraint(DSL.primaryKey(MESSAGE_ID))
                 .comment("Holds the metadata of a mail")))

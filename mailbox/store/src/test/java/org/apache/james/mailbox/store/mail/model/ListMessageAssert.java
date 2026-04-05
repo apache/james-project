@@ -47,7 +47,7 @@ public class ListMessageAssert {
     private InnerMessage getInnerMessage(MailboxMessage message) {
         try {
             return new InnerMessage(message.getMessageId(), message.getUid(), message.getMailboxId(), message.getInternalDate(), message.getBodyOctets(),
-                    message.getFullContentOctets(), message.getMediaType(), message.getSubType(), IOUtils.toString(message.getFullContent(), StandardCharsets.UTF_8));
+                    message.getFullContentOctets(), IOUtils.toString(message.getFullContent(), StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -71,19 +71,15 @@ public class ListMessageAssert {
         private final Date internalDate;
         private final long bodyOctets;
         private final long fullContentOctets;
-        private final String mediaType;
-        private final String subType;
         private final String content;
 
         public InnerMessage(MessageId id, MessageUid uid, MailboxId mailboxId, Date internalDate, long bodyOctets,
-                long fullContentOctets, String mediaType, String subType, String content) {
+                long fullContentOctets, String content) {
             this.uid = uid;
             this.mailboxId = mailboxId;
             this.internalDate = internalDate;
             this.bodyOctets = bodyOctets;
             this.fullContentOctets = fullContentOctets;
-            this.mediaType = mediaType;
-            this.subType = subType;
             this.content = content;
         }
 
@@ -107,21 +103,13 @@ public class ListMessageAssert {
             return fullContentOctets;
         }
 
-        public String getMediaType() {
-            return mediaType;
-        }
-
-        public String getSubType() {
-            return subType;
-        }
-
         public String getContent() {
             return content;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(uid, mailboxId, internalDate, bodyOctets, fullContentOctets, mediaType, subType, content);
+            return Objects.hashCode(uid, mailboxId, internalDate, bodyOctets, fullContentOctets, content);
         }
 
         @Override
@@ -133,8 +121,6 @@ public class ListMessageAssert {
                     && Objects.equal(internalDate, o.getInternalDate())
                     && Objects.equal(bodyOctets, o.getBodyOctets())
                     && Objects.equal(fullContentOctets, o.getFullContentOctets())
-                    && Objects.equal(mediaType, o.getMediaType())
-                    && Objects.equal(subType, o.getSubType())
                     && Objects.equal(content, o.getContent());
             }
             return false;

@@ -35,7 +35,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,7 +55,7 @@ class MetadataMapAssertTest {
     @BeforeEach
     void setUp() {
         message1 = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, DATE, HEADER_STRING.length() + BODY_STRING.length(),
-            HEADER_STRING.length(), new ByteContent((HEADER_STRING + BODY_STRING).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
+            HEADER_STRING.length(), new ByteContent((HEADER_STRING + BODY_STRING).getBytes()), new Flags(), MAILBOX_ID);
         message1.setUid(UID);
         message1.setModSeq(MODSEQ);
     }

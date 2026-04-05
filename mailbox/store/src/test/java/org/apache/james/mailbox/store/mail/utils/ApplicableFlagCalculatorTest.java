@@ -34,7 +34,6 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
@@ -106,7 +105,7 @@ class ApplicableFlagCalculatorTest {
         int bodyStart = 10;
 
         return new SimpleMailboxMessage(new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId()), new Date(), content.length(), bodyStart,
-            new ByteContent(content.getBytes()), messageFlags, new PropertyBuilder().build(), TestId.of(1));
+            new ByteContent(content.getBytes()), messageFlags, TestId.of(1));
     }
 
     private Flags getDefaultApplicableFlag() {

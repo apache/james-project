@@ -39,7 +39,6 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +64,7 @@ class MessageUtilsTest {
         MockitoAnnotations.initMocks(this);
         messageUtils = new MessageUtils(uidProvider, modSeqProvider);
         message = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, new Date(), CONTENT.length(), BODY_START,
-            new ByteContent(CONTENT.getBytes()), new Flags(), new PropertyBuilder().build(), mailbox.getMailboxId());
+            new ByteContent(CONTENT.getBytes()), new Flags(), mailbox.getMailboxId());
     }
     
     @Test

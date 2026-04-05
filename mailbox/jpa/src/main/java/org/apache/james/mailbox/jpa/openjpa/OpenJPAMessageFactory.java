@@ -34,11 +34,10 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.MessageFactory;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
 public class OpenJPAMessageFactory implements MessageFactory<AbstractJPAMailboxMessage> {
     @Override
-    public AbstractJPAMailboxMessage createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, Date saveDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) throws MailboxException {
-        return new JPAMailboxMessage(JPAMailbox.from(mailbox), internalDate, size, flags, content,  bodyStartOctet,  propertyBuilder);
+    public AbstractJPAMailboxMessage createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, Date saveDate, int size, int bodyStartOctet, Content content, Flags flags, List<MessageAttachmentMetadata> attachments) throws MailboxException {
+        return new JPAMailboxMessage(JPAMailbox.from(mailbox), internalDate, size, flags, content, bodyStartOctet);
     }
 }

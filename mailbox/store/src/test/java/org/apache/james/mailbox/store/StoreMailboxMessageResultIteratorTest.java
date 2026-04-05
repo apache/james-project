@@ -46,7 +46,6 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.Test;
 
@@ -86,7 +85,7 @@ class StoreMailboxMessageResultIteratorTest {
 
         private SimpleMailboxMessage createMessage(MessageUid uid) {
             SimpleMailboxMessage message = new SimpleMailboxMessage(new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId()), null, 0, 0, new ByteContent(
-                    "".getBytes()), new Flags(), new PropertyBuilder().build(), TestId.of(1L));
+                    "".getBytes()), new Flags(), TestId.of(1L));
             message.setUid(uid);
             return message;
         }

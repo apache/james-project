@@ -69,7 +69,6 @@ import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
@@ -1809,7 +1808,6 @@ public abstract class AbstractMessageSearchIndexTest {
             bodyStart,
             new ByteContent(content.getBytes()),
             new Flags(),
-            new PropertyBuilder().build(),
             mailbox.getMailboxId());
     }
 

@@ -40,8 +40,6 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.Properties;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 import com.google.common.base.MoreObjects;
@@ -229,16 +227,6 @@ public class CassandraMessageMetadata {
         }
 
         @Override
-        public String getMediaType() {
-            return delegate.getMediaType();
-        }
-
-        @Override
-        public String getSubType() {
-            return delegate.getSubType();
-        }
-
-        @Override
         public long getBodyOctets() {
             return delegate.getBodyOctets();
         }
@@ -251,11 +239,6 @@ public class CassandraMessageMetadata {
         @Override
         public long getHeaderOctets() {
             return delegate.getHeaderOctets();
-        }
-
-        @Override
-        public Long getTextualLineCount() {
-            return delegate.getTextualLineCount();
         }
 
         @Override
@@ -281,11 +264,6 @@ public class CassandraMessageMetadata {
         @Override
         public ThreadId getThreadId() {
             return delegate.getThreadId();
-        }
-
-        @Override
-        public Properties getProperties() {
-            return delegate.getProperties();
         }
 
         @Override
@@ -373,7 +351,6 @@ public class CassandraMessageMetadata {
                 .bodyStartOctet(Math.toIntExact(bodyStartOctet.get()))
                 .internalDate(internalDate.get())
                 .saveDate(saveDate)
-                .properties(new PropertyBuilder())
                 .build(),
             getHeaderContent().get());
     }

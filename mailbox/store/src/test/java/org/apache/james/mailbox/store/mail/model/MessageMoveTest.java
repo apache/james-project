@@ -38,7 +38,6 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Assume;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,7 +73,7 @@ public abstract class MessageMoveTest {
         Username benwa = Username.of("benwa");
         benwaInboxMailbox = createMailbox(MailboxPath.forUser(benwa, "INBOX"));
         benwaWorkMailbox = createMailbox(MailboxPath.forUser(benwa, "INBOX" + DELIMITER + "work"));
-        message1 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
+        message1 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START);
     }
 
     @Test
@@ -148,7 +147,7 @@ public abstract class MessageMoveTest {
         return messageMapper.findInMailbox(mailbox, MessageRange.one(message.getUid()), FetchType.METADATA, LIMIT).next();
     }
     
-    private MailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
-        return new SimpleMailboxMessage(messageId, ThreadId.fromBaseMessageId(messageId),new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId());
+    private MailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart) {
+        return new SimpleMailboxMessage(messageId, ThreadId.fromBaseMessageId(messageId), new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), mailbox.getMailboxId());
     }
 }

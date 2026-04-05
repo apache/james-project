@@ -108,13 +108,6 @@ class SimpleMailboxMessageTest {
 
     @Test
     void copyShouldReturnFieldByFieldEqualsObject() throws Exception {
-        long textualLineCount = 42L;
-        String text = "text";
-        String plain = "plain";
-        PropertyBuilder propertyBuilder = new PropertyBuilder();
-        propertyBuilder.setTextualLineCount(textualLineCount);
-        propertyBuilder.setMediaType(text);
-        propertyBuilder.setSubType(plain);
         MessageId messageId = new TestMessageId.Factory().generate();
         ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
         Optional<Date> saveDate = Optional.of(new Date());
@@ -123,7 +116,6 @@ class SimpleMailboxMessageTest {
             BODY_START_OCTET,
             CONTENT_STREAM,
             new Flags(),
-            propertyBuilder.build(),
             TEST_ID,
             List.of(),
             saveDate);
@@ -136,17 +128,13 @@ class SimpleMailboxMessageTest {
             .isNotSameAs(original.getMessage());
         assertThat(IOUtils.toString(copy.getMessage().getFullContent(), StandardCharsets.UTF_8))
             .isEqualTo(IOUtils.toString(original.getMessage().getFullContent(), StandardCharsets.UTF_8));
-        assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getTextualLineCount()).isEqualTo(textualLineCount);
-        assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getMediaType()).isEqualTo(text);
-        assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getSubType()).isEqualTo(plain);
         assertThat(SimpleMailboxMessage.copy(TEST_ID, original).getSaveDate()).isEqualTo(saveDate);
     }
 
     private static SimpleMailboxMessage buildMessage(String content) {
         return new SimpleMailboxMessage(new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId()), Calendar.getInstance().getTime(),
             content.length(), BODY_START_OCTET, new ByteContent(
-                    content.getBytes(MESSAGE_CHARSET)), new Flags(),
-            new PropertyBuilder().build(), TEST_ID);
+                    content.getBytes(MESSAGE_CHARSET)), new Flags(), TEST_ID);
     }
 
     @Test
@@ -175,7 +163,6 @@ class SimpleMailboxMessageTest {
             .size(SIZE)
             .content(CONTENT_STREAM)
             .flags(new Flags())
-            .properties(new PropertyBuilder())
             .build();
     }
 
@@ -185,7 +172,6 @@ class SimpleMailboxMessageTest {
     void buildShouldCreateAMessageWithAllFields() throws IOException {
         Date internalDate = new Date();
         Flags flags = new Flags();
-        PropertyBuilder propertyBuilder = new PropertyBuilder();
         ModSeq modseq = ModSeq.of(145);
         MessageUid uid = MessageUid.of(45);
         MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
@@ -209,7 +195,6 @@ class SimpleMailboxMessageTest {
             .size(SIZE)
             .content(CONTENT_STREAM)
             .flags(flags)
-            .properties(propertyBuilder)
             .addAttachments(ImmutableList.of(messageAttachment))
             .build();
         String messageContent = IOUtils.toString(message.getFullContent(), StandardCharsets.UTF_8);
@@ -222,7 +207,6 @@ class SimpleMailboxMessageTest {
             soft.assertThat(message.getFullContentOctets()).isEqualTo(SIZE);
             soft.assertThat(messageContent).isEqualTo(MESSAGE_CONTENT);
             soft.assertThat(message.createFlags()).isEqualTo(flags);
-            soft.assertThat(message.getProperties().toProperties()).isEqualTo(propertyBuilder.toProperties());
             soft.assertThat(message.getUid()).isEqualTo(uid);
             soft.assertThat(message.getModSeq()).isEqualTo(modseq);
             soft.assertThat(message.getAttachments()).containsOnly(messageAttachment);
@@ -240,7 +224,6 @@ class SimpleMailboxMessageTest {
                 .size(SIZE)
                 .content(CONTENT_STREAM)
                 .flags(new Flags())
-                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -256,7 +239,6 @@ class SimpleMailboxMessageTest {
             .size(SIZE)
             .content(CONTENT_STREAM)
             .flags(new Flags())
-            .properties(new PropertyBuilder())
             .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -272,7 +254,6 @@ class SimpleMailboxMessageTest {
             .size(SIZE)
             .content(CONTENT_STREAM)
             .flags(new Flags())
-            .properties(new PropertyBuilder())
             .build())
             .doesNotThrowAnyException();
     }
@@ -288,7 +269,6 @@ class SimpleMailboxMessageTest {
                 .size(SIZE)
                 .content(CONTENT_STREAM)
                 .flags(new Flags())
-                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -303,7 +283,6 @@ class SimpleMailboxMessageTest {
                 .size(SIZE)
                 .content(CONTENT_STREAM)
                 .flags(new Flags())
-                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -319,7 +298,6 @@ class SimpleMailboxMessageTest {
                 .size(SIZE)
                 .content(CONTENT_STREAM)
                 .flags(new Flags())
-                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -335,7 +313,6 @@ class SimpleMailboxMessageTest {
                 .bodyStartOctet(BODY_START_OCTET)
                 .content(CONTENT_STREAM)
                 .flags(new Flags())
-                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -351,7 +328,6 @@ class SimpleMailboxMessageTest {
                 .bodyStartOctet(BODY_START_OCTET)
                 .size(SIZE)
                 .flags(new Flags())
-                .properties(new PropertyBuilder())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -367,23 +343,6 @@ class SimpleMailboxMessageTest {
                 .bodyStartOctet(BODY_START_OCTET)
                 .size(SIZE)
                 .content(CONTENT_STREAM)
-                .properties(new PropertyBuilder())
-                .build())
-            .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void buildShouldThrowOnMissingProperties() {
-        Date internalDate = new Date();
-        assertThatThrownBy(() -> SimpleMailboxMessage.builder()
-                .messageId(MESSAGE_ID)
-                .threadId(THREAD_ID)
-                .mailboxId(TEST_ID)
-                .internalDate(internalDate)
-                .bodyStartOctet(BODY_START_OCTET)
-                .size(SIZE)
-                .content(CONTENT_STREAM)
-                .flags(new Flags())
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -404,7 +363,6 @@ class SimpleMailboxMessageTest {
             .size(SIZE)
             .content(CONTENT_STREAM)
             .flags(new Flags())
-            .properties(new PropertyBuilder())
             .build();
 
         assertThat(mailboxMessage.getSaveDate()).isEmpty();
@@ -423,7 +381,6 @@ class SimpleMailboxMessageTest {
             .size(SIZE)
             .content(CONTENT_STREAM)
             .flags(new Flags())
-            .properties(new PropertyBuilder())
             .build();
 
         assertThat(mailboxMessage.getSaveDate()).isEqualTo(saveDate);

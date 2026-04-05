@@ -47,7 +47,6 @@ import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.store.mail.AttachmentIdAssignationStrategy;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
@@ -103,10 +102,10 @@ public class PostgresMessageMapperRowLevelSecurityTest {
     }
 
     private MailboxMessage createMessage() {
-        return  createMessage(mailbox, new PostgresMessageId.Factory().generate(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
+        return createMessage(mailbox, new PostgresMessageId.Factory().generate(), "Subject: Test1 \n\nBody1\n.\n", BODY_START);
     }
 
-    private MailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
-        return new SimpleMailboxMessage(messageId, ThreadId.fromBaseMessageId(messageId), new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId());
+    private MailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart) {
+        return new SimpleMailboxMessage(messageId, ThreadId.fromBaseMessageId(messageId), new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), mailbox.getMailboxId());
     }
 }

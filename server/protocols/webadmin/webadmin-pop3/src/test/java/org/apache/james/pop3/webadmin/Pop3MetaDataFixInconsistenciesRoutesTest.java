@@ -52,7 +52,6 @@ import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.pop3server.mailbox.CassandraPop3MetadataStore;
@@ -157,7 +156,6 @@ class Pop3MetaDataFixInconsistenciesRoutesTest {
         .size(CONTENT_MESSAGE.length())
         .content(new ByteContent(CONTENT_MESSAGE.getBytes(StandardCharsets.UTF_8)))
         .flags(new Flags())
-        .properties(new PropertyBuilder())
         .addAttachments(ImmutableList.of())
         .build();
 

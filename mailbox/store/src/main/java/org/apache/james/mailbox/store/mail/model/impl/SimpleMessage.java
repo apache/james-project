@@ -42,18 +42,14 @@ public class SimpleMessage implements Message {
     private final int bodyStartOctet;
     private final Date internalDate;
     private final long size;
-    private final Long textualLineCount;
-    private final Properties properties;
     private final List<MessageAttachmentMetadata> attachments;
 
-    public SimpleMessage(MessageId messageId, Content content, long size, Date internalDate, int bodyStartOctet, Long textualLineCount, Properties properties, List<MessageAttachmentMetadata> attachments) {
+    public SimpleMessage(MessageId messageId, Content content, long size, Date internalDate, int bodyStartOctet, List<MessageAttachmentMetadata> attachments) {
         this.messageId = messageId;
         this.content = content;
         this.bodyStartOctet = bodyStartOctet;
         this.internalDate = internalDate;
         this.size = size;
-        this.textualLineCount = textualLineCount;
-        this.properties = properties;
         this.attachments = attachments;
     }
 
@@ -75,16 +71,6 @@ public class SimpleMessage implements Message {
     }
 
     @Override
-    public String getMediaType() {
-        return properties.getMediaType();
-    }
-
-    @Override
-    public String getSubType() {
-        return properties.getSubType();
-    }
-
-    @Override
     public long getBodyOctets() {
         return getFullContentOctets() - bodyStartOctet;
     }
@@ -97,11 +83,6 @@ public class SimpleMessage implements Message {
     @Override
     public long getFullContentOctets() {
         return size;
-    }
-
-    @Override
-    public Long getTextualLineCount() {
-        return textualLineCount;
     }
 
     @Override
@@ -133,11 +114,6 @@ public class SimpleMessage implements Message {
     @Override
     public Optional<byte[][]> getFullBytes() {
         return content.asBytesSequence();
-    }
-
-    @Override
-    public Properties getProperties() {
-        return properties;
     }
 
     @Override

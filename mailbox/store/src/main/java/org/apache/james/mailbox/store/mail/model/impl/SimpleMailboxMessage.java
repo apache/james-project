@@ -65,7 +65,6 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         private Integer bodyStartOctet;
         private Content content;
         private Flags flags;
-        private Properties properties;
         private MailboxId mailboxId;
         private Optional<MessageUid> uid = Optional.empty();
         private Optional<ModSeq> modseq = Optional.empty();
@@ -128,16 +127,6 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             return this;
         }
 
-        public Builder properties(PropertyBuilder propertyBuilder) {
-            this.properties = propertyBuilder.build();
-            return this;
-        }
-
-        public Builder properties(Properties properties) {
-            this.properties = properties;
-            return this;
-        }
-
         public Builder mailboxId(MailboxId mailboxId) {
             this.mailboxId = mailboxId;
             return this;
@@ -156,12 +145,11 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             Preconditions.checkNotNull(bodyStartOctet, "bodyStartOctet is required");
             Preconditions.checkNotNull(content, "content is required");
             Preconditions.checkNotNull(flags, "flags is required");
-            Preconditions.checkNotNull(properties, "properties is required");
             Preconditions.checkNotNull(mailboxId, "mailboxId is required");
 
             ImmutableList<MessageAttachmentMetadata> attachments = this.attachments.build();
             SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, threadId, internalDate, size,
-                bodyStartOctet, content, flags, properties, mailboxId, attachments, saveDate);
+                bodyStartOctet, content, flags, mailboxId, attachments, saveDate);
 
             uid.ifPresent(simpleMailboxMessage::setUid);
             modseq.ifPresent(simpleMailboxMessage::setModSeq);
@@ -188,8 +176,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             .internalDate(original.getInternalDate())
             .saveDate(original.getSaveDate())
             .size(original.getFullContentOctets())
-            .flags(original.createFlags())
-            .properties(original.getProperties());
+            .flags(original.createFlags());
     }
 
     public static SimpleMailboxMessage copyWithoutAttachments(MailboxId mailboxId, MailboxMessage original) throws MailboxException {
@@ -220,13 +207,11 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
     public SimpleMailboxMessage(MessageId messageId, ThreadId threadId, Date internalDate, long size, int bodyStartOctet,
                                 Content content, Flags flags,
-                                Properties properties, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments, Optional<Date> saveDate) {
+                                MailboxId mailboxId, List<MessageAttachmentMetadata> attachments, Optional<Date> saveDate) {
         super(new SimpleMessage(
                 messageId,
                 content, size, internalDate,
                 bodyStartOctet,
-                properties.getTextualLineCount(),
-                properties,
                 attachments));
 
         setFlags(flags);
@@ -238,10 +223,10 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     @VisibleForTesting
     public SimpleMailboxMessage(MessageId messageId, ThreadId threadId, Date internalDate, long size, int bodyStartOctet,
                                 Content content, Flags flags,
-                                Properties properties, MailboxId mailboxId) {
+                                MailboxId mailboxId) {
         this(messageId, threadId, internalDate, size, bodyStartOctet,
                 content, flags,
-                properties, mailboxId, ImmutableList.of(), EMPTY_SAVE_DATE);
+                mailboxId, ImmutableList.of(), EMPTY_SAVE_DATE);
     }
 
     @Override

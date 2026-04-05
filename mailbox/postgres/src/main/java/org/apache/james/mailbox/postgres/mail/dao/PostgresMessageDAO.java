@@ -24,23 +24,11 @@ import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.ATTACHMENT_METADATA;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.BODY_BLOB_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.BODY_START_OCTET;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DESCRIPTION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DISPOSITION_PARAMETERS;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_DISPOSITION_TYPE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_LANGUAGE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_LOCATION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_MD5;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_TRANSFER_ENCODING;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.CONTENT_TYPE_PARAMETERS;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.HEADER_CONTENT;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.INTERNAL_DATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.MESSAGE_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.MIME_SUBTYPE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.MIME_TYPE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.SIZE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.TABLE_NAME;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition.MessageTable.TEXTUAL_LINE_COUNT;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.BYTE_TO_CONTENT_FUNCTION;
 
 import java.time.LocalDateTime;
@@ -61,7 +49,6 @@ import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
 import org.apache.james.mailbox.postgres.mail.dto.AttachmentsDTO;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.jooq.Record;
-import org.jooq.postgres.extensions.types.Hstore;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -85,7 +72,6 @@ public class PostgresMessageDAO {
         }
     }
 
-    public static final long DEFAULT_LONG_VALUE = 0L;
     private final PostgresExecutor postgresExecutor;
     private final BlobId.Factory blobIdFactory;
 
@@ -101,21 +87,9 @@ public class PostgresMessageDAO {
             .flatMap(headerContentAsByte -> postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
                 .set(MESSAGE_ID, ((PostgresMessageId) message.getMessageId()).asUuid())
                 .set(BODY_BLOB_ID, bodyBlobId)
-                .set(MIME_TYPE, message.getMediaType())
-                .set(MIME_SUBTYPE, message.getSubType())
                 .set(INTERNAL_DATE, DATE_TO_LOCAL_DATE_TIME.apply(message.getInternalDate()))
                 .set(SIZE, message.getFullContentOctets())
                 .set(BODY_START_OCTET, (int) (message.getFullContentOctets() - message.getBodyOctets()))
-                .set(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE).intValue())
-                .set(CONTENT_DESCRIPTION, message.getProperties().getContentDescription())
-                .set(CONTENT_DISPOSITION_TYPE, message.getProperties().getContentDispositionType())
-                .set(CONTENT_ID, message.getProperties().getContentID())
-                .set(CONTENT_MD5, message.getProperties().getContentMD5())
-                .set(CONTENT_LANGUAGE, message.getProperties().getContentLanguage().toArray(new String[0]))
-                .set(CONTENT_LOCATION, message.getProperties().getContentLocation())
-                .set(CONTENT_TRANSFER_ENCODING, message.getProperties().getContentTransferEncoding())
-                .set(CONTENT_TYPE_PARAMETERS, Hstore.hstore(message.getProperties().getContentTypeParameters()))
-                .set(CONTENT_DISPOSITION_PARAMETERS, Hstore.hstore(message.getProperties().getContentDispositionParameters()))
                 .set(ATTACHMENT_METADATA, AttachmentsDTO.from(message.getAttachments()))
                 .set(HEADER_CONTENT, headerContentAsByte))));
     }

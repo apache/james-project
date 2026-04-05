@@ -59,7 +59,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageAssert;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.utils.UpdatableTickingClock;
@@ -450,7 +449,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             .inline();
         List<MessageAttachmentMetadata> messageAttachments = attachmentMapper.storeAttachments(ImmutableList.of(attachment1), messageId);
         MailboxMessage message = new SimpleMailboxMessage(messageId, ThreadId.fromBaseMessageId(messageId), new Date(), content.length(), 16,
-            new ByteContent(content.getBytes()), new Flags(), new PropertyBuilder().build(), benwaInboxMailbox.getMailboxId(),
+            new ByteContent(content.getBytes()), new Flags(), benwaInboxMailbox.getMailboxId(),
             messageAttachments, Optional.empty());
         messageMapper.add(benwaInboxMailbox, message);
         message.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
