@@ -73,6 +73,9 @@ public class MimePartParser {
     private void processMimePart(MimeTokenStream stream, EntityState state) {
         switch (state) {
             case T_START_MULTIPART:
+                extractMimePartBodyDescription(stream);
+                stackCurrent();
+                break;
             case T_START_MESSAGE:
                 stackCurrent();
                 break;

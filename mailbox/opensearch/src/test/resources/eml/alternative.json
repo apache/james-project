@@ -26,7 +26,7 @@
     {"name":"content-type","value":"multipart/mixed; boundary=\"-=Part.17f.732e3d28e1c76db4.18da4b40791.62ef5e3fa995057d=-\""}
   ],
   "mailboxId":"18",
-  "mediaType":"plain",
+  "mediaType":"multipart",
   "messageId":"184",
   "threadId":"184",
   "modSeq":42,
@@ -34,7 +34,7 @@
   "saveDate":null,
   "size":25,
   "subject":["Test"],
-  "subtype":"text",
+  "subtype":"mixed",
   "to":[{"name":"Benoit TELLIER","address":"btellier@linagora.com","domain":"linagora"}],
   "uid":25,
   "userFlags":[],
