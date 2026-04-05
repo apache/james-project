@@ -47,7 +47,6 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
-import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
 import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -60,11 +59,8 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.FlagsFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParserImpl;
-import org.apache.james.mailbox.store.mail.model.impl.Properties;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
@@ -242,36 +238,6 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     @Column(name = "MAIL_CONTENT_OCTETS_COUNT", nullable = false)
     private long contentOctets;
 
-    /**
-     * MIME media type
-     */
-    @Basic(optional = true)
-    @Column(name = "MAIL_MIME_TYPE", nullable = true, length = 200)
-    private String mediaType;
-
-    /**
-     * MIME subtype
-     */
-    @Basic(optional = true)
-    @Column(name = "MAIL_MIME_SUBTYPE", nullable = true, length = 200)
-    private String subType;
-
-    /**
-     * THE CRFL count when this document is textual, null otherwise
-     */
-    @Basic(optional = true)
-    @Column(name = "MAIL_TEXTUAL_LINE_COUNT", nullable = true)
-    private Long textualLineCount;
-
-    /**
-     * Metadata for this message
-     */
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @OrderBy("line")
-    @ElementJoinColumns({@ElementJoinColumn(name = "MAILBOX_ID", referencedColumnName = "MAILBOX_ID"),
-        @ElementJoinColumn(name = "MAIL_UID", referencedColumnName = "MAIL_UID")})
-    private List<JPAProperty> properties;
-
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @OrderBy("id")
     @ElementJoinColumns({@ElementJoinColumn(name = "MAILBOX_ID", referencedColumnName = "MAILBOX_ID"),
@@ -283,7 +249,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     }
 
     protected AbstractJPAMailboxMessage(JPAMailbox mailbox, Date internalDate, Flags flags, long contentOctets,
-                                     int bodyStartOctet, PropertyBuilder propertyBuilder) {
+                                     int bodyStartOctet) {
         this.mailbox = mailbox;
         this.internalDate = internalDate;
         userFlags = new ArrayList<>();
@@ -291,17 +257,6 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         setFlags(flags);
         this.contentOctets = contentOctets;
         this.bodyStartOctet = bodyStartOctet;
-        Properties properties = propertyBuilder.build();
-        this.textualLineCount = properties.getTextualLineCount();
-        this.mediaType = properties.getMediaType();
-        this.subType = properties.getSubType();
-        final List<Property> propertiesAsList = properties.toProperties();
-        this.properties = new ArrayList<>(propertiesAsList.size());
-        int order = 0;
-        for (Property property : propertiesAsList) {
-            this.properties.add(new JPAProperty(property, order++));
-        }
-
     }
 
     /**
@@ -329,16 +284,6 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         this.contentOctets = original.getFullContentOctets();
         this.bodyStartOctet = (int) (original.getFullContentOctets() - original.getBodyOctets());
         this.internalDate = original.getInternalDate();
-
-        this.textualLineCount = original.getTextualLineCount();
-        this.mediaType = original.getMediaType();
-        this.subType = original.getSubType();
-        final List<Property> properties = original.getProperties().toProperties();
-        this.properties = new ArrayList<>(properties.size());
-        int order = 0;
-        for (Property property : properties) {
-            this.properties.add(new JPAProperty(property, order++));
-        }
     }
 
     @Override
@@ -374,36 +319,6 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     @Override
     public void setModSeq(ModSeq modSeq) {
         this.modSeq = modSeq.asLong();
-    }
-
-    @Override
-    public String getMediaType() {
-        return mediaType;
-    }
-
-    @Override
-    public String getSubType() {
-        return subType;
-    }
-
-    /**
-     * Gets a read-only list of meta-data properties. For properties with
-     * multiple values, this list will contain several enteries with the same
-     * namespace and local name.
-     *
-     * @return unmodifiable list of meta-data, not null
-     */
-    @Override
-    public Properties getProperties() {
-        return new PropertyBuilder(properties.stream()
-            .map(JPAProperty::toProperty)
-            .collect(ImmutableList.toImmutableList()))
-            .build();
-    }
-
-    @Override
-    public Long getTextualLineCount() {
-        return textualLineCount;
     }
 
     @Override

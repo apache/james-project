@@ -28,24 +28,9 @@ public interface CassandraMessageV3Table {
     CqlIdentifier BODY_START_OCTET = CqlIdentifier.fromCql("bodyStartOctet");
     CqlIdentifier FULL_CONTENT_OCTETS = CqlIdentifier.fromCql("fullContentOctets");
     CqlIdentifier BODY_OCTECTS = CqlIdentifier.fromCql("bodyOctets");
-    CqlIdentifier TEXTUAL_LINE_COUNT = CqlIdentifier.fromCql("textualLineCount");
     CqlIdentifier BODY_CONTENT = CqlIdentifier.fromCql("bodyContent");
     CqlIdentifier HEADER_CONTENT = CqlIdentifier.fromCql("headerContent");
     CqlIdentifier ATTACHMENTS = CqlIdentifier.fromCql("attachments");
-
-    interface Properties {
-        CqlIdentifier MEDIA_TYPE = CqlIdentifier.fromCql("mediaType");
-        CqlIdentifier SUB_TYPE = CqlIdentifier.fromCql("subType");
-        CqlIdentifier CONTENT_ID = CqlIdentifier.fromCql("contentId");
-        CqlIdentifier CONTENT_LOCATION = CqlIdentifier.fromCql("contentLocation");
-        CqlIdentifier CONTENT_DESCRIPTION = CqlIdentifier.fromCql("contentDescription");
-        CqlIdentifier CONTENT_TRANSFER_ENCODING = CqlIdentifier.fromCql("contentTransferEncoding");
-        CqlIdentifier CONTENT_DISPOSITION_TYPE = CqlIdentifier.fromCql("contentDispositionType");
-        CqlIdentifier CONTENT_DISPOSITION_PARAMETERS = CqlIdentifier.fromCql("contentDispositionParameters");
-        CqlIdentifier CONTENT_TYPE_PARAMETERS = CqlIdentifier.fromCql("contentTypeParameters");
-        CqlIdentifier CONTENT_MD5 = CqlIdentifier.fromCql("contentMd5");
-        CqlIdentifier CONTENT_LANGUAGE = CqlIdentifier.fromCql("contentLanguage");
-    }
 
     interface Attachments {
         CqlIdentifier ID = CqlIdentifier.fromCql("id");

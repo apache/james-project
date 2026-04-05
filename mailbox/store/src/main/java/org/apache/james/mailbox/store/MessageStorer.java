@@ -43,7 +43,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.utils.MimeMessageHeadersUtil;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.HeaderImpl;
@@ -64,7 +63,7 @@ public interface MessageStorer {
      * <p>
      * Otherwize an empty optional will be returned on the right side of the pair.
      */
-    Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) throws MailboxException;
+    Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) throws MailboxException;
 
     /**
      * MessageStorer parsing, storing and returning AttachmentMetadata
@@ -95,7 +94,7 @@ public interface MessageStorer {
         }
 
         @Override
-        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) {
+        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
             Optional<MimeMessageId> mimeMessageId = MimeMessageHeadersUtil.parseMimeMessageId(headers);
@@ -113,7 +112,7 @@ public interface MessageStorer {
                             ThreadId threadId = pair.getT2();
                             Date saveDate = Date.from(clock.instant());
 
-                            MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, saveDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
+                            MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, saveDate, size, bodyStartOctet, content, flags, attachments);
                             return Mono.from(messageMapper.addReactive(mailbox, message))
                                 .map(metadata -> Pair.of(metadata, Optional.of(attachments)));
                         }).sneakyThrow()));
@@ -168,7 +167,7 @@ public interface MessageStorer {
         }
 
         @Override
-        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) throws MailboxException {
+        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) throws MailboxException {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
             Optional<MimeMessageId> mimeMessageId = MimeMessageHeadersUtil.parseMimeMessageId(headers);
@@ -181,7 +180,7 @@ public interface MessageStorer {
                     .flatMap(Throwing.function((ThreadId threadId) -> {
                         Date saveDate = Date.from(clock.instant());
 
-                        MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, saveDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
+                        MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, saveDate, size, bodyStartOctet, content, flags, ImmutableList.of());
                         return Mono.from(messageMapper.addReactive(mailbox, message))
                             .map(metadata -> Pair.of(metadata, Optional.empty()));
                     })));

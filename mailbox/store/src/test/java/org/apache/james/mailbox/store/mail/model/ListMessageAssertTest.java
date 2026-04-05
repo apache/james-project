@@ -40,7 +40,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,8 +66,8 @@ class ListMessageAssertTest {
     void setUp() {
         benwaInboxMailbox = createMailbox(MailboxPath.inbox(Username.of("user")));
 
-        message1 = createMessage(benwaInboxMailbox, MESSAGE_ID, THREAD_ID, BODY_CONTENT1, BODY_START, new PropertyBuilder());
-        message2 = createMessage(benwaInboxMailbox, MESSAGE_ID, THREAD_ID, BODY_CONTENT2, BODY_START, new PropertyBuilder());
+        message1 = createMessage(benwaInboxMailbox, MESSAGE_ID, THREAD_ID, BODY_CONTENT1, BODY_START);
+        message2 = createMessage(benwaInboxMailbox, MESSAGE_ID, THREAD_ID, BODY_CONTENT2, BODY_START);
     }
 
     @Test
@@ -76,8 +75,8 @@ class ListMessageAssertTest {
         List<MailboxMessage> actual = ImmutableList.of(message1, message2);
 
         assertMessages(actual).containOnly(
-                createMailboxMessage(MAILBOX_ID, MESSAGE_ID, THREAD_ID, MESSAGE_UID, INTERNAL_DATE, BODY_CONTENT1, BODY_START, new PropertyBuilder()),
-                createMailboxMessage(MAILBOX_ID, MESSAGE_ID, THREAD_ID, MESSAGE_UID, INTERNAL_DATE, BODY_CONTENT2, BODY_START, new PropertyBuilder()));
+                createMailboxMessage(MAILBOX_ID, MESSAGE_ID, THREAD_ID, MESSAGE_UID, INTERNAL_DATE, BODY_CONTENT1, BODY_START),
+                createMailboxMessage(MAILBOX_ID, MESSAGE_ID, THREAD_ID, MESSAGE_UID, INTERNAL_DATE, BODY_CONTENT2, BODY_START));
     }
 
     @Test
@@ -85,14 +84,14 @@ class ListMessageAssertTest {
         List<MailboxMessage> actual = ImmutableList.of(message1);
 
         assertThatThrownBy(() -> assertMessages(actual).containOnly(
-                createMailboxMessage(MAILBOX_ID, MESSAGE_ID, THREAD_ID, MESSAGE_UID, INTERNAL_DATE, BODY_CONTENT2, BODY_START, new PropertyBuilder())))
+                createMailboxMessage(MAILBOX_ID, MESSAGE_ID, THREAD_ID, MESSAGE_UID, INTERNAL_DATE, BODY_CONTENT2, BODY_START)))
             .isInstanceOf(AssertionError.class);
     }
 
     private MailboxMessage createMailboxMessage(MailboxId mailboxId, MessageId messageId, ThreadId threadId, MessageUid uid, Date internalDate,
-                                                String content, int bodyStart, PropertyBuilder propertyBuilder) {
+                                                String content, int bodyStart) {
         SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, threadId, internalDate, content.length(),
-            bodyStart, new ByteContent(content.getBytes(StandardCharsets.UTF_8)), new Flags(), propertyBuilder.build(), mailboxId);
+            bodyStart, new ByteContent(content.getBytes(StandardCharsets.UTF_8)), new Flags(), mailboxId);
 
         simpleMailboxMessage.setUid(uid);
         simpleMailboxMessage.setModSeq(ModSeq.first());
@@ -103,9 +102,9 @@ class ListMessageAssertTest {
         return new Mailbox(mailboxPath, UID_VALIDITY, MAILBOX_ID);
     }
 
-    private MailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
+    private MailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart) {
         SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, threadId, INTERNAL_DATE, content.length(),
-            bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId());
+            bodyStart, new ByteContent(content.getBytes()), new Flags(), mailbox.getMailboxId());
 
         simpleMailboxMessage.setUid(MESSAGE_UID);
         return simpleMailboxMessage;

@@ -78,12 +78,6 @@ public class MessageAssert extends AbstractAssert<MessageAssert, MailboxMessage>
         if (!Objects.equal(actual.getBodyOctets(), expected.getBodyOctets())) {
             failWithMessage("Expected Body octet to be <%s> but was <%s>", expected.getBodyOctets(), actual.getBodyOctets());
         }
-        if (!Objects.equal(actual.getMediaType(), expected.getMediaType())) {
-            failWithMessage("Expected Media type to be <%s> but was <%s>", expected.getBodyOctets(), actual.getBodyOctets());
-        }
-        if (!Objects.equal(actual.getSubType(), expected.getSubType())) {
-            failWithMessage("Expected Sub type to be <%s> but was <%s>", expected.getBodyOctets(), actual.getBodyOctets());
-        }
         if (usedFetchType == MessageMapper.FetchType.FULL) {
             if (!Objects.equal(actual.getFullContentOctets(), expected.getFullContentOctets())) {
                 failWithMessage("Expected MailboxMessage size to be <%s> but was <%s>", expected.getFullContentOctets(), actual.getFullContentOctets());

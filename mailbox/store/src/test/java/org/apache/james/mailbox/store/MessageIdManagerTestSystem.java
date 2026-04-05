@@ -42,7 +42,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 public class MessageIdManagerTestSystem {
@@ -122,7 +121,7 @@ public class MessageIdManagerTestSystem {
     private static MailboxMessage createMessage(MailboxId mailboxId, Flags flags, MessageId messageId, ThreadId threadId, MessageUid uid) {
         int bodyStartOctet = 20;
         MailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, threadId, new Date(), MESSAGE_CONTENT.length, bodyStartOctet,
-            new ByteContent(MESSAGE_CONTENT), flags, new PropertyBuilder().build(), mailboxId);
+            new ByteContent(MESSAGE_CONTENT), flags, mailboxId);
         mailboxMessage.setModSeq(MOD_SEQ);
         mailboxMessage.setUid(uid);
         return mailboxMessage;

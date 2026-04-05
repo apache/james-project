@@ -49,7 +49,6 @@ import jakarta.mail.Flags.Flag;
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.io.input.UnsynchronizedBufferedInputStream;
 import org.apache.commons.io.input.UnsynchronizedFilterInputStream;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
@@ -94,17 +93,12 @@ import org.apache.james.mailbox.store.mail.FetchGroupConverter;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.mailbox.store.streaming.CountingInputStream;
 import org.apache.james.mime4j.MimeException;
-import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.field.LenientFieldParser;
-import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
 import org.apache.james.mime4j.message.HeaderImpl;
-import org.apache.james.mime4j.message.MaximalBodyDescriptor;
 import org.apache.james.mime4j.stream.EntityState;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
@@ -147,16 +141,6 @@ public class StoreMessageManager implements MessageManager {
     private static final SearchQuery LIST_ALL_QUERY = SearchQuery.of(SearchQuery.all());
     private static final SearchQuery LIST_FROM_ONE = SearchQuery.of(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.MIN_VALUE, MessageUid.MAX_VALUE)));
     private static final LenientFieldParser FIELD_PARSER = new LenientFieldParser();
-
-    private static class MediaType {
-        final String mediaType;
-        final String subType;
-
-        private MediaType(String mediaType, String subType) {
-            this.mediaType = mediaType;
-            this.subType = subType;
-        }
-    }
 
     static {
         MINIMAL_PERMANET_FLAGS = new Flags();
@@ -369,9 +353,7 @@ public class StoreMessageManager implements MessageManager {
                      .setInputStream(new TeeInputStream(msgIn, bufferedOut))
                      .get();
                  BodyOffsetInputStream bIn = new BodyOffsetInputStream(tmpMsgIn)) {
-                Pair<PropertyBuilder, HeaderImpl> pair = parseProperties(bIn);
-                PropertyBuilder propertyBuilder = pair.getLeft();
-                HeaderImpl headers = pair.getRight();
+                HeaderImpl headers = parseHeaders(bIn);
 
                 InputStreamConsummer.consume(tmpMsgIn);
                 bufferedOut.flush();
@@ -389,7 +371,7 @@ public class StoreMessageManager implements MessageManager {
                         public long size() {
                             return finalFile.length();
                         }
-                    }, propertyBuilder,
+                    },
                     getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, unparsedMimeMessqage, headers, !IS_DELIVERY));
             }
         } catch (IOException | MimeException e) {
@@ -421,13 +403,11 @@ public class StoreMessageManager implements MessageManager {
                      .setInputStream(contentStream)
                      .get();
                 BodyOffsetInputStream bIn = new BodyOffsetInputStream(bufferedContentStream)) {
-                Pair<PropertyBuilder, HeaderImpl> pair = parseProperties(bIn);
-                PropertyBuilder propertyBuilder = pair.getLeft();
-                HeaderImpl headers = pair.getRight();
+                HeaderImpl headers = parseHeaders(bIn);
                 int bodyStartOctet = getBodyStartOctet(bIn);
 
                 return createAndDispatchMessage(computeInternalDate(internalDate),
-                    mailboxSession, msgIn, propertyBuilder,
+                    mailboxSession, msgIn,
                     getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, maybeMessage, headers, isDelivery);
             } catch (IOException | MimeException e) {
                 throw new MailboxException("Unable to parse message", e);
@@ -436,18 +416,12 @@ public class StoreMessageManager implements MessageManager {
             .subscribeOn(Schedulers.boundedElastic());
     }
 
-    private Pair<PropertyBuilder, HeaderImpl> parseProperties(BodyOffsetInputStream bIn) throws IOException, MimeException {
+    private HeaderImpl parseHeaders(BodyOffsetInputStream bIn) throws IOException, MimeException {
         // Disable line length... This should be handled by the smtp server
         // component and not the parser itself
         // https://issues.apache.org/jira/browse/IMAP-122
         MimeTokenStream parser = getParser(bIn);
-        final HeaderImpl headers = readHeader(parser);
-
-        final MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser.getBodyDescriptor();
-        final MediaType mediaType = getMediaType(descriptor);
-        final PropertyBuilder propertyBuilder = getPropertyBuilder(descriptor, mediaType.mediaType, mediaType.subType);
-        setTextualLinesCount(parser, mediaType.mediaType, propertyBuilder);
-        return new ImmutablePair<>(propertyBuilder, headers);
+        return readHeader(parser);
     }
 
     private Date computeInternalDate(Date internalDate) {
@@ -456,21 +430,11 @@ public class StoreMessageManager implements MessageManager {
     }
 
     private MimeTokenStream getParser(BodyOffsetInputStream bIn) {
-        final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE,
-            new DefaultBodyDescriptorBuilder(null, FIELD_PARSER, DecodeMonitor.SILENT));
+        final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE, null);
 
         parser.setRecursionMode(RecursionMode.M_NO_RECURSE);
         parser.parse(bIn);
         return parser;
-    }
-
-    private MediaType getMediaType(MaximalBodyDescriptor descriptor) {
-        final String mediaTypeFromHeader = descriptor.getMediaType();
-        if (mediaTypeFromHeader == null) {
-            return new MediaType("text", "plain");
-        } else {
-            return new MediaType(mediaTypeFromHeader, descriptor.getSubType());
-        }
     }
 
     private HeaderImpl readHeader(MimeTokenStream parser) throws IOException, MimeException {
@@ -503,25 +467,6 @@ public class StoreMessageManager implements MessageManager {
         return flags;
     }
 
-    private void setTextualLinesCount(MimeTokenStream parser, String mediaType, PropertyBuilder propertyBuilder) throws IOException, MimeException {
-        EntityState next;
-        if ("text".equalsIgnoreCase(mediaType)) {
-            final CountingInputStream bodyStream = new CountingInputStream(parser.getInputStream());
-            bodyStream.readAll();
-            long lines = bodyStream.getLineCount();
-            bodyStream.close();
-            next = parser.next();
-            if (next == EntityState.T_EPILOGUE) {
-                final CountingInputStream epilogueStream = new CountingInputStream(parser.getInputStream());
-                epilogueStream.readAll();
-                lines += epilogueStream.getLineCount();
-                epilogueStream.close();
-
-            }
-            propertyBuilder.setTextualLineCount(lines);
-        }
-    }
-
     private int getBodyStartOctet(BodyOffsetInputStream bIn) {
         int bodyStartOctet = (int) bIn.getBodyStartOffset();
         if (bodyStartOctet == -1) {
@@ -530,7 +475,7 @@ public class StoreMessageManager implements MessageManager {
         return bodyStartOctet;
     }
 
-    private Mono<AppendResult> createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, Content content, PropertyBuilder propertyBuilder,
+    private Mono<AppendResult> createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, Content content,
                                                         Flags flags, int bodyStartOctet, Optional<Message> maybeMessage, HeaderImpl headers,
                                                         boolean isDelivery) throws MailboxException {
         int size = (int) content.size();
@@ -539,7 +484,7 @@ public class StoreMessageManager implements MessageManager {
             .map(quotas -> new QuotaChecker(quotas, quotaRoot))
             .doOnNext(Throwing.consumer((QuotaChecker quotaChecker) -> quotaChecker.tryAddition(1, size)).sneakyThrow())
             .then(Mono.from(locker.executeReactiveWithLockReactive(getMailboxPath(),
-                messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, maybeMessage, mailboxSession, headers)
+                messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, content, flags, maybeMessage, mailboxSession, headers)
                     .flatMap(data -> eventBus.dispatch(EventFactory.added()
                             .randomEventId()
                             .mailboxSession(mailboxSession)
@@ -557,31 +502,6 @@ public class StoreMessageManager implements MessageManager {
         MessageMetaData messageMetaData = data.getLeft();
         ComposedMessageId ids = new ComposedMessageId(mailbox.getMailboxId(), messageMetaData.getMessageId(), messageMetaData.getUid());
         return new AppendResult(ids, messageMetaData.getSize(), data.getRight(), messageMetaData.getThreadId());
-    }
-
-    private PropertyBuilder getPropertyBuilder(MaximalBodyDescriptor descriptor, String mediaType, String subType) {
-        final PropertyBuilder propertyBuilder = new PropertyBuilder();
-        propertyBuilder.setMediaType(mediaType);
-        propertyBuilder.setSubType(subType);
-        propertyBuilder.setContentID(descriptor.getContentId());
-        propertyBuilder.setContentDescription(descriptor.getContentDescription());
-        propertyBuilder.setContentLocation(descriptor.getContentLocation());
-        propertyBuilder.setContentMD5(descriptor.getContentMD5Raw());
-        propertyBuilder.setContentTransferEncoding(descriptor.getTransferEncoding());
-        propertyBuilder.setContentLanguage(descriptor.getContentLanguage());
-        propertyBuilder.setContentDispositionType(descriptor.getContentDispositionType());
-        propertyBuilder.setContentDispositionParameters(descriptor.getContentDispositionParameters());
-        propertyBuilder.setContentTypeParameters(descriptor.getContentTypeParameters());
-        // Add missing types
-        final String codeset = descriptor.getCharset();
-        if (codeset == null) {
-            if ("TEXT".equalsIgnoreCase(mediaType)) {
-                propertyBuilder.setCharset("us-ascii");
-            }
-        } else {
-            propertyBuilder.setCharset(codeset);
-        }
-        return propertyBuilder;
     }
 
     @Override

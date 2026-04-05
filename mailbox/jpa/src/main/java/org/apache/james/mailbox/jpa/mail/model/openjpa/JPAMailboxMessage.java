@@ -41,7 +41,6 @@ import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -75,8 +74,8 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
         this.body = body;
     }
 
-    public JPAMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, Content content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
-        super(mailbox, internalDate, flags, size, bodyStartOctet, propertyBuilder);
+    public JPAMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, Content content, int bodyStartOctet) throws MailboxException {
+        super(mailbox, internalDate, flags, size, bodyStartOctet);
         try {
             int headerEnd = bodyStartOctet;
             if (headerEnd < 0) {

@@ -46,7 +46,6 @@ import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxDataDefinition;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageDataDefinition;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Limit;
@@ -207,7 +206,6 @@ public class PostgresMailboxMessageDAOTest {
             .internalDate(new Date())
             .bodyStartOctet(0)
             .flags(new Flags(Flags.Flag.RECENT))
-            .properties(new PropertyBuilder())
             .mailboxId(mailboxId)
             .modseq(ModSeq.of(index))
             .build();

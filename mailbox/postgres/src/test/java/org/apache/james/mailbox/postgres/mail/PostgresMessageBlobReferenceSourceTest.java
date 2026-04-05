@@ -38,7 +38,6 @@ import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,9 +71,9 @@ public class PostgresMessageBlobReferenceSourceTest {
     @Test
     void blobReferencesShouldReturnAllBlobs() {
         MessageId messageId1 = PostgresMessageId.Factory.of(UUID.randomUUID());
-        SimpleMailboxMessage message = createMessage(messageId1, ThreadId.fromBaseMessageId(messageId1),  CONTENT, BODY_START, new PropertyBuilder());
+        SimpleMailboxMessage message = createMessage(messageId1, ThreadId.fromBaseMessageId(messageId1),  CONTENT, BODY_START);
         MessageId messageId2 = PostgresMessageId.Factory.of(UUID.randomUUID());
-        MailboxMessage message2 = createMessage(messageId2, ThreadId.fromBaseMessageId(messageId2),  CONTENT_2, BODY_START, new PropertyBuilder());
+        MailboxMessage message2 = createMessage(messageId2, ThreadId.fromBaseMessageId(messageId2),  CONTENT_2, BODY_START);
         postgresMessageDAO.insert(message, "1").block();
         postgresMessageDAO.insert(message2, "2").block();
 
@@ -82,7 +81,7 @@ public class PostgresMessageBlobReferenceSourceTest {
             .hasSize(2);
     }
 
-    private SimpleMailboxMessage createMessage(MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
+    private SimpleMailboxMessage createMessage(MessageId messageId, ThreadId threadId, String content, int bodyStart) {
         return SimpleMailboxMessage.builder()
             .messageId(messageId)
             .threadId(threadId)
@@ -93,7 +92,6 @@ public class PostgresMessageBlobReferenceSourceTest {
             .size(content.length())
             .content(new ByteContent(content.getBytes(StandardCharsets.UTF_8)))
             .flags(new Flags())
-            .properties(propertyBuilder)
             .build();
     }
 

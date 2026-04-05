@@ -38,7 +38,6 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 import com.google.common.collect.ImmutableList;
@@ -85,7 +84,7 @@ public class MessageBuilder {
         byte[] headerContent = getHeaderContent();
         ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
         SimpleMailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, threadId, internalDate, size, headerContent.length,
-            new ByteContent(Bytes.concat(headerContent, body)), flags, new PropertyBuilder().build(), mailboxId, NO_ATTACHMENTS, saveDate);
+            new ByteContent(Bytes.concat(headerContent, body)), flags, mailboxId, NO_ATTACHMENTS, saveDate);
         mailboxMessage.setUid(uid);
         return mailboxMessage;
     }

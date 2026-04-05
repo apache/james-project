@@ -19,9 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
-import static com.datastax.oss.driver.api.core.type.DataTypes.frozenListOf;
-import static com.datastax.oss.driver.api.core.type.DataTypes.frozenMapOf;
 import static com.datastax.oss.driver.api.core.type.DataTypes.listOf;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
@@ -40,25 +37,12 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.B
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.FULL_CONTENT_OCTETS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.HEADER_CONTENT;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.INTERNAL_DATE;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_DESCRIPTION;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_PARAMETERS;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_TYPE;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_ID;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_LANGUAGE;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_LOCATION;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_MD5;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_TRANSFER_ENCODING;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_TYPE_PARAMETERS;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.MEDIA_TYPE;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.SUB_TYPE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.TABLE_NAME;
-import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.TEXTUAL_LINE_COUNT;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
@@ -82,8 +66,6 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.Properties;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -106,10 +88,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 
 public class CassandraMessageDAOV3 {
-    public static final long DEFAULT_LONG_VALUE = 0L;
     private static final byte[] EMPTY_BYTE_ARRAY = {};
-    private static final TypeCodec<Map<String, String>> MAP_OF_STRINGS_CODEC = CodecRegistry.DEFAULT.codecFor(frozenMapOf(TEXT, TEXT));
-    private static final TypeCodec<List<String>> LIST_OF_STRINGS_CODEC = CodecRegistry.DEFAULT.codecFor(frozenListOf(TEXT));
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final BlobStore blobStore;
@@ -168,18 +147,6 @@ public class CassandraMessageDAOV3 {
                 setColumn(BODY_OCTECTS, bindMarker(BODY_OCTECTS)),
                 setColumn(BODY_CONTENT, bindMarker(BODY_CONTENT)),
                 setColumn(HEADER_CONTENT, bindMarker(HEADER_CONTENT)),
-                setColumn(CONTENT_DESCRIPTION, bindMarker(CONTENT_DESCRIPTION)),
-                setColumn(CONTENT_DISPOSITION_TYPE, bindMarker(CONTENT_DISPOSITION_TYPE)),
-                setColumn(MEDIA_TYPE, bindMarker(MEDIA_TYPE)),
-                setColumn(SUB_TYPE, bindMarker(SUB_TYPE)),
-                setColumn(CONTENT_ID, bindMarker(CONTENT_ID)),
-                setColumn(CONTENT_MD5, bindMarker(CONTENT_MD5)),
-                setColumn(CONTENT_TRANSFER_ENCODING, bindMarker(CONTENT_TRANSFER_ENCODING)),
-                setColumn(CONTENT_LOCATION, bindMarker(CONTENT_LOCATION)),
-                setColumn(CONTENT_LANGUAGE, bindMarker(CONTENT_LANGUAGE)),
-                setColumn(CONTENT_DISPOSITION_PARAMETERS, bindMarker(CONTENT_DISPOSITION_PARAMETERS)),
-                setColumn(CONTENT_TYPE_PARAMETERS, bindMarker(CONTENT_TYPE_PARAMETERS)),
-                setColumn(TEXTUAL_LINE_COUNT, bindMarker(TEXTUAL_LINE_COUNT)),
                 prepend(ATTACHMENTS, bindMarker(ATTACHMENTS)))
             .where(column(MESSAGE_ID).isEqualTo(bindMarker(MESSAGE_ID)))
             .build());
@@ -205,19 +172,7 @@ public class CassandraMessageDAOV3 {
             .setLong(FULL_CONTENT_OCTETS, message.getSize())
             .setLong(BODY_OCTECTS, message.getSize() - message.getBodyStartOctet())
             .setString(BODY_CONTENT, message.getBodyId().asString())
-            .setString(HEADER_CONTENT, message.getHeaderId().asString())
-            .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getProperties().getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
-            .setString(CONTENT_DESCRIPTION, message.getProperties().getContentDescription())
-            .setString(CONTENT_DISPOSITION_TYPE, message.getProperties().getContentDispositionType())
-            .setString(MEDIA_TYPE, message.getProperties().getMediaType())
-            .setString(SUB_TYPE, message.getProperties().getSubType())
-            .setString(CONTENT_ID, message.getProperties().getContentID())
-            .setString(CONTENT_MD5, message.getProperties().getContentMD5())
-            .setString(CONTENT_TRANSFER_ENCODING, message.getProperties().getContentTransferEncoding())
-            .setString(CONTENT_LOCATION, message.getProperties().getContentLocation())
-            .set(CONTENT_LANGUAGE, message.getProperties().getContentLanguage(), LIST_OF_STRINGS_CODEC)
-            .set(CONTENT_DISPOSITION_PARAMETERS, message.getProperties().getContentDispositionParameters(), MAP_OF_STRINGS_CODEC)
-            .set(CONTENT_TYPE_PARAMETERS, message.getProperties().getContentTypeParameters(), MAP_OF_STRINGS_CODEC);
+            .setString(HEADER_CONTENT, message.getHeaderId().asString());
 
         if (message.getAttachments().isEmpty()) {
             return cassandraAsyncExecutor.executeVoid(boundStatement.unset(ATTACHMENTS).build());
@@ -264,18 +219,6 @@ public class CassandraMessageDAOV3 {
             .setLong(BODY_OCTECTS, message.getBodyOctets())
             .setString(BODY_CONTENT, pair.getT2().asString())
             .setString(HEADER_CONTENT, pair.getT1().asString())
-            .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
-            .setString(CONTENT_DESCRIPTION, message.getProperties().getContentDescription())
-            .setString(CONTENT_DISPOSITION_TYPE, message.getProperties().getContentDispositionType())
-            .setString(MEDIA_TYPE, message.getProperties().getMediaType())
-            .setString(SUB_TYPE, message.getProperties().getSubType())
-            .setString(CONTENT_ID, message.getProperties().getContentID())
-            .setString(CONTENT_MD5, message.getProperties().getContentMD5())
-            .setString(CONTENT_TRANSFER_ENCODING, message.getProperties().getContentTransferEncoding())
-            .setString(CONTENT_LOCATION, message.getProperties().getContentLocation())
-            .set(CONTENT_LANGUAGE, message.getProperties().getContentLanguage(), LIST_OF_STRINGS_CODEC)
-            .set(CONTENT_DISPOSITION_PARAMETERS, message.getProperties().getContentDispositionParameters(), MAP_OF_STRINGS_CODEC)
-            .set(CONTENT_TYPE_PARAMETERS, message.getProperties().getContentTypeParameters(), MAP_OF_STRINGS_CODEC)
             .setExecutionProfile(writeProfile);
 
         if (message.getAttachments().isEmpty()) {
@@ -363,27 +306,9 @@ public class CassandraMessageDAOV3 {
                     row.getLong(FULL_CONTENT_OCTETS),
                     row.getInt(BODY_START_OCTET),
                     content,
-                    getProperties(row),
                     getAttachments(row),
                     headerId,
                     bodyId));
-    }
-
-    private Properties getProperties(Row row) {
-        PropertyBuilder property = new PropertyBuilder();
-        property.setContentDescription(row.get(CONTENT_DESCRIPTION, TypeCodecs.TEXT));
-        property.setContentDispositionType(row.get(CONTENT_DISPOSITION_TYPE, TypeCodecs.TEXT));
-        property.setMediaType(row.get(MEDIA_TYPE, TypeCodecs.TEXT));
-        property.setSubType(row.get(SUB_TYPE, TypeCodecs.TEXT));
-        property.setContentID(row.get(CONTENT_ID, TypeCodecs.TEXT));
-        property.setContentMD5(row.get(CONTENT_MD5, TypeCodecs.TEXT));
-        property.setContentTransferEncoding(row.get(CONTENT_TRANSFER_ENCODING, TypeCodecs.TEXT));
-        property.setContentLocation(row.get(CONTENT_LOCATION, TypeCodecs.TEXT));
-        property.setContentLanguage(row.get(CONTENT_LANGUAGE, LIST_OF_STRINGS_CODEC));
-        property.setContentDispositionParameters(row.get(CONTENT_DISPOSITION_PARAMETERS, MAP_OF_STRINGS_CODEC));
-        property.setContentTypeParameters(row.get(CONTENT_TYPE_PARAMETERS, MAP_OF_STRINGS_CODEC));
-        property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT));
-        return property.build();
     }
 
     private List<MessageAttachmentRepresentation> getAttachments(Row row) {

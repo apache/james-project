@@ -285,16 +285,9 @@ public class MessageResultImpl implements MessageResult {
 
     @Override
     public MimeDescriptor getMimeDescriptor() throws MailboxException {
-        
-        // check if we need to create the MimeDescriptor which is done in a lazy fashion because
-        // it can be relative expensive on big messages and slow mailbox implementations
         if (mimeDescriptor == null) {
             try {
-                if (isComposite(message.getMediaType())) {
-                    mimeDescriptor = MimeDescriptorImpl.build(getFullContent().getInputStream());
-                } else {
-                    mimeDescriptor = new LazyMimeDescriptor(this, message);
-                }
+                mimeDescriptor = MimeDescriptorImpl.build(getFullContent().getInputStream());
             } catch (IOException | MimeException e) {
                 throw new MailboxException("Unable to create the MimeDescriptor", e);
             }
@@ -302,18 +295,7 @@ public class MessageResultImpl implements MessageResult {
         return mimeDescriptor;
     }
 
-    /**
-     * Is this a composite media type (as per RFC2045)?
-     *
-     * TODO: Move to Mime4j
-     * @param mediaType possibly null
-     * @return true when the type is composite,
-     * false otherwise
-     */
-    private boolean isComposite(String mediaType) {
-        return "message".equalsIgnoreCase(mediaType) || "multipart".equalsIgnoreCase(mediaType);
-    }
-    
+
     @Override
     public Headers getHeaders() {
         return headers;

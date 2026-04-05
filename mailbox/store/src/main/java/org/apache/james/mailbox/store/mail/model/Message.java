@@ -29,7 +29,6 @@ import java.util.Optional;
 
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
@@ -65,20 +64,6 @@ public interface Message {
     }
 
     /**
-     * Gets the top level MIME content media type.
-     *
-     * @return top level MIME content media type, or null if default
-     */
-    String getMediaType();
-
-    /**
-     * Gets the MIME content subtype.
-     *
-     * @return the MIME content subtype, or null if default
-     */
-    String getSubType();
-
-    /**
      * The number of octets contained in the body of this document.
      */
     long getBodyOctets();
@@ -92,13 +77,6 @@ public interface Message {
      * The number of octets contained in the header content of this document.
      */
     long getHeaderOctets();
-
-    /**
-     * Gets the number of CRLF in a textual document.
-     * @return CRLF count when document is textual,
-     * null otherwise
-     */
-    Long getTextualLineCount();
 
     /**
      * Gets the header as {@link InputStream}. This MUST INCLUDE the CRLF terminator
@@ -143,15 +121,6 @@ public interface Message {
         }
     }
 
-    /**
-     * Gets a read-only list of meta-data properties.
-     * For properties with multiple values, this list will contain
-     * several entries with the same namespace and local name.
-     *
-     * @return unmodifiable list of meta-data, not null
-     */
-    Properties getProperties();
-    
     /**
      * Return the list of attachments
      * 

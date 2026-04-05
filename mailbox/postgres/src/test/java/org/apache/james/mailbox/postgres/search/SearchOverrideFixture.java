@@ -39,7 +39,6 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 interface SearchOverrideFixture {
@@ -63,7 +62,6 @@ interface SearchOverrideFixture {
             .internalDate(new Date())
             .bodyStartOctet(18)
             .flags(flags)
-            .properties(new PropertyBuilder())
             .mailboxId(mailboxId)
             .modseq(ModSeq.of(1))
             .build();

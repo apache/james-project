@@ -52,7 +52,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -115,36 +114,8 @@ class CassandraMessageDAOV3Test {
     }
 
     @Test
-    void saveShouldSaveNullValueForTextualLineCountAsZero() throws Exception {
-        message = createMessage(messageId, threadId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT, EMPTY_SAVE_DATE);
-
-        testee.save(message).block();
-
-        MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.METADATA));
-
-        assertThat(attachmentRepresentation.getProperties().getTextualLineCount())
-            .isEqualTo(0L);
-    }
-
-    @Test
-    void saveShouldSaveTextualLineCount() throws Exception {
-        long textualLineCount = 10L;
-        PropertyBuilder propertyBuilder = new PropertyBuilder();
-        propertyBuilder.setTextualLineCount(textualLineCount);
-        message = createMessage(messageId, threadId, CONTENT, BODY_START, propertyBuilder, NO_ATTACHMENT, EMPTY_SAVE_DATE);
-
-        testee.save(message).block();
-
-        MessageRepresentation attachmentRepresentation =
-            toMessage(testee.retrieveMessage(messageIdWithMetadata, MessageMapper.FetchType.METADATA));
-
-        assertThat(attachmentRepresentation.getProperties().getTextualLineCount()).isEqualTo(textualLineCount);
-    }
-
-    @Test
     void saveShouldStoreMessageWithFullContent() throws Exception {
-        message = createMessage(messageId, threadId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT, EMPTY_SAVE_DATE);
+        message = createMessage(messageId, threadId, CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
 
         testee.save(message).block();
 
@@ -157,7 +128,7 @@ class CassandraMessageDAOV3Test {
 
     @Test
     void saveShouldStoreMessageWithHeaderContent() throws Exception {
-        message = createMessage(messageId, threadId,  CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT, EMPTY_SAVE_DATE);
+        message = createMessage(messageId, threadId,  CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
 
         testee.save(message).block();
 
@@ -176,8 +147,8 @@ class CassandraMessageDAOV3Test {
 
     @Test
     void blobReferencesShouldReturnAllBlobs() throws Exception {
-        message = createMessage(messageId, threadId,  CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT, EMPTY_SAVE_DATE);
-        MailboxMessage message2 = createMessage(messageId2, threadId,  CONTENT_2, BODY_START, new PropertyBuilder(), NO_ATTACHMENT, EMPTY_SAVE_DATE);
+        message = createMessage(messageId, threadId,  CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
+        MailboxMessage message2 = createMessage(messageId2, threadId,  CONTENT_2, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
         testee.save(message).block();
         testee.save(message2).block();
 
@@ -185,7 +156,7 @@ class CassandraMessageDAOV3Test {
             .hasSize(4);
     }
 
-    private SimpleMailboxMessage createMessage(MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder,
+    private SimpleMailboxMessage createMessage(MessageId messageId, ThreadId threadId, String content, int bodyStart,
                                                Collection<MessageAttachmentMetadata> attachments, Optional<Date> saveDate) {
         return SimpleMailboxMessage.builder()
             .messageId(messageId)
@@ -198,7 +169,6 @@ class CassandraMessageDAOV3Test {
             .size(content.length())
             .content(new ByteContent(content.getBytes(StandardCharsets.UTF_8)))
             .flags(new Flags())
-            .properties(propertyBuilder)
             .addAttachments(attachments)
             .build();
     }

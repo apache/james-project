@@ -25,8 +25,6 @@ import static com.datastax.oss.driver.api.core.type.DataTypes.INT;
 import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
 import static com.datastax.oss.driver.api.core.type.DataTypes.TIMESTAMP;
 import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
-import static com.datastax.oss.driver.api.core.type.DataTypes.frozenListOf;
-import static com.datastax.oss.driver.api.core.type.DataTypes.frozenMapOf;
 import static com.datastax.oss.driver.api.core.type.DataTypes.listOf;
 import static com.datastax.oss.driver.api.core.type.DataTypes.setOf;
 import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
@@ -103,21 +101,9 @@ public interface CassandraMessageDataDefinition {
             .withColumn(CassandraMessageV3Table.INTERNAL_DATE, TIMESTAMP)
             .withColumn(CassandraMessageV3Table.BODY_START_OCTET, INT)
             .withColumn(CassandraMessageV3Table.BODY_OCTECTS, BIGINT)
-            .withColumn(CassandraMessageV3Table.TEXTUAL_LINE_COUNT, BIGINT)
             .withColumn(CassandraMessageV3Table.FULL_CONTENT_OCTETS, BIGINT)
             .withColumn(CassandraMessageV3Table.BODY_CONTENT, TEXT)
             .withColumn(CassandraMessageV3Table.HEADER_CONTENT, TEXT)
-            .withColumn(CassandraMessageV3Table.Properties.CONTENT_DESCRIPTION, TEXT)
-            .withColumn(CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_TYPE, TEXT)
-            .withColumn(CassandraMessageV3Table.Properties.MEDIA_TYPE, TEXT)
-            .withColumn(CassandraMessageV3Table.Properties.SUB_TYPE, TEXT)
-            .withColumn(CassandraMessageV3Table.Properties.CONTENT_ID, TEXT)
-            .withColumn(CassandraMessageV3Table.Properties.CONTENT_MD5, TEXT)
-            .withColumn(CassandraMessageV3Table.Properties.CONTENT_TRANSFER_ENCODING, TEXT)
-            .withColumn(CassandraMessageV3Table.Properties.CONTENT_LOCATION, TEXT)
-            .withColumn(CassandraMessageV3Table.Properties.CONTENT_LANGUAGE, frozenListOf(TEXT))
-            .withColumn(CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_PARAMETERS, frozenMapOf(TEXT, TEXT))
-            .withColumn(CassandraMessageV3Table.Properties.CONTENT_TYPE_PARAMETERS, frozenMapOf(TEXT, TEXT))
             .withColumn(CassandraMessageV3Table.ATTACHMENTS, listOf(SchemaBuilder.udt(CassandraMessageV3Table.ATTACHMENTS, true))))
         .type(CassandraMessageV3Table.ATTACHMENTS.asCql(true))
         .statement(statement -> statement

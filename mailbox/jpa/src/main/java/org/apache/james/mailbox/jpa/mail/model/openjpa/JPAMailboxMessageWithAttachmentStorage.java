@@ -48,7 +48,6 @@ import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 
@@ -85,8 +84,8 @@ public class JPAMailboxMessageWithAttachmentStorage extends AbstractJPAMailboxMe
 
     }
 
-    public JPAMailboxMessageWithAttachmentStorage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, Content content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
-        super(mailbox, internalDate, flags, size, bodyStartOctet, propertyBuilder);
+    public JPAMailboxMessageWithAttachmentStorage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, Content content, int bodyStartOctet) throws MailboxException {
+        super(mailbox, internalDate, flags, size, bodyStartOctet);
         try {
             int headerEnd = bodyStartOctet;
             if (headerEnd < 0) {

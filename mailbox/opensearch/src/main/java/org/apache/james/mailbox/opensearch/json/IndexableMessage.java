@@ -161,8 +161,8 @@ public class IndexableMessage {
                     ModSeq modSeq = message.getModSeq();
                     long size = message.getFullContentOctets();
                     String date = DATE_TIME_FORMATTER.format(getSanitizedInternalDate(message, zoneId));
-                    String mediaType = message.getMediaType();
-                    String subType = message.getSubType();
+                    String mediaType = parsingResult.getMediaType().orElse(null);
+                    String subType = parsingResult.getSubType().orElse(null);
                     boolean isAnswered = message.isAnswered();
                     boolean isDeleted = message.isDeleted();
                     boolean isDraft = message.isDraft();

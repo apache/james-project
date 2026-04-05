@@ -86,7 +86,6 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndexContract;
@@ -138,7 +137,6 @@ class OpenSearchListeningMessageSearchIndexTest {
         .internalDate(new Date(1433628000000L))
         .size(SIZE)
         .content(new ByteContent("message".getBytes(StandardCharsets.UTF_8)))
-        .properties(new PropertyBuilder())
         .modseq(MOD_SEQ);
 
     static final SimpleMailboxMessage MESSAGE_1 = MESSAGE_BUILDER.messageId(MESSAGE_ID_1)
@@ -355,7 +353,6 @@ class OpenSearchListeningMessageSearchIndexTest {
             .internalDate(new Date(1433628000000L))
             .size(SIZE)
             .content(new ByteContent("message".getBytes(StandardCharsets.UTF_8)))
-            .properties(new PropertyBuilder())
             .modseq(MOD_SEQ)
             .messageId(MESSAGE_ID_1)
             .threadId(ThreadId.fromBaseMessageId(MESSAGE_ID_1))

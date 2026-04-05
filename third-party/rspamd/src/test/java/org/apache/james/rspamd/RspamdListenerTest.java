@@ -58,7 +58,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.SystemMailboxesProviderImpl;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
@@ -359,7 +358,7 @@ public class RspamdListenerTest {
         int bodyStartOctet = 25;
         byte[] content = "Subject: test\r\n\r\nBody\r\n".getBytes(StandardCharsets.UTF_8);
         SimpleMailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, new Date(),
-            size, bodyStartOctet, new ByteContent(content), new Flags(), new PropertyBuilder().build(),
+            size, bodyStartOctet, new ByteContent(content), new Flags(),
             mailbox.getMailboxId());
         MessageMetaData messageMetaData = mapperFactory.createMessageMapper(null).add(mailbox, message);
         message.setUid(messageMetaData.getUid());

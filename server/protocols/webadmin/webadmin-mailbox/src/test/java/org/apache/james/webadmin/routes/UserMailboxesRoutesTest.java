@@ -88,7 +88,6 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.task.Hostname;
@@ -1853,7 +1852,6 @@ class UserMailboxesRoutesTest {
                     .internalDate(new Date(ZonedDateTime.parse("2018-02-15T15:54:02Z").toEpochSecond()))
                     .bodyStartOctet(0)
                     .flags(new Flags("myFlags"))
-                    .properties(new PropertyBuilder())
                     .mailboxId(mailboxId)
                     .build();
 

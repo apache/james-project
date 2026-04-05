@@ -46,7 +46,6 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
@@ -115,11 +114,11 @@ public abstract class MessageWithAttachmentMapperTest {
         List<MessageAttachmentMetadata> message1Attachments = attachmentMapper.storeAttachments(ImmutableList.of(attachment1), messageId1);
         List<MessageAttachmentMetadata> message2Attachments = attachmentMapper.storeAttachments(ImmutableList.of(attachment2, attachment3), messageId2);
 
-        messageWith1Attachment = createMessage(attachmentsMailbox, messageId1, threadId1, "Subject: Test7 \n\nBody7\n.\n", BODY_START, new PropertyBuilder(),
+        messageWith1Attachment = createMessage(attachmentsMailbox, messageId1, threadId1, "Subject: Test7 \n\nBody7\n.\n", BODY_START,
                 message1Attachments);
-        messageWith2Attachments = createMessage(attachmentsMailbox, messageId2, threadId2, "Subject: Test8 \n\nBody8\n.\n", BODY_START, new PropertyBuilder(),
+        messageWith2Attachments = createMessage(attachmentsMailbox, messageId2, threadId2, "Subject: Test8 \n\nBody8\n.\n", BODY_START,
                 message2Attachments);
-        messageWithoutAttachment = createMessage(attachmentsMailbox, messageId3, threadId3, "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
+        messageWithoutAttachment = createMessage(attachmentsMailbox, messageId3, threadId3, "Subject: Test1 \n\nBody1\n.\n", BODY_START);
     }
 
     @Test
@@ -185,11 +184,11 @@ public abstract class MessageWithAttachmentMapperTest {
         messageWith2Attachments.setModSeq(messageMapper.getHighestModSeq(attachmentsMailbox));
     }
 
-    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
-        return new SimpleMailboxMessage(messageId, threadId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId(), attachments, EMPTY_SAVE_DATE);
+    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart, List<MessageAttachmentMetadata> attachments) {
+        return new SimpleMailboxMessage(messageId, threadId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), mailbox.getMailboxId(), attachments, EMPTY_SAVE_DATE);
     }
 
-    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
-        return new SimpleMailboxMessage(messageId, threadId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId());
+    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart) {
+        return new SimpleMailboxMessage(messageId, threadId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), mailbox.getMailboxId());
     }
 }

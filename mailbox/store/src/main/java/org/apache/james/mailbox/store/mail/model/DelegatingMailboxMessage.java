@@ -29,7 +29,6 @@ import jakarta.mail.Flags;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.store.mail.model.impl.Properties;
 
 public abstract class DelegatingMailboxMessage implements MailboxMessage {
 
@@ -65,11 +64,6 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
     }
 
     @Override
-    public Long getTextualLineCount() {
-        return message.getTextualLineCount();
-    }
-
-    @Override
     public InputStream getHeaderContent() throws IOException {
         return message.getHeaderContent();
     }
@@ -77,11 +71,6 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
     @Override
     public InputStream getFullContent() throws IOException {
         return message.getFullContent();
-    }
-
-    @Override
-    public Properties getProperties() {
-        return message.getProperties();
     }
 
     @Override
@@ -97,16 +86,6 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
     @Override
     public long getHeaderOctets() {
         return message.getHeaderOctets();
-    }
-
-    @Override
-    public String getMediaType() {
-        return message.getMediaType();
-    }
-
-    @Override
-    public String getSubType() {
-        return message.getSubType();
     }
 
     @Override
