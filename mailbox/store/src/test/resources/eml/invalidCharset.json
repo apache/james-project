@@ -22,7 +22,7 @@
     {"name":"content-transfer-encoding","value":"7bit"}
   ],
   "mailboxId":"18",
-  "mediaType":"plain",
+  "mediaType":"text",
   "messageId":"184",
   "threadId": "184",
   "modSeq":42,
@@ -30,7 +30,7 @@
   "saveDate": null,
   "size":25,
   "subject":["Inline attachment"],
-  "subtype":"text",
+  "subtype":"plain",
   "to":[{
     "name":"Antoine DUPRAT",
     "address":"xyz@linagora.com",

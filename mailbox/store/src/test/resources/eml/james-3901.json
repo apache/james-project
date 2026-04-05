@@ -32,7 +32,7 @@
     {"name":"content-type","value":"multipart/mixed;\tboundary=\"--boundary-LibPST-iamunique-1722682679_-_-\""}
   ],
   "mailboxId":"18",
-  "mediaType":"plain",
+  "mediaType":"multipart",
   "messageId":"184",
   "threadId":"184",
   "modSeq":42,
@@ -40,7 +40,7 @@
   "saveDate":null,
   "size":25,
   "subject":["Revised Draft"],
-  "subtype":"text",
+  "subtype":"mixed",
   "to":[{"name":null,"address":"Mary Kay Miller","domain":null}],
   "uid":25,
   "userFlags":[],

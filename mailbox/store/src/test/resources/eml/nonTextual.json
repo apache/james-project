@@ -58,14 +58,14 @@
     "value": "multipart/mixed; boundary=\"------------030000010109090603040500\""
   }],
   "mailboxId":"18",
-  "mediaType":"plain",
+  "mediaType":"multipart",
   "messageId":"184",
   "threadId": "184",
   "modSeq":42,
   "sentDate":"2015-06-18T12:43:26+0200",
   "size":25,
   "subject":["Test message"],
-  "subtype":"text",
+  "subtype":"mixed",
   "to":[{
     "name":null,
     "address":"btellier@linagora.com",
