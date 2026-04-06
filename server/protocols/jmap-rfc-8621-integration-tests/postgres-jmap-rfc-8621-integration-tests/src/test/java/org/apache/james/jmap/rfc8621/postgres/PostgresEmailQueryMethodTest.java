@@ -38,6 +38,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresEmailQueryMethodTest implements EmailQueryMethodContract {
     @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.emptyWithTruncate();
+
+    @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
@@ -51,12 +54,13 @@ public class PostgresEmailQueryMethodTest implements EmailQueryMethodContract {
                 .deduplication()
                 .noCryptoConfig())
             .build())
-        .extension(PostgresExtension.empty())
+        .extension(postgresExtension)
         .extension(new RabbitMQExtension())
         .extension(new DockerOpenSearchExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new DelegationProbeModule())
             .overrideWith(new IdentityProbeModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

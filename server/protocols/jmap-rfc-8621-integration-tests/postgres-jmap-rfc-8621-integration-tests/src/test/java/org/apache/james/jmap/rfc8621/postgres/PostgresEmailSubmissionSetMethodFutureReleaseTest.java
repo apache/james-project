@@ -46,6 +46,9 @@ public class PostgresEmailSubmissionSetMethodFutureReleaseTest implements EmailS
     public static final PostgresMessageId.Factory MESSAGE_ID_FACTORY = new PostgresMessageId.Factory();
 
     @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.emptyWithTruncate();
+
+    @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
@@ -59,13 +62,14 @@ public class PostgresEmailSubmissionSetMethodFutureReleaseTest implements EmailS
                 .deduplication()
                 .noCryptoConfig())
             .build())
-        .extension(PostgresExtension.empty())
+        .extension(postgresExtension)
         .extension(new RabbitMQExtension())
         .extension(new ClockExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new DelegationProbeModule()))
         .overrideServerModule(binder -> binder.bind(Boolean.class).annotatedWith(Names.named("supportsDelaySends")).toInstance(true))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override

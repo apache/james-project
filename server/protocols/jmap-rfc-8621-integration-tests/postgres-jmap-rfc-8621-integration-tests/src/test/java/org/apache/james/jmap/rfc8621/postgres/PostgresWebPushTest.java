@@ -39,6 +39,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresWebPushTest implements WebPushContract {
     @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.emptyWithTruncate();
+
+    @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
@@ -52,13 +55,14 @@ public class PostgresWebPushTest implements WebPushContract {
                 .deduplication()
                 .noCryptoConfig())
             .build())
-        .extension(PostgresExtension.empty())
+        .extension(postgresExtension)
         .extension(new RabbitMQExtension())
         .extension(new ClockExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new PushSubscriptionProbeModule())
             .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @RegisterExtension

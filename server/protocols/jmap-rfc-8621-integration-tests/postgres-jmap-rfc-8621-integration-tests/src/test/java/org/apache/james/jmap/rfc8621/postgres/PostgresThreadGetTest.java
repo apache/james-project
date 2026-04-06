@@ -40,6 +40,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresThreadGetTest implements ThreadGetContract {
     @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.emptyWithTruncate();
+
+    @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
@@ -53,11 +56,12 @@ public class PostgresThreadGetTest implements ThreadGetContract {
                 .deduplication()
                 .noCryptoConfig())
             .build())
-        .extension(PostgresExtension.empty())
+        .extension(postgresExtension)
         .extension(new RabbitMQExtension())
         .extension(new DockerOpenSearchExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override

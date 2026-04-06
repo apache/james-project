@@ -35,6 +35,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresAuthenticationTest implements AuthenticationContract {
     @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.emptyWithTruncate();
+
+    @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
@@ -48,10 +51,10 @@ public class PostgresAuthenticationTest implements AuthenticationContract {
                 .deduplication()
                 .noCryptoConfig())
             .build())
-        .extension(PostgresExtension.empty())
+        .extension(postgresExtension)
         .extension(new RabbitMQExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_ENCLOSING_CLASS)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

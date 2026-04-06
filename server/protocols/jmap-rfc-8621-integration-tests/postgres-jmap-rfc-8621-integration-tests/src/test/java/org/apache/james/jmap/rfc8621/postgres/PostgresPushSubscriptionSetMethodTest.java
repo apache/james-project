@@ -40,6 +40,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresPushSubscriptionSetMethodTest implements PushSubscriptionSetMethodContract {
     @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.emptyWithTruncate();
+
+    @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
@@ -53,7 +56,7 @@ public class PostgresPushSubscriptionSetMethodTest implements PushSubscriptionSe
                 .deduplication()
                 .noCryptoConfig())
             .build())
-        .extension(PostgresExtension.empty())
+        .extension(postgresExtension)
         .extension(new RabbitMQExtension())
         .extension(new ClockExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
@@ -61,6 +64,7 @@ public class PostgresPushSubscriptionSetMethodTest implements PushSubscriptionSe
             .overrideWith(new PushSubscriptionProbeModule())
             .overrideWith(new TypeStateModule())
             .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @RegisterExtension

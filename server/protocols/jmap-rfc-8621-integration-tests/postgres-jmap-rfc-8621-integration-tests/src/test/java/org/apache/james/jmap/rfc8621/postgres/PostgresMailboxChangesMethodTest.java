@@ -43,6 +43,9 @@ import com.google.inject.name.Names;
 
 public class PostgresMailboxChangesMethodTest implements MailboxChangesMethodContract {
     @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.emptyWithTruncate();
+
+    @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
@@ -56,12 +59,13 @@ public class PostgresMailboxChangesMethodTest implements MailboxChangesMethodCon
                 .deduplication()
                 .noCryptoConfig())
             .build())
-        .extension(PostgresExtension.empty())
+        .extension(postgresExtension)
         .extension(new RabbitMQExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(PostgresMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5)))
             .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(PostgresMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5))))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override

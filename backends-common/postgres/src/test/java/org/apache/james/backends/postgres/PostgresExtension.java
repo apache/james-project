@@ -82,8 +82,17 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         return new PostgresExtension(module, RowLevelSecurity.DISABLED, Optional.of(poolSize));
     }
 
+    public enum ResetMode {
+        DROP,
+        TRUNCATE
+    }
+
     public static PostgresExtension empty() {
         return withoutRowLevelSecurity(PostgresDataDefinition.EMPTY_MODULE);
+    }
+
+    public static PostgresExtension emptyWithTruncate() {
+        return new PostgresExtension(PostgresDataDefinition.EMPTY_MODULE, RowLevelSecurity.DISABLED, Optional.empty(), ResetMode.TRUNCATE);
     }
 
     public static final PoolSize DEFAULT_POOL_SIZE = PoolSize.SMALL;
@@ -92,6 +101,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     private final RowLevelSecurity rowLevelSecurity;
     private final PostgresFixture.Database selectedDatabase;
     private PoolSize poolSize;
+    private final ResetMode resetMode;
     private PostgresConfiguration postgresConfiguration;
     private PostgresExecutor defaultPostgresExecutor;
     private PostgresExecutor byPassRLSPostgresExecutor;
@@ -111,12 +121,17 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     private PostgresExtension(PostgresDataDefinition postgresDataDefinition, RowLevelSecurity rowLevelSecurity) {
-        this(postgresDataDefinition, rowLevelSecurity, Optional.empty());
+        this(postgresDataDefinition, rowLevelSecurity, Optional.empty(), ResetMode.DROP);
     }
 
     private PostgresExtension(PostgresDataDefinition postgresDataDefinition, RowLevelSecurity rowLevelSecurity, Optional<PoolSize> maybePoolSize) {
+        this(postgresDataDefinition, rowLevelSecurity, maybePoolSize, ResetMode.DROP);
+    }
+
+    private PostgresExtension(PostgresDataDefinition postgresDataDefinition, RowLevelSecurity rowLevelSecurity, Optional<PoolSize> maybePoolSize, ResetMode resetMode) {
         this.postgresDataDefinition = postgresDataDefinition;
         this.rowLevelSecurity = rowLevelSecurity;
+        this.resetMode = resetMode;
         if (rowLevelSecurity.isRowLevelSecurityEnabled()) {
             this.selectedDatabase = PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
         } else {
@@ -214,7 +229,11 @@ public class PostgresExtension implements GuiceModuleTestExtension {
 
     @Override
     public void afterEach(ExtensionContext extensionContext) {
-        resetSchema();
+        if (resetMode == ResetMode.TRUNCATE) {
+            truncateAllTables();
+        } else {
+            resetSchema();
+        }
     }
 
     public void restartContainer() {
@@ -269,6 +288,20 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     private void resetSchema() {
         List<String> tables = postgresTableManager.listExistTables().block();
         dropTables(tables);
+    }
+
+    private void truncateAllTables() {
+        List<String> tables = postgresTableManager.listExistTables().block();
+        if (!tables.isEmpty()) {
+            String tableList = tables.stream()
+                .map(tableName -> "\"" + tableName + "\"")
+                .collect(Collectors.joining(", "));
+            Flux.from(defaultConnection.createStatement(
+                    String.format("TRUNCATE %s RESTART IDENTITY CASCADE;", tableList))
+                .execute())
+                .then()
+                .block();
+        }
     }
 
     private void dropTables(List<String> tables) {
