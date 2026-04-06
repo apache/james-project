@@ -41,7 +41,7 @@ import com.google.inject.name.Names;
 
 public class PostgresEmailChangesMethodTest implements EmailChangesMethodContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.emptyWithTruncate();
+    static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
@@ -63,7 +63,6 @@ public class PostgresEmailChangesMethodTest implements EmailChangesMethodContrac
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(PostgresEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5)))
             .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(PostgresEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5))))
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Override
