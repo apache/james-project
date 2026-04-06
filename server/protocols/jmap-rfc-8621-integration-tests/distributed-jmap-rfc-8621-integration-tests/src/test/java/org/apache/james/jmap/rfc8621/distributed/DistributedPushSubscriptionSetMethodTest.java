@@ -22,8 +22,10 @@ package org.apache.james.jmap.rfc8621.distributed;
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.CleanupTasksPerformerProbe;
 import org.apache.james.ClockExtension;
 import org.apache.james.DockerOpenSearchExtension;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
@@ -35,7 +37,11 @@ import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.utils.GuiceProbe;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.google.inject.multibindings.Multibinder;
 
 public class DistributedPushSubscriptionSetMethodTest implements PushSubscriptionSetMethodContract {
     @RegisterExtension
@@ -56,9 +62,17 @@ public class DistributedPushSubscriptionSetMethodTest implements PushSubscriptio
         .extension(new ClockExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule(), new TypeStateModule())
-            .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))
+            .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT()))
+            .overrideWith(binder -> Multibinder.newSetBinder(binder, GuiceProbe.class).addBinding().to(CleanupTasksPerformerProbe.class)))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+
         .build();
 
     @RegisterExtension
     static PushServerExtension pushServerExtension = new PushServerExtension();
+
+    @AfterEach
+    void cleanUp(GuiceJamesServer server) {
+        server.getProbe(CleanupTasksPerformerProbe.class).clean();
+    }
 }

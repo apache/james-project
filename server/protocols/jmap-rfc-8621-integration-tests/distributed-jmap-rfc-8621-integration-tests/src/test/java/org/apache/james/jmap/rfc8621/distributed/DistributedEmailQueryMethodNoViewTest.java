@@ -22,6 +22,7 @@ package org.apache.james.jmap.rfc8621.distributed;
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.CleanupTasksPerformerProbe;
 import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
@@ -32,9 +33,13 @@ import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.utils.GuiceProbe;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.google.inject.multibindings.Multibinder;
 
 public class DistributedEmailQueryMethodNoViewTest implements EmailQueryMethodContract {
     public static final DockerOpenSearchExtension ELASTIC_SEARCH_EXTENSION = new DockerOpenSearchExtension();
@@ -61,7 +66,10 @@ public class DistributedEmailQueryMethodNoViewTest implements EmailQueryMethodCo
                     .enable()
                     .randomPort()
                     .disableEmailQueryView()
-                    .build())))
+                    .build()))
+            .overrideWith(binder -> Multibinder.newSetBinder(binder, GuiceProbe.class).addBinding().to(CleanupTasksPerformerProbe.class)))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+
         .build();
 
     @Test
@@ -86,5 +94,10 @@ public class DistributedEmailQueryMethodNoViewTest implements EmailQueryMethodCo
     @Override
     @Disabled("JAMES-3340 Not supported for no email query view")
     public void inMailboxBeforeSortedByReceivedAtShouldCollapseThreads(GuiceJamesServer server) {
+    }
+
+    @AfterEach
+    void cleanUp(GuiceJamesServer server) {
+        server.getProbe(CleanupTasksPerformerProbe.class).clean();
     }
 }

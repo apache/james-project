@@ -22,6 +22,7 @@ package org.apache.james.jmap.rfc8621.distributed;
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.CleanupTasksPerformerProbe;
 import org.apache.james.ClockExtension;
 import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.GuiceJamesServer;
@@ -37,11 +38,14 @@ import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.UpdatableTickingClock;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class DistributedEmailSubmissionSetMethodFutureReleaseTest implements EmailSubmissionSetMethodFutureReleaseContract {
@@ -67,8 +71,11 @@ public class DistributedEmailSubmissionSetMethodFutureReleaseTest implements Ema
         .extension(new AwsS3BlobStoreExtension())
         .extension(new ClockExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule(), new DelegationProbeModule()))
+            .overrideWith(new TestJMAPServerModule(), new DelegationProbeModule())
+            .overrideWith(binder -> Multibinder.newSetBinder(binder, GuiceProbe.class).addBinding().to(CleanupTasksPerformerProbe.class)))
         .overrideServerModule(binder -> binder.bind(Boolean.class).annotatedWith(Names.named("supportsDelaySends")).toInstance(true))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+
         .build();
 
     @Override
@@ -94,5 +101,10 @@ public class DistributedEmailSubmissionSetMethodFutureReleaseTest implements Ema
     @Disabled("Not work for distributed test")
     @Override
     public void emailSubmissionSetCreateShouldDelayEmailWithHoldUntil(GuiceJamesServer server, UpdatableTickingClock updatableTickingClock){
+    }
+
+    @AfterEach
+    void cleanUp(GuiceJamesServer server) {
+        server.getProbe(CleanupTasksPerformerProbe.class).clean();
     }
 }
