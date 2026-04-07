@@ -67,7 +67,9 @@ public class EmbeddedActiveMQ {
 
     @PreDestroy
     public void stop() throws Exception {
+        LOGGER.info("Stopping embedded ActiveMQ...");
         brokerService.stop();
+        LOGGER.info("Stopped embedded ActiveMQ");
     }
 
     private ActiveMQConnectionFactory createActiveMQConnectionFactory(BlobTransferPolicy blobTransferPolicy) {
@@ -100,6 +102,7 @@ public class EmbeddedActiveMQ {
         brokerService.setDataDirectoryFile(fileSystem.getFile(BROCKERS_LOCATION));
         brokerService.setUseShutdownHook(false);
         brokerService.setSchedulerSupport(false);
+        brokerService.setAdjustUsageLimits(false);
         brokerService.setBrokerId(BROKER_ID);
         String[] uris = {BROCKER_URI};
         brokerService.setTransportConnectorURIs(uris);
@@ -113,6 +116,6 @@ public class EmbeddedActiveMQ {
         String[] transportConnectorsURIs = {BROCKER_URI};
         brokerService.setTransportConnectorURIs(transportConnectorsURIs);
         brokerService.start();
-        LOGGER.info("Started embedded activeMq");
+        LOGGER.info("Started embedded ActiveMQ");
     }
 }
