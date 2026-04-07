@@ -51,7 +51,7 @@ public class PostgresEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(failDeliveredEvent != null, FAIL_DELIVERED_EVENT_CANNOT_BE_NULL);
 
         String serializedEvent = eventSerializer.toJson(failDeliveredEvent)
-            .orElseThrow(() -> new RuntimeException("Could not serialize event: " + failDeliveredEvent));
+            .json();
 
         InsertionId insertionId = InsertionId.random();
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)

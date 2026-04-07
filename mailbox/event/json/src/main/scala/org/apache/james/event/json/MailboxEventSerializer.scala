@@ -21,7 +21,7 @@ package org.apache.james.event.json
 
 import java.time.Instant
 import java.util
-import java.util.{Optional, TreeMap => JavaTreeMap}
+import java.util.{TreeMap => JavaTreeMap}
 
 import jakarta.inject.Inject
 import julienrf.json.derived
@@ -30,7 +30,7 @@ import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaSizeL
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
 import org.apache.james.event.json.DTOs._
 import org.apache.james.events.Event.EventId
-import org.apache.james.events.{DeserializationResult, EventSerializer, Event => JavaEvent}
+import org.apache.james.events.{DeserializationResult, EventSerializer, SerializationResult, Event => JavaEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
 import org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED
 import org.apache.james.mailbox.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, MailboxSubscribedEvent => JavaMailboxSubscribedEvent, MailboxUnsubscribedEvent => JavaMailboxUnsubscribedEvent, MessageContentDeletionEvent => JavaMessageContentDeletionEvent, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
@@ -456,15 +456,39 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
 class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) extends EventSerializer {
   private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory, quotaRootDeserializer)
 
-  override def toJson(event: JavaEvent): Optional[String] = Optional.of(jsonSerialize.toJson(event))
+  override def toJson(event: JavaEvent): SerializationResult =
+    try {
+      val serializedEvent: String = jsonSerialize.toJson(event)
+      new SerializationResult.Success(serializedEvent)
+    } catch {
+      case exception: Exception => new SerializationResult.Failure(exception.getMessage)
+    }
 
-  override def toJsonBytes(event: JavaEvent): Optional[Array[Byte]] = Optional.of(jsonSerialize.toJsonBytes(event))
+  override def toJsonBytes(event: JavaEvent): SerializationResult =
+    try {
+      val serializedBytesEvent: Array[Byte] = jsonSerialize.toJsonBytes(event)
+      new SerializationResult.SuccessBytes(serializedBytesEvent)
+    } catch {
+      case exception: Exception => new SerializationResult.Failure(exception.getMessage)
+    }
 
-  override def toJsonBytes(event: util.Collection[JavaEvent]): Optional[Array[Byte]] = Optional.of(jsonSerialize.toJsonBytes(event))
+  override def toJsonBytes(event: util.Collection[JavaEvent]): SerializationResult =
+    try {
+      val serializedBytesEvents: Array[Byte] = jsonSerialize.toJsonBytes(event)
+      new SerializationResult.SuccessBytes(serializedBytesEvents)
+    } catch {
+      case exception: Exception => new SerializationResult.Failure(exception.getMessage)
+    }
 
   def fromJson(json: String): JsResult[JavaEvent] = jsonSerialize.fromJson(json)
 
-  override def toJson(event: util.Collection[JavaEvent]): Optional[String] = Optional.of(jsonSerialize.toJson(event))
+  override def toJson(event: util.Collection[JavaEvent]): SerializationResult =
+    try {
+      val serializedEvents: String = jsonSerialize.toJson(event)
+      new SerializationResult.Success(serializedEvents)
+    } catch {
+      case exception: Exception => new SerializationResult.Failure(exception.getMessage)
+    }
 
   override def asEvents(serialized: String): DeserializationResult = {
     val result = jsonSerialize.fromJsonAsEvents(serialized)

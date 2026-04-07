@@ -59,7 +59,7 @@ class MessageMoveEventSerializationTest {
 
     @Test
     void messageMoveEventShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(EVENT).get())
+        assertThatJson(EVENT_SERIALIZER.toJson(EVENT).json())
             .isEqualTo(JSON);
     }
 
@@ -94,7 +94,7 @@ class MessageMoveEventSerializationTest {
 
             @Test
             void messageMoveEventShouldBeWellSerialized() {
-                assertThatJson(EVENT_SERIALIZER.toJson(event).get())
+                assertThatJson(EVENT_SERIALIZER.toJson(event).json())
                     .isEqualTo(json);
             }
 
@@ -128,7 +128,7 @@ class MessageMoveEventSerializationTest {
 
             @Test
             void messageMoveEventShouldBeWellSerialized() {
-                assertThatJson(EVENT_SERIALIZER.toJson(event).get())
+                assertThatJson(EVENT_SERIALIZER.toJson(event).json())
                     .isEqualTo(json);
             }
 
@@ -162,7 +162,7 @@ class MessageMoveEventSerializationTest {
 
             @Test
             void messageMoveEventShouldBeWellSerialized() {
-                assertThatJson(EVENT_SERIALIZER.toJson(event).get())
+                assertThatJson(EVENT_SERIALIZER.toJson(event).json())
                     .isEqualTo(json);
             }
 

@@ -60,7 +60,7 @@ class MailboxAddedSerializationTest {
 
     @Test
     void mailboxAddedShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(EVENT_1).get())
+        assertThatJson(EVENT_SERIALIZER.toJson(EVENT_1).json())
             .isEqualTo(JSON_1);
     }
 

@@ -76,7 +76,7 @@ class MailboxRenamedSerializationTest {
 
     @Test
     void mailboxRenamedShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_MAILBOX_RENAMED_EVENT).get())
+        assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_MAILBOX_RENAMED_EVENT).json())
             .isEqualTo(DEFAULT_MAILBOX_RENAMED_EVENT_JSON);
     }
 

@@ -172,13 +172,13 @@ class AddedSerializationTest {
 
     @Test
     void addedShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_ADDED_EVENT).get())
+        assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_ADDED_EVENT).json())
             .isEqualTo(DEFAULT_ADDED_EVENT_JSON);
     }
 
     @Test
     void addedWithDistinctMessageIdAndThreadIdShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT).get())
+        assertThatJson(EVENT_SERIALIZER.toJson(ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT).json())
             .isEqualTo(ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT_JSON);
     }
 
@@ -252,7 +252,7 @@ class AddedSerializationTest {
 
         @Test
         void addedShouldBeWellSerializedWhenMapKeyIsEmpty() {
-            assertThatJson(EVENT_SERIALIZER.toJson(emptyAddedEvent).get())
+            assertThatJson(EVENT_SERIALIZER.toJson(emptyAddedEvent).json())
                 .isEqualTo(emptyAddedEventJson);
         }
 
