@@ -675,52 +675,57 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         QueueBrowser browser = null;
         try {
             browser = session.createBrowser(queue);
-
             Enumeration<Message> messages = browser.getEnumeration();
-            QueueBrowser myBrowser = browser;
-
-            return new MailQueueIterator() {
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException("Read-only");
-                }
-
-                @Override
-                public MailQueueItemView next() {
-                    while (hasNext()) {
-                        try {
-                            Message m = messages.nextElement();
-                            return new DefaultMailQueueItemView(createMail(m), nextDeliveryDate(m));
-                        } catch (MessagingException | JMSException e) {
-                            LOGGER.error("Unable to browse queue", e);
-                        }
-                    }
-
-                    throw new NoSuchElementException();
-                }
-
-                private ZonedDateTime nextDeliveryDate(Message m) throws JMSException {
-                    long nextDeliveryTimestamp = m.getLongProperty(JAMES_NEXT_DELIVERY);
-                    return Instant.ofEpochMilli(nextDeliveryTimestamp).atZone(ZoneId.systemDefault());
-                }
-
-                @Override
-                public boolean hasNext() {
-                    return messages.hasMoreElements();
-                }
-
-                @Override
-                public void close() {
-                    closeBrowser(myBrowser);
-                }
-            };
-
+            return new BrowsingMailQueueIterator(browser, messages);
         } catch (Exception e) {
             closeBrowser(browser);
 
             LOGGER.error("Unable to browse queue {}", queueName, e);
             throw new MailQueueException("Unable to browse queue " + queueName.asString(), e);
+        }
+    }
+
+    private final class BrowsingMailQueueIterator implements MailQueueIterator {
+        private final QueueBrowser browser;
+        private final Enumeration<Message> messages;
+
+        private BrowsingMailQueueIterator(QueueBrowser browser, Enumeration<Message> messages) {
+            this.browser = browser;
+            this.messages = messages;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Read-only");
+        }
+
+        @Override
+        public MailQueueItemView next() {
+            while (hasNext()) {
+                try {
+                    Message m = messages.nextElement();
+                    return new DefaultMailQueueItemView(createMail(m), nextDeliveryDate(m));
+                } catch (MessagingException | JMSException e) {
+                    LOGGER.error("Unable to browse queue", e);
+                }
+            }
+
+            throw new NoSuchElementException();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return messages.hasMoreElements();
+        }
+
+        @Override
+        public void close() {
+            closeBrowser(browser);
+        }
+
+        private ZonedDateTime nextDeliveryDate(Message m) throws JMSException {
+            long nextDeliveryTimestamp = m.getLongProperty(JAMES_NEXT_DELIVERY);
+            return Instant.ofEpochMilli(nextDeliveryTimestamp).atZone(ZoneId.systemDefault());
         }
     }
 
