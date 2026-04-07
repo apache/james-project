@@ -36,6 +36,7 @@ import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.api.ManageableMailQueue.MailQueueIterator;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 import org.apache.james.util.streams.Iterators;
@@ -185,8 +186,8 @@ public class MailQueueRoutes implements Routes {
     }
 
     private List<MailQueueItemDTO> listMails(ManageableMailQueue queue, Optional<Boolean> isDelayed, Limit limit) {
-        try (MailQueue closeable = queue) {
-            return limit.applyOnStream(Iterators.toStream(queue.browse()))
+        try (MailQueue closeable = queue; MailQueueIterator iter = queue.browse()) {
+            return limit.applyOnStream(Iterators.toStream(iter))
                     .map(Throwing.function(MailQueueItemDTO::from).sneakyThrow())
                     .filter(item -> filter(item, isDelayed))
                     .collect(ImmutableList.toImmutableList());

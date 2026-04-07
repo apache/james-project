@@ -106,12 +106,13 @@ public interface ManageableMailQueue extends MailQueue {
      * {@link Iterator} subclass which allows to browse the content of a queue.
      * The content is not meant to be modifiable, everything is just READ-ONLY!
      */
-    interface MailQueueIterator extends Iterator<MailQueueItemView> {
+    interface MailQueueIterator extends Iterator<MailQueueItemView>, AutoCloseable {
 
         /**
          * Close the iterator. After this was called the iterator MUST NOT be
          * used again
          */
+        @Override
         void close();
     }
 
