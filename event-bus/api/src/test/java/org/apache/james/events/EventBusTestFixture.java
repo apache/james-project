@@ -178,11 +178,11 @@ public interface EventBusTestFixture {
         static final String ARRAY_SEPARATOR = "^";
 
         @Override
-        public Optional<String> toJson(Event event) {
+        public SerializationResult toJson(Event event) {
             if (!(event instanceof TestEvent || event instanceof UnsupportedEvent)) {
-                return Optional.empty();
+                return new SerializationResult.Failure("Unknown event type: " + event);
             }
-            return Optional.of(event.getClass().getCanonicalName() + "&" + event.getEventId().getId().toString() + "&" + event.getUsername().asString());
+            return new SerializationResult.Success(event.getClass().getCanonicalName() + "&" + event.getEventId().getId().toString() + "&" + event.getUsername().asString());
         }
 
         @Override
@@ -201,11 +201,13 @@ public interface EventBusTestFixture {
         }
 
         @Override
-        public Optional<String> toJson(Collection<Event> event) {
-            return Optional.of(event.stream()
-                .map(this::toJson)
-                .map(Optional::get)
-                .collect(Collectors.joining(ARRAY_SEPARATOR)));
+        public SerializationResult toJson(Collection<Event> event) {
+            return SerializationResult.of(
+                Optional.of(event.stream()
+                    .map(this::toJson)
+                    .map(SerializationResult::json)
+                    .collect(Collectors.joining(ARRAY_SEPARATOR))),
+                "Could not serialize events");
         }
 
         @Override

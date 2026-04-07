@@ -21,19 +21,18 @@ package org.apache.james.events;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Optional;
 
 public interface EventSerializer {
-    Optional<String> toJson(Event event);
+    SerializationResult toJson(Event event);
 
-    Optional<String> toJson(Collection<Event> event);
+    SerializationResult toJson(Collection<Event> event);
 
-    default Optional<byte[]> toJsonBytes(Event event) {
-        return toJson(event).map(json -> json.getBytes(StandardCharsets.UTF_8));
+    default SerializationResult toJsonBytes(Event event) {
+        return toJson(event);
     }
 
-    default Optional<byte[]> toJsonBytes(Collection<Event> event) {
-        return toJson(event).map(json -> json.getBytes(StandardCharsets.UTF_8));
+    default SerializationResult toJsonBytes(Collection<Event> event) {
+        return toJson(event);
     }
 
     DeserializationResult asEvent(String serialized);

@@ -20,7 +20,6 @@
 package org.apache.james.events;
 
 import java.util.Collection;
-import java.util.Optional;
 import java.util.Set;
 
 import jakarta.inject.Inject;
@@ -36,11 +35,12 @@ public class EventSerializersAggregator implements EventSerializer {
     }
 
     @Override
-    public Optional<String> toJson(Event event) {
+    public SerializationResult toJson(Event event) {
         return allEventSerializers.stream()
             .map(eventSerializer -> eventSerializer.toJson(event))
-            .flatMap(Optional::stream)
-            .findFirst();
+            .filter(SerializationResult::isSuccess)
+            .findFirst()
+            .orElse(new SerializationResult.Failure("Could not serialize event: " + event));
     }
 
     @Override
@@ -53,11 +53,12 @@ public class EventSerializersAggregator implements EventSerializer {
     }
 
     @Override
-    public Optional<String> toJson(Collection<Event> events) {
+    public SerializationResult toJson(Collection<Event> events) {
         return allEventSerializers.stream()
             .map(eventSerializer -> eventSerializer.toJson(events))
-            .flatMap(Optional::stream)
-            .findFirst();
+            .filter(SerializationResult::isSuccess)
+            .findFirst()
+            .orElse(new SerializationResult.Failure("Could not serialize events: " + events));
     }
 
     @Override

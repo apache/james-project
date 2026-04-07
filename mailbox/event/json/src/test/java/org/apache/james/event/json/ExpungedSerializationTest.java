@@ -166,13 +166,13 @@ class ExpungedSerializationTest {
 
     @Test
     void expungedShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_EXPUNGED_EVENT).get())
+        assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_EXPUNGED_EVENT).json())
             .isEqualTo(DEFAULT_EXPUNGED_EVENT_JSON);
     }
 
     @Test
     void expungedWithDistinctMessageIdAndThreadIdShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT).get())
+        assertThatJson(EVENT_SERIALIZER.toJson(EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT).json())
             .isEqualTo(EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT_JSON);
     }
 
@@ -242,7 +242,7 @@ class ExpungedSerializationTest {
 
         @Test
         void expungedShouldBeWellSerializedWhenMapKeyIsEmpty() {
-            assertThatJson(EVENT_SERIALIZER.toJson(emptyExpungedEvent).get())
+            assertThatJson(EVENT_SERIALIZER.toJson(emptyExpungedEvent).json())
                 .isEqualTo(emptyExpungedEventJson);
         }
 

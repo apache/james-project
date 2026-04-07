@@ -234,8 +234,8 @@ class MessageContentDeletionSerializationTest {
 
     @Test
     void messageContentDeletionEventShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(EVENT).get()).isEqualTo(JSON);
-        assertThatJson(EVENT_SERIALIZER.toJson(EVENT_WITHOUT_HEADER_CONTENT).get()).isEqualTo(JSON_WITHOUT_HEADER_CONTENT);
+        assertThatJson(EVENT_SERIALIZER.toJson(EVENT).json()).isEqualTo(JSON);
+        assertThatJson(EVENT_SERIALIZER.toJson(EVENT_WITHOUT_HEADER_CONTENT).json()).isEqualTo(JSON_WITHOUT_HEADER_CONTENT);
     }
 
     @Test
@@ -246,7 +246,7 @@ class MessageContentDeletionSerializationTest {
 
     @Test
     void messageContentDeletionEventWithMailboxPathShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(EVENT_WITH_MAILBOX_PATH).get()).isEqualTo(JSON_WITH_MAILBOX_PATH);
+        assertThatJson(EVENT_SERIALIZER.toJson(EVENT_WITH_MAILBOX_PATH).json()).isEqualTo(JSON_WITH_MAILBOX_PATH);
     }
 
     @Test

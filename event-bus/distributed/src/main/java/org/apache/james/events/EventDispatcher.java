@@ -259,11 +259,11 @@ public class EventDispatcher {
 
     private byte[] serializeEvent(Event event) {
         return eventSerializer.toJsonBytes(event)
-            .orElseThrow(() -> new RuntimeException("Could not serialize event: " + event));
+            .jsonBytes();
     }
 
     private byte[] serializeEvents(Collection<Event> event) {
         return eventSerializer.toJsonBytes(event)
-            .orElseThrow(() -> new RuntimeException("Could not serialize events"));
+            .jsonBytes();
     }
 }

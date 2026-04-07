@@ -105,7 +105,7 @@ public class CassandraEventDeadLettersDAO {
 
     Mono<Void> store(Group group, Event failedEvent, EventDeadLetters.InsertionId insertionId) {
         String serializedEvent = eventSerializer.toJson(failedEvent)
-            .orElseThrow(() -> new RuntimeException("Could not serialize event: " + failedEvent));
+            .json();
 
         return executor.executeVoid(insertStatement.bind()
                 .setString(GROUP, group.asString())
