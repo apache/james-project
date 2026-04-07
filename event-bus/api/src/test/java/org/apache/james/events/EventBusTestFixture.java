@@ -186,18 +186,18 @@ public interface EventBusTestFixture {
         }
 
         @Override
-        public Optional<Event> asEvent(String serialized) {
+        public DeserializationResult asEvent(String serialized) {
             if (!serialized.contains("&") || serialized.contains(ARRAY_SEPARATOR)) {
-                return Optional.empty();
+                return new DeserializationResult.Failure("Invalid format: " + serialized);
             }
             List<String> parts = Splitter.on("&").splitToList(serialized);
             if (!parts.get(0).equals(TestEvent.class.getCanonicalName())) {
-                return Optional.empty();
+                return new DeserializationResult.Failure("Unknown event type: " + parts.get(0));
             }
 
             Event.EventId eventId = Event.EventId.of(UUID.fromString(parts.get(1)));
             Username username = Username.of(Joiner.on("&").join(parts.stream().skip(2).collect(ImmutableList.toImmutableList())));
-            return Optional.of(new TestEvent(eventId, username));
+            return new DeserializationResult.Success(new TestEvent(eventId, username));
         }
 
         @Override
@@ -209,12 +209,14 @@ public interface EventBusTestFixture {
         }
 
         @Override
-        public Optional<List<Event>> asEvents(String serialized) {
-            return Optional.of(Splitter.on(ARRAY_SEPARATOR)
-                .splitToStream(serialized)
-                .map(this::asEvent)
-                .map(Optional::get)
-                .collect(ImmutableList.toImmutableList()));
+        public DeserializationResult asEvents(String serialized) {
+            return DeserializationResult.ofList(
+                Optional.of(Splitter.on(ARRAY_SEPARATOR)
+                    .splitToStream(serialized)
+                    .map(this::asEvent)
+                    .map(DeserializationResult::event)
+                    .collect(ImmutableList.toImmutableList())),
+                "Could not deserialize events");
         }
     }
 

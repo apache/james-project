@@ -143,6 +143,6 @@ public class CassandraEventDeadLettersDAO {
 
     private Event deserializeEvent(String serializedEvent) {
         return eventSerializer.asEvent(serializedEvent)
-            .orElseThrow(() -> new RuntimeException("Could not deserialize event: " + serializedEvent));
+            .event();
     }
 }

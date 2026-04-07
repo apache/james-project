@@ -26,7 +26,6 @@ import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateExclusive;
 import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -222,9 +221,11 @@ class KeyRegistrationHandler {
             return deserializeEvents(bodyAsBytes);
         }
 
-        return eventSerializer.fromBytes(bodyAsBytes)
-            .map(List::of)
-            .orElse(deserializeEvents(bodyAsBytes));
+        DeserializationResult result = eventSerializer.fromBytes(bodyAsBytes);
+        if (result.isSuccess()) {
+            return List.of(result.event());
+        }
+        return deserializeEvents(bodyAsBytes);
     }
 
     private StructuredLogger structuredLogger(List<Event> events, RegistrationKey key) {
@@ -243,6 +244,6 @@ class KeyRegistrationHandler {
 
     private List<Event> deserializeEvents(byte[] bodyAsBytes) {
         return eventSerializer.asEventsFromBytes(bodyAsBytes)
-            .orElseThrow(() -> new RuntimeException("Could not deserialize events: " + new String(bodyAsBytes, StandardCharsets.UTF_8)));
+            .events();
     }
 }

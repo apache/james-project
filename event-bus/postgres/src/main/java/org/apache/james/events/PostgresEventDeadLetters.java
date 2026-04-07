@@ -92,7 +92,7 @@ public class PostgresEventDeadLetters implements EventDeadLetters {
     private Event deserializeEvent(Record record) {
         String serializedEvent = record.get(EVENT);
         return eventSerializer.asEvent(serializedEvent)
-            .orElseThrow(() -> new RuntimeException("Could not deserialize event: " + serializedEvent));
+            .event();
     }
 
     @Override

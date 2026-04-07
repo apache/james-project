@@ -27,7 +27,6 @@ import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateExclusive;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -178,8 +177,7 @@ class GroupRegistration implements Registration {
     }
 
     private Mono<Event> deserializeEvent(byte[] eventAsBytes) {
-        return Mono.fromCallable(() -> eventSerializer.fromBytes(eventAsBytes)
-                .orElseThrow(() -> new RuntimeException("Could not deserialize event: " + new String(eventAsBytes, StandardCharsets.UTF_8))))
+        return Mono.fromCallable(() -> eventSerializer.fromBytes(eventAsBytes).event())
             .subscribeOn(Schedulers.parallel());
     }
 
