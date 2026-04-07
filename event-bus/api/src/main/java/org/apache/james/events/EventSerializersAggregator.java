@@ -20,7 +20,6 @@
 package org.apache.james.events;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -45,11 +44,12 @@ public class EventSerializersAggregator implements EventSerializer {
     }
 
     @Override
-    public Optional<Event> asEvent(String serialized) {
+    public DeserializationResult asEvent(String serialized) {
         return allEventSerializers.stream()
             .map(eventSerializer -> eventSerializer.asEvent(serialized))
-            .flatMap(Optional::stream)
-            .findFirst();
+            .filter(DeserializationResult::isSuccess)
+            .findFirst()
+            .orElse(new DeserializationResult.Failure("Could not deserialize event: " + serialized));
     }
 
     @Override
@@ -61,10 +61,11 @@ public class EventSerializersAggregator implements EventSerializer {
     }
 
     @Override
-    public Optional<List<Event>> asEvents(String serialized) {
+    public DeserializationResult asEvents(String serialized) {
         return allEventSerializers.stream()
             .map(eventSerializer -> eventSerializer.asEvents(serialized))
-            .flatMap(Optional::stream)
-            .findFirst();
+            .filter(DeserializationResult::isSuccess)
+            .findFirst()
+            .orElse(new DeserializationResult.Failure("Could not deserialize events: " + serialized));
     }
 }

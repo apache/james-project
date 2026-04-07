@@ -21,7 +21,6 @@ package org.apache.james.events;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 public interface EventSerializer {
@@ -37,15 +36,15 @@ public interface EventSerializer {
         return toJson(event).map(json -> json.getBytes(StandardCharsets.UTF_8));
     }
 
-    Optional<Event> asEvent(String serialized);
+    DeserializationResult asEvent(String serialized);
 
-    Optional<List<Event>> asEvents(String serialized);
+    DeserializationResult asEvents(String serialized);
 
-    default Optional<Event> fromBytes(byte[] serialized) {
+    default DeserializationResult fromBytes(byte[] serialized) {
         return asEvent(new String(serialized, StandardCharsets.UTF_8));
     }
 
-    default Optional<List<Event>> asEventsFromBytes(byte[] serialized) {
+    default DeserializationResult asEventsFromBytes(byte[] serialized) {
         return asEvents(new String(serialized, StandardCharsets.UTF_8));
     }
 }

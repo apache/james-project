@@ -23,11 +23,10 @@ import java.util
 import java.util.Optional
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.google.common.collect.ImmutableList
 import jakarta.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
-import org.apache.james.events.{Event, EventSerializer}
+import org.apache.james.events.{DeserializationResult, Event, EventSerializer}
 import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{State, TypeName}
 import org.apache.james.jmap.core.UuidState
@@ -87,11 +86,15 @@ case class JmapEventSerializer @Inject()(stateChangeEventDTOFactory: StateChange
 
   override def toJson(event: Event): Optional[String] = genericSerializer.maybeSerialize(event)
 
-  override def asEvent(serialized: String): Optional[Event] = genericSerializer.maybeDeserialize(serialized)
+  override def asEvent(serialized: String): DeserializationResult = DeserializationResult.of(
+    genericSerializer.maybeDeserialize(serialized),
+    "Could not deserialize event " + serialized)
 
   override def toJsonBytes(event: Event): Optional[Array[Byte]] = genericSerializer.maybeSerializeToBytes(event)
 
-  override def fromBytes(serialized: Array[Byte]): Optional[Event] = genericSerializer.maybeDeserializeFromBytes(serialized)
+  override def fromBytes(serialized: Array[Byte]): DeserializationResult = DeserializationResult.of(
+    genericSerializer.maybeDeserializeFromBytes(serialized),
+    "Could not deserialize event " + serialized.map(_.toChar).mkString)
 
   override def toJson(event: util.Collection[Event]): Optional[String] = {
     if (event.size() != 1) {
@@ -100,6 +103,5 @@ case class JmapEventSerializer @Inject()(stateChangeEventDTOFactory: StateChange
     toJson(event.iterator().next())
   }
 
-  override def asEvents(serialized: String): Optional[util.List[Event]] =
-    asEvent(serialized).map(event => ImmutableList.of(event))
+  override def asEvents(serialized: String): DeserializationResult = asEvent(serialized)
 }

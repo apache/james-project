@@ -30,7 +30,7 @@ import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaSizeL
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
 import org.apache.james.event.json.DTOs._
 import org.apache.james.events.Event.EventId
-import org.apache.james.events.{EventSerializer, Event => JavaEvent}
+import org.apache.james.events.{DeserializationResult, EventSerializer, Event => JavaEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
 import org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED
 import org.apache.james.mailbox.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, MailboxSubscribedEvent => JavaMailboxSubscribedEvent, MailboxUnsubscribedEvent => JavaMailboxUnsubscribedEvent, MessageContentDeletionEvent => JavaMessageContentDeletionEvent, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
@@ -466,21 +466,19 @@ class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, mess
 
   override def toJson(event: util.Collection[JavaEvent]): Optional[String] = Optional.of(jsonSerialize.toJson(event))
 
-  override def asEvents(serialized: String): Optional[util.List[JavaEvent]] = {
+  override def asEvents(serialized: String): DeserializationResult = {
     val result = jsonSerialize.fromJsonAsEvents(serialized)
     if (result.isError) {
-      Optional.empty()
-    } else {
-      Optional.of(result.get.asJava)
+      List(new DeserializationResult.Failure(s"Could not deserialize events: $serialized")).asJava
     }
+    new DeserializationResult.SuccessList(result.get.asJava)
   }
 
-  override def asEvent(serialized: String): Optional[JavaEvent] = {
+  override def asEvent(serialized: String): DeserializationResult = {
     val result = fromJson(serialized)
     if (result.isError) {
-      Optional.empty()
-    } else {
-      Optional.of(result.get)
+      new DeserializationResult.Failure(s"Could not deserialize event: $serialized")
     }
+    new DeserializationResult.Success(result.get)
   }
 }
