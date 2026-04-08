@@ -74,20 +74,24 @@ public interface BlobStoreDAO {
 
     }
 
-    record BlobMetadata(Map<BlobMetadataName, BlobMetadataValue> metadata) {
+    record BlobMetadata(Map<BlobMetadataName, BlobMetadataValue> underlyingMap) {
         public static BlobMetadata empty() {
             return new BlobMetadata(ImmutableMap.of());
         }
 
+        public Optional<BlobMetadataValue> get(BlobMetadataName name) {
+            return Optional.ofNullable(underlyingMap.get(name));
+        }
+
         public BlobMetadata withMetadata(BlobMetadataName name, BlobMetadataValue value) {
             return new BlobMetadata(ImmutableMap.<BlobMetadataName, BlobMetadataValue>builder()
-                .putAll(metadata)
+                .putAll(underlyingMap)
                 .put(name, value)
                 .build());
         }
 
         public Optional<ContentTransferEncoding> contentTransferEncoding() {
-            return Optional.ofNullable(metadata.get(ContentTransferEncoding.NAME)).map(ContentTransferEncoding::fromValue);
+            return get(ContentTransferEncoding.NAME).map(ContentTransferEncoding::fromValue);
         }
 
         public BlobMetadata withContentTransferEncoding(ContentTransferEncoding contentTransferEncoding) {
@@ -159,6 +163,8 @@ public interface BlobStoreDAO {
             return new InputStreamBlob(payload, metadata);
         }
 
+        private static final int FILE_THRESHOLD = 100 * 1024;
+
         @Override
         public InputStreamBlob asInputStream() {
             return this;
@@ -171,7 +177,7 @@ public interface BlobStoreDAO {
 
         @Override
         public ByteSourceBlob asByteSource() throws IOException {
-            try (FileBackedOutputStream fileBackedOutputStream = new FileBackedOutputStream(100 * 1024)) {
+            try (FileBackedOutputStream fileBackedOutputStream = new FileBackedOutputStream(FILE_THRESHOLD)) {
                 payload.transferTo(fileBackedOutputStream);
                 return new ByteSourceBlob(fileBackedOutputStream.asByteSource(), metadata);
             }
@@ -203,12 +209,41 @@ public interface BlobStoreDAO {
         }
     }
 
+    /**
+     * Reads a InputStreamBlob based on its BucketName and its BlobId.
+     *
+     * @throws ObjectNotFoundException when the blobId or the bucket is not found
+     * @throws ObjectStoreIOException when an unexpected IO error occurs
+     */
     InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
 
+    /**
+     * Reads reactively a InputStreamBlob based on its BucketName and its BlobId.
+     *
+     * @return a Publisher containing the content and metadata of the blob or
+     *  an ObjectNotFoundException in its error channel when the blobId or the bucket is not found
+     *  or an ObjectStoreIOException when an unexpected IO error occurs
+     */
     Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId);
 
+    /**
+     * Reads reactively a BytesBlob based on its BucketName and its BlobId.
+     *
+     * @return a Publisher containing the content and metadata of the blob or
+     *  an ObjectNotFoundException in its error channel when the blobId or the bucket is not found
+     *  or an ObjectStoreIOException when an unexpected IO error occurs
+     */
     Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId);
 
+    /**
+     * Save the blob with the provided blob id, and overwrite the previous blob with the same id if it already exists.
+     * The bucket is created if it does not already exist.
+     * This operation should be atomic and isolated.
+     * Two blobs having the same blobId must have the same content.
+     *
+     * @return an empty Publisher when the save succeeds,
+     *  otherwise an ObjectStoreIOException in its error channel
+     */
     Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob);
 
     /**

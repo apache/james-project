@@ -40,37 +40,37 @@ public interface MetadataAwareBlobStoreDAOContract {
 
         Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytesBlob)).block();
 
-        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().metadata())
-            .containsAllEntriesOf(bytesBlob.metadata().metadata());
+        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().underlyingMap())
+            .containsAllEntriesOf(bytesBlob.metadata().underlyingMap());
     }
 
     @Test
     default void readStreamShouldPreserveMetadata() {
         BlobStoreDAO testee = testee();
 
-        BlobStoreDAO.InputStreamBlob bytesBlob = BlobStoreDAO.BytesBlob.of("payload".getBytes(),
+        BlobStoreDAO.InputStreamBlob inputStreamBlob = BlobStoreDAO.BytesBlob.of("payload".getBytes(),
             BlobStoreDAO.BlobMetadata.empty()
                 .withMetadata(new BlobStoreDAO.BlobMetadataName("name"), new BlobStoreDAO.BlobMetadataValue("value")))
             .asInputStream();
 
-        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytesBlob)).block();
+        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, inputStreamBlob)).block();
 
-        assertThat(Mono.from(testee.readReactive(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().metadata())
-            .containsAllEntriesOf(bytesBlob.metadata().metadata());
+        assertThat(Mono.from(testee.readReactive(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().underlyingMap())
+            .containsAllEntriesOf(inputStreamBlob.metadata().underlyingMap());
     }
 
     @Test
     default void readByteSourceShouldPreserveMetadata() {
         BlobStoreDAO testee = testee();
 
-        BlobStoreDAO.ByteSourceBlob bytesBlob = BlobStoreDAO.BytesBlob.of("payload".getBytes(),
+        BlobStoreDAO.ByteSourceBlob byteSourceBlob = BlobStoreDAO.BytesBlob.of("payload".getBytes(),
             BlobStoreDAO.BlobMetadata.empty()
                 .withMetadata(new BlobStoreDAO.BlobMetadataName("name"), new BlobStoreDAO.BlobMetadataValue("value")))
             .asByteSource();
 
-        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytesBlob)).block();
+        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, byteSourceBlob)).block();
 
-        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().metadata())
-            .containsAllEntriesOf(bytesBlob.metadata().metadata());
+        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().underlyingMap())
+            .containsAllEntriesOf(byteSourceBlob.metadata().underlyingMap());
     }
 }
