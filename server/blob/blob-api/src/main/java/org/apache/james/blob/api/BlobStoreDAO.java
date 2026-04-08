@@ -23,8 +23,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.reactivestreams.Publisher;
@@ -131,6 +133,20 @@ public interface BlobStoreDAO {
         @Override
         public ByteSourceBlob asByteSource() {
             return new ByteSourceBlob(ByteSource.wrap(payload), metadata);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof BytesBlob(byte[] otherPayload, BlobMetadata otherMetadata)) {
+                return Arrays.equals(payload, otherPayload)
+                    && metadata.equals(otherMetadata);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(Arrays.hashCode(payload), metadata);
         }
     }
 
