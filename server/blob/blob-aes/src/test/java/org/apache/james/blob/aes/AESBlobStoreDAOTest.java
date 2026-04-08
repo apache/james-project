@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
+import org.apache.james.blob.api.MetadataAwareBlobStoreDAOContract;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -33,7 +34,7 @@ import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
 
-class AESBlobStoreDAOTest implements BlobStoreDAOContract {
+class AESBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract {
     private static final String SAMPLE_SALT = "c603a7327ee3dcbc031d8d34b1096c605feca5e1";
     private static final CryptoConfig CRYPTO_CONFIG = CryptoConfig.builder()
         .salt(SAMPLE_SALT)
