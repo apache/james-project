@@ -104,10 +104,8 @@
                     <argLine>-Djava.library.path=
                         -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
                         -Xms512m -Xmx2048m</argLine>
-                    <forkedProcessTimeoutInSeconds>3600</forkedProcessTimeoutInSeconds>
+                    <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
                     <reuseForks>true</reuseForks>
-                    <groups combine.self="override">BasicFeature</groups>
-                    <excludedGroups>unstable</excludedGroups>
                     <properties>
                         <includeTags>junit5</includeTags>
                     </properties>
