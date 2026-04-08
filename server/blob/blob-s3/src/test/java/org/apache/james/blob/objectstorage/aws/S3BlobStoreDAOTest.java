@@ -156,9 +156,9 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         TestBlobId blobId = new TestBlobId("id");
         Mono.from(store.save(fallbackBucket, blobId, ELEVEN_KILOBYTES)).block();
 
-        byte[] bytes = Mono.from(store.readBytes(BucketName.DEFAULT, blobId)).block().payload();
+        BlobStoreDAO.BytesBlob bytes = Mono.from(store.readBytes(BucketName.DEFAULT, blobId)).block();
 
-        assertThat(bytes).isEqualTo(ELEVEN_KILOBYTES.asBytes());
+        assertThat(bytes).isEqualTo(ELEVEN_KILOBYTES);
     }
 
     @Test
