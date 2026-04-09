@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -47,6 +48,7 @@ public interface BlobStoreDAO {
         public BlobMetadataName {
             Preconditions.checkArgument(CHAR_MATCHER.matchesAllOf(name), "Invalid char in metadata name. Must be a-z,A-Z,0-9 or - got " + name);
             Preconditions.checkArgument(name.length() < 128, "Metadata name is too long. Size exceed 128 chars");
+            name = name.toLowerCase(Locale.US);
         }
     }
 
