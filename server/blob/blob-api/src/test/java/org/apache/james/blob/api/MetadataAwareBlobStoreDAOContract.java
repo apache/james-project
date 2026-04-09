@@ -73,4 +73,65 @@ public interface MetadataAwareBlobStoreDAOContract {
         assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().underlyingMap())
             .containsAllEntriesOf(byteSourceBlob.metadata().underlyingMap());
     }
+
+    @Test
+    default void storeMultipleMetadataEntriesShouldSucceed() {
+        BlobStoreDAO testee = testee();
+
+        BlobStoreDAO.ByteSourceBlob byteSourceBlob = BlobStoreDAO.BytesBlob.of("payload".getBytes(),
+                BlobStoreDAO.BlobMetadata.empty()
+                    .withMetadata(new BlobStoreDAO.BlobMetadataName("name1"), new BlobStoreDAO.BlobMetadataValue("value1"))
+                    .withMetadata(new BlobStoreDAO.BlobMetadataName("name2"), new BlobStoreDAO.BlobMetadataValue("value2")))
+            .asByteSource();
+
+        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, byteSourceBlob)).block();
+
+        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().underlyingMap())
+            .containsAllEntriesOf(byteSourceBlob.metadata().underlyingMap());
+    }
+
+    @Test
+    default void retrieveContentTransferEncodingShouldSucceed() {
+        BlobStoreDAO testee = testee();
+
+        BlobStoreDAO.BytesBlob bytesBlob = BlobStoreDAO.BytesBlob.of("payload".getBytes(),
+            BlobStoreDAO.BlobMetadata.empty()
+                .withContentTransferEncoding(BlobStoreDAO.ContentTransferEncoding.ZSTD));
+
+        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytesBlob)).block();
+
+        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().contentTransferEncoding())
+            .contains(BlobStoreDAO.ContentTransferEncoding.ZSTD);
+    }
+
+    @Test
+    default void saveShouldPreserveEmptyMetadata() {
+        BlobStoreDAO testee = testee();
+
+        BlobStoreDAO.BytesBlob bytesBlob = BlobStoreDAO.BytesBlob.of("payload".getBytes(), BlobStoreDAO.BlobMetadata.empty());
+
+        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytesBlob)).block();
+
+        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata())
+            .isEqualTo(BlobStoreDAO.BlobMetadata.empty());
+    }
+
+    @Test
+    default void saveShouldOverwriteExistingBlobMetadata() {
+        BlobStoreDAO testee = testee();
+
+        BlobStoreDAO.BytesBlob initialBlob = BlobStoreDAO.BytesBlob.of("payload".getBytes(),
+            BlobStoreDAO.BlobMetadata.empty()
+                .withMetadata(new BlobStoreDAO.BlobMetadataName("first"), new BlobStoreDAO.BlobMetadataValue("value1")));
+        BlobStoreDAO.BytesBlob updatedBlob = BlobStoreDAO.BytesBlob.of("payload".getBytes(),
+            BlobStoreDAO.BlobMetadata.empty()
+                .withMetadata(new BlobStoreDAO.BlobMetadataName("second"), new BlobStoreDAO.BlobMetadataValue("value2")));
+
+        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, initialBlob)).block();
+        Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, updatedBlob)).block();
+
+        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().underlyingMap())
+            .containsAllEntriesOf(updatedBlob.metadata().underlyingMap())
+            .doesNotContainKey(new BlobStoreDAO.BlobMetadataName("first"));
+    }
 }
