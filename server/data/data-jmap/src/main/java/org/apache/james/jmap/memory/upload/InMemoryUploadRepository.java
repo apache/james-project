@@ -79,7 +79,7 @@ public class InMemoryUploadRepository implements UploadRepository {
 
         return Mono.fromCallable(() -> new CountingInputStream(data))
             .flatMap(countedData -> Mono.from(blobStoreDAO.save(bucketName, blobId, BlobStoreDAO.InputStreamBlob.of(countedData)))
-                    .thenReturn(countedData.getCount()))
+                .then(Mono.fromCallable(countedData::getCount)))
                 .map(count -> {
                     Instant uploadDate = clock.instant();
                     uploadStore.put(uploadId, new ImmutablePair<>(user, UploadMetaData.from(uploadId, contentType, count, blobId, uploadDate)));
