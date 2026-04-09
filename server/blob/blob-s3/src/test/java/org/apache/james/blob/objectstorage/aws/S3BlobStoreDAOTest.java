@@ -34,6 +34,7 @@ import java.util.stream.IntStream;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.MetadataAwareBlobStoreDAOContract;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
@@ -49,7 +50,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
 @ExtendWith(DockerAwsS3Extension.class)
-public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
+public class S3BlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract {
     private static final BucketName fallbackBucket = BucketName.of("fallback");
 
     private static S3BlobStoreDAO testee;

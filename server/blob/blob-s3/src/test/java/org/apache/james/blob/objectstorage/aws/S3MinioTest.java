@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
+import org.apache.james.blob.api.MetadataAwareBlobStoreDAOContract;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -47,7 +48,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
-public class S3MinioTest implements BlobStoreDAOContract {
+public class S3MinioTest implements BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract {
 
     @RegisterExtension
     static S3MinioExtension minoExtension = new S3MinioExtension();
