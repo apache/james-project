@@ -27,6 +27,7 @@ import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.OpenSearchCleanupProbe;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -70,7 +71,11 @@ public class DistributedVacationRelayIntegrationTest implements VacationRelayInt
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule(), new DelegationProbeModule(), new IdentityProbeModule())
             .overrideWith((binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService)))
-            .overrideWith(binder -> Multibinder.newSetBinder(binder, GuiceProbe.class).addBinding().to(CleanupTasksPerformerProbe.class)))
+            .overrideWith(binder -> {
+                Multibinder<GuiceProbe> probes = Multibinder.newSetBinder(binder, GuiceProbe.class);
+                probes.addBinding().to(CleanupTasksPerformerProbe.class);
+                probes.addBinding().to(OpenSearchCleanupProbe.class);
+            }))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
 
         .build();

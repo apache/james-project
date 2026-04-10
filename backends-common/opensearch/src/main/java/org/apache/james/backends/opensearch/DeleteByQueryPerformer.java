@@ -31,7 +31,7 @@ public class DeleteByQueryPerformer {
     private final ReactorOpenSearchClient client;
     private final WriteAliasName aliasName;
 
-    DeleteByQueryPerformer(ReactorOpenSearchClient client, WriteAliasName aliasName) {
+    public DeleteByQueryPerformer(ReactorOpenSearchClient client, WriteAliasName aliasName) {
         this.client = client;
         this.aliasName = aliasName;
     }

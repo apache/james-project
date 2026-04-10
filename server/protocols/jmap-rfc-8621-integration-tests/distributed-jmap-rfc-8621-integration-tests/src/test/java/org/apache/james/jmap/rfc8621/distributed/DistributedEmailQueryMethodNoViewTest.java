@@ -27,6 +27,7 @@ import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.OpenSearchCleanupProbe;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.rfc8621.contract.EmailQueryMethodContract;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -67,7 +68,11 @@ public class DistributedEmailQueryMethodNoViewTest implements EmailQueryMethodCo
                     .randomPort()
                     .disableEmailQueryView()
                     .build()))
-            .overrideWith(binder -> Multibinder.newSetBinder(binder, GuiceProbe.class).addBinding().to(CleanupTasksPerformerProbe.class)))
+            .overrideWith(binder -> {
+                Multibinder<GuiceProbe> probes = Multibinder.newSetBinder(binder, GuiceProbe.class);
+                probes.addBinding().to(CleanupTasksPerformerProbe.class);
+                probes.addBinding().to(OpenSearchCleanupProbe.class);
+            }))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
 
         .build();
@@ -99,5 +104,6 @@ public class DistributedEmailQueryMethodNoViewTest implements EmailQueryMethodCo
     @AfterEach
     void cleanUp(GuiceJamesServer server) {
         server.getProbe(CleanupTasksPerformerProbe.class).clean();
+        server.getProbe(OpenSearchCleanupProbe.class).cleanUp();
     }
 }

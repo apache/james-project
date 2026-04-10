@@ -29,6 +29,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MailQueueChoice;
+import org.apache.james.OpenSearchCleanupProbe;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.jmap.rfc8621.contract.EmailSubmissionSetMethodFutureReleaseContract;
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
@@ -72,7 +73,11 @@ public class DistributedEmailSubmissionSetMethodFutureReleaseTest implements Ema
         .extension(new ClockExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule(), new DelegationProbeModule())
-            .overrideWith(binder -> Multibinder.newSetBinder(binder, GuiceProbe.class).addBinding().to(CleanupTasksPerformerProbe.class)))
+            .overrideWith(binder -> {
+                Multibinder<GuiceProbe> probes = Multibinder.newSetBinder(binder, GuiceProbe.class);
+                probes.addBinding().to(CleanupTasksPerformerProbe.class);
+                probes.addBinding().to(OpenSearchCleanupProbe.class);
+            }))
         .overrideServerModule(binder -> binder.bind(Boolean.class).annotatedWith(Names.named("supportsDelaySends")).toInstance(true))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
 
@@ -106,5 +111,6 @@ public class DistributedEmailSubmissionSetMethodFutureReleaseTest implements Ema
     @AfterEach
     void cleanUp(GuiceJamesServer server) {
         server.getProbe(CleanupTasksPerformerProbe.class).clean();
+        server.getProbe(OpenSearchCleanupProbe.class).cleanUp();
     }
 }
