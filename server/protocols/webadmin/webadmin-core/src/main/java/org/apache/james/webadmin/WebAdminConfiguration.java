@@ -58,6 +58,8 @@ public class WebAdminConfiguration {
         private Optional<String> urlCORSOrigin = Optional.empty();
         private Optional<String> host = Optional.empty();
         private Optional<String> password = Optional.empty();
+        private Optional<String> readOnlyPassword = Optional.empty();
+        private Optional<String> noDeletePassword = Optional.empty();
         private ImmutableList.Builder<String> additionalRoutes = ImmutableList.builder();
         private Optional<String> jwtPublicKey = Optional.empty();
         private Optional<Integer> maxThreadCount = Optional.empty();
@@ -134,6 +136,26 @@ public class WebAdminConfiguration {
             return this;
         }
 
+        public Builder readOnlyPassword(String readOnlyPassword) {
+            this.readOnlyPassword = Optional.ofNullable(readOnlyPassword);
+            return this;
+        }
+
+        public Builder readOnlyPassword(Optional<String> readOnlyPassword) {
+            this.readOnlyPassword = readOnlyPassword;
+            return this;
+        }
+
+        public Builder noDeletePassword(String noDeletePassword) {
+            this.noDeletePassword = Optional.ofNullable(noDeletePassword);
+            return this;
+        }
+
+        public Builder noDeletePassword(Optional<String> noDeletePassword) {
+            this.noDeletePassword = noDeletePassword;
+            return this;
+        }
+
         public Builder additionalRoute(String additionalRoute) {
             this.additionalRoutes.add(additionalRoute);
             return this;
@@ -167,6 +189,8 @@ public class WebAdminConfiguration {
                 additionalRoutes.build(),
                 jwtPublicKey,
                 password,
+                readOnlyPassword,
+                noDeletePassword,
                 maxThreadCount,
                 minThreadCount);
         }
@@ -181,12 +205,16 @@ public class WebAdminConfiguration {
     private final List<String> additionalRoutes;
     private final Optional<String> jwtPublicKey;
     private final Optional<String> password;
+    private final Optional<String> readOnlyPassword;
+    private final Optional<String> noDeletePassword;
     private final Optional<Integer> maxThreadCount;
     private final Optional<Integer> minThreadCount;
 
     @VisibleForTesting
     WebAdminConfiguration(boolean enabled, Optional<PortSupplier> port, Optional<TlsConfiguration> tlsConfiguration,
-                          boolean enableCORS, String urlCORSOrigin, String host, List<String> additionalRoutes, Optional<String> jwtPublicKey, Optional<String> password, Optional<Integer> maxThreadCount, Optional<Integer> minThreadCount) {
+                          boolean enableCORS, String urlCORSOrigin, String host, List<String> additionalRoutes, 
+                          Optional<String> jwtPublicKey, Optional<String> password, Optional<String> readOnlyPassword, 
+                          Optional<String> noDeletePassword, Optional<Integer> maxThreadCount, Optional<Integer> minThreadCount) {
         this.enabled = enabled;
         this.port = port;
         this.tlsConfiguration = tlsConfiguration;
@@ -196,6 +224,8 @@ public class WebAdminConfiguration {
         this.additionalRoutes = additionalRoutes;
         this.jwtPublicKey = jwtPublicKey;
         this.password = password;
+        this.readOnlyPassword = readOnlyPassword;
+        this.noDeletePassword = noDeletePassword;
         this.maxThreadCount = maxThreadCount;
         this.minThreadCount = minThreadCount;
     }
@@ -248,6 +278,14 @@ public class WebAdminConfiguration {
         return password;
     }
 
+    public Optional<String> getReadOnlyPassword() {
+        return readOnlyPassword;
+    }
+
+    public Optional<String> getNoDeletePassword() {
+        return noDeletePassword;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof WebAdminConfiguration) {
@@ -261,6 +299,8 @@ public class WebAdminConfiguration {
                 && Objects.equals(this.urlCORSOrigin, that.urlCORSOrigin)
                 && Objects.equals(this.host, that.host)
                 && Objects.equals(this.password, that.password)
+                && Objects.equals(this.readOnlyPassword, that.readOnlyPassword)
+                && Objects.equals(this.noDeletePassword, that.noDeletePassword)
                 && Objects.equals(this.additionalRoutes, that.additionalRoutes)
                 && Objects.equals(this.minThreadCount, that.minThreadCount)
                 && Objects.equals(this.maxThreadCount, that.maxThreadCount);
@@ -270,6 +310,7 @@ public class WebAdminConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(enabled, port, tlsConfiguration, enableCORS, jwtPublicKey, urlCORSOrigin, host, additionalRoutes, minThreadCount, maxThreadCount, password);
+        return Objects.hash(enabled, port, tlsConfiguration, enableCORS, jwtPublicKey, urlCORSOrigin, host, 
+            password, readOnlyPassword, noDeletePassword, additionalRoutes, minThreadCount, maxThreadCount);
     }
 }

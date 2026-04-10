@@ -156,6 +156,8 @@ public class WebAdminServerModule extends AbstractModule {
                 .maxThreadCount(Optional.ofNullable(configurationFile.getInteger("maxThreadCount", null)))
                 .minThreadCount(Optional.ofNullable(configurationFile.getInteger("minThreadCount", null)))
                 .password(Optional.ofNullable(configurationFile.getString("password", null)))
+                .readOnlyPassword(Optional.ofNullable(configurationFile.getString("password.readonly", null)))
+                .noDeletePassword(Optional.ofNullable(configurationFile.getString("password.nodelete", null)))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");
