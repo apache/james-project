@@ -22,6 +22,8 @@ package org.apache.james.webadmin;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -188,6 +190,80 @@ class WebAdminConfigurationTest {
                 .build())
             .extracting(WebAdminConfiguration::getHost)
             .isEqualTo(host);
+    }
+
+    @Test
+    void builderShouldAcceptReadOnlyPassword() {
+        String password = "readonly123";
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .readOnlyPassword(password)
+                .build())
+            .extracting(WebAdminConfiguration::getReadOnlyPassword)
+            .isEqualTo(Optional.of(password));
+    }
+
+    @Test
+    void builderShouldAcceptReadOnlyPasswordAsOptional() {
+        Optional<String> password = Optional.of("readonly456");
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .readOnlyPassword(password)
+                .build())
+            .extracting(WebAdminConfiguration::getReadOnlyPassword)
+            .isEqualTo(password);
+    }
+
+    @Test
+    void builderShouldReturnEmptyReadOnlyPasswordByDefault() {
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .build())
+            .extracting(WebAdminConfiguration::getReadOnlyPassword)
+            .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    void builderShouldAcceptNoDeletePassword() {
+        String password = "nodelete123";
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .noDeletePassword(password)
+                .build())
+            .extracting(WebAdminConfiguration::getNoDeletePassword)
+            .isEqualTo(Optional.of(password));
+    }
+
+    @Test
+    void builderShouldAcceptNoDeletePasswordAsOptional() {
+        Optional<String> password = Optional.of("nodelete456");
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .noDeletePassword(password)
+                .build())
+            .extracting(WebAdminConfiguration::getNoDeletePassword)
+            .isEqualTo(password);
+    }
+
+    @Test
+    void builderShouldReturnEmptyNoDeletePasswordByDefault() {
+        assertThat(
+            WebAdminConfiguration.builder()
+                .enabled()
+                .port(PORT)
+                .build())
+            .extracting(WebAdminConfiguration::getNoDeletePassword)
+            .isEqualTo(Optional.empty());
     }
 
     @Test
