@@ -440,4 +440,77 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         assertThat(out.toString()).contains("Received: from mx.example.com");
         LifecycleUtil.dispose(wrapper);
     }
+
+    @Test
+    void writeToFastPathShouldReflectAddedHeaderWithoutExplicitSaveChanges() throws Exception {
+        mw.addHeader("X-James-Test", "added-value");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        mw.writeTo(out);
+
+        assertThat(out.toString()).contains("X-James-Test: added-value");
+    }
+
+    @Test
+    void writeToFastPathShouldReflectSetHeader() throws Exception {
+        // Subject is already set in setUp() as "foo"; replace it
+        mw.setHeader("Subject", "replaced-subject");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        mw.writeTo(out);
+
+        String result = out.toString();
+        assertThat(result).contains("Subject: replaced-subject");
+        assertThat(result).doesNotContain("Subject: foo");
+    }
+
+    @Test
+    void writeToFastPathShouldReflectRemovedHeader() throws Exception {
+        // Subject header is present in the original message
+        assertThat(mw.getHeader("Subject")).isNotNull();
+
+        mw.removeHeader("Subject");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        mw.writeTo(out);
+
+        assertThat(out.toString()).doesNotContain("Subject:");
+    }
+
+    @Test
+    void writeToFastPathShouldPreserveBodyWhenHeadersModified() throws Exception {
+        mw.addHeader("X-James-Test", "some-value");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        mw.writeTo(out);
+
+        // Body must be preserved exactly
+        assertThat(out.toString()).endsWith(body);
+    }
+
+    @Test
+    void writeToFastPathShouldPreserveUnmodifiedHeaders() throws Exception {
+        // Only add a new header; the original "Subject: foo" must survive
+        mw.addHeader("X-James-Extra", "extra");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        mw.writeTo(out);
+
+        String result = out.toString();
+        assertThat(result).contains("Subject: foo");
+        assertThat(result).contains("X-James-Extra: extra");
+    }
+
+    @Test
+    void writeToFastPathShouldReflectMultipleAddedHeadersForSameName() throws Exception {
+        mw.addHeader("Received", "from relay1.example.com");
+        mw.addHeader("Received", "from relay2.example.com");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        mw.writeTo(out);
+
+        String result = out.toString();
+        assertThat(result).contains("Received: from relay1.example.com");
+        assertThat(result).contains("Received: from relay2.example.com");
+    }
 }

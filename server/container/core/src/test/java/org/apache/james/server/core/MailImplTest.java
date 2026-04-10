@@ -247,6 +247,33 @@ public class MailImplTest extends ContractMailTest {
     }
 
     @Test
+    void duplicateShouldNotThrowOnMalformedMimeWithModifiedHeaders() throws Exception {
+        // Reproduces the spooler reprocessing loop: a mail with malformed MIME (unbalanced quoted
+        // string in a body-part Content-Type) that also has a pre-modified header (e.g. Received
+        // added by the SMTP handler). Before the fix, MailImpl.duplicate() would call saveChanges()
+        // on the original MimeMessageWrapper which triggered MIME body-part parsing and threw
+        // ParseException: Unbalanced quoted string.
+        MailImpl mail = MailImpl.builder()
+            .name(MailUtil.newId())
+            .sender("sender@localhost")
+            .addRecipients("recipient@localhost")
+            .mimeMessage(new MimeMessageWrapper(MimeMessageInputStreamSource.create("test",
+                ClassLoaderUtils.getSystemResourceAsSharedStream("invalid.eml"))))
+            .build();
+
+        // Simulate the Received header added by the SMTP handler (sets headersModified = true)
+        mail.getMessage().addHeader("Received", "from mx.example.com by james.example.com");
+
+        // Must not throw ParseException
+        MailImpl duplicate = MailImpl.duplicate(mail);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        duplicate.getMessage().writeTo(out);
+        assertThat(new String(out.toByteArray(), StandardCharsets.US_ASCII))
+            .contains("Received: from mx.example.com by james.example.com");
+    }
+
+    @Test
     void setAttributeShouldThrowOnNullAttributeName() {
         MailImpl mail = newMail();
 
