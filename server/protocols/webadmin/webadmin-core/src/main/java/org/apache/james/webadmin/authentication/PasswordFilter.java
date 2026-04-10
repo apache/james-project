@@ -29,6 +29,7 @@ import jakarta.inject.Inject;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 
 import spark.Request;
 import spark.Response;
@@ -39,12 +40,69 @@ public class PasswordFilter implements AuthenticationFilter {
     public static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
     public static final String AUTHORIZATION_HEADER_NAME = "Authorization";
 
-    private final List<String> passwords;
+    private static final String GET_METHOD = "GET";
+    private static final String HEAD_METHOD = "HEAD";
+    private static final String DELETE_METHOD = "DELETE";
 
+    private final Optional<List<String>> passwords;
+    private final Optional<List<String>> readOnlyPasswords;
+    private final Optional<List<String>> noDeletePasswords;
+
+    /**
+     * @param passwordString optional comma-separated list of full-access passwords
+     * @param readOnlyPasswordString optional comma-separated list of read-only passwords
+     * @param noDeletePasswordString optional comma-separated list of no-delete passwords
+     */
     @Inject
-    public PasswordFilter(String passwordString) {
-        this.passwords = Splitter.on(',')
-            .splitToList(passwordString);
+    public PasswordFilter(Optional<String> passwordString, Optional<String> readOnlyPasswordString, Optional<String> noDeletePasswordString) {
+        this.passwords = splitOptionalPasswords(passwordString);
+        this.readOnlyPasswords = splitOptionalPasswords(readOnlyPasswordString);
+        this.noDeletePasswords = splitOptionalPasswords(noDeletePasswordString);
+    }
+
+    private Optional<List<String>> splitOptionalPasswords(Optional<String> optionalPasswordString) {
+        return optionalPasswordString.map(this::splitPasswords);
+    }
+
+    private List<String> splitPasswords(String passwordString) {
+        if (passwordString == null || passwordString.isEmpty()) {
+            return ImmutableList.of();
+        }
+        return Splitter.on(',').splitToList(passwordString);
+    }
+
+    private enum AccessLevel {
+        FULL,
+        NO_DELETE,
+        READ_ONLY,
+        NONE
+    }
+
+    private AccessLevel getAccessLevel(String password) {
+        if (passwords.isPresent() && passwords.get().contains(password)) {
+            return AccessLevel.FULL;
+        }
+        if (noDeletePasswords.isPresent() && noDeletePasswords.get().contains(password)) {
+            return AccessLevel.NO_DELETE;
+        }
+        if (readOnlyPasswords.isPresent() && readOnlyPasswords.get().contains(password)) {
+            return AccessLevel.READ_ONLY;
+        }
+        return AccessLevel.NONE;
+    }
+
+    private boolean isAccessAllowed(AccessLevel accessLevel, String httpMethod) {
+        switch (accessLevel) {
+            case FULL:
+                return true;
+            case NO_DELETE:
+                return !httpMethod.equals(DELETE_METHOD);
+            case READ_ONLY:
+                return httpMethod.equals(GET_METHOD) || httpMethod.equals(HEAD_METHOD);
+            case NONE:
+            default:
+                return false;
+        }
     }
 
     @Override
@@ -53,22 +111,24 @@ public class PasswordFilter implements AuthenticationFilter {
             Optional<String> password = Optional.ofNullable(request.headers(PASSWORD));
             Optional<String> authorization = Optional.ofNullable(request.headers(AUTHORIZATION_HEADER_NAME));
 
-            if (!password.isPresent()) {
-                if (authorization.isPresent()) {
-                    Optional<String> bearer = authorization
-                        .filter(value -> value.startsWith(AUTHORIZATION_HEADER_PREFIX))
-                        .map(value -> value.substring(AUTHORIZATION_HEADER_PREFIX.length()));
+            Optional<String> providedPassword = password
+                .or(() -> authorization
+                    .filter(value -> value.startsWith(AUTHORIZATION_HEADER_PREFIX))
+                    .map(value -> value.substring(AUTHORIZATION_HEADER_PREFIX.length())));
 
-                    if (!bearer.filter(passwords::contains).isPresent()) {
-                        halt(HttpStatus.UNAUTHORIZED_401, "Wrong Bearer.");
-                    }
-                } else {
-                    halt(HttpStatus.UNAUTHORIZED_401, "No Password header.");
-                }
-            } else {
-                if (!passwords.contains(password.get())) {
-                    halt(HttpStatus.UNAUTHORIZED_401, "Wrong Password header.");
-                }
+            if (providedPassword.isEmpty()) {
+                halt(HttpStatus.UNAUTHORIZED_401, "No Password in header.");
+                return;
+            }
+
+            AccessLevel accessLevel = getAccessLevel(providedPassword.get());
+            if (accessLevel == AccessLevel.NONE) {
+                halt(HttpStatus.UNAUTHORIZED_401, "Wrong password.");
+                return;
+            }
+
+            if (!isAccessAllowed(accessLevel, request.requestMethod())) {
+                halt(HttpStatus.FORBIDDEN_403, "Insufficient permissions for this operation.");
             }
         }
     }
