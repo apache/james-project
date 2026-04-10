@@ -404,4 +404,40 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
             IOUtils.consume(wrapper.getMessageInputStream()));
         LifecycleUtil.dispose(wrapper);
     }
+
+    @Test
+    void writeToShouldNotThrowOnMalformedMimeWhenHeadersModified() throws Exception {
+        // A multipart message with an unbalanced quoted string in a body part's Content-Type
+        // name parameter — the kind of malformed MIME that causes ParseException in saveChanges().
+        String malformedMime = "MIME-Version: 1.0\r\n" +
+            "From: sender@example.com\r\n" +
+            "To: recipient@example.com\r\n" +
+            "Subject: test\r\n" +
+            "Content-Type: multipart/mixed; boundary=\"boundary\"\r\n" +
+            "\r\n" +
+            "--boundary\r\n" +
+            "Content-Type: image/png;\r\n" +
+            "    name=\"Outlook-Icon\r\n" +
+            "\r\n" +
+            "Desc.png\"\r\n" +
+            "Content-Transfer-Encoding: base64\r\n" +
+            "\r\n" +
+            "dGVzdA==\r\n" +
+            "--boundary--\r\n";
+
+        MimeMessageWrapper wrapper = new MimeMessageWrapper(
+            MimeMessageInputStreamSource.create("test", new SharedByteArrayInputStream(malformedMime.getBytes())));
+
+        // Simulate what James does: add a Received header before duplicating the mail.
+        // This sets headersModified = true, causing writeTo() to previously call saveChanges()
+        // which would fail with ParseException on the malformed Content-Type.
+        wrapper.addHeader("Received", "from mx.example.com");
+
+        // writeTo() must not throw even though the MIME body part has a malformed Content-Type
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        wrapper.writeTo(out);
+
+        assertThat(out.toString()).contains("Received: from mx.example.com");
+        LifecycleUtil.dispose(wrapper);
+    }
 }
