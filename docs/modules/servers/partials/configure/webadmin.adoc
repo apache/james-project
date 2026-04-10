@@ -8,8 +8,8 @@ The web administration supports for now the CRUD operations on:
 - Performing cassandra migrations [small]*_(only for Distributed James Server that uses cassandra as backend)_*
 - And much more, as described in the following sections.
 
-*WARNING*: This API allows authentication only via the use of JWT. If not
-configured with JWT, an administrator should ensure an attacker can not
+*WARNING*: This API supports authentication via JWT or static passwords. If not
+configured with either, an administrator should ensure an attacker cannot
 use this API.
 
 By the way, some endpoints are not filtered by authentication. Those endpoints are not related to data stored in James,
@@ -41,7 +41,7 @@ to get some examples and hints.
 
 | password
 | Uses a configured static value for authentication. It relies on the Password header.
-It supports several passwords, configured as a coma separated list.
+It supports several passwords, configured as a comma separated list.
 
 ....
 password=secretA,secretB,secretC
@@ -61,6 +61,54 @@ Password: secretD
 ....
 
 As well as request without the password header.
+
+| password.readonly
+| Configures passwords that only allow read operations (GET requests).
+These passwords can view data but cannot modify it.
+Multiple passwords can be configured as a comma-separated list.
+
+....
+password.readonly=aaa,bbb
+....
+
+Requests with these passwords will be allowed for:
+
+....
+GET /domains
+GET /users
+....
+
+But denied for:
+
+....
+POST /domains
+DELETE /users
+PUT /mailboxes
+....
+
+| password.nodelete
+| Configures passwords that allow all operations except DELETE.
+These passwords can read and create/modify data but cannot delete.
+Multiple passwords can be configured as a comma-separated list.
+
+....
+password.nodelete=ccc,ddd
+....
+
+Requests with these passwords will be allowed for:
+
+....
+GET /domains
+POST /users
+PUT /mailboxes
+....
++
+But denied for:
++
+....
+DELETE /domains
+DELETE /users
+....
 
 | jwt.enable
 | Allow JSON Web Token as an authentication mechanism (default: false)
@@ -97,6 +145,16 @@ xref:{pages-path}/customization/webadmin-routes.adoc[creating you own webadmin r
 | Minimum threads used by the underlying Jetty server. Optional.
 
 |===
+
+*Note on HTTP status codes:*
+
+- `401 Unauthorized` is returned when:
+  - No password header is provided
+  - The password is not recognized (not in any of the configured lists)
+
+- `403 Forbidden` is returned when:
+  - The password is valid but the HTTP method is not allowed for that password type
+  - For example, using a readonly password for a POST request
 
 == Generating a JWT key pair
 
