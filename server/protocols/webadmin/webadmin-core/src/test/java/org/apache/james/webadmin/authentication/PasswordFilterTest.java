@@ -24,6 +24,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +40,7 @@ class PasswordFilterTest {
 
     @BeforeEach
     void setUp() {
-        testee = new PasswordFilter("abc,def");
+        testee = new PasswordFilter(Optional.of("abc,def"), Optional.of("readonly1,readonly2"), Optional.of("nodelete1,nodelete2"));
     }
 
     @Test
@@ -105,7 +107,6 @@ class PasswordFilterTest {
     void handleShouldAcceptValidPassword() throws Exception {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
-        when(request.requestMethod()).thenReturn("GET");
         when(request.headers("Password")).thenReturn("abc");
 
         testee.handle(request, mock(Response.class));
@@ -115,9 +116,129 @@ class PasswordFilterTest {
     void handleShouldAcceptValidPasswordWhenBearer() throws Exception {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
-        when(request.requestMethod()).thenReturn("GET");
         when(request.headers("Authorization")).thenReturn("Bearer abc");
 
         testee.handle(request, mock(Response.class));
+    }
+
+    @Test
+    void handleShouldAcceptValidReadOnlyPasswordOnGet() throws Exception {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("GET");
+        when(request.headers("Password")).thenReturn("readonly1");
+
+        testee.handle(request, mock(Response.class));
+    }
+
+    @Test
+    void handleShouldRejectReadOnlyPasswordOnPost() {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("POST");
+        when(request.headers("Password")).thenReturn("readonly1");
+
+        assertThatThrownBy(() -> testee.handle(request, mock(Response.class)))
+            .isInstanceOf(HaltException.class)
+            .extracting(e -> HaltException.class.cast(e).statusCode())
+            .isEqualTo(403);
+    }
+
+    @Test
+    void handleShouldRejectReadOnlyPasswordOnDelete() {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("DELETE");
+        when(request.headers("Password")).thenReturn("readonly1");
+
+        assertThatThrownBy(() -> testee.handle(request, mock(Response.class)))
+            .isInstanceOf(HaltException.class)
+            .extracting(e -> HaltException.class.cast(e).statusCode())
+            .isEqualTo(403);
+    }
+
+    @Test
+    void handleShouldAcceptValidReadOnlyPasswordOnGetViaBearer() throws Exception {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("GET");
+        when(request.headers("Authorization")).thenReturn("Bearer readonly2");
+
+        testee.handle(request, mock(Response.class));
+    }
+
+    @Test
+    void handleShouldAcceptValidReadOnlyPasswordOnHeadViaBearer() throws Exception {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("HEAD");
+        when(request.headers("Authorization")).thenReturn("Bearer readonly2");
+
+        testee.handle(request, mock(Response.class));
+    }
+
+    @Test
+    void handleShouldAcceptValidNoDeletePasswordOnGet() throws Exception {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("GET");
+        when(request.headers("Password")).thenReturn("nodelete1");
+
+        testee.handle(request, mock(Response.class));
+    }
+
+    @Test
+    void handleShouldAcceptValidNoDeletePasswordOnPost() throws Exception {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("POST");
+        when(request.headers("Password")).thenReturn("nodelete1");
+
+        testee.handle(request, mock(Response.class));
+    }
+
+    @Test
+    void handleShouldRejectNoDeletePasswordOnDelete() {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("DELETE");
+        when(request.headers("Password")).thenReturn("nodelete1");
+
+        assertThatThrownBy(() -> testee.handle(request, mock(Response.class)))
+            .isInstanceOf(HaltException.class)
+            .extracting(e -> HaltException.class.cast(e).statusCode())
+            .isEqualTo(403);
+    }
+
+    @Test
+    void handleShouldAcceptValidNoDeletePasswordOnPut() throws Exception {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("PUT");
+        when(request.headers("Password")).thenReturn("nodelete2");
+
+        testee.handle(request, mock(Response.class));
+    }
+
+    @Test
+    void handleShouldAcceptFullPasswordOnDelete() throws Exception {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("DELETE");
+        when(request.headers("Password")).thenReturn("abc");
+
+        testee.handle(request, mock(Response.class));
+    }
+
+    @Test
+    void handleShouldAcceptFullPasswordOnPost() throws Exception {
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("POST");
+        when(request.headers("Password")).thenReturn("def");
+
+        testee.handle(request, mock(Response.class));
+    }
+
+    @Test
+    void handleShouldRejectWhenNoConfiguredPasswords() {
+        PasswordFilter filterWithNulls = new PasswordFilter(Optional.empty(), Optional.empty(), Optional.empty());
+        Request request = mock(Request.class);
+        when(request.requestMethod()).thenReturn("GET");
+        when(request.headers("Password")).thenReturn("anypassword");
+
+        assertThatThrownBy(() -> filterWithNulls.handle(request, mock(Response.class)))
+            .isInstanceOf(HaltException.class)
+            .extracting(e -> HaltException.class.cast(e).statusCode())
+            .isEqualTo(401);
     }
 }

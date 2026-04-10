@@ -193,12 +193,21 @@ public class WebAdminServerModule extends AbstractModule {
             if (configurationFile.getBoolean("jwt.enabled", DEFAULT_JWT_DISABLED)) {
                 return new JwtFilter(jwtTokenVerifier);
             }
-            return webAdminConfiguration.getPassword()
-                .<AuthenticationFilter>map(PasswordFilter::new)
-                .orElse(new NoAuthenticationFilter());
+            if (isPasswordPresent(webAdminConfiguration)) {
+                return new PasswordFilter(webAdminConfiguration.getPassword(),
+                    webAdminConfiguration.getReadOnlyPassword(),
+                    webAdminConfiguration.getNoDeletePassword());
+            }
+            return new NoAuthenticationFilter();
         } catch (FileNotFoundException e) {
             return new NoAuthenticationFilter();
         }
+    }
+
+    private boolean isPasswordPresent(WebAdminConfiguration webAdminConfiguration) {
+        return webAdminConfiguration.getPassword().isPresent()
+            || webAdminConfiguration.getNoDeletePassword().isPresent()
+            || webAdminConfiguration.getReadOnlyPassword().isPresent();
     }
 
     @Provides
