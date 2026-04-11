@@ -218,14 +218,14 @@ class KeyRegistrationHandler {
         byte[] bodyAsBytes = deliver.getBody();
         // if the json is an array, we have multiple events
         if (bodyAsBytes != null && bodyAsBytes.length > 0 && bodyAsBytes[0] == '[') {
-            return eventSerializer.asEventsFromBytes(bodyAsBytes);
+            return deserializeEvents(bodyAsBytes);
         }
 
-        try {
-            return List.of(eventSerializer.fromBytes(bodyAsBytes));
-        } catch (RuntimeException exception) {
-            return eventSerializer.asEventsFromBytes(bodyAsBytes);
+        DeserializationResult result = eventSerializer.fromBytes(bodyAsBytes);
+        if (result.isSuccess()) {
+            return List.of(result.event());
         }
+        return deserializeEvents(bodyAsBytes);
     }
 
     private StructuredLogger structuredLogger(List<Event> events, RegistrationKey key) {
@@ -240,5 +240,10 @@ class KeyRegistrationHandler {
                 .map(e -> e.getUsername().asString())
                 .collect(Collectors.joining(",")))
             .field(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key.asString());
+    }
+
+    private List<Event> deserializeEvents(byte[] bodyAsBytes) {
+        return eventSerializer.asEventsFromBytes(bodyAsBytes)
+            .events();
     }
 }

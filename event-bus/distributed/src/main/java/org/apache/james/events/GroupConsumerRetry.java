@@ -100,7 +100,8 @@ class GroupConsumerRetry {
     }
 
     private Mono<Void> sendRetryMessage(Event event, int currentRetryCount) {
-        byte[] eventAsBytes = eventSerializer.toJsonBytes(event);
+        byte[] eventAsBytes = eventSerializer.toJsonBytes(event)
+            .jsonBytes();
 
         Mono<OutboundMessage> retryMessage = Mono.just(new OutboundMessage(
             retryExchangeName.asString(),

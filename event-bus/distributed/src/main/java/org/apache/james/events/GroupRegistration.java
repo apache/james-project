@@ -177,7 +177,7 @@ class GroupRegistration implements Registration {
     }
 
     private Mono<Event> deserializeEvent(byte[] eventAsBytes) {
-        return Mono.fromCallable(() -> eventSerializer.fromBytes(eventAsBytes))
+        return Mono.fromCallable(() -> eventSerializer.fromBytes(eventAsBytes).event())
             .subscribeOn(Schedulers.parallel());
     }
 

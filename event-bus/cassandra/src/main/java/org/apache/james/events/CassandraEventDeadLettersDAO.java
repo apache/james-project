@@ -104,10 +104,13 @@ public class CassandraEventDeadLettersDAO {
     }
 
     Mono<Void> store(Group group, Event failedEvent, EventDeadLetters.InsertionId insertionId) {
+        String serializedEvent = eventSerializer.toJson(failedEvent)
+            .json();
+
         return executor.executeVoid(insertStatement.bind()
                 .setString(GROUP, group.asString())
                 .setUuid(INSERTION_ID, insertionId.getId())
-                .setString(EVENT, eventSerializer.toJson(failedEvent)));
+                .setString(EVENT, serializedEvent));
     }
 
     Mono<Void> removeEvent(Group group, EventDeadLetters.InsertionId failedInsertionId) {
@@ -139,6 +142,7 @@ public class CassandraEventDeadLettersDAO {
     }
 
     private Event deserializeEvent(String serializedEvent) {
-        return eventSerializer.asEvent(serializedEvent);
+        return eventSerializer.asEvent(serializedEvent)
+            .event();
     }
 }

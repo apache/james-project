@@ -431,7 +431,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                     .blockFirst()
                     .getBody();
 
-                return eventSerializer.asEvent(new String(eventInBytes, StandardCharsets.UTF_8));
+                return eventSerializer.asEvent(new String(eventInBytes, StandardCharsets.UTF_8)).event();
             }
         }
     }

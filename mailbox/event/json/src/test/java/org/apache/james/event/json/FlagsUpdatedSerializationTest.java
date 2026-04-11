@@ -129,7 +129,7 @@ class FlagsUpdatedSerializationTest {
 
     @Test
     void flagsUpdatedShouldBeWellSerialized() {
-        assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_EVENT))
+        assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_EVENT).json())
             .when(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo(DEFAULT_EVENT_JSON);
     }
@@ -164,7 +164,7 @@ class FlagsUpdatedSerializationTest {
 
         @Test
         void flagsUpdatedShouldBeWellSerialized() {
-            assertThatJson(EVENT_SERIALIZER.toJson(emptyUpdatedFlagsEvent))
+            assertThatJson(EVENT_SERIALIZER.toJson(emptyUpdatedFlagsEvent).json())
                 .when(Option.IGNORING_ARRAY_ORDER)
                 .isEqualTo(EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS);
         }
@@ -272,7 +272,7 @@ class FlagsUpdatedSerializationTest {
 
         @Test
         void flagsUpdatedShouldBeWellSerialized() {
-            assertThatJson(EVENT_SERIALIZER.toJson(eventWithMessageIds))
+            assertThatJson(EVENT_SERIALIZER.toJson(eventWithMessageIds).json())
                 .when(Option.IGNORING_ARRAY_ORDER)
                 .isEqualTo(EVENT_WITH_MESSAGE_IDS_JSON);
         }

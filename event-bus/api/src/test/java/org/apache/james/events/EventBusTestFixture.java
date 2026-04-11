@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -34,7 +35,6 @@ import java.util.stream.Collectors;
 import org.apache.james.core.Username;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -178,36 +178,47 @@ public interface EventBusTestFixture {
         static final String ARRAY_SEPARATOR = "^";
 
         @Override
-        public String toJson(Event event) {
-            Preconditions.checkArgument(event instanceof TestEvent || event instanceof UnsupportedEvent);
-            return event.getClass().getCanonicalName() + "&" + event.getEventId().getId().toString() + "&" + event.getUsername().asString();
+        public SerializationResult toJson(Event event) {
+            if (!(event instanceof TestEvent || event instanceof UnsupportedEvent)) {
+                return new SerializationResult.Failure("Unknown event type: " + event);
+            }
+            return new SerializationResult.Success(event.getClass().getCanonicalName() + "&" + event.getEventId().getId().toString() + "&" + event.getUsername().asString());
         }
 
         @Override
-        public Event asEvent(String serialized) {
-            Preconditions.checkArgument(serialized.contains("&"));
-            Preconditions.checkArgument(!serialized.contains(ARRAY_SEPARATOR));
+        public DeserializationResult asEvent(String serialized) {
+            if (!serialized.contains("&") || serialized.contains(ARRAY_SEPARATOR)) {
+                return new DeserializationResult.Failure("Invalid format: " + serialized);
+            }
             List<String> parts = Splitter.on("&").splitToList(serialized);
-            Preconditions.checkArgument(parts.get(0).equals(TestEvent.class.getCanonicalName()));
+            if (!parts.get(0).equals(TestEvent.class.getCanonicalName())) {
+                return new DeserializationResult.Failure("Unknown event type: " + parts.get(0));
+            }
 
             Event.EventId eventId = Event.EventId.of(UUID.fromString(parts.get(1)));
             Username username = Username.of(Joiner.on("&").join(parts.stream().skip(2).collect(ImmutableList.toImmutableList())));
-            return new TestEvent(eventId, username);
+            return new DeserializationResult.Success(new TestEvent(eventId, username));
         }
 
         @Override
-        public String toJson(Collection<Event> event) {
-            return event.stream()
-                .map(this::toJson)
-                .collect(Collectors.joining(ARRAY_SEPARATOR));
+        public SerializationResult toJson(Collection<Event> event) {
+            return SerializationResult.of(
+                Optional.of(event.stream()
+                    .map(this::toJson)
+                    .map(SerializationResult::json)
+                    .collect(Collectors.joining(ARRAY_SEPARATOR))),
+                "Could not serialize events");
         }
 
         @Override
-        public List<Event> asEvents(String serialized) {
-            return Splitter.on(ARRAY_SEPARATOR)
-                .splitToStream(serialized)
-                .map(this::asEvent)
-                .collect(ImmutableList.toImmutableList());
+        public DeserializationResult asEvents(String serialized) {
+            return DeserializationResult.ofList(
+                Optional.of(Splitter.on(ARRAY_SEPARATOR)
+                    .splitToStream(serialized)
+                    .map(this::asEvent)
+                    .map(DeserializationResult::event)
+                    .collect(ImmutableList.toImmutableList())),
+                "Could not deserialize events");
         }
     }
 

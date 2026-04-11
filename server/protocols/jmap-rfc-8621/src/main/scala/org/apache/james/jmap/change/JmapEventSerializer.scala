@@ -23,11 +23,10 @@ import java.util
 import java.util.Optional
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.google.common.collect.ImmutableList
 import jakarta.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
-import org.apache.james.events.{Event, EventSerializer}
+import org.apache.james.events.{DeserializationResult, Event, EventSerializer, SerializationResult}
 import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{State, TypeName}
 import org.apache.james.jmap.core.UuidState
@@ -85,20 +84,28 @@ case class JmapEventSerializer @Inject()(stateChangeEventDTOFactory: StateChange
     .forModules(stateChangeEventDTOFactory.dtoModule.asInstanceOf[EventDTOModule[Event, EventDTO]])
     .withoutNestedType()
 
-  override def toJson(event: Event): String = genericSerializer.serialize(event)
+  override def toJson(event: Event): SerializationResult = SerializationResult.of(
+    genericSerializer.maybeSerialize(event),
+    "Could not serialize event " + event)
 
-  override def asEvent(serialized: String): Event = genericSerializer.deserialize(serialized)
+  override def asEvent(serialized: String): DeserializationResult = DeserializationResult.of(
+    genericSerializer.maybeDeserialize(serialized),
+    "Could not deserialize event " + serialized)
 
-  override def toJsonBytes(event: Event): Array[Byte] =  genericSerializer.serializeToBytes(event)
+  override def toJsonBytes(event: Event): SerializationResult = SerializationResult.ofBytes(
+    genericSerializer.maybeSerializeToBytes(event),
+    "Could not serialize event " + event)
 
-  override def fromBytes(serialized: Array[Byte]): Event = genericSerializer.deserializeFromBytes(serialized)
+  override def fromBytes(serialized: Array[Byte]): DeserializationResult = DeserializationResult.of(
+    genericSerializer.maybeDeserializeFromBytes(serialized),
+    "Could not deserialize event " + serialized.map(_.toChar).mkString)
 
-  override def toJson(event: util.Collection[Event]): String = {
+  override def toJson(event: util.Collection[Event]): SerializationResult = {
     if (event.size() != 1) {
-      throw new IllegalArgumentException("Not supported for multiple events, please serialize separately")
+      new SerializationResult.Failure("Not supported for multiple events, please serialize separately")
     }
     toJson(event.iterator().next())
   }
 
-  override def asEvents(serialized: String): util.List[Event] = ImmutableList.of(asEvent(serialized))
+  override def asEvents(serialized: String): DeserializationResult = asEvent(serialized)
 }

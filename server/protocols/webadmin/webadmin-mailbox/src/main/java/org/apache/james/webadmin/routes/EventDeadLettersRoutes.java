@@ -26,6 +26,7 @@ import jakarta.inject.Inject;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventSerializer;
 import org.apache.james.events.Group;
+import org.apache.james.events.SerializationResult;
 import org.apache.james.task.TaskManager;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.webadmin.Routes;
@@ -107,7 +108,9 @@ public class EventDeadLettersRoutes implements Routes {
 
         return eventDeadLettersService.getEvent(group, insertionId)
             .map(eventSerializer::toJson)
-            .switchIfEmpty(Mono.fromRunnable(() ->  response.status(HttpStatus.NOT_FOUND_404)))
+            .filter(SerializationResult::isSuccess)
+            .map(SerializationResult::json)
+            .switchIfEmpty(Mono.fromRunnable(() -> response.status(HttpStatus.NOT_FOUND_404)))
             .block();
     }
 

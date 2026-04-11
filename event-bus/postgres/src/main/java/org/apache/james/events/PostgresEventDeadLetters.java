@@ -50,11 +50,14 @@ public class PostgresEventDeadLetters implements EventDeadLetters {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEvent != null, FAIL_DELIVERED_EVENT_CANNOT_BE_NULL);
 
+        String serializedEvent = eventSerializer.toJson(failDeliveredEvent)
+            .json();
+
         InsertionId insertionId = InsertionId.random();
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
                 .set(INSERTION_ID, insertionId.getId())
                 .set(GROUP, registeredGroup.asString())
-                .set(EVENT, eventSerializer.toJson(failDeliveredEvent))))
+                .set(EVENT, serializedEvent)))
             .thenReturn(insertionId);
     }
 
@@ -87,7 +90,9 @@ public class PostgresEventDeadLetters implements EventDeadLetters {
     }
 
     private Event deserializeEvent(Record record) {
-        return eventSerializer.asEvent(record.get(EVENT));
+        String serializedEvent = record.get(EVENT);
+        return eventSerializer.asEvent(serializedEvent)
+            .event();
     }
 
     @Override

@@ -77,7 +77,7 @@ class QuotaUsageUpdatedEventSerializationTest {
 
     @Test
     void toJsonShouldReturnQuotaEventJson() {
-        assertThatJson(EVENT_SERIALIZER.toJson(eventWithUserContainsUsername))
+        assertThatJson(EVENT_SERIALIZER.toJson(eventWithUserContainsUsername).json())
             .isEqualTo(quotaUsageUpdatedEvent);
     }
 
