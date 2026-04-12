@@ -78,17 +78,22 @@ public class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
             // Refresh MDC info to account for proxying
             MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx);
 
+            // Pause reading while the connection check is in progress to prevent IMAP
+            // commands from being processed before the check completes.
+            ctx.channel().config().setAutoRead(false);
             performConnectionCheck(sourceIP)
                 .then(Mono.fromRunnable(() -> {
                     if (imapSession != null) {
                         imapSession.setAttribute(MDC_KEY, boundMDC);
                     }
-                    ctx.executor().execute(Throwing.runnable(() -> super.channelReadComplete(ctx)));
                 }))
                 .doFinally(any -> haproxyMsg.release())
                 .subscribe(any -> {
-
-                }, error -> ctx.executor().execute(() -> ctx.pipeline().fireExceptionCaught(error)));
+                }, error -> ctx.executor().execute(() -> ctx.pipeline().fireExceptionCaught(error)),
+                    () -> ctx.executor().execute(Throwing.runnable(() -> {
+                        ctx.channel().config().setAutoRead(true);
+                        super.channelReadComplete(ctx);
+                    })));
 
         } else {
             haproxyMsg.release();
