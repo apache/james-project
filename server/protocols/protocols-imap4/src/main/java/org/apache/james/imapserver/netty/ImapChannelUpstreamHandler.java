@@ -212,7 +212,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    public void channelActive(ChannelHandlerContext ctx) {
         imapChannelGroup.add(ctx.channel());
         SessionId sessionId = SessionId.generate();
         ImapSession imapsession = new NettyImapSession(ctx.channel(), secure, compress, authenticationConfiguration.isSSLRequired(),
@@ -225,8 +225,14 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             .addToContext(MDCBuilder.SESSION_ID, sessionId.asString());
         imapsession.setAttribute(MDC_KEY, boundMDC);
 
-        performConnectionCheck(imapsession.getRemoteAddress());
+        performConnectionCheck(imapsession.getRemoteAddress())
+            .then(Mono.fromRunnable(() -> ctx.executor().execute(Throwing.runnable(() -> acceptConnection(ctx, imapsession)))))
+            .subscribe(any -> {
 
+            }, error -> ctx.executor().execute(() -> ctx.fireExceptionCaught(error)));
+    }
+
+    private void acceptConnection(ChannelHandlerContext ctx, ImapSession imapsession) throws Exception {
         try (Closeable closeable = mdc(imapsession).build()) {
             InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
             LOGGER.info("Connection established from {}", address.getAddress().getHostAddress());
@@ -249,13 +255,13 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         }
     }
 
-    private void performConnectionCheck(InetSocketAddress clientIp) {
+    private Mono<Void> performConnectionCheck(InetSocketAddress clientIp) {
         if (!connectionChecks.isEmpty() && !proxyRequired) {
-            Flux.fromIterable(connectionChecks)
+            return Flux.fromIterable(connectionChecks)
                 .concatMap(connectionCheck -> connectionCheck.validate(clientIp))
-                .then()
-                .block();
+                .then();
         }
+        return Mono.empty();
     }
 
     private MDCBuilder mdc(ChannelHandlerContext ctx) {
