@@ -25,6 +25,7 @@ import java.time.{Duration, ZonedDateTime}
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -34,14 +35,15 @@ import net.javacrumbs.jsonunit.core.Option
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.JmapGuiceProbe
 import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.EmailGetMethodContract.createTestMessage
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.EmailGetMethodContract.TestContext
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE_PASSWORD, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.junit.categories.BasicFeature
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -60,15 +62,11 @@ import org.junit.jupiter.api.{BeforeEach, Test}
 import play.api.libs.json.Json
 
 object EmailGetMethodContract {
-  private def createTestMessage: Message = Message.Builder
-      .of
-      .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
-      .setSubject("World domination \r\n" +
-        " and this is also part of the header")
-      .setBody("testmail", StandardCharsets.UTF_8)
-      .build
+  case class TestContext(bobUsername: Username, bobAccountId: String,
+                        andreUsername: Username, andreAccountId: String,
+                        aliceUsername: Username, aliceAccountId: String)
+  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] =
+    new java.util.concurrent.atomic.AtomicReference[TestContext]()
 }
 
 trait EmailGetMethodContract {
@@ -79,18 +77,50 @@ trait EmailGetMethodContract {
     .await
   private lazy val awaitAtMostTenSeconds = calmlyAwait.atMost(10, TimeUnit.SECONDS)
 
+  def bobUsername: Username = EmailGetMethodContract.currentContext.get().bobUsername
+  def bobAccountId: String = EmailGetMethodContract.currentContext.get().bobAccountId
+  def andreUsername: Username = EmailGetMethodContract.currentContext.get().andreUsername
+  def andreAccountId: String = EmailGetMethodContract.currentContext.get().andreAccountId
+  def aliceUsername: Username = EmailGetMethodContract.currentContext.get().aliceUsername
+  def aliceAccountId: String = EmailGetMethodContract.currentContext.get().aliceAccountId
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = java.util.UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    val alice = Username.fromLocalPartWithDomain(s"alice$uniqueSuffix", _2_DOT_DOMAIN)
+    EmailGetMethodContract.currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString,
+      andreUsername = andre,
+      andreAccountId = Hashing.sha256().hashString(andre.asString(), StandardCharsets.UTF_8).toString,
+      aliceUsername = alice,
+      aliceAccountId = Hashing.sha256().hashString(alice.asString(), StandardCharsets.UTF_8).toString
+    ))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString(), ANDRE_PASSWORD)
+      .addDomain(_2_DOT_DOMAIN.asString)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString(), ANDRE_PASSWORD)
+      .addUser(alice.asString(), ALICE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
+
+  private def createTestMessage: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
+      .setSubject("World domination \r\n" +
+        " and this is also part of the header")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
 
   def randomMessageId: MessageId
 
@@ -144,7 +174,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |    "Email/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": null
                |    },
                |    "c1"]]
@@ -183,7 +213,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |    "Email/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": []
                |    },
                |    "c1"]]
@@ -203,7 +233,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "state": "${INSTANCE.value}",
          |                "list": [],
          |                "notFound": []
@@ -224,7 +254,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |    "Email/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["invalid"]
                |    },
                |    "c1"]]
@@ -244,7 +274,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "state": "${INSTANCE.value}",
          |                "list": [],
          |                "notFound": ["invalid"]
@@ -265,7 +295,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"]
          |    },
          |    "c1"]]
@@ -288,7 +318,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "state": "${INSTANCE.value}",
          |                "list": [],
          |                "notFound": ["${messageId.serialize}"]
@@ -305,9 +335,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -318,7 +348,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["id", "size"]
          |    },
@@ -344,7 +374,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [{
          |                        "id": "${messageId.serialize}",
          |                        "size": 85
@@ -358,10 +388,10 @@ trait EmailGetMethodContract {
 
   @Test
   def messageIdPropertyShouldBeSupported(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -373,7 +403,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["messageId"]
          |    },
@@ -402,10 +432,10 @@ trait EmailGetMethodContract {
 
   @Test
   def inReplyToPropertyShouldBeSupported(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -415,7 +445,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["inReplyTo"]
          |    },
@@ -444,10 +474,10 @@ trait EmailGetMethodContract {
 
   @Test
   def referencesPropertyShouldBeSupported(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -457,7 +487,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["references"]
          |    },
@@ -493,9 +523,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -504,7 +534,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["to"]
          |    },
@@ -550,9 +580,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -561,7 +591,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["to"]
          |    },
@@ -601,9 +631,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -612,7 +642,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["to"]
          |    },
@@ -653,9 +683,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -664,7 +694,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["from"]
          |    },
@@ -705,9 +735,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -716,7 +746,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["cc"]
          |    },
@@ -757,9 +787,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -768,7 +798,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["bcc"]
          |    },
@@ -809,9 +839,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -820,7 +850,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
@@ -861,9 +891,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -872,7 +902,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["replyTo"]
          |    },
@@ -912,9 +942,9 @@ trait EmailGetMethodContract {
         "=?UTF-8?Q?MODAL=C4=B0F?= is\r\n the best!"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -923,7 +953,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["subject"]
          |    },
@@ -961,9 +991,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -972,7 +1002,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["from"]
          |    },
@@ -1014,9 +1044,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1025,7 +1055,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["cc"]
          |    },
@@ -1067,9 +1097,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1078,7 +1108,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["bcc"]
          |    },
@@ -1119,9 +1149,9 @@ trait EmailGetMethodContract {
         "user2@domain.tld"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1130,7 +1160,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
@@ -1172,9 +1202,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1183,7 +1213,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["replyTo"]
          |    },
@@ -1224,9 +1254,9 @@ trait EmailGetMethodContract {
         "Zo Meuh"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1235,7 +1265,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["subject"]
          |    },
@@ -1269,9 +1299,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1280,7 +1310,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["to"]
          |    },
@@ -1315,9 +1345,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1326,7 +1356,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["cc"]
          |    },
@@ -1368,9 +1398,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1379,7 +1409,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["cc"]
          |    },
@@ -1414,9 +1444,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1425,7 +1455,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["bcc"]
          |    },
@@ -1467,9 +1497,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1478,7 +1508,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["bcc"]
          |    },
@@ -1513,9 +1543,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1524,7 +1554,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["from"]
          |    },
@@ -1566,9 +1596,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1577,7 +1607,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["from"]
          |    },
@@ -1612,9 +1642,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1623,7 +1653,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["replyTo"]
          |    },
@@ -1665,9 +1695,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1676,7 +1706,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["replyTo"]
          |    },
@@ -1709,9 +1739,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1720,7 +1750,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["subject"]
          |    },
@@ -1753,9 +1783,9 @@ trait EmailGetMethodContract {
       .of
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1764,7 +1794,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["subject"]
          |    },
@@ -1799,9 +1829,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1810,7 +1840,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sentAt"]
          |    },
@@ -1848,9 +1878,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1859,7 +1889,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sentAt"]
          |    },
@@ -1893,9 +1923,9 @@ trait EmailGetMethodContract {
       .setDate(null)
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1904,7 +1934,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sentAt"]
          |    },
@@ -1939,9 +1969,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -1950,7 +1980,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
@@ -1991,9 +2021,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2002,7 +2032,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
@@ -2042,9 +2072,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2053,7 +2083,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
@@ -2096,9 +2126,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2107,7 +2137,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["sender"]
          |    },
@@ -2135,10 +2165,10 @@ trait EmailGetMethodContract {
 
   @Test
   def messageIdShouldReturnNullWhenNone(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -2150,7 +2180,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["messageId"]
          |    },
@@ -2179,10 +2209,10 @@ trait EmailGetMethodContract {
 
   @Test
   def inReplyToShouldReturnNullWhenNone(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -2194,7 +2224,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["inReplyTo"]
          |    },
@@ -2223,10 +2253,10 @@ trait EmailGetMethodContract {
 
   @Test
   def referencesShouldReturnNullWhenNone(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -2238,7 +2268,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["references"]
          |    },
@@ -2272,9 +2302,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
     val nonExistingMessageId: MessageId = randomMessageId
 
@@ -2286,7 +2316,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}", "invalid", "${nonExistingMessageId.serialize}"],
          |      "properties": ["id", "size"]
          |    },
@@ -2313,7 +2343,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [ {
          |                        "id": "${messageId.serialize}",
          |                        "size": 85
@@ -2332,12 +2362,12 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2348,7 +2378,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId1.serialize()}", "${messageId2.serialize()}"],
          |      "properties": ["id", "size"]
          |    },
@@ -2374,7 +2404,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId1.serialize()}",
@@ -2394,10 +2424,10 @@ trait EmailGetMethodContract {
 
   @Test
   def useDefaultPropertiesWhenNone(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.builder()
+      .appendMessage(bobUsername.asString, path, AppendCommand.builder()
         .withInternalDate(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant))
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
@@ -2410,7 +2440,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"]
          |    },
          |    "c1"]]
@@ -2436,7 +2466,7 @@ trait EmailGetMethodContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "threadId": "${messageId.serialize}",
@@ -2515,10 +2545,10 @@ trait EmailGetMethodContract {
 
   @Test
   def shouldInlineMDN(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.builder()
+      .appendMessage(bobUsername.asString, path, AppendCommand.builder()
         .withInternalDate(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant))
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mdn_simple.eml")))
       .getMessageId
@@ -2529,7 +2559,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"]
          |    },
          |    "c1"]]
@@ -2623,9 +2653,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2636,7 +2666,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}", "${messageId.serialize}"],
          |      "properties": ["id", "size"]
          |    },
@@ -2662,7 +2692,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [{
          |                        "id": "${messageId.serialize}",
          |                        "size": 85
@@ -2681,9 +2711,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2694,7 +2724,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}", "${messageId.serialize}"],
          |      "properties": ["id"]
          |    },
@@ -2720,7 +2750,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [{
          |                        "id": "${messageId.serialize}"
          |                    }],
@@ -2738,9 +2768,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2751,7 +2781,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}", "${messageId.serialize}"],
          |      "properties": []
          |    },
@@ -2777,7 +2807,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "state": "${INSTANCE.value}",
          |                "list": [{
          |                        "id": "${messageId.serialize}"
@@ -2796,9 +2826,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2809,7 +2839,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}", "${messageId.serialize}"],
          |      "properties": ["size"]
          |    },
@@ -2835,7 +2865,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [{
          |                        "id": "${messageId.serialize}",
          |                        "size": 85
@@ -2854,9 +2884,9 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2867,7 +2897,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}", "${messageId.serialize}"],
          |      "properties": ["invalid"]
          |    },
@@ -2910,7 +2940,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}", "${messageId.serialize}"]
          |    },
          |    "c1"]]
@@ -2933,7 +2963,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "state": "${INSTANCE.value}",
          |                "list": [],
          |                "notFound": ["${messageId.serialize}"]
@@ -2946,7 +2976,7 @@ trait EmailGetMethodContract {
   @Test
   def getShouldReturnNotFoundWhenNoRights(server: GuiceJamesServer): Unit = {
     val andreMailbox: String = "andrecustom"
-    val path = MailboxPath.forUser(ANDRE, andreMailbox)
+    val path = MailboxPath.forUser(andreUsername, andreMailbox)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -2954,7 +2984,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, path, AppendCommand.from(message))
+      .appendMessage(andreUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2965,7 +2995,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"]
          |    },
          |    "c1"]]
@@ -2988,7 +3018,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "state": "${INSTANCE.value}",
          |                "list": [],
          |                "notFound": ["${messageId.serialize}"]
@@ -3001,7 +3031,7 @@ trait EmailGetMethodContract {
   @Test
   def getShouldReturnMessagesInDelegatedMailboxes(server: GuiceJamesServer): Unit = {
     val andreMailbox: String = "andrecustom"
-    val path = MailboxPath.forUser(ANDRE, andreMailbox)
+    val path = MailboxPath.forUser(andreUsername, andreMailbox)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3009,10 +3039,10 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, path, AppendCommand.from(message))
+      .appendMessage(andreUsername.asString, path, AppendCommand.from(message))
       .getMessageId
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -3022,7 +3052,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["id", "size"]
          |    },
@@ -3046,7 +3076,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "state": "${INSTANCE.value}",
          |                "list": [{
          |                        "id": "${messageId.serialize}",
@@ -3062,7 +3092,7 @@ trait EmailGetMethodContract {
   @Test
   def getShouldReturnNotFoundWhenDeletedUserMissesReadRight(server: GuiceJamesServer): Unit = {
     val andreMailbox: String = "andrecustom"
-    val path = MailboxPath.forUser(ANDRE, andreMailbox)
+    val path = MailboxPath.forUser(andreUsername, andreMailbox)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3070,10 +3100,10 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, path, AppendCommand.from(message))
+      .appendMessage(andreUsername.asString, path, AppendCommand.from(message))
       .getMessageId
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, MailboxACL.Rfc4314Rights.allExcept(Right.Read))
+      .replaceRights(path, bobUsername.asString, MailboxACL.Rfc4314Rights.allExcept(Right.Read))
 
     val request =
       s"""{
@@ -3083,7 +3113,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"]
          |    },
          |    "c1"]]
@@ -3106,7 +3136,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "state": "${INSTANCE.value}",
          |                "list": [],
          |                "notFound": ["${messageId.serialize}"]
@@ -3126,7 +3156,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"]
                |     },
                |     "c1"]]
@@ -3163,7 +3193,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"]
                |     },
                |     "c1"]]
@@ -3192,7 +3222,7 @@ trait EmailGetMethodContract {
 
   @Test
   def bodyPropertiesFilteringShouldBeApplied(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3200,7 +3230,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -3211,7 +3241,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["partId", "blobId"]
@@ -3238,7 +3268,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -3257,10 +3287,10 @@ trait EmailGetMethodContract {
 
   @Test
   def shouldSupportAttachedMessageWithComplexMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
           ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nested2.eml")))
       .getMessageId
 
@@ -3272,7 +3302,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["partId", "blobId", "subParts","size", "type"]
@@ -3318,7 +3348,7 @@ trait EmailGetMethodContract {
 
   @Test
   def mailboxIdsPropertiesShouldBeReturned(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3326,7 +3356,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -3335,7 +3365,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["mailboxIds"]
          |    },
@@ -3366,7 +3396,7 @@ trait EmailGetMethodContract {
 
   @Test
   def receivedAtPropertyShouldBeReturned(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3374,7 +3404,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.builder()
+      .appendMessage(bobUsername.asString, path, AppendCommand.builder()
         .withInternalDate(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant))
         .build(message))
       .getMessageId
@@ -3385,7 +3415,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["receivedAt"]
          |    },
@@ -3414,7 +3444,7 @@ trait EmailGetMethodContract {
 
   @Test
   def blobIdPropertiesShouldBeReturned(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3422,7 +3452,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -3431,7 +3461,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["blobId"]
          |    },
@@ -3460,7 +3490,7 @@ trait EmailGetMethodContract {
 
   @Test
   def threadIdPropertiesShouldBeReturned(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3468,7 +3498,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -3477,7 +3507,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["threadId"]
          |    },
@@ -3506,7 +3536,7 @@ trait EmailGetMethodContract {
 
   @Test
   def bodyPropertiesShouldMatchSpecifiedDefaults(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3514,7 +3544,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -3525,7 +3555,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"]
          |    },
@@ -3552,7 +3582,7 @@ trait EmailGetMethodContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -3577,7 +3607,7 @@ trait EmailGetMethodContract {
 
   @Test
   def emptyBodyPropertiesShouldReturnEmptyObjects(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3585,7 +3615,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -3596,7 +3626,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":[]
@@ -3623,7 +3653,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -3641,7 +3671,7 @@ trait EmailGetMethodContract {
 
   @Test
   def invalidBodyPropertiesShouldBeRejected(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3649,7 +3679,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -3660,7 +3690,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["invalid"]
@@ -3697,7 +3727,7 @@ trait EmailGetMethodContract {
 
   @Test
   def bodyStructureForSimpleMessage(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3705,7 +3735,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -3716,7 +3746,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location", "subParts", "headers"]
@@ -3744,7 +3774,7 @@ trait EmailGetMethodContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -3783,7 +3813,7 @@ trait EmailGetMethodContract {
 
   @Test
   def bodyStructureShouldSupportSpecificHeaders(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -3791,7 +3821,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -3802,7 +3832,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "header:Subject:asText"]
@@ -3840,10 +3870,10 @@ trait EmailGetMethodContract {
 
   @Test
   def bodyStructureForSimpleMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -3855,7 +3885,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location", "subParts", "headers"]
@@ -3884,7 +3914,7 @@ trait EmailGetMethodContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4032,10 +4062,10 @@ trait EmailGetMethodContract {
 
   @Test
   def bodyStructureForComplexMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -4047,7 +4077,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyStructure"],
          |      "bodyProperties":["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location", "subParts", "headers"]
@@ -4075,7 +4105,7 @@ trait EmailGetMethodContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4217,10 +4247,10 @@ trait EmailGetMethodContract {
 
   @Test
   def textBodyForSimpleMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -4232,7 +4262,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["textBody"]
          |    },
@@ -4258,7 +4288,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4282,10 +4312,10 @@ trait EmailGetMethodContract {
 
   @Test
   def textBodyForComplexMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -4297,7 +4327,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["textBody"]
          |    },
@@ -4323,7 +4353,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4357,10 +4387,10 @@ trait EmailGetMethodContract {
 
   @Test
   def htmlBodyForComplexMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -4372,7 +4402,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["htmlBody"]
          |    },
@@ -4398,7 +4428,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4432,10 +4462,10 @@ trait EmailGetMethodContract {
 
   @Test
   def textBodyValuesForSimpleMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -4447,7 +4477,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchTextBodyValues": true
@@ -4474,7 +4504,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4496,10 +4526,10 @@ trait EmailGetMethodContract {
 
   @Test
   def textBodyValuesForHtmlMessage(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/html.eml")))
       .getMessageId
 
@@ -4511,7 +4541,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchTextBodyValues": true
@@ -4538,7 +4568,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4560,10 +4590,10 @@ trait EmailGetMethodContract {
 
   @Test
   def textBodyValuesForAlternativeMessage(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/alternative.eml")))
       .getMessageId
 
@@ -4575,7 +4605,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchTextBodyValues": true
@@ -4603,7 +4633,7 @@ trait EmailGetMethodContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [
          |
          |                ],
@@ -4628,10 +4658,10 @@ trait EmailGetMethodContract {
 
   @Test
   def attachmentValuesForInlinedMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml")))
       .getMessageId
 
@@ -4643,7 +4673,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues", "attachments"],
          |      "fetchTextBodyValues": true
@@ -4671,7 +4701,7 @@ trait EmailGetMethodContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notFound": [
          |
          |                ],
@@ -4716,10 +4746,10 @@ trait EmailGetMethodContract {
 
   @Test
   def shouldUseFullViewReaderWhenFetchAllBodyProperties(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml")))
       .getMessageId
 
@@ -4733,7 +4763,7 @@ trait EmailGetMethodContract {
          |		[
          |			"Email/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"ids": ["${messageId.serialize}"],
          |				"properties": [
          |					"id",
@@ -4779,7 +4809,7 @@ trait EmailGetMethodContract {
          |		[
          |			"Email/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"notFound": [],
          |				"list": [{
          |					"preview": "Main test message...",
@@ -4832,10 +4862,10 @@ trait EmailGetMethodContract {
 
   @Test
   def inlinedAttachmentMailShouldNotBeCountedAsHasAttachmentWhenEmailFullView(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/simple-inlined-attachment.eml")))
       .getMessageId
 
@@ -4849,7 +4879,7 @@ trait EmailGetMethodContract {
          |		[
          |			"Email/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"ids": ["${messageId.serialize}"],
          |				"properties": [
          |					"id",
@@ -4895,7 +4925,7 @@ trait EmailGetMethodContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "state": "33ac468f-7903-4f68-ac3e-8120505b5c3d",
          |                "list": [
          |                    {
@@ -4947,10 +4977,10 @@ trait EmailGetMethodContract {
   @Category(Array(classOf[BasicFeature]))
   @Test
   def shouldUseFastViewWithAttachmentMetadataWhenSupportedBodyProperties(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml")))
       .getMessageId
 
@@ -4964,7 +4994,7 @@ trait EmailGetMethodContract {
          |		[
          |			"Email/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"ids": ["${messageId.serialize}"],
          |				"properties": [
          |					"id",
@@ -5011,7 +5041,7 @@ trait EmailGetMethodContract {
          |		[
          |			"Email/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"notFound": [],
          |				"list": [{
          |					"preview": "Main test message...",
@@ -5090,10 +5120,10 @@ trait EmailGetMethodContract {
 
   @Test
   def shouldUseFastViewWithAttachmentMetadataWhenSupportedBodyPropertiesAtAttachmentReadLevel(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml")))
       .getMessageId
 
@@ -5107,7 +5137,7 @@ trait EmailGetMethodContract {
          |		[
          |			"Email/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"ids": ["${messageId.serialize}"],
          |				"properties": [
          |					"id",
@@ -5157,7 +5187,7 @@ trait EmailGetMethodContract {
                |		[
                |			"Email/get",
                |			{
-               |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |				"accountId": "$bobAccountId",
                |				"notFound": [],
                |				"list": [{
                |					"preview": "Main test message...",
@@ -5207,10 +5237,10 @@ trait EmailGetMethodContract {
 
   @Test
   def shouldBeAbleToDownloadAttachmentBaseOnFastViewWithAttachmentsMetadataResult(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-single-attachment.eml")))
       .getMessageId
 
@@ -5224,7 +5254,7 @@ trait EmailGetMethodContract {
          |		[
          |			"Email/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"ids": ["${messageId.serialize}"],
          |				"properties": [
          |					"id",
@@ -5267,7 +5297,7 @@ trait EmailGetMethodContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER).log().all()
     .when
-      .get(s"/download/29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6/$blobId")
+      .get(s"/download/$bobAccountId/$blobId")
     .`then`
       .statusCode(SC_OK)
       .contentType("application/json")
@@ -5288,10 +5318,10 @@ trait EmailGetMethodContract {
 
   @Test
   def shouldBeAbleToDownloadAttachmentBaseOnFastViewWithAttachmentsMetadataResultWithReadLevelFll(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-single-attachment.eml")))
       .getMessageId
 
@@ -5305,7 +5335,7 @@ trait EmailGetMethodContract {
          |		[
          |			"Email/get",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"ids": ["${messageId.serialize}"],
          |				"properties": [
          |					"id",
@@ -5348,7 +5378,7 @@ trait EmailGetMethodContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER).log().all()
     .when
-      .get(s"/download/29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6/$blobId")
+      .get(s"/download/$bobAccountId/$blobId")
     .`then`
       .statusCode(SC_OK)
       .contentType("application/json")
@@ -5369,10 +5399,10 @@ trait EmailGetMethodContract {
 
   @Test
   def textBodyValuesForComplexMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -5384,7 +5414,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchTextBodyValues": true
@@ -5411,7 +5441,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -5438,10 +5468,10 @@ trait EmailGetMethodContract {
 
   @Test
   def htmlBodyValuesForComplexMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -5453,7 +5483,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchHTMLBodyValues": true
@@ -5480,7 +5510,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -5507,10 +5537,10 @@ trait EmailGetMethodContract {
 
   @Test
   def htmlBodyValuesShouldFallBackToPlainTextWhenNoHtmlPart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/alternative.cal.eml")))
       .getMessageId
 
@@ -5522,7 +5552,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues", "htmlBody"],
          |      "fetchHTMLBodyValues": true
@@ -5566,10 +5596,10 @@ trait EmailGetMethodContract {
 
   @Test
   def textAndHtmlBodyValuesForComplexMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -5581,7 +5611,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchTextBodyValues": true,
@@ -5610,7 +5640,7 @@ trait EmailGetMethodContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -5643,10 +5673,10 @@ trait EmailGetMethodContract {
 
   @Test
   def textAndHtmlBodyValuesForSimpleMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -5658,7 +5688,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchTextBodyValues": true,
@@ -5686,7 +5716,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -5708,10 +5738,10 @@ trait EmailGetMethodContract {
 
   @Test
   def allBodyValuesForSimpleMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -5723,7 +5753,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchAllBodyValues": true
@@ -5751,7 +5781,7 @@ trait EmailGetMethodContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -5783,10 +5813,10 @@ trait EmailGetMethodContract {
 
   @Test
   def htmlBodyValuesForRelatedMultipartInsideAlternative(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/related_in_alternative_multipart.eml")))
       .getMessageId
 
@@ -5798,7 +5828,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchHTMLBodyValues": true
@@ -5825,7 +5855,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -5847,10 +5877,10 @@ trait EmailGetMethodContract {
 
   @Test
   def bodyValueShouldBeTruncatedIfNeeded(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -5862,7 +5892,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchAllBodyValues": true,
@@ -5891,7 +5921,7 @@ trait EmailGetMethodContract {
          |        [
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -5923,10 +5953,10 @@ trait EmailGetMethodContract {
 
   @Test
   def allBodyValuesForComplexMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -5938,7 +5968,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"],
          |      "fetchAllBodyValues": true
@@ -5965,7 +5995,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -5997,10 +6027,10 @@ trait EmailGetMethodContract {
 
   @Test
   def bodyValuesShouldBeEmptyWithoutFetch(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -6012,7 +6042,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["bodyValues"]
          |    },
@@ -6038,7 +6068,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -6054,10 +6084,10 @@ trait EmailGetMethodContract {
 
   @Test
   def attachmentsForSimpleMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -6069,7 +6099,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["attachments"]
          |    },
@@ -6095,7 +6125,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -6139,10 +6169,10 @@ trait EmailGetMethodContract {
 
   @Test
   def attachmentsForComplexMultipart(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -6154,7 +6184,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["attachments"]
          |    },
@@ -6180,7 +6210,7 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -6207,7 +6237,7 @@ trait EmailGetMethodContract {
 
   @Test
   def previewForSimpleEmail(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -6215,7 +6245,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -6224,7 +6254,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["preview"]
          |    },
@@ -6253,7 +6283,7 @@ trait EmailGetMethodContract {
 
   @Test
   def previewShouldBeTruncatedForLongTextBodies(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -6261,7 +6291,7 @@ trait EmailGetMethodContract {
       .setBody("0123456789".repeat(100), StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -6270,7 +6300,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["preview"]
          |    },
@@ -6299,7 +6329,7 @@ trait EmailGetMethodContract {
 
   @Test
   def previewForSimpleEmailWithoutBody(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -6307,7 +6337,7 @@ trait EmailGetMethodContract {
       .setBody("", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -6316,7 +6346,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["preview"]
          |    },
@@ -6345,7 +6375,7 @@ trait EmailGetMethodContract {
 
   @Test
   def previewForSimpleEmailWithHtmlBody(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -6353,7 +6383,7 @@ trait EmailGetMethodContract {
       .setBody("A <b>HTML</b> body...", "html", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -6362,7 +6392,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["preview"]
          |    },
@@ -6391,7 +6421,7 @@ trait EmailGetMethodContract {
 
   @Test
   def hasAttachmentForSimpleEmail(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
@@ -6399,7 +6429,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -6408,7 +6438,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["hasAttachment"]
          |    },
@@ -6437,10 +6467,10 @@ trait EmailGetMethodContract {
   @Test
   def hasAttachmentForMultipartWithAttachment(server: GuiceJamesServer): Unit = {
 
-    val path = MailboxPath.inbox(BOB)
+    val path = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -6450,7 +6480,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["hasAttachment"]
          |    },
@@ -6487,9 +6517,9 @@ trait EmailGetMethodContract {
         .build())
       .build()
 
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -6498,7 +6528,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["hasAttachment"]
          |    },
@@ -6527,21 +6557,21 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnUnparsedHeaders(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("World domination \r\n" +
         " and this is also part of the header")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -6553,7 +6583,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["headers"]
                |     },
@@ -6576,14 +6606,14 @@ trait EmailGetMethodContract {
          |    "methodResponses": [[
          |            "Email/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [{
          |                    "id": "${messageId.serialize}",
          |                    "headers": [
          |                      {"name":"MIME-Version","value":" 1.0"},
          |                      {"name":"Subject","value":" =?US-ASCII?Q?World_domination_=0D=0A_and_th?=\\r\\n =?US-ASCII?Q?is_is_also_part_of_the_header?="},
-         |                      {"name":"Sender","value":" andre@domain.tld"},
-         |                      {"name":"From","value":" andre@domain.tld"},
+         |                      {"name":"Sender","value":" ${andreUsername.asString()}"},
+         |                      {"name":"From","value":" ${andreUsername.asString()}"},
          |                      {"name":"Content-Type","value":" text/plain; charset=UTF-8"}
          |                    ]
          |                }],
@@ -6596,20 +6626,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnSpecificUnparsedHeaders(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB);
+    val bobPath = MailboxPath.inbox(bobUsername);
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("World domination \r\n" +
         " and this is also part of the header")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -6621,7 +6651,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:Subject", "header:From", "header:Sender"]
                |     },
@@ -6642,27 +6672,27 @@ trait EmailGetMethodContract {
         s"""{
            |    "id": "${messageId.serialize}",
            |    "header:Subject":" =?US-ASCII?Q?World_domination_=0D=0A_and_th?=\\r\\n =?US-ASCII?Q?is_is_also_part_of_the_header?=",
-           |    "header:From":" andre@domain.tld",
-           |    "header:Sender":" andre@domain.tld"
+           |    "header:From":" ${andreUsername.asString()}",
+           |    "header:Sender":" ${andreUsername.asString()}"
            |}""".stripMargin)
   }
 
   @Test
   def emailGetShouldReturnSpecificUnparsedHeadersWithInsensitiveCaseMatching(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB);
+    val bobPath = MailboxPath.inbox(bobUsername);
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("World domination \r\n" +
         " and this is also part of the header")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -6674,7 +6704,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:subJeCt"]
                |     },
@@ -6700,20 +6730,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldRejectSpecificUnparsedHeadersWithColon(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB);
+    val bobPath = MailboxPath.inbox(bobUsername);
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("World domination \r\n" +
         " and this is also part of the header")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -6725,7 +6755,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:From:Subject"]
                |     },
@@ -6756,20 +6786,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnNullWhenUnknownSpecificUnparsedHeaders(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB);
+    val bobPath = MailboxPath.inbox(bobUsername);
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("World domination \r\n" +
         " and this is also part of the header")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -6781,7 +6811,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:blahblah"]
                |     },
@@ -6807,20 +6837,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldRejectEmptySpecificUnparsedHeaders(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB);
+    val bobPath = MailboxPath.inbox(bobUsername);
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("World domination \r\n" +
         " and this is also part of the header")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -6832,7 +6862,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:"]
                |     },
@@ -6867,9 +6897,9 @@ trait EmailGetMethodContract {
 
     val flags: Flags = new Flags(Flags.Flag.ANSWERED)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -6884,7 +6914,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["keywords"]
            |     },
@@ -6922,9 +6952,9 @@ trait EmailGetMethodContract {
     flags.add(Flags.Flag.FLAGGED)
     flags.add(Flags.Flag.SEEN)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -6939,7 +6969,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["keywords"]
            |     },
@@ -6980,9 +7010,9 @@ trait EmailGetMethodContract {
     flags.add(Flags.Flag.FLAGGED)
     flags.add("custom_flag")
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -6997,7 +7027,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["keywords"]
            |     },
@@ -7036,9 +7066,9 @@ trait EmailGetMethodContract {
     val nonExposedFlags: Flags = new Flags(Flags.Flag.RECENT)
     nonExposedFlags.add(Flags.Flag.DELETED)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(nonExposedFlags)
       .build(message))
       .getMessageId
@@ -7053,7 +7083,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["keywords"]
            |     },
@@ -7093,16 +7123,16 @@ trait EmailGetMethodContract {
     flags2.add("f3")
     flags2.add("f2")
 
-    val path1 = MailboxPath.inbox(BOB)
-    val path2 = MailboxPath.forUser(BOB, "box2")
+    val path1 = MailboxPath.inbox(bobUsername)
+    val path2 = MailboxPath.forUser(bobUsername, "box2")
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path1)
     mailboxProbe.createMailbox(path2)
-    val messageId: ComposedMessageId = mailboxProbe.appendMessage(BOB.asString(), path1, AppendCommand.builder()
+    val messageId: ComposedMessageId = mailboxProbe.appendMessage(bobUsername.asString(), path1, AppendCommand.builder()
       .withFlags(flags1)
       .build(message))
-    mailboxProbe.copy(BOB, path1, path2, messageId.getUid)
-    mailboxProbe.setFlags(BOB, path1, messageId.getUid, flags2)
+    mailboxProbe.copy(bobUsername, path1, path2, messageId.getUid)
+    mailboxProbe.setFlags(bobUsername, path1, messageId.getUid, flags2)
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -7112,7 +7142,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.getMessageId.serialize}"],
            |       "properties": ["keywords"]
            |     },
@@ -7147,21 +7177,21 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnSpecificHeadersAsRaw(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("World domination \r\n" +
         " and this is also part of the header")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7173,7 +7203,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:Subject:asRaw"]
                |     },
@@ -7199,15 +7229,15 @@ trait EmailGetMethodContract {
 
   @Test
   def asRawShouldSupportSeveralHeaders(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("To",
         "\"user1\" user1@domain.tld"))
       .addField(new RawField("Cc",
@@ -7221,7 +7251,7 @@ trait EmailGetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7233,7 +7263,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:Subject:asRaw", "header:Sender:asRaw", "header:From:asRaw", "header:To:asRaw", "header:Cc:asRaw", "header:Bcc:asRaw",
                |       "header:ReplyTo:asRaw", "header:InReplyTo:asRaw", "header:References:asRaw", "header:MessageId:asRaw", "header:sentAt:asRaw"]
@@ -7257,34 +7287,34 @@ trait EmailGetMethodContract {
            |    "header:Bcc:asRaw": " \\"user3\\" user3@domain.tld",
            |    "header:MessageId:asRaw": null,
            |    "header:ReplyTo:asRaw": " \\"user1\\" user1@domain.tld",
-           |    "header:From:asRaw": " andre@domain.tld",
+           |    "header:From:asRaw": " ${andreUsername.asString()}",
            |    "header:Cc:asRaw": " \\"user2\\" user2@domain.tld",
            |    "header:Subject:asRaw": " =?US-ASCII?Q?World_domination_=0D=0A_and_th?=\\r\\n =?US-ASCII?Q?is_is_also_part_of_the_header?=",
            |    "header:InReplyTo:asRaw": null,
            |    "header:sentAt:asRaw": null,
            |    "header:To:asRaw": " \\"user1\\" user1@domain.tld",
            |    "header:References:asRaw": null,
-           |    "header:Sender:asRaw": " andre@domain.tld"
+           |    "header:Sender:asRaw": " ${andreUsername.asString()}"
            |}""".stripMargin)
   }
 
   @Test
   def emailGetShouldReturnSpecificHeadersAsText(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("   World domination\r\n" +
         " and this is also part of the header\r\n")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7296,7 +7326,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:Subject:asText"]
                |     },
@@ -7322,21 +7352,21 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldSupportDifferentSpecificHeadersTypeOnSameMessage(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("   World domination\r\n" +
         " and this is also part of the header\r\n")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7348,7 +7378,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:Subject:asText", "header:Subject:asRaw"]
                |     },
@@ -7375,20 +7405,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldSupportAllQualifierForSpecificHeader(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
       .addField(new RawField("Subject", "Another SUB"))
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7400,7 +7430,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:Subject:asText:all", "header:Subject:all", "header:Missing:all"]
                |     },
@@ -7428,20 +7458,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnSpecificHeadersAsAddresses(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("To", "\"  user1  \" <user1@domain.tld>, \"user2\" <user2@domain.tld>"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7453,7 +7483,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:To:asAddresses"]
                |     },
@@ -7482,20 +7512,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnSpecificHeadersAsAddressesAndIgnoresGroup(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("To", "\"  user1  \" <user1@domain.tld>, Friends: \"user2\" <user2@domain.tld>, \"user3\" <user3@domain.tld>;"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7507,7 +7537,7 @@ trait EmailGetMethodContract {
                |  "methodCalls": [[
                |     "Email/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["${messageId.serialize}"],
                |       "properties": ["header:To:asAddresses"]
                |     },
@@ -7537,20 +7567,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnEmptyWhenCannotParseAsAddresses(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("To", "blahblah"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7563,7 +7593,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:To:asAddresses"]
            |     },
@@ -7589,20 +7619,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnGroupedAddresses(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("To", "\"  user1  \" <user1@domain.tld>, \"  user2  \" <user2@domain.tld>, Friends: <user3@domain.tld>, \"user4\" <user4@domain.tld>;"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7615,7 +7645,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:To:asGroupedAddresses"]
            |     },
@@ -7667,20 +7697,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnAsGroupedAddressesWithoutGroupInfo(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("To", "\"  user1  \" <user1@domain.tld>, \"  user2  \" <user2@domain.tld>, <user3@domain.tld>, \"user4\" <user4@domain.tld>"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7693,7 +7723,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:To:asGroupedAddresses"]
            |     },
@@ -7740,20 +7770,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnEmptyWhenCannotParseAsGroupedAddresses(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("To", "blahblah"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7766,7 +7796,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:To:asGroupedAddresses"]
            |     },
@@ -7792,20 +7822,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnSpecificHeaderAsMessageIds(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setMessageId("<1234@local.machine.example>")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7818,7 +7848,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:Message-Id:asMessageIds"]
            |     },
@@ -7846,20 +7876,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetSpecificHeaderAsMessageIdsShouldSupportMultipleIds(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("References", "<1234@local.machine.example> \r\n <3456@example.net>"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7872,7 +7902,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:References:asMessageIds"]
            |     },
@@ -7901,20 +7931,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetAsMessageIdsHeaderShouldReturnNullWhenInvalidMessageIds(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setMessageId("invalid")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7927,7 +7957,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:Message-Id:asMessageIds"]
            |     },
@@ -7953,20 +7983,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnSpecificHeaderWhenPartialInvalidMessageIds(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("References", "invalid   bloblah \r\n <3456@example.net>"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -7979,7 +8009,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:References:asMessageIds"]
            |     },
@@ -8007,22 +8037,22 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnSpecificHeaderAsDate(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("Date",
         "Wed, 9 Sep 2020 07:00:26 +0200"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -8035,7 +8065,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:Date:asDate"]
            |     },
@@ -8061,21 +8091,21 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnNullWhenInvalidSpecificHeaderAsDate(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("Date", "Invalid"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -8088,7 +8118,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:Date:asDate"]
            |     },
@@ -8114,20 +8144,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnSpecificHeaderAsURLs(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("List-Help", "<http://www.host.com/list/>, <mailto:list-info@host.com>"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -8140,7 +8170,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:List-Help:asURLs"]
            |     },
@@ -8169,20 +8199,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnSpecificHeaderAsURLsAndIgnoresComments(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("List-Help", "<http://www.host.com/list/>, (FTP) <mailto:list-info@host.com>"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -8195,7 +8225,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:List-Help:asURLs"]
            |     },
@@ -8224,20 +8254,20 @@ trait EmailGetMethodContract {
 
   @Test
   def emailGetShouldReturnNullWhenInvalidSpecificHeaderAsURLs(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val alicePath = MailboxPath.inbox(ALICE)
+    val alicePath = MailboxPath.inbox(aliceUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .addField(new RawField("List-Help", "Invalid"))
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val response = `given`
@@ -8250,7 +8280,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["${messageId.serialize}"],
            |       "properties": ["header:List-Help:asURLs"]
            |     },
@@ -8277,18 +8307,18 @@ trait EmailGetMethodContract {
   @Test
   def emailStateShouldBeTheLatestOne(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val accountId: AccountId = AccountId.fromUsername(BOB)
-    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
+    val path: MailboxPath = MailboxPath.inbox(bobUsername)
     mailboxProbe.createMailbox(path)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(BOB.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(bobUsername.asString())
+      .setFrom(andreUsername.asString())
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, path, AppendCommand.from(message))
       .getMessageId
       .serialize()
 
@@ -8302,7 +8332,7 @@ trait EmailGetMethodContract {
            |  "methodCalls": [[
            |     "Email/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": ["$messageId"],
            |       "properties": ["id"]
            |     },
@@ -8322,7 +8352,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |  "accountId": "$bobAccountId",
            |  "state": "${state.getValue}",
            |  "list":[
            |    {
@@ -8335,14 +8365,14 @@ trait EmailGetMethodContract {
 
   @Test
   def bobShouldBeAbleToAccessAndreMailboxWhenDelegated(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(ANDRE)
+    val path = MailboxPath.inbox(andreUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, path, AppendCommand.from(
+      .appendMessage(andreUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
-    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(ANDRE, BOB)
+    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(andreUsername, bobUsername)
 
     val request =
       s"""{
@@ -8352,7 +8382,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["messageId"]
          |    },
@@ -8381,10 +8411,10 @@ trait EmailGetMethodContract {
 
   @Test
   def bobShouldNotBeAbleToAccessAndreMailboxWhenNotDelegated(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.inbox(ANDRE)
+    val path = MailboxPath.inbox(andreUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, path, AppendCommand.from(
+      .appendMessage(andreUsername.asString, path, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -8396,7 +8426,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["messageId"]
          |    },
@@ -8429,12 +8459,12 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     val messagesList = List.range(0, 100)
       .map(_ => {
         server.getProbe(classOf[MailboxProbeImpl])
-          .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+          .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
           .getMessageId
           .serialize()
       }).toArray
@@ -8449,7 +8479,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": $messageIdsJson,
          |      "properties": ["id", "size", "bodyStructure", "textBody", "htmlBody", "bodyValues"]
          |    },
@@ -8488,12 +8518,12 @@ trait EmailGetMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     val messagesList = List.range(0, 100)
       .map(_ => {
         server.getProbe(classOf[MailboxProbeImpl])
-          .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+          .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
           .getMessageId
           .serialize()
       }).toArray
@@ -8508,7 +8538,7 @@ trait EmailGetMethodContract {
          |  "methodCalls": [[
          |    "Email/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": $messageIdsJson,
          |      "properties": ["id", "size"]
          |    },
