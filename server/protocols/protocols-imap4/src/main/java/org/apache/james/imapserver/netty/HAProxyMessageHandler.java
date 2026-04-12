@@ -88,7 +88,7 @@ public class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
                 .doFinally(any -> haproxyMsg.release())
                 .subscribe(any -> {
 
-                }, error -> ctx.executor().execute(() -> ctx.fireExceptionCaught(error)));
+                }, error -> ctx.executor().execute(() -> ctx.pipeline().fireExceptionCaught(error)));
 
         } else {
             haproxyMsg.release();

@@ -229,7 +229,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             .then(Mono.fromRunnable(() -> ctx.executor().execute(Throwing.runnable(() -> acceptConnection(ctx, imapsession)))))
             .subscribe(any -> {
 
-            }, error -> ctx.executor().execute(() -> ctx.fireExceptionCaught(error)));
+            }, error -> ctx.executor().execute(() -> ctx.pipeline().fireExceptionCaught(error)));
     }
 
     private void acceptConnection(ChannelHandlerContext ctx, ImapSession imapsession) throws Exception {
