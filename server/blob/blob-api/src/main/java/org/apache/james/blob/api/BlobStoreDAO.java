@@ -19,85 +19,234 @@
 
 package org.apache.james.blob.api;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import org.reactivestreams.Publisher;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSource;
+import com.google.common.io.FileBackedOutputStream;
 
 public interface BlobStoreDAO {
-    class ReactiveByteSource {
-        private final long size;
-        private final Publisher<ByteBuffer> content;
+    record BlobMetadataName(String name) {
+        private static final CharMatcher CHAR_MATCHER = CharMatcher.inRange('a', 'z')
+            .or(CharMatcher.inRange('A', 'Z'))
+            .or(CharMatcher.inRange('0', '9'))
+            .or(CharMatcher.is('-'));
 
-        public ReactiveByteSource(long size, Publisher<ByteBuffer> content) {
-            this.size = size;
-            this.content = content;
+        public BlobMetadataName {
+            Preconditions.checkArgument(CHAR_MATCHER.matchesAllOf(name), "Invalid char in metadata name. Must be a-z,A-Z,0-9 or - got " + name);
+            Preconditions.checkArgument(name.length() < 128, "Metadata name is too long. Size exceed 128 chars");
+            name = name.toLowerCase(Locale.US);
+        }
+    }
+
+    record BlobMetadataValue(String value) {
+        public BlobMetadataValue {
+            Preconditions.checkArgument(value.length() < 128, "Metadata value is too long. Size exceed 128 chars");
+        }
+    }
+
+    record ContentTransferEncoding(String value) {
+        public static BlobMetadataName NAME = new BlobMetadataName("content-transfer-encoding");
+        public static ContentTransferEncoding ZSTD = new ContentTransferEncoding("zstd");
+
+        public static ContentTransferEncoding fromValue(BlobMetadataValue value) {
+            return new ContentTransferEncoding(value.value());
         }
 
-        public long getSize() {
-            return size;
+        public ContentTransferEncoding {
+            Preconditions.checkArgument(value.length() < 128, "ContentTransferEncoding value is too long. Size exceed 128 chars");
         }
 
-        public Publisher<ByteBuffer> getContent() {
-            return content;
+        public BlobMetadataValue asValue() {
+            return new BlobMetadataValue(value);
+        }
+
+    }
+
+    record BlobMetadata(Map<BlobMetadataName, BlobMetadataValue> underlyingMap) {
+        public static BlobMetadata empty() {
+            return new BlobMetadata(ImmutableMap.of());
+        }
+
+        public Optional<BlobMetadataValue> get(BlobMetadataName name) {
+            return Optional.ofNullable(underlyingMap.get(name));
+        }
+
+        public BlobMetadata withMetadata(BlobMetadataName name, BlobMetadataValue value) {
+            return new BlobMetadata(ImmutableMap.<BlobMetadataName, BlobMetadataValue>builder()
+                .putAll(underlyingMap)
+                .put(name, value)
+                .build());
+        }
+
+        public Optional<ContentTransferEncoding> contentTransferEncoding() {
+            return get(ContentTransferEncoding.NAME).map(ContentTransferEncoding::fromValue);
+        }
+
+        public BlobMetadata withContentTransferEncoding(ContentTransferEncoding contentTransferEncoding) {
+            return withMetadata(ContentTransferEncoding.NAME, contentTransferEncoding.asValue());
         }
     }
 
 
+    sealed interface Blob {
+        BlobMetadata metadata();
+
+        // Have the POJOs encode some conversions ?
+        InputStreamBlob asInputStream() throws IOException;
+
+        BytesBlob asBytes() throws IOException;
+
+        ByteSourceBlob asByteSource() throws IOException;
+    }
+
+    record BytesBlob(byte[] payload,  BlobMetadata metadata) implements Blob {
+        public static BytesBlob of(byte[] payload) {
+            return of(payload, BlobMetadata.empty());
+        }
+
+        public static BytesBlob of(String payload) {
+            return of(payload.getBytes(StandardCharsets.UTF_8), BlobMetadata.empty());
+        }
+
+        public static BytesBlob of(byte[] payload,  BlobMetadata metadata) {
+            return new BytesBlob(payload, metadata);
+        }
+
+        @Override
+        public InputStreamBlob asInputStream() {
+            return new InputStreamBlob(new ByteArrayInputStream(payload), metadata);
+        }
+
+        @Override
+        public BytesBlob asBytes() {
+            return this;
+        }
+
+        @Override
+        public ByteSourceBlob asByteSource() {
+            return new ByteSourceBlob(ByteSource.wrap(payload), metadata);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof BytesBlob(byte[] otherPayload, BlobMetadata otherMetadata)) {
+                return Arrays.equals(payload, otherPayload)
+                    && metadata.equals(otherMetadata);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(Arrays.hashCode(payload), metadata);
+        }
+    }
+
+    record InputStreamBlob(InputStream payload,  BlobMetadata metadata) implements Blob {
+        public static InputStreamBlob of(InputStream payload) {
+            return of(payload, BlobMetadata.empty());
+        }
+
+        public static InputStreamBlob of(InputStream payload, BlobMetadata metadata) {
+            return new InputStreamBlob(payload, metadata);
+        }
+
+        private static final int FILE_THRESHOLD = 100 * 1024;
+
+        @Override
+        public InputStreamBlob asInputStream() {
+            return this;
+        }
+
+        @Override
+        public BytesBlob asBytes() throws IOException {
+            return new BytesBlob(payload.readAllBytes(), metadata);
+        }
+
+        @Override
+        public ByteSourceBlob asByteSource() throws IOException {
+            try (FileBackedOutputStream fileBackedOutputStream = new FileBackedOutputStream(FILE_THRESHOLD)) {
+                payload.transferTo(fileBackedOutputStream);
+                return new ByteSourceBlob(fileBackedOutputStream.asByteSource(), metadata);
+            }
+        }
+    }
+
+    record ByteSourceBlob(ByteSource payload, BlobMetadata metadata) implements Blob {
+        public static ByteSourceBlob of(ByteSource payload) {
+            return of(payload, BlobMetadata.empty());
+        }
+
+        public static ByteSourceBlob of(ByteSource payload, BlobMetadata metadata) {
+            return new ByteSourceBlob(payload, metadata);
+        }
+
+        @Override
+        public InputStreamBlob asInputStream() throws IOException {
+            return new InputStreamBlob(payload.openStream(), metadata);
+        }
+
+        @Override
+        public BytesBlob asBytes() throws IOException {
+            return new BytesBlob(payload.read(), metadata);
+        }
+
+        @Override
+        public ByteSourceBlob asByteSource() {
+            return this;
+        }
+    }
+
     /**
-     * Reads a Blob based on its BucketName and its BlobId.
+     * Reads a InputStreamBlob based on its BucketName and its BlobId.
      *
      * @throws ObjectNotFoundException when the blobId or the bucket is not found
      * @throws ObjectStoreIOException when an unexpected IO error occurs
      */
-    InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
-
-    Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId);
+    InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
 
     /**
-     * Reads a Blob based on its BucketName and its BlobId
+     * Reads reactively a InputStreamBlob based on its BucketName and its BlobId.
      *
-     * @return a Mono containing the content of the blob or
+     * @return a Publisher containing the content and metadata of the blob or
      *  an ObjectNotFoundException in its error channel when the blobId or the bucket is not found
-     *  or an IOObjectStoreException when an unexpected IO error occurs
+     *  or an ObjectStoreIOException when an unexpected IO error occurs
      */
-    Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId);
-
+    Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId);
 
     /**
-     * Save the blob with the provided blob id, and overwrite the previous blob with the same id if it already exists
-     * The bucket is created if it not already exists.
-     * This operation should be atomic and isolated
-     * Two blobs having the same blobId must have the same content
-     * @return an empty Mono when the save succeed,
-     *  otherwise an IOObjectStoreException in its error channel
-     */
-    Publisher<Void> save(BucketName bucketName, BlobId blobId, byte[] data);
-
-    /**
-     * @see #save(BucketName, BlobId, byte[])
+     * Reads reactively a BytesBlob based on its BucketName and its BlobId.
      *
-     * The InputStream should be closed after the call to this method
+     * @return a Publisher containing the content and metadata of the blob or
+     *  an ObjectNotFoundException in its error channel when the blobId or the bucket is not found
+     *  or an ObjectStoreIOException when an unexpected IO error occurs
      */
-    Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream);
+    Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId);
 
     /**
-     * @see #save(BucketName, BlobId, byte[])
-     */
-    Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSource content);
-
-    /**
-     * @see #save(BucketName, BlobId, byte[])
+     * Save the blob with the provided blob id, and overwrite the previous blob with the same id if it already exists.
+     * The bucket is created if it does not already exist.
+     * This operation should be atomic and isolated.
+     * Two blobs having the same blobId must have the same content.
      *
-     * The String is stored as UTF-8.
+     * @return an empty Publisher when the save succeeds,
+     *  otherwise an ObjectStoreIOException in its error channel
      */
-    default Publisher<Void> save(BucketName bucketName, BlobId blobId, String data) {
-        return save(bucketName, blobId, data.getBytes(StandardCharsets.UTF_8));
-    }
+    Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob);
 
     /**
      * Remove a Blob based on its BucketName and its BlobId.

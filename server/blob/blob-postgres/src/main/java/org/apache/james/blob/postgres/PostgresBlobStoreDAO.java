@@ -25,7 +25,6 @@ import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.P
 import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.SIZE;
 import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.TABLE_NAME;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -44,6 +43,7 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.jooq.impl.DSL;
+import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -63,28 +63,37 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         return Mono.from(readReactive(bucketName, blobId))
             .block();
     }
 
     @Override
-    public Mono<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
+    public Mono<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
         return Mono.from(readBytes(bucketName, blobId))
-            .map(ByteArrayInputStream::new);
+            .map(BytesBlob::asInputStream);
     }
 
     @Override
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+    public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(DATA)
                 .from(TABLE_NAME)
                 .where(BUCKET_NAME.eq(bucketName.asString()))
                 .and(BLOB_ID.eq(blobId.asString()))))
             .map(record -> record.get(DATA))
-            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException("Blob " + blobId + " does not exist in bucket " + bucketName)));
+            .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException("Blob " + blobId + " does not exist in bucket " + bucketName)))
+            .map(BytesBlob::of);
     }
 
     @Override
+    public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
+        return switch (blob) {
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload());
+        };
+    }
+
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
         Preconditions.checkNotNull(data);
 
@@ -100,7 +109,6 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
                 .set(SIZE, data.length)));
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(inputStream);
 
@@ -113,7 +121,6 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
         }).flatMap(bytes -> save(bucketName, blobId, bytes));
     }
 
-    @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         return Mono.fromCallable(() -> {
             try {

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,23 +15,20 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
+ ***************************************************************/
+
 package org.apache.james.blob.api;
 
-import java.nio.charset.StandardCharsets;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.base.Strings;
+import org.junit.jupiter.api.Test;
 
-public interface BlobStoreDAOFixture {
-    BucketName TEST_BUCKET_NAME = BucketName.of("my-test-bucket");
-    BucketName CUSTOM_BUCKET_NAME = BucketName.of("custom");
-    BlobId TEST_BLOB_ID = new TestBlobId("test-blob-id");
-    BlobId OTHER_TEST_BLOB_ID = new TestBlobId("other-test-blob-id");
-    String SHORT_STRING = "toto";
-    byte[] EMPTY_BYTEARRAY = {};
-    BlobStoreDAO.BytesBlob SHORT_BYTEARRAY = BlobStoreDAO.BytesBlob.of(SHORT_STRING.getBytes(StandardCharsets.UTF_8));
-    BlobStoreDAO.BytesBlob ELEVEN_KILOBYTES = BlobStoreDAO.BytesBlob.of(Strings.repeat("2103456789\n", 1000));
-    String TWELVE_MEGABYTES_STRING = Strings.repeat("7893456789\r\n", 1024 * 1024);
-    BlobStoreDAO.BytesBlob TWELVE_MEGABYTES = BlobStoreDAO.BytesBlob.of(TWELVE_MEGABYTES_STRING);
-
+class BlobMetadataTest {
+    @Test
+    void blobMetadataNameShouldBeCaseInsensitive() {
+        assertThat(new BlobStoreDAO.BlobMetadataName("X-Test").name())
+            .isEqualTo("x-test");
+        assertThat(new BlobStoreDAO.BlobMetadataName("X-Test"))
+            .isEqualTo(new BlobStoreDAO.BlobMetadataName("x-test"));
+    }
 }
