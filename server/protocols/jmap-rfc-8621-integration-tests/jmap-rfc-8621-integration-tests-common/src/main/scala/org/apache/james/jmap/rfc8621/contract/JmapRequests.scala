@@ -19,22 +19,29 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.`given`
 import io.restassured.http.ContentType.JSON
 import org.apache.http.HttpStatus.SC_OK
-import org.apache.james.jmap.rfc8621.contract.Fixture.ACCEPT_RFC8621_VERSION_HEADER
+import org.apache.james.core.Username
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB}
 import org.apache.james.mailbox.model.MessageId
 
 object JmapRequests {
-  def renameMailbox(mailboxId: String, name: String): Unit = {
+  private def accountId(username: Username): String =
+    Hashing.sha256().hashString(username.asString(), StandardCharsets.UTF_8).toString
+
+  def renameMailbox(mailboxId: String, name: String, username: Username = BOB): Unit = {
     val request =
       s"""
          |{
          |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
          |  "methodCalls": [[
          |    "Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "${accountId(username)}",
          |      "update": {
          |        "$mailboxId": {
          |          "name": "$name"
@@ -56,14 +63,14 @@ object JmapRequests {
       .contentType(JSON)
   }
 
-  def destroyMailbox(mailboxId: String): Unit = {
+  def destroyMailbox(mailboxId: String, username: Username = BOB): Unit = {
     val request =
       s"""
          |{
          |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
          |  "methodCalls": [[
          |    "Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "${accountId(username)}",
          |      "destroy": ["$mailboxId"]
          |    }, "c1"]
          |  ]
@@ -81,13 +88,13 @@ object JmapRequests {
       .contentType(JSON)
   }
 
-  def markEmailAsSeen(messageId: MessageId): Unit = {
+  def markEmailAsSeen(messageId: MessageId, username: Username = BOB): Unit = {
     val request = String.format(
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "${accountId(username)}",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "keywords": {
@@ -109,13 +116,13 @@ object JmapRequests {
       .contentType(JSON)
   }
 
-  def markEmailAsNotSeen(messageId: MessageId): Unit = {
+  def markEmailAsNotSeen(messageId: MessageId, username: Username = BOB): Unit = {
     val request = String.format(
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "${accountId(username)}",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "keywords/$$seen": null
@@ -135,13 +142,13 @@ object JmapRequests {
       .contentType(JSON)
   }
 
-  def destroyEmail(messageId: MessageId): Unit = {
+  def destroyEmail(messageId: MessageId, username: Username = BOB): Unit = {
     val request = String.format(
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "${accountId(username)}",
          |      "destroy": ["${messageId.serialize}"]
          |    }, "c1"]]
          |}""".stripMargin)
@@ -157,14 +164,14 @@ object JmapRequests {
       .contentType(JSON)
   }
 
-  def subscribe( mailboxId: String) : Unit = {
+  def subscribe(mailboxId: String, username: Username = BOB): Unit = {
     val request =
       s"""
          |{
          |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
          |  "methodCalls": [[
          |    "Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "${accountId(username)}",
          |      "update": {
          |        "$mailboxId": {
          |          "isSubscribed": true
@@ -186,14 +193,14 @@ object JmapRequests {
       .contentType(JSON)
   }
 
-  def unSubscribe(mailboxId: String): Unit = {
+  def unSubscribe(mailboxId: String, username: Username = BOB): Unit = {
     val request =
       s"""
          |{
          |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
          |  "methodCalls": [[
          |    "Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "${accountId(username)}",
          |      "update": {
          |        "$mailboxId": {
          |          "isSubscribed": false

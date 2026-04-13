@@ -22,8 +22,11 @@ package org.apache.james.jmap.rfc8621.contract
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.util.UUID
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
@@ -33,10 +36,12 @@ import net.javacrumbs.jsonunit.core.Option
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, BOB, BOB_PASSWORD, CEDRIC, DAVID, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, CEDRIC, DAVID, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.MailboxSetMethodContract.TestContext
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.jmap.{JmapGuiceProbe, MessageIdProbe}
 import org.apache.james.mailbox.DefaultMailboxes
@@ -68,7 +73,17 @@ import scala.concurrent.duration.MILLISECONDS
 import scala.jdk.CollectionConverters._
 
 
+object MailboxSetMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String,
+                         andreUsername: Username)
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+}
+
 trait MailboxSetMethodContract {
+  def bobUsername: Username = MailboxSetMethodContract.currentContext.get().bobUsername
+  def bobAccountId: String = MailboxSetMethodContract.currentContext.get().bobAccountId
+  def andreUsername: Username = MailboxSetMethodContract.currentContext.get().andreUsername
+
   private lazy val slowPacedPollInterval = Duration.ofMillis(100)
   private lazy val calmlyAwait = Awaitility.`with`
     .pollInterval(slowPacedPollInterval)
@@ -80,13 +95,23 @@ trait MailboxSetMethodContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    MailboxSetMethodContract.currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString,
+      andreUsername = andre
+    ))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString(), ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -143,7 +168,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenModifyingRole(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
     val request =
       s"""
          |{
@@ -151,7 +176,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "role": "Draft"
@@ -182,7 +207,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -198,7 +223,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenModifyingSortOrder(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
     val request =
       s"""
          |{
@@ -206,7 +231,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sortOrder": 42
@@ -237,7 +262,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -253,7 +278,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenModifyingQuotas(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
     val request =
       s"""
          |{
@@ -261,7 +286,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "quotas": {}
@@ -292,7 +317,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -308,7 +333,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenModifyingNamespace(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
     val request =
       s"""
          |{
@@ -316,7 +341,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "namespace": "Personal"
@@ -347,7 +372,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -363,7 +388,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenModifyingMyRights(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
     val request =
       s"""
          |{
@@ -371,7 +396,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "myRights": {}
@@ -402,7 +427,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -418,7 +443,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenModifyingNameToBlank(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
          |{
@@ -426,7 +451,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize()}": {
          |                      "name": "   "
@@ -457,11 +482,11 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize()}": {
          |          "type": "invalidArguments",
-         |          "description": "'#private:bob@domain.tld:   ' has an empty part within its mailbox name considering . as a delimiter",
+         |          "description": "'#private:${bobUsername.asString()}:   ' has an empty part within its mailbox name considering . as a delimiter",
          |          "properties":["name"]
          |        }
          |      }
@@ -473,14 +498,14 @@ trait MailboxSetMethodContract {
   @Test
   def createShouldFailWhenNameWithDelimiter(): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "my.mailbox"
@@ -513,7 +538,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
@@ -529,7 +554,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenModifyingUnreadThreads(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
     val request =
       s"""
          |{
@@ -537,7 +562,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "unreadThreads": 42
@@ -568,7 +593,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -584,7 +609,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenModifyingTotalThreads(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
     val request =
       s"""
          |{
@@ -592,7 +617,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "totalThreads": 42
@@ -623,7 +648,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -639,7 +664,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenModifyingUnreadEmails(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
     val request =
       s"""
          |{
@@ -647,7 +672,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "unreadEmails": 42
@@ -678,7 +703,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -694,7 +719,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenModifyingTotalEmails(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
     val request =
       s"""
          |{
@@ -702,7 +727,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "totalEmails": 42
@@ -733,7 +758,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -749,14 +774,14 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldReturnNotCreatedWhenNameIsMissing(): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                    }
@@ -790,7 +815,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
@@ -805,14 +830,14 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldReturnNotCreatedWhenNameIsEmpty(): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": ""
@@ -847,7 +872,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
@@ -862,14 +887,14 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldReturnNotCreatedWhenNameIsBlank(): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "      "
@@ -904,11 +929,11 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
-         |          "description": "'#private:bob@domain.tld:      ' has an empty part within its mailbox name considering . as a delimiter",
+         |          "description": "'#private:${bobUsername.asString()}:      ' has an empty part within its mailbox name considering . as a delimiter",
          |          "properties":["name"]
          |        }
          |      }
@@ -920,14 +945,14 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldReturnNotCreatedWhenUnknownParameter(): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "plop",
@@ -963,7 +988,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
@@ -979,14 +1004,14 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldReturnNotCreatedWhenServerSetParameter(): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "plop",
@@ -1022,7 +1047,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
@@ -1038,14 +1063,14 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldReturnNotCreatedWhenBadParameter(): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "plop",
@@ -1081,7 +1106,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
@@ -1096,14 +1121,14 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldCreateMailboxWhenOnlyName(server: GuiceJamesServer): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox"
@@ -1130,21 +1155,21 @@ trait MailboxSetMethodContract {
         .asString
 
     Assertions.assertThatCode(() => server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "myMailbox")).doesNotThrowAnyException()
+      .getMailboxId("#private", bobUsername.asString(), "myMailbox")).doesNotThrowAnyException()
   }
 
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def mailboxSetShouldSubscribeMailboxWhenRequired(server: GuiceJamesServer): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox",
@@ -1172,20 +1197,20 @@ trait MailboxSetMethodContract {
       .asString
 
     Assertions.assertThat(server.getProbe(classOf[MailboxProbeImpl])
-      .listSubscriptions(BOB.asString())).contains("myMailbox")
+      .listSubscriptions(bobUsername.asString())).contains("myMailbox")
   }
 
   @Test
   def createShouldNotReturnSubscribeWhenSpecified(server: GuiceJamesServer): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox",
@@ -1213,7 +1238,7 @@ trait MailboxSetMethodContract {
       .asString
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "myMailbox")
+      .getMailboxId("#private", bobUsername.asString(), "myMailbox")
       .serialize
 
     assertThatJson(response)
@@ -1223,7 +1248,7 @@ trait MailboxSetMethodContract {
          |	"sessionState": "${SESSION_STATE.value}",
          |	"methodResponses": [
          |		["Mailbox/set", {
-         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"accountId": "$bobAccountId",
          |			"created": {
          |				"C42": {
          |					"id": "${mailboxId}",
@@ -1253,14 +1278,14 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldNotSubscribeMailboxWhenRequired(server: GuiceJamesServer): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox",
@@ -1288,20 +1313,20 @@ trait MailboxSetMethodContract {
       .asString
 
     Assertions.assertThat(server.getProbe(classOf[MailboxProbeImpl])
-      .listSubscriptions(BOB.asString())).doesNotContain("myMailbox")
+      .listSubscriptions(bobUsername.asString())).doesNotContain("myMailbox")
   }
 
   @Test
   def mailboxSetShouldSubscribeMailboxByDefault(server: GuiceJamesServer): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox"
@@ -1328,7 +1353,7 @@ trait MailboxSetMethodContract {
       .asString
 
     Assertions.assertThat(server.getProbe(classOf[MailboxProbeImpl])
-      .listSubscriptions(BOB.asString())).contains("myMailbox")
+      .listSubscriptions(bobUsername.asString())).contains("myMailbox")
   }
 
   @Test
@@ -1342,12 +1367,12 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox",
         |                      "rights": {
-        |                        "${ANDRE.asString()}": ["l", "r"]
+        |                        "${andreUsername.asString()}": ["l", "r"]
         |                      }
         |                    }
         |                }
@@ -1356,7 +1381,7 @@ trait MailboxSetMethodContract {
         |       ],
         |       ["Mailbox/get",
         |         {
-        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "accountId": "$bobAccountId",
         |           "properties": ["id", "name", "rights"],
         |           "ids": ["#C42"]
         |          },
@@ -1379,7 +1404,7 @@ trait MailboxSetMethodContract {
       .asString
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "myMailbox")
+      .getMailboxId("#private", bobUsername.asString(), "myMailbox")
       .serialize
 
     assertThatJson(response)
@@ -1389,7 +1414,7 @@ trait MailboxSetMethodContract {
          |	"sessionState": "${SESSION_STATE.value}",
          |	"methodResponses": [
          |		["Mailbox/set", {
-         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"accountId": "$bobAccountId",
          |			"created": {
          |				"C42": {
          |					"id": "$mailboxId",
@@ -1414,13 +1439,13 @@ trait MailboxSetMethodContract {
          |			}
          |		}, "c1"],
          |		["Mailbox/get", {
-         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"accountId": "$bobAccountId",
          |			"state": "${INSTANCE.value}",
          |			"list": [{
          |				"id": "$mailboxId",
          |				"name": "myMailbox",
          |				"rights": {
-         |					"andre@domain.tld": ["l", "r"]
+         |					"${andreUsername.asString()}": ["l", "r"]
          |				}
          |			}],
          |      "notFound":[]
@@ -1439,12 +1464,12 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox",
         |                      "rights": {
-        |                        "${ANDRE.asString()}": ["invalid"]
+        |                        "${andreUsername.asString()}": ["invalid"]
         |                      }
         |                    }
         |                }
@@ -1475,11 +1500,11 @@ trait MailboxSetMethodContract {
          |	"sessionState": "${SESSION_STATE.value}",
          |	"methodResponses": [
          |		["Mailbox/set", {
-         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"accountId": "$bobAccountId",
          |			"notCreated": {
          |				"C42": {
          |					"type": "invalidArguments",
-         |					"description": "'/rights/andre@domain.tld(0)' property is not valid: Rights must have size 1"
+         |					"description": "'/rights/${andreUsername.asString()}(0)' property is not valid: Rights must have size 1"
          |				}
          |			}
          |		}, "c1"]
@@ -1497,12 +1522,12 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox",
         |                      "rights": {
-        |                        "${ANDRE.asString()}": ["z"]
+        |                        "${andreUsername.asString()}": ["z"]
         |                      }
         |                    }
         |                }
@@ -1533,11 +1558,11 @@ trait MailboxSetMethodContract {
          |	"sessionState": "${SESSION_STATE.value}",
          |	"methodResponses": [
          |		["Mailbox/set", {
-         |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |			"accountId": "$bobAccountId",
          |			"notCreated": {
          |				"C42": {
          |					"type": "invalidArguments",
-         |					"description": "'/rights/andre@domain.tld(0)' property is not valid: Unknown right 'z'"
+         |					"description": "'/rights/${andreUsername.asString()}(0)' property is not valid: Unknown right 'z'"
          |				}
          |			}
          |		}, "c1"]
@@ -1548,14 +1573,14 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxGetShouldAllowTheUseOfCreationIds(server: GuiceJamesServer): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox"
@@ -1566,7 +1591,7 @@ trait MailboxSetMethodContract {
         |       ],
         |       ["Mailbox/get",
         |         {
-        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "accountId": "$bobAccountId",
         |           "properties": ["id", "name"],
         |           "ids": ["#C42"]
         |          },
@@ -1589,7 +1614,7 @@ trait MailboxSetMethodContract {
       .asString
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "myMailbox")
+      .getMailboxId("#private", bobUsername.asString(), "myMailbox")
       .serialize
 
     assertThatJson(response)
@@ -1599,7 +1624,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "created": {
          |        "C42": {
          |          "id": "$mailboxId",
@@ -1624,7 +1649,7 @@ trait MailboxSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [{
          |        "id": "$mailboxId",
@@ -1639,13 +1664,13 @@ trait MailboxSetMethodContract {
   @Test
   def destroyShouldUnsubscribeMailboxes(server: GuiceJamesServer): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox"
@@ -1656,7 +1681,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "destroy": ["#C42"]
         |           },
         |    "c2"]
@@ -1678,21 +1703,21 @@ trait MailboxSetMethodContract {
         .asString
 
     Assertions.assertThat(server.getProbe(classOf[MailboxProbeImpl])
-      .listSubscriptions(BOB.asString())).doesNotContain("myMailbox")
+      .listSubscriptions(bobUsername.asString())).doesNotContain("myMailbox")
   }
 
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def mailboxSetShouldReturnCreatedWhenOnlyName(server: GuiceJamesServer): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox"
@@ -1720,7 +1745,7 @@ trait MailboxSetMethodContract {
       .asString
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "myMailbox")
+      .getMailboxId("#private", bobUsername.asString(), "myMailbox")
       .serialize
 
     assertThatJson(response)
@@ -1731,7 +1756,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "created": {
          |        "C42": {
          |          "id": "$mailboxId",
@@ -1752,14 +1777,14 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxSetShouldReturnCreatedAndNotCreatedWhenOneWithOnlyNameAndOneWithoutName(server: GuiceJamesServer): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox"
@@ -1789,7 +1814,7 @@ trait MailboxSetMethodContract {
         .asString
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "myMailbox")
+      .getMailboxId("#private", bobUsername.asString(), "myMailbox")
       .serialize
 
     assertThatJson(response)
@@ -1800,7 +1825,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "created": {
          |        "C42": {
          |          "id": "$mailboxId",
@@ -1827,14 +1852,14 @@ trait MailboxSetMethodContract {
   @Test
   def mailboxCreationShouldReturnQuotaWhenUsingQuotaExtension(server: GuiceJamesServer): Unit = {
     val request =
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:quota" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox"
@@ -1862,7 +1887,7 @@ trait MailboxSetMethodContract {
         .asString
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "myMailbox")
+      .getMailboxId("#private", bobUsername.asString(), "myMailbox")
       .serialize
 
     assertThatJson(response)
@@ -1873,7 +1898,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "created": {
          |        "C42": {
          |          "id": "$mailboxId",
@@ -1885,7 +1910,7 @@ trait MailboxSetMethodContract {
          |          "unreadEmails":0,
          |          "unreadThreads":0,
          |          "quotas": {
-         |            "#private&bob@domain.tld": {
+         |            "#private&${bobUsername.asString()}": {
          |              "Storage": {
          |                "used": 0
          |              },
@@ -1903,7 +1928,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldCreateMailboxWhenNameAndParentId(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId  = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "parentMailbox"))
+    val mailboxId: MailboxId  = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "parentMailbox"))
     val request =
       s"""
         |{
@@ -1912,7 +1937,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "childMailbox",
@@ -1937,7 +1962,7 @@ trait MailboxSetMethodContract {
         .contentType(JSON)
 
     Assertions.assertThatCode(() => server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "parentMailbox.childMailbox")).doesNotThrowAnyException()
+      .getMailboxId("#private", bobUsername.asString(), "parentMailbox.childMailbox")).doesNotThrowAnyException()
   }
 
   @Test
@@ -1951,7 +1976,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "childMailbox",
@@ -1986,7 +2011,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
@@ -2001,7 +2026,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldNotCreateMailboxWhenNameExists(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
         |{
@@ -2010,7 +2035,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "mailbox"
@@ -2044,11 +2069,11 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
-         |          "description": "Mailbox with name=#private:bob@domain.tld:mailbox already exists.",
+         |          "description": "Mailbox with name=#private:${bobUsername.asString()}:mailbox already exists.",
          |          "properties":["name"]
          |        }
          |      }
@@ -2067,7 +2092,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "${"a".repeat(201)}"
@@ -2101,7 +2126,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
@@ -2116,11 +2141,11 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldNotCreateChildMailboxWhenSharedParentMailbox(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
     val request =
       s"""
         |{
@@ -2129,7 +2154,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "childMailbox",
@@ -2164,7 +2189,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notCreated": {
          |        "C42": {
          |          "type": "forbidden",
@@ -2179,11 +2204,11 @@ trait MailboxSetMethodContract {
 
   @Test
   def mailboxSetShouldCreateChildMailboxWhenSharedParentMailboxWithCreateRight(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.CreateMailbox))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.CreateMailbox))
     val request =
       s"""
         |{
@@ -2192,7 +2217,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "childMailbox",
@@ -2220,7 +2245,7 @@ trait MailboxSetMethodContract {
       .asString
 
     val childMailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", ANDRE.asString(), "mailbox.childMailbox")
+      .getMailboxId("#private", andreUsername.asString(), "mailbox.childMailbox")
       .serialize
 
     assertThatJson(response)
@@ -2231,7 +2256,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "created":{
          |        "C42":{
          |          "id":"${childMailboxId}",
@@ -2262,7 +2287,7 @@ trait MailboxSetMethodContract {
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def deleteShouldSucceedWhenMailboxExists(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
 
     val request =
       s"""
@@ -2272,7 +2297,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "destroy": ["${mailboxId.serialize}"]
         |           },
         |    "c1"
@@ -2302,7 +2327,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "destroyed": ["${mailboxId.serialize}"]
          |    },
          |    "c1"]]
@@ -2311,7 +2336,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def deleteShouldRemoveExistingMailbox(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
 
     val request =
       s"""
@@ -2321,7 +2346,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "destroy": ["${mailboxId.serialize}"]
         |           },
         |    "c1"
@@ -2350,7 +2375,7 @@ trait MailboxSetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId.serialize}"]
                |      },
                |      "c1"]]
@@ -2371,7 +2396,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "state": "${INSTANCE.value}",
          |                "list": [
          |
@@ -2388,8 +2413,8 @@ trait MailboxSetMethodContract {
 
   @Test
   def deleteShouldRemoveExistingMailboxes(server: GuiceJamesServer): Unit = {
-    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
-    val mailboxId2: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
+    val mailboxId2: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
 
     val request =
       s"""
@@ -2399,7 +2424,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "destroy": ["${mailboxId1.serialize}", "${mailboxId2.serialize}"]
         |           },
         |    "c1"
@@ -2428,7 +2453,7 @@ trait MailboxSetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId1.serialize}", "${mailboxId2.serialize}"]
                |      },
                |      "c1"]]
@@ -2450,7 +2475,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "state": "${INSTANCE.value}",
          |                "list": [
          |
@@ -2476,7 +2501,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "destroy": ["${mailboxId.serialize}"]
         |           },
         |    "c1"
@@ -2506,7 +2531,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "${mailboxId.serialize}": {
          |          "type": "notFound",
@@ -2526,9 +2551,9 @@ trait MailboxSetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox1"), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox1"), AppendCommand.from(message))
 
     val request =
       s"""
@@ -2538,7 +2563,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "destroy": ["${mailboxId.serialize}"]
         |           },
         |    "c1"
@@ -2568,7 +2593,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "${mailboxId.serialize}": {
          |          "type": "mailboxHasEmail",
@@ -2582,8 +2607,8 @@ trait MailboxSetMethodContract {
 
   @Test
   def deleteShouldFailWhenMailboxHasChild(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1.mailbox2"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1.mailbox2"))
 
     val request =
       s"""
@@ -2593,7 +2618,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "destroy": ["${mailboxId.serialize}"]
         |           },
         |    "c1"
@@ -2623,7 +2648,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "${mailboxId.serialize}": {
          |          "type": "mailboxHasChild",
@@ -2637,10 +2662,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def deleteShouldFailWhenNotEnoughRights(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.CreateMailbox))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.CreateMailbox))
 
     val request =
       s"""
@@ -2650,7 +2675,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "destroy": ["${mailboxId.serialize}"]
         |           },
         |    "c1"
@@ -2680,11 +2705,11 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
-         |          "description": "user 'bob@domain.tld' is not allowed to delete the mailbox '#private:andre@domain.tld:mailbox'"
+         |          "description": "user '${bobUsername.asString()}' is not allowed to delete the mailbox '#private:${andreUsername.asString()}:mailbox'"
          |        }
          |      }
          |    },
@@ -2694,10 +2719,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def deleteSharedMailboxShouldSuccessWhenHasRight(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.DeleteMailbox))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.DeleteMailbox))
 
     val request =
       s"""
@@ -2707,7 +2732,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "destroy": ["${mailboxId.serialize}"]
          |           },
          |    "c1"
@@ -2731,10 +2756,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def deleteSharedMailboxShouldFailWhenDoesNotHaveRight(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(Right.DeleteMailbox)))
+      .replaceRights(path, bobUsername.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(Right.DeleteMailbox)))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -2746,7 +2771,7 @@ trait MailboxSetMethodContract {
            |       [
            |           "Mailbox/set",
            |           {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "destroy": ["${mailboxId.serialize}"]
            |           },
            |    "c1"
@@ -2774,7 +2799,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "destroy": ["invalid"]
         |           },
         |    "c1"
@@ -2804,7 +2829,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "invalid": {
          |          "type": "invalidArguments",
@@ -2825,7 +2850,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox"
@@ -2835,7 +2860,7 @@ trait MailboxSetMethodContract {
         |    "c1"],
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "destroy": ["#C42"]
         |           },
         |    "c2"]
@@ -2866,7 +2891,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "parent"
@@ -2876,7 +2901,7 @@ trait MailboxSetMethodContract {
         |    "c1"],
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C43": {
         |                      "name": "child",
@@ -2903,10 +2928,10 @@ trait MailboxSetMethodContract {
       .asString
 
     val parentId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "parent")
+      .getMailboxId("#private", bobUsername.asString(), "parent")
       .serialize
     val childId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "parent.child")
+      .getMailboxId("#private", bobUsername.asString(), "parent.child")
       .serialize
 
     assertThatJson(response)
@@ -2919,7 +2944,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "created": {
          |                    "C42": {
          |                        "id": "$parentId",
@@ -2948,7 +2973,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "created": {
          |                    "C43": {
          |                        "id": "$childId",
@@ -2987,13 +3012,13 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |      ["Mailbox/set",
         |          {
-        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "accountId": "$bobAccountId",
         |               "destroy": ["#C42"]
         |          },
         |   "c2"],
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox"
@@ -3019,7 +3044,7 @@ trait MailboxSetMethodContract {
       .asString
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "myMailbox")
+      .getMailboxId("#private", bobUsername.asString(), "myMailbox")
       .serialize
 
     assertThatJson(response)
@@ -3030,7 +3055,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "#C42": {
          |          "type": "invalidArguments",
@@ -3039,7 +3064,7 @@ trait MailboxSetMethodContract {
          |      }
          |    }, "c2"],
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "created": {
          |        "C42": {
          |          "id": "$mailboxId",
@@ -3076,7 +3101,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |      ["Mailbox/set",
         |          {
-        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "accountId": "$bobAccountId",
         |               "destroy": ["#C42"]
         |          },
         |   "c2"]
@@ -3104,7 +3129,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "#C42": {
          |          "type": "invalidArguments",
@@ -3125,7 +3150,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |      ["Mailbox/set",
         |          {
-        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "accountId": "$bobAccountId",
         |               "destroy": ["#"]
         |          },
         |   "c2"]
@@ -3154,7 +3179,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "#": {
          |          "type": "invalidArguments",
@@ -3169,7 +3194,7 @@ trait MailboxSetMethodContract {
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldRenameMailboxes(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
 
     val request =
       s"""
@@ -3178,7 +3203,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |      ["Mailbox/set",
         |          {
-        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "accountId": "$bobAccountId",
         |               "update": {
         |                 "${mailboxId.serialize}" : {
         |                   "name": "newName"
@@ -3188,7 +3213,7 @@ trait MailboxSetMethodContract {
         |   "c2"],
         |      ["Mailbox/get",
         |         {
-        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "accountId": "$bobAccountId",
         |           "properties": ["id", "name"],
         |           "ids": ["${mailboxId.serialize}"]
         |          },
@@ -3217,13 +3242,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c2"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
@@ -3238,9 +3263,9 @@ trait MailboxSetMethodContract {
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldRenameMailboxesWithManyChildren(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
     SFlux.range(0, 100)
-      .concatMap(i =>  SMono.fromCallable(() => server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, s"mailbox1.$i"))))
+      .concatMap(i =>  SMono.fromCallable(() => server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, s"mailbox1.$i"))))
       .asJava()
       .blockLast()
 
@@ -3251,7 +3276,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |      ["Mailbox/set",
         |          {
-        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "accountId": "$bobAccountId",
         |               "update": {
         |                 "${mailboxId.serialize}" : {
         |                   "name": "newName"
@@ -3261,7 +3286,7 @@ trait MailboxSetMethodContract {
         |   "c2"],
         |      ["Mailbox/get",
         |         {
-        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "accountId": "$bobAccountId",
         |           "properties": ["id", "name"],
         |           "ids": ["${mailboxId.serialize}"]
         |          },
@@ -3290,13 +3315,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c2"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
@@ -3317,7 +3342,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C43": {
         |                      "name": "mailbox"
@@ -3327,7 +3352,7 @@ trait MailboxSetMethodContract {
         |    "c1"],
         |      ["Mailbox/set",
         |          {
-        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "accountId": "$bobAccountId",
         |               "update": {
         |                 "#C43" : {
         |                   "name": "newName"
@@ -3353,7 +3378,7 @@ trait MailboxSetMethodContract {
       .asString
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "newName")
+      .getMailboxId("#private", bobUsername.asString(), "newName")
       .serialize
 
     assertThatJson(response)
@@ -3364,7 +3389,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "created": {
          |        "C43": {
          |          "id": "$mailboxId",
@@ -3389,7 +3414,7 @@ trait MailboxSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "$mailboxId": {}
          |      }
@@ -3408,7 +3433,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C43": {
         |                      "name": "mailbox"
@@ -3418,7 +3443,7 @@ trait MailboxSetMethodContract {
         |    "c1"],
         |      ["Mailbox/set",
         |          {
-        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "accountId": "$bobAccountId",
         |               "update": {
         |                 "#C43" : {
         |                   "name": "newName"
@@ -3435,16 +3460,16 @@ trait MailboxSetMethodContract {
       .body(request)
       .post
 
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listSubscriptions(BOB.asString()))
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listSubscriptions(bobUsername.asString()))
       .contains("newName")
-    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listSubscriptions(BOB.asString()))
+    assertThat(server.getProbe(classOf[MailboxProbeImpl]).listSubscriptions(bobUsername.asString()))
       .doesNotContain("mailbox")
   }
 
   @Test
   def updateShouldFailWhenTargetMailboxAlreadyExist(server: GuiceJamesServer): Unit = {
-    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "newName"))
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "previousName"))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "newName"))
     val request =
       s"""
         |{
@@ -3452,7 +3477,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId1.serialize}": {
         |                      "name": "newName"
@@ -3483,11 +3508,11 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId1.serialize}": {
          |          "type": "invalidArguments",
-         |          "description": "Mailbox with name=#private:bob@domain.tld:newName already exists.",
+         |          "description": "Mailbox with name=#private:${bobUsername.asString()}:newName already exists.",
          |          "properties": ["name"]
          |        }
          |      }
@@ -3498,7 +3523,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldFailWhenWrongJsonObject(server: GuiceJamesServer): Unit = {
-    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "previousName"))
     val request =
       s"""
         |{
@@ -3506,7 +3531,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId1.serialize}": {
         |                      "name": ["newName"]
@@ -3537,7 +3562,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId1.serialize}": {
          |          "type": "invalidArguments",
@@ -3552,7 +3577,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldFailWhenUnknownProperty(server: GuiceJamesServer): Unit = {
-    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "previousName"))
     val request =
       s"""
         |{
@@ -3560,7 +3585,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId1.serialize}": {
         |                      "unknown": "newValue"
@@ -3591,7 +3616,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId1.serialize}": {
          |          "type": "invalidArguments",
@@ -3606,7 +3631,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldFailWhenPropertyStartWithImplicitSlash(server: GuiceJamesServer): Unit = {
-    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "previousName"))
     val request =
       s"""
         |{
@@ -3614,7 +3639,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId1.serialize}": {
         |                      "/name": "newValue"
@@ -3645,7 +3670,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId1.serialize}": {
          |          "type": "invalidArguments",
@@ -3660,7 +3685,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldFailWhenEmptyProperty(server: GuiceJamesServer): Unit = {
-    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "previousName"))
     val request =
       s"""
         |{
@@ -3668,7 +3693,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId1.serialize}": {
         |                      "": "newValue"
@@ -3700,7 +3725,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId1.serialize}": {
          |          "type": "invalidPatch",
@@ -3714,7 +3739,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldFailWhenMailboxNameIsTooLong(server: GuiceJamesServer): Unit = {
-    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "previousName"))
     val request =
       s"""
         |{
@@ -3722,7 +3747,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId1.serialize}": {
         |                      "name": "${"a".repeat(201)}"
@@ -3753,7 +3778,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId1.serialize}": {
          |          "type": "invalidArguments",
@@ -3776,7 +3801,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId1.serialize}": {
         |                      "name": "newName"
@@ -3807,7 +3832,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId1.serialize}": {
          |          "type": "notFound",
@@ -3821,10 +3846,10 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldNotRenameSharedMailboxWhenDoesNotHasRight(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "previousName")
+    val path = MailboxPath.forUser(andreUsername, "previousName")
     val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(MailboxACL.Right.DeleteMailbox)))
+      .replaceRights(path, bobUsername.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(MailboxACL.Right.DeleteMailbox)))
     val request =
       s"""
         |{
@@ -3832,7 +3857,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId1.serialize}": {
         |                      "name": "newName"
@@ -3862,14 +3887,14 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldRenameSharedMailboxWhenHasRight(server: GuiceJamesServer): Unit = {
-    val parentPath = MailboxPath.forUser(ANDRE, "parent")
+    val parentPath = MailboxPath.forUser(andreUsername, "parent")
     val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(parentPath)
     val childPath = parentPath.child("child1", '.')
     val childId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(childPath)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(parentPath, BOB.asString, new MailboxACL.Rfc4314Rights(MailboxACL.Right.CreateMailbox));
+      .replaceRights(parentPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(MailboxACL.Right.CreateMailbox));
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(childPath, BOB.asString, MailboxACL.FULL_RIGHTS);
+      .replaceRights(childPath, bobUsername.asString, MailboxACL.FULL_RIGHTS);
 
     val request =
       s"""
@@ -3879,7 +3904,7 @@ trait MailboxSetMethodContract {
          |    [
          |      "Mailbox/set",
          |      {
-         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |        "accountId": "$bobAccountId",
          |        "update": {
          |          "${childId.serialize}": {
          |            "name": "newName"
@@ -3891,7 +3916,7 @@ trait MailboxSetMethodContract {
          |    [
          |      "Mailbox/get",
          |      {
-         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |        "accountId": "$bobAccountId",
          |        "ids": [ "${childId.serialize}" ],
          |        "properties": [ "id", "name", "parentId", "myRights", "rights" ]
          |      },
@@ -3923,7 +3948,7 @@ trait MailboxSetMethodContract {
            |    [
            |      "Mailbox/set",
            |      {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "updated": {
            |          "${childId.serialize}": {}
            |        }
@@ -3933,7 +3958,7 @@ trait MailboxSetMethodContract {
            |    [
            |      "Mailbox/get",
            |      {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "list": [
            |          {
            |            "id": "${childId.serialize}",
@@ -3951,7 +3976,7 @@ trait MailboxSetMethodContract {
            |              "maySubmit": true
            |            },
            |            "rights": {
-           |              "bob@domain.tld": [ "a", "e", "i", "k", "l", "p", "r", "s", "t", "w", "x" ]
+           |              "${bobUsername.asString()}": [ "a", "e", "i", "k", "l", "p", "r", "s", "t", "w", "x" ]
            |            }
            |          }
            |        ],
@@ -3966,7 +3991,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldNotRenameSystemMailboxes(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS))
+      .createMailbox(MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS))
     val request =
       s"""
         |{
@@ -3974,7 +3999,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "name": "newName"
@@ -4005,7 +4030,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -4020,9 +4045,9 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldRenameInbox(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
+    server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
         AppendCommand.from(Message.Builder.of.setSubject("test").setBody("testmail", StandardCharsets.UTF_8).build))
 
     val request =
@@ -4032,7 +4057,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "name": "newName"
@@ -4042,7 +4067,7 @@ trait MailboxSetMethodContract {
          |   "c2"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "name", "totalEmails"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -4071,13 +4096,13 @@ trait MailboxSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Mailbox/set", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "updated": {
            |        "${mailboxId.serialize}": {}
            |      }
            |    }, "c2"],
            |    ["Mailbox/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "state": "${INSTANCE.value}",
            |      "list": [{
            |        "id": "${mailboxId.serialize}",
@@ -4092,9 +4117,9 @@ trait MailboxSetMethodContract {
 
   @Test
   def renameInboxShouldCreateNewInbox(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
+    server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
       AppendCommand.from(Message.Builder.of.setSubject("test").setBody("testmail", StandardCharsets.UTF_8).build))
 
     val request =
@@ -4104,7 +4129,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "name": "newName"
@@ -4114,7 +4139,7 @@ trait MailboxSetMethodContract {
          |   "c2"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "name"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -4136,7 +4161,7 @@ trait MailboxSetMethodContract {
       .body
       .asString
 
-    val newInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", BOB.asString(), MailboxConstants.INBOX)
+    val newInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", bobUsername.asString(), MailboxConstants.INBOX)
 
     val request2 =
       s"""
@@ -4145,7 +4170,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "name", "totalEmails"],
          |           "ids": ["${newInboxId.serialize}"]
          |          },
@@ -4174,7 +4199,7 @@ trait MailboxSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Mailbox/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "state": "${INSTANCE.value}",
            |      "list": [{
            |        "id": "${newInboxId.serialize}",
@@ -4189,8 +4214,8 @@ trait MailboxSetMethodContract {
 
   @Test
   def renameInboxShouldNotAffectSubMailboxes(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "INBOX"))
-    val subInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "INBOX.subInbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
+    val subInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "INBOX.subInbox"))
 
     val request =
       s"""
@@ -4199,7 +4224,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "name": "newName"
@@ -4209,7 +4234,7 @@ trait MailboxSetMethodContract {
          |   "c2"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "name"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -4231,7 +4256,7 @@ trait MailboxSetMethodContract {
       .body
       .asString
 
-    val newInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", BOB.asString(), MailboxConstants.INBOX)
+    val newInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).getMailboxId("#private", bobUsername.asString(), MailboxConstants.INBOX)
 
     val request2 =
       s"""
@@ -4240,7 +4265,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "name", "parentId"],
          |           "ids": ["${subInboxId.serialize}"]
          |          },
@@ -4269,7 +4294,7 @@ trait MailboxSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Mailbox/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "state": "${INSTANCE.value}",
            |      "list": [{
            |        "id": "${subInboxId.serialize}",
@@ -4285,7 +4310,7 @@ trait MailboxSetMethodContract {
   @Test
   def destroyShouldNotRemoveSystemMailboxes(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "INBOX"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "INBOX"))
     val request =
       s"""
         |{
@@ -4293,7 +4318,7 @@ trait MailboxSetMethodContract {
         |   "methodCalls": [
         |       ["Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "destroy": ["${mailboxId.serialize}"]
         |           },
         |    "c1"]]
@@ -4320,7 +4345,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -4335,9 +4360,9 @@ trait MailboxSetMethodContract {
   @Test
   def nameUpdatesShouldNotAffectParentId(server: GuiceJamesServer): Unit = {
     val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "parent"))
     val childId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent.oldChild"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "parent.oldChild"))
     val request=
       s"""
         |{
@@ -4346,7 +4371,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${childId.serialize}": {
         |                      "name": "newChild"
@@ -4357,7 +4382,7 @@ trait MailboxSetMethodContract {
         |       ],
         |       ["Mailbox/get",
         |         {
-        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "accountId": "$bobAccountId",
         |           "properties": ["id", "name", "parentId"],
         |           "ids": ["${childId.serialize}"]
         |          },
@@ -4386,13 +4411,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${childId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "state": "${INSTANCE.value}",
          |      "list": [{
          |        "id": "${childId.serialize}",
@@ -4408,9 +4433,9 @@ trait MailboxSetMethodContract {
   @Test
   def parentRenameShouldNotAffectChild(server: GuiceJamesServer): Unit = {
     val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "parent"))
     val childId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent.child"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "parent.child"))
     val request=
       s"""
         |{
@@ -4419,7 +4444,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${parentId.serialize}": {
         |                      "name": "newParent"
@@ -4430,7 +4455,7 @@ trait MailboxSetMethodContract {
         |       ],
         |       ["Mailbox/get",
         |         {
-        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "accountId": "$bobAccountId",
         |           "properties": ["id", "name", "parentId"],
         |           "ids": ["${childId.serialize}"]
         |          },
@@ -4459,13 +4484,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${parentId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${childId.serialize}",
          |        "name": "child",
@@ -4479,7 +4504,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def deleteShouldSucceedWhenOnDestroyRemoveEmails(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val message: Message = Message.Builder
       .of
       .setSubject("test")
@@ -4487,7 +4512,7 @@ trait MailboxSetMethodContract {
       .build
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox"), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox"), AppendCommand.from(message))
 
     val request =
       s"""
@@ -4497,7 +4522,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "destroy": ["${mailboxId.serialize}"],
          |                "onDestroyRemoveEmails": true
          |           },
@@ -4528,7 +4553,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "destroyed": ["${mailboxId.serialize}"]
          |    },
          |    "c1"]]
@@ -4537,7 +4562,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def deleteShouldRemoveMailboxWhenOnDestroyRemoveEmails(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val message: Message = Message.Builder
       .of
       .setSubject("test")
@@ -4545,7 +4570,7 @@ trait MailboxSetMethodContract {
       .build
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox"), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox"), AppendCommand.from(message))
 
     val request =
       s"""
@@ -4555,7 +4580,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "destroy": ["${mailboxId.serialize}"],
          |                "onDestroyRemoveEmails": true
          |           },
@@ -4583,7 +4608,7 @@ trait MailboxSetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId.serialize}"]
                |      },
                |      "c1"]]
@@ -4604,7 +4629,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/get",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "list": [],
          |                "notFound": ["${mailboxId.serialize}"]
          |            },
@@ -4616,7 +4641,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def deleteShouldRemoveMessagesWhenOnDestroyRemoveEmails(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val message1: Message = Message.Builder
       .of
       .setSubject("test")
@@ -4630,9 +4655,9 @@ trait MailboxSetMethodContract {
       .build
 
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox"), AppendCommand.from(message1))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox"), AppendCommand.from(message1))
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox"), AppendCommand.from(message2))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox"), AppendCommand.from(message2))
 
     val request =
       s"""
@@ -4642,7 +4667,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "destroy": ["${mailboxId.serialize}"],
          |                "onDestroyRemoveEmails": true
          |           },
@@ -4664,8 +4689,8 @@ trait MailboxSetMethodContract {
 
     //Should be replaced with JMAP message query when it is available
     SoftAssertions.assertSoftly(softly => {
-      softly.assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId1.getMessageId, BOB)).isEmpty()
-      softly.assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId2.getMessageId, BOB)).isEmpty()
+      softly.assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId1.getMessageId, bobUsername)).isEmpty()
+      softly.assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId2.getMessageId, bobUsername)).isEmpty()
     })
   }
 
@@ -4677,9 +4702,9 @@ trait MailboxSetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox"), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox"), AppendCommand.from(message))
 
     val request =
       s"""
@@ -4689,7 +4714,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "destroy": ["${mailboxId.serialize}"],
          |                "onDestroyRemoveEmails": false
          |           },
@@ -4720,7 +4745,7 @@ trait MailboxSetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/set",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notDestroyed": {
          |        "${mailboxId.serialize}": {
          |          "type": "mailboxHasEmail",
@@ -4735,7 +4760,7 @@ trait MailboxSetMethodContract {
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldSubscribeMailboxes(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
 
     val request =
       s"""
@@ -4744,7 +4769,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "isSubscribed": true
@@ -4754,7 +4779,7 @@ trait MailboxSetMethodContract {
          |   "c2"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "isSubscribed"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -4784,13 +4809,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c2"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "isSubscribed": true
@@ -4803,7 +4828,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldUnsubscribeMailboxes(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
 
     val request =
       s"""
@@ -4812,7 +4837,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "isSubscribed": true
@@ -4822,7 +4847,7 @@ trait MailboxSetMethodContract {
          |   "c2"],
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "isSubscribed": false
@@ -4832,7 +4857,7 @@ trait MailboxSetMethodContract {
          |   "c3"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "isSubscribed"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -4863,19 +4888,19 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c2"],
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c3"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "isSubscribed": false
@@ -4888,7 +4913,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldSubscribeMailboxesWhenNull(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
 
     val request =
       s"""
@@ -4897,7 +4922,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "isSubscribed": null
@@ -4907,7 +4932,7 @@ trait MailboxSetMethodContract {
          |   "c3"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "isSubscribed"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -4937,13 +4962,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c3"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "isSubscribed": true
@@ -4957,11 +4982,11 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldSubscribeDelegatedMailboxes(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     val request =
       s"""
@@ -4970,7 +4995,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "isSubscribed": true
@@ -4980,7 +5005,7 @@ trait MailboxSetMethodContract {
          |   "c3"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "isSubscribed", "namespace"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -5009,17 +5034,17 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c3"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "isSubscribed": true,
-         |        "namespace": "Delegated[andre@domain.tld]"
+         |        "namespace": "Delegated[${andreUsername.asString()}]"
          |      }],
          |      "notFound": []
          |    }, "c4"]
@@ -5029,11 +5054,11 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldUnsubscribeDelegatedMailboxes(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     val request =
       s"""
@@ -5042,7 +5067,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "isSubscribed": true
@@ -5052,7 +5077,7 @@ trait MailboxSetMethodContract {
          |   "c2"],
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "isSubscribed": false
@@ -5062,7 +5087,7 @@ trait MailboxSetMethodContract {
          |   "c3"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "isSubscribed", "namespace"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -5093,23 +5118,23 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c2"],
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c3"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "isSubscribed": false,
-         |        "namespace": "Delegated[andre@domain.tld]"
+         |        "namespace": "Delegated[${andreUsername.asString()}]"
          |      }],
          |      "notFound": []
          |    }, "c4"]
@@ -5119,15 +5144,15 @@ trait MailboxSetMethodContract {
 
   @Test
   def subscribeChildMailboxShouldPropagateSubscriptionToParentMailboxes(server: GuiceJamesServer): Unit = {
-    val parentMailboxPath = MailboxPath.forUser(BOB, "parent")
+    val parentMailboxPath = MailboxPath.forUser(bobUsername, "parent")
     server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(parentMailboxPath)
-    val childMailboxPath = MailboxPath.forUser(BOB, "parent.child")
+    val childMailboxPath = MailboxPath.forUser(bobUsername, "parent.child")
     val childMailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(childMailboxPath)
 
     assertThat(server.getProbe(classOf[MailboxProbeImpl])
-      .listSubscriptions(BOB.asString()))
+      .listSubscriptions(bobUsername.asString()))
       .doesNotContain(childMailboxPath.getName(), parentMailboxPath.getName())
 
     val request =
@@ -5136,7 +5161,7 @@ trait MailboxSetMethodContract {
          |	"methodCalls": [
          |		["Mailbox/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"update": {
          |					"${childMailboxId.serialize}": {
          |						"isSubscribed": true
@@ -5159,16 +5184,16 @@ trait MailboxSetMethodContract {
       .contentType(JSON)
 
     awaitAtMostTenSeconds.untilAsserted(() => assertThat(server.getProbe(classOf[MailboxProbeImpl])
-      .listSubscriptions(BOB.asString()))
+      .listSubscriptions(bobUsername.asString()))
       .contains(childMailboxPath.getName(), parentMailboxPath.getName()))
   }
 
   @Test
   def unsubscribeParentMailboxShouldPropagateUnsubscriptionToChildrenMailboxes(server: GuiceJamesServer): Unit = {
-    val parentMailboxPath = MailboxPath.forUser(BOB, "parent")
+    val parentMailboxPath = MailboxPath.forUser(bobUsername, "parent")
     val parentMailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(parentMailboxPath)
-    val childMailboxPath = MailboxPath.forUser(BOB, "parent.child")
+    val childMailboxPath = MailboxPath.forUser(bobUsername, "parent.child")
     val childMailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(childMailboxPath)
 
@@ -5179,7 +5204,7 @@ trait MailboxSetMethodContract {
          |	"methodCalls": [
          |		["Mailbox/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"update": {
          |					"${childMailboxId.serialize}": {
          |						"isSubscribed": true
@@ -5202,7 +5227,7 @@ trait MailboxSetMethodContract {
       .contentType(JSON)
 
     awaitAtMostTenSeconds.untilAsserted(() => assertThat(server.getProbe(classOf[MailboxProbeImpl])
-      .listSubscriptions(BOB.asString()))
+      .listSubscriptions(bobUsername.asString()))
       .contains(childMailboxPath.getName(), parentMailboxPath.getName()))
 
     // unsubscribe parent mailbox
@@ -5212,7 +5237,7 @@ trait MailboxSetMethodContract {
          |	"methodCalls": [
          |		["Mailbox/set",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"update": {
          |					"${parentMailboxId.serialize}": {
          |						"isSubscribed": false
@@ -5236,13 +5261,13 @@ trait MailboxSetMethodContract {
 
     // should propagate unsubscription to child mailboxes
     awaitAtMostTenSeconds.untilAsserted(() => assertThat(server.getProbe(classOf[MailboxProbeImpl])
-      .listSubscriptions(BOB.asString()))
+      .listSubscriptions(bobUsername.asString()))
       .doesNotContain(childMailboxPath.getName(), parentMailboxPath.getName()))
   }
 
   @Test
   def updateShouldFailWhenMailboxNameContainsDelimiter(server: GuiceJamesServer): Unit = {
-    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "previousName"))
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "previousName"))
     val request =
       s"""
          |{
@@ -5250,7 +5275,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId1.serialize}": {
          |                      "name": "a.b"
@@ -5281,7 +5306,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId1.serialize}": {
          |          "type": "invalidArguments",
@@ -5296,11 +5321,11 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldAllowDifferentIsSubscribedValuesWhenMailboxHaveTheSameName(server: GuiceJamesServer): Unit = {
-    val andrePath = MailboxPath.forUser(ANDRE, "mailbox")
+    val andrePath = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val andreId: MailboxId = mailboxProbe.createMailbox(andrePath)
-    val bobId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
-    server.getProbe(classOf[ACLProbeImpl]).replaceRights(andrePath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+    val bobId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
+    server.getProbe(classOf[ACLProbeImpl]).replaceRights(andrePath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     val request =
       s"""
@@ -5309,7 +5334,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${andreId.serialize}" : {
          |                   "isSubscribed": true
@@ -5322,21 +5347,21 @@ trait MailboxSetMethodContract {
          |   "c2"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "isSubscribed"],
          |           "ids": ["${andreId.serialize}"]
          |          },
          |       "c3"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "isSubscribed"],
          |           "ids": ["${bobId.serialize}"]
          |          },
          |       "c4"],
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${andreId.serialize}" : {
          |                   "isSubscribed": false
@@ -5349,14 +5374,14 @@ trait MailboxSetMethodContract {
          |   "c5"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "isSubscribed"],
          |           "ids": ["${andreId.serialize}"]
          |          },
          |       "c6"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "isSubscribed"],
          |           "ids": ["${bobId.serialize}"]
          |          },
@@ -5393,14 +5418,14 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${andreId.serialize}": {},
          |        "${bobId.serialize}": {}
          |      }
          |    }, "c2"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${andreId.serialize}",
          |        "isSubscribed": true
@@ -5408,7 +5433,7 @@ trait MailboxSetMethodContract {
          |      "notFound": []
          |    }, "c3"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${bobId.serialize}",
          |        "isSubscribed": false
@@ -5416,14 +5441,14 @@ trait MailboxSetMethodContract {
          |      "notFound": []
          |    }, "c4"],
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${andreId.serialize}": {},
          |        "${bobId.serialize}": {}
          |      }
          |    }, "c5"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${andreId.serialize}",
          |        "isSubscribed": false
@@ -5431,7 +5456,7 @@ trait MailboxSetMethodContract {
          |      "notFound": []
          |    }, "c6"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${bobId.serialize}",
          |        "isSubscribed": true
@@ -5444,11 +5469,11 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldUnsubscribeDelegatedMailboxesWhenNull(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     val request =
       s"""
@@ -5457,7 +5482,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "isSubscribed": true
@@ -5467,7 +5492,7 @@ trait MailboxSetMethodContract {
          |   "c2"],
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "isSubscribed": null
@@ -5477,7 +5502,7 @@ trait MailboxSetMethodContract {
          |   "c3"],
          |      ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "isSubscribed", "namespace"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -5508,23 +5533,23 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c2"],
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c3"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "isSubscribed": false,
-         |        "namespace": "Delegated[andre@domain.tld]"
+         |        "namespace": "Delegated[${andreUsername.asString()}]"
          |      }],
          |      "notFound": []
          |    }, "c4"]
@@ -5534,12 +5559,12 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldNotAffectSubscriptionOfOthers(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val mailboxId: MailboxId = mailboxProbe
       .createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     val request =
       s"""
@@ -5548,7 +5573,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "isSubscribed": true
@@ -5570,12 +5595,12 @@ trait MailboxSetMethodContract {
       .statusCode(SC_OK)
       .contentType(JSON)
 
-    assertThat(mailboxProbe.listSubscriptions(ANDRE.asString())).isEmpty()
+    assertThat(mailboxProbe.listSubscriptions(andreUsername.asString())).isEmpty()
   }
 
   @Test
   def updateShouldFailWhenInvalidIsSubscribedJSON(server: GuiceJamesServer): Unit = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
 
     val request =
       s"""
@@ -5584,7 +5609,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |      ["Mailbox/set",
          |          {
-         |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |               "accountId": "$bobAccountId",
          |               "update": {
          |                 "${mailboxId.serialize}" : {
          |                   "isSubscribed": "invalid"
@@ -5616,7 +5641,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -5637,9 +5662,9 @@ trait MailboxSetMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "mailbox"), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "mailbox"), AppendCommand.from(message))
 
     val request =
       s"""
@@ -5649,7 +5674,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "destroy": ["${mailboxId.serialize}"],
          |                "onDestroyRemoveEmails": false
          |           },
@@ -5670,12 +5695,12 @@ trait MailboxSetMethodContract {
       .contentType(JSON)
 
     //Should be replaced with JMAP message query when it is available
-    assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId.getMessageId, BOB)).isNotEmpty
+    assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId.getMessageId, bobUsername)).isNotEmpty
   }
 
   @Test
   def updateRightsResetShouldFailWhenOmittingCapability(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
          |{
@@ -5684,11 +5709,11 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith": {
-         |                        "${ANDRE.asString()}":["r", "l"]
+         |                        "${andreUsername.asString()}":["r", "l"]
          |                      }
          |                    }
          |                }
@@ -5721,7 +5746,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
@@ -5738,7 +5763,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateRightsShouldFailWhenOmittingCapability(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
          |{
@@ -5747,10 +5772,10 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
-         |                      "sharedWith/${ANDRE.asString()}": ["r", "l"]
+         |                      "sharedWith/${andreUsername.asString()}": ["r", "l"]
          |                    }
          |                }
          |           },
@@ -5782,12 +5807,12 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
-         |                        "description": "sharedWith/${ANDRE.asString()} property do not exist thus cannot be updated",
-         |                        "properties": ["sharedWith/${ANDRE.asString()}"]
+         |                        "description": "sharedWith/${andreUsername.asString()} property do not exist thus cannot be updated",
+         |                        "properties": ["sharedWith/${andreUsername.asString()}"]
          |                    }
          |                }
          |            },
@@ -5799,7 +5824,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateQuotasShouldFailWhenOmittingCapability(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
          |{
@@ -5808,7 +5833,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "/quotas": "toto"
@@ -5843,7 +5868,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
@@ -5861,7 +5886,7 @@ trait MailboxSetMethodContract {
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldAllowSettingRights(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
          |{
@@ -5870,11 +5895,11 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith": {
-         |                        "${ANDRE.asString()}":["r", "l"]
+         |                        "${andreUsername.asString()}":["r", "l"]
          |                      }
          |                    }
          |                }
@@ -5883,7 +5908,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "rights"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -5913,17 +5938,17 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "rights": {
-         |          "${ANDRE.asString()}": ["l", "r"]
+         |          "${andreUsername.asString()}": ["l", "r"]
          |        }
          |      }],
          |      "notFound": []
@@ -5935,11 +5960,11 @@ trait MailboxSetMethodContract {
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldAllowResettingRights(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, ANDRE.asString(), new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Administer))
+      .replaceRights(path, andreUsername.asString(), new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Administer))
     server.getProbe(classOf[ACLProbeImpl])
       .replaceRights(path, CEDRIC.asString(), new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
 
@@ -5951,11 +5976,11 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith": {
-         |                        "${ANDRE.asString()}":["r", "l"],
+         |                        "${andreUsername.asString()}":["r", "l"],
          |                        "${DAVID.asString()}":["r", "l", "w"]
          |                      }
          |                    }
@@ -5965,7 +5990,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "rights"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -5995,17 +6020,17 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "rights": {
-         |          "${ANDRE.asString()}": ["l", "r"],
+         |          "${andreUsername.asString()}": ["l", "r"],
          |          "${DAVID.asString()}": ["l", "r", "w"]
          |        }
          |      }],
@@ -6017,11 +6042,11 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldNotResetRightsInSharedMailboxes(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString(), new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(path, bobUsername.asString(), new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     val request =
       s"""
@@ -6031,12 +6056,12 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith": {
          |                        "${DAVID.asString()}":["r", "l", "w"],
-         |                        "${BOB.asString()}":["r", "l", "w", "a"]
+         |                        "${bobUsername.asString()}":["r", "l", "w", "a"]
          |                      }
          |                    }
          |                }
@@ -6045,7 +6070,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "namespace", "rights"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -6075,7 +6100,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "forbidden",
@@ -6084,12 +6109,12 @@ trait MailboxSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
-         |        "namespace": "Delegated[andre@domain.tld]",
+         |        "namespace": "Delegated[${andreUsername.asString()}]",
          |        "rights": {
-         |          "bob@domain.tld": ["l"]
+         |          "${bobUsername.asString()}": ["l"]
          |        }
          |      }],
          |      "notFound": []
@@ -6099,12 +6124,12 @@ trait MailboxSetMethodContract {
 
     assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
       .getEntries)
-      .doesNotContainKeys(EntryKey.createUserEntryKey(ANDRE))
+      .doesNotContainKeys(EntryKey.createUserEntryKey(andreUsername))
   }
 
   @Test
   def updateShouldFailOnOthersMailbox(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     val request =
@@ -6115,12 +6140,12 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith": {
          |                        "${DAVID.asString()}":["r", "l", "w"],
-         |                        "${BOB.asString()}":["r", "l", "w", "a"]
+         |                        "${bobUsername.asString()}":["r", "l", "w", "a"]
          |                      }
          |                    }
          |                }
@@ -6151,7 +6176,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "notFound",
@@ -6164,12 +6189,12 @@ trait MailboxSetMethodContract {
 
     assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
       .getEntries)
-      .doesNotContainKeys(EntryKey.createUserEntryKey(ANDRE))
+      .doesNotContainKeys(EntryKey.createUserEntryKey(andreUsername))
   }
 
   @Test
   def updateShouldFailWhenInvalidRightReset(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
 
     val request =
       s"""
@@ -6179,7 +6204,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith":  "invalid"
@@ -6212,7 +6237,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -6227,7 +6252,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def updateShouldAllowPerRightsSetting(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     server.getProbe(classOf[ACLProbeImpl])
@@ -6241,10 +6266,10 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
-         |                      "sharedWith/${ANDRE.asString()}": ["r", "l"]
+         |                      "sharedWith/${andreUsername.asString()}": ["r", "l"]
          |                    }
          |                }
          |           },
@@ -6252,7 +6277,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "rights"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -6282,17 +6307,17 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "rights": {
-         |          "${ANDRE.asString()}": ["l", "r"],
+         |          "${andreUsername.asString()}": ["l", "r"],
          |          "${DAVID.asString()}": ["l"]
          |        }
          |      }],
@@ -6304,7 +6329,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def partialRightsUpdateShouldFailWhenInvalidUsername(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     val request =
@@ -6315,7 +6340,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith/invalid@invalid@${DOMAIN.asString()}": ["r", "l"]
@@ -6348,7 +6373,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -6362,7 +6387,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def partialRightsUpdateShouldCorrectlyHandleAnyoneKeyword(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     val request =
@@ -6373,7 +6398,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith/anyone": ["p"]
@@ -6384,7 +6409,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "rights"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -6414,13 +6439,13 @@ trait MailboxSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Mailbox/set", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "updated": {
            |        "${mailboxId.serialize}": {}
            |      }
            |    }, "c1"],
            |    ["Mailbox/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "list": [{
            |        "id": "${mailboxId.serialize}",
            |        "rights": {
@@ -6439,7 +6464,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def partialRightsUpdateShouldNotGrantAnyoneRightOtherThanPost(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     val request =
@@ -6450,7 +6475,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith/anyone": ["r", "l"]
@@ -6483,7 +6508,7 @@ trait MailboxSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Mailbox/set", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "notUpdated": {
            |        "${mailboxId.serialize}": {
            |          "type": "invalidPatch",
@@ -6497,7 +6522,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def resetRightsUpdateShouldCorrectlyHandleAnyoneKeyword(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     val request =
@@ -6508,7 +6533,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith": {
@@ -6521,7 +6546,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "properties": ["id", "rights"],
          |           "ids": ["${mailboxId.serialize}"]
          |          },
@@ -6551,13 +6576,13 @@ trait MailboxSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Mailbox/set", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "updated": {
            |        "${mailboxId.serialize}": {}
            |      }
            |    }, "c1"],
            |    ["Mailbox/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "list": [{
            |        "id": "${mailboxId.serialize}",
            |        "rights": {
@@ -6576,7 +6601,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def resetRightsUpdateShouldNotGrantAnyoneRightOtherThanPost(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     val request =
@@ -6587,7 +6612,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith": {
@@ -6622,7 +6647,7 @@ trait MailboxSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Mailbox/set", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "notUpdated": {
            |        "${mailboxId.serialize}": {
            |          "type": "invalidPatch",
@@ -6636,7 +6661,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def partialRightsUpdateShouldFailWhenInvalidRights(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     val request =
@@ -6647,10 +6672,10 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
-         |                      "sharedWith/${ANDRE.asString()}": ["y"]
+         |                      "sharedWith/${andreUsername.asString()}": ["y"]
          |                    }
          |                }
          |           },
@@ -6682,13 +6707,13 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
          |                        "description": "Specified value do not match the expected JSON format: List(((0),List(JsonValidationError(List(Unknown right 'y'),List()))))",
          |                        "properties": [
-         |                            "sharedWith/andre@domain.tld"
+         |                            "sharedWith/${andreUsername.asString()}"
          |                        ]
          |                    }
          |                }
@@ -6701,7 +6726,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def rightsUpdateShouldFailWhenBothPartialAndReset(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     val request =
@@ -6712,13 +6737,13 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "sharedWith": {
          |                        "${DAVID.asString()}":["r", "l", "w"]
          |                      },
-         |                      "sharedWith/${ANDRE.asString()}": ["r"]
+         |                      "sharedWith/${andreUsername.asString()}": ["r"]
          |                    }
          |                }
          |           },
@@ -6750,7 +6775,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidPatch",
@@ -6766,7 +6791,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def partialUpdateShouldFailOnOthersMailbox(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     val request =
@@ -6777,10 +6802,10 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
-         |                          "sharedWith/${BOB.asString()}": ["r"],
+         |                          "sharedWith/${bobUsername.asString()}": ["r"],
          |                          "sharedWith/${DAVID.asString()}": ["r"]
          |                      }
          |                }
@@ -6811,7 +6836,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "notFound",
@@ -6829,11 +6854,11 @@ trait MailboxSetMethodContract {
 
   @Test
   def partialUpdateShouldFailWhenDelegatedMailbox(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString(), new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(path, bobUsername.asString(), new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     val request =
       s"""
@@ -6843,10 +6868,10 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
-         |                          "sharedWith/${BOB.asString()}": ["r"],
+         |                          "sharedWith/${bobUsername.asString()}": ["r"],
          |                          "sharedWith/${DAVID.asString()}": ["r"]
          |                      }
          |                }
@@ -6877,7 +6902,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "forbidden",
@@ -6897,9 +6922,9 @@ trait MailboxSetMethodContract {
   @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldAllowParentIdChangeWhenTopLevelMailbox(server: GuiceJamesServer): Unit = {
     val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "parent"))
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
          |{
@@ -6908,7 +6933,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "parentId": "${parentId.serialize}"
@@ -6919,7 +6944,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "ids": ["${mailboxId.serialize}"],
          |           "properties": ["id", "name", "parentId"]
          |          },
@@ -6949,13 +6974,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "name": "mailbox",
@@ -6970,7 +6995,7 @@ trait MailboxSetMethodContract {
   @Test
   def parentIdUpdateSetToSelfShouldBeRejected(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
          |{
@@ -6979,7 +7004,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "parentId": "${mailboxId.serialize}"
@@ -7014,7 +7039,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
@@ -7034,9 +7059,9 @@ trait MailboxSetMethodContract {
   @Test
   def parentIdUpdateSetToAChildShouldBeRejected(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val childId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox.child"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox.child"))
     val request =
       s"""
          |{
@@ -7045,7 +7070,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "parentId": "${childId.serialize}"
@@ -7080,7 +7105,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
@@ -7100,9 +7125,9 @@ trait MailboxSetMethodContract {
   @RepeatedTest(20)
   def concurrencyChecksUponParentIdUpdate(server: GuiceJamesServer): Unit = {
     val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
     val mailboxId2: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
     val request1 =
       s"""
          |{
@@ -7111,7 +7136,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId1.serialize}": {
          |                      "parentId": "${mailboxId2.serialize}"
@@ -7131,7 +7156,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId2.serialize}": {
          |                      "parentId": "${mailboxId1.serialize}"
@@ -7171,7 +7196,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "ids": null,
          |           "properties": ["id", "name"]
          |          },
@@ -7209,7 +7234,7 @@ trait MailboxSetMethodContract {
          |   "methodCalls": [
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "ids": ["${mailboxId1.serialize}", "${mailboxId2.serialize}"],
          |           "properties": ["id", "name"]
          |          },
@@ -7253,9 +7278,9 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldAllowParentIdChangeWhenChildMailbox(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
-    val newParentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "newParent"))
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent"))
+    val newParentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "newParent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent.mailbox"))
     val request =
       s"""
          |{
@@ -7264,7 +7289,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "parentId": "${newParentId.serialize}"
@@ -7275,7 +7300,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "ids": ["${mailboxId.serialize}"],
          |           "properties": ["id", "name", "parentId"]
          |          },
@@ -7305,13 +7330,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "name": "mailbox",
@@ -7326,8 +7351,8 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldAllowParentIdChangeWhenTopLevelMailboxAndNewName(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val parentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val parentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
          |{
@@ -7336,7 +7361,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "parentId": "${parentId.serialize}",
@@ -7348,7 +7373,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "ids": ["${mailboxId.serialize}"],
          |           "properties": ["id", "name", "parentId"]
          |          },
@@ -7378,13 +7403,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "name": "newName",
@@ -7399,9 +7424,9 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldAllowParentIdChangeWhenChildMailboxAndNewName(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
-    val newParentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "newParent"))
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent"))
+    val newParentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "newParent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent.mailbox"))
     val request =
       s"""
          |{
@@ -7410,7 +7435,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "parentId": "${newParentId.serialize}",
@@ -7422,7 +7447,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "ids": ["${mailboxId.serialize}"],
          |           "properties": ["id", "name", "parentId"]
          |          },
@@ -7452,13 +7477,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "name": "newName",
@@ -7473,9 +7498,9 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldAllowParentIdDropWhenChildMailbox(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "newParent"))
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "newParent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent.mailbox"))
     val request =
       s"""
          |{
@@ -7484,7 +7509,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "parentId": null
@@ -7495,7 +7520,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "ids": ["${mailboxId.serialize}"],
          |           "properties": ["id", "name", "parentId"]
          |          },
@@ -7524,13 +7549,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "name": "mailbox"
@@ -7544,8 +7569,8 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldAllowParentIdDropWhenTopLevelMailboxAndNewName(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
          |{
@@ -7554,7 +7579,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "parentId": null,
@@ -7566,7 +7591,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "ids": ["${mailboxId.serialize}"],
          |           "properties": ["id", "name", "parentId"]
          |          },
@@ -7596,13 +7621,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "name": "newName"
@@ -7616,9 +7641,9 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldAllowParentIdDropWhenChildMailboxAndNewName(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "newParent"))
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "newParent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent.mailbox"))
     val request =
       s"""
          |{
@@ -7627,7 +7652,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "parentId": null,
@@ -7639,7 +7664,7 @@ trait MailboxSetMethodContract {
          |       ],
          |       ["Mailbox/get",
          |         {
-         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "accountId": "$bobAccountId",
          |           "ids": ["${mailboxId.serialize}"],
          |           "properties": ["id", "name", "parentId"]
          |          },
@@ -7669,13 +7694,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "name": "newName"
@@ -7689,7 +7714,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldAllowNameNoop(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
         |{
@@ -7698,7 +7723,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "name": "mailbox"
@@ -7709,7 +7734,7 @@ trait MailboxSetMethodContract {
         |       ],
         |       ["Mailbox/get",
         |         {
-        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "accountId": "$bobAccountId",
         |           "ids": ["${mailboxId.serialize}"],
         |           "properties": ["id", "name", "parentId"]
         |          },
@@ -7739,13 +7764,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "name": "mailbox"
@@ -7759,9 +7784,9 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldAllowParentIdNoop(server: GuiceJamesServer): Unit = {
     val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "parent"))
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "parent.mailbox"))
     val request =
       s"""
         |{
@@ -7770,7 +7795,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "parentId": "${parentId.serialize}"
@@ -7781,7 +7806,7 @@ trait MailboxSetMethodContract {
         |       ],
         |       ["Mailbox/get",
         |         {
-        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "accountId": "$bobAccountId",
         |           "ids": ["${mailboxId.serialize}"],
         |           "properties": ["id", "name", "parentId"]
         |          },
@@ -7811,13 +7836,13 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "parentId": "${parentId.serialize}",
@@ -7832,7 +7857,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldAcceptCreationIdsForParentId(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request = s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -7840,7 +7865,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                        "name": "parent"
@@ -7852,7 +7877,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "parentId": "#C42"
@@ -7863,7 +7888,7 @@ trait MailboxSetMethodContract {
         |       ],
         |       ["Mailbox/get",
         |         {
-        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "accountId": "$bobAccountId",
         |           "ids": ["${mailboxId.serialize}"],
         |           "properties": ["id", "name", "parentId"]
         |          },
@@ -7887,7 +7912,7 @@ trait MailboxSetMethodContract {
       .asString
 
     val parentId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "parent")
+      .getMailboxId("#private", bobUsername.asString(), "parent")
       .serialize
 
     assertThatJson(response)
@@ -7899,7 +7924,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "created": {
          |        "C42": {
          |          "id": "$parentId",
@@ -7924,13 +7949,13 @@ trait MailboxSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
          |    }, "c2"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [{
          |        "id": "${mailboxId.serialize}",
          |        "name": "mailbox",
@@ -7945,7 +7970,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldRejectInvalidParentIdJsonPayload(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request = s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -7953,7 +7978,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "parentId": ["invalid"]
@@ -7986,7 +8011,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -8002,7 +8027,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldRejectUnresolvableCreationIds(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request = s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -8010,7 +8035,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "parentId": "#C42"
@@ -8043,7 +8068,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
@@ -8059,7 +8084,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenParentIdNotFound(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val parentId = randomMailboxId
     val request = s"""
         |{
@@ -8068,7 +8093,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "parentId": "${parentId.serialize}"
@@ -8101,7 +8126,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "notFound",
@@ -8116,9 +8141,9 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenTargetMailboxAlreadyExists(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
-    val parentId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent.mailbox"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
+    val parentId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent.mailbox"))
     val request = s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -8126,7 +8151,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "parentId": "${parentId.serialize}"
@@ -8159,11 +8184,11 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
-         |          "description": "Mailbox with name=#private:bob@domain.tld:parent.mailbox already exists.",
+         |          "description": "Mailbox with name=#private:${bobUsername.asString()}:parent.mailbox already exists.",
          |          "properties":["parentId"]
          |        }
          |      }
@@ -8175,9 +8200,9 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenTargetMailboxAlreadyExistsAndBothPropertiesSpecified(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
-    val parentId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent.newMailbox"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
+    val parentId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent.newMailbox"))
     val request = s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
@@ -8185,7 +8210,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "parentId": "${parentId.serialize}",
@@ -8219,11 +8244,11 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "notUpdated": {
          |        "${mailboxId.serialize}": {
          |          "type": "invalidArguments",
-         |          "description": "Mailbox with name=#private:bob@domain.tld:parent.newMailbox already exists.",
+         |          "description": "Mailbox with name=#private:${bobUsername.asString()}:parent.newMailbox already exists.",
          |          "properties":["name", "parentId"]
          |        }
          |      }
@@ -8235,14 +8260,14 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldSuccessWhenRenamingParentIdWithinSharedMailboxAndHasRight(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = mailboxProbe.createMailbox(path)
-    val parentPath = MailboxPath.forUser(ANDRE, "parent")
+    val parentPath = MailboxPath.forUser(andreUsername, "parent")
     val parentId = mailboxProbe.createMailbox(parentPath)
 
     val aCLProbeImpl = server.getProbe(classOf[ACLProbeImpl])
-    aCLProbeImpl.replaceRights(path, BOB.asString, MailboxACL.FULL_RIGHTS)
-    aCLProbeImpl.replaceRights(parentPath, BOB.asString, MailboxACL.FULL_RIGHTS)
+    aCLProbeImpl.replaceRights(path, bobUsername.asString, MailboxACL.FULL_RIGHTS)
+    aCLProbeImpl.replaceRights(parentPath, bobUsername.asString, MailboxACL.FULL_RIGHTS)
 
     val request = s"""
         |{
@@ -8251,7 +8276,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "parentId": "${parentId.serialize}"
@@ -8278,14 +8303,14 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenRenamingParentIdWithinSharedMailboxAndDoesNotHasRight(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = mailboxProbe.createMailbox(path)
-    val parentPath = MailboxPath.forUser(ANDRE, "parent")
+    val parentPath = MailboxPath.forUser(andreUsername, "parent")
     val parentId = mailboxProbe.createMailbox(parentPath)
 
     val aCLProbeImpl = server.getProbe(classOf[ACLProbeImpl])
-    aCLProbeImpl.replaceRights(path, BOB.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(Right.DeleteMailbox)))
-    aCLProbeImpl.replaceRights(parentPath, BOB.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(Right.CreateMailbox)))
+    aCLProbeImpl.replaceRights(path, bobUsername.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(Right.DeleteMailbox)))
+    aCLProbeImpl.replaceRights(parentPath, bobUsername.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(Right.CreateMailbox)))
 
     val request = s"""
                      |{
@@ -8294,7 +8319,7 @@ trait MailboxSetMethodContract {
                      |       [
                      |           "Mailbox/set",
                      |           {
-                     |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                     |                "accountId": "$bobAccountId",
                      |                "update": {
                      |                    "${mailboxId.serialize}": {
                      |                      "parentId": "${parentId.serialize}"
@@ -8326,13 +8351,13 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldSuccessWhenUpdateParentIdFromSharedMailboxAndHasRights(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = mailboxProbe.createMailbox(path)
-    val parentPath = MailboxPath.forUser(BOB, "parent")
+    val parentPath = MailboxPath.forUser(bobUsername, "parent")
     val parentId = mailboxProbe.createMailbox(parentPath)
 
     val aCLProbeImpl = server.getProbe(classOf[ACLProbeImpl])
-    aCLProbeImpl.replaceRights(path, BOB.asString, MailboxACL.FULL_RIGHTS)
+    aCLProbeImpl.replaceRights(path, bobUsername.asString, MailboxACL.FULL_RIGHTS)
 
     val request = s"""
         |{
@@ -8341,7 +8366,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "parentId": "${parentId.serialize}"
@@ -8368,13 +8393,13 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenUpdateParentIdFromSharedMailboxAndDoesNotHasDeleteMailboxRight(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val path = MailboxPath.forUser(ANDRE, "mailbox")
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = mailboxProbe.createMailbox(path)
-    val parentPath = MailboxPath.forUser(BOB, "parent")
+    val parentPath = MailboxPath.forUser(bobUsername, "parent")
     val parentId = mailboxProbe.createMailbox(parentPath)
 
     val aCLProbeImpl = server.getProbe(classOf[ACLProbeImpl])
-    aCLProbeImpl.replaceRights(path, BOB.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(Right.DeleteMailbox)))
+    aCLProbeImpl.replaceRights(path, bobUsername.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(Right.DeleteMailbox)))
 
     val request = s"""
                      |{
@@ -8383,7 +8408,7 @@ trait MailboxSetMethodContract {
                      |       [
                      |           "Mailbox/set",
                      |           {
-                     |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                     |                "accountId": "$bobAccountId",
                      |                "update": {
                      |                    "${mailboxId.serialize}": {
                      |                      "parentId": "${parentId.serialize}"
@@ -8415,13 +8440,13 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldFailWhenRenamingParentIdToASharedMailboxWithDoesNotCreateMailboxRight(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId: MailboxId = mailboxProbe.createMailbox(path)
-    val parentPath = MailboxPath.forUser(ANDRE, "parent")
+    val parentPath = MailboxPath.forUser(andreUsername, "parent")
     val parentId = mailboxProbe.createMailbox(parentPath)
 
     val aCLProbeImpl = server.getProbe(classOf[ACLProbeImpl])
-    aCLProbeImpl.replaceRights(parentPath, BOB.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(Right.CreateMailbox)))
+    aCLProbeImpl.replaceRights(parentPath, bobUsername.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(Right.CreateMailbox)))
 
     val request = s"""
         |{
@@ -8430,7 +8455,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "parentId": "${parentId.serialize}"
@@ -8463,13 +8488,13 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldSuccessWhenRenamingParentIdToASharedMailboxWithCreateMailboxRight(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId: MailboxId = mailboxProbe.createMailbox(path)
-    val parentPath = MailboxPath.forUser(ANDRE, "parent")
+    val parentPath = MailboxPath.forUser(andreUsername, "parent")
     val parentId = mailboxProbe.createMailbox(parentPath)
 
     val aCLProbeImpl = server.getProbe(classOf[ACLProbeImpl])
-    aCLProbeImpl.replaceRights(parentPath, BOB.asString, MailboxACL.FULL_RIGHTS)
+    aCLProbeImpl.replaceRights(parentPath, bobUsername.asString, MailboxACL.FULL_RIGHTS)
 
     val request = s"""
                      |{
@@ -8478,7 +8503,7 @@ trait MailboxSetMethodContract {
                      |       [
                      |           "Mailbox/set",
                      |           {
-                     |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                     |                "accountId": "$bobAccountId",
                      |                "update": {
                      |                    "${mailboxId.serialize}": {
                      |                      "parentId": "${parentId.serialize}"
@@ -8506,13 +8531,13 @@ trait MailboxSetMethodContract {
   @Test
   def lookupRightShouldBePropagated(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val path = MailboxPath.forUser(BOB, "mailbox")
+    val path = MailboxPath.forUser(bobUsername, "mailbox")
     val mailboxId: MailboxId = mailboxProbe.createMailbox(path)
-    val parentPath = MailboxPath.forUser(BOB, "parent")
+    val parentPath = MailboxPath.forUser(bobUsername, "parent")
     val parentId = mailboxProbe.createMailbox(parentPath)
 
     val aCLProbeImpl = server.getProbe(classOf[ACLProbeImpl])
-    aCLProbeImpl.replaceRights(path, ANDRE.asString, MailboxACL.FULL_RIGHTS)
+    aCLProbeImpl.replaceRights(path, andreUsername.asString, MailboxACL.FULL_RIGHTS)
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -8522,7 +8547,7 @@ trait MailboxSetMethodContract {
               |       [
               |           "Mailbox/set",
               |           {
-              |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+              |                "accountId": "$bobAccountId",
               |                "update": {
               |                    "${mailboxId.serialize}": {
               |                      "parentId": "${parentId.serialize}"
@@ -8550,7 +8575,7 @@ trait MailboxSetMethodContract {
          |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "updated": {
          |        "${mailboxId.serialize}": {}
          |      }
@@ -8568,7 +8593,7 @@ trait MailboxSetMethodContract {
             |   "methodCalls": [
             |       ["Mailbox/get",
             |         {
-            |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+            |           "accountId": "$bobAccountId",
             |           "ids": ["${parentId.serialize}"],
             |           "properties": ["id", "name", "parentId", "rights"]
             |          },
@@ -8591,13 +8616,13 @@ trait MailboxSetMethodContract {
              |  "sessionState": "${SESSION_STATE.value}",
              |  "methodResponses": [
              |    ["Mailbox/get", {
-             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |      "accountId": "$bobAccountId",
              |      "state": "$${json-unit.ignore}",
              |      "list": [{
              |        "id": "${parentId.serialize}",
              |        "name": "parent",
              |        "rights": {
-             |          "${ANDRE.asString()}": ["l"]
+             |          "${andreUsername.asString()}": ["l"]
              |        }
              |      }],
              |      "notFound": []
@@ -8610,9 +8635,9 @@ trait MailboxSetMethodContract {
   @Test
   def updatingParentIdShouldSucceedWhenMailboxHasAChild(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox.child"))
-    val parentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "parent"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox.child"))
+    val parentId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "parent"))
 
     val request = s"""
         |{
@@ -8621,7 +8646,7 @@ trait MailboxSetMethodContract {
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "update": {
         |                    "${mailboxId.serialize}": {
         |                      "parentId": "${parentId.serialize}"
@@ -8656,7 +8681,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "updated": {
          |                    "${mailboxId.serialize}": {}
          |                }
@@ -8678,7 +8703,7 @@ trait MailboxSetMethodContract {
                |  "methodCalls": [[
                |     "Mailbox/set",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "update": {
                |         "${mailboxId.serialize}": {}
                |       }
@@ -8718,7 +8743,7 @@ trait MailboxSetMethodContract {
                |  "methodCalls": [[
                |     "Mailbox/set",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "update": {
                |         "${mailboxId.serialize}": {}
                |       }
@@ -8750,7 +8775,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldHandleNotFoundClientId(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -8760,7 +8785,7 @@ trait MailboxSetMethodContract {
                |    [
                |     "Mailbox/set",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "update": {
                |         "#invalid": {
                |           "name": "newName"
@@ -8787,7 +8812,7 @@ trait MailboxSetMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "notUpdated": {
          |                    "#invalid": {
          |                        "type": "invalidArguments",
@@ -8804,7 +8829,7 @@ trait MailboxSetMethodContract {
   @Test
   def newStateShouldBeUpToDate(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
          |{
@@ -8813,7 +8838,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "name": "newName"
@@ -8822,7 +8847,7 @@ trait MailboxSetMethodContract {
          |           }, "c1"],
          |       [ "Mailbox/changes",
          |       {
-         |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |         "accountId": "$bobAccountId",
          |         "#sinceState": {
          |            "resultOf":"c1",
          |            "name":"Mailbox/set",
@@ -8853,7 +8878,7 @@ trait MailboxSetMethodContract {
       .inPath("methodResponses[1][1]")
       .isEqualTo(
         s"""{
-           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |  "accountId": "$bobAccountId",
            |  "hasMoreChanges": false,
            |  "updatedProperties": null,
            |  "created": [],
@@ -8865,7 +8890,7 @@ trait MailboxSetMethodContract {
   @Test
   def oldStateShouldIncludeSetChanges(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
     val request =
       s"""
          |{
@@ -8874,7 +8899,7 @@ trait MailboxSetMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "update": {
          |                    "${mailboxId.serialize}": {
          |                      "name": "newName"
@@ -8883,7 +8908,7 @@ trait MailboxSetMethodContract {
          |           }, "c1"],
          |       [ "Mailbox/changes",
          |       {
-         |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |         "accountId": "$bobAccountId",
          |         "#sinceState": {
          |            "resultOf":"c1",
          |            "name":"Mailbox/set",
@@ -8914,7 +8939,7 @@ trait MailboxSetMethodContract {
       .inPath("methodResponses[1][1]")
       .isEqualTo(
         s"""{
-           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |  "accountId": "$bobAccountId",
            |  "hasMoreChanges": false,
            |  "updatedProperties": null,
            |  "created": [],
@@ -8933,7 +8958,7 @@ trait MailboxSetMethodContract {
            |  "methodCalls": [[
            |      "Mailbox/get",
            |      {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+           |        "accountId": "$bobAccountId"
            |      },
            |      "c1"]]
            |}""".stripMargin)
@@ -8944,12 +8969,12 @@ trait MailboxSetMethodContract {
       .get("methodResponses[0][1].state")
 
     val sharedMailboxName = "AndreShared"
-    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -8960,7 +8985,7 @@ trait MailboxSetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/set",
                |           {
-               |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+               |                "accountId": "$bobAccountId"
                |           }, "c1"]]
                |}""".stripMargin)
     .when
@@ -8980,7 +9005,7 @@ trait MailboxSetMethodContract {
            |  "methodCalls": [[
            |      "Mailbox/get",
            |      {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+           |        "accountId": "$bobAccountId"
            |      },
            |      "c1"]]
            |}""".stripMargin)
@@ -8991,12 +9016,12 @@ trait MailboxSetMethodContract {
       .get("methodResponses[0][1].state")
 
     val sharedMailboxName = "AndreShared"
-    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -9008,7 +9033,7 @@ trait MailboxSetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/set",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+               |        "accountId": "$bobAccountId"
                |      },
                |      "c1"]]
                |}""".stripMargin)
@@ -9021,7 +9046,7 @@ trait MailboxSetMethodContract {
 
   @Test
   def webSocketShouldPushNewMessageWhenChangeSubscriptionOfMailbox(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     Thread.sleep(100)
 
@@ -9029,9 +9054,10 @@ trait MailboxSetMethodContract {
       .getJmapPort
       .getValue
 
+    val authHeader = s"Basic ${java.util.Base64.getEncoder.encodeToString(s"${bobUsername.asString()}:$BOB_PASSWORD".getBytes)}"
     val response: Either[String, List[String]] =
       basicRequest.get(Uri.apply(new URI(s"ws://127.0.0.1:$socketPort/jmap/ws")))
-        .header("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+        .header("Authorization", authHeader)
         .header("Accept", ACCEPT_RFC8621_VERSION_HEADER)
         .response(asWebSocket[Identity, List[String]] {
           ws =>
@@ -9050,7 +9076,7 @@ trait MailboxSetMethodContract {
                  |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
                  |  "methodCalls": [
                  |    ["Mailbox/set", {
-                 |      "accountId": "$ACCOUNT_ID",
+                 |      "accountId": "$bobAccountId",
                  |      "update": {
                  |        "${mailboxId.serialize}" : {
                  |           "isSubscribed": true
@@ -9064,7 +9090,7 @@ trait MailboxSetMethodContract {
         .body
 
     val hasMailboxStateChangeConsumer : ThrowingConsumer[String] = (s: String) => assertThat(s)
-        .startsWith("{\"@type\":\"StateChange\",\"changed\":{\"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6\":{\"Mailbox\":")
+        .startsWith(s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Mailbox":""")
     assertThat(response.toOption.get.asJava)
       .anySatisfy(hasMailboxStateChangeConsumer)
   }
@@ -9072,14 +9098,14 @@ trait MailboxSetMethodContract {
   @Test
   def sseShouldHasNewEventWhenChangeSubscribeOfMailbox(server: GuiceJamesServer): Unit = {
     val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox12"))
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "mailbox12"))
     Thread.sleep(500)
 
     val seq = new ListBuffer[String]()
     HttpClient.create
       .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeAfter=no")
       .headers(builder => {
-        builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+        builder.add("Authorization", s"Basic ${java.util.Base64.getEncoder.encodeToString(s"${bobUsername.asString()}:$BOB_PASSWORD".getBytes)}")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
       })
       .get()
@@ -9099,23 +9125,23 @@ trait MailboxSetMethodContract {
       .await
       .untilAsserted { () =>
         // change subscription
-        JmapRequests.subscribe(mailboxId.serialize())
+        JmapRequests.subscribe(mailboxId.serialize(), bobUsername)
         Thread.sleep(200)
 
         assertThat(seq.asJava)
           .hasSize(1)
         assertThat(seq.head)
-          .startsWith("event: state\ndata: {\"@type\":\"StateChange\",\"changed\":{\"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6\":{\"Mailbox\":")
+          .startsWith(s"event: state\ndata: {\"@type\":\"StateChange\",\"changed\":{\"$bobAccountId\":{\"Mailbox\":")
         assertThat(seq.head).endsWith("\n\n")
       }
   }
 
   @Test
   def createSubfolderInSharedMailboxShouldSucceedWhenHasCreateMailboxRight(server: GuiceJamesServer): Unit = {
-    val path = MailboxPath.forUser(ANDRE, "shared")
+    val path = MailboxPath.forUser(andreUsername, "shared")
     val sharedMailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.CreateMailbox))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.CreateMailbox))
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -9124,7 +9150,7 @@ trait MailboxSetMethodContract {
                |   "methodCalls": [
                |     [ "Mailbox/set",
                |       {
-               |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |         "accountId": "$bobAccountId",
                |         "create": {
                |           "C42": {
                |             "name": "child",
@@ -9134,7 +9160,7 @@ trait MailboxSetMethodContract {
                |       }, "c1"],
                |     [ "Mailbox/get",
                |       {
-               |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |         "accountId": "$bobAccountId",
                |         "ids": ["#C42"],
                |         "properties": ["id", "name", "parentId"]
                |       }, "c2"]]
@@ -9157,15 +9183,15 @@ trait MailboxSetMethodContract {
 
   @Test
   def renameSubfolderInSharedMailboxShouldSucceedWhenHasDeleteMailboxRight(server: GuiceJamesServer): Unit = {
-    val parentPath = MailboxPath.forUser(ANDRE, "shared")
+    val parentPath = MailboxPath.forUser(andreUsername, "shared")
     val parentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(parentPath)
     val childPath = parentPath.child("child", '.')
     val childId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(childPath)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(parentPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.CreateMailbox))
+      .replaceRights(parentPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.CreateMailbox))
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(childPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.DeleteMailbox))
+      .replaceRights(childPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.DeleteMailbox))
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -9174,7 +9200,7 @@ trait MailboxSetMethodContract {
                |   "methodCalls": [
                |     [ "Mailbox/set",
                |       {
-               |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |         "accountId": "$bobAccountId",
                |         "update": {
                |           "${childId.serialize}": {
                |             "name": "renamed"
@@ -9183,7 +9209,7 @@ trait MailboxSetMethodContract {
                |       }, "c1"],
                |     [ "Mailbox/get",
                |       {
-               |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |         "accountId": "$bobAccountId",
                |         "ids": ["${childId.serialize}"],
                |         "properties": ["id", "name", "parentId"]
                |       }, "c2"]]
@@ -9206,17 +9232,17 @@ trait MailboxSetMethodContract {
 
   @Test
   def moveSubfolderInSharedMailboxShouldSucceedWhenHasRequiredRights(server: GuiceJamesServer): Unit = {
-    val srcParentPath = MailboxPath.forUser(ANDRE, "src")
+    val srcParentPath = MailboxPath.forUser(andreUsername, "src")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(srcParentPath)
     val childPath = srcParentPath.child("child", '.')
     val childId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(childPath)
-    val destParentPath = MailboxPath.forUser(ANDRE, "dest")
+    val destParentPath = MailboxPath.forUser(andreUsername, "dest")
     val destParentId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(destParentPath)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(childPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.DeleteMailbox))
+      .replaceRights(childPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.DeleteMailbox))
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(destParentPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.CreateMailbox))
+      .replaceRights(destParentPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.CreateMailbox))
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -9225,7 +9251,7 @@ trait MailboxSetMethodContract {
                |   "methodCalls": [
                |     [ "Mailbox/set",
                |       {
-               |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |         "accountId": "$bobAccountId",
                |         "update": {
                |           "${childId.serialize}": {
                |             "parentId": "${destParentId.serialize}"
@@ -9234,7 +9260,7 @@ trait MailboxSetMethodContract {
                |       }, "c1"],
                |     [ "Mailbox/get",
                |       {
-               |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |         "accountId": "$bobAccountId",
                |         "ids": ["${childId.serialize}"],
                |         "properties": ["id", "name", "parentId"]
                |       }, "c2"]]
@@ -9257,13 +9283,13 @@ trait MailboxSetMethodContract {
 
   @Test
   def deleteSubfolderInSharedMailboxShouldSucceedWhenHasDeleteMailboxRight(server: GuiceJamesServer): Unit = {
-    val parentPath = MailboxPath.forUser(ANDRE, "shared")
+    val parentPath = MailboxPath.forUser(andreUsername, "shared")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(parentPath)
     val childPath = parentPath.child("child", '.')
     val childId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(childPath)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(childPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.DeleteMailbox))
+      .replaceRights(childPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.DeleteMailbox))
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -9272,12 +9298,12 @@ trait MailboxSetMethodContract {
                |   "methodCalls": [
                |     [ "Mailbox/set",
                |       {
-               |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |         "accountId": "$bobAccountId",
                |         "destroy": ["${childId.serialize}"]
                |       }, "c1"],
                |     [ "Mailbox/get",
                |       {
-               |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |         "accountId": "$bobAccountId",
                |         "ids": ["${childId.serialize}"]
                |       }, "c2"]]
                |}""".stripMargin)
