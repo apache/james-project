@@ -32,6 +32,8 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
@@ -39,6 +41,7 @@ import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
 import io.netty.util.AttributeKey;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(HAProxyMessageHandler.class);
@@ -60,44 +63,50 @@ public class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void handleHAProxyMessage(ChannelHandlerContext ctx, HAProxyMessage haproxyMsg) throws Exception {
-        try {
+    private void handleHAProxyMessage(ChannelHandlerContext ctx, HAProxyMessage haproxyMsg) {
+        ChannelPipeline pipeline = ctx.pipeline();
+        ImapSession imapSession = (ImapSession) pipeline.channel().attr(SESSION_ATTRIBUTE_KEY).get();
+        if (haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP4) || haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP6)) {
 
-            ChannelPipeline pipeline = ctx.pipeline();
-            ImapSession imapSession = (ImapSession) pipeline.channel().attr(SESSION_ATTRIBUTE_KEY).get();
-            if (haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP4) || haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP6)) {
+            InetSocketAddress sourceIP = new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort());
+            ctx.channel().attr(PROXY_INFO).set(
+                new ProxyInformation(
+                    sourceIP,
+                    new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort())));
 
-                InetSocketAddress sourceIP = new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort());
-                ctx.channel().attr(PROXY_INFO).set(
-                    new ProxyInformation(
-                        sourceIP,
-                        new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort())));
+            LOGGER.info("Connection from {} runs through {} proxy", haproxyMsg.sourceAddress(), haproxyMsg.destinationAddress());
+            // Refresh MDC info to account for proxying
+            MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx);
 
-                LOGGER.info("Connection from {} runs through {} proxy", haproxyMsg.sourceAddress(), haproxyMsg.destinationAddress());
-                // Refresh MDC info to account for proxying
-                MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx);
+            // Pause reading while the connection check is in progress to prevent IMAP
+            // commands from being processed before the check completes.
+            ctx.channel().config().setAutoRead(false);
+            performConnectionCheck(sourceIP)
+                .then(Mono.fromRunnable(() -> {
+                    if (imapSession != null) {
+                        imapSession.setAttribute(MDC_KEY, boundMDC);
+                    }
+                }))
+                .doFinally(any -> haproxyMsg.release())
+                .subscribe(any -> {
+                }, error -> ctx.executor().execute(() -> ctx.pipeline().fireExceptionCaught(error)),
+                    () -> ctx.executor().execute(Throwing.runnable(() -> {
+                        ctx.channel().config().setAutoRead(true);
+                        super.channelReadComplete(ctx);
+                    })));
 
-                performConnectionCheck(sourceIP);
-
-                if (imapSession != null) {
-                    imapSession.setAttribute(MDC_KEY, boundMDC);
-                }
-            } else {
-                throw new IllegalArgumentException("Only TCP4/TCP6 are supported when using PROXY protocol.");
-            }
-
-            super.channelReadComplete(ctx);
-        } finally {
+        } else {
             haproxyMsg.release();
+            throw new IllegalArgumentException("Only TCP4/TCP6 are supported when using PROXY protocol.");
         }
     }
 
-    private void performConnectionCheck(InetSocketAddress realClientIp) {
+    private Mono<Void> performConnectionCheck(InetSocketAddress realClientIp) {
         if (!connectionChecks.isEmpty()) {
-            Flux.fromIterable(connectionChecks)
+            return Flux.fromIterable(connectionChecks)
                 .concatMap(connectionCheck -> connectionCheck.validate(realClientIp))
-                .then()
-                .block();
+                .then();
         }
+        return Mono.empty();
     }
 }
