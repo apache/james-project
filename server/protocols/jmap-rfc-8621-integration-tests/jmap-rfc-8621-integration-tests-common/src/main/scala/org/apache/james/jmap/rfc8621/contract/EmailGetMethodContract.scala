@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets
 import java.time.{Duration, ZonedDateTime}
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
@@ -65,8 +66,8 @@ object EmailGetMethodContract {
   case class TestContext(bobUsername: Username, bobAccountId: String,
                         andreUsername: Username, andreAccountId: String,
                         aliceUsername: Username, aliceAccountId: String)
-  val currentContext: java.util.concurrent.atomic.AtomicReference[TestContext] =
-    new java.util.concurrent.atomic.AtomicReference[TestContext]()
+  val currentContext: AtomicReference[TestContext] =
+    new AtomicReference[TestContext]()
 }
 
 trait EmailGetMethodContract {
