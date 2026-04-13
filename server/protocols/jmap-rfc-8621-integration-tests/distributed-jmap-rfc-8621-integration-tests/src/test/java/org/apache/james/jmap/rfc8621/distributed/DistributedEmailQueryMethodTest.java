@@ -22,6 +22,6 @@ package org.apache.james.jmap.rfc8621.distributed;
 import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.jmap.rfc8621.contract.EmailQueryMethodContract;
 
-public class DistributedEmailQueryMethodTest extends DistributedBase implements EmailQueryMethodContract {
+public class DistributedEmailQueryMethodTest extends PerClassDistributedBase implements EmailQueryMethodContract {
     public static final DockerOpenSearchExtension ELASTIC_SEARCH_EXTENSION = new DockerOpenSearchExtension();
 }

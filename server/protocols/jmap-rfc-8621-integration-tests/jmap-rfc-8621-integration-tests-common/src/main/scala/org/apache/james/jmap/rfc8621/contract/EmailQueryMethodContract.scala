@@ -24,7 +24,9 @@ import java.nio.charset.StandardCharsets
 import java.time.format.DateTimeFormatter
 import java.time.{Duration, Instant, ZonedDateTime}
 import java.util.Date
+import java.util.UUID
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import java.util.stream.Stream
 
 import com.google.common.hash.Hashing
@@ -36,10 +38,12 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.EmailQueryMethodContract.TestContext
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.mailbox.FlagsBuilder
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -61,6 +65,10 @@ import org.junit.jupiter.params.provider.{Arguments, MethodSource, ValueSource}
 import org.threeten.extra.Seconds
 
 object EmailQueryMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String,
+                         andreUsername: Username)
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+
   def jmapSystemKeywords : Stream[Arguments] = {
     Stream.of(
       Arguments.of(new Flags(Flags.Flag.SEEN), "$Seen"),
@@ -72,6 +80,10 @@ object EmailQueryMethodContract {
 }
 
 trait EmailQueryMethodContract {
+  def bobUsername: Username = EmailQueryMethodContract.currentContext.get().bobUsername
+  def bobAccountId: String = EmailQueryMethodContract.currentContext.get().bobAccountId
+  def andreUsername: Username = EmailQueryMethodContract.currentContext.get().andreUsername
+
 
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
@@ -84,14 +96,23 @@ trait EmailQueryMethodContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    EmailQueryMethodContract.currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString,
+      andreUsername = andre
+    ))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString(), ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -155,15 +176,15 @@ trait EmailQueryMethodContract {
   @Test
   def hasAttachmentShouldKeepMessageWithAttachmentWhenTrue(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
     mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -175,7 +196,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"hasAttachment":true}
          |    },
          |    "c1"]]
@@ -200,7 +221,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId2)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -216,10 +237,10 @@ trait EmailQueryMethodContract {
   @Test
   def messagesMarkedAsDeletedShouldNotBeExposedOverJMAP(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withFlags(new Flags(Flags.Flag.DELETED))
           .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
@@ -233,7 +254,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"hasAttachment":true}
          |    },
          |    "c1"]]
@@ -257,7 +278,7 @@ trait EmailQueryMethodContract {
          |    "methodResponses": [[
          |            "Email/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "queryState": "${generateQueryState()}",
          |                "canCalculateChanges": false,
          |                "position": 0,
@@ -278,7 +299,7 @@ trait EmailQueryMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "create": {
          |                    "C42": {
          |                      "name": "myMailbox"
@@ -289,7 +310,7 @@ trait EmailQueryMethodContract {
          |       ], [
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "inMailboxOtherThan": ["#C42"]
          |      }
@@ -311,7 +332,7 @@ trait EmailQueryMethodContract {
       .asString
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "myMailbox")
+      .getMailboxId("#private", bobUsername.asString(), "myMailbox")
       .serialize
 
     assertThatJson(response)
@@ -323,7 +344,7 @@ trait EmailQueryMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "created": {
          |                    "C42": {
          |                        "id": "${mailboxId}",
@@ -352,7 +373,7 @@ trait EmailQueryMethodContract {
          |        [
          |            "Email/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "queryState": "00000000",
          |                "canCalculateChanges": false,
          |                "ids": [
@@ -376,7 +397,7 @@ trait EmailQueryMethodContract {
          |       [
          |           "Mailbox/set",
          |           {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "create": {
          |                    "C42": {
          |                      "name": "myMailbox"
@@ -387,7 +408,7 @@ trait EmailQueryMethodContract {
          |       ], [
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "inMailbox": "#C42"
          |      }
@@ -409,7 +430,7 @@ trait EmailQueryMethodContract {
       .asString
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .getMailboxId("#private", BOB.asString(), "myMailbox")
+      .getMailboxId("#private", bobUsername.asString(), "myMailbox")
       .serialize
 
     assertThatJson(response)
@@ -421,7 +442,7 @@ trait EmailQueryMethodContract {
          |        [
          |            "Mailbox/set",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "created": {
          |                    "C42": {
          |                        "id": "${mailboxId}",
@@ -450,7 +471,7 @@ trait EmailQueryMethodContract {
          |        [
          |            "Email/query",
          |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "accountId": "$bobAccountId",
          |                "queryState": "00000000",
          |                "canCalculateChanges": false,
          |                "ids": [
@@ -468,9 +489,9 @@ trait EmailQueryMethodContract {
   @Test
   def emailInSharedMailboxesShouldNotBeDisplayedWhenNoExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(inbox(ANDRE))
+    mailboxProbe.createMailbox(inbox(andreUsername))
     mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -480,7 +501,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -490,7 +511,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+         |      "accountId": "$bobAccountId"
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -514,7 +535,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState()}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -530,9 +551,9 @@ trait EmailQueryMethodContract {
   @Test
   def emailInSharedMailboxesShouldBeDisplayedWhenExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(inbox(ANDRE))
+    mailboxProbe.createMailbox(inbox(andreUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -542,7 +563,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -553,7 +574,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+         |      "accountId": "$bobAccountId"
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -577,7 +598,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -593,9 +614,9 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxFilterShouldReturnEmptyForSharedMailboxesWhenNoExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -605,7 +626,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -615,7 +636,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"inMailbox": "${andreInboxId.serialize()}"}
          |    },
          |    "c1"]]
@@ -640,7 +661,7 @@ trait EmailQueryMethodContract {
            |        [
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState()}",
            |                "canCalculateChanges": false,
            |                "ids": [
@@ -658,9 +679,9 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxFilterShouldAcceptSharedMailboxesWhenExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -670,7 +691,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -681,7 +702,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"inMailbox": "${andreInboxId.serialize()}"}
          |    },
          |    "c1"]]
@@ -706,7 +727,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -722,9 +743,9 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxFilterWithSortedByReceivedAtShouldReturnEmptyForSharedMailboxesWhenNoSharesExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -734,7 +755,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+      .addRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
 
     val request =
       s"""{
@@ -746,7 +767,7 @@ trait EmailQueryMethodContract {
          |		[
          |			"Email/query",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"filter": {
          |					"inMailbox": "${andreInboxId.serialize()}"
          |				},
@@ -779,7 +800,7 @@ trait EmailQueryMethodContract {
            |        [
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState()}",
            |                "canCalculateChanges": false,
            |                "ids": [
@@ -797,9 +818,9 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxFilterWithSortedByReceivedAtShouldAcceptSharedMailboxesWhenSharesExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -809,7 +830,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+      .addRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
 
     val request =
       s"""{
@@ -822,7 +843,7 @@ trait EmailQueryMethodContract {
          |		[
          |			"Email/query",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"filter": {
          |					"inMailbox": "${andreInboxId.serialize()}"
          |				},
@@ -855,7 +876,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -871,9 +892,9 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxFilterWithSortedBySentAtShouldReturnEmptyForSharedMailboxesWhenNoSharesExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -883,7 +904,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+      .addRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
 
     val request =
       s"""{
@@ -895,7 +916,7 @@ trait EmailQueryMethodContract {
          |		[
          |			"Email/query",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"filter": {
          |					"inMailbox": "${andreInboxId.serialize()}"
          |				},
@@ -928,7 +949,7 @@ trait EmailQueryMethodContract {
            |        [
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState()}",
            |                "canCalculateChanges": false,
            |                "ids": [
@@ -946,9 +967,9 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxFilterWithSortedBySentAtShouldAcceptSharedMailboxesWhenSharesExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -958,7 +979,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+      .addRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
 
     val request =
       s"""{
@@ -971,7 +992,7 @@ trait EmailQueryMethodContract {
          |		[
          |			"Email/query",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"filter": {
          |					"inMailbox": "${andreInboxId.serialize()}"
          |				},
@@ -1004,7 +1025,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -1020,9 +1041,9 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxOtherThanFilterShouldReturnEmptyForSharedMailboxesWhenNoExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1032,7 +1053,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -1042,7 +1063,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"inMailboxOtherThan": ["${andreInboxId.serialize()}"]}
          |    },
          |    "c1"]]
@@ -1066,7 +1087,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState()}",
            |                "canCalculateChanges": false,
            |                "ids": [],
@@ -1082,9 +1103,9 @@ trait EmailQueryMethodContract {
   def inMailboxAfterWithSortedBySentAtShouldReturnEmptyForSharedMailboxesWhenNoSharesExtension(server: GuiceJamesServer): Unit = {
     val requestDate = ZonedDateTime.now().minusDays(1)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1094,7 +1115,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+      .addRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
 
     val request =
       s"""{
@@ -1106,7 +1127,7 @@ trait EmailQueryMethodContract {
          |		[
          |			"Email/query",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"filter": {
          |					"inMailbox": "${andreInboxId.serialize()}",
          |					"after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
@@ -1139,7 +1160,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState()}",
            |                "canCalculateChanges": false,
            |                "ids": [],
@@ -1155,9 +1176,9 @@ trait EmailQueryMethodContract {
   def inMailboxAfterWithSortedBySentAtShouldAcceptSharedMailboxesWhenSharesExtension(server: GuiceJamesServer): Unit = {
     val requestDate = ZonedDateTime.now().minusDays(1)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1167,7 +1188,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+      .addRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
 
     val request =
       s"""{
@@ -1180,7 +1201,7 @@ trait EmailQueryMethodContract {
          |		[
          |			"Email/query",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"filter": {
          |					"inMailbox": "${andreInboxId.serialize()}",
          |					"after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
@@ -1215,7 +1236,7 @@ trait EmailQueryMethodContract {
              |    "methodResponses": [[
              |            "Email/query",
              |            {
-             |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |                "accountId": "$bobAccountId",
              |                "queryState": "${generateQueryState(messageId1)}",
              |                "canCalculateChanges": false,
              |                "ids": ["${messageId1.serialize()}"],
@@ -1232,9 +1253,9 @@ trait EmailQueryMethodContract {
   def inMailboxAfterWithSortedByReceivedAtShouldReturnEmptyForSharedMailboxesWhenNoSharesExtension(server: GuiceJamesServer): Unit = {
     val requestDate = ZonedDateTime.now().minusDays(1)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1244,7 +1265,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+      .addRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
 
     val request =
       s"""{
@@ -1256,7 +1277,7 @@ trait EmailQueryMethodContract {
          |		[
          |			"Email/query",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"filter": {
          |					"inMailbox": "${andreInboxId.serialize()}",
          |					"after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
@@ -1289,7 +1310,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState()}",
            |                "canCalculateChanges": false,
            |                "ids": [],
@@ -1305,9 +1326,9 @@ trait EmailQueryMethodContract {
   def inMailboxAfterWithSortedByReceivedAtShouldAcceptSharedMailboxesWhenSharesExtension(server: GuiceJamesServer): Unit = {
     val requestDate = ZonedDateTime.now().minusDays(1)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1317,7 +1338,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+      .addRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
 
     val request =
       s"""{
@@ -1330,7 +1351,7 @@ trait EmailQueryMethodContract {
          |		[
          |			"Email/query",
          |			{
-         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"accountId": "$bobAccountId",
          |				"filter": {
          |					"inMailbox": "${andreInboxId.serialize()}",
          |					"after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
@@ -1363,7 +1384,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "canCalculateChanges": false,
            |                "ids": ["${messageId1.serialize()}"],
@@ -1378,10 +1399,10 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxOtherThanFilterShouldAcceptSharedMailboxesWhenExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
-    mailboxProbe.createMailbox(inbox(BOB))
+    val andreInboxId = mailboxProbe.createMailbox(inbox(andreUsername))
+    mailboxProbe.createMailbox(inbox(bobUsername))
     mailboxProbe
-      .appendMessage(ANDRE.asString, inbox(ANDRE),
+      .appendMessage(andreUsername.asString, inbox(andreUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1390,7 +1411,7 @@ trait EmailQueryMethodContract {
             .build))
       .getMessageId
     val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1400,7 +1421,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(inbox(andreUsername), bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -1411,7 +1432,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"inMailboxOtherThan": ["${andreInboxId.serialize()}"]}
          |    },
          |    "c1"]]
@@ -1436,7 +1457,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId2)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -1451,12 +1472,12 @@ trait EmailQueryMethodContract {
 
   def bodyFilterShouldMatchTextPlainOnBody(server: GuiceJamesServer): Unit = {
     val message: Message = simpleMessage("this message body are uniqueeee")
-    val mailboxPath = MailboxPath.inbox(BOB)
+    val mailboxPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(mailboxPath)
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     val messageId1: MessageId = sendMessageToBobInbox(server, message, requestDate)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, mailboxPath, AppendCommand.from(
+      .appendMessage(bobUsername.asString, mailboxPath, AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -1468,7 +1489,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "body":"this message"
          |       }
@@ -1498,12 +1519,12 @@ trait EmailQueryMethodContract {
   @Test
   def bodyFilterShouldMatchTextPlainOnAttachmentsContent(server: GuiceJamesServer): Unit = {
     val message: Message = simpleMessage("this message body are uniqueeee")
-    val mailboxPath = MailboxPath.inbox(BOB)
+    val mailboxPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(mailboxPath)
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     sendMessageToBobInbox(server, message, requestDate)
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -1515,7 +1536,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "body":"RSA PRIVATE"
          |       }
@@ -1545,12 +1566,12 @@ trait EmailQueryMethodContract {
   @Test
   def bodyFilterShouldMatchTextPlainOnAttachmentsFileName(server: GuiceJamesServer): Unit = {
     val message: Message = simpleMessage("this message body are uniqueeee")
-    val mailboxPath = MailboxPath.inbox(BOB)
+    val mailboxPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(mailboxPath)
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     sendMessageToBobInbox(server, message, requestDate)
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -1562,7 +1583,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "body":"text2"
          |       }
@@ -1593,9 +1614,9 @@ trait EmailQueryMethodContract {
   @Test
   def headerExistsShouldBeCaseInsentive(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(inbox(BOB))
+    mailboxProbe.createMailbox(inbox(bobUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1605,7 +1626,7 @@ trait EmailQueryMethodContract {
             .build))
       .getMessageId
     mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1623,7 +1644,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"header": ["X-SpEcIfIc"]}
          |    },
          |    "c1"]]
@@ -1648,7 +1669,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -1664,9 +1685,9 @@ trait EmailQueryMethodContract {
   @Test
   def headerShouldAllowToMatchMailWithSpecificHeaderSet(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(inbox(BOB))
+    mailboxProbe.createMailbox(inbox(bobUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1676,7 +1697,7 @@ trait EmailQueryMethodContract {
             .build))
       .getMessageId
     mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1694,7 +1715,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"header": ["X-Specific"]}
          |    },
          |    "c1"]]
@@ -1719,7 +1740,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -1735,9 +1756,9 @@ trait EmailQueryMethodContract {
   @Test
   def headerShouldAllowToMatchMailWithSpecificValueHeaderSet(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(inbox(BOB))
+    mailboxProbe.createMailbox(inbox(bobUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1747,7 +1768,7 @@ trait EmailQueryMethodContract {
             .build))
       .getMessageId
     mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1756,7 +1777,7 @@ trait EmailQueryMethodContract {
             .build))
       .getMessageId
     mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1775,7 +1796,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"header": ["X-Specific", "value"]}
          |    },
          |    "c1"]]
@@ -1800,7 +1821,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -1816,9 +1837,9 @@ trait EmailQueryMethodContract {
   @Test
   def headerContainsShouldBeCaseInsentive(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(inbox(BOB))
+    mailboxProbe.createMailbox(inbox(bobUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1828,7 +1849,7 @@ trait EmailQueryMethodContract {
             .build))
       .getMessageId
     mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1837,7 +1858,7 @@ trait EmailQueryMethodContract {
             .build))
       .getMessageId
     mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1856,7 +1877,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"header": ["X-Specific", "value"]}
          |    },
          |    "c1"]]
@@ -1881,7 +1902,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -1897,9 +1918,9 @@ trait EmailQueryMethodContract {
   @Test
   def headerShouldRejectWhenMoreThanTwoItems(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(inbox(BOB))
+    mailboxProbe.createMailbox(inbox(bobUsername))
     mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1909,7 +1930,7 @@ trait EmailQueryMethodContract {
             .build))
       .getMessageId
     mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1918,7 +1939,7 @@ trait EmailQueryMethodContract {
             .build))
       .getMessageId
     mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB),
+      .appendMessage(bobUsername.asString, inbox(bobUsername),
         AppendCommand.from(
           Message.Builder
             .of
@@ -1937,7 +1958,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"header": ["X-Specific", "value", "invalid"]}
          |    },
          |    "c1"]]
@@ -1974,15 +1995,15 @@ trait EmailQueryMethodContract {
   @Test
   def hasAttachmentShouldKeepMessageWithoutAttachmentWhenFalse(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
     mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -1994,7 +2015,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {"hasAttachment":false}
          |    },
          |    "c1"]]
@@ -2019,7 +2040,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -2038,29 +2059,29 @@ trait EmailQueryMethodContract {
     val requestDate = ZonedDateTime.now().minusDays(1)
     val afterRequestDate = Date.from(ZonedDateTime.now().toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
     mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(beforeRequestDate)
           .build(buildTestMessage))
       .getMessageId
 
     mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
           .withInternalDate(beforeRequestDate)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(afterRequestDate)
           .build(buildTestMessage))
       .getMessageId
 
     mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withInternalDate(afterRequestDate)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
@@ -2073,7 +2094,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "hasAttachment":false,
          |        "after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
@@ -2101,7 +2122,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId3)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -2122,29 +2143,29 @@ trait EmailQueryMethodContract {
     val afterRequestDate1 = Date.from(ZonedDateTime.now().toInstant)
     val afterRequestDate2 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(beforeRequestDate1)
           .build(buildTestMessage))
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
           .withInternalDate(beforeRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(afterRequestDate1)
           .build(buildTestMessage))
       .getMessageId
 
     val messageId4: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withInternalDate(afterRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
@@ -2157,7 +2178,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize()}",
          |        "after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
@@ -2189,7 +2210,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId4, messageId3)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -2210,29 +2231,29 @@ trait EmailQueryMethodContract {
     val afterRequestDate1 = Date.from(ZonedDateTime.now().toInstant)
     val afterRequestDate2 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(beforeRequestDate1)
           .build(buildTestMessage))
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
           .withInternalDate(beforeRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(afterRequestDate1)
           .build(buildTestMessage))
       .getMessageId
 
     val messageId4: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withInternalDate(afterRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
@@ -2245,7 +2266,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize()}",
          |        "after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
@@ -2279,7 +2300,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId3)}",
            |                "canCalculateChanges": false,
            |                "position": 1,
@@ -2299,29 +2320,29 @@ trait EmailQueryMethodContract {
     val afterRequestDate1 = Date.from(ZonedDateTime.now().toInstant)
     val afterRequestDate2 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(beforeRequestDate1)
           .build(buildTestMessage))
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
           .withInternalDate(beforeRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(afterRequestDate1)
           .build(buildTestMessage))
       .getMessageId
 
     val messageId4: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withInternalDate(afterRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
@@ -2334,7 +2355,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize()}"
          |       },
@@ -2365,7 +2386,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId4, messageId3, messageId2, messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -2386,29 +2407,29 @@ trait EmailQueryMethodContract {
     val afterRequestDate1 = Date.from(ZonedDateTime.now().toInstant)
     val afterRequestDate2 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(beforeRequestDate1)
           .build(buildTestMessage))
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withInternalDate(beforeRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(afterRequestDate1)
           .build(buildTestMessage))
       .getMessageId
 
     val messageId4: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withInternalDate(afterRequestDate2)
         .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
@@ -2419,7 +2440,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize()}"
          |      },
@@ -2452,7 +2473,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId3, messageId2)}",
            |                "canCalculateChanges": false,
            |                "position": 1,
@@ -2467,14 +2488,14 @@ trait EmailQueryMethodContract {
   @Test
   def shouldListMailsInAllUserMailboxes(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     val messageId1: MessageId = sendMessageToBobInbox(server, message, requestDate)
 
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2485,7 +2506,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+         |      "accountId": "$bobAccountId"
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2514,14 +2535,14 @@ trait EmailQueryMethodContract {
   @Test
   def shouldNotListMailsFromOtherUserMailboxes(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(ANDRE, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(andreUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(andreUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -2532,7 +2553,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+         |      "accountId": "$bobAccountId"
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2556,7 +2577,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -2571,8 +2592,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedByDescendingOrderOfSentAt(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val message: Message = Message.Builder
       .of
@@ -2582,7 +2603,7 @@ trait EmailQueryMethodContract {
 
     val requestDateMessage1 = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(requestDateMessage1)
           .build(message))
@@ -2590,7 +2611,7 @@ trait EmailQueryMethodContract {
 
     val requestDateMessage2 = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(requestDateMessage2)
           .build(message))
@@ -2598,7 +2619,7 @@ trait EmailQueryMethodContract {
 
     val requestDateMessage3 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(requestDateMessage3)
           .build(message))
@@ -2612,7 +2633,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{
          |        "property":"sentAt",
          |        "isAscending": false
@@ -2642,7 +2663,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedByDescendingOrderOfSentAtAndInMailbox(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val message: Message = Message.Builder
       .of
       .setSubject("test")
@@ -2651,7 +2672,7 @@ trait EmailQueryMethodContract {
 
     val requestDateMessage1 = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(requestDateMessage1)
           .build(message))
@@ -2659,7 +2680,7 @@ trait EmailQueryMethodContract {
 
     val requestDateMessage2 = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(requestDateMessage2)
           .build(message))
@@ -2667,7 +2688,7 @@ trait EmailQueryMethodContract {
 
     val requestDateMessage3 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withInternalDate(requestDateMessage3)
           .build(message))
@@ -2681,7 +2702,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize}"
          |      },
@@ -2714,8 +2735,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedByAscendingOrderOfSentAt(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
 
     val requestDateMessage1 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
@@ -2726,7 +2747,7 @@ trait EmailQueryMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message1))
       .getMessageId
 
@@ -2738,7 +2759,7 @@ trait EmailQueryMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message2))
       .getMessageId
 
@@ -2750,7 +2771,7 @@ trait EmailQueryMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message3))
       .getMessageId
 
@@ -2762,7 +2783,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{
          |        "property":"sentAt",
          |        "isAscending": true
@@ -2792,8 +2813,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedByAscendingOrderWhenSortingBySentAtWithoutOrdering(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
 
     val requestDateMessage1 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
@@ -2804,7 +2825,7 @@ trait EmailQueryMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message1))
       .getMessageId
 
@@ -2816,7 +2837,7 @@ trait EmailQueryMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message2))
       .getMessageId
 
@@ -2828,7 +2849,7 @@ trait EmailQueryMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message3))
       .getMessageId
 
@@ -2840,7 +2861,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{
          |        "property":"sentAt"
          |      }]
@@ -2869,8 +2890,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedWhenUsingSize(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
 
     val message1: Message = Message.Builder
@@ -2879,7 +2900,7 @@ trait EmailQueryMethodContract {
       .setBody("short", StandardCharsets.UTF_8)
       .build
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message1))
       .getMessageId
 
@@ -2889,7 +2910,7 @@ trait EmailQueryMethodContract {
       .setBody("definitly looooooooooooooooooooooooooooooooooooong", StandardCharsets.UTF_8)
       .build
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message2))
       .getMessageId
 
@@ -2899,7 +2920,7 @@ trait EmailQueryMethodContract {
       .setBody("not that short", StandardCharsets.UTF_8)
       .build
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message3))
       .getMessageId
 
@@ -2909,7 +2930,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{"property":"size"}]
          |    },
          |    "c1"]]
@@ -2936,8 +2957,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedWhenUsingSubject(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
 
     val message1: Message = Message.Builder
@@ -2946,7 +2967,7 @@ trait EmailQueryMethodContract {
       .setBody("any body", StandardCharsets.UTF_8)
       .build
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message1))
       .getMessageId
 
@@ -2956,7 +2977,7 @@ trait EmailQueryMethodContract {
       .setBody("any body", StandardCharsets.UTF_8)
       .build
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message2))
       .getMessageId
 
@@ -2966,7 +2987,7 @@ trait EmailQueryMethodContract {
       .setBody("any body", StandardCharsets.UTF_8)
       .build
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message3))
       .getMessageId
 
@@ -2976,7 +2997,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{"property":"subject"}]
          |    },
          |    "c1"]]
@@ -3003,8 +3024,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedWhenUsingTo(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
 
     val message1: Message = Message.Builder
@@ -3014,7 +3035,7 @@ trait EmailQueryMethodContract {
       .setBody("any body", StandardCharsets.UTF_8)
       .build
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message1))
       .getMessageId
 
@@ -3025,7 +3046,7 @@ trait EmailQueryMethodContract {
       .setBody("any body", StandardCharsets.UTF_8)
       .build
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message2))
       .getMessageId
 
@@ -3036,7 +3057,7 @@ trait EmailQueryMethodContract {
       .setBody("any body", StandardCharsets.UTF_8)
       .build
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message3))
       .getMessageId
 
@@ -3046,7 +3067,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{"property":"to"}]
          |    },
          |    "c1"]]
@@ -3073,8 +3094,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedWhenUsingFrom(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
 
     val message1: Message = Message.Builder
@@ -3084,7 +3105,7 @@ trait EmailQueryMethodContract {
       .setBody("any body", StandardCharsets.UTF_8)
       .build
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message1))
       .getMessageId
 
@@ -3095,7 +3116,7 @@ trait EmailQueryMethodContract {
       .setBody("any body", StandardCharsets.UTF_8)
       .build
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message2))
       .getMessageId
 
@@ -3106,7 +3127,7 @@ trait EmailQueryMethodContract {
       .setBody("any body", StandardCharsets.UTF_8)
       .build
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().build(message3))
       .getMessageId
 
@@ -3116,7 +3137,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{"property":"from"}]
          |    },
          |    "c1"]]
@@ -3143,8 +3164,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldBeSortedByAscendingOrderOfInternalDateByDefaultWhenNoDateInHeader(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
 
     val requestDateMessage1 = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
@@ -3154,19 +3175,19 @@ trait EmailQueryMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
       .getMessageId
 
     val requestDateMessage2 = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().withInternalDate(requestDateMessage2).build(message))
       .getMessageId
 
     val requestDateMessage3 = Date.from(ZonedDateTime.now().toInstant)
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().withInternalDate(requestDateMessage3).build(message))
       .getMessageId
 
@@ -3178,7 +3199,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{
          |        "property":"sentAt"
          |      }]
@@ -3208,14 +3229,14 @@ trait EmailQueryMethodContract {
   @Test
   def listMailsShouldBeIdempotent(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -3226,7 +3247,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+         |      "accountId": "$bobAccountId"
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -3263,21 +3284,21 @@ trait EmailQueryMethodContract {
   @Test
   def listMailsShouldBeSortedInAscendingOrderByDefault(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val now: Instant = Instant.now()
     val requestDateMessage1: Date = Date.from(now)
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
       .getMessageId
     val requestDateMessage2: Date = Date.from(now.plus(Seconds.of(3)))
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage2).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withInternalDate(requestDateMessage2).build(message))
       .getMessageId
     val requestDateMessage3: Date = Date.from(now.plus(Seconds.of(6)))
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage3).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withInternalDate(requestDateMessage3).build(message))
       .getMessageId
     val request =
       s"""{
@@ -3287,7 +3308,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{
          |        "property":"receivedAt"
          |      }]
@@ -3318,20 +3339,20 @@ trait EmailQueryMethodContract {
   def listMailsShouldBeSortedInAscendingOrder(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
     val now: Instant = Instant.now()
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val requestDateMessage1: Date = Date.from(now)
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
       .getMessageId
     val requestDateMessage2: Date = Date.from(now.plus(Seconds.of(3)))
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage2).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withInternalDate(requestDateMessage2).build(message))
       .getMessageId
     val requestDateMessage3: Date = Date.from(now.plus(Seconds.of(6)))
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage3).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withInternalDate(requestDateMessage3).build(message))
       .getMessageId
     val request =
       s"""{
@@ -3341,7 +3362,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{
          |        "property":"receivedAt",
          |        "isAscending": true
@@ -3373,20 +3394,20 @@ trait EmailQueryMethodContract {
   def listMailsShouldBeSortedInDescendingOrder(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
     val now: Instant = Instant.now()
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val requestDateMessage1: Date = Date.from(now)
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withInternalDate(requestDateMessage1).build(message))
       .getMessageId
     val requestDateMessage2: Date = Date.from(now.plus(Seconds.of(3)))
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage2).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withInternalDate(requestDateMessage2).build(message))
       .getMessageId
     val requestDateMessage3: Date = Date.from(now.plus(Seconds.of(6)))
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withInternalDate(requestDateMessage3).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withInternalDate(requestDateMessage3).build(message))
       .getMessageId
     val request =
       s"""{
@@ -3396,7 +3417,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{
          |        "property":"receivedAt",
          |        "isAscending": false
@@ -3426,8 +3447,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldReturnErrorWhenPropertyFieldInComparatorIsOmitted(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val request =
       s"""{
@@ -3437,7 +3458,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${otherMailboxId.serialize}"
          |        },
@@ -3475,14 +3496,14 @@ trait EmailQueryMethodContract {
   @Test
   def shouldListMailsInASpecificUserMailboxes(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -3493,7 +3514,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${otherMailboxId.serialize}"
          |        }
@@ -3522,8 +3543,8 @@ trait EmailQueryMethodContract {
 
   @Test
   def listMailsShouldReturnErrorWhenPropertyFieldInComparatorIsInvalid(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val request =
       s"""{
@@ -3533,7 +3554,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${otherMailboxId.serialize}"
          |        },
@@ -3584,7 +3605,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{
          |        "property":"$unsupported"
          |      }]
@@ -3629,7 +3650,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "$unsupportedFilter": "abc"
          |      }
@@ -3669,7 +3690,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "anchor": "123"
          |    },
          |    "c1"]]
@@ -3707,7 +3728,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "anchorOffset": 0
          |    },
          |    "c1"]]
@@ -3738,17 +3759,17 @@ trait EmailQueryMethodContract {
   @Test
   def shouldReturnIllegalArgumentErrorForAnUnknownSpecificUserMailboxes(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
-    server.getProbe(classOf[MailboxProbeImpl]).deleteMailbox(otherMailboxPath.getNamespace, BOB.asString(), otherMailboxPath.getName)
+    server.getProbe(classOf[MailboxProbeImpl]).deleteMailbox(otherMailboxPath.getNamespace, bobUsername.asString(), otherMailboxPath.getName)
 
     val request =
       s"""{
@@ -3758,7 +3779,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${otherMailboxId.serialize}"
          |      }
@@ -3808,10 +3829,10 @@ trait EmailQueryMethodContract {
     computeSize(message3)
 
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(inbox(BOB))
-    mailboxProbe.appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(message1)).getMessageId
-    val id2 = mailboxProbe.appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(message2)).getMessageId
-    val id3 = mailboxProbe.appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(message3)).getMessageId
+    mailboxProbe.createMailbox(inbox(bobUsername))
+    mailboxProbe.appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(message1)).getMessageId
+    val id2 = mailboxProbe.appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(message2)).getMessageId
+    val id3 = mailboxProbe.appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(message3)).getMessageId
 
     val request =
       s"""{
@@ -3821,7 +3842,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "minSize": $size2
          |      }
@@ -3865,10 +3886,10 @@ trait EmailQueryMethodContract {
     computeSize(message3)
 
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(inbox(BOB))
-    val id1 = mailboxProbe.appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(message1)).getMessageId
-    mailboxProbe.appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(message2)).getMessageId
-    mailboxProbe.appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(message3)).getMessageId
+    mailboxProbe.createMailbox(inbox(bobUsername))
+    val id1 = mailboxProbe.appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(message1)).getMessageId
+    mailboxProbe.appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(message2)).getMessageId
+    mailboxProbe.appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(message3)).getMessageId
 
     val request =
       s"""{
@@ -3878,7 +3899,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "maxSize": $size2
          |      }
@@ -3919,7 +3940,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "maxSize": -1
          |      }
@@ -3968,7 +3989,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "minSize": -1
          |      }
@@ -4025,14 +4046,14 @@ trait EmailQueryMethodContract {
   @Test
   def shouldListMailsNotInASpecificUserMailboxes(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -4043,7 +4064,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailboxOtherThan": [ "${otherMailboxId.serialize}" ]
          |      }
@@ -4073,13 +4094,13 @@ trait EmailQueryMethodContract {
   @Test
   def shouldListMailsNotInZeroMailboxes(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val requestDateMessage1 = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     val messageId1: MessageId = sendMessageToBobInbox(server, message, requestDateMessage1)
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -4090,7 +4111,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailboxOtherThan": [  ]
          |      }
@@ -4121,14 +4142,14 @@ trait EmailQueryMethodContract {
   @Test
   def listMailsInAFirstMailboxAndNotSomeOtherMailboxShouldReturnMailsInFirstMailbox(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    val inbox = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val inbox = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     val otherMailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -4139,7 +4160,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox":  "${inbox.serialize}",
          |        "inMailboxOtherThan": [ "${otherMailboxId.serialize}" ]
@@ -4170,14 +4191,14 @@ trait EmailQueryMethodContract {
   @Test
   def listMailsInAFirstMailboxAndNotInTheSameMailboxShouldReturnEmptyResult(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    val inbox = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val inbox = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(message))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -4188,7 +4209,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "inMailbox":  "${inbox.serialize}",
          |        "inMailboxOtherThan": [ "${inbox.serialize}" ]
@@ -4219,15 +4240,15 @@ trait EmailQueryMethodContract {
   @Test
   def shouldListMailsReceivedBeforeADate(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
     val requestDate = ZonedDateTime.now().minusDays(1)
     val messageId1 = sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
 
 
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -4238,7 +4259,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "before": "${UTCDate(requestDate.plusHours(1)).asUTC.format(UTC_DATE_FORMAT)}"
          |      }
@@ -4268,14 +4289,14 @@ trait EmailQueryMethodContract {
   @Test
   def shouldListMailsReceivedBeforeADateInclusively(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
     val requestDate = ZonedDateTime.now().minusDays(1)
     val messageId1 = sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
 
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -4286,7 +4307,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "before": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
          |      }
@@ -4316,14 +4337,14 @@ trait EmailQueryMethodContract {
   @Test
   def shouldListMailsReceivedBeforeInAMailbox(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
     val requestDate = ZonedDateTime.now().minusDays(1)
     val messageId1 = sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
 
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -4334,7 +4355,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "before": "${UTCDate(requestDate).asUTC.plusSeconds(1).format(UTC_DATE_FORMAT)}",
          |        "inMailbox": "${mailboxId.serialize()}"
@@ -4369,15 +4390,15 @@ trait EmailQueryMethodContract {
   @Test
   def shouldListMailsReceivedAfterADate(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
     val receivedDateMessage1 = ZonedDateTime.now().minusDays(1)
     sendMessageToBobInbox(server, message, Date.from(receivedDateMessage1.toInstant))
 
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val receivedDateMessage2 = receivedDateMessage1.plusHours(2)
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.builder().withInternalDate(Date.from(receivedDateMessage2.toInstant)).build(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.builder().withInternalDate(Date.from(receivedDateMessage2.toInstant)).build(message))
       .getMessageId
 
     val request =
@@ -4388,7 +4409,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "after": "${UTCDate(receivedDateMessage2.minusHours(1)).asUTC.format(UTC_DATE_FORMAT)}"
          |      }
@@ -4418,14 +4439,14 @@ trait EmailQueryMethodContract {
   @Test
   def listMailsReceivedAfterADateShouldBeExclusive(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val receivedDateMessage1 = ZonedDateTime.now().minusDays(1)
     sendMessageToBobInbox(server, message, Date.from(receivedDateMessage1.toInstant))
 
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -4436,7 +4457,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "after": "${UTCDate(receivedDateMessage1).asUTC.format(UTC_DATE_FORMAT)}"
          |      }
@@ -4466,14 +4487,14 @@ trait EmailQueryMethodContract {
   @Test
   def shouldLimitResultByTheLimitProvidedByTheClient(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
 
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -4484,7 +4505,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "limit": 1,
          |      "sort": [{
          |        "property":"receivedAt",
@@ -4513,7 +4534,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId2)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -4534,30 +4555,30 @@ trait EmailQueryMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     mailboxProbe.createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.builder()
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.builder()
         .withInternalDate(Date.from(ZonedDateTime.now().minusDays(4).toInstant))
         .build(message))
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.builder()
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.builder()
         .withInternalDate(Date.from(ZonedDateTime.now().minusDays(3).toInstant))
         .build(message))
       .getMessageId
 
     val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.builder()
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.builder()
         .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
         .build(message))
       .getMessageId
 
     mailboxProbe
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.builder()
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.builder()
         .withInternalDate(Date.from(ZonedDateTime.now().minusDays(1).toInstant))
         .build(message))
       .getMessageId
@@ -4572,7 +4593,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "limit": 2,
          |      "position": 2,
          |      "sort": [{
@@ -4602,7 +4623,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId3, messageId2)}",
            |                "canCalculateChanges": false,
            |                "position": 2,
@@ -4624,14 +4645,14 @@ trait EmailQueryMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
 
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -4642,7 +4663,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "limit": 2,
          |      "position": 2
          |    },
@@ -4668,7 +4689,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState()}",
            |                "canCalculateChanges": false,
            |                "position": 2,
@@ -4690,7 +4711,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "limit": -1
          |    },
          |    "c1"]]
@@ -4729,7 +4750,7 @@ trait EmailQueryMethodContract {
   @Test
   def theLimitshouldBeEnforcedByTheServerIfNoLimitProvidedByTheClient(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     val allMessages = (0 to 300).toList.foldLeft(List[MessageId](), ZonedDateTime.now().minusYears(1))((acc, _) => {
       val (messageList, date) = acc
@@ -4748,7 +4769,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sort": [{
          |        "property":"receivedAt",
          |        "isAscending": false
@@ -4783,7 +4804,7 @@ trait EmailQueryMethodContract {
   @Test
   def theLimitshouldBeEnforcedByTheServerIfAGreaterLimitProvidedByTheClient(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     val allMessages = (0 to 300).toList.foldLeft(List[MessageId](), ZonedDateTime.now().minusYears(1))((acc, _) => {
       val (messageList, date) = acc
@@ -4802,7 +4823,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "limit": 2000,
          |      "sort": [{
          |        "property":"receivedAt",
@@ -4838,14 +4859,14 @@ trait EmailQueryMethodContract {
   @Test
   def resultsShouldStartAtThePositionProvidedByTheClient(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-        .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+        .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
           .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
           .build(message))
         .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-        .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+        .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
           .withInternalDate(Date.from(ZonedDateTime.now().minusDays(1).toInstant))
           .build(message))
         .getMessageId
@@ -4858,7 +4879,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "position": 1,
          |      "sort": [{
          |        "property":"receivedAt",
@@ -4887,7 +4908,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "position": 1,
            |                "limit": 256,
@@ -4903,14 +4924,14 @@ trait EmailQueryMethodContract {
   @Test
   def zeroPositionQueryShouldReturnItemsFromTheStart(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-        .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+        .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
           .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
           .build(message))
         .getMessageId
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-        .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+        .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
           .withInternalDate(Date.from(ZonedDateTime.now().minusDays(1).toInstant))
           .build(message))
         .getMessageId
@@ -4923,7 +4944,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "position": 0,
          |      "sort": [{
          |        "property":"receivedAt",
@@ -4952,7 +4973,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId2, messageId1)}",
            |                "position": 0,
            |                "limit": 256,
@@ -4968,14 +4989,14 @@ trait EmailQueryMethodContract {
   @Test
   def resultsShouldBeEmptyWithoutErrorWhenThePositionProvidedByTheClientIsGreaterThanTheNumberOfResults(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
 
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -4986,7 +5007,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "position": 2
          |    },
          |    "c1"]]
@@ -5011,7 +5032,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState()}",
            |                "position": 2,
            |                "limit": 256,
@@ -5026,17 +5047,17 @@ trait EmailQueryMethodContract {
 
   @Test
   def combiningSortPositionAndLimitShouldYieldExpectedResult(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .build(buildTestMessage(Date.from(ZonedDateTime.now().minusDays(3).toInstant))))
       .getMessageId
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .build(buildTestMessage(Date.from(ZonedDateTime.now().minusDays(2).toInstant))))
       .getMessageId
     val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .build(buildTestMessage(Date.from(ZonedDateTime.now().minusDays(1).toInstant))))
       .getMessageId
 
@@ -5048,7 +5069,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "position": 2,
          |      "limit": 2,
          |      "filter": {
@@ -5081,7 +5102,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId1)}",
            |                "position": 2,
            |                "canCalculateChanges": false,
@@ -5096,15 +5117,15 @@ trait EmailQueryMethodContract {
   @Test
   def shouldReturnAnIllegalArgumentExceptionIfThePositionIsNegative(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val requestDate = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
     sendMessageToBobInbox(server, message, Date.from(requestDate.toInstant))
 
-    val otherMailboxPath = MailboxPath.forUser(BOB, "other")
+    val otherMailboxPath = MailboxPath.forUser(bobUsername, "other")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(otherMailboxPath)
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, otherMailboxPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, otherMailboxPath, AppendCommand.from(message))
       .getMessageId
 
     val request =
@@ -5115,7 +5136,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "position": -1
          |    },
          |    "c1"]]
@@ -5155,12 +5176,12 @@ trait EmailQueryMethodContract {
   @MethodSource(value = Array("jmapSystemKeywords"))
   def listMailsBySystemKeywordShouldReturnOnlyMailsWithThisSystemKeyword(keywordFlag: Flags, keywordName: String, server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(keywordFlag).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(keywordFlag).build(message))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(message))
       .getMessageId
 
     val request =
@@ -5171,7 +5192,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "hasKeyword": "$keywordName"
          |      }
@@ -5208,7 +5229,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "hasKeyword": ""
          |      }
@@ -5254,7 +5275,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "hasKeyword": "${"a".repeat(257)}"
          |      }
@@ -5293,16 +5314,16 @@ trait EmailQueryMethodContract {
   @Test
   def hasKeywordShouldNotAcceptIMAPDeletedKeyword(): Unit = {
     val request =
-      """{
+      s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
-         |        "hasKeyword": "$Deleted"
+         |        "hasKeyword": "$$Deleted"
          |      }
          |    },
          |    "c1"]]
@@ -5340,16 +5361,16 @@ trait EmailQueryMethodContract {
   @Test
   def hasKeywordShouldNotAcceptIMAPRecentKeyword(): Unit = {
     val request =
-      """{
+      s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
-         |        "hasKeyword": "$Recent"
+         |        "hasKeyword": "$$Recent"
          |      }
          |    },
          |    "c1"]]
@@ -5394,7 +5415,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "hasKeyword": "custom&invalid"
          |      }
@@ -5434,12 +5455,12 @@ trait EmailQueryMethodContract {
   @Test
   def listMailsByCustomKeywordShouldReturnOnlyMailsWithThisCustomKeyword(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(message))
       .getMessageId
 
     val request =
@@ -5450,7 +5471,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "hasKeyword": "custom"
          |      }
@@ -5479,47 +5500,47 @@ trait EmailQueryMethodContract {
 
   @Test
   def fromShouldFilterResultsWhenAddress(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     def messageBuilder = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setFrom("user@domain.tld")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setFrom("other@domain.tld")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setFrom("yet@other.tld")
           .build))
       .getMessageId
     val messageId4 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setFrom("yet@other.tld", "user@domain.tld")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder.build))
       .getMessageId
     val messageId6 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setFrom("\"User\" <user@domain.tld>")
           .build))
       .getMessageId
     val messageId7 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setFrom("\"user@domain.tld\" <other@domain.tld>")
           .build))
@@ -5533,7 +5554,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "from": "user@domain.tld"
          |      }
@@ -5563,31 +5584,31 @@ trait EmailQueryMethodContract {
 
   @Test
   def fromShouldFilterResultsWhenNotAnAddress(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     def messageBuilder = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setFrom("user@domain.tld")
           .build))
       .getMessageId
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setFrom("\"Display\" <other@domain.tld>")
           .build))
       .getMessageId
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setFrom("display@other.tld")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder.build))
       .getMessageId
 
@@ -5599,7 +5620,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "from": "Display"
          |      }
@@ -5629,47 +5650,47 @@ trait EmailQueryMethodContract {
 
   @Test
   def toShouldFilterResultsWhenAddress(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     def messageBuilder = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setTo("user@domain.tld")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setTo("other@domain.tld")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setTo("yet@other.tld")
           .build))
       .getMessageId
     val messageId4 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setTo("yet@other.tld", "user@domain.tld")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder.build))
       .getMessageId
     val messageId6 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setTo("\"User\" <user@domain.tld>")
           .build))
       .getMessageId
     val messageId7 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setTo("\"user@domain.tld\" <other@domain.tld>")
           .build))
@@ -5683,7 +5704,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "to": "user@domain.tld"
          |      }
@@ -5713,31 +5734,31 @@ trait EmailQueryMethodContract {
 
   @Test
   def toShouldFilterResultsWhenNotAnAddress(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     def messageBuilder = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setTo("user@domain.tld")
           .build))
       .getMessageId
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setTo("\"Display\" <other@domain.tld>")
           .build))
       .getMessageId
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setTo("display@other.tld")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder.build))
       .getMessageId
 
@@ -5749,7 +5770,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "to": "Display"
          |      }
@@ -5779,48 +5800,48 @@ trait EmailQueryMethodContract {
 
   @Test
   def ccShouldFilterResultsWhenAddress(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     def messageBuilder = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setCc(DefaultAddressParser.DEFAULT.parseMailbox("user@domain.tld"))
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setCc(DefaultAddressParser.DEFAULT.parseMailbox("other@domain.tld"))
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setCc(DefaultAddressParser.DEFAULT.parseMailbox("yet@other.tld"))
           .build))
       .getMessageId
     val messageId4 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setCc(DefaultAddressParser.DEFAULT.parseMailbox("yet@other.tld"),
             DefaultAddressParser.DEFAULT.parseMailbox("user@domain.tld"))
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder.build))
       .getMessageId
     val messageId6 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setCc(DefaultAddressParser.DEFAULT.parseMailbox("\"User\" <user@domain.tld>"))
           .build))
       .getMessageId
     val messageId7 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setCc(DefaultAddressParser.DEFAULT.parseMailbox("\"user@domain.tld\" <other@domain.tld>"))
           .build))
@@ -5834,7 +5855,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "cc": "user@domain.tld"
          |      }
@@ -5864,31 +5885,31 @@ trait EmailQueryMethodContract {
 
   @Test
   def ccShouldFilterResultsWhenNotAnAddress(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     def messageBuilder = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setCc(DefaultAddressParser.DEFAULT.parseMailbox("user@domain.tld"))
           .build))
       .getMessageId
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setCc(DefaultAddressParser.DEFAULT.parseMailbox("\"Display\" <other@domain.tld>"))
           .build))
       .getMessageId
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setCc(DefaultAddressParser.DEFAULT.parseMailbox("display@other.tld"))
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder.build))
       .getMessageId
 
@@ -5900,7 +5921,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "cc": "Display"
          |      }
@@ -5930,48 +5951,48 @@ trait EmailQueryMethodContract {
 
   @Test
   def bccShouldFilterResultsWhenAddress(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     def messageBuilder = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("user@domain.tld"))
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("other@domain.tld"))
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("yet@other.tld"))
           .build))
       .getMessageId
     val messageId4 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("yet@other.tld"),
             DefaultAddressParser.DEFAULT.parseMailbox("user@domain.tld"))
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder.build))
       .getMessageId
     val messageId6 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("\"User\" <user@domain.tld>"))
           .build))
       .getMessageId
     val messageId7 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("\"user@domain.tld\" <other@domain.tld>"))
           .build))
@@ -5985,7 +6006,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "bcc": "user@domain.tld"
          |      }
@@ -6015,31 +6036,31 @@ trait EmailQueryMethodContract {
 
   @Test
   def bccShouldFilterResultsWhenNotAnAddress(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     def messageBuilder = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("user@domain.tld"))
           .build))
       .getMessageId
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("\"Display\" <other@domain.tld>"))
           .build))
       .getMessageId
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setBcc(DefaultAddressParser.DEFAULT.parseMailbox("display@other.tld"))
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder.build))
       .getMessageId
 
@@ -6051,7 +6072,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "bcc": "Display"
          |      }
@@ -6081,24 +6102,24 @@ trait EmailQueryMethodContract {
 
   @Test
   def subjectShouldFilterEmails(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     def messageBuilder = Message.Builder
       .of
       .setBody("testmail", StandardCharsets.UTF_8)
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setSubject("Yet another day in paradise")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setSubject("Welcome to hell")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder.build))
       .getMessageId
 
@@ -6110,7 +6131,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "subject": "paradise"
          |      }
@@ -6140,28 +6161,28 @@ trait EmailQueryMethodContract {
 
   @Test
   def subjectShouldBeCaseInsensitive(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     def messageBuilder = Message.Builder
       .of
       .setBody("testmail", StandardCharsets.UTF_8)
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setSubject("Yet another day in paradise")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setSubject("Welcome to hell")
           .build))
       .getMessageId
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder.build))
       .getMessageId
     val messageId4 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(
         messageBuilder
           .setSubject("Yet another day in PaRaDiSe")
           .build))
@@ -6175,7 +6196,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "subject": "paradise"
          |      }
@@ -6207,12 +6228,12 @@ trait EmailQueryMethodContract {
   @MethodSource(value = Array("jmapSystemKeywords"))
   def listMailsNotBySystemKeywordShouldReturnOnlyMailsWithoutThisSystemKeyword(keywordFlag: Flags, keywordName: String, server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(keywordFlag).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(keywordFlag).build(message))
       .getMessageId
     val messageWithoudFlagId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(message))
       .getMessageId
 
     val request =
@@ -6223,7 +6244,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "notKeyword": "$keywordName"
          |      }
@@ -6253,12 +6274,12 @@ trait EmailQueryMethodContract {
   @Test
   def listMailsNotByCustomKeywordShouldReturnOnlyMailsWithoutThisCustomKeyword(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
     val messageWithoudFlagId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(message))
       .getMessageId
 
     val request =
@@ -6269,7 +6290,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "notKeyword": "custom"
          |      }
@@ -6300,10 +6321,10 @@ trait EmailQueryMethodContract {
   def emailQueryShouldSupportTextFilterForHeaders(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
-    mailboxProbe.createMailbox(inbox(BOB))
+    mailboxProbe.createMailbox(inbox(bobUsername))
 
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("a mail")
         .setFrom("bloblah@domain.tld")
@@ -6313,7 +6334,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("another mail")
         .setTo("bloblah@domain.tld")
@@ -6323,7 +6344,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     val messageId3: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("another mail")
         .addField(new RawField("Cc", "<bloblah@domain.tld>, <test@other.tld>"))
@@ -6332,7 +6353,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     val messageId4: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("another mail")
         .addField(new RawField("Bcc", "<bloblah@domain.tld>, <test@other.tld>"))
@@ -6341,7 +6362,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     mailboxProbe
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("should not be found mail")
         .setBody("lorem ipsum", StandardCharsets.UTF_8)
@@ -6356,7 +6377,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "text": "test@other.tld"
          |      }
@@ -6392,9 +6413,9 @@ trait EmailQueryMethodContract {
 
   @Test
   def emailQueryShouldSupportTextFilterForTextBody(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("a mail")
         .setBody("This is a test body", StandardCharsets.UTF_8)
@@ -6402,7 +6423,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("should not be found mail")
         .setBody("lorem ipsum", StandardCharsets.UTF_8)
@@ -6417,7 +6438,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "text": "test"
          |      }
@@ -6449,9 +6470,9 @@ trait EmailQueryMethodContract {
 
   @Test
   def emailQueryShouldSupportTextFilterForHtmlBody(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("a mail")
         .setBody("<body>This is a test body</body>", "html", StandardCharsets.UTF_8)
@@ -6459,7 +6480,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("should not be found mail")
         .setBody("<body>This is another body</body>", "html", StandardCharsets.UTF_8)
@@ -6474,7 +6495,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "text": "test"
          |      }
@@ -6506,10 +6527,10 @@ trait EmailQueryMethodContract {
 
   @Test
   def emailQueryShouldSupportTextFilterForMultipartMessage(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
 
     val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("a mail")
         .setBody(MultipartBuilder.create()
@@ -6519,7 +6540,7 @@ trait EmailQueryMethodContract {
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("should not be found mail")
         .setBody(MultipartBuilder.create()
@@ -6536,7 +6557,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "text": "test"
          |      }
@@ -6568,9 +6589,9 @@ trait EmailQueryMethodContract {
 
   @Test
   def emailQueryFilterByTextShouldIgnoreMarkupsInHtmlBody(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, inbox(BOB), AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, inbox(bobUsername), AppendCommand.from(Message.Builder
         .of
         .setSubject("A mail")
         .setBody("<body><test>This is a html body<test></body>", "html", StandardCharsets.UTF_8)
@@ -6585,7 +6606,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "text": "test"
          |      }
@@ -6615,9 +6636,9 @@ trait EmailQueryMethodContract {
 
   @Test
   def emailQueryFilterByTextShouldIncludeAttachmentName(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -6629,7 +6650,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "text": "text2"
          |      }
@@ -6659,9 +6680,9 @@ trait EmailQueryMethodContract {
 
   @Test
   def attachmentFilenameShouldBeSearchableWhenMissingInContentDispositionAndExistsInContentType(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/attachment-filename-in-content-type.eml")))
       .getMessageId
 
@@ -6673,7 +6694,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "text": "filename"
          |      }
@@ -6704,17 +6725,17 @@ trait EmailQueryMethodContract {
   @Test
   def emailQueryShouldSupportAndOperator(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
       .getMessageId
 
     val request =
@@ -6725,7 +6746,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "operator": "AND",
          |        "conditions": [
@@ -6758,27 +6779,27 @@ trait EmailQueryMethodContract {
   @Test
   def emailQueryShouldSupportOrOperator(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withFlags(new Flags("custom"))
         .build(message))
       .getMessageId
 
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withFlags(new Flags("another_custom"))
         .build(message))
       .getMessageId
 
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withFlags(new FlagsBuilder().add("custom", "another_custom").build())
         .build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(message))
       .getMessageId
 
     val request =
@@ -6789,7 +6810,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "operator": "OR",
          |        "conditions": [
@@ -6823,27 +6844,27 @@ trait EmailQueryMethodContract {
   @Test
   def emailQueryShouldSupportNotOperator(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withFlags(new Flags("custom"))
         .build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withFlags(new Flags("another_custom"))
         .build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder()
         .withFlags(new FlagsBuilder().add("custom", "another_custom").build())
         .build(message))
       .getMessageId
 
     val messageId4 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().build(message))
       .getMessageId
 
     val request =
@@ -6854,7 +6875,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "operator": "NOT",
          |        "conditions": [
@@ -6887,7 +6908,7 @@ trait EmailQueryMethodContract {
 
   @Test
   def emailQueryShouldRejectFilterOperatorWithExtraFields(server: GuiceJamesServer): Unit = {
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val requestDate = ZonedDateTime.now().minusDays(1)
 
     val request =
@@ -6898,7 +6919,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "inMailbox": "${mailboxId.serialize}",
          |        "before": "${UTCDate(requestDate.plusHours(1)).asUTC.format(UTC_DATE_FORMAT)}",
@@ -6949,7 +6970,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "operator": "AND"
          |      }
@@ -6988,26 +7009,26 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxShouldResolveSimpleFilter(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "other"))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     val request =
@@ -7018,7 +7039,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "operator": "AND",
          |        "conditions": [
@@ -7052,26 +7073,26 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxShouldBeRejectedWhenInOperator(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "other"))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     val request =
@@ -7082,7 +7103,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "operator": "AND",
          |        "conditions": [
@@ -7131,26 +7152,26 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxOtherThanShouldBeRejectedWhenInOperator(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "other"))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
      server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
     val messageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     val request =
@@ -7161,7 +7182,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "operator": "AND",
          |        "conditions": [
@@ -7195,26 +7216,26 @@ trait EmailQueryMethodContract {
   @Test
   def inMailboxOtherThanShouldBeRejectedWhenOrOperator(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "other"))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
     val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "other"), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, "other"), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     val request =
@@ -7225,7 +7246,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "operator": "OR",
          |        "conditions": [
@@ -7266,9 +7287,9 @@ trait EmailQueryMethodContract {
 
   @Test
   def emailQueryFilterByTextShouldIgnoreAttachmentContent(server: GuiceJamesServer): Unit = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(bobUsername))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.from(
         ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
@@ -7280,7 +7301,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "text": "RSA PRIVATE"
          |      }
@@ -7311,17 +7332,17 @@ trait EmailQueryMethodContract {
   @Test
   def nestedOperatorsShouldBeSupported(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("custom")).build(message))
       .getMessageId
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new Flags("another_custom")).build(message))
       .getMessageId
 
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername), AppendCommand.builder().withFlags(new FlagsBuilder().add("custom", "another_custom").build()).build(message))
       .getMessageId
 
     val request =
@@ -7332,7 +7353,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "operator": "AND",
          |        "conditions": [
@@ -7377,7 +7398,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter":{
          |        "unsupported_option": "blahh_blahh",
          |        "role":"Inbox"
@@ -7411,24 +7432,24 @@ trait EmailQueryMethodContract {
   @Test
   def priorityOfNestedOperatorsShouldBePreserved(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withFlags(new FlagsBuilder().add("custom_1", "custom_2").build())
           .build(message))
       .getMessageId
 
     val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withFlags(new FlagsBuilder().add("custom_1", "custom_3").build())
           .build(message))
       .getMessageId
 
     val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder()
           .withFlags(new FlagsBuilder().add("custom_2", "custom_3").build())
           .build(message))
@@ -7442,7 +7463,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter" : {
          |        "operator": "AND",
          |        "conditions": [
@@ -7491,7 +7512,7 @@ trait EmailQueryMethodContract {
     val afterRequestDate2 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val afterRequestDate3 = Date.from(ZonedDateTime.now().plusDays(2).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId1: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate1)
     val messageId2: MessageId = sendMessageToBobInbox(server, message2, afterRequestDate1)
@@ -7506,7 +7527,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize()}",
          |        "after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
@@ -7539,7 +7560,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId4, messageId2)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -7562,7 +7583,7 @@ trait EmailQueryMethodContract {
     val afterRequestDate1 = Date.from(ZonedDateTime.now().toInstant)
     val afterRequestDate2 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId1: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate1)
     val messageId2: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate2)
@@ -7577,7 +7598,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize()}"
          |       },
@@ -7609,7 +7630,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId4, messageId2)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -7632,7 +7653,7 @@ trait EmailQueryMethodContract {
     val afterRequestDate1 = Date.from(ZonedDateTime.now().toInstant)
     val afterRequestDate2 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId1: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate1)
     val messageId2: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate2)
@@ -7647,7 +7668,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize()}"
          |       },
@@ -7679,7 +7700,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId4, messageId2)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -7704,7 +7725,7 @@ trait EmailQueryMethodContract {
     val requestDate = ZonedDateTime.now()
     val afterRequestDate1 = Date.from(ZonedDateTime.now().plusDays(1).toInstant)
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId1: MessageId = sendMessageToBobInbox(server, message1, beforeRequestDate1)
     val messageId2: MessageId = sendMessageToBobInbox(server, message2, beforeRequestDate2)
@@ -7719,7 +7740,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize()}",
          |        "before": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
@@ -7752,7 +7773,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId3, messageId1)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -7773,7 +7794,7 @@ trait EmailQueryMethodContract {
     val threeDaysBefore = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
     val twoDaysBefore = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
     val oneDayBefore = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     // Thread 1: message 1 (oldest), message 3 (newest)
     // Thread 2: message 2
@@ -7789,7 +7810,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize()}",
          |        "text": "testmail"
@@ -7822,7 +7843,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId3, messageId2)}",
            |                "canCalculateChanges": false,
            |                "position": 0,
@@ -7846,7 +7867,7 @@ trait EmailQueryMethodContract {
     val threeDaysBefore = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
     val twoDaysBefore = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
     val oneDayBefore = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     // Thread 1: message 1 (oldest), message 2 (newest)
     // Thread 2: message 3
@@ -7864,7 +7885,7 @@ trait EmailQueryMethodContract {
          |  "methodCalls": [[
          |    "Email/query",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize()}",
          |        "text": "testmail"
@@ -7899,7 +7920,7 @@ trait EmailQueryMethodContract {
            |    "methodResponses": [[
            |            "Email/query",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$bobAccountId",
            |                "queryState": "${generateQueryState(messageId3, messageId4)}",
            |                "canCalculateChanges": false,
            |                "position": 1,
@@ -7913,7 +7934,7 @@ trait EmailQueryMethodContract {
 
   private def sendMessageToBobInbox(server: GuiceJamesServer, message: Message, requestDate: Date): MessageId = {
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.builder().withInternalDate(requestDate).build(message))
       .getMessageId
   }
