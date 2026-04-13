@@ -23,7 +23,7 @@ import org.apache.james.jmap.rfc8621.contract.EmailGetMethodContract;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 
-public class PostgresEmailGetMethodTest extends PostgresBase implements EmailGetMethodContract {
+public class PostgresEmailGetMethodTest extends PerClassPostgresBase implements EmailGetMethodContract {
     public static final PostgresMessageId.Factory MESSAGE_ID_FACTORY = new PostgresMessageId.Factory();
 
     @Override
