@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -63,6 +64,10 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
     private static final CharMatcher ALPHANUMERIC_MATCHER = CharMatcher.inRange('a', 'z')
         .or(CharMatcher.inRange('A', 'Z'))
         .or(CharMatcher.inRange('0', '9'));
+    private static final CharMatcher LABEL_CHAR_MATCHER = ALPHANUMERIC_MATCHER.or(CharMatcher.is('-'));
+    private static final Splitter LABEL_SPLITTER = Splitter.on('.');
+    private static final int MAX_HOSTNAME_LENGTH = 253;
+    private static final int MAX_LABEL_LENGTH = 63;
 
     private List<EhloExtension> ehloExtensions;
 
@@ -102,16 +107,41 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
         return resp;
     }
 
-    private boolean isValid(String argument) {
+    boolean isValid(String argument) {
         String hostname = unquote(argument);
 
         // Without [] Guava attempt to parse IPV4
         return InetAddresses.isUriInetAddress(hostname)
             // Guava tries parsing IPv6 if and only if wrapped by []
             || InetAddresses.isUriInetAddress("[" + removeEmIPV6Prefix(hostname) + "]")
+            // Guava's InternetDomainName requires labels to start with a letter (RFC 1034),
+            // but RFC 1123 / RFC 5321 allow labels to start with a digit (e.g. "2s1n").
+            // We keep Guava as a fast path and fall back to our own RFC 5321 validator.
             || InternetDomainName.isValid(hostname)
             || emClientCompatibility(hostname)
-            || isAlphanumeric(hostname);
+            || isAlphanumeric(hostname)
+            || isRfc5321Hostname(hostname);
+    }
+
+    // RFC 5321 §4.1.2 / RFC 1123 §2.1: labels may start with a letter or digit,
+    // contain letters/digits/hyphens, and must not start or end with a hyphen.
+    // Validated character-by-character to avoid any regex backtracking (ReDoS).
+    private boolean isRfc5321Hostname(String hostname) {
+        if (hostname.isEmpty() || hostname.length() > MAX_HOSTNAME_LENGTH) {
+            return false;
+        }
+        return LABEL_SPLITTER.splitToStream(hostname)
+            .allMatch(this::isValidRfc1123Label);
+    }
+
+    private boolean isValidRfc1123Label(String label) {
+        if (label.isEmpty() || label.length() > MAX_LABEL_LENGTH) {
+            return false;
+        }
+        if (label.charAt(0) == '-' || label.charAt(label.length() - 1) == '-') {
+            return false;
+        }
+        return LABEL_CHAR_MATCHER.matchesAllOf(label);
     }
 
     // CF JAMES-4046 https://issues.apache.org/jira/projects/JAMES/issues/JAMES-4066
