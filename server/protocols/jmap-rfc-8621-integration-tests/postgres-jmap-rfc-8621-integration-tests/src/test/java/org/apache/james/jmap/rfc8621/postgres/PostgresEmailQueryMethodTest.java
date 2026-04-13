@@ -58,5 +58,6 @@ public class PostgresEmailQueryMethodTest implements EmailQueryMethodContract {
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new DelegationProbeModule())
             .overrideWith(new IdentityProbeModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
