@@ -25,7 +25,7 @@ import org.apache.james.jmap.rfc8621.contract.MailboxSetMethodContract;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MailboxId;
 
-public class MemoryMailboxSetMethodTest extends MemoryBase implements MailboxSetMethodContract {
+public class MemoryMailboxSetMethodTest extends PerClassMemoryBase implements MailboxSetMethodContract {
     @Override
     public MailboxId randomMailboxId() {
         return InMemoryId.of(ThreadLocalRandom.current().nextInt(100000) + 100);
