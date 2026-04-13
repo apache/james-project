@@ -205,7 +205,14 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             .flatMap(Throwing.<String, Stream<SearchResultEntry>>function(s -> entriesFromDN(s, usernameAttribute)).sneakyThrow())
             .flatMap(entry -> Optional.ofNullable(entry.getAttribute(usernameAttribute)).stream())
             .map(Attribute::getValue)
-            .map(Username::of)
+            .flatMap(name -> {
+                try {
+                    return Stream.of(Username.of(name));
+                } catch (Exception e) {
+                    LOGGER.warn("Invalid username in the LDAP: {}", name, e);
+                    return Stream.empty();
+                }
+            })
             .distinct();
     }
 
