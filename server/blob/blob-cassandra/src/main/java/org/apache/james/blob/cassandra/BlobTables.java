@@ -27,6 +27,7 @@ public interface BlobTables {
         String TABLE_NAME = "blobs";
         CqlIdentifier ID = CqlIdentifier.fromCql("id");
         CqlIdentifier NUMBER_OF_CHUNK = CqlIdentifier.fromCql("position");
+        CqlIdentifier METADATA = CqlIdentifier.fromCql("metadata");
     }
 
     interface DefaultBucketBlobParts {
@@ -41,6 +42,7 @@ public interface BlobTables {
         CqlIdentifier BUCKET = CqlIdentifier.fromCql("bucket");
         CqlIdentifier ID = CqlIdentifier.fromCql("id");
         CqlIdentifier NUMBER_OF_CHUNK = CqlIdentifier.fromCql("position");
+        CqlIdentifier METADATA = CqlIdentifier.fromCql("metadata");
     }
 
     interface BucketBlobParts {

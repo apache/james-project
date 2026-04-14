@@ -25,9 +25,12 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.BUCKET;
 import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.ID;
+import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.METADATA;
 import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.NUMBER_OF_CHUNK;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -35,6 +38,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStoreDAO.BlobMetadata;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.cassandra.BlobTables.BucketBlobParts;
 
@@ -71,6 +75,7 @@ public class CassandraBucketDAO {
             .value(BUCKET, bindMarker(BUCKET))
             .value(ID, bindMarker(ID))
             .value(NUMBER_OF_CHUNK, bindMarker(NUMBER_OF_CHUNK))
+            .value(METADATA, bindMarker(METADATA))
             .build());
 
         this.insertPart = session.prepare(insertInto(BucketBlobParts.TABLE_NAME)
@@ -123,29 +128,39 @@ public class CassandraBucketDAO {
                 .setByteBuffer(BucketBlobParts.DATA, data));
     }
 
-    Mono<Void> saveBlobPartsReferences(BucketName bucketName, BlobId blobId, int numberOfChunk) {
+    Mono<Void> saveBlobPartsReferences(BucketName bucketName, BlobId blobId, int numberOfChunk, BlobMetadata metadata) {
         return cassandraAsyncExecutor.executeVoid(
             insert.bind()
                 .setString(BUCKET, bucketName.asString())
                 .setString(ID, blobId.asString())
-                .setInt(NUMBER_OF_CHUNK, numberOfChunk));
+                .setInt(NUMBER_OF_CHUNK, numberOfChunk)
+                .setMap(METADATA, CassandraBlobDescriptor.toRawMetadata(metadata), String.class, String.class));
     }
 
-    Mono<Integer> selectRowCount(BucketName bucketName, BlobId blobId) {
+    Mono<Void> saveBlobPartsReferences(BucketName bucketName, BlobId blobId, int numberOfChunk) {
+        return saveBlobPartsReferences(bucketName, blobId, numberOfChunk, BlobMetadata.empty());
+    }
+
+    Mono<CassandraBlobDescriptor> selectBlobDescriptor(BucketName bucketName, BlobId blobId) {
         return cassandraAsyncExecutor.executeSingleRow(
                 select.bind()
                     .setString(BUCKET, bucketName.asString())
                     .setString(ID, blobId.asString()))
-            .map(row -> row.getInt(NUMBER_OF_CHUNK));
+            .map(this::rowToBlobDescriptor);
     }
 
-    Mono<Integer> selectRowCountClOne(BucketName bucketName, BlobId blobId) {
+    Mono<Integer> selectRowCount(BucketName bucketName, BlobId blobId) {
+        return selectBlobDescriptor(bucketName, blobId)
+            .map(CassandraBlobDescriptor::rowCount);
+    }
+
+    Mono<CassandraBlobDescriptor> selectBlobDescriptorClOne(BucketName bucketName, BlobId blobId) {
         return cassandraAsyncExecutor.executeSingleRow(
                 select.bind()
                     .setString(BUCKET, bucketName.asString())
                     .setString(ID, blobId.asString())
                     .setExecutionProfile(optimisticConsistencyLevelProfile))
-            .map(row -> row.getInt(NUMBER_OF_CHUNK));
+            .map(this::rowToBlobDescriptor);
     }
 
     Mono<ByteBuffer> readPart(BucketName bucketName, BlobId blobId, int position) {
@@ -194,5 +209,14 @@ public class CassandraBucketDAO {
 
     private ByteBuffer rowToData(Row row) {
         return row.getByteBuffer(BucketBlobParts.DATA);
+    }
+
+    private CassandraBlobDescriptor rowToBlobDescriptor(Row row) {
+        return CassandraBlobDescriptor.from(row.getInt(NUMBER_OF_CHUNK), metadata(row));
+    }
+
+    private Map<String, String> metadata(Row row) {
+        return Optional.ofNullable(row.getMap(METADATA, String.class, String.class))
+            .orElseGet(Map::of);
     }
 }
