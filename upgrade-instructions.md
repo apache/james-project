@@ -15,9 +15,30 @@ Note: this section is in progress. It will be updated during all the development
 Changes to apply between 3.9.x and 3.10.0 will be reported here.
 
 Change list:
+ - [Adding metadata column to Cassandra blob tables](#adding-metadata-column-to-cassandra-blob-tables)
  - [Adding thread_id column to Cassandra email_query_view_sent_at and email_query_view_received_at tables](#adding-thread_id-column-to-cassandra-email_query_view_sent_at-and-email_query_view_received_at-tables)
  - [Adding thread_id column to Postgresql email_query_view table](#adding-thread_id-column-to-postgresql-email_query_view-table)
  - [Lucene mailbox index schema update for collapseThreads support](#lucene-mailbox-index-schema-update-for-collapsethreads-support)
+
+### Adding metadata column to Cassandra blob tables
+
+Date: 14/04/2026
+
+Concerned products: James products using Cassandra as blob storage
+
+James now persists blob metadata in the Cassandra blob descriptor tables:
+
+- `blobs.metadata` (`frozen<map<text, text>>`)
+- `blobsInBucket.metadata` (`frozen<map<text, text>>`)
+
+Existing Cassandra deployments need to add these columns manually before a rolling upgrade.
+
+To add these columns, run the following CQL commands:
+
+```sql
+ALTER TABLE james_keyspace.blobs ADD metadata frozen<map<text, text>>;
+ALTER TABLE james_keyspace.blobsInBucket ADD metadata frozen<map<text, text>>;
+```
 
 ### Lucene mailbox index schema update for collapseThreads support
 

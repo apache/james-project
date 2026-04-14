@@ -137,7 +137,7 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
         String longString = Strings.repeat("0123456789\n", repeatCount);
         BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), longString, LOW_COST)).block();
 
-        when(defaultBucketDAO().selectRowCountClOne(blobId)).thenReturn(Mono.empty());
+        when(defaultBucketDAO().selectBlobDescriptorClOne(blobId)).thenReturn(Mono.empty());
 
         String data = IOUtils.toString(testee().read(testee().getDefaultBucketName(), blobId), StandardCharsets.UTF_8);
 
@@ -150,7 +150,7 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
         String longString = Strings.repeat("0123456789\n", repeatCount);
         BlobId blobId = Mono.from(testee().save(testee().getDefaultBucketName(), longString, LOW_COST)).block();
 
-        when(defaultBucketDAO().selectRowCountClOne(blobId)).thenReturn(Mono.empty());
+        when(defaultBucketDAO().selectBlobDescriptorClOne(blobId)).thenReturn(Mono.empty());
 
         byte[] bytes = Mono.from(testee().readBytes(testee().getDefaultBucketName(), blobId)).block();
 
@@ -213,7 +213,7 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
 
         BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
 
-        when(defaultBucketDAO().selectRowCountClOne(blobId)).thenReturn(Mono.empty());
+        when(defaultBucketDAO().selectBlobDescriptorClOne(blobId)).thenReturn(Mono.empty());
         store.read(store.getDefaultBucketName(), blobId);
 
         when(defaultBucketDAO().readPartClOne(blobId, 1)).thenReturn(Mono.empty());
@@ -230,7 +230,7 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract, Dedupli
 
         BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
 
-        when(defaultBucketDAO().selectRowCountClOne(blobId)).thenReturn(Mono.empty());
+        when(defaultBucketDAO().selectBlobDescriptorClOne(blobId)).thenReturn(Mono.empty());
         Mono.from(store.readBytes(store.getDefaultBucketName(), blobId)).block();
 
         when(defaultBucketDAO().readPartClOne(blobId, 1)).thenReturn(Mono.empty());

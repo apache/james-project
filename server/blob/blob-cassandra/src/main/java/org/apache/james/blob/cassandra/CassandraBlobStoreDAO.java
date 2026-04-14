@@ -98,58 +98,63 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return InputStreamBlob.of(ReactorUtils.toInputStream(readBlobParts(bucketName, blobId)));
+        return Mono.from(readBlobDescriptor(bucketName, blobId))
+            .map(blobDescriptor -> InputStreamBlob.of(ReactorUtils.toInputStream(readBlobParts(bucketName, blobId, blobDescriptor.rowCount())), blobDescriptor.metadata()))
+            .block();
     }
 
     @Override
     public Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
-        return Mono.just(read(bucketName, blobId));
+        return Mono.from(readBlobDescriptor(bucketName, blobId))
+            .publishOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+            .map(blobDescriptor -> InputStreamBlob.of(ReactorUtils.toInputStream(readBlobParts(bucketName, blobId, blobDescriptor.rowCount())), blobDescriptor.metadata()));
     }
 
     @Override
     public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
-        return readBlobParts(bucketName, blobId)
-            .collectList()
-            .map(this::byteBuffersToBytesArray)
-            .map(BytesBlob::of);
+        return Mono.from(readBlobDescriptor(bucketName, blobId))
+            .flatMap(blobDescriptor -> readBlobParts(bucketName, blobId, blobDescriptor.rowCount())
+                .collectList()
+                .map(this::byteBuffersToBytesArray)
+                .map(bytes -> BytesBlob.of(bytes, blobDescriptor.metadata())));
     }
 
     @Override
     public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
         return switch (blob) {
-            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
-            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
-            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload());
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload(), bytesBlob.metadata());
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload(), inputStreamBlob.metadata());
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload(), byteSourceBlob.metadata());
         };
     }
 
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
+    private Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data, BlobMetadata metadata) {
         Preconditions.checkNotNull(data);
 
         return Mono.fromCallable(() -> DataChunker.chunk(data, configuration.getBlobPartSize()))
-            .flatMap(chunks -> save(bucketName, blobId, chunks));
+            .flatMap(chunks -> save(bucketName, blobId, chunks, metadata));
     }
 
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
+    private Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream, BlobMetadata metadata) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(inputStream);
 
         return Mono.fromCallable(() -> ReactorUtils.toChunks(inputStream, configuration.getBlobPartSize())
                 .subscribeOn(Schedulers.boundedElastic()))
-            .flatMap(chunks -> save(bucketName, blobId, chunks))
-            .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving input stream", e));
+            .flatMap(chunks -> save(bucketName, blobId, chunks, metadata))
+            .onErrorMap(Throwable.class, e -> new ObjectStoreIOException("Exception occurred while saving input stream", e));
     }
 
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
+    private Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content, BlobMetadata metadata) {
         return Mono.using(content::openBufferedStream,
-            stream -> save(bucketName, blobId, stream),
+            stream -> save(bucketName, blobId, stream, metadata),
             Throwing.consumer(InputStream::close).sneakyThrow(),
             LAZY);
     }
 
-    private Mono<Void> save(BucketName bucketName, BlobId blobId, Flux<ByteBuffer> chunksAsFlux) {
+    private Mono<Void> save(BucketName bucketName, BlobId blobId, Flux<ByteBuffer> chunksAsFlux, BlobMetadata metadata) {
         return saveBlobParts(bucketName, blobId, chunksAsFlux)
-            .flatMap(numberOfChunk -> saveBlobPartReference(bucketName, blobId, numberOfChunk));
+            .flatMap(numberOfChunk -> saveBlobPartReference(bucketName, blobId, numberOfChunk, metadata));
     }
 
     private Mono<Integer> saveBlobParts(BucketName bucketName, BlobId blobId, Flux<ByteBuffer> chunksAsFlux) {
@@ -171,11 +176,11 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
         return write.thenReturn(anyNonEmptyValue);
     }
 
-    private Mono<Void> saveBlobPartReference(BucketName bucketName, BlobId blobId, Integer numberOfChunk) {
+    private Mono<Void> saveBlobPartReference(BucketName bucketName, BlobId blobId, Integer numberOfChunk, BlobMetadata metadata) {
         if (isDefaultBucket(bucketName)) {
-            return defaultBucketDAO.saveBlobPartsReferences(blobId, numberOfChunk);
+            return defaultBucketDAO.saveBlobPartsReferences(blobId, numberOfChunk, metadata);
         } else {
-            return bucketDAO.saveBlobPartsReferences(bucketName, blobId, numberOfChunk);
+            return bucketDAO.saveBlobPartsReferences(bucketName, blobId, numberOfChunk, metadata);
         }
     }
 
@@ -240,43 +245,40 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
         }
     }
 
-    private Mono<Integer> selectRowCount(BucketName bucketName, BlobId blobId) {
-        if (configuration.isOptimisticConsistencyLevel()) {
-            return selectRowCountClOne(bucketName, blobId)
+    private Mono<CassandraBlobDescriptor> readBlobDescriptor(BucketName bucketName, BlobId blobId) {
+        Mono<CassandraBlobDescriptor> descriptor = configuration.isOptimisticConsistencyLevel()
+            ? readBlobDescriptorClOne(bucketName, blobId)
                 .doOnNext(any -> metricClOneHitCount.increment())
                 .switchIfEmpty(Mono.fromRunnable(metricClOneMissCount::increment)
-                    .then(selectRowCountClDefault(bucketName, blobId)));
-        } else {
-            return selectRowCountClDefault(bucketName, blobId);
-        }
+                    .then(readBlobDescriptorClDefault(bucketName, blobId)))
+            : readBlobDescriptorClDefault(bucketName, blobId);
+
+        return descriptor.switchIfEmpty(Mono.error(() ->
+            new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId))));
     }
 
-    private Mono<Integer> selectRowCountClOne(BucketName bucketName, BlobId blobId) {
+    private Mono<CassandraBlobDescriptor> readBlobDescriptorClOne(BucketName bucketName, BlobId blobId) {
         if (isDefaultBucket(bucketName)) {
-            return defaultBucketDAO.selectRowCountClOne(blobId);
+            return defaultBucketDAO.selectBlobDescriptorClOne(blobId);
         } else {
-            return bucketDAO.selectRowCountClOne(bucketName, blobId);
+            return bucketDAO.selectBlobDescriptorClOne(bucketName, blobId);
         }
     }
 
-    private Mono<Integer> selectRowCountClDefault(BucketName bucketName, BlobId blobId) {
+    private Mono<CassandraBlobDescriptor> readBlobDescriptorClDefault(BucketName bucketName, BlobId blobId) {
         if (isDefaultBucket(bucketName)) {
-            return defaultBucketDAO.selectRowCount(blobId);
+            return defaultBucketDAO.selectBlobDescriptor(blobId);
         } else {
-            return bucketDAO.selectRowCount(bucketName, blobId);
+            return bucketDAO.selectBlobDescriptor(bucketName, blobId);
         }
     }
 
-    private Flux<ByteBuffer> readBlobParts(BucketName bucketName, BlobId blobId) {
-        return selectRowCount(bucketName, blobId)
-            .single()
-            .onErrorMap(NoSuchElementException.class, e ->
-                new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId)))
-            .flatMapMany(rowCount -> Flux.range(0, rowCount)
-                .concatMap(partIndex -> readPart(bucketName, blobId, partIndex)
-                    .single()
-                    .onErrorMap(NoSuchElementException.class, e ->
-                        new ObjectNotFoundException(String.format("Missing blob part for blobId %s and position %d", blobId.asString(), partIndex)))));
+    private Flux<ByteBuffer> readBlobParts(BucketName bucketName, BlobId blobId, int rowCount) {
+        return Flux.range(0, rowCount)
+            .concatMap(partIndex -> readPart(bucketName, blobId, partIndex)
+                .single()
+                .onErrorMap(NoSuchElementException.class, e ->
+                    new ObjectNotFoundException(String.format("Missing blob part for blobId %s and position %d", blobId.asString(), partIndex))));
     }
 
     private byte[] byteBuffersToBytesArray(List<ByteBuffer> byteBuffers) {
