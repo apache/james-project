@@ -3033,7 +3033,7 @@
             <dependency>
                 <groupId>org.zoomba-lang</groupId>
                 <artifactId>spark-core</artifactId>
-                <version>3.0.2</version>
+                <version>3.0.4</version>
             </dependency>
             <dependency>
                 <groupId>pl.pragmatists</groupId>
