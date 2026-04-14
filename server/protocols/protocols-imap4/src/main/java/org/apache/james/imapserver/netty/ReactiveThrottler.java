@@ -123,17 +123,22 @@ public class ReactiveThrottler {
                     }
                     return Mono.from(task);
                 })
-                .then(Mono.fromRunnable(() -> one.emitEmpty(Sinks.EmitFailureHandler.FAIL_FAST))), ctx);
+                // Signal the outer one.asMono() subscriber on both success and error paths.
+                // tryEmitEmpty/tryEmitError are used (not FAIL_FAST) to avoid throwing when
+                // the subscriber has already cancelled (e.g. channel closed mid-queue).
+                .doOnSuccess(ignored -> one.tryEmitEmpty())
+                .doOnError(one::tryEmitError), ctx);
             queue.add(taskHolder);
             // Let the caller await task completion
             return one.asMono()
                 .doOnCancel(() -> {
                     cancelled.set(true);
+                    // Do NOT decrement concurrentRequests here when disposable is null
+                    // (task not yet dispatched). The TaskHolder stays in the queue, will be
+                    // dispatched as Mono.empty() by the next onRequestDone(), and that call
+                    // handles the single authoritative decrement. 
                     Optional.ofNullable(taskHolder.disposable.get())
-                        .ifPresentOrElse(Disposable::dispose,
-                            // If no Disposable set → task never started,
-                            // but still counted → must release the slot
-                            concurrentRequests::decrementAndGet);
+                        .ifPresent(Disposable::dispose);
                 });
         } else {
             concurrentRequests.decrementAndGet();
