@@ -42,6 +42,22 @@ ALTER TABLE james_keyspace.blobs ADD metadata frozen<map<text, text>>;
 ALTER TABLE james_keyspace.blobsInBucket ADD metadata frozen<map<text, text>>;
 ```
 
+#### PostgreSQL
+
+Date: 15/04/2026
+
+Concerned products: James products using PostgreSQL as blob storage
+
+James now persists blob metadata using the `metadata` column of the `blob_storage` table.
+
+Existing deployments still need to add this new column manually before a rolling upgrade.
+
+To add this column, run the following SQL command:
+
+```sql
+ALTER TABLE blob_storage ADD COLUMN metadata hstore;
+```
+
 ### Lucene mailbox index schema update for collapseThreads support
 
 Date: 06/02/2026

@@ -22,6 +22,7 @@ package org.apache.james.blob.postgres;
 import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.BLOB_ID;
 import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.BUCKET_NAME;
 import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.DATA;
+import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.METADATA;
 import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.SIZE;
 import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.TABLE_NAME;
 
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -43,10 +45,12 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.jooq.impl.DSL;
+import org.jooq.postgres.extensions.types.Hstore;
 import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Flux;
@@ -76,40 +80,41 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
-        return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(DATA)
+        return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(DATA, METADATA)
                 .from(TABLE_NAME)
                 .where(BUCKET_NAME.eq(bucketName.asString()))
                 .and(BLOB_ID.eq(blobId.asString()))))
-            .map(record -> record.get(DATA))
             .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException("Blob " + blobId + " does not exist in bucket " + bucketName)))
-            .map(BytesBlob::of);
+            .map(record -> BytesBlob.of(record.get(DATA), asBlobMetadata(record.get(METADATA))));
     }
 
     @Override
     public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
         return switch (blob) {
-            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload());
-            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload());
-            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload());
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload(), bytesBlob.metadata());
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload(), inputStreamBlob.metadata());
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload(), byteSourceBlob.metadata());
         };
     }
 
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
+    private Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data, BlobMetadata metadata) {
         Preconditions.checkNotNull(data);
 
         return postgresExecutor.executeVoid(dslContext ->
-            Mono.from(dslContext.insertInto(TABLE_NAME, BUCKET_NAME, BLOB_ID, DATA, SIZE)
+            Mono.from(dslContext.insertInto(TABLE_NAME, BUCKET_NAME, BLOB_ID, DATA, SIZE, METADATA)
                 .values(bucketName.asString(),
                     blobId.asString(),
                     data,
-                    data.length)
+                    data.length,
+                    asHstore(metadata))
                 .onConflict(BUCKET_NAME, BLOB_ID)
                 .doUpdate()
                 .set(DATA, data)
-                .set(SIZE, data.length)));
+                .set(SIZE, data.length)
+                .set(METADATA, asHstore(metadata))));
     }
 
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
+    private Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream, BlobMetadata metadata) {
         Preconditions.checkNotNull(inputStream);
 
         return Mono.fromCallable(() -> {
@@ -118,17 +123,17 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
             } catch (IOException e) {
                 throw new ObjectStoreIOException("IOException occurred", e);
             }
-        }).flatMap(bytes -> save(bucketName, blobId, bytes));
+        }).flatMap(bytes -> save(bucketName, blobId, bytes, metadata));
     }
 
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
+    private Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content, BlobMetadata metadata) {
         return Mono.fromCallable(() -> {
             try {
                 return content.read();
             } catch (IOException e) {
                 throw new ObjectStoreIOException("IOException occurred", e);
             }
-        }).flatMap(bytes -> save(bucketName, blobId, bytes));
+        }).flatMap(bytes -> save(bucketName, blobId, bytes, metadata));
     }
 
     @Override
@@ -183,5 +188,22 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
             .map(record -> blobIdFactory.parse(record.get(BLOB_ID)))
             .collectList()
             .switchIfEmpty(Mono.just(ImmutableList.of()));
+    }
+
+    private Hstore asHstore(BlobMetadata metadata) {
+        return Hstore.hstore(metadata.underlyingMap().entrySet().stream()
+            .collect(ImmutableMap.toImmutableMap(
+                entry -> entry.getKey().name(),
+                entry -> entry.getValue().value())));
+    }
+
+    private BlobMetadata asBlobMetadata(Hstore hstore) {
+        return new BlobMetadata(Optional.ofNullable(hstore)
+            .map(Hstore::data)
+            .orElseGet(Map::of)
+            .entrySet().stream()
+            .collect(ImmutableMap.toImmutableMap(
+                entry -> new BlobMetadataName(entry.getKey()),
+                entry -> new BlobMetadataValue(entry.getValue()))));
     }
 }
