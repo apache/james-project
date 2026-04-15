@@ -15,12 +15,14 @@ Note: this section is in progress. It will be updated during all the development
 Changes to apply between 3.9.x and 3.10.0 will be reported here.
 
 Change list:
- - [Adding metadata column to Cassandra blob tables](#adding-metadata-column-to-cassandra-blob-tables)
+ - [Adding metadata column to blob tables](#adding-metadata-column-to-blob-tables)
  - [Adding thread_id column to Cassandra email_query_view_sent_at and email_query_view_received_at tables](#adding-thread_id-column-to-cassandra-email_query_view_sent_at-and-email_query_view_received_at-tables)
  - [Adding thread_id column to Postgresql email_query_view table](#adding-thread_id-column-to-postgresql-email_query_view-table)
  - [Lucene mailbox index schema update for collapseThreads support](#lucene-mailbox-index-schema-update-for-collapsethreads-support)
 
-### Adding metadata column to Cassandra blob tables
+### Adding metadata column to blob tables
+
+#### Cassandra
 
 Date: 14/04/2026
 
