@@ -197,7 +197,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO blobs (id,position) VALUES (:id,:position)"));
+                    .whenQueryStartsWith("INSERT INTO blobs (id,position,metadata)"));
 
             try {
                 message1.setUid(mapperProvider.generateMessageUid(benwaInboxMailbox));
