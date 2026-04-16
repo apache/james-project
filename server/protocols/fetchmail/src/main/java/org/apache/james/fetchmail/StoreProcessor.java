@@ -82,7 +82,7 @@ public class StoreProcessor extends ProcessorAbstract {
                     store.close();
                 }
             } catch (MessagingException ex) {
-                LOGGER.error("A MessagingException occured while closing the Store", ex);
+                LOGGER.error("A MessagingException occurred while closing the Store", ex);
             }
             LOGGER.info("Finished fetching mail from server '{}' for user '{}' in folder '{}'", getHost(), getUser(), getJavaMailFolderName());
         }
