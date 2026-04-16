@@ -1235,6 +1235,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>blob-zstd</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>dead-letter-cassandra</artifactId>
                 <version>${project.version}</version>
             </dependency>

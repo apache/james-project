@@ -17,36 +17,24 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.apache.james</groupId>
-        <artifactId>james-server</artifactId>
+        <artifactId>james-project</artifactId>
         <version>3.10.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-blob</artifactId>
-    <packaging>pom</packaging>
-    <name>Apache James :: Server :: Blob</name>
+    <artifactId>blob-zstd</artifactId>
+    <name>Apache James :: Server :: Blob :: Zstd compression</name>
 
-    <modules>
-        <module>blob-aes</module>
-        <module>blob-api</module>
-        <module>blob-cassandra</module>
-        <module>blob-common</module>
-        <module>blob-export-api</module>
-        <module>blob-export-file</module>
-        <module>blob-file</module>
-        <module>blob-memory</module>
-        <module>blob-postgres</module>
-        <module>blob-s3</module>
-        <module>blob-storage-strategy</module>
-        <module>blob-zstd</module>
-
-        <module>mail-store</module>
-    </modules>
-
+    <dependencies>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>testing-base</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>
