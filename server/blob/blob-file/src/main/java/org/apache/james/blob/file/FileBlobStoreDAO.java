@@ -159,7 +159,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
             replaceBlob(tempFile, blob);
             tempFileHandled = true;
         } catch (IOException e) {
-            throw new ObjectStoreIOException("IOException occured", e);
+            throw new ObjectStoreIOException("IOException occurred", e);
         } finally {
             if (!tempFileHandled) {
                 FileUtils.deleteQuietly(tempFile);
@@ -185,7 +185,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
                 try {
                     return content.read();
                 } catch (IOException e) {
-                    throw new ObjectStoreIOException("IOException occured", e);
+                    throw new ObjectStoreIOException("IOException occurred", e);
                 }
             })
             .flatMap(bytes -> save(bucketName, blobId, bytes, metadata));
@@ -255,7 +255,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
                     Throwing.function((String attributeName) -> new BlobMetadataValue(readFileAttributeValue(attributeView, attributeName)))
                         .sneakyThrow())));
         } catch (IOException e) {
-            throw new ObjectStoreIOException("IOException occured", e);
+            throw new ObjectStoreIOException("IOException occurred", e);
         }
     }
 
@@ -301,7 +301,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
         try {
             return Files.createTempFile(blob.getParentFile().toPath(), blob.getName(), ".tmp").toFile();
         } catch (IOException e) {
-            throw new ObjectStoreIOException("IOException occured", e);
+            throw new ObjectStoreIOException("IOException occurred", e);
         }
     }
 
