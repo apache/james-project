@@ -692,6 +692,69 @@ class UserIdentitiesRoutesTest {
     }
 
     @Test
+    void deleteIdentityShouldWork() throws Exception {
+        Mockito.when(identityFactory.listIdentities(BOB))
+            .thenReturn(Flux.empty());
+
+        IdentityCreationRequest creationRequest = IdentityCreationRequest.fromJava(
+            BOB.asMailAddress(),
+            Optional.of("identity name 1"),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+
+        Identity customIdentity = Mono.from(identityRepository.save(BOB, creationRequest)).block();
+        String customIdentityId = customIdentity.id().id().toString();
+
+        given()
+            .delete(String.format(GET_IDENTITIES_USERS_PATH, BOB.asString()) + "/" + customIdentityId)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(Flux.from(identityRepository.list(BOB)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void deleteIdentityShouldReturnNoContentWhenIdentityNotFound() {
+        Mockito.when(identityFactory.listIdentities(BOB))
+            .thenReturn(Flux.empty());
+
+        String notFoundIdentityId = UUID.randomUUID().toString();
+
+        given()
+            .delete(String.format(GET_IDENTITIES_USERS_PATH, BOB.asString()) + "/" + notFoundIdentityId)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
+    @Test
+    void deleteIdentityShouldReturnForbiddenWhenServerSetIdentity() throws Exception {
+        Mockito.when(identityFactory.listIdentities(BOB))
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
+
+        String serverSetIdentityId = IdentityRepositoryTest.IDENTITY1().id().id().toString();
+
+        String response = given()
+            .delete(String.format(GET_IDENTITIES_USERS_PATH, BOB.asString()) + "/" + serverSetIdentityId)
+        .then()
+            .statusCode(HttpStatus.FORBIDDEN_403)
+            .extract()
+            .body()
+            .asString();
+
+        assertThatJson(response)
+            .isEqualTo(String.format("{" +
+                "    \"statusCode\": 403," +
+                "    \"type\": \"InvalidArgument\"," +
+                "    \"message\": \"IdentityId '%s' can not be deleted\"," +
+                "    \"details\": null" +
+                "}", serverSetIdentityId));
+    }
+
+    @Test
     void updateIdentityShouldNotAcceptChangeMayDeleteProperty() throws Exception {
         Mockito.when(identityFactory.listIdentities(BOB))
             .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));

@@ -797,6 +797,23 @@ Response codes:
 Resource name `username` represents a valid user.
 Resource name `identityId` represents a exist user identity
 
+### Deleting a JMAP user identity
+
+API to delete a JMAP user identity
+
+```
+curl -XDELETE http://ip:port/users/{username}/identities/{identityId}
+```
+
+Response codes:
+
+ - 204: The identity was successfully deleted
+ - 403: The identity is a server-set identity and cannot be deleted
+ - 400: The identityId is invalid
+
+Resource name `username` represents a valid user.
+Resource name `identityId` represents an existing user identity
+
 ## Administrating mailboxes
 
 ### All mailboxes

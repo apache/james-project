@@ -32,6 +32,7 @@ import jakarta.inject.Inject;
 import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.Username;
+import org.apache.james.jmap.api.identity.IdentityForbiddenDeleteException;
 import org.apache.james.jmap.api.identity.IdentityNotFoundException;
 import org.apache.james.jmap.api.identity.IdentityRepository;
 import org.apache.james.jmap.api.model.IdentityId;
@@ -53,6 +54,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import scala.jdk.javaapi.CollectionConverters;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
@@ -93,6 +95,7 @@ public class UserIdentityRoutes implements Routes {
         getUserIdentities();
         createUserIdentity();
         updateUserIdentity();
+        deleteUserIdentity();
     }
 
     public void getUserIdentities() {
@@ -105,6 +108,10 @@ public class UserIdentityRoutes implements Routes {
 
     public void updateUserIdentity() {
         service.put(USERS_IDENTITY_BASE_PATH + SEPARATOR + IDENTITY_ID, this::updateIdentity);
+    }
+
+    public void deleteUserIdentity() {
+        service.delete(USERS_IDENTITY_BASE_PATH + SEPARATOR + IDENTITY_ID, this::deleteIdentity);
     }
 
     private List<UserIdentity> listIdentities(Request request, Response response) {
@@ -185,6 +192,24 @@ public class UserIdentityRoutes implements Routes {
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message("Invalid argument while updating identity")
                 .cause(e)
+                .haltError();
+        }
+    }
+
+    private HaltException deleteIdentity(Request request, Response response) {
+        Username username = extractUsername(request);
+        IdentityId identityId = Optional.ofNullable(request.params(IDENTITY_ID))
+            .map(UUID::fromString)
+            .map(IdentityId::new)
+            .orElseThrow(() -> new IllegalArgumentException("Can not parse identityId"));
+        try {
+            Mono.from(identityRepository.delete(username, CollectionConverters.asScala(java.util.Set.of(identityId)).toSet())).block();
+            return halt(HttpStatus.NO_CONTENT_204);
+        } catch (IdentityForbiddenDeleteException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.FORBIDDEN_403)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message(String.format("IdentityId '%s' can not be deleted", identityId.id().toString()))
                 .haltError();
         }
     }
