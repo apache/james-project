@@ -114,7 +114,6 @@ import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.vault.DeletedMessage;
-import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.DeletedMessageZipper;
 import org.apache.james.vault.VaultConfiguration;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
@@ -144,6 +143,8 @@ import reactor.core.publisher.Mono;
 
 class DeletedMessagesVaultRoutesTest {
 
+    private MemoryBlobStoreDAO blobStoreDAO;
+
     private static class NoopBlobExporting implements BlobExportMechanism {
         private Optional<BlobId> exportedBlobId = Optional.empty();
 
@@ -161,7 +162,7 @@ class DeletedMessagesVaultRoutesTest {
         }
     }
 
-    private static final ZonedDateTime NOW = ZonedDateTime.parse("2015-10-30T16:12:00Z");
+    private static final ZonedDateTime NOW = ZonedDateTime.parse("2016-10-30T16:12:00Z");
     private static final ZonedDateTime OLD_DELETION_DATE = ZonedDateTime.parse("2010-10-30T15:12:00Z");
     private static final String MATCH_ALL_QUERY = "{" +
         "\"combinator\": \"and\"," +
@@ -173,7 +174,7 @@ class DeletedMessagesVaultRoutesTest {
     private static final String BOB_DELETE_PATH = BOB_PATH + SEPARATOR + DELETED_MESSAGE_PARAM_PATH;
 
     private WebAdminServer webAdminServer;
-    private DeletedMessageVault vault;
+    private BlobStoreDeletedMessageVault vault;
     private InMemoryMailboxManager mailboxManager;
     private MemoryTaskManager taskManager;
     private NoopBlobExporting blobExporting;
@@ -187,16 +188,17 @@ class DeletedMessagesVaultRoutesTest {
     @BeforeEach
     void beforeEach() throws Exception {
         blobIdFactory = new PlainBlobId.Factory();
-        MemoryBlobStoreDAO blobStoreDAO = new MemoryBlobStoreDAO();
+        this.blobStoreDAO = spy(new MemoryBlobStoreDAO());
         blobStore = spy(BlobStoreFactory.builder()
             .blobStoreDAO(blobStoreDAO)
             .blobIdFactory(blobIdFactory)
             .defaultBucketName()
             .passthrough());
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
+        usersRepository = createUsersRepository();
         vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
-            blobStore, blobStoreDAO, new BucketNameGenerator(clock), clock,
-            VaultConfiguration.ENABLED_DEFAULT));
+            blobStoreDAO, new BucketNameGenerator(clock), clock,
+            VaultConfiguration.ENABLED_DEFAULT, usersRepository));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();
         mailboxManager = spy(inMemoryResource.getMailboxManager());
 
@@ -208,7 +210,6 @@ class DeletedMessagesVaultRoutesTest {
         zipper = new DeletedMessageZipper();
         exportService = new ExportService(blobExporting, blobStore, zipper, vault);
         QueryTranslator queryTranslator = new QueryTranslator(new InMemoryId.Factory());
-        usersRepository = createUsersRepository();
         MessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new TasksRoutes(taskManager, jsonTransformer,
@@ -2031,6 +2032,92 @@ class DeletedMessagesVaultRoutesTest {
         }
 
         @Test
+        void oldPurgeShouldProduceASuccessfulTaskWithAdditionalInformation() {
+            Mono.from(vault.appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+
+            clock.setInstant(NOW.toInstant());
+
+            String taskId =
+                with()
+                    .queryParam("scope", "expired")
+                    .delete()
+                .jsonPath()
+                    .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("taskId", is(taskId))
+                .body("type", is("deleted-messages-blob-store-based-garbage-collection"))
+                .body("additionalInformation.beginningOfRetentionPeriod", is(notNullValue()))
+                .body("additionalInformation.deletedBuckets", contains("deleted-messages-2010-10-01"))
+                .body("additionalInformation.deletedBlobs", is(0))
+                .body("startedDate", is(notNullValue()))
+                .body("submitDate", is(notNullValue()))
+                .body("completedDate", is(notNullValue()));
+        }
+
+        @Test
+        void oldPurgeShouldNotDeleteNotExpiredMessagesInTheVault() {
+
+            Mono.from(vault.appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+
+            clock.setInstant(NOW.toInstant());
+            DeletedMessage notExpiredMessage = DeletedMessage.builder()
+                .messageId(InMemoryMessageId.of(46))
+                .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
+                .user(USERNAME)
+                .deliveryDate(DELIVERY_DATE)
+                .deletionDate(ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC))
+                .sender(MaybeSender.of(SENDER))
+                .recipients(RECIPIENT1, RECIPIENT3)
+                .hasAttachment(false)
+                .size(CONTENT.length)
+                .build();
+
+            Mono.from(vault.appendV1(notExpiredMessage, new ByteArrayInputStream(CONTENT))).block();
+
+            String taskId =
+                with()
+                    .queryParam("scope", "expired")
+                    .delete()
+                .jsonPath()
+                    .get("taskId");
+
+            with()
+                .basePath(TasksRoutes.BASE)
+                .get(taskId + "/await");
+
+            assertThat(Flux.from(vault.search(USERNAME, Query.ALL)).toStream())
+                .containsOnly(notExpiredMessage);
+        }
+
+        @Test
+        void oldPurgeShouldNotAppendMessagesToUserMailbox() throws Exception {
+            Mono.from(vault.appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+
+            String taskId =
+                with()
+                    .queryParam("scope", "expired")
+                    .delete()
+                .jsonPath()
+                    .get("taskId");
+
+            with()
+                .basePath(TasksRoutes.BASE)
+                .get(taskId + "/await");
+
+            assertThat(hasAnyMail(USERNAME))
+                .isFalse();
+        }
+
+        @Test
         void purgeShouldProduceASuccessfulTaskWithAdditionalInformation() {
             Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
             Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
@@ -2053,7 +2140,8 @@ class DeletedMessagesVaultRoutesTest {
                 .body("taskId", is(taskId))
                 .body("type", is("deleted-messages-blob-store-based-garbage-collection"))
                 .body("additionalInformation.beginningOfRetentionPeriod", is(notNullValue()))
-                .body("additionalInformation.deletedBuckets", contains("deleted-messages-2010-10-01"))
+                .body("additionalInformation.deletedBuckets", hasSize(0))
+                .body("additionalInformation.deletedBlobs", is(2))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
                 .body("completedDate", is(notNullValue()));
@@ -2061,6 +2149,11 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void purgeShouldNotDeleteNotExpiredMessagesInTheVault() {
+            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+
+            clock.setInstant(NOW.toInstant());
+
             DeletedMessage notExpiredMessage = DeletedMessage.builder()
                 .messageId(InMemoryMessageId.of(46))
                 .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
@@ -2072,11 +2165,6 @@ class DeletedMessagesVaultRoutesTest {
                 .hasAttachment(false)
                 .size(CONTENT.length)
                 .build();
-
-            Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-            Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
-
-            clock.setInstant(NOW.toInstant());
 
             Mono.from(vault.append(notExpiredMessage, new ByteArrayInputStream(CONTENT))).block();
 
@@ -2118,12 +2206,12 @@ class DeletedMessagesVaultRoutesTest {
         @Nested
         class FailingPurgeTest {
             @Test
-            void purgeShouldProduceAFailedTaskWhenFailingDeletingBucket() {
-                Mono.from(vault.append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-                Mono.from(vault.append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+            void oldPurgeShouldProduceAFailedTaskWhenFailingDeletingBucket() {
+                Mono.from(vault.appendV1(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+                Mono.from(vault.appendV1(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
                 doReturn(Mono.error(new RuntimeException("mock exception")))
-                    .when(blobStore)
+                    .when(blobStoreDAO)
                     .deleteBucket(BucketName.of("deleted-messages-2010-10-01"));
 
                 clock.setInstant(NOW.toInstant());
@@ -2145,6 +2233,7 @@ class DeletedMessagesVaultRoutesTest {
                     .body("type", is("deleted-messages-blob-store-based-garbage-collection"))
                     .body("additionalInformation.beginningOfRetentionPeriod", is(notNullValue()))
                     .body("additionalInformation.deletedBuckets", hasSize(0))
+                    .body("additionalInformation.deletedBlobs", is(0))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
                     .body("completedDate", is(nullValue()));
