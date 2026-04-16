@@ -74,7 +74,7 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
                     try {
                         return inputStreamBlob.asBytes();
                     } catch (IOException e) {
-                        throw new ObjectStoreIOException("IOException occured", e);
+                        throw new ObjectStoreIOException("IOException occurred", e);
                     }
                 })
                 .flatMap(bytes -> save(bucketName, blobId, bytes));
@@ -82,7 +82,7 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
                     try {
                         return byteSourceBlob.asBytes();
                     } catch (IOException e) {
-                        throw new ObjectStoreIOException("IOException occured", e);
+                        throw new ObjectStoreIOException("IOException occurred", e);
                     }
                 })
             .map(bytes -> checkContentSize(byteSourceBlob.payload(), bytes))
@@ -106,7 +106,7 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
                 "Difference in size between the pre-computed content can cause other blob stores to fail thus we need to test for alignment. Expecting " + realSize + " but pre-computed size was " + preComputedSize);
             return bytes;
         } catch (IOException e) {
-            throw new ObjectStoreIOException("IOException occured", e);
+            throw new ObjectStoreIOException("IOException occurred", e);
         }
     }
 
