@@ -238,15 +238,19 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
     private Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream, BlobMetadata metadata) {
         BlobMetadata sanitizedMetadata = sanitizeMetadata(metadata);
 
+        if (!compressionEnabled()) {
+            return Mono.from(underlying.save(bucketName, blobId, InputStreamBlob.of(inputStream, sanitizedMetadata)));
+        }
+
         return Mono.usingWhen(Mono.fromCallable(() -> new FileBackedOutputStream(FILE_THRESHOLD)),
                 originalContent -> Mono.fromCallable(() -> inputStream.transferTo(originalContent))
                     .flatMap(originalSize -> {
-                        if (shouldAttemptCompression(originalSize)) {
+                        if (originalSize >= compressionConfiguration.threshold()) {
                             return compressAndSave(bucketName, blobId, originalContent, originalSize, sanitizedMetadata);
                         }
 
-                        recordThresholdSkipIfNeeded(originalSize);
-                        return Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(originalContent.asByteSource(), originalSize, sanitizedMetadata)));
+                        return Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(originalContent.asByteSource(), originalSize, sanitizedMetadata)))
+                            .doOnSuccess(ignored -> thresholdSkipCount.increment());
                     }),
                 originalContent -> Mono.fromRunnable(Throwing.runnable(originalContent::reset)).subscribeOn(Schedulers.boundedElastic()))
             .subscribeOn(Schedulers.boundedElastic())
@@ -255,18 +259,18 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
 
     private Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSource byteSource, BlobMetadata metadata) {
         BlobMetadata sanitizedMetadata = sanitizeMetadata(metadata);
-        if (!compressionConfiguration.enabled() || compressionConfiguration.minRatio() == 0) {
+        if (!compressionEnabled()) {
             return Mono.from(underlying.save(bucketName, blobId, ByteSourceBlob.of(byteSource, sanitizedMetadata)));
         }
 
         return Mono.fromCallable(() -> resolveSize(byteSource))
             .flatMap(originalSize -> {
-                if (!shouldAttemptCompression(originalSize)) {
-                    recordThresholdSkipIfNeeded(originalSize);
-                    return saveOriginal(bucketName, blobId, byteSource, originalSize, metadata);
+                if (originalSize < compressionConfiguration.threshold()) {
+                    return saveOriginal(bucketName, blobId, byteSource, originalSize, sanitizedMetadata)
+                        .doOnSuccess(ignored -> thresholdSkipCount.increment());
                 }
 
-                return compressAndSave(bucketName, blobId, byteSource, originalSize, metadata);
+                return compressAndSave(bucketName, blobId, byteSource, originalSize, sanitizedMetadata);
             })
             .subscribeOn(Schedulers.boundedElastic())
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob " + blobId.asString(), e));
@@ -376,14 +380,17 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
     }
 
     private boolean shouldAttemptCompression(long originalSize) {
-        return compressionConfiguration.enabled()
-            && compressionConfiguration.minRatio() > 0 // minRatio == 0 means decompress-only mode: never compress on save
+        return compressionEnabled()
             && originalSize >= compressionConfiguration.threshold();
     }
 
+    private boolean compressionEnabled() {
+        return compressionConfiguration.enabled()
+            && compressionConfiguration.minRatio() > 0; // minRatio == 0 means decompress-only mode: never compress on save
+    }
+
     private void recordThresholdSkipIfNeeded(long originalSize) {
-        if (compressionConfiguration.enabled()
-            && compressionConfiguration.minRatio() > 0
+        if (compressionEnabled()
             && originalSize < compressionConfiguration.threshold()) {
             thresholdSkipCount.increment();
         }
