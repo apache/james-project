@@ -204,7 +204,6 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
         if (shouldAttemptCompression(data.length)) {
             return Mono.fromCallable(() -> compress(data))
                 .subscribeOn(Schedulers.parallel())
-                .publishOn(Schedulers.boundedElastic())
                 .flatMap(compressed -> {
                     CompressionDecision compressionDecision = compressionDecision(data.length, compressed.length);
                     if (compressionDecision.satisfyCompressionMinRatio(compressionConfiguration.minRatio())) {
