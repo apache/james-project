@@ -49,8 +49,13 @@ import reactor.core.scheduler.Schedulers;
 
 public class ZstdBlobStoreDAO implements BlobStoreDAO {
     private record CompressionDecision(long originalSize, long compressedSize) {
-        boolean satisfyCompressionMinRatio(float minRatio) {
-            return ((float) compressedSize / originalSize) <= minRatio;
+        boolean satisfyCompressionMinRatio(float minCompressionRatio) {
+            // minCompressionRatio == 0 means decompress-only mode: never compress on save
+            if (minCompressionRatio == 0) {
+                return false;
+            }
+
+            return ((float) compressedSize / originalSize) <= minCompressionRatio;
         }
     }
 
@@ -319,7 +324,7 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
 
     private boolean shouldAttemptCompression(long originalSize) {
         return compressionConfiguration.enabled()
-            && compressionConfiguration.minRatio() > 0
+            && compressionConfiguration.minRatio() > 0 // minRatio == 0 means decompress-only mode: never compress on save
             && originalSize >= compressionConfiguration.threshold();
     }
 
