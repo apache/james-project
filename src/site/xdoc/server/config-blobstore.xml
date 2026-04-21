@@ -139,6 +139,30 @@ generate salt with : openssl rand -hex 16
                     </code>
                 </pre>
             </subsection>
+            <subsection name="Compression choice">
+                <p>
+                    Data can be optionally compressed with zstd before being stored in the blobStore. This especially
+                    benefits text-heavy mail contents and attachments when using S3 compatible object stores where
+                    storage costs matter.
+                </p>
+                <dl>
+                    <dt><strong>compression.enabled</strong></dt>
+                    <dd>Optional boolean, defaults to false.</dd>
+                </dl>
+                <dl>
+                    <dt><strong>compression.threshold</strong></dt>
+                    <dd>Optional size, defaults to 16K. Compression is only attempted for blobs whose original
+                        size is greater than or equal to this threshold. Supported units: no suffix for bytes, or B, K, M, G.</dd>
+                </dl>
+                <dl>
+                    <dt><strong>compression.min-ratio</strong></dt>
+                    <dd>Optional float between 0 and 1, defaults to 1. James keeps the compressed payload only when
+                        compressedSize / originalSize &lt;= compression.min-ratio.</dd>
+                    <dd>Use <code>0</code> for a "decompress-only" mode: James will still read previously compressed
+                        blobs but will not compress new writes.</dd>
+                </dl>
+                <p>If both compression and AES encryption are enabled, James compresses first and encrypts afterwards.</p>
+            </subsection>
             <subsection name="ObjectStorage BlobStore Buckets Configuration">
                 <dl>
                     <dt><strong>objectstorage.bucketPrefix</strong></dt>
