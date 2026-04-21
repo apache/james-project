@@ -126,9 +126,9 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
     @Override
     public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
         return switch (blob) {
-            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob.payload(), bytesBlob.metadata());
-            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob.payload(), inputStreamBlob.metadata());
-            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob.payload(), byteSourceBlob.metadata());
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob);
+            case InputStreamBlob inputStreamBlob -> save(bucketName, blobId, inputStreamBlob);
+            case ByteSourceBlob byteSourceBlob -> save(bucketName, blobId, byteSourceBlob);
         };
     }
 
@@ -200,8 +200,10 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
         }
     }
 
-    private Publisher<Void> save(BucketName bucketName, BlobId blobId, byte[] data, BlobMetadata metadata) {
-        BlobMetadata sanitizedMetadata = sanitizeMetadata(metadata);
+    private Publisher<Void> save(BucketName bucketName, BlobId blobId, BytesBlob bytesBlob) {
+        byte[] data = bytesBlob.payload();
+        BlobMetadata sanitizedMetadata = sanitizeMetadata(bytesBlob.metadata());
+        BytesBlob uncompressedBlob = BytesBlob.of(data, sanitizedMetadata);
 
         if (shouldAttemptCompression(data.length)) {
             return Mono.fromCallable(() -> compress(data))
@@ -209,47 +211,49 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
                 .flatMap(compressed -> {
                     CompressionDecision compressionDecision = compressionDecision(data.length, compressed.length);
                     if (compressionDecision.satisfyCompressionMinRatio(compressionConfiguration.minRatio())) {
-                        return saveCompressed(bucketName, blobId, data, compressed, sanitizedMetadata);
+                        return saveCompressed(bucketName, blobId,
+                            BytesBlob.of(compressed, withCompressionMetadata(sanitizedMetadata, data.length)),
+                            uncompressedBlob);
                     }
 
-                    return saveOriginal(bucketName, blobId, data, sanitizedMetadata)
+                    return saveOriginal(bucketName, blobId, uncompressedBlob)
                         .doOnSuccess(ignored -> ratioSkipCount.increment());
                 })
                 .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob " + blobId.asString(), e));
         }
 
         recordThresholdSkipIfNeeded(data.length);
-        return Mono.from(underlying.save(bucketName, blobId, BytesBlob.of(data, sanitizedMetadata)))
+        return Mono.from(underlying.save(bucketName, blobId, uncompressedBlob))
             .subscribeOn(Schedulers.boundedElastic());
     }
 
-    private Mono<Void> saveCompressed(BucketName bucketName, BlobId blobId, byte[] data, byte[] compressed, BlobMetadata sanitizedMetadata) {
-        return Mono.from(underlying.save(bucketName, blobId, BytesBlob.of(compressed, withCompressionMetadata(sanitizedMetadata, data.length))))
+    private Mono<Void> saveCompressed(BucketName bucketName, BlobId blobId, BytesBlob compressedBlob, BytesBlob uncompressedBlob) {
+        return Mono.from(underlying.save(bucketName, blobId, compressedBlob))
             .doOnSuccess(ignored -> {
                 compressSaveCount.increment();
-                savedBytes.add(data.length - compressed.length);
+                savedBytes.add(uncompressedBlob.payload().length - compressedBlob.payload().length);
             });
     }
 
-    private Mono<Void> saveOriginal(BucketName bucketName, BlobId blobId, byte[] data, BlobMetadata sanitizedMetadata) {
-        return Mono.from(underlying.save(bucketName, blobId, BytesBlob.of(data, sanitizedMetadata)));
+    private Mono<Void> saveOriginal(BucketName bucketName, BlobId blobId, BytesBlob bytesBlob) {
+        return Mono.from(underlying.save(bucketName, blobId, bytesBlob));
     }
 
-    private Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream, BlobMetadata metadata) {
-        BlobMetadata sanitizedMetadata = sanitizeMetadata(metadata);
+    private Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStreamBlob inputStreamBlob) {
+        InputStreamBlob sanitizedBlob = InputStreamBlob.of(inputStreamBlob.payload(), sanitizeMetadata(inputStreamBlob.metadata()));
 
         if (!compressionEnabled()) {
-            return Mono.from(underlying.save(bucketName, blobId, InputStreamBlob.of(inputStream, sanitizedMetadata)));
+            return Mono.from(underlying.save(bucketName, blobId, sanitizedBlob));
         }
 
         return Mono.usingWhen(Mono.fromCallable(() -> new FileBackedOutputStream(FILE_THRESHOLD)),
-                originalContent -> Mono.fromCallable(() -> inputStream.transferTo(originalContent))
+                originalContent -> Mono.fromCallable(() -> sanitizedBlob.payload().transferTo(originalContent))
                     .flatMap(originalSize -> {
                         if (originalSize >= compressionConfiguration.threshold()) {
-                            return compressAndSave(bucketName, blobId, originalContent, originalSize, sanitizedMetadata);
+                            return compressAndSave(bucketName, blobId, originalContent, originalSize, sanitizedBlob.metadata());
                         }
 
-                        return Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(originalContent.asByteSource(), originalSize, sanitizedMetadata)))
+                        return Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(originalContent.asByteSource(), originalSize, sanitizedBlob.metadata())))
                             .doOnSuccess(ignored -> thresholdSkipCount.increment());
                     }),
                 originalContent -> Mono.fromRunnable(Throwing.runnable(originalContent::reset)).subscribeOn(Schedulers.boundedElastic()))
@@ -257,20 +261,20 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob " + blobId.asString(), e));
     }
 
-    private Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSource byteSource, BlobMetadata metadata) {
-        BlobMetadata sanitizedMetadata = sanitizeMetadata(metadata);
+    private Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSourceBlob byteSourceBlob) {
+        ByteSourceBlob sanitizedBlob = ByteSourceBlob.of(byteSourceBlob.payload(), sanitizeMetadata(byteSourceBlob.metadata()));
         if (!compressionEnabled()) {
-            return Mono.from(underlying.save(bucketName, blobId, ByteSourceBlob.of(byteSource, sanitizedMetadata)));
+            return Mono.from(underlying.save(bucketName, blobId, sanitizedBlob));
         }
 
-        return Mono.fromCallable(() -> resolveSize(byteSource))
+        return Mono.fromCallable(() -> resolveSize(sanitizedBlob.payload()))
             .flatMap(originalSize -> {
                 if (originalSize < compressionConfiguration.threshold()) {
-                    return saveOriginal(bucketName, blobId, byteSource, originalSize, sanitizedMetadata)
+                    return saveOriginal(bucketName, blobId, byteSourceBlobWithSize(sanitizedBlob.payload(), originalSize, sanitizedBlob.metadata()))
                         .doOnSuccess(ignored -> thresholdSkipCount.increment());
                 }
 
-                return compressAndSave(bucketName, blobId, byteSource, originalSize, sanitizedMetadata);
+                return compressAndSave(bucketName, blobId, sanitizedBlob, originalSize);
             })
             .subscribeOn(Schedulers.boundedElastic())
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob " + blobId.asString(), e));
@@ -283,10 +287,10 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
             () -> saveOriginal(bucketName, blobId, originalContent, originalSize, metadata));
     }
 
-    private Mono<Void> compressAndSave(BucketName bucketName, BlobId blobId, ByteSource byteSource, long originalSize, BlobMetadata metadata) {
-        return compressAndSave(bucketName, blobId, originalSize, metadata,
-            compressContent -> prepareCompressedContent(byteSource, originalSize, compressContent),
-            () -> saveOriginal(bucketName, blobId, byteSource, originalSize, metadata));
+    private Mono<Void> compressAndSave(BucketName bucketName, BlobId blobId, ByteSourceBlob byteSourceBlob, long originalSize) {
+        return compressAndSave(bucketName, blobId, originalSize, byteSourceBlob.metadata(),
+            compressContent -> prepareCompressedContent(byteSourceBlob.payload(), originalSize, compressContent),
+            () -> saveOriginal(bucketName, blobId, byteSourceBlobWithSize(byteSourceBlob.payload(), originalSize, byteSourceBlob.metadata())));
     }
 
     private Mono<Void> compressAndSave(BucketName bucketName, BlobId blobId, long originalSize, BlobMetadata metadata,
@@ -334,13 +338,12 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
 
     private Mono<Void> saveOriginal(BucketName bucketName, BlobId blobId, FileBackedOutputStream originalContent,
                                     long originalSize, BlobMetadata metadata) {
-        return Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(originalContent.asByteSource(), originalSize, metadata)))
+        return saveOriginal(bucketName, blobId, byteSourceBlobWithSize(originalContent.asByteSource(), originalSize, metadata))
             .doOnSuccess(ignored -> ratioSkipCount.increment());
     }
 
-    private Mono<Void> saveOriginal(BucketName bucketName, BlobId blobId, ByteSource byteSource,
-                                    long originalSize, BlobMetadata metadata) {
-        return Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(byteSource, originalSize, metadata)))
+    private Mono<Void> saveOriginal(BucketName bucketName, BlobId blobId, ByteSourceBlob byteSourceBlob) {
+        return Mono.from(underlying.save(bucketName, blobId, byteSourceBlob))
             .doOnSuccess(ignored -> ratioSkipCount.increment());
     }
 
