@@ -223,8 +223,7 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
         }
 
         recordThresholdSkipIfNeeded(data.length);
-        return Mono.from(underlying.save(bucketName, blobId, uncompressedBlob))
-            .subscribeOn(Schedulers.boundedElastic());
+        return Mono.from(underlying.save(bucketName, blobId, uncompressedBlob));
     }
 
     private Mono<Void> saveCompressed(BucketName bucketName, BlobId blobId, BytesBlob compressedBlob, BytesBlob uncompressedBlob) {
