@@ -22,6 +22,7 @@ package org.apache.james.modules.blobstore;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.blob.aes.CryptoConfig;
+import org.apache.james.blob.zstd.CompressionConfiguration;
 import org.junit.jupiter.api.Test;
 
 class BlobStoreModulesChooserTest {
@@ -71,6 +72,31 @@ class BlobStoreModulesChooserTest {
                     .salt("73616c7479")
                     .build())))
             .filteredOn(module -> module instanceof BlobStoreModulesChooser.EncryptionModule)
+            .hasSize(1);
+    }
+
+    @Test
+    void provideBlobStoreShouldReturnNoCompressionWhenCompressionDisabled() {
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+            .s3()
+            .disableCache()
+            .deduplication()
+            .noCryptoConfig()))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.NoCompressionModule)
+            .hasSize(1);
+    }
+
+    @Test
+    void provideBlobStoreShouldReturnCompressionWhenConfigured() {
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+            .cassandra()
+            .disableCache()
+            .passthrough()
+            .noCryptoConfig()
+            .compressionConfig(CompressionConfiguration.builder()
+                .enabled(true)
+                .build())))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.CompressionModule)
             .hasSize(1);
     }
 }

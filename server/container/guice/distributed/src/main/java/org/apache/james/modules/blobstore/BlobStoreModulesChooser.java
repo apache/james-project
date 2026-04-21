@@ -39,7 +39,10 @@ import org.apache.james.blob.objectstorage.aws.sse.S3SSECConfiguration;
 import org.apache.james.blob.objectstorage.aws.sse.S3SSECustomerKeyFactory;
 import org.apache.james.blob.objectstorage.aws.sse.S3SSECustomerKeyFactory.SingleCustomerKeyFactory;
 import org.apache.james.blob.postgres.PostgresBlobStoreDAO;
+import org.apache.james.blob.zstd.CompressionConfiguration;
+import org.apache.james.blob.zstd.ZstdBlobStoreDAO;
 import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.modules.blobstore.validation.BlobStoreConfigurationValidationStartUpCheck.StorageStrategySupplier;
 import org.apache.james.modules.blobstore.validation.StoragePolicyConfigurationSanityEnforcementModule;
 import org.apache.james.modules.mailbox.BlobStoreAPIModule;
@@ -65,7 +68,8 @@ import com.google.inject.name.Names;
 import modules.BlobPostgresModule;
 
 public class BlobStoreModulesChooser {
-    private static final String UNENCRYPTED = "unencrypted";
+    private static final String RAW = "raw";
+    private static final String ENCRYPTION = "encryption";
 
     static class CassandraBlobStoreDAODeclarationModule extends AbstractModule {
         @Override
@@ -73,7 +77,7 @@ public class BlobStoreModulesChooser {
             install(new CassandraBlobStoreDependenciesModule());
             install(new DefaultBucketModule());
 
-            bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(CassandraBlobStoreDAO.class);
+            bind(BlobStoreDAO.class).annotatedWith(Names.named(RAW)).to(CassandraBlobStoreDAO.class);
         }
     }
 
@@ -83,7 +87,7 @@ public class BlobStoreModulesChooser {
             install(new S3BlobStoreModule());
             install(new S3BucketModule());
 
-            bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(S3BlobStoreDAO.class)
+            bind(BlobStoreDAO.class).annotatedWith(Names.named(RAW)).to(S3BlobStoreDAO.class)
                 .in(Scopes.SINGLETON);
             Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(ObjectStorageHealthCheck.class);
         }
@@ -107,7 +111,7 @@ public class BlobStoreModulesChooser {
         protected void configure() {
             install(new DefaultBucketModule());
 
-            bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(FileBlobStoreDAO.class);
+            bind(BlobStoreDAO.class).annotatedWith(Names.named(RAW)).to(FileBlobStoreDAO.class);
         }
     }
 
@@ -118,15 +122,43 @@ public class BlobStoreModulesChooser {
 
             install(new DefaultBucketModule());
 
-            bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(PostgresBlobStoreDAO.class);
+            bind(BlobStoreDAO.class).annotatedWith(Names.named(RAW)).to(PostgresBlobStoreDAO.class);
+        }
+    }
+
+    static class NoCompressionModule extends AbstractModule {
+        @Provides
+        @Singleton
+        BlobStoreDAO blobStoreDAO(@Named(ENCRYPTION) BlobStoreDAO encryption) {
+            return encryption;
+        }
+    }
+
+    static class CompressionModule extends AbstractModule {
+        private final CompressionConfiguration compressionConfiguration;
+
+        CompressionModule(CompressionConfiguration compressionConfiguration) {
+            this.compressionConfiguration = compressionConfiguration;
+        }
+
+        @Provides
+        @Singleton
+        BlobStoreDAO blobStoreDAO(@Named(ENCRYPTION) BlobStoreDAO encryption, MetricFactory metricFactory) {
+            return new ZstdBlobStoreDAO(encryption, compressionConfiguration, metricFactory);
+        }
+
+        @Provides
+        CompressionConfiguration compressionConfiguration() {
+            return compressionConfiguration;
         }
     }
 
     static class NoEncryptionModule extends AbstractModule {
         @Provides
         @Singleton
-        BlobStoreDAO blobStoreDAO(@Named(UNENCRYPTED) BlobStoreDAO unencrypted) {
-            return unencrypted;
+        @Named(ENCRYPTION)
+        BlobStoreDAO blobStoreDAO(@Named(RAW) BlobStoreDAO raw) {
+            return raw;
         }
     }
 
@@ -139,8 +171,9 @@ public class BlobStoreModulesChooser {
 
         @Provides
         @Singleton
-        BlobStoreDAO blobStoreDAO(@Named(UNENCRYPTED) BlobStoreDAO unencrypted) {
-            return new AESBlobStoreDAO(unencrypted, cryptoConfig);
+        @Named(ENCRYPTION)
+        BlobStoreDAO blobStoreDAO(@Named(RAW) BlobStoreDAO raw) {
+            return new AESBlobStoreDAO(raw, cryptoConfig);
         }
 
         @Provides
@@ -151,8 +184,9 @@ public class BlobStoreModulesChooser {
 
     public static List<Module> chooseModules(BlobStoreConfiguration choosingConfiguration) {
         return ImmutableList.<Module>builder()
-            .add(chooseEncryptionModule(choosingConfiguration.getCryptoConfig()))
             .add(chooseBlobStoreDAOModule(choosingConfiguration.getImplementation()))
+            .add(chooseEncryptionModule(choosingConfiguration.getCryptoConfig()))
+            .add(chooseCompressionModule(choosingConfiguration.getCompressionConfiguration()))
             .addAll(chooseStoragePolicyModule(choosingConfiguration.storageStrategy()))
             .add(new StoragePolicyConfigurationSanityEnforcementModule())
             .add(binder -> binder.bind(BlobStoreConfiguration.class).toInstance(choosingConfiguration))
@@ -178,6 +212,13 @@ public class BlobStoreModulesChooser {
     public static Module chooseEncryptionModule(Optional<CryptoConfig> cryptoConfig) {
         Optional<Module> encryptionModule = cryptoConfig.map(EncryptionModule::new);
         return encryptionModule.orElse(new NoEncryptionModule());
+    }
+
+    public static Module chooseCompressionModule(CompressionConfiguration compressionConfiguration) {
+        if (compressionConfiguration.enabled()) {
+            return new CompressionModule(compressionConfiguration);
+        }
+        return new NoCompressionModule();
     }
 
     public static List<Module> chooseStoragePolicyModule(StorageStrategy storageStrategy) {
