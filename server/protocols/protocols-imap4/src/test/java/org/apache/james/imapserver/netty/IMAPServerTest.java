@@ -3577,4 +3577,48 @@ class IMAPServerTest {
         }
     }
 
+    @Nested
+    class Utf8AcceptTest {
+        IMAPServer imapServer;
+
+        @AfterEach
+        void tearDown() {
+            if (imapServer != null) {
+                imapServer.destroy();
+            }
+        }
+
+        @Test
+        void capabilityShouldAdvertiseUtf8Accept() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+            assertThat(
+                testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().getFirst().getPort())
+                    .sendCommand("CAPABILITY"))
+                .contains("UTF8=ACCEPT");
+        }
+
+        @Test
+        void enableUtf8AcceptShouldSucceed() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+            assertThat(
+                testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().getFirst().getPort())
+                    .login(USER.asString(), USER_PASS)
+                    .sendCommand("ENABLE UTF8=ACCEPT"))
+                .contains("* ENABLED UTF8=ACCEPT")
+                .contains("OK ENABLE completed.");
+        }
+
+        @Test
+        void enableUtf8AcceptShouldNotEchoUnsupportedCapability() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+            assertThat(
+                testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().getFirst().getPort())
+                    .login(USER.asString(), USER_PASS)
+                    .sendCommand("ENABLE BOGUS-CAPABILITY UTF8=ACCEPT"))
+                .contains("* ENABLED UTF8=ACCEPT")
+                .doesNotContain("BOGUS-CAPABILITY")
+                .contains("OK ENABLE completed.");
+        }
+    }
+
 }
