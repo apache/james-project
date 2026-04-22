@@ -754,7 +754,7 @@ public abstract class ImapRequestLineReader {
      */
     protected String consumeQuoted(Charset charset) throws DecodingException {
         if (charset == null) {
-            return consumeQuoted(US_ASCII);
+            return consumeQuoted(UTF_8);
         } else {
             // The 1st character must be '"'
             consumeChar('"');
