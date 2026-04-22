@@ -22,7 +22,6 @@ package org.apache.james.blob.zstd;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -61,35 +60,69 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
         }
     }
 
+    static final class MetricRecorder {
+        static final String BLOB_ZSTD_COMPRESS_SAVE_COUNT_METRIC_NAME = "blobZstdCompressSaveCount";
+        static final String BLOB_ZSTD_THRESHOLD_SKIP_COUNT_METRIC_NAME = "blobZstdThresholdSkipCount";
+        static final String BLOB_ZSTD_RATIO_SKIP_COUNT_METRIC_NAME = "blobZstdRatioSkipCount";
+        static final String BLOB_ZSTD_DECOMPRESS_COUNT_METRIC_NAME = "blobZstdDecompressCount";
+        static final String BLOB_ZSTD_SAVED_BYTES_METRIC_NAME = "blobZstdSavedBytes";
+        static final String BLOB_ZSTD_COMPRESS_LATENCY_METRIC_NAME = "blobZstdCompressLatency";
+        static final String BLOB_ZSTD_DECOMPRESS_LATENCY_METRIC_NAME = "blobZstdDecompressLatency";
+
+        private final MetricFactory metricFactory;
+        private final Metric compressSaveCount;
+        private final Metric thresholdSkipCount;
+        private final Metric ratioSkipCount;
+        private final Metric decompressCount;
+        private final Metric savedBytes;
+
+        private MetricRecorder(MetricFactory metricFactory) {
+            this.metricFactory = metricFactory;
+            this.compressSaveCount = metricFactory.generate(BLOB_ZSTD_COMPRESS_SAVE_COUNT_METRIC_NAME);
+            this.thresholdSkipCount = metricFactory.generate(BLOB_ZSTD_THRESHOLD_SKIP_COUNT_METRIC_NAME);
+            this.ratioSkipCount = metricFactory.generate(BLOB_ZSTD_RATIO_SKIP_COUNT_METRIC_NAME);
+            this.decompressCount = metricFactory.generate(BLOB_ZSTD_DECOMPRESS_COUNT_METRIC_NAME);
+            this.savedBytes = metricFactory.generate(BLOB_ZSTD_SAVED_BYTES_METRIC_NAME);
+        }
+
+        TimeMetric startCompressionLatencyTimer() {
+            return metricFactory.timer(BLOB_ZSTD_COMPRESS_LATENCY_METRIC_NAME);
+        }
+
+        TimeMetric startDecompressionLatencyTimer() {
+            return metricFactory.timer(BLOB_ZSTD_DECOMPRESS_LATENCY_METRIC_NAME);
+        }
+
+        void recordCompressedSave(long originalSize, long compressedSize) {
+            compressSaveCount.increment();
+            savedBytes.add(Math.toIntExact(originalSize - compressedSize));
+        }
+
+        void recordThresholdSkip() {
+            thresholdSkipCount.increment();
+        }
+
+        void recordRatioSkip() {
+            ratioSkipCount.increment();
+        }
+
+        void recordDecompression() {
+            decompressCount.increment();
+        }
+    }
+
     public static final BlobMetadataName CONTENT_ORIGINAL_SIZE = new BlobMetadataName("content-original-size");
-    public static final String BLOB_ZSTD_COMPRESS_SAVE_COUNT_METRIC_NAME = "blobZstdCompressSaveCount";
-    public static final String BLOB_ZSTD_THRESHOLD_SKIP_COUNT_METRIC_NAME = "blobZstdThresholdSkipCount";
-    public static final String BLOB_ZSTD_RATIO_SKIP_COUNT_METRIC_NAME = "blobZstdRatioSkipCount";
-    public static final String BLOB_ZSTD_DECOMPRESS_COUNT_METRIC_NAME = "blobZstdDecompressCount";
-    public static final String BLOB_ZSTD_SAVED_BYTES_METRIC_NAME = "blobZstdSavedBytes";
-    public static final String BLOB_ZSTD_COMPRESS_LATENCY_METRIC_NAME = "blobZstdCompressLatency";
-    public static final String BLOB_ZSTD_DECOMPRESS_LATENCY_METRIC_NAME = "blobZstdDecompressLatency";
     private static final int FILE_THRESHOLD = 100 * 1024;
     private static final Set<BlobMetadataName> RESERVED_METADATA_NAMES = Set.of(ContentTransferEncoding.NAME, CONTENT_ORIGINAL_SIZE);
 
     private final BlobStoreDAO underlying;
     private final CompressionConfiguration compressionConfiguration;
-    private final MetricFactory metricFactory;
-    private final Metric compressSaveCount;
-    private final Metric thresholdSkipCount;
-    private final Metric ratioSkipCount;
-    private final Metric decompressCount;
-    private final Metric savedBytes;
+    private final MetricRecorder metricRecorder;
 
     public ZstdBlobStoreDAO(BlobStoreDAO underlying, CompressionConfiguration compressionConfiguration, MetricFactory metricFactory) {
         this.underlying = underlying;
         this.compressionConfiguration = compressionConfiguration;
-        this.metricFactory = metricFactory;
-        this.compressSaveCount = metricFactory.generate(BLOB_ZSTD_COMPRESS_SAVE_COUNT_METRIC_NAME);
-        this.thresholdSkipCount = metricFactory.generate(BLOB_ZSTD_THRESHOLD_SKIP_COUNT_METRIC_NAME);
-        this.ratioSkipCount = metricFactory.generate(BLOB_ZSTD_RATIO_SKIP_COUNT_METRIC_NAME);
-        this.decompressCount = metricFactory.generate(BLOB_ZSTD_DECOMPRESS_COUNT_METRIC_NAME);
-        this.savedBytes = metricFactory.generate(BLOB_ZSTD_SAVED_BYTES_METRIC_NAME);
+        this.metricRecorder = new MetricRecorder(metricFactory);
     }
 
     @Override
@@ -159,7 +192,7 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
 
     private InputStreamBlob decompress(InputStreamBlob blob) throws ObjectStoreIOException {
         try {
-            decompressCount.increment();
+            metricRecorder.recordDecompression();
             return InputStreamBlob.of(new ZstdInputStream(blob.payload()), blob.metadata());
         } catch (IOException e) {
             throw new ObjectStoreIOException("Failed to initialize zstd decompression", e);
@@ -168,19 +201,19 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
 
     private Mono<InputStreamBlob> decompressReactive(InputStreamBlob blob) {
         return Mono.fromCallable(() -> InputStreamBlob.of(new ZstdInputStream(blob.payload()), blob.metadata()))
-            .doOnNext(ignored -> decompressCount.increment())
+            .doOnNext(ignored -> metricRecorder.recordDecompression())
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Failed to initialize zstd decompression", e));
     }
 
     private Mono<BytesBlob> decompressBytesReactive(BytesBlob blob) {
         return Mono.fromCallable(() -> decompress(blob))
             .subscribeOn(Schedulers.parallel())
-            .doOnNext(ignored -> decompressCount.increment())
+            .doOnNext(ignored -> metricRecorder.recordDecompression())
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Failed to decompress blob", e));
     }
 
     private BytesBlob decompress(BytesBlob blob) throws IOException {
-        TimeMetric timeMetric = metricFactory.timer(BLOB_ZSTD_DECOMPRESS_LATENCY_METRIC_NAME);
+        TimeMetric timeMetric = metricRecorder.startDecompressionLatencyTimer();
         try {
             return BytesBlob.of(Zstd.decompress(blob.payload(), originalSize(blob.metadata())), blob.metadata());
         } finally {
@@ -201,59 +234,52 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
     }
 
     private Publisher<Void> save(BucketName bucketName, BlobId blobId, BytesBlob bytesBlob) {
-        byte[] data = bytesBlob.payload();
-        BlobMetadata sanitizedMetadata = sanitizeMetadata(bytesBlob.metadata());
-        BytesBlob uncompressedBlob = BytesBlob.of(data, sanitizedMetadata);
+        validateMetadata(bytesBlob.metadata());
 
-        if (shouldAttemptCompression(data.length)) {
-            return Mono.fromCallable(() -> compress(data))
+        if (shouldAttemptCompression(bytesBlob.payload().length)) {
+            return Mono.fromCallable(() -> compress(bytesBlob.payload()))
                 .subscribeOn(Schedulers.parallel())
-                .flatMap(compressed -> {
-                    CompressionDecision compressionDecision = compressionDecision(data.length, compressed.length);
-                    if (compressionDecision.satisfyCompressionMinRatio(compressionConfiguration.minRatio())) {
-                        return saveCompressed(bucketName, blobId,
-                            BytesBlob.of(compressed, withCompressionMetadata(sanitizedMetadata, data.length)),
-                            uncompressedBlob);
-                    }
-
-                    return saveOriginal(bucketName, blobId, uncompressedBlob)
-                        .doOnSuccess(ignored -> ratioSkipCount.increment());
-                })
+                .flatMap(compressed -> saveCompressedIfWorthKeeping(bucketName, blobId,
+                    BytesBlob.of(compressed, withCompressionMetadata(bytesBlob.metadata(), bytesBlob.payload().length)),
+                    bytesBlob))
                 .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob " + blobId.asString(), e));
         }
 
-        recordThresholdSkipIfNeeded(data.length);
-        return Mono.from(underlying.save(bucketName, blobId, uncompressedBlob));
-    }
-
-    private Mono<Void> saveCompressed(BucketName bucketName, BlobId blobId, BytesBlob compressedBlob, BytesBlob uncompressedBlob) {
-        return Mono.from(underlying.save(bucketName, blobId, compressedBlob))
+        return Mono.from(underlying.save(bucketName, blobId, bytesBlob))
             .doOnSuccess(ignored -> {
-                compressSaveCount.increment();
-                savedBytes.add(uncompressedBlob.payload().length - compressedBlob.payload().length);
+                if (compressionEnabled() && bytesBlob.payload().length < compressionConfiguration.threshold()) {
+                    metricRecorder.recordThresholdSkip();
+                }
             });
     }
 
-    private Mono<Void> saveOriginal(BucketName bucketName, BlobId blobId, BytesBlob bytesBlob) {
-        return Mono.from(underlying.save(bucketName, blobId, bytesBlob));
+    private Mono<Void> saveCompressedIfWorthKeeping(BucketName bucketName, BlobId blobId, BytesBlob compressedBlob,
+                                                    BytesBlob uncompressedBlob) {
+        CompressionDecision compressionDecision = compressionDecision(uncompressedBlob.payload().length, compressedBlob.payload().length);
+        if (compressionDecision.satisfyCompressionMinRatio(compressionConfiguration.minRatio())) {
+            return Mono.from(underlying.save(bucketName, blobId, compressedBlob))
+                .doOnSuccess(ignored -> metricRecorder.recordCompressedSave(uncompressedBlob.payload().length, compressedBlob.payload().length));
+        }
+        return Mono.from(underlying.save(bucketName, blobId, uncompressedBlob))
+            .doOnSuccess(ignored -> metricRecorder.recordRatioSkip());
     }
 
     private Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStreamBlob inputStreamBlob) {
-        InputStreamBlob sanitizedBlob = InputStreamBlob.of(inputStreamBlob.payload(), sanitizeMetadata(inputStreamBlob.metadata()));
+        validateMetadata(inputStreamBlob.metadata());
 
         if (!compressionEnabled()) {
-            return Mono.from(underlying.save(bucketName, blobId, sanitizedBlob));
+            return Mono.from(underlying.save(bucketName, blobId, inputStreamBlob));
         }
 
         return Mono.usingWhen(Mono.fromCallable(() -> new FileBackedOutputStream(FILE_THRESHOLD)),
-                originalContent -> Mono.fromCallable(() -> sanitizedBlob.payload().transferTo(originalContent))
+                originalContent -> Mono.fromCallable(() -> inputStreamBlob.payload().transferTo(originalContent))
                     .flatMap(originalSize -> {
                         if (originalSize >= compressionConfiguration.threshold()) {
-                            return compressAndSave(bucketName, blobId, originalContent, originalSize, sanitizedBlob.metadata());
+                            return compressAndSave(bucketName, blobId, originalContent, originalSize, inputStreamBlob.metadata());
                         }
 
-                        return Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(originalContent.asByteSource(), originalSize, sanitizedBlob.metadata())))
-                            .doOnSuccess(ignored -> thresholdSkipCount.increment());
+                        return Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(originalContent.asByteSource(), originalSize, inputStreamBlob.metadata())))
+                            .doOnSuccess(ignored -> metricRecorder.recordThresholdSkip());
                     }),
                 originalContent -> Mono.fromRunnable(Throwing.runnable(originalContent::reset)).subscribeOn(Schedulers.boundedElastic()))
             .subscribeOn(Schedulers.boundedElastic())
@@ -261,19 +287,20 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
     }
 
     private Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSourceBlob byteSourceBlob) {
-        ByteSourceBlob sanitizedBlob = ByteSourceBlob.of(byteSourceBlob.payload(), sanitizeMetadata(byteSourceBlob.metadata()));
+        validateMetadata(byteSourceBlob.metadata());
+
         if (!compressionEnabled()) {
-            return Mono.from(underlying.save(bucketName, blobId, sanitizedBlob));
+            return Mono.from(underlying.save(bucketName, blobId, byteSourceBlob));
         }
 
-        return Mono.fromCallable(() -> resolveSize(sanitizedBlob.payload()))
+        return Mono.fromCallable(() -> resolveSize(byteSourceBlob.payload()))
             .flatMap(originalSize -> {
                 if (originalSize < compressionConfiguration.threshold()) {
-                    return saveOriginal(bucketName, blobId, byteSourceBlobWithSize(sanitizedBlob.payload(), originalSize, sanitizedBlob.metadata()))
-                        .doOnSuccess(ignored -> thresholdSkipCount.increment());
+                    return Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(byteSourceBlob.payload(), originalSize, byteSourceBlob.metadata())))
+                        .doOnSuccess(ignored -> metricRecorder.recordThresholdSkip());
                 }
 
-                return compressAndSave(bucketName, blobId, sanitizedBlob, originalSize);
+                return compressAndSave(bucketName, blobId, byteSourceBlob, originalSize);
             })
             .subscribeOn(Schedulers.boundedElastic())
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob " + blobId.asString(), e));
@@ -283,13 +310,15 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
                                        long originalSize, BlobMetadata metadata) {
         return compressAndSave(bucketName, blobId, originalSize, metadata,
             compressContent -> prepareCompressedContent(originalContent, originalSize, compressContent),
-            () -> saveOriginal(bucketName, blobId, originalContent, originalSize, metadata));
+            () -> Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(originalContent.asByteSource(), originalSize, metadata)))
+                .doOnSuccess(ignored -> metricRecorder.recordRatioSkip()));
     }
 
     private Mono<Void> compressAndSave(BucketName bucketName, BlobId blobId, ByteSourceBlob byteSourceBlob, long originalSize) {
         return compressAndSave(bucketName, blobId, originalSize, byteSourceBlob.metadata(),
             compressContent -> prepareCompressedContent(byteSourceBlob.payload(), originalSize, compressContent),
-            () -> saveOriginal(bucketName, blobId, byteSourceBlobWithSize(byteSourceBlob.payload(), originalSize, byteSourceBlob.metadata())));
+            () -> Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(byteSourceBlob.payload(), originalSize, byteSourceBlob.metadata())))
+                .doOnSuccess(ignored -> metricRecorder.recordRatioSkip()));
     }
 
     private Mono<Void> compressAndSave(BucketName bucketName, BlobId blobId, long originalSize, BlobMetadata metadata,
@@ -297,15 +326,22 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
                                        Supplier<Mono<Void>> saveOriginal) {
         return Mono.usingWhen(Mono.fromCallable(() -> new FileBackedOutputStream(FILE_THRESHOLD)),
                 compressContent -> prepareCompressedContent.apply(compressContent)
-                    .flatMap(compressionDecision -> {
-                        if (compressionDecision.satisfyCompressionMinRatio(compressionConfiguration.minRatio())) {
-                            return saveCompressed(bucketName, blobId, originalSize, metadata, compressContent, compressionDecision.compressedSize());
-                        }
-
-                        return saveOriginal.get();
-                    }),
+                    .flatMap(compressionDecision -> saveCompressedIfWorthKeeping(bucketName, blobId, originalSize, metadata,
+                        compressContent, compressionDecision, saveOriginal)),
                 compressContent -> Mono.fromRunnable(Throwing.runnable(compressContent::reset)).subscribeOn(Schedulers.boundedElastic()))
             .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    private Mono<Void> saveCompressedIfWorthKeeping(BucketName bucketName, BlobId blobId, long originalSize,
+                                                    BlobMetadata metadata, FileBackedOutputStream compressedContent,
+                                                    CompressionDecision compressionDecision, Supplier<Mono<Void>> saveOriginal) {
+        if (compressionDecision.satisfyCompressionMinRatio(compressionConfiguration.minRatio())) {
+            return Mono.from(underlying.save(bucketName, blobId,
+                    byteSourceBlobWithSize(compressedContent.asByteSource(), compressionDecision.compressedSize(), withCompressionMetadata(metadata, originalSize))))
+                .doOnSuccess(ignored -> metricRecorder.recordCompressedSave(originalSize, compressionDecision.compressedSize()));
+        }
+
+        return saveOriginal.get();
     }
 
     private Mono<CompressionDecision> prepareCompressedContent(FileBackedOutputStream originalContent, long originalSize,
@@ -326,28 +362,8 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
         });
     }
 
-    private Mono<Void> saveCompressed(BucketName bucketName, BlobId blobId, long originalSize, BlobMetadata metadata,
-                                      FileBackedOutputStream compressContent, long compressedSize) {
-        return Mono.from(underlying.save(bucketName, blobId, byteSourceBlobWithSize(compressContent.asByteSource(), compressedSize, withCompressionMetadata(metadata, originalSize))))
-            .doOnSuccess(ignored -> {
-                compressSaveCount.increment();
-                savedBytes.add(Math.toIntExact(originalSize - compressedSize));
-            });
-    }
-
-    private Mono<Void> saveOriginal(BucketName bucketName, BlobId blobId, FileBackedOutputStream originalContent,
-                                    long originalSize, BlobMetadata metadata) {
-        return saveOriginal(bucketName, blobId, byteSourceBlobWithSize(originalContent.asByteSource(), originalSize, metadata))
-            .doOnSuccess(ignored -> ratioSkipCount.increment());
-    }
-
-    private Mono<Void> saveOriginal(BucketName bucketName, BlobId blobId, ByteSourceBlob byteSourceBlob) {
-        return Mono.from(underlying.save(bucketName, blobId, byteSourceBlob))
-            .doOnSuccess(ignored -> ratioSkipCount.increment());
-    }
-
     private byte[] compress(byte[] data) {
-        TimeMetric timeMetric = metricFactory.timer(BLOB_ZSTD_COMPRESS_LATENCY_METRIC_NAME);
+        TimeMetric timeMetric = metricRecorder.startCompressionLatencyTimer();
         try {
             return Zstd.compress(data);
         } finally {
@@ -356,7 +372,7 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
     }
 
     private long compress(InputStream inputStream, FileBackedOutputStream compressedContent) throws IOException {
-        TimeMetric timeMetric = metricFactory.timer(BLOB_ZSTD_COMPRESS_LATENCY_METRIC_NAME);
+        TimeMetric timeMetric = metricRecorder.startCompressionLatencyTimer();
 
         try (CountingOutputStream countingOutputStream = new CountingOutputStream(compressedContent);
              ZstdOutputStream zstdOutputStream = new ZstdOutputStream(countingOutputStream)) {
@@ -369,7 +385,7 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
     }
 
     private long compress(ByteSource byteSource, FileBackedOutputStream compressedContent) throws IOException {
-        TimeMetric timeMetric = metricFactory.timer(BLOB_ZSTD_COMPRESS_LATENCY_METRIC_NAME);
+        TimeMetric timeMetric = metricRecorder.startCompressionLatencyTimer();
 
         try (CountingOutputStream countingOutputStream = new CountingOutputStream(compressedContent);
              ZstdOutputStream zstdOutputStream = new ZstdOutputStream(countingOutputStream)) {
@@ -391,13 +407,6 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
             && compressionConfiguration.minRatio() > 0; // minRatio == 0 means decompress-only mode: never compress on save
     }
 
-    private void recordThresholdSkipIfNeeded(long originalSize) {
-        if (compressionEnabled()
-            && originalSize < compressionConfiguration.threshold()) {
-            thresholdSkipCount.increment();
-        }
-    }
-
     private CompressionDecision compressionDecision(long originalSize, long compressedSize) {
         return new CompressionDecision(originalSize, compressedSize);
     }
@@ -416,12 +425,16 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
         return byteSource.size();
     }
 
-    private BlobMetadata sanitizeMetadata(BlobMetadata metadata) {
-        return new BlobMetadata(metadata.underlyingMap()
-            .entrySet()
+    private void validateMetadata(BlobMetadata metadata) {
+        Set<BlobMetadataName> reservedNames = metadata.underlyingMap()
+            .keySet()
             .stream()
-            .filter(entry -> !RESERVED_METADATA_NAMES.contains(entry.getKey()))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+            .filter(RESERVED_METADATA_NAMES::contains)
+            .collect(Collectors.toSet());
+
+        if (!reservedNames.isEmpty()) {
+            throw new IllegalArgumentException("Reserved zstd metadata are not allowed: " + reservedNames);
+        }
     }
 
     private BlobMetadata withCompressionMetadata(BlobMetadata metadata, long originalSize) {

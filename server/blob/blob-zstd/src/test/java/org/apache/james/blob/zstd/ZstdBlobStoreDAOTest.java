@@ -26,8 +26,10 @@ import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
 import static org.apache.james.blob.objectstorage.aws.JamesS3MetricPublisher.DEFAULT_S3_METRICS_PREFIX;
 import static org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration.UPLOAD_RETRY_EXCEPTION_PREDICATE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -59,6 +61,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -326,12 +330,12 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
         BlobStoreDAO.BytesBlob storedBlob = Mono.from(underlying.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
 
         assertSoftly(softly -> {
-            softly.assertThat(metricFactory.countFor(ZstdBlobStoreDAO.BLOB_ZSTD_COMPRESS_SAVE_COUNT_METRIC_NAME)).isEqualTo(1);
-            softly.assertThat(metricFactory.countFor(ZstdBlobStoreDAO.BLOB_ZSTD_DECOMPRESS_COUNT_METRIC_NAME)).isEqualTo(1);
-            softly.assertThat(metricFactory.countFor(ZstdBlobStoreDAO.BLOB_ZSTD_SAVED_BYTES_METRIC_NAME))
+            softly.assertThat(metricFactory.countFor(ZstdBlobStoreDAO.MetricRecorder.BLOB_ZSTD_COMPRESS_SAVE_COUNT_METRIC_NAME)).isEqualTo(1);
+            softly.assertThat(metricFactory.countFor(ZstdBlobStoreDAO.MetricRecorder.BLOB_ZSTD_DECOMPRESS_COUNT_METRIC_NAME)).isEqualTo(1);
+            softly.assertThat(metricFactory.countFor(ZstdBlobStoreDAO.MetricRecorder.BLOB_ZSTD_SAVED_BYTES_METRIC_NAME))
                 .isEqualTo(ELEVEN_KILOBYTES.payload().length - storedBlob.payload().length);
-            softly.assertThat(metricFactory.executionTimesFor(ZstdBlobStoreDAO.BLOB_ZSTD_COMPRESS_LATENCY_METRIC_NAME)).hasSize(1);
-            softly.assertThat(metricFactory.executionTimesFor(ZstdBlobStoreDAO.BLOB_ZSTD_DECOMPRESS_LATENCY_METRIC_NAME)).hasSize(1);
+            softly.assertThat(metricFactory.executionTimesFor(ZstdBlobStoreDAO.MetricRecorder.BLOB_ZSTD_COMPRESS_LATENCY_METRIC_NAME)).hasSize(1);
+            softly.assertThat(metricFactory.executionTimesFor(ZstdBlobStoreDAO.MetricRecorder.BLOB_ZSTD_DECOMPRESS_LATENCY_METRIC_NAME)).hasSize(1);
         });
     }
 
@@ -339,8 +343,16 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
     void shouldRecordThresholdSkipMetricIfThresholdNotMatch() {
         Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
 
-        assertThat(metricFactory.countFor(ZstdBlobStoreDAO.BLOB_ZSTD_THRESHOLD_SKIP_COUNT_METRIC_NAME))
+        assertThat(metricFactory.countFor(ZstdBlobStoreDAO.MetricRecorder.BLOB_ZSTD_THRESHOLD_SKIP_COUNT_METRIC_NAME))
             .isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @MethodSource("blobsWithReservedCompressionMetadata")
+    void saveShouldRejectReservedCompressionMetadata(BlobStoreDAO.Blob blob) {
+        assertThatThrownBy(() -> Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, blob)).block())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Reserved zstd metadata are not allowed");
     }
 
     @ParameterizedTest
@@ -420,6 +432,16 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
             Arguments.of("zstd/james-logo.jpg"),
             Arguments.of("zstd/mail1.eml"),
             Arguments.of("zstd/document.pdf"));
+    }
+
+    private static Stream<Arguments> blobsWithReservedCompressionMetadata() {
+        BlobStoreDAO.BlobMetadata reservedMetadata = BlobStoreDAO.BlobMetadata.empty()
+            .withMetadata(BlobStoreDAO.ContentTransferEncoding.NAME, BlobStoreDAO.ContentTransferEncoding.ZSTD.asValue());
+
+        return Stream.of(
+            Arguments.of(BlobStoreDAO.BytesBlob.of(ELEVEN_KILOBYTES.payload(), reservedMetadata)),
+            Arguments.of(BlobStoreDAO.InputStreamBlob.of(new ByteArrayInputStream(ELEVEN_KILOBYTES.payload()), reservedMetadata)),
+            Arguments.of(BlobStoreDAO.ByteSourceBlob.of(ByteSource.wrap(ELEVEN_KILOBYTES.payload()), reservedMetadata)));
     }
 
     private byte[] readResource(String resourcePath) throws IOException {
