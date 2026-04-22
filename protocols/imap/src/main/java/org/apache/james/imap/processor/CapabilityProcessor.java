@@ -26,6 +26,7 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_LITERAL_PLUS;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_OBJECTID;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_RFC3348;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_SAVEDATE;
+import static org.apache.james.imap.api.ImapConstants.SUPPORTS_UTF8_ACCEPT;
 import static org.apache.james.mailbox.MailboxManager.MessageCapabilities.UniqueID;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import java.util.Set;
 import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.ImapConfiguration;
+import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -49,7 +51,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
-public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequest> implements CapabilityImplementingProcessor {
+public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequest> implements CapabilityImplementingProcessor, PermitEnableCapabilityProcessor {
 
     private static final List<Capability> CAPS = ImmutableList.of(
         BASIC_CAPABILITIES,
@@ -58,7 +60,12 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
         SUPPORTS_I18NLEVEL_1,
         SUPPORTS_CONDSTORE,
         SUPPORTS_OBJECTID,
+        SUPPORTS_UTF8_ACCEPT,
         SUPPORTS_SAVEDATE);
+
+    // QRESYNC and CONDSTORE are also enableable, but handled by AbstractSelectionProcessor
+    // (which emits a HIGHESTMODSEQ response on enable), so they don't belong here.
+    private static final List<Capability> ENABLEABLE_CAPS = ImmutableList.of(SUPPORTS_UTF8_ACCEPT);
 
     private final List<CapabilityImplementingProcessor> capabilities = new ArrayList<>();
     private final Set<Capability> disabledCaps = new HashSet<>();
@@ -105,6 +112,16 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     @Override
     public List<Capability> getImplementedCapabilities(ImapSession session) {
         return CAPS;
+    }
+
+    @Override
+    public List<Capability> getPermitEnableCapabilities(ImapSession session) {
+        return ENABLEABLE_CAPS;
+    }
+
+    @Override
+    public Mono<Void> enable(ImapMessage message, Responder responder, ImapSession session, Capability capability) {
+        return Mono.empty();
     }
     
     /**
