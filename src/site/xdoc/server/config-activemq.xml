@@ -40,7 +40,7 @@
       </p>
       <dl>
         <dt><strong>adjust.usage.limits</strong></dt>
-        <dd>Enable adjusting usage limits (defaults to true). You might want to turn it to false
+        <dd>Enable adjusting usage limits (defaults to false). You might want to turn it to false
           for limiting memory usage for example.</dd>
       </dl>
     </section>
