@@ -243,7 +243,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     @Override
     public ImapResponseComposer mailbox(String mailboxName) throws IOException {
         if (utf8Accept) {
-            quoteUtf8(mailboxName);
+            quote(mailboxName);
         } else {
             quote(ModifiedUtf7.encodeModifiedUTF7(mailboxName));
         }
@@ -260,19 +260,6 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
         return this;
     }
 
-    private void quoteUtf8(String message) throws IOException {
-        space();
-        buffer.write(BYTE_DQUOTE);
-        byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
-        for (byte b : bytes) {
-            if (b == BYTE_BACK_SLASH || b == BYTE_DQUOTE) {
-                buffer.write(BYTE_BACK_SLASH);
-            }
-            buffer.write(b);
-        }
-        buffer.write(BYTE_DQUOTE);
-    }
-
     @Override
     public ImapResponseComposer commandName(ImapCommand command) throws IOException {
         return message(command.getNameAsBytes());
@@ -281,19 +268,27 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     @Override
     public ImapResponseComposer quote(String message) throws IOException {
         space();
-        final int length = message.length();
-       
         buffer.write(BYTE_DQUOTE);
-        for (int i = 0; i < length; i++) {
-            char character = message.charAt(i);
-            if (character == ImapConstants.BACK_SLASH || character == DQUOTE) {
-                buffer.write(BYTE_BACK_SLASH);
+        if (utf8Accept) {
+            for (byte b : message.getBytes(StandardCharsets.UTF_8)) {
+                if (b == BYTE_BACK_SLASH || b == BYTE_DQUOTE) {
+                    buffer.write(BYTE_BACK_SLASH);
+                }
+                buffer.write(b);
             }
-            // 7-bit ASCII only
-            if (character >= 128) {
-                buffer.write(BYTE_QUESTION);
-            } else {
-                buffer.write((byte) character);
+        } else {
+            final int length = message.length();
+            for (int i = 0; i < length; i++) {
+                char character = message.charAt(i);
+                if (character == ImapConstants.BACK_SLASH || character == DQUOTE) {
+                    buffer.write(BYTE_BACK_SLASH);
+                }
+                // 7-bit ASCII only
+                if (character >= 128) {
+                    buffer.write(BYTE_QUESTION);
+                } else {
+                    buffer.write((byte) character);
+                }
             }
         }
         buffer.write(BYTE_DQUOTE);

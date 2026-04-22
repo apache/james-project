@@ -93,4 +93,15 @@ class ImapRequestLineReaderTest {
 
         assertThat(lineReader.mailbox()).isEqualTo("grå");
     }
+
+    @Test
+    void astringShouldDecodeUtf8QuotedStringByDefault() throws Exception {
+        // Many IMAP clients put UTF-8 in quoted-string arguments (e.g.
+        // SEARCH HEADER Subject "grå") without an explicit CHARSET. RFC 9051
+        // allows this, and we accept it regardless of UTF8=ACCEPT.
+        inputStream = new ByteArrayInputStream("\"grå\" ".getBytes(StandardCharsets.UTF_8));
+        lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThat(lineReader.astring()).isEqualTo("grå");
+    }
 }
