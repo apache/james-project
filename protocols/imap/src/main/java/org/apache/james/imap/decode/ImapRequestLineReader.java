@@ -20,6 +20,7 @@
 package org.apache.james.imap.decode;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -292,6 +293,7 @@ public abstract class ImapRequestLineReader {
 
     protected char nextChar; // unknown
     protected boolean nextSeen = false;
+    private boolean utf8Accept;
     private final StringBuilder stringBuilder = new StringBuilder();
 
     /**
@@ -490,12 +492,30 @@ public abstract class ImapRequestLineReader {
      * 
      */
     public String mailbox() throws DecodingException {
+        if (utf8Accept) {
+            String mailbox = astring(UTF_8);
+            if (mailbox.equalsIgnoreCase(ImapConstants.INBOX_NAME)) {
+                return ImapConstants.INBOX_NAME;
+            }
+            return mailbox;
+        }
         String mailboxUTF7 = mailboxUTF7();
         try {
             return ModifiedUtf7.decodeModifiedUTF7(mailboxUTF7);
         } catch (MalformedUtf7Exception e) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid mailbox name: not a valid modified UTF-7 value", e);
         }
+    }
+
+    /**
+     * When set, {@link #mailbox()} treats the astring as UTF-8 and does not
+     * run Modified UTF-7 decoding. Callers should set this from
+     * {@code EnableProcessor.getEnabledCapabilities(session).contains(SUPPORTS_UTF8_ACCEPT)}
+     * after the session state is known.
+     */
+    public ImapRequestLineReader setUtf8Accept(boolean utf8Accept) {
+        this.utf8Accept = utf8Accept;
+        return this;
     }
 
     /**
@@ -507,7 +527,8 @@ public abstract class ImapRequestLineReader {
      * variants of ;; INBOX (e.g. "iNbOx") MUST be interpreted as INBOX ;; not
      * as an astring.
      * 
-     * Be aware that mailbox names are encoded via a modified UTF7. For more information RFC3501
+     * Be aware that mailbox names are encoded via a modified UTF7 in unextended
+     * IMAP. For more information see RFC3501. RFC9755 changes this.
      */
     public String mailboxUTF7() throws DecodingException {
         String mailbox = astring();
