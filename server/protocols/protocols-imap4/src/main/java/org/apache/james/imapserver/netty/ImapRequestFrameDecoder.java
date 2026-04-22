@@ -39,12 +39,14 @@ import java.util.function.Consumer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.ImapRequestLineReader;
+import org.apache.james.imap.processor.EnableProcessor;
 import org.apache.james.lifecycle.api.Disposable.LeakAware;
 import org.apache.james.protocols.netty.LineHandlerAware;
 
@@ -146,6 +148,8 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         // Also check if the session was logged out if so there is not need to try to decode it. See JAMES-1341
         if (session != null && session.getState() != ImapSessionState.LOGOUT) {
             try {
+                readerAndSize.getLeft().setUtf8Accept(
+                    EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_UTF8_ACCEPT));
 
                 ImapMessage message = decoder.decode(readerAndSize.getLeft(), session);
 

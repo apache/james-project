@@ -22,6 +22,7 @@ package org.apache.james.imap.encode.base;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import jakarta.mail.Flags;
@@ -63,6 +64,8 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     private final FastByteArrayOutputStream buffer;
 
     private boolean skipNextSpace;
+
+    private boolean utf8Accept;
 
     public ImapResponseComposerImpl(ImapResponseWriter writer, int bufferSize) {
         skipNextSpace = false;
@@ -239,8 +242,35 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     
     @Override
     public ImapResponseComposer mailbox(String mailboxName) throws IOException {
-        quote(ModifiedUtf7.encodeModifiedUTF7(mailboxName));
+        if (utf8Accept) {
+            quoteUtf8(mailboxName);
+        } else {
+            quote(ModifiedUtf7.encodeModifiedUTF7(mailboxName));
+        }
         return this;
+    }
+
+    /**
+     * Per RFC 9755, when the client has ENABLEd UTF8=ACCEPT the server emits
+     * mailbox names and other strings as UTF-8 octets (not Modified UTF-7).
+     * Set this once per composer, from the session's enabled-capabilities set.
+     */
+    public ImapResponseComposerImpl setUtf8Accept(boolean utf8Accept) {
+        this.utf8Accept = utf8Accept;
+        return this;
+    }
+
+    private void quoteUtf8(String message) throws IOException {
+        space();
+        buffer.write(BYTE_DQUOTE);
+        byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
+        for (byte b : bytes) {
+            if (b == BYTE_BACK_SLASH || b == BYTE_DQUOTE) {
+                buffer.write(BYTE_BACK_SLASH);
+            }
+            buffer.write(b);
+        }
+        buffer.write(BYTE_DQUOTE);
     }
 
     @Override

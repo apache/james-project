@@ -57,4 +57,40 @@ class ImapRequestLineReaderTest {
 
         assertThatThrownBy(() -> lineReader.nextNonSpaceChar()).isInstanceOf(DecodingException.class);
     }
+
+    @Test
+    void mailboxShouldDecodeModifiedUtf7WhenUtf8AcceptNotEnabled() throws Exception {
+        // Wire form "a&--b" is the Modified UTF-7 encoding of "a&-b".
+        inputStream = new ByteArrayInputStream("\"a&--b\" ".getBytes(StandardCharsets.US_ASCII));
+        lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThat(lineReader.mailbox()).isEqualTo("a&-b");
+    }
+
+    @Test
+    void mailboxShouldDecodeUnicodeModifiedUtf7WhenUtf8AcceptNotEnabled() throws Exception {
+        // Wire form "gr&AOU-" is the Modified UTF-7 encoding of "grå".
+        inputStream = new ByteArrayInputStream("\"gr&AOU-\" ".getBytes(StandardCharsets.US_ASCII));
+        lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThat(lineReader.mailbox()).isEqualTo("grå");
+    }
+
+    @Test
+    void mailboxShouldReturnRawStringWhenUtf8AcceptEnabledAndNameContainsAmpersand() throws Exception {
+        inputStream = new ByteArrayInputStream("\"a&-b\" ".getBytes(StandardCharsets.UTF_8));
+        lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+        lineReader.setUtf8Accept(true);
+
+        assertThat(lineReader.mailbox()).isEqualTo("a&-b");
+    }
+
+    @Test
+    void mailboxShouldReturnRawUnicodeWhenUtf8AcceptEnabled() throws Exception {
+        inputStream = new ByteArrayInputStream("\"grå\" ".getBytes(StandardCharsets.UTF_8));
+        lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+        lineReader.setUtf8Accept(true);
+
+        assertThat(lineReader.mailbox()).isEqualTo("grå");
+    }
 }

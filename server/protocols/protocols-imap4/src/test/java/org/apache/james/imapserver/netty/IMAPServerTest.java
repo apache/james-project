@@ -3619,6 +3619,90 @@ class IMAPServerTest {
                 .doesNotContain("BOGUS-CAPABILITY")
                 .contains("OK ENABLE completed.");
         }
+
+        @Test
+        void listShouldEncodeMailboxNameAsModifiedUtf7WhenUtf8AcceptNotEnabled() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+            MailboxSession session = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.forUser(USER, "grå"), session);
+
+            try (SocketChannel c = SocketChannel.open(new InetSocketAddress(LOCALHOST_IP,
+                    imapServer.getListenAddresses().getFirst().getPort()))) {
+                readUtf8Bytes(c);
+                c.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+                readUtf8Until(c, s -> s.contains("a0 OK"));
+                c.write(ByteBuffer.wrap("a1 LIST \"\" \"*\"\r\n".getBytes(StandardCharsets.UTF_8)));
+                List<String> replies = readUtf8Until(c, s -> s.contains("a1 OK"));
+
+                assertThat(String.join("", replies))
+                    .contains("gr&AOU-")
+                    .doesNotContain("grå");
+            }
+        }
+
+        @Test
+        void createWithUnicodeMailboxNameShouldSucceedAfterEnableUtf8Accept() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+
+            try (SocketChannel c = SocketChannel.open(new InetSocketAddress(LOCALHOST_IP,
+                    imapServer.getListenAddresses().getFirst().getPort()))) {
+                readUtf8Bytes(c);
+                c.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+                readUtf8Until(c, s -> s.contains("a0 OK"));
+                c.write(ByteBuffer.wrap("a1 ENABLE UTF8=ACCEPT\r\n".getBytes(StandardCharsets.UTF_8)));
+                readUtf8Until(c, s -> s.contains("a1 OK"));
+                c.write(ByteBuffer.wrap("a2 CREATE \"grå\"\r\n".getBytes(StandardCharsets.UTF_8)));
+                readUtf8Until(c, s -> s.contains("a2 OK"));
+                c.write(ByteBuffer.wrap("a3 LIST \"\" \"*\"\r\n".getBytes(StandardCharsets.UTF_8)));
+                List<String> replies = readUtf8Until(c, s -> s.contains("a3 OK"));
+
+                assertThat(String.join("", replies)).contains("grå");
+            }
+        }
+
+        @Test
+        void listShouldEncodeMailboxNameAsRawUtf8WhenUtf8AcceptEnabled() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+            MailboxSession session = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.forUser(USER, "grå"), session);
+
+            try (SocketChannel c = SocketChannel.open(new InetSocketAddress(LOCALHOST_IP,
+                    imapServer.getListenAddresses().getFirst().getPort()))) {
+                readUtf8Bytes(c);
+                c.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+                readUtf8Until(c, s -> s.contains("a0 OK"));
+                c.write(ByteBuffer.wrap("a1 ENABLE UTF8=ACCEPT\r\n".getBytes(StandardCharsets.UTF_8)));
+                readUtf8Until(c, s -> s.contains("a1 OK"));
+                c.write(ByteBuffer.wrap("a2 LIST \"\" \"*\"\r\n".getBytes(StandardCharsets.UTF_8)));
+                List<String> replies = readUtf8Until(c, s -> s.contains("a2 OK"));
+
+                assertThat(String.join("", replies))
+                    .contains("grå")
+                    .doesNotContain("gr&AOU-");
+            }
+        }
+
+        private byte[] readUtf8Bytes(SocketChannel channel) throws IOException {
+            ByteBuffer buf = ByteBuffer.allocate(8192);
+            channel.read(buf);
+            buf.flip();
+            byte[] out = new byte[buf.remaining()];
+            buf.get(out);
+            return out;
+        }
+
+        private List<String> readUtf8Until(SocketChannel channel, Predicate<String> condition) throws IOException {
+            ImmutableList.Builder<String> result = ImmutableList.builder();
+            while (true) {
+                String line = new String(readUtf8Bytes(channel), StandardCharsets.UTF_8);
+                result.add(line);
+                if (condition.test(line)) {
+                    return result.build();
+                }
+            }
+        }
     }
 
 }

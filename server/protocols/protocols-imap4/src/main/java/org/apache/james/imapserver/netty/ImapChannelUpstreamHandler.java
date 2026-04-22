@@ -51,6 +51,7 @@ import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.imap.message.request.AbstractImapRequest;
 import org.apache.james.imap.message.response.ImmutableStatusResponse;
+import org.apache.james.imap.processor.EnableProcessor;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.protocols.netty.Encryption;
 import org.apache.james.util.MDCBuilder;
@@ -417,7 +418,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         }
 
         ChannelImapResponseWriter writer = new ChannelImapResponseWriter(ctx.channel(), session);
-        ImapResponseComposerImpl response = new ImapResponseComposerImpl(writer);
+        ImapResponseComposerImpl response = new ImapResponseComposerImpl(writer)
+            .setUtf8Accept(EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_UTF8_ACCEPT));
         writer.setFlushCallback(response::flush);
         ImapMessage message = (ImapMessage) msg;
 
