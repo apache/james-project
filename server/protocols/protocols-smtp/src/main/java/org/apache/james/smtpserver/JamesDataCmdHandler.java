@@ -52,8 +52,13 @@ public class JamesDataCmdHandler extends DataCmdHandler {
     protected SMTPResponse doDATA(SMTPSession session, String argument) {
         try {
             MimeMessageInputStreamSource mmiss = MimeMessageInputStreamSource.create(MailImpl.getId());
-            ExtendedSMTPSession extendedSMTPSession = (ExtendedSMTPSession) session;
-            extendedSMTPSession.setMimeMessageInputStreamSource(mmiss);
+            try {
+                ExtendedSMTPSession extendedSMTPSession = (ExtendedSMTPSession) session;
+                extendedSMTPSession.setMimeMessageInputStreamSource(mmiss);
+            } catch (Exception e) {
+                mmiss.dispose();
+                throw e;
+            }
         } catch (Exception e) {
             LOGGER.warn("Error creating mimemessagesource for incoming data", e);
             return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, "Unexpected error preparing to receive DATA.");
