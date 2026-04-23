@@ -158,11 +158,16 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                     saved = true;
                 } else {
                     MimeMessageInputStreamSource src = MimeMessageInputStreamSource.create("MailCopy-" + UUID.randomUUID().toString());
-                    OutputStream out = src.getWritableOutputStream();
-                    original.writeTo(out);
-                    out.close();
-                    source = src;
-                    saved = true;
+                    try {
+                        OutputStream out = src.getWritableOutputStream();
+                        original.writeTo(out);
+                        out.close();
+                        source = src;
+                        saved = true;
+                    } catch (IOException ex) {
+                        src.dispose();
+                        throw ex;
+                    }
                 }
 
             } catch (IOException ex) {
