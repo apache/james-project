@@ -48,22 +48,20 @@ public class DeletedWithRangeSearchOverride implements ListeningMessageSearchInd
         return searchQuery.getCriteria().size() == 2
             && searchQuery.getCriteria().contains(SearchQuery.flagIsSet(Flags.Flag.DELETED))
             && searchQuery.getCriteria().stream()
-                .anyMatch(criterion -> criterion instanceof SearchQuery.UidCriterion)
+                .anyMatch(criterion -> criterion instanceof SearchQuery.UidCriterion
+                    || criterion instanceof SearchQuery.AllCriterion)
             && searchQuery.getSorts().equals(SearchQuery.DEFAULT_SORTS);
     }
 
     @Override
     public Flux<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) {
-        SearchQuery.UidCriterion uidArgument = searchQuery.getCriteria().stream()
+        return searchQuery.getCriteria().stream()
             .filter(criterion -> criterion instanceof SearchQuery.UidCriterion)
             .map(SearchQuery.UidCriterion.class::cast)
             .findAny()
-            .orElseThrow(() -> new RuntimeException("Missing Uid argument"));
-
-        SearchQuery.UidRange[] uidRanges = uidArgument.getOperator().getRange();
-
-        return Flux.fromIterable(ImmutableList.copyOf(uidRanges))
-            .concatMap(range -> dao.retrieveDeletedMessage((CassandraId) mailbox.getMailboxId(),
-                MessageRange.range(range.getLowValue(), range.getHighValue())));
+            .map(uidCriterion -> Flux.fromIterable(ImmutableList.copyOf(uidCriterion.getOperator().getRange()))
+                .concatMap(range -> dao.retrieveDeletedMessage((CassandraId) mailbox.getMailboxId(),
+                    MessageRange.range(range.getLowValue(), range.getHighValue()))))
+            .orElseGet(() -> dao.retrieveDeletedMessage((CassandraId) mailbox.getMailboxId(), MessageRange.all()));
     }
 }
