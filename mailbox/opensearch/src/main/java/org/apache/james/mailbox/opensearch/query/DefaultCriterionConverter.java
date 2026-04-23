@@ -50,6 +50,8 @@ import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
 import org.opensearch.client.opensearch._types.query_dsl.SimpleQueryStringQuery;
 import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
+import org.opensearch.client.opensearch._types.query_dsl.TermsQuery;
+import org.opensearch.client.opensearch._types.query_dsl.TermsQueryField;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
@@ -518,10 +520,29 @@ public class DefaultCriterionConverter implements CriterionConverter {
         if (uidCriterion.getOperator().getRange().length == 0) {
             return new BoolQuery.Builder().build().toQuery();
         }
+        SearchQuery.UidRange[] ranges = uidCriterion.getOperator().getRange();
+
+        ImmutableList<FieldValue> singleUids = Arrays.stream(ranges)
+            .filter(r -> r.getLowValue().equals(r.getHighValue()))
+            .map(r -> new FieldValue.Builder().longValue(r.getLowValue().asLong()).build())
+            .collect(ImmutableList.toImmutableList());
+
+        Stream<Query> rangeQueries = Arrays.stream(ranges)
+            .filter(r -> !r.getLowValue().equals(r.getHighValue()))
+            .map(this::uidRangeFilter);
+
+        Stream<Query> termsQuery = singleUids.isEmpty() ? Stream.empty() :
+            Stream.of(new TermsQuery.Builder()
+                .field(JsonMessageConstants.UID)
+                .terms(new TermsQueryField.Builder()
+                    .value(singleUids)
+                    .build())
+                .build()
+                .toQuery());
+
         return new BoolQuery.Builder()
             .filter(convertToBoolQuery(
-                Arrays.stream(uidCriterion.getOperator().getRange())
-                    .map(this::uidRangeFilter), BoolQuery.Builder::should))
+                Stream.concat(rangeQueries, termsQuery), BoolQuery.Builder::should))
             .build()
             .toQuery();
     }

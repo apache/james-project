@@ -821,6 +821,32 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .isEqualTo(expectedCountResult));
     }
 
+    @Test
+    void uidSearchShouldSupportMoreThan1024IndividualUids() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "largeUidMailbox");
+        MailboxId mailboxId = storeMailboxManager.createMailbox(mailboxPath, session).get();
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxId, session);
+
+        int messageCount = 1100;
+        ImmutableList.Builder<MessageUid> uidBuilder = ImmutableList.builder();
+        for (int i = 0; i < messageCount; i++) {
+            ComposedMessageId id = messageManager.appendMessage(
+                MessageManager.AppendCommand.from(
+                    Message.Builder.of().setBody("message " + i, StandardCharsets.UTF_8)), session).getId();
+            uidBuilder.add(id.getUid());
+        }
+        List<MessageUid> appendedUids = uidBuilder.build();
+
+        awaitMessageCount(List.of(mailboxId), SearchQuery.matchAll(), messageCount);
+
+        SearchQuery.UidRange[] ranges = appendedUids.stream()
+            .map(uid -> new SearchQuery.UidRange(uid, uid))
+            .toArray(SearchQuery.UidRange[]::new);
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.uid(ranges)), session)).toStream())
+            .hasSize(messageCount);
+    }
+
     @Override
     protected boolean supportsCollapseThreads() {
         return true;
