@@ -73,6 +73,27 @@ class FinalRecipientTest {
     }
 
     @Test
+    void typeShouldDefaultToUtf8WhenAddressContainsNonAscii() {
+        // RFC 6533 §3.1: use the utf-8 addr-type when the address contains UTF-8
+        Text address = Text.fromRawText("arnt@grå.org");
+
+        assertThat(FinalRecipient.builder()
+                .finalRecipient(address)
+                .build()
+                .getAddressType())
+            .isEqualTo(AddressType.UTF_8);
+    }
+
+    @Test
+    void formattedValueShouldDisplayUtf8TypeForNonAsciiAddress() {
+        assertThat(FinalRecipient.builder()
+                .finalRecipient(Text.fromRawText("arnt@grå.org"))
+                .build()
+                .formattedValue())
+            .isEqualTo("Final-Recipient: utf-8; arnt@grå.org");
+    }
+
+    @Test
     void formattedValueShouldDisplayAddress() {
         assertThat(FinalRecipient.builder()
                 .finalRecipient(Text.fromRawText("Plop"))

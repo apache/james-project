@@ -521,4 +521,86 @@ class MDNTest {
     private String asString(Message message) throws Exception {
         return new String(DefaultMessageWriter.asBytes(message), StandardCharsets.UTF_8);
     }
+
+    // RFC 6533 section
+
+    @Test
+    void asMime4JMessageShouldUseLegacyContentTypeWhenRecipientsAreAscii() throws Exception {
+        MDN mdn = MDN.builder()
+            .humanReadableText("human")
+            .report(MINIMAL_REPORT)
+            .build();
+
+        assertThat(asString(mdn.asMime4JMessageBuilder().build()))
+            .contains("Content-Type: message/disposition-notification")
+            .doesNotContain("message/global-disposition-notification");
+    }
+
+    @Test
+    void asMime4JMessageShouldUseGlobalContentTypeWhenFinalRecipientIsUtf8() throws Exception {
+        MDNReport report = MDNReport.builder()
+            .finalRecipientField(FinalRecipient.builder()
+                .finalRecipient(Text.fromRawText("user@grå.org"))
+                .build())
+            .dispositionField(Disposition.builder()
+                .actionMode(DispositionActionMode.Automatic)
+                .sendingMode(DispositionSendingMode.Automatic)
+                .type(DispositionType.Deleted)
+                .build())
+            .build();
+        MDN mdn = MDN.builder()
+            .humanReadableText("human")
+            .report(report)
+            .build();
+
+        assertThat(asString(mdn.asMime4JMessageBuilder().build()))
+            .contains("Content-Type: message/global-disposition-notification");
+    }
+
+    @Test
+    void parseShouldAcceptGlobalDispositionNotificationContentType() throws Exception {
+        MDNReport parsed = parseReportWithContentType(
+            "Final-Recipient: utf-8; user@grå.org\r\n" +
+                "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n",
+            "message/global-disposition-notification");
+
+        assertThat(parsed.getFinalRecipientField().getFinalRecipient())
+            .isEqualTo(Text.fromRawText("user@grå.org"));
+        assertThat(parsed.getFinalRecipientField().getAddressType())
+            .isEqualTo(AddressType.UTF_8);
+    }
+
+    @Test
+    void parsedReportShouldBeIndistinguishableAcrossFormatsForAsciiAddress() throws Exception {
+        // Same recipient, both addr-types — parsed reports should be equal on the
+        // fields callers actually care about (recipient + disposition).
+        MDNReport legacy = parseReportWithContentType(
+            "Final-Recipient: rfc822; user@example.com\r\n" +
+                "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n",
+            "message/disposition-notification");
+        MDNReport global = parseReportWithContentType(
+            "Final-Recipient: rfc822; user@example.com\r\n" +
+                "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n",
+            "message/global-disposition-notification");
+
+        assertThat(legacy.getFinalRecipientField().getFinalRecipient())
+            .isEqualTo(global.getFinalRecipientField().getFinalRecipient());
+        assertThat(legacy.getDispositionField())
+            .isEqualTo(global.getDispositionField());
+    }
+
+    private MDNReport parseReportWithContentType(String body, String contentType) throws Exception {
+        BodyPart mdnBodyPart = BodyPartBuilder
+            .create()
+            .setBody(SingleBodyBuilder.create().setText(body).buildText())
+            .setContentType(contentType)
+            .build();
+        Message message = Message.Builder.of()
+            .setBody(MultipartBuilder.create("report")
+                .addTextPart("first", StandardCharsets.UTF_8)
+                .addBodyPart(mdnBodyPart)
+                .build())
+            .build();
+        return MDN.parse(message).getReport();
+    }
 }

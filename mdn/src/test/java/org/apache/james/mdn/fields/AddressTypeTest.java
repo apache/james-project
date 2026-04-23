@@ -86,4 +86,21 @@ class AddressTypeTest {
         assertThat(addressType.getType())
             .isEqualTo("ab");
     }
+
+    @Test
+    void utf8ConstantShouldHoldRfc6533Value() {
+        assertThat(AddressType.UTF_8.getType()).isEqualTo("utf-8");
+    }
+
+    @Test
+    void pickForShouldReturnRfc822ForAsciiAddress() {
+        assertThat(AddressType.pickFor(Text.fromRawText("user@example.com")))
+            .isEqualTo(AddressType.RFC_822);
+    }
+
+    @Test
+    void pickForShouldReturnUtf8ForNonAsciiAddress() {
+        assertThat(AddressType.pickFor(Text.fromRawText("user@grå.org")))
+            .isEqualTo(AddressType.UTF_8);
+    }
 }

@@ -1496,4 +1496,88 @@ public class DSNBounceTest {
         assertThat(MimeMessageUtil.asString(sentMessage))
             .contains("Auto-Submitted: auto-replied");
     }
+
+    @Nested
+    class Rfc6533 {
+        @Test
+        void dsnForAsciiRecipientShouldUseRfc822AddrTypeAndLegacyContentType() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(new MailAddress("sender@example.com"))
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().setText("body"))
+                .recipient("info@example.com")
+                .lastUpdated(Date.from(Instant.parse("2026-04-27T10:00:00.000Z")))
+                .remoteAddr("remoteHost")
+                .build();
+
+            dsnBounce.service(mail);
+
+            BodyPart dsnPart = (BodyPart) ((MimeMultipart) fakeMailContext.getSentMails()
+                .get(0).getMsg().getContent()).getBodyPart(1);
+            assertThat(dsnPart.getContentType()).startsWith("message/delivery-status");
+            String body = IOUtils.toString((SharedByteArrayInputStream) dsnPart.getContent(), StandardCharsets.UTF_8);
+            assertThat(body).contains("Final-Recipient: rfc822; info@example.com");
+        }
+
+        @Test
+        void dsnForUtf8LocalPartShouldUseUtf8AddrTypeAndGlobalContentType() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(new MailAddress("sender@example.com"))
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().setText("body"))
+                .recipient("grå@example.com")
+                .lastUpdated(Date.from(Instant.parse("2026-04-27T10:00:00.000Z")))
+                .remoteAddr("remoteHost")
+                .build();
+
+            dsnBounce.service(mail);
+
+            BodyPart dsnPart = (BodyPart) ((MimeMultipart) fakeMailContext.getSentMails()
+                .get(0).getMsg().getContent()).getBodyPart(1);
+            assertThat(dsnPart.getContentType()).startsWith("message/global-delivery-status");
+            String body = IOUtils.toString((SharedByteArrayInputStream) dsnPart.getContent(), StandardCharsets.UTF_8);
+            assertThat(body).contains("Final-Recipient: utf-8; grå@example.com");
+        }
+
+        @Test
+        void dsnForUtf8DomainOnlyShouldUseUtf8AddrTypeAndGlobalContentType() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(new MailAddress("sender@example.com"))
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().setText("body"))
+                .recipient("arnt@grå.org")
+                .lastUpdated(Date.from(Instant.parse("2026-04-27T10:00:00.000Z")))
+                .remoteAddr("remoteHost")
+                .build();
+
+            dsnBounce.service(mail);
+
+            BodyPart dsnPart = (BodyPart) ((MimeMultipart) fakeMailContext.getSentMails()
+                .get(0).getMsg().getContent()).getBodyPart(1);
+            assertThat(dsnPart.getContentType()).startsWith("message/global-delivery-status");
+            String body = IOUtils.toString((SharedByteArrayInputStream) dsnPart.getContent(), StandardCharsets.UTF_8);
+            assertThat(body).contains("Final-Recipient: utf-8; arnt@grå.org");
+        }
+    }
 }
