@@ -44,7 +44,7 @@ class LeakAwareTest {
     private static final class LeakResourceSample extends LeakAware<LeakResourceSample.TestResource> {
         static class TestResource extends LeakAware.Resource {
             public TestResource(Disposable cleanup) {
-                super(cleanup);
+                super("LeakAwareTest.TestResource", cleanup);
             }
         }
 

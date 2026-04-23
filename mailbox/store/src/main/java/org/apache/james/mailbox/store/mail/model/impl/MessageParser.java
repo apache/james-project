@@ -36,7 +36,7 @@ public interface MessageParser {
             private final List<ParsedAttachment> attachments;
 
             Resource(List<ParsedAttachment> attachments, Disposable cleanup) {
-                super(cleanup);
+                super("MessageParser.ParsingResult", cleanup);
                 this.attachments = attachments;
             }
         }

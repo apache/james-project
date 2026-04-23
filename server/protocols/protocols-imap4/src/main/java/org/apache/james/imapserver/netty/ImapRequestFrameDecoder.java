@@ -329,7 +329,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         private final File file;
 
         private FileHolderInner(File file) {
-            super(() -> FileUtils.deleteQuietly(file));
+            super("ImapRequestFrameDecoder.FileHolder", () -> FileUtils.deleteQuietly(file));
             this.file = file;
         }
 

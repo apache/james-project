@@ -46,8 +46,10 @@ public interface Disposable {
         public static class Resource implements Disposable {
             private final AtomicBoolean isDisposed = new AtomicBoolean(false);
             private final Disposable cleanup;
+            private final String name;
 
-            public Resource(Disposable cleanup) {
+            public Resource(String name, Disposable cleanup) {
+                this.name = name;
                 this.cleanup = cleanup;
             }
 
@@ -169,6 +171,10 @@ public interface Disposable {
             }
         }
 
+        private String resourceName() {
+            return resource.name + "@" + Integer.toHexString(System.identityHashCode(resource));
+        }
+
         public void detectLeak() {
             switch (LeakAware.LEVEL) {
                 case NONE: // nothing
@@ -194,11 +200,11 @@ public interface Disposable {
         public void errorLog() {
             if (LeakAware.tracedEnabled()) {
                 LOGGER.error("Leak detected! Resource {} was not released before its referent was garbage-collected. \n" +
-                    "This resource was instanced at: \n{}", resource, traceRecord.toString());
+                    "This resource was instanced at: \n{}", resourceName(), traceRecord.toString());
             } else {
                 LOGGER.error("Leak detected! Resource {} was not released before its referent was garbage-collected. \n" +
                     "Resource management needs to be reviewed: ensure to always call dispose() for disposable objects you work with. \n" +
-                    "Consider enabling advanced leak detection to further identify the problem.", resource);
+                    "Consider enabling advanced leak detection to further identify the problem.", resourceName());
             }
         }
 
