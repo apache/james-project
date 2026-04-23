@@ -34,9 +34,12 @@
     <bean id="embeddedActiveMQ" class="org.apache.james.queue.activemq.EmbeddedActiveMQ">
         <constructor-arg index="0" ref="filesystem"/>
         <constructor-arg index="1" ref="persistenceAdapter"/>
+        <constructor-arg index="2" ref="configuration"/>
     </bean>
 
     <bean id="persistenceAdapter" class="org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter"/>
 
     <bean id="activeMQMetricCollector" class="org.apache.james.queue.activemq.metric.ActiveMQMetricCollectorNoop"/>
+
+    <bean id="configuration" class="org.apache.james.queue.activemq.ActiveMQConfiguration" factory-method="getDefault"/>
 </beans>
