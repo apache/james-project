@@ -57,7 +57,7 @@ public class FinalRecipient implements Field {
         public FinalRecipient build() {
             Preconditions.checkNotNull(finalRecipient);
 
-            return new FinalRecipient(addressType.orElse(AddressType.RFC_822), finalRecipient);
+            return new FinalRecipient(addressType.orElseGet(() -> AddressType.pickFor(finalRecipient)), finalRecipient);
         }
     }
 
