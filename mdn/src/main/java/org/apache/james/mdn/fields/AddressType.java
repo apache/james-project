@@ -26,7 +26,22 @@ import com.google.common.base.Preconditions;
 public class AddressType {
     public static final AddressType DNS = new AddressType("dns");
     public static final AddressType RFC_822 = new AddressType("rfc822");
+    public static final AddressType UTF_8 = new AddressType("utf-8");
     public static final AddressType UNKNOWN = new AddressType("unknown");
+
+    /**
+     * Picks the appropriate addr-type per RFC 6533: {@link #UTF_8} when the
+     * address contains non-ASCII octets, otherwise {@link #RFC_822}.
+     */
+    public static AddressType pickFor(Text text) {
+        String value = text.formatted();
+        for (int i = 0; i < value.length(); i++) {
+            if (value.charAt(i) > 0x7F) {
+                return UTF_8;
+            }
+        }
+        return RFC_822;
+    }
 
     private final String type;
 

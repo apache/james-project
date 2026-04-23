@@ -476,6 +476,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
 
     private MimeBodyPart createDSN(Mail originalMail) throws MessagingException {
         StringBuilder buffer = new StringBuilder();
+        boolean anyNonAsciiAddress = false;
 
         appendReportingMTA(buffer);
         buffer.append("Received-From-MTA: dns; " + originalMail.getRemoteHost())
@@ -496,12 +497,22 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
                 .append(LINE_BREAK));
 
         for (MailAddress rec : originalMail.getRecipients()) {
+            anyNonAsciiAddress |= containsNonAscii(rec);
             appendRecipient(buffer, rec, getDeliveryError(originalMail), originalMail.getLastUpdated());
         }
 
         MimeBodyPart bodyPart = new MimeBodyPart();
-        bodyPart.setContent(buffer.toString(), "text/plain");
-        bodyPart.setHeader("Content-Type", "message/delivery-status");
+        // RFC 6533 §3.2: when any reported address contains non-ASCII
+        // octets the DSN body part is "message/global-delivery-status";
+        // otherwise the RFC 3464 form. The outer "multipart/report;
+        // report-type=delivery-status" wrapper does not change. Setting
+        // the storage Content-Type with charset=UTF-8 first makes
+        // jakarta.mail serialise the body as UTF-8 octets; the second
+        // setHeader overrides only the type label.
+        bodyPart.setContent(buffer.toString(), "text/plain; charset=UTF-8");
+        bodyPart.setHeader("Content-Type", anyNonAsciiAddress
+            ? "message/global-delivery-status; charset=UTF-8"
+            : "message/delivery-status");
         bodyPart.setDescription("Delivery Status Notification");
         bodyPart.setFileName("status.dat");
         return bodyPart;
@@ -518,7 +529,10 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
 
     private void appendRecipient(StringBuilder buffer, MailAddress mailAddress, String deliveryError, Date lastUpdated) {
         buffer.append(LINE_BREAK);
-        buffer.append("Final-Recipient: rfc822; " + mailAddress.toString()).append(LINE_BREAK);
+        // RFC 6533 §3.2: addr-type is "utf-8" when the address contains
+        // non-ASCII octets, otherwise the legacy "rfc822".
+        buffer.append("Final-Recipient: ").append(addrType(mailAddress)).append("; ")
+            .append(mailAddress.toString()).append(LINE_BREAK);
         buffer.append("Action: ").append(action.asString().toLowerCase(Locale.US)).append(LINE_BREAK);
         buffer.append("Status: " + deliveryError).append(LINE_BREAK);
         if (action.shouldIncludeDiagnostic()) {
@@ -526,6 +540,20 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         }
         buffer.append("Last-Attempt-Date: " + dateFormatter.format(ZonedDateTime.ofInstant(lastUpdated.toInstant(), ZoneId.systemDefault())))
             .append(LINE_BREAK);
+    }
+
+    private static String addrType(MailAddress mailAddress) {
+        return containsNonAscii(mailAddress) ? "utf-8" : "rfc822";
+    }
+
+    private static boolean containsNonAscii(MailAddress mailAddress) {
+        String s = mailAddress.toString();
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) > 0x7F) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getDeliveryError(Mail originalMail) {

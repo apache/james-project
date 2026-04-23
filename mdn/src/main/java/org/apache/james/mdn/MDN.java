@@ -38,6 +38,7 @@ import jakarta.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.javax.MimeMultipartReport;
+import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
@@ -59,8 +60,14 @@ public class MDN {
     private static final NameValuePair UTF_8_CHARSET = new NameValuePair("charset", Charsets.UTF_8.name());
 
     public static final String DISPOSITION_CONTENT_TYPE = "message/disposition-notification";
+    public static final String GLOBAL_DISPOSITION_CONTENT_TYPE = "message/global-disposition-notification";
     public static final String REPORT_SUB_TYPE = "report";
     public static final String DISPOSITION_NOTIFICATION_REPORT_TYPE = "disposition-notification";
+
+    private static boolean isDispositionNotificationType(String mimeType) {
+        return mimeType.equals(DISPOSITION_CONTENT_TYPE)
+            || mimeType.equals(GLOBAL_DISPOSITION_CONTENT_TYPE);
+    }
 
     public static class Builder {
         private String humanReadableText;
@@ -170,7 +177,7 @@ public class MDN {
 
     public static Optional<MDNReport> extractMDNReport(List<Entity> entities) {
         return entities.stream()
-            .filter(entity -> entity.getMimeType().startsWith(DISPOSITION_CONTENT_TYPE))
+            .filter(entity -> isDispositionNotificationType(entity.getMimeType()))
             .findAny()
             .flatMap(entity -> {
                 try (InputStream inputStream = ((SingleBody) entity.getBody()).getInputStream()) {
@@ -187,7 +194,7 @@ public class MDN {
     }
 
     public boolean isReport(Entity entity) {
-        return entity.getMimeType().startsWith(DISPOSITION_CONTENT_TYPE);
+        return isDispositionNotificationType(entity.getMimeType());
     }
 
     private final String humanReadableText;
@@ -245,8 +252,24 @@ public class MDN {
 
     public BodyPart computeReportPart() throws MessagingException {
         MimeBodyPart mdnPart = new MimeBodyPart();
-        mdnPart.setContent(report.formattedValue(), DISPOSITION_CONTENT_TYPE);
+        mdnPart.setContent(report.formattedValue(), dispositionContentType());
         return mdnPart;
+    }
+
+    /**
+     * Per RFC 6533, emits {@code message/global-disposition-notification} when
+     * any recipient in the report uses the {@code utf-8} addr-type, otherwise
+     * the RFC 3798 form {@code message/disposition-notification}.
+     */
+    private String dispositionContentType() {
+        boolean finalIsUtf8 = report.getFinalRecipientField().getAddressType()
+            .equals(AddressType.UTF_8);
+        boolean originalIsUtf8 = report.getOriginalRecipientField()
+            .map(r -> r.getAddressType().equals(AddressType.UTF_8))
+            .orElse(false);
+        return finalIsUtf8 || originalIsUtf8
+            ? GLOBAL_DISPOSITION_CONTENT_TYPE
+            : DISPOSITION_CONTENT_TYPE;
     }
 
     public BodyPart computeOriginalMessagePart(Message message) throws MessagingException {
@@ -276,7 +299,7 @@ public class MDN {
         builder.addBodyPart(BodyPartBuilder.create()
             .use(new BasicBodyFactory())
             .setBody(report.formattedValue(), Charsets.UTF_8)
-            .setContentType(DISPOSITION_CONTENT_TYPE, UTF_8_CHARSET));
+            .setContentType(dispositionContentType(), UTF_8_CHARSET));
 
         return builder.build();
     }
