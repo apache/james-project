@@ -164,7 +164,7 @@ public class BlobStoreConfiguration {
     static final String ENCRYPTION_ENABLE_PROPERTY = "encryption.aes.enable";
     static final String ENCRYPTION_PASSWORD_PROPERTY = "encryption.aes.password";
     static final String ENCRYPTION_SALT_PROPERTY = "encryption.aes.salt";
-    static final String COMPRESSION_ENABLE_PROPERTY = "compression.enabled";
+    static final String COMPRESSION_ENABLE_PROPERTY = "compression.enable";
     static final String COMPRESSION_THRESHOLD_PROPERTY = "compression.threshold";
     static final String COMPRESSION_MIN_RATIO_PROPERTY = "compression.min-ratio";
     static final boolean CACHE_ENABLED = true;

@@ -146,7 +146,7 @@ generate salt with : openssl rand -hex 16
                     storage costs matter.
                 </p>
                 <dl>
-                    <dt><strong>compression.enabled</strong></dt>
+                    <dt><strong>compression.enable</strong></dt>
                     <dd>Optional boolean, defaults to false.</dd>
                 </dl>
                 <dl>
