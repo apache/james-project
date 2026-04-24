@@ -176,7 +176,7 @@ class BlobStoreConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", "cassandra");
         configuration.addProperty("deduplication.enable", false);
-        configuration.addProperty("compression.enabled", true);
+        configuration.addProperty("compression.enable", true);
         configuration.addProperty("compression.threshold", "32K");
         configuration.addProperty("compression.min-ratio", 0.8F);
         FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
@@ -196,7 +196,7 @@ class BlobStoreConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", "cassandra");
         configuration.addProperty("deduplication.enable", false);
-        configuration.addProperty("compression.enabled", true);
+        configuration.addProperty("compression.enable", true);
         configuration.addProperty("compression.threshold", "32 K");
         FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
             .register(ConfigurationComponent.NAME, configuration)
