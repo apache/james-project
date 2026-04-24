@@ -72,6 +72,10 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
             DSNStatus.getStatus(DSNStatus.PERMANENT,
                     DSNStatus.ADDRESS_SYNTAX_SENDER)
                     + " Syntax error in sender address").immutable();
+    /** RFC 6531 §4.2: 553 5.6.7 when a non-ASCII sender is given without SMTPUTF8. */
+    private static final Response NON_ASCII_SENDER_WITHOUT_SMTPUTF8 = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_MAILBOX,
+            DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.CONTENT_NON_ASCII_ADDR)
+                    + " Non-ASCII addresses not permitted without SMTPUTF8").immutable();
     /**
      * A map of parameterHooks
      */
@@ -203,8 +207,14 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                 LOGGER.info("Error parsing sender address: {}: did not start and end with < >", sender);
                 return SYNTAX_ERROR;
             }
+            String senderAddressString = removeBrackets(sender);
+            if (containsNonAscii(senderAddressString)
+                    && !session.getAttachment(SMTPSession.SMTPUTF8_REQUESTED, State.Transaction).orElse(Boolean.FALSE)) {
+                LOGGER.info("Rejected non-ASCII sender address without SMTPUTF8: {}", sender);
+                return NON_ASCII_SENDER_WITHOUT_SMTPUTF8;
+            }
             try {
-                MaybeSender senderAddress = toMaybeSender(removeBrackets(sender));
+                MaybeSender senderAddress = toMaybeSender(senderAddressString);
                 // Store the senderAddress in session map
                 session.setAttachment(SMTPSession.SENDER, senderAddress, State.Transaction);
             } catch (Exception pe) {
@@ -225,6 +235,15 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
         }
         return MaybeSender.of(new MailAddress(
             appendDefaultDomainIfNeeded(senderAsString)));
+    }
+
+    private static boolean containsNonAscii(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) > 0x7F) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String removeBrackets(String input) {
