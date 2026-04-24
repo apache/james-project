@@ -25,11 +25,13 @@ import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.netty.Encryption;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 
 public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest {
-    
-    
+
+
     @Override
     protected SMTPClient createClient() {
         SMTPSClient client = new SMTPSClient(true,BogusSslContextFactory.getClientContext());
@@ -37,11 +39,27 @@ public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest {
         return client;
     }
 
-    
+
     @Override
     protected ProtocolServer createServer(Protocol protocol) {
         return createEncryptedServer(protocol, Encryption.createTls(BogusSslContextFactory.getServerContext()));
     }
-    
+
     protected abstract ProtocolServer createEncryptedServer(Protocol protocol, Encryption enc);
+
+    // The UTF-8 "accepted" tests use a raw TCP socket to control bytes on the
+    // wire. That does not speak TLS, so skip those cases under SMTPS — the plain
+    // variant covers the server-side logic. Rejection tests still work under
+    // SMTPS via the regular SMTPClient path.
+    @Override
+    @Test
+    @Disabled("Raw-socket UTF-8 test is not SSL-aware; covered by NettySMTPServerTest")
+    void mailFromWithNonAsciiSenderShouldBeAcceptedWhenSmtpUtf8IsAsserted() {
+    }
+
+    @Override
+    @Test
+    @Disabled("Raw-socket UTF-8 test is not SSL-aware; covered by NettySMTPServerTest")
+    void rcptToWithNonAsciiRecipientShouldBeAcceptedWhenSmtpUtf8IsAsserted() {
+    }
 }

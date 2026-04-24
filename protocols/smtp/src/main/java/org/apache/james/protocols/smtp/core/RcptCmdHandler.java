@@ -62,6 +62,10 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     private static final Response SYNTAX_ERROR_ARGS = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Usage: RCPT TO:<recipient>").immutable();
     private static final Response SYNTAX_ERROR_DELIVERY = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Syntax error in parameters or arguments").immutable();
     private static final Response SYNTAX_ERROR_ADDRESS = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_MAILBOX, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.ADDRESS_SYNTAX) + " Syntax error in recipient address").immutable();
+    /** RFC 6531 §4.2: 553 5.6.7 when a non-ASCII recipient is given without SMTPUTF8. */
+    private static final Response NON_ASCII_RECIPIENT_WITHOUT_SMTPUTF8 = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_MAILBOX,
+            DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.CONTENT_NON_ASCII_ADDR)
+                    + " Non-ASCII addresses not permitted without SMTPUTF8").immutable();
 
     @Inject
     public RcptCmdHandler(MetricFactory metricFactory) {
@@ -153,6 +157,12 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
                     + getDefaultDomain();
         }
 
+        if (containsNonAscii(recipient)
+                && !session.getAttachment(SMTPSession.SMTPUTF8_REQUESTED, State.Transaction).orElse(Boolean.FALSE)) {
+            LOGGER.info("Rejected non-ASCII recipient address without SMTPUTF8: {}", recipient);
+            return NON_ASCII_RECIPIENT_WITHOUT_SMTPUTF8;
+        }
+
         try {
             recipientAddress = new MailAddress(recipient);
         } catch (Exception pe) {
@@ -193,6 +203,15 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         session.setAttachment(CURRENT_RECIPIENT, recipientAddress, State.Transaction);
 
         return null;
+    }
+
+    private static boolean containsNonAscii(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) > 0x7F) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getContext(SMTPSession session, MailAddress recipientAddress, String recipient) {
