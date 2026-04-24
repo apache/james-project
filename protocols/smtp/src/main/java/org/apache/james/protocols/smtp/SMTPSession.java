@@ -46,6 +46,10 @@ public interface SMTPSession extends ProtocolSession {
     AttachmentKey<String> CURRENT_HELO_NAME = AttachmentKey.of("CURRENT_HELO_NAME", String.class);
     /** Set per-transaction when the client asserted the RFC 6531 SMTPUTF8 parameter on MAIL FROM. */
     AttachmentKey<Boolean> SMTPUTF8_REQUESTED = AttachmentKey.of("SMTPUTF8_REQUESTED", Boolean.class);
+    /** The sender address exactly as it arrived on the wire (no bracket removal, no IDN normalisation). Used for echoing back in responses. */
+    AttachmentKey<String> RAW_SENDER_STRING = AttachmentKey.of("RAW_SENDER_STRING", String.class);
+    /** The recipient currently being processed, in wire form. See {@link #RAW_SENDER_STRING}. */
+    AttachmentKey<String> RAW_CURRENT_RECIPIENT_STRING = AttachmentKey.of("RAW_CURRENT_RECIPIENT_STRING", String.class);
 
     /**
      * Returns the service wide configuration
