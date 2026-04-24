@@ -1112,6 +1112,138 @@ public abstract class AbstractSMTPServerTest {
         }
     }
 
+    @Test
+    void aceLabelDomainsShouldBeExposedToHooksAsUnicode() throws Exception {
+        // Drive a full transaction with ACE-form addresses on the wire, then
+        // inspect the envelope that TestMessageHook captured: both sender and
+        // recipient should be in U-label form (grå.org), not the ACE form the
+        // client sent.
+        TestMessageHook hook = new TestMessageHook();
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(hook));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            rawUtf8Exchange(bindedAddress,
+                "EHLO localhost\r\n",
+                "MAIL FROM:<arnt@xn--gr-zia.org>\r\n",
+                "RCPT TO:<someone@xn--gr-zia.org>\r\n",
+                "DATA\r\n",
+                MSG1 + "\r\n.\r\n",
+                "QUIT\r\n");
+
+            Iterator<MailEnvelope> queued = hook.getQueued().iterator();
+            assertThat(queued.hasNext()).isTrue();
+            MailEnvelope env = queued.next();
+            assertThat(env.getMaybeSender().asString()).isEqualTo("arnt@grå.org");
+            assertThat(env.getRecipients())
+                .extracting(MailAddress::asString)
+                .containsExactly("someone@grå.org");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
+    void mailFromWithAceLabelDomainShouldBeAcceptedWithoutSmtpUtf8() throws Exception {
+        // xn--gr-zia is the Punycode (A-label) form of "grå". The wire is pure
+        // ASCII, no SMTPUTF8 asserted. RFC 6531 §3.7.4.2 says the server
+        // response must stay ASCII in that case, so the echo preserves the
+        // ACE form the client sent — even though internally we store the
+        // U-label form (see aceLabelDomainsShouldBeExposedToHooksAsUnicode).
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String reply = rawUtf8Exchange(bindedAddress,
+                "EHLO localhost\r\n",
+                "MAIL FROM:<arnt@xn--gr-zia.org>\r\n",
+                "QUIT\r\n");
+
+            assertThat(reply).contains("250 2.1.0 Sender <arnt@xn--gr-zia.org> OK");
+            assertThat(reply).doesNotContain("grå");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
+    void rcptToWithAceLabelDomainShouldBeAcceptedWithoutSmtpUtf8() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String reply = rawUtf8Exchange(bindedAddress,
+                "EHLO localhost\r\n",
+                "MAIL FROM:<" + SENDER + ">\r\n",
+                "RCPT TO:<someone@xn--gr-zia.org>\r\n",
+                "QUIT\r\n");
+
+            assertThat(reply).contains("250 2.1.5 Recipient <someone@xn--gr-zia.org> OK");
+            assertThat(reply).doesNotContain("grå");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
+    void mailFromWithMalformedAceLabelShouldBeRejected() throws Exception {
+        // "xn--" on its own is not a valid A-label; IDN.toUnicode leaves it
+        // unchanged, which we detect and reject with a specific error.
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String reply = rawUtf8Exchange(bindedAddress,
+                "EHLO localhost\r\n",
+                "MAIL FROM:<arnt@xn--.example.com>\r\n",
+                "QUIT\r\n");
+
+            assertThat(reply).contains("501");
+            assertThat(reply).contains("Invalid A-label");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
+    void rcptToWithMalformedAceLabelShouldBeRejected() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String reply = rawUtf8Exchange(bindedAddress,
+                "EHLO localhost\r\n",
+                "MAIL FROM:<" + SENDER + ">\r\n",
+                "RCPT TO:<someone@xn--.example.com>\r\n",
+                "QUIT\r\n");
+
+            assertThat(reply).contains("501");
+            assertThat(reply).contains("Invalid A-label");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
     /**
      * Write all {@code commands} verbatim in UTF-8 and return the concatenated
      * server response as one UTF-8 decoded string. Reads until the server

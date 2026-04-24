@@ -62,4 +62,34 @@ public abstract class AbstractSMTPSServerTest extends AbstractSMTPServerTest {
     @Disabled("Raw-socket UTF-8 test is not SSL-aware; covered by NettySMTPServerTest")
     void rcptToWithNonAsciiRecipientShouldBeAcceptedWhenSmtpUtf8IsAsserted() {
     }
+
+    @Override
+    @Test
+    @Disabled("Raw-socket test is not SSL-aware; covered by NettySMTPServerTest")
+    void mailFromWithAceLabelDomainShouldBeAcceptedWithoutSmtpUtf8() {
+    }
+
+    @Override
+    @Test
+    @Disabled("Raw-socket test is not SSL-aware; covered by NettySMTPServerTest")
+    void rcptToWithAceLabelDomainShouldBeAcceptedWithoutSmtpUtf8() {
+    }
+
+    @Override
+    @Test
+    @Disabled("Raw-socket test is not SSL-aware; covered by NettySMTPServerTest")
+    void mailFromWithMalformedAceLabelShouldBeRejected() {
+    }
+
+    @Override
+    @Test
+    @Disabled("Raw-socket test is not SSL-aware; covered by NettySMTPServerTest")
+    void rcptToWithMalformedAceLabelShouldBeRejected() {
+    }
+
+    @Override
+    @Test
+    @Disabled("Raw-socket test is not SSL-aware; covered by NettySMTPServerTest")
+    void aceLabelDomainsShouldBeExposedToHooksAsUnicode() {
+    }
 }
