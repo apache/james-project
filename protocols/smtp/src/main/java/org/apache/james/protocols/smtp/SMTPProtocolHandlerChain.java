@@ -48,6 +48,7 @@ import org.apache.james.protocols.smtp.core.WelcomeMessageHandler;
 import org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler;
 import org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler;
 import org.apache.james.protocols.smtp.core.esmtp.MailSizeEsmtpExtension;
+import org.apache.james.protocols.smtp.core.esmtp.SMTPUTF8Extension;
 import org.apache.james.protocols.smtp.core.esmtp.StartTlsCmdHandler;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.Hook;
@@ -99,6 +100,7 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
         defaultHandlers.add(new VrfyCmdHandler());
         defaultHandlers.add(new DataCmdHandler(metricFactory));
         defaultHandlers.add(new MailSizeEsmtpExtension());
+        defaultHandlers.add(new SMTPUTF8Extension());
         defaultHandlers.add(new WelcomeMessageHandler());
         defaultHandlers.add(new PostmasterAbuseRcptHook());
         defaultHandlers.add(new ReceivedDataLineFilter());

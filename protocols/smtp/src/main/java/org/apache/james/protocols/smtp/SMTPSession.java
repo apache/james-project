@@ -44,6 +44,8 @@ public interface SMTPSession extends ProtocolSession {
     /** HELO or EHLO */
     AttachmentKey<String> CURRENT_HELO_MODE = AttachmentKey.of("CURRENT_HELO_MODE", String.class);
     AttachmentKey<String> CURRENT_HELO_NAME = AttachmentKey.of("CURRENT_HELO_NAME", String.class);
+    /** Set per-transaction when the client asserted the RFC 6531 SMTPUTF8 parameter on MAIL FROM. */
+    AttachmentKey<Boolean> SMTPUTF8_REQUESTED = AttachmentKey.of("SMTPUTF8_REQUESTED", Boolean.class);
 
     /**
      * Returns the service wide configuration

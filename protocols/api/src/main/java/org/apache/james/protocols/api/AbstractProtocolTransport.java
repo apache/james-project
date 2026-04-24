@@ -85,7 +85,12 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
                 builder.append(CRLF);
             }
         }
-        return builder.toString().getBytes(StandardCharsets.US_ASCII);
+        // RFC 6531 §3.7.4.2: when a server echoes a UTF-8 mailbox address back
+        // to the client, those octets are UTF-8; all other reply content stays
+        // ASCII. UTF-8 is a strict superset of ASCII, so encoding the whole
+        // reply in UTF-8 preserves ASCII-only replies byte-for-byte while
+        // allowing non-ASCII addresses to survive the echo.
+        return builder.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     /**
