@@ -66,6 +66,9 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     private static final Response NON_ASCII_RECIPIENT_WITHOUT_SMTPUTF8 = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_MAILBOX,
             DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.CONTENT_NON_ASCII_ADDR)
                     + " Non-ASCII addresses not permitted without SMTPUTF8").immutable();
+    private static final Response INVALID_IDN_RECIPIENT = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
+            DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.ADDRESS_SYNTAX)
+                    + " Invalid A-label (xn--) in recipient domain").immutable();
 
     @Inject
     public RcptCmdHandler(MetricFactory metricFactory) {
@@ -91,10 +94,14 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         rcptColl.add(recipientAddress);
         session.setAttachment(SMTPSession.RCPT_LIST, rcptColl, State.Transaction);
 
+        // Echo the recipient back in the exact form the client sent it. See
+        // the matching comment in MailCmdHandler.doMAIL — RFC 6531 §3.7.4.2.
+        String echo = session.getAttachment(SMTPSession.RAW_CURRENT_RECIPIENT_STRING, State.Transaction)
+                .orElseGet(recipientAddress::asString);
         StringBuilder response = new StringBuilder();
         String status = DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.ADDRESS_VALID);
         response.append(status)
-                .append(" Recipient <").append(recipientAddress).append("> OK");
+                .append(" Recipient <").append(echo).append("> OK");
 
         LOGGER.debug("RCPT TO {}", StringUtils.abbreviate(recipientAddress.asString(), 80));
 
@@ -157,10 +164,19 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
                     + getDefaultDomain();
         }
 
+        session.setAttachment(SMTPSession.RAW_CURRENT_RECIPIENT_STRING, recipient, State.Transaction);
+
         if (containsNonAscii(recipient)
                 && !session.getAttachment(SMTPSession.SMTPUTF8_REQUESTED, State.Transaction).orElse(Boolean.FALSE)) {
             LOGGER.info("Rejected non-ASCII recipient address without SMTPUTF8: {}", recipient);
             return NON_ASCII_RECIPIENT_WITHOUT_SMTPUTF8;
+        }
+
+        try {
+            recipient = AddressNormalization.aceLabelsToUnicode(recipient);
+        } catch (IllegalArgumentException e) {
+            LOGGER.info("Rejected recipient address with invalid A-label: {}", recipient);
+            return INVALID_IDN_RECIPIENT;
         }
 
         try {
