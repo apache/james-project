@@ -984,5 +984,180 @@ public abstract class AbstractSMTPServerTest {
         }
 
     }
-    
+
+    // RFC 6531 SMTPUTF8
+
+    @Test
+    void ehloShouldAdvertiseSmtpUtf8() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+
+            SMTPClient client = createClient();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+            client.sendCommand("EHLO", "localhost");
+
+            assertThat(client.getReplyString()).contains("SMTPUTF8");
+
+            client.quit();
+            client.disconnect();
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
+    void mailFromWithNonAsciiSenderShouldBeRejectedWhenSmtpUtf8NotAsserted() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+
+            SMTPClient client = createClient();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+            client.sendCommand("EHLO", "localhost");
+
+            client.sendCommand("MAIL", "FROM:<arnt@grå.org>");
+
+            assertThat(client.getReplyCode()).isEqualTo(553);
+            assertThat(client.getReplyString()).contains("5.6.7");
+
+            client.quit();
+            client.disconnect();
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
+    void mailFromWithNonAsciiSenderShouldBeAcceptedWhenSmtpUtf8IsAsserted() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String reply = rawUtf8Exchange(bindedAddress,
+                "EHLO localhost\r\n",
+                "MAIL FROM:<arnt@grå.org> SMTPUTF8\r\n",
+                "QUIT\r\n");
+
+            // RFC 6531 §3.7.4.2: the server echoes the UTF-8 sender address
+            // back unmodified.
+            assertThat(reply).contains("250 2.1.0 Sender <arnt@grå.org> OK");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
+    void rcptToWithNonAsciiRecipientShouldBeRejectedWhenSmtpUtf8NotAsserted() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+
+            SMTPClient client = createClient();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+            client.sendCommand("EHLO", "localhost");
+            client.sendCommand("MAIL", "FROM:<" + SENDER + ">");
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode()))
+                .as("Reply=" + client.getReplyString()).isTrue();
+
+            client.sendCommand("RCPT", "TO:<arnt@grå.org>");
+
+            assertThat(client.getReplyCode()).isEqualTo(553);
+            assertThat(client.getReplyString()).contains("5.6.7");
+
+            client.quit();
+            client.disconnect();
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    @Test
+    void rcptToWithNonAsciiRecipientShouldBeAcceptedWhenSmtpUtf8IsAsserted() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+
+            String reply = rawUtf8Exchange(bindedAddress,
+                "EHLO localhost\r\n",
+                "MAIL FROM:<" + SENDER + "> SMTPUTF8\r\n",
+                "RCPT TO:<arnt@grå.org>\r\n",
+                "QUIT\r\n");
+
+            // RFC 6531 §3.7.4.2: the server echoes the UTF-8 recipient address
+            // back unmodified.
+            assertThat(reply).contains("250 2.1.5 Recipient <arnt@grå.org> OK");
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
+    /**
+     * Write all {@code commands} verbatim in UTF-8 and return the concatenated
+     * server response as one UTF-8 decoded string. Reads until the server
+     * closes the socket (which it does on QUIT).
+     */
+    private String rawUtf8Exchange(InetSocketAddress address, String... commands) throws IOException {
+        try (java.net.Socket socket = new java.net.Socket(address.getAddress().getHostAddress(), address.getPort())) {
+            socket.getOutputStream().write(String.join("", commands).getBytes(StandardCharsets.UTF_8));
+            socket.getOutputStream().flush();
+            java.io.ByteArrayOutputStream collected = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[4096];
+            int n;
+            while ((n = socket.getInputStream().read(buf)) > 0) {
+                collected.write(buf, 0, n);
+            }
+            return collected.toString(StandardCharsets.UTF_8);
+        }
+    }
+
+    @Test
+    void asciiAddressesShouldStillWorkWithoutSmtpUtf8() throws Exception {
+        ProtocolServer server = null;
+        try {
+            server = createServer(createProtocol(new TestMessageHook()));
+            server.bind();
+
+            SMTPClient client = createClient();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+            client.sendCommand("EHLO", "localhost");
+
+            client.sendCommand("MAIL", "FROM:<arnt@example.com>");
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode()))
+                .as("Reply=" + client.getReplyString()).isTrue();
+
+            client.sendCommand("RCPT", "TO:<recipient@example.com>");
+            assertThat(SMTPReply.isPositiveCompletion(client.getReplyCode()))
+                .as("Reply=" + client.getReplyString()).isTrue();
+
+            client.quit();
+            client.disconnect();
+        } finally {
+            if (server != null) {
+                server.unbind();
+            }
+        }
+    }
+
 }
