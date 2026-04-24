@@ -27,8 +27,11 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.metrics.api.Gauge;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.awaitility.Awaitility;
@@ -282,6 +285,176 @@ class ReactiveThrottlerTest {
         // Then extra tasks are rejected
         Thread.sleep(200);
         assertThat(executed.get()).isTrue();
+    }
+
+    @RepeatedTest(10)
+    void concurrencyLimitShouldBeRespectedAfterCancellingQueuedTasks() throws Exception {
+        ReactiveThrottler testee = new ReactiveThrottler(new NoopGaugeRegistry(), 2, 10);
+        CountDownLatch blocker = new CountDownLatch(1);
+
+        // Fill both concurrent slots with tasks that block until we say so
+        Mono.from(testee.throttle(
+            Mono.fromRunnable(Throwing.runnable(blocker::await)).subscribeOn(Schedulers.boundedElastic()).then(),
+            NO_IMAP_MESSAGE)).subscribe();
+        Mono.from(testee.throttle(
+            Mono.fromRunnable(Throwing.runnable(blocker::await)).subscribeOn(Schedulers.boundedElastic()).then(),
+            NO_IMAP_MESSAGE)).subscribe();
+
+        // Queue 5 tasks then cancel each one before it is dispatched
+        for (int i = 0; i < 5; i++) {
+            Mono.from(testee.throttle(Mono.delay(Duration.ofSeconds(10)).then(), NO_IMAP_MESSAGE))
+                .subscribe()
+                .dispose();
+        }
+        Thread.sleep(100); // Let cancellation callbacks propagate
+
+        // Release the blocking tasks
+        blocker.countDown();
+        Thread.sleep(200);
+
+        // Submit new tasks and verify parallelism never exceeds maxConcurrentRequests = 2
+        AtomicInteger concurrent = new AtomicInteger(0);
+        ConcurrentLinkedDeque<Integer> snapshots = new ConcurrentLinkedDeque<>();
+        Mono<Void> measured = Mono.fromRunnable(() -> snapshots.add(concurrent.incrementAndGet()))
+            .then(Mono.delay(Duration.ofMillis(50)))
+            .then(Mono.fromRunnable(() -> snapshots.add(concurrent.getAndDecrement())));
+
+        for (int i = 0; i < 6; i++) {
+            Mono.from(testee.throttle(measured, NO_IMAP_MESSAGE))
+                .onErrorResume(ReactiveThrottler.RejectedException.class, e -> Mono.empty())
+                .subscribe();
+        }
+
+        Awaitility.await().atMost(Duration.ofSeconds(5))
+            .untilAsserted(() -> assertThat(snapshots.size()).isGreaterThanOrEqualTo(8));
+
+        assertThat(snapshots).allSatisfy(count -> assertThat(count).isBetween(0, 2));
+    }
+
+    @Test
+    void queuedTaskErrorShouldPropagateToOuterSubscriber() {
+        ReactiveThrottler testee = new ReactiveThrottler(new NoopGaugeRegistry(), 2, 5);
+
+        // Fill both concurrent slots so the next task is queued
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(200)).then(), NO_IMAP_MESSAGE)).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(200)).then(), NO_IMAP_MESSAGE)).subscribe();
+
+        AtomicBoolean signalReceived = new AtomicBoolean(false);
+        Mono.from(testee.throttle(
+                Mono.error(new RuntimeException("simulated task failure")),
+                NO_IMAP_MESSAGE))
+            .doOnError(e -> signalReceived.set(true))
+            .doOnSuccess(v -> signalReceived.set(true))
+            .onErrorResume(e -> Mono.empty())
+            .subscribe();
+
+        // The outer subscriber must receive either onComplete or onError within a reasonable time
+        Awaitility.await().atMost(Duration.ofSeconds(5))
+            .untilAsserted(() -> assertThat(signalReceived.get()).isTrue());
+    }
+
+    @Test
+    void queuedTaskErrorShouldFreeThrottlerSlotForSubsequentTasks() {
+        // A queued task that errors must still release its concurrency slot via doFinally,
+        // so the tasks behind it in the queue are not permanently stalled.
+        ReactiveThrottler testee = new ReactiveThrottler(new NoopGaugeRegistry(), 2, 5);
+
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(100)).then(), NO_IMAP_MESSAGE)).subscribe();
+        Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(100)).then(), NO_IMAP_MESSAGE)).subscribe();
+
+        // A queued task that will fail when dispatched
+        Mono.from(testee.throttle(
+                Mono.error(new RuntimeException("task error")),
+                NO_IMAP_MESSAGE))
+            .onErrorResume(e -> Mono.empty())
+            .subscribe();
+
+        // A normal task queued after the failing one
+        AtomicBoolean executed = new AtomicBoolean(false);
+        Mono.from(testee.throttle(Mono.fromRunnable(() -> executed.set(true)), NO_IMAP_MESSAGE))
+            .subscribe();
+
+        Awaitility.await().atMost(Duration.ofSeconds(5))
+            .untilAsserted(() -> assertThat(executed.get()).isTrue());
+    }
+
+    @Test
+    void cancelledQueuedTaskShouldNotPreventSubsequentTaskExecution() throws Exception {
+        // Verifies that a mix of cancelled and completed queued tasks does not leave
+        // the throttler in a state where later tasks are permanently stalled.
+        ReactiveThrottler testee = new ReactiveThrottler(new NoopGaugeRegistry(), 2, 20);
+        CountDownLatch blocker = new CountDownLatch(1);
+
+        Mono.from(testee.throttle(
+            Mono.fromRunnable(Throwing.runnable(blocker::await)).subscribeOn(Schedulers.boundedElastic()).then(),
+            NO_IMAP_MESSAGE)).subscribe();
+        Mono.from(testee.throttle(
+            Mono.fromRunnable(Throwing.runnable(blocker::await)).subscribeOn(Schedulers.boundedElastic()).then(),
+            NO_IMAP_MESSAGE)).subscribe();
+
+        // Mix: some queued tasks cancelled, some left to run normally.
+        // Short delay so non-cancelled tasks complete well within the test timeout.
+        for (int i = 0; i < 8; i++) {
+            Disposable d = Mono.from(testee.throttle(Mono.delay(Duration.ofMillis(100)).then(), NO_IMAP_MESSAGE))
+                .subscribe();
+            if (i % 2 == 0) {
+                d.dispose();
+            }
+        }
+
+        blocker.countDown();
+        Thread.sleep(1000); // Enough for all 4 non-cancelled 100ms tasks to drain (2 concurrent max → 200ms min)
+
+        AtomicInteger executionCount = new AtomicInteger(0);
+        for (int i = 0; i < 4; i++) {
+            Mono.from(testee.throttle(Mono.fromRunnable(executionCount::incrementAndGet), NO_IMAP_MESSAGE))
+                .onErrorResume(ReactiveThrottler.RejectedException.class, e -> Mono.empty())
+                .subscribe();
+        }
+
+        Awaitility.await().atMost(Duration.ofSeconds(5))
+            .untilAsserted(() -> assertThat(executionCount.get()).isEqualTo(4));
+    }
+
+    @Test
+    void concurrentRequestsGaugeShouldBeZeroWhenIdle() throws Exception {
+        AtomicReference<Gauge<Integer>> concurrentCountGauge = new AtomicReference<>();
+        GaugeRegistry capturingRegistry = new GaugeRegistry() {
+            @Override
+            @SuppressWarnings("unchecked")
+            public <T> GaugeRegistry register(String name, Gauge<T> gauge) {
+                if (name.equals("imap.request.concurrent.count")) {
+                    concurrentCountGauge.set((Gauge<Integer>) gauge);
+                }
+                return this;
+            }
+
+            @Override
+            public <T> GaugeRegistry.SettableGauge<T> settableGauge(String name) {
+                return value -> { };
+            }
+        };
+        ReactiveThrottler testee = new ReactiveThrottler(capturingRegistry, 2, 10);
+
+        // Stress the counter: fill slots, queue tasks, cancel them all
+        CountDownLatch blocker = new CountDownLatch(1);
+        Mono.from(testee.throttle(
+            Mono.fromRunnable(Throwing.runnable(blocker::await)).subscribeOn(Schedulers.boundedElastic()).then(),
+            NO_IMAP_MESSAGE)).subscribe();
+        Mono.from(testee.throttle(
+            Mono.fromRunnable(Throwing.runnable(blocker::await)).subscribeOn(Schedulers.boundedElastic()).then(),
+            NO_IMAP_MESSAGE)).subscribe();
+        for (int i = 0; i < 5; i++) {
+            Mono.from(testee.throttle(Mono.delay(Duration.ofSeconds(10)).then(), NO_IMAP_MESSAGE))
+                .subscribe()
+                .dispose();
+        }
+        Thread.sleep(100);
+        blocker.countDown();
+
+        // Wait for the throttler to fully drain
+        Awaitility.await().atMost(Duration.ofSeconds(5))
+            .untilAsserted(() -> assertThat(concurrentCountGauge.get().get()).isZero());
     }
 
     @Test

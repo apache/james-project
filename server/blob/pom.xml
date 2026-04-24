@@ -44,6 +44,7 @@
         <module>blob-postgres</module>
         <module>blob-s3</module>
         <module>blob-storage-strategy</module>
+        <module>blob-zstd</module>
 
         <module>mail-store</module>
     </modules>

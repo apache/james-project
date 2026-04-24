@@ -26,7 +26,7 @@ import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class PostgresMailboxSetMethodTest extends PostgresBase implements MailboxSetMethodContract {
+public class PostgresMailboxSetMethodTest extends PerClassPostgresBase implements MailboxSetMethodContract {
     @Override
     public MailboxId randomMailboxId() {
         return PostgresMailboxId.generate();

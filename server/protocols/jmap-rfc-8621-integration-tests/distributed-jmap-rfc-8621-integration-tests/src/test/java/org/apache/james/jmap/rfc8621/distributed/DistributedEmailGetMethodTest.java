@@ -25,7 +25,7 @@ import org.apache.james.mailbox.model.MessageId;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 
-public class DistributedEmailGetMethodTest extends DistributedBase implements EmailGetMethodContract {
+public class DistributedEmailGetMethodTest extends PerClassDistributedBase implements EmailGetMethodContract {
     public static final CassandraMessageId.Factory MESSAGE_ID_FACTORY = new CassandraMessageId.Factory();
 
     @Override

@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * <p>
  * This Matcher determines if the exception specified in the condition or
- * the subclasses of it has occured during the processing of the mail.
+ * the subclasses of it has occurred during the processing of the mail.
  * If true, all recipients are returned, else null. This matcher presupposes
  * that the exception has been captured as a Mail attribute
  * {@value org.apache.mailet.Mail#MAILET_ERROR_ATTRIBUTE_NAME} in the process.
@@ -63,7 +63,7 @@ public class HasException extends GenericMatcher {
     /**
      * <p>
      * Returns the recipients of the mail if the specified exception or the
-     * subclasses of it has occured.
+     * subclasses of it has occurred.
      * </p>
      * 
      * @param mail

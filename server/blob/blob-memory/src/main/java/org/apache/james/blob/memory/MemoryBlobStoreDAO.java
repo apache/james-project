@@ -19,12 +19,9 @@
 
 package org.apache.james.blob.memory;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
@@ -43,33 +40,57 @@ import reactor.core.publisher.Mono;
 
 public class MemoryBlobStoreDAO implements BlobStoreDAO {
 
-    private final Table<BucketName, BlobId, byte[]> blobs;
+    private final Table<BucketName, BlobId, BytesBlob> blobs;
 
     public MemoryBlobStoreDAO() {
         blobs = HashBasedTable.create();
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return readBytes(bucketName, blobId)
-            .map(ByteArrayInputStream::new)
+    public InputStreamBlob read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+        return Mono.from(readBytes(bucketName, blobId))
+            .map(BytesBlob::asInputStream)
             .block();
     }
 
     @Override
-    public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        return readBytes(bucketName, blobId)
-            .map(ByteArrayInputStream::new);
+    public Publisher<InputStreamBlob> readReactive(BucketName bucketName, BlobId blobId) {
+        return Mono.from(readBytes(bucketName, blobId))
+            .map(BytesBlob::asInputStream);
     }
 
     @Override
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+    public Publisher<BytesBlob> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.fromCallable(() -> blobs.get(bucketName, blobId))
             .switchIfEmpty(Mono.error(() -> new ObjectNotFoundException(String.format("blob '%s' not found in bucket '%s'", blobId.asString(), bucketName.asString()))));
     }
 
     @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
+    public Publisher<Void> save(BucketName bucketName, BlobId blobId, Blob blob) {
+        Preconditions.checkNotNull(blob);
+        return switch (blob) {
+            case BytesBlob bytesBlob -> save(bucketName, blobId, bytesBlob);
+            case InputStreamBlob inputStreamBlob -> Mono.fromCallable(() -> {
+                    try {
+                        return inputStreamBlob.asBytes();
+                    } catch (IOException e) {
+                        throw new ObjectStoreIOException("IOException occurred", e);
+                    }
+                })
+                .flatMap(bytes -> save(bucketName, blobId, bytes));
+            case ByteSourceBlob byteSourceBlob -> Mono.fromCallable(() -> {
+                    try {
+                        return byteSourceBlob.asBytes();
+                    } catch (IOException e) {
+                        throw new ObjectStoreIOException("IOException occurred", e);
+                    }
+                })
+            .map(bytes -> checkContentSize(byteSourceBlob.payload(), bytes))
+                .flatMap(bytes -> save(bucketName, blobId, bytes));
+        };
+    }
+
+    public Mono<Void> save(BucketName bucketName, BlobId blobId, BytesBlob data) {
         return Mono.fromRunnable(() -> {
             synchronized (blobs) {
                 blobs.put(bucketName, blobId, data);
@@ -77,41 +98,15 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
         });
     }
 
-    @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
-        Preconditions.checkNotNull(inputStream);
-        return Mono.fromCallable(() -> {
-                try {
-                    return IOUtils.toByteArray(inputStream);
-                } catch (IOException e) {
-                    throw new ObjectStoreIOException("IOException occured", e);
-                }
-            })
-            .flatMap(bytes -> save(bucketName, blobId, bytes));
-    }
-
-    @Override
-    public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
-        return Mono.fromCallable(() -> {
-                try {
-                    return content.read();
-                } catch (IOException e) {
-                    throw new ObjectStoreIOException("IOException occured", e);
-                }
-            })
-            .map(bytes -> checkContentSize(content, bytes))
-            .flatMap(bytes -> save(bucketName, blobId, bytes));
-    }
-
-    private static byte[] checkContentSize(ByteSource content, byte[] bytes) {
+    private static BytesBlob checkContentSize(ByteSource content, BytesBlob bytes) {
         try {
             long preComputedSize = content.size();
-            long realSize = bytes.length;
+            long realSize = bytes.payload().length;
             Preconditions.checkArgument(content.size() == realSize,
                 "Difference in size between the pre-computed content can cause other blob stores to fail thus we need to test for alignment. Expecting " + realSize + " but pre-computed size was " + preComputedSize);
             return bytes;
         } catch (IOException e) {
-            throw new ObjectStoreIOException("IOException occured", e);
+            throw new ObjectStoreIOException("IOException occurred", e);
         }
     }
 

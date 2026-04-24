@@ -285,7 +285,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO blobs (id,position)"));
+                    .whenQueryStartsWith("INSERT INTO blobs (id,position,metadata)"));
 
             try {
                 messageMapper.add(benwaInboxMailbox, message1);

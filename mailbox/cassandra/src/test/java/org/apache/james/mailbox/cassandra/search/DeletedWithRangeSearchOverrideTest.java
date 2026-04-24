@@ -75,6 +75,18 @@ class DeletedWithRangeSearchOverrideTest {
     }
 
     @Test
+    void deletedWithAllQueryShouldBeApplicable() {
+        assertThat(testee.applicable(
+            SearchQuery.builder()
+                .andCriteria(SearchQuery.flagIsSet(DELETED))
+                .andCriteria(SearchQuery.all())
+                .sorts(DEFAULT_SORTS)
+                .build(),
+            MAILBOX_SESSION))
+            .isTrue();
+    }
+
+    @Test
     void deletedQueryShouldNotBeApplicable() {
         assertThat(testee.applicable(
             SearchQuery.builder()
@@ -128,5 +140,24 @@ class DeletedWithRangeSearchOverrideTest {
                 .sorts(DEFAULT_SORTS)
                 .build()).collectList().block())
             .containsOnly(messageUid2, messageUid3, messageUid4);
+    }
+
+    @Test
+    void searchWithAllShouldReturnAllMailboxEntries() {
+        MessageUid messageUid = MessageUid.of(1);
+        MessageUid messageUid2 = MessageUid.of(2);
+        MessageUid messageUid3 = MessageUid.of(3);
+
+        dao.addDeleted((CassandraId) MAILBOX.getMailboxId(), messageUid).block();
+        dao.addDeleted((CassandraId) MAILBOX.getMailboxId(), messageUid2).block();
+        dao.addDeleted((CassandraId) MAILBOX.getMailboxId(), messageUid3).block();
+
+        assertThat(testee.search(MAILBOX_SESSION, MAILBOX,
+            SearchQuery.builder()
+                .andCriteria(SearchQuery.flagIsSet(DELETED))
+                .andCriteria(SearchQuery.all())
+                .sorts(DEFAULT_SORTS)
+                .build()).collectList().block())
+            .containsOnly(messageUid, messageUid2, messageUid3);
     }
 }

@@ -22,13 +22,13 @@ package org.apache.james.blob.postgres;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BLOB_ID;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
 
-import java.io.ByteArrayInputStream;
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
+import org.apache.james.blob.api.MetadataAwareBlobStoreDAOContract;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,11 +37,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.google.common.io.ByteSource;
-
 import reactor.core.publisher.Mono;
 
-class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
+class PostgresBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract {
     static Duration CONCURRENT_TEST_DURATION = Duration.ofMinutes(5);
 
     @RegisterExtension
@@ -67,12 +65,12 @@ class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
     @Override
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("blobs")
-    public void concurrentSaveByteSourceShouldReturnConsistentValues(String description, byte[] bytes) throws ExecutionException, InterruptedException {
+    public void concurrentSaveByteSourceShouldReturnConsistentValues(String description, BlobStoreDAO.BytesBlob bytes) throws ExecutionException, InterruptedException {
         Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes)).block();
         ConcurrentTestRunner.builder()
             .randomlyDistributedReactorOperations(
-                (threadNumber, step) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, ByteSource.wrap(bytes)),
-                (threadNumber, step) -> checkConcurrentSaveOperation(bytes)
+                (threadNumber, step) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes.asByteSource()),
+                (threadNumber, step) -> checkConcurrentSaveOperation(bytes.payload())
             )
             .threadCount(5)
             .operationCount(10)
@@ -82,12 +80,12 @@ class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
     @Override
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("blobs")
-    public void concurrentSaveInputStreamShouldReturnConsistentValues(String description, byte[] bytes) throws ExecutionException, InterruptedException {
+    public void concurrentSaveInputStreamShouldReturnConsistentValues(String description, BlobStoreDAO.BytesBlob bytes) throws ExecutionException, InterruptedException {
         Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes)).block();
         ConcurrentTestRunner.builder()
             .randomlyDistributedReactorOperations(
-                (threadNumber, step) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, new ByteArrayInputStream(bytes)),
-                (threadNumber, step) -> checkConcurrentSaveOperation(bytes)
+                (threadNumber, step) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes.asInputStream()),
+                (threadNumber, step) -> checkConcurrentSaveOperation(bytes.payload())
             )
             .threadCount(5)
             .operationCount(10)
@@ -97,12 +95,12 @@ class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
     @Override
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource(value = "blobs")
-    public void concurrentSaveBytesShouldReturnConsistentValues(String description, byte[] bytes) throws ExecutionException, InterruptedException {
+    public void concurrentSaveBytesShouldReturnConsistentValues(String description, BlobStoreDAO.BytesBlob bytes) throws ExecutionException, InterruptedException {
         Mono.from(testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes)).block();
         ConcurrentTestRunner.builder()
             .randomlyDistributedReactorOperations(
                 (threadNumber, step) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytes),
-                (threadNumber, step) -> checkConcurrentSaveOperation(bytes)
+                (threadNumber, step) -> checkConcurrentSaveOperation(bytes.payload())
             )
             .threadCount(5)
             .operationCount(10)

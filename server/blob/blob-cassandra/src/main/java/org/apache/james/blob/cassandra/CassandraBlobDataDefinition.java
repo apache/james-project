@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.cassandra;
 
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
 import static org.apache.james.blob.cassandra.BlobTables.DefaultBucketBlobParts.DATA;
 
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
@@ -46,7 +47,8 @@ public interface CassandraBlobDataDefinition {
             "Messages` headers and bodies are stored as blobparts.")
         .statement(statement -> types -> statement
             .withPartitionKey(DefaultBucketBlobTable.ID, DataTypes.TEXT)
-            .withClusteringColumn(DefaultBucketBlobTable.NUMBER_OF_CHUNK, DataTypes.INT))
+            .withClusteringColumn(DefaultBucketBlobTable.NUMBER_OF_CHUNK, DataTypes.INT)
+            .withColumn(DefaultBucketBlobTable.METADATA, DataTypes.frozenMapOf(TEXT, TEXT)))
 
         .table(BucketBlobParts.TABLE_NAME)
         .comment("Holds blob parts composing blobs in a non-default bucket." +
@@ -63,7 +65,8 @@ public interface CassandraBlobDataDefinition {
         .statement(statement -> types -> statement
             .withPartitionKey(BucketBlobParts.BUCKET, DataTypes.TEXT)
             .withPartitionKey(BucketBlobParts.ID, DataTypes.TEXT)
-            .withClusteringColumn(BucketBlobTable.NUMBER_OF_CHUNK, DataTypes.INT))
+            .withClusteringColumn(BucketBlobTable.NUMBER_OF_CHUNK, DataTypes.INT)
+            .withColumn(BucketBlobTable.METADATA, DataTypes.frozenMapOf(TEXT, TEXT)))
 
         .build();
 }

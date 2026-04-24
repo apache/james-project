@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.postgres;
 
+import static org.apache.james.backends.postgres.PostgresCommons.DataTypes.HSTORE;
 import static org.apache.james.blob.postgres.PostgresBlobStorageDataDefinition.PostgresBlobStorageTable.BUCKET_NAME_INDEX;
 import static org.jooq.impl.SQLDataType.BLOB;
 
@@ -30,6 +31,7 @@ import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
+import org.jooq.postgres.extensions.types.Hstore;
 
 public interface PostgresBlobStorageDataDefinition {
     interface PostgresBlobStorageTable {
@@ -39,6 +41,7 @@ public interface PostgresBlobStorageDataDefinition {
         Field<String> BLOB_ID = DSL.field("blob_id", SQLDataType.VARCHAR(200).notNull());
         Field<byte[]> DATA = DSL.field("data", BLOB.notNull());
         Field<Integer> SIZE = DSL.field("size", SQLDataType.INTEGER.notNull());
+        Field<Hstore> METADATA = DSL.field("metadata", HSTORE);
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
@@ -46,6 +49,7 @@ public interface PostgresBlobStorageDataDefinition {
                 .column(BLOB_ID)
                 .column(DATA)
                 .column(SIZE)
+                .column(METADATA)
                 .constraint(DSL.primaryKey(BUCKET_NAME, BLOB_ID))))
             .disableRowLevelSecurity()
             .build();

@@ -622,12 +622,12 @@
 
         <james.groupId>org.apache.james</james.groupId>
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
-        <activemq.version>6.2.4</activemq.version>
+        <activemq.version>6.2.5</activemq.version>
         <apache-mime4j.version>0.8.13</apache-mime4j.version>
         <apache.openjpa.version>4.1.1</apache.openjpa.version>
         <!-- Align with EE10 Persistence 3.1 & Transactions 2.0: https://openjpa.apache.org/ -->
         <h2.version>2.3.232</h2.version>
-        <log4j2.version>2.24.3</log4j2.version>
+        <log4j2.version>2.25.4</log4j2.version>
 
         <!-- Align with Jakarta EE 10
              https://jakarta.ee/release/10/ -->
@@ -681,6 +681,7 @@
         <guice.version>7.0.0</guice.version>
         <logback.version>1.5.19</logback.version>
         <tink.version>1.17.0</tink.version>
+        <zstd-jni.version>1.5.7-7</zstd-jni.version>
         <lettuce.core.version>6.7.1.RELEASE</lettuce.core.version>
         <io.micrometer.core.version>1.15.1</io.micrometer.core.version>
         <io.micrometer.tracing.version>1.5.1</io.micrometer.tracing.version>
@@ -1234,6 +1235,11 @@
                 <artifactId>blob-storage-strategy</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-zstd</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
@@ -2228,6 +2234,11 @@
                 <groupId>com.github.fge</groupId>
                 <artifactId>throwing-lambdas</artifactId>
                 <version>0.5.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.luben</groupId>
+                <artifactId>zstd-jni</artifactId>
+                <version>${zstd-jni.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.spullara.mustache.java</groupId>

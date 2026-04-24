@@ -69,7 +69,7 @@ public class MimeMessageInputStreamSource extends Disposable.LeakAware<MimeMessa
         private final Set<InputStream> streams;
 
         Resource(BufferedDeferredFileOutputStream out, Set<InputStream> streams) {
-            super(() -> {
+            super("MimeMessageInputStreamSource", () -> {
                 // explicit close all streams
                 for (InputStream stream : streams) {
                     try {

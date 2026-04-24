@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
@@ -35,6 +34,7 @@ import java.util.stream.IntStream;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.MetadataAwareBlobStoreDAOContract;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
@@ -45,14 +45,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import com.google.common.io.ByteSource;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
 @ExtendWith(DockerAwsS3Extension.class)
-public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
+public class S3BlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobStoreDAOContract {
     private static final BucketName fallbackBucket = BucketName.of("fallback");
 
     private static S3BlobStoreDAO testee;
@@ -102,8 +100,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
 
         final int count = 1500;
         Flux.range(0, count)
-            .concatMap(i -> store.save(TEST_BUCKET_NAME, new TestBlobId("test-blob-id-" + i),
-                ByteSource.wrap(ELEVEN_KILOBYTES)))
+            .concatMap(i -> store.save(TEST_BUCKET_NAME, new TestBlobId("test-blob-id-" + i), ELEVEN_KILOBYTES))
             .blockLast();
 
         assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NAME)).count().block())
@@ -115,11 +112,11 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         TestBlobId blobId = new TestBlobId("id");
-        Mono.from(store.save(TEST_BUCKET_NAME, blobId, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, blobId, ELEVEN_KILOBYTES)).block();
 
         assertThatCode(() -> IntStream.range(0, 256)
             .forEach(i -> {
-                InputStream inputStream = store.read(TEST_BUCKET_NAME, blobId);
+                InputStream inputStream = store.read(TEST_BUCKET_NAME, blobId).payload();
                 // Close the stream without reading it
                 try {
                     inputStream.close();
@@ -134,11 +131,11 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         TestBlobId blobId = new TestBlobId("id");
-        Mono.from(store.save(fallbackBucket, blobId, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
+        Mono.from(store.save(fallbackBucket, blobId, ELEVEN_KILOBYTES)).block();
 
-        InputStream read = store.read(BucketName.DEFAULT, blobId);
+        InputStream read = store.read(BucketName.DEFAULT, blobId).payload();
 
-        assertThat(read).hasSameContentAs(new ByteArrayInputStream(ELEVEN_KILOBYTES));
+        assertThat(read).hasSameContentAs(ELEVEN_KILOBYTES.asInputStream().payload());
     }
 
     @Test
@@ -146,11 +143,11 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         TestBlobId blobId = new TestBlobId("id");
-        Mono.from(store.save(fallbackBucket, blobId, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
+        Mono.from(store.save(fallbackBucket, blobId, ELEVEN_KILOBYTES)).block();
 
-        InputStream read = Mono.from(store.readReactive(BucketName.DEFAULT, blobId)).block();
+        InputStream read = Mono.from(store.readReactive(BucketName.DEFAULT, blobId)).block().payload();
 
-        assertThat(read).hasSameContentAs(new ByteArrayInputStream(ELEVEN_KILOBYTES));
+        assertThat(read).hasSameContentAs(ELEVEN_KILOBYTES.asInputStream().payload());
     }
 
     @Test
@@ -158,9 +155,9 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         TestBlobId blobId = new TestBlobId("id");
-        Mono.from(store.save(fallbackBucket, blobId, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
+        Mono.from(store.save(fallbackBucket, blobId, ELEVEN_KILOBYTES)).block();
 
-        byte[] bytes = Mono.from(store.readBytes(BucketName.DEFAULT, blobId)).block();
+        BlobStoreDAO.BytesBlob bytes = Mono.from(store.readBytes(BucketName.DEFAULT, blobId)).block();
 
         assertThat(bytes).isEqualTo(ELEVEN_KILOBYTES);
     }
@@ -170,7 +167,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         TestBlobId blobId = new TestBlobId("id");
-        Mono.from(store.save(TEST_BUCKET_NAME, blobId, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, blobId, ELEVEN_KILOBYTES)).block();
 
         assertThatThrownBy(() -> store.read(BucketName.DEFAULT, blobId))
             .isExactlyInstanceOf(ObjectNotFoundException.class);
@@ -181,9 +178,9 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         TestBlobId blobId = new TestBlobId("id");
-        Mono.from(store.save(TEST_BUCKET_NAME, blobId, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, blobId, ELEVEN_KILOBYTES)).block();
 
-        assertThatThrownBy(() -> Mono.from(store.readReactive(BucketName.DEFAULT, blobId)).block())
+        assertThatThrownBy(() -> Mono.from(store.readReactive(BucketName.DEFAULT, blobId)).block().payload())
             .isExactlyInstanceOf(ObjectNotFoundException.class);
     }
 
@@ -192,9 +189,9 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
         BlobStoreDAO store = testee();
 
         TestBlobId blobId = new TestBlobId("id");
-        Mono.from(store.save(TEST_BUCKET_NAME, blobId, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, blobId, ELEVEN_KILOBYTES)).block();
 
-        assertThatThrownBy(() -> Mono.from(store.readBytes(BucketName.DEFAULT, blobId)).block())
+        assertThatThrownBy(() -> Mono.from(store.readBytes(BucketName.DEFAULT, blobId)).block().payload())
             .isExactlyInstanceOf(ObjectNotFoundException.class);
     }
 }

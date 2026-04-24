@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 
-public class DistributedMailboxSetMethodTest extends DistributedBase implements MailboxSetMethodContract {
+public class DistributedMailboxSetMethodTest extends PerClassDistributedBase implements MailboxSetMethodContract {
     @Override
     public MailboxId randomMailboxId() {
         return CassandraId.of(Uuids.timeBased());

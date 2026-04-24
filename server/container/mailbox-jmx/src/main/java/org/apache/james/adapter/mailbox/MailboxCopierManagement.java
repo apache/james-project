@@ -76,10 +76,10 @@ public class MailboxCopierManagement implements MailboxCopierManagementMBean {
         try {
             copier.copyMailboxes(resolver.resolveMailboxManager(srcBean), resolver.resolveMailboxManager(dstBean));
         } catch (OverQuotaException e) {
-            log.error("An over quota occured during the copy process", e);
+            log.error("An over quota occurred during the copy process", e);
             throw new Exception(e.getMessage());
         } catch (MailboxManagerResolverException | MailboxException | IOException e) {
-            log.error("An exception occured during the copy process", e);
+            log.error("An exception occurred during the copy process", e);
             throw new Exception(e.getMessage());
         }
     }

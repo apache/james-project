@@ -29,9 +29,11 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.blob.aes.CryptoConfig;
+import org.apache.james.blob.zstd.CompressionConfiguration;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
+import org.apache.james.util.Size;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,12 +97,29 @@ public class BlobStoreConfiguration {
     public interface RequireCryptoConfig {
         BlobStoreConfiguration cryptoConfig(Optional<CryptoConfig> cryptoConfig);
 
+        default RequireCompressionConfig withNoCryptoConfig() {
+            return compressionConfiguration -> noCryptoConfig().compressionConfig(compressionConfiguration);
+        }
+
         default BlobStoreConfiguration noCryptoConfig() {
             return cryptoConfig(Optional.empty());
         }
 
+        default RequireCompressionConfig withCryptoConfig(CryptoConfig cryptoConfig) {
+            return compressionConfiguration -> cryptoConfig(cryptoConfig).compressionConfig(compressionConfiguration);
+        }
+
         default BlobStoreConfiguration cryptoConfig(CryptoConfig cryptoConfig) {
             return cryptoConfig(Optional.of(cryptoConfig));
+        }
+    }
+
+    @FunctionalInterface
+    public interface RequireCompressionConfig {
+        BlobStoreConfiguration compressionConfig(CompressionConfiguration compressionConfiguration);
+
+        default BlobStoreConfiguration noCompressionConfig() {
+            return compressionConfig(CompressionConfiguration.disabled());
         }
     }
 
@@ -145,6 +164,9 @@ public class BlobStoreConfiguration {
     static final String ENCRYPTION_ENABLE_PROPERTY = "encryption.aes.enable";
     static final String ENCRYPTION_PASSWORD_PROPERTY = "encryption.aes.password";
     static final String ENCRYPTION_SALT_PROPERTY = "encryption.aes.salt";
+    static final String COMPRESSION_ENABLE_PROPERTY = "compression.enabled";
+    static final String COMPRESSION_THRESHOLD_PROPERTY = "compression.threshold";
+    static final String COMPRESSION_MIN_RATIO_PROPERTY = "compression.min-ratio";
     static final boolean CACHE_ENABLED = true;
     static final String DEDUPLICATION_ENABLE_PROPERTY = "deduplication.enable";
 
@@ -189,19 +211,22 @@ public class BlobStoreConfiguration {
                         "the mails sharing the same content once one is deleted.\n" +
                         "Upgrade note: If you are upgrading from James 3.5 or older, the deduplication was enabled."));
         Optional<CryptoConfig> cryptoConfig = parseCryptoConfig(configuration);
+        CompressionConfiguration compressionConfiguration = parseCompressionConfiguration(configuration);
 
         if (deduplicationEnabled) {
             return builder()
                 .implementation(blobStoreImplName)
                 .enableCache(cacheEnabled)
                 .deduplication()
-                .cryptoConfig(cryptoConfig);
+                .cryptoConfig(cryptoConfig)
+                .compressionConfig(compressionConfiguration);
         } else {
             return builder()
                 .implementation(blobStoreImplName)
                 .enableCache(cacheEnabled)
                 .passthrough()
-                .cryptoConfig(cryptoConfig);
+                .cryptoConfig(cryptoConfig)
+                .compressionConfig(compressionConfiguration);
         }
     }
 
@@ -214,6 +239,20 @@ public class BlobStoreConfiguration {
                 .build());
         }
         return Optional.empty();
+    }
+
+    private static CompressionConfiguration parseCompressionConfiguration(Configuration configuration) {
+        return CompressionConfiguration.builder()
+            .enabled(configuration.getBoolean(COMPRESSION_ENABLE_PROPERTY, CompressionConfiguration.DISABLED))
+            .threshold(Optional.ofNullable(configuration.getString(COMPRESSION_THRESHOLD_PROPERTY, null))
+                .map(StringUtils::trim)
+                .filter(StringUtils::isNotBlank)
+                .map(StringUtils::deleteWhitespace)
+                .map(Size::parse)
+                .map(Size::asBytes)
+                .orElse(CompressionConfiguration.DEFAULT_THRESHOLD))
+            .minRatio(configuration.getFloat(COMPRESSION_MIN_RATIO_PROPERTY, CompressionConfiguration.DEFAULT_MIN_RATIO))
+            .build();
     }
 
     @VisibleForTesting
@@ -231,12 +270,19 @@ public class BlobStoreConfiguration {
     private final boolean cacheEnabled;
     private final StorageStrategy storageStrategy;
     private final Optional<CryptoConfig> cryptoConfig;
+    private final CompressionConfiguration compressionConfiguration;
 
     BlobStoreConfiguration(BlobStoreImplName implementation, boolean cacheEnabled, StorageStrategy storageStrategy, Optional<CryptoConfig> cryptoConfig) {
+        this(implementation, cacheEnabled, storageStrategy, cryptoConfig, CompressionConfiguration.disabled());
+    }
+
+    BlobStoreConfiguration(BlobStoreImplName implementation, boolean cacheEnabled, StorageStrategy storageStrategy,
+                           Optional<CryptoConfig> cryptoConfig, CompressionConfiguration compressionConfiguration) {
         this.implementation = implementation;
         this.cacheEnabled = cacheEnabled;
         this.storageStrategy = storageStrategy;
         this.cryptoConfig = cryptoConfig;
+        this.compressionConfiguration = compressionConfiguration;
     }
 
     public boolean cacheEnabled() {
@@ -255,6 +301,14 @@ public class BlobStoreConfiguration {
         return cryptoConfig;
     }
 
+    public CompressionConfiguration getCompressionConfiguration() {
+        return compressionConfiguration;
+    }
+
+    public BlobStoreConfiguration compressionConfig(CompressionConfiguration compressionConfiguration) {
+        return new BlobStoreConfiguration(implementation, cacheEnabled, storageStrategy, cryptoConfig, compressionConfiguration);
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof BlobStoreConfiguration) {
@@ -263,14 +317,15 @@ public class BlobStoreConfiguration {
             return Objects.equals(this.implementation, that.implementation)
                 && Objects.equals(this.cacheEnabled, that.cacheEnabled)
                 && Objects.equals(this.storageStrategy, that.storageStrategy)
-                && Objects.equals(this.cryptoConfig, that.cryptoConfig);
+                && Objects.equals(this.cryptoConfig, that.cryptoConfig)
+                && Objects.equals(this.compressionConfiguration, that.compressionConfiguration);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(implementation, cacheEnabled, storageStrategy, cryptoConfig);
+        return Objects.hash(implementation, cacheEnabled, storageStrategy, cryptoConfig, compressionConfiguration);
     }
 
     @Override
@@ -280,6 +335,7 @@ public class BlobStoreConfiguration {
             .add("cacheEnabled", cacheEnabled)
             .add("storageStrategy", storageStrategy.name())
             .add("cryptoConfig", cryptoConfig)
+            .add("compressionConfiguration", compressionConfiguration)
             .toString();
     }
 }

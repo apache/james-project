@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.FakePropertiesProvider;
 import org.apache.james.blob.aes.CryptoConfig;
+import org.apache.james.blob.zstd.CompressionConfiguration;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
 import org.junit.jupiter.api.Test;
@@ -155,6 +156,76 @@ class BlobStoreConfigurationTest {
                     .password("myPass".toCharArray())
                     .salt("73616c7479")
                     .build()));
+    }
+
+    @Test
+    void compressionShouldBeDisabledByDefault() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", "cassandra");
+        configuration.addProperty("deduplication.enable", false);
+        FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
+            .register(ConfigurationComponent.NAME, configuration)
+            .build();
+
+        assertThat(parse(propertyProvider).getCompressionConfiguration())
+            .isEqualTo(CompressionConfiguration.disabled());
+    }
+
+    @Test
+    void compressionCanBeActivated() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", "cassandra");
+        configuration.addProperty("deduplication.enable", false);
+        configuration.addProperty("compression.enabled", true);
+        configuration.addProperty("compression.threshold", "32K");
+        configuration.addProperty("compression.min-ratio", 0.8F);
+        FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
+            .register(ConfigurationComponent.NAME, configuration)
+            .build();
+
+        assertThat(parse(propertyProvider).getCompressionConfiguration())
+            .isEqualTo(CompressionConfiguration.builder()
+                .enabled(true)
+                .threshold(32 * 1024L)
+                .minRatio(0.8F)
+                .build());
+    }
+
+    @Test
+    void compressionThresholdShouldAcceptWhitespaceAroundSizeUnit() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", "cassandra");
+        configuration.addProperty("deduplication.enable", false);
+        configuration.addProperty("compression.enabled", true);
+        configuration.addProperty("compression.threshold", "32 K");
+        FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
+            .register(ConfigurationComponent.NAME, configuration)
+            .build();
+
+        assertThat(parse(propertyProvider).getCompressionConfiguration().threshold())
+            .isEqualTo(32 * 1024L);
+    }
+
+    @Test
+    void builderShouldAllowFluentCompressionConfigurationAfterCryptoChoice() {
+        CompressionConfiguration compressionConfiguration = CompressionConfiguration.builder()
+            .enabled(true)
+            .threshold(32 * 1024L)
+            .minRatio(0.8F)
+            .build();
+
+        assertThat(BlobStoreConfiguration.builder()
+            .cassandra()
+            .disableCache()
+            .passthrough()
+            .withNoCryptoConfig()
+            .compressionConfig(compressionConfiguration))
+            .isEqualTo(BlobStoreConfiguration.builder()
+                .cassandra()
+                .disableCache()
+                .passthrough()
+                .noCryptoConfig()
+                .compressionConfig(compressionConfiguration));
     }
 
     @Test

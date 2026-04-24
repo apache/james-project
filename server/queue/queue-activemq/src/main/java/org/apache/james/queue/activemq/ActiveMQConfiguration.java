@@ -23,22 +23,32 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.james.queue.activemq.metric.ActiveMQMetricConfiguration;
 
 public class ActiveMQConfiguration {
+    private static final String ADJUST_USAGE_LIMITS = "adjust.usage.limits";
+    private static final boolean ADJUST_USAGE_LIMITS_DEFAULT = false;
 
     private final ActiveMQMetricConfiguration metricConfiguration;
+    private final boolean adjustUsageLimits;
 
     public static ActiveMQConfiguration getDefault() {
         return from(new BaseConfiguration());
     }
 
     public static ActiveMQConfiguration from(Configuration configuration) {
-        return new ActiveMQConfiguration(ActiveMQMetricConfiguration.from(configuration));
+        return new ActiveMQConfiguration(
+            ActiveMQMetricConfiguration.from(configuration),
+            configuration.getBoolean(ADJUST_USAGE_LIMITS, ADJUST_USAGE_LIMITS_DEFAULT));
     }
 
-    private ActiveMQConfiguration(ActiveMQMetricConfiguration metricConfiguration) {
+    private ActiveMQConfiguration(ActiveMQMetricConfiguration metricConfiguration, boolean adjustUsageLimits) {
         this.metricConfiguration = metricConfiguration;
+        this.adjustUsageLimits = adjustUsageLimits;
     }
 
     public ActiveMQMetricConfiguration getMetricConfiguration() {
         return metricConfiguration;
+    }
+
+    public boolean isAdjustUsageLimits() {
+        return adjustUsageLimits;
     }
 }

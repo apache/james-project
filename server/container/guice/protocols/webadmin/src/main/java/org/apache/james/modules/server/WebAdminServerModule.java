@@ -156,6 +156,8 @@ public class WebAdminServerModule extends AbstractModule {
                 .maxThreadCount(Optional.ofNullable(configurationFile.getInteger("maxThreadCount", null)))
                 .minThreadCount(Optional.ofNullable(configurationFile.getInteger("minThreadCount", null)))
                 .password(Optional.ofNullable(configurationFile.getString("password", null)))
+                .readOnlyPassword(Optional.ofNullable(configurationFile.getString("password.readonly", null)))
+                .noDeletePassword(Optional.ofNullable(configurationFile.getString("password.nodelete", null)))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");
@@ -191,12 +193,21 @@ public class WebAdminServerModule extends AbstractModule {
             if (configurationFile.getBoolean("jwt.enabled", DEFAULT_JWT_DISABLED)) {
                 return new JwtFilter(jwtTokenVerifier);
             }
-            return webAdminConfiguration.getPassword()
-                .<AuthenticationFilter>map(PasswordFilter::new)
-                .orElse(new NoAuthenticationFilter());
+            if (isPasswordPresent(webAdminConfiguration)) {
+                return new PasswordFilter(webAdminConfiguration.getPassword(),
+                    webAdminConfiguration.getReadOnlyPassword(),
+                    webAdminConfiguration.getNoDeletePassword());
+            }
+            return new NoAuthenticationFilter();
         } catch (FileNotFoundException e) {
             return new NoAuthenticationFilter();
         }
+    }
+
+    private boolean isPasswordPresent(WebAdminConfiguration webAdminConfiguration) {
+        return webAdminConfiguration.getPassword().isPresent()
+            || webAdminConfiguration.getNoDeletePassword().isPresent()
+            || webAdminConfiguration.getReadOnlyPassword().isPresent();
     }
 
     @Provides

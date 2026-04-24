@@ -62,6 +62,7 @@ public class DistributedEmailQueryMethodNoViewTest implements EmailQueryMethodCo
                     .randomPort()
                     .disableEmailQueryView()
                     .build())))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @Test

@@ -65,7 +65,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
      */
     public static final String USE_MEMORY_COPY = "james.message.usememorycopy";
     private static final int UNKNOWN = -1;
-    private static final int HEADER_BODY_SEPARATOR_SIZE = 2;
 
     /**
      * Can provide an input stream to the data
@@ -159,11 +158,16 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                     saved = true;
                 } else {
                     MimeMessageInputStreamSource src = MimeMessageInputStreamSource.create("MailCopy-" + UUID.randomUUID().toString());
-                    OutputStream out = src.getWritableOutputStream();
-                    original.writeTo(out);
-                    out.close();
-                    source = src;
-                    saved = true;
+                    try {
+                        OutputStream out = src.getWritableOutputStream();
+                        original.writeTo(out);
+                        out.close();
+                        source = src;
+                        saved = true;
+                    } catch (IOException ex) {
+                        src.dispose();
+                        throw ex;
+                    }
                 }
 
             } catch (IOException ex) {
@@ -332,10 +336,16 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 if (!isHeaderModified()) {
                     myHeaders = parsedHeaders;
                 } else {
-                    // The headers was modified so we need to call saveChanges() just to be sure
-                    // See JAMES-1320
-                    if (!saved) {
-                        saveChanges();
+                    // Headers were modified via setHeader/addHeader, which already updated
+                    // this.headers (checkModifyHeaders ensures it is loaded from source first).
+                    // Calling saveChanges() here would trigger updateHeaders() on every MIME
+                    // body part, which re-parses Content-Type parameters and fails on malformed
+                    // MIME structures (e.g. unbalanced quoted strings). Since we are in the fast
+                    // path (body is unmodified), the body-derived headers have not changed and
+                    // saveChanges() is not needed to reflect them.
+                    // See JAMES-1320 (checkModifyHeaders already guarantees headers != null)
+                    if (headers == null) {
+                        loadHeaders();
                     }
                     myHeaders = headers;
                 }
