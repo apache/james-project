@@ -290,6 +290,11 @@ public class DSNStatus {
      */
     public static final String CONTENT_CONVERSION_FAILED = "6.5";
 
+    /**
+     * Non-ASCII addresses not permitted for that sender/recipient (RFC 6531)
+     */
+    public static final String CONTENT_NON_ASCII_ADDR = "6.7";
+
 
     /**
      * Security or Policy Status

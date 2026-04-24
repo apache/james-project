@@ -59,6 +59,9 @@ public interface SMTPSession extends ProtocolSession {
         return getAttachment(ALLOW_USE_OTHER_IDENTITY, State.Connection).orElse(false);
     }
 
+    /** Set per-transaction when the client asserted the RFC 6531 SMTPUTF8 parameter on MAIL FROM. */
+    AttachmentKey<Boolean> SMTPUTF8_REQUESTED = AttachmentKey.of("SMTPUTF8_REQUESTED", Boolean.class);
+
     /**
      * Returns the service wide configuration
      *
