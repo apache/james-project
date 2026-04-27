@@ -20,6 +20,7 @@
 package org.apache.james.core;
 
 import java.net.IDN;
+import java.text.Normalizer;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -173,7 +174,13 @@ public class MailAddress implements java.io.Serializable {
      * @throws AddressException if the parse failed
      */
     public MailAddress(String address) throws AddressException {
-        address = address.trim();
+        // RFC 6532 §3.1 recommends NFC normalisation. Canonically-equivalent
+        // Unicode strings (for example U+00E9 vs U+0065 U+0301 — both render
+        // as "é") then produce equal MailAddress objects with equal hashCode
+        // values, which dedup, alias resolution and routing-table lookups
+        // rely on. NFC is a no-op for pure ASCII, so ASCII addresses are
+        // unaffected.
+        address = Normalizer.normalize(address.trim(), Normalizer.Form.NFC);
         int pos = 0;
 
         // Test if mail address has source routing information (RFC-821) and get rid of it!!

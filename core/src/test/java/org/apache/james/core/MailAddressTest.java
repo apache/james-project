@@ -22,6 +22,7 @@ package org.apache.james.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.text.Normalizer;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -327,6 +328,60 @@ class MailAddressTest {
     void stripDetailsShouldBePreciseWithMultipleCharacterDelimiter() throws AddressException {
         MailAddress mailAddress = new MailAddress("localpart---details@example.com");
         assertThat(mailAddress.stripDetails("--")).isEqualTo("localpart@example.com");
+    }
+
+    // RFC 6532 §3.1 — NFC normalisation
+
+    @Test
+    void nfcAndNfdFormsOfSameAddressShouldCompareEqual() throws AddressException {
+        // "pelé" as NFC: p, e, l, U+00E9
+        MailAddress nfc = new MailAddress("pelé@example.com");
+        // "pelé" as NFD: p, e, l, U+0065, U+0301 (combining acute)
+        MailAddress nfd = new MailAddress("pelé@example.com");
+
+        assertThat(nfc).isEqualTo(nfd);
+        assertThat(nfc.hashCode()).isEqualTo(nfd.hashCode());
+        assertThat(nfc.asString()).isEqualTo(nfd.asString());
+    }
+
+    @Test
+    void nfdInputShouldBeStoredAsNfc() throws AddressException {
+        // Build the input string explicitly in NFD form: the local
+        // part is p, e, l, e, U+0301 (combining acute) — five codepoints.
+        String input = "pele\u0301@example.com";
+        int atIndex = input.indexOf('@');
+        int lIndex = input.indexOf('l');
+
+        // Sanity-check that the input is actually NFD: there should be
+        // two codepoints between 'l' and '@' (the 'e' and the
+        // combining acute).
+        assertThat(input.codePointCount(lIndex + 1, atIndex)).isEqualTo(2);
+
+        MailAddress address = new MailAddress(input);
+
+        // The local part comes back in NFC form (single U+00E9), not
+        // the two codepoints that went in.
+        assertThat(address.getLocalPart()).isEqualTo("pelé");
+        assertThat(address.getLocalPart().codePointAt(3)).isEqualTo(0x00E9);
+    }
+
+    @Test
+    void nfcNormalisationShouldBeNoopForAsciiAddresses() throws AddressException {
+        MailAddress address = new MailAddress("arnt@example.com");
+
+        assertThat(address.asString()).isEqualTo("arnt@example.com");
+    }
+
+    @Test
+    void nfcNormalisationShouldApplyToDomainsToo() throws AddressException {
+        // Unicode combining sequence in the domain's Unicode form. After
+        // construction, asString() should round-trip through NFC (whether the
+        // domain is ultimately stored as A-label or U-label is the Domain
+        // class's concern — here we only check that the two spellings collapse).
+        MailAddress nfc = new MailAddress("info@grå.org");
+        MailAddress nfd = new MailAddress("info@gra\u030A.org");
+
+        assertThat(nfc).isEqualTo(nfd);
     }
 
 }
