@@ -40,6 +40,10 @@ public class ReceivedHeaderGenerator {
     private static final String ESMTPSA = "ESMTPSA";
     private static final String ESMTP = "ESMTP";
     private static final String ESMTPS = "ESMTPS";
+    private static final String UTF8SMTP = "UTF8SMTP";
+    private static final String UTF8SMTPA = "UTF8SMTPA";
+    private static final String UTF8SMTPS = "UTF8SMTPS";
+    private static final String UTF8SMTPSA = "UTF8SMTPSA";
     private final ProtocolSession.AttachmentKey<Integer> mtPriority = ProtocolSession.AttachmentKey.of("MT-PRIORITY", Integer.class);
 
     /**
@@ -48,24 +52,32 @@ public class ReceivedHeaderGenerator {
     protected String getServiceType(SMTPSession session, String heloMode) {
         // Check if EHLO was used
         if (EHLO.equals(heloMode)) {
+            // See RFC 6531 §4.3:
+            // The new keyword "UTF8SMTP" indicates the use of ESMTP when
+            // the SMTPUTF8 extension is also used; the "A" / "S" / "SA"
+            // suffixes have the same meaning as in the E* keywords.
+            boolean smtpUtf8 = session.getAttachment(SMTPSession.SMTPUTF8_REQUESTED, ProtocolSession.State.Transaction)
+                .orElse(Boolean.FALSE);
             // Not successful auth
             if (session.getUsername() == null) {
                 if (session.isTLSStarted()) {
-                    return ESMTPS;
+                    return smtpUtf8 ? UTF8SMTPS : ESMTPS;
                 } else {
-                    return ESMTP;
+                    return smtpUtf8 ? UTF8SMTP : ESMTP;
                 }
             } else {
                 // See RFC3848:
                 // The new keyword "ESMTPA" indicates the use of ESMTP when the SMTP
                 // AUTH [3] extension is also used and authentication is successfully achieved.
                 if (session.isTLSStarted()) {
-                    return ESMTPSA;
+                    return smtpUtf8 ? UTF8SMTPSA : ESMTPSA;
                 } else {
-                    return ESMTPA;
+                    return smtpUtf8 ? UTF8SMTPA : ESMTPA;
                 }
             }
         } else {
+            // HELO was used (not EHLO), so SMTPUTF8 cannot have been
+            // negotiated — the extension requires EHLO. Plain SMTP only.
             return SMTP;
         }
     }
