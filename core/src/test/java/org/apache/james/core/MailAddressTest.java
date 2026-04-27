@@ -40,8 +40,10 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MailAddressTest {
 
-    // Checkstyle forbids \\uXXXX escapes, and a bare combining mark cannot be
-    // spelled out as a source literal, so build them by code point.
+    // Checkstyle forbids \\uXXXX escapes, and lone surrogates or a bare combining
+    // mark cannot be spelled out as source literals, so build them by code point.
+    private static final String HIGH_SURROGATE = String.valueOf(Character.highSurrogate(0x1F600));
+    private static final String LOW_SURROGATE = String.valueOf(Character.lowSurrogate(0x1F600));
     private static final String COMBINING_ACUTE = String.valueOf((char) 0x0301);
     private static final String COMBINING_RING_ABOVE = String.valueOf((char) 0x030A);
 
@@ -64,6 +66,9 @@ class MailAddressTest {
                 "Abc@10.42.0.1",
                 "Abc.123@example.com",
                 "Loïc.Accentué@voilà.fr8",
+                // Supplementary-plane codepoint as a properly-paired
+                // UTF-16 surrogate pair (U+1F600).
+                "abc" + HIGH_SURROGATE + LOW_SURROGATE + "@example.com",
                 "pelé@exemple.com",
                 "δοκιμή@παράδειγμα.δοκιμή",
                 "我買@屋企.香港",
@@ -116,6 +121,21 @@ class MailAddressTest {
                 "server-dev\\.@james.apache.org", // jakarta.mail is unable to handle this so we better reject it
                 "a..b@domain.com",
                 "sales@\u200Eibm.example", // U+200E is left-to-right
+                // Unpaired and mis-ordered UTF-16 surrogates would
+                // produce ill-formed UTF-8 on output, so we reject
+                // them: lone high surrogate at end, lone low
+                // surrogate, and a high surrogate not followed by
+                // a low one.
+                "abc" + HIGH_SURROGATE + "@example.com",
+                "abc" + LOW_SURROGATE + "def@example.com",
+                "abc" + HIGH_SURROGATE + "def@example.com",
+                // C1 controls in the local part: rejected on the
+                // same grounds as C0. Tested with U+0080 (start),
+                // U+0085 (NEL — common in EBCDIC interop bugs),
+                // and U+009F (end of the C1 range).
+                "abc\u0080def@example.com",
+                "abc\u0085def@example.com",
+                "abc\u009Fdef@example.com",
                 // According to wikipedia this address is valid but as jakarta.mail is unable
                 // to work with it we shall rather reject them (note that this is not breaking retro-compatibility)
                 "mail.allow\\,d@james.apache.org")
