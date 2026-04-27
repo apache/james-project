@@ -521,6 +521,24 @@ public class MailAddress implements java.io.Serializable {
                             "characters exception <CR>, <LF>, quote (\"), or backslash (\\) at position " +
                             (pos + 1) + " in '" + address + "'");
                 }
+                // Same surrogate-pair check as in parseUnquotedLocalPart:
+                // unpaired or mis-ordered surrogates would produce
+                // ill-formed UTF-8 on output.
+                if (Character.isLowSurrogate(q)) {
+                    throw new AddressException("Unpaired UTF-16 low surrogate in quoted local-part at position " +
+                            (pos + 1) + " in '" + address + "'");
+                }
+                if (Character.isHighSurrogate(q)) {
+                    if (pos + 1 >= address.length()
+                            || !Character.isLowSurrogate(address.charAt(pos + 1))) {
+                        throw new AddressException("Unpaired UTF-16 high surrogate in quoted local-part at position " +
+                                (pos + 1) + " in '" + address + "'");
+                    }
+                    lpSB.append(q);
+                    lpSB.append(address.charAt(pos + 1));
+                    pos += 2;
+                    continue;
+                }
                 lpSB.append(q);
                 pos++;
             }
@@ -561,13 +579,35 @@ public class MailAddress implements java.io.Serializable {
                 //    unicode codepoint, but not <special> or <SP>
                 //<special> ::= "<" | ">" | "(" | ")" | "[" | "]" | "\" | "."
                 //    | "," | ";" | ":" | "@"  """ | the control
-                //    characters (ASCII codes 0 through 31 inclusive and
-                //    127)
+                //    characters (ASCII codes 0 through 31 inclusive,
+                //    127, and the C1 controls 128 through 159)
                 //<SP> ::= the space character (ASCII code 32)
                 char c = address.charAt(pos);
-                if (c <= 31 || c == 127 || c == ' ') {
+                if (c <= 31 || c == 127 || c == ' ' || (c >= 0x80 && c <= 0x9F)) {
                     throw new AddressException("Invalid character in local-part (user account) at position " +
                             (pos + 1) + " in '" + address + "'", address, pos + 1);
+                }
+                // Java strings are UTF-16, so a supplementary-plane
+                // codepoint (emoji, CJK extension, etc.) appears here as a
+                // high-surrogate followed by a low-surrogate. We must keep
+                // them paired so the address can serialise as well-formed
+                // UTF-8 (RFC 6532 §3.1) — a lone or mis-ordered surrogate
+                // would produce ill-formed UTF-8 octets on output.
+                if (Character.isLowSurrogate(c)) {
+                    throw new AddressException("Unpaired UTF-16 low surrogate in local-part at position " +
+                            (pos + 1) + " in '" + address + "'", address, pos + 1);
+                }
+                if (Character.isHighSurrogate(c)) {
+                    if (pos + 1 >= address.length()
+                            || !Character.isLowSurrogate(address.charAt(pos + 1))) {
+                        throw new AddressException("Unpaired UTF-16 high surrogate in local-part at position " +
+                                (pos + 1) + " in '" + address + "'", address, pos + 1);
+                    }
+                    lpSB.append(c);
+                    lpSB.append(address.charAt(pos + 1));
+                    pos += 2;
+                    lastCharDot = false;
+                    continue;
                 }
                 int i = 0;
                 while (i < SPECIAL.length) {
