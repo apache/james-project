@@ -55,7 +55,17 @@ public class Domain implements Serializable {
         Preconditions.checkArgument(domain.length() <= MAXIMUM_DOMAIN_LENGTH,
             "Domain name length should not exceed %s characters", MAXIMUM_DOMAIN_LENGTH);
 
-        String domainWithoutBrackets = IDN.toASCII(removeBrackets(domain), IDN.ALLOW_UNASSIGNED);
+        String domainWithoutBrackets;
+        try {
+            domainWithoutBrackets = IDN.toASCII(removeBrackets(domain), IDN.ALLOW_UNASSIGNED);
+        } catch (IllegalArgumentException e) {
+            // IDN.toASCII's own message can be cryptic ("Empty label is not
+            // a legal name", "A prohibited code point was found in the
+            // input..."). Let's save wear and tear on the poor developer's
+            // brain.
+            throw new IllegalArgumentException(
+                "Domain '" + domain + "' is invalid according to IDNA: " + e.getMessage(), e);
+        }
         Preconditions.checkArgument(PART_CHAR_MATCHER.matchesAllOf(domainWithoutBrackets),
                                     "Domain parts ASCII chars must be a-z A-Z 0-9 - or _ in %s", domain);
 
@@ -63,7 +73,8 @@ public class Domain implements Serializable {
             domainWithoutBrackets.contains(".xn--")) {
             domainWithoutBrackets = IDN.toUnicode(domainWithoutBrackets);
             Preconditions.checkArgument(!domainWithoutBrackets.startsWith("xn--") &&
-                                        !domainWithoutBrackets.contains(".xn--"));
+                                        !domainWithoutBrackets.contains(".xn--"),
+                                        "A-label could not be decoded to Unicode in %s", domain);
         }
 
         int pos = 0;
