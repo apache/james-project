@@ -76,6 +76,16 @@ class DomainTest {
             .as("rejecting malformed domain " + malformed)
             .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @ParameterizedTest
+    @MethodSource("malformedDomains")
+    void exceptionForMalformedDomainShouldNameTheOffendingInput(String malformed) {
+        // Without the offending input in the message, "Domain invalid
+        // according to IDNA" leaves a future debugger guessing what
+        // string actually triggered it.
+        assertThatThrownBy(() -> Domain.of(malformed))
+            .hasMessageContaining(malformed);
+    }
 }
 
 
