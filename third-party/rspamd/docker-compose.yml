@@ -45,7 +45,7 @@ services:
       redis:
           condition: service_started
     container_name: rspamd
-    image: rspamd/rspamd:3.12.0
+    image: rspamd/rspamd:3.14.3
     environment:
       - RSPAMD_PASSWORD=admin
     volumes:
