@@ -96,12 +96,12 @@ public interface MetadataAwareBlobStoreDAOContract {
 
         BlobStoreDAO.BytesBlob bytesBlob = BlobStoreDAO.BytesBlob.of("payload".getBytes(),
             BlobStoreDAO.BlobMetadata.empty()
-                .withContentTransferEncoding(BlobStoreDAO.ContentTransferEncoding.ZSTD));
+                .withContentEncoding(BlobStoreDAO.ContentEncoding.ZSTD));
 
         Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, bytesBlob)).block();
 
-        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().contentTransferEncoding())
-            .contains(BlobStoreDAO.ContentTransferEncoding.ZSTD);
+        assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().contentEncoding())
+            .contains(BlobStoreDAO.ContentEncoding.ZSTD);
     }
 
     @Test

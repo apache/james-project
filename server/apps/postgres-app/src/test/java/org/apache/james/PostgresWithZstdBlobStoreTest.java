@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import static org.apache.james.blob.api.BlobStoreDAO.ContentTransferEncoding.ZSTD;
+import static org.apache.james.blob.api.BlobStoreDAO.ContentEncoding.ZSTD;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.nio.charset.StandardCharsets;
@@ -104,7 +104,7 @@ public class PostgresWithZstdBlobStoreTest {
         assertSoftly(softly -> {
             softly.assertThat(blobSnapshot.readPayload()).isEqualTo(blobSnapshot.originalPayload());
             softly.assertThat(blobSnapshot.storedBlob().payload().length).isLessThan(blobSnapshot.originalPayload().length);
-            softly.assertThat(blobSnapshot.storedBlob().metadata().contentTransferEncoding()).contains(ZSTD);
+            softly.assertThat(blobSnapshot.storedBlob().metadata().contentEncoding()).contains(ZSTD);
             softly.assertThat(blobSnapshot.storedBlob().metadata().get(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE))
                 .contains(new BlobStoreDAO.BlobMetadataValue(String.valueOf(blobSnapshot.originalPayload().length)));
         });
