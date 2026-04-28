@@ -113,7 +113,7 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
 
     public static final BlobMetadataName CONTENT_ORIGINAL_SIZE = new BlobMetadataName("content-original-size");
     private static final int FILE_THRESHOLD = 100 * 1024;
-    private static final Set<BlobMetadataName> RESERVED_METADATA_NAMES = Set.of(ContentTransferEncoding.NAME, CONTENT_ORIGINAL_SIZE);
+    private static final Set<BlobMetadataName> RESERVED_METADATA_NAMES = Set.of(ContentEncoding.NAME, CONTENT_ORIGINAL_SIZE);
 
     private final BlobStoreDAO underlying;
     private final CompressionConfiguration compressionConfiguration;
@@ -412,8 +412,8 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
     }
 
     private boolean isCompressed(BlobMetadata metadata) {
-        return metadata.contentTransferEncoding()
-            .filter(ContentTransferEncoding.ZSTD::equals)
+        return metadata.contentEncoding()
+            .filter(ContentEncoding.ZSTD::equals)
             .isPresent();
     }
 
@@ -439,7 +439,7 @@ public class ZstdBlobStoreDAO implements BlobStoreDAO {
 
     private BlobMetadata withCompressionMetadata(BlobMetadata metadata, long originalSize) {
         return metadata
-            .withContentTransferEncoding(ContentTransferEncoding.ZSTD)
+            .withContentEncoding(ContentEncoding.ZSTD)
             .withMetadata(CONTENT_ORIGINAL_SIZE, new BlobMetadataValue(String.valueOf(originalSize)));
     }
 

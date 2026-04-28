@@ -140,8 +140,8 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
         // should compress and append content-transfer-encoding metadata, when threshold is met.
         Mono.from(localTestee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
 
-        assertThat(Mono.from(localTestee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().contentTransferEncoding())
-            .contains(BlobStoreDAO.ContentTransferEncoding.ZSTD);
+        assertThat(Mono.from(localTestee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block().metadata().contentEncoding())
+            .contains(BlobStoreDAO.ContentEncoding.ZSTD);
     }
 
     @Test
@@ -165,7 +165,7 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
             softly.assertThat(readBlob.metadata().underlyingMap())
                 .containsEntry(new BlobStoreDAO.BlobMetadataName("name"), new BlobStoreDAO.BlobMetadataValue("value"))
                 .containsEntry(new BlobStoreDAO.BlobMetadataName("type"), new BlobStoreDAO.BlobMetadataValue("attachment"))
-                .containsEntry(BlobStoreDAO.ContentTransferEncoding.NAME, BlobStoreDAO.ContentTransferEncoding.ZSTD.asValue())
+                .containsEntry(BlobStoreDAO.ContentEncoding.NAME, BlobStoreDAO.ContentEncoding.ZSTD.asValue())
                 .containsEntry(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE,
                     new BlobStoreDAO.BlobMetadataValue(String.valueOf(ELEVEN_KILOBYTES.payload().length)));
         });
@@ -194,7 +194,7 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
 
         assertSoftly(softly -> {
             softly.assertThat(storedBlob.payload()).isEqualTo(SHORT_BYTEARRAY.payload());
-            softly.assertThat(storedBlob.metadata().contentTransferEncoding()).isEmpty();
+            softly.assertThat(storedBlob.metadata().contentEncoding()).isEmpty();
             softly.assertThat(storedBlob.metadata().get(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE)).isEmpty();
         });
     }
@@ -215,7 +215,7 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
 
         assertSoftly(softly -> {
             softly.assertThat(payload).isEqualTo(ELEVEN_KILOBYTES.payload());
-            softly.assertThat(readBlob.metadata().contentTransferEncoding()).contains(BlobStoreDAO.ContentTransferEncoding.ZSTD);
+            softly.assertThat(readBlob.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
             softly.assertThat(readBlob.metadata().get(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE))
                 .contains(new BlobStoreDAO.BlobMetadataValue(String.valueOf(ELEVEN_KILOBYTES.payload().length)));
         });
@@ -237,7 +237,7 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
 
         assertSoftly(softly -> {
             softly.assertThat(payload).isEqualTo(ELEVEN_KILOBYTES.payload());
-            softly.assertThat(readBlob.metadata().contentTransferEncoding()).contains(BlobStoreDAO.ContentTransferEncoding.ZSTD);
+            softly.assertThat(readBlob.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
             softly.assertThat(readBlob.metadata().get(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE))
                 .contains(new BlobStoreDAO.BlobMetadataValue(String.valueOf(ELEVEN_KILOBYTES.payload().length)));
         });
@@ -259,7 +259,7 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
 
         assertSoftly(softly -> {
             softly.assertThat(storedBlob.payload()).isEqualTo(ELEVEN_KILOBYTES.payload());
-            softly.assertThat(storedBlob.metadata().contentTransferEncoding()).isEmpty();
+            softly.assertThat(storedBlob.metadata().contentEncoding()).isEmpty();
             softly.assertThat(storedBlob.metadata().get(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE)).isEmpty();
         });
     }
@@ -286,7 +286,7 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
 
         assertSoftly(softly -> {
             softly.assertThat(readBlob.payload()).isEqualTo(ELEVEN_KILOBYTES.payload());
-            softly.assertThat(readBlob.metadata().contentTransferEncoding()).contains(BlobStoreDAO.ContentTransferEncoding.ZSTD);
+            softly.assertThat(readBlob.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
             softly.assertThat(readBlob.metadata().get(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE))
                 .contains(new BlobStoreDAO.BlobMetadataValue(String.valueOf(ELEVEN_KILOBYTES.payload().length)));
         });
@@ -311,7 +311,7 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
 
         assertSoftly(softly -> {
             softly.assertThat(storedBlob.payload()).isEqualTo(randomPayload);
-            softly.assertThat(storedBlob.metadata().contentTransferEncoding()).isEmpty();
+            softly.assertThat(storedBlob.metadata().contentEncoding()).isEmpty();
             softly.assertThat(storedBlob.metadata().get(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE)).isEmpty();
         });
     }
@@ -372,7 +372,7 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
 
         assertSoftly(softly -> {
             softly.assertThat(readBlob.payload()).isEqualTo(resourceBytes);
-            softly.assertThat(readBlob.metadata().contentTransferEncoding()).contains(BlobStoreDAO.ContentTransferEncoding.ZSTD);
+            softly.assertThat(readBlob.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
             softly.assertThat(readBlob.metadata().get(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE))
                 .contains(new BlobStoreDAO.BlobMetadataValue(String.valueOf(resourceBytes.length)));
         });
@@ -396,7 +396,7 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
 
         assertSoftly(softly -> {
             softly.assertThat(payload).isEqualTo(resourceBytes);
-            softly.assertThat(readBlob.metadata().contentTransferEncoding()).contains(BlobStoreDAO.ContentTransferEncoding.ZSTD);
+            softly.assertThat(readBlob.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
             softly.assertThat(readBlob.metadata().get(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE))
                 .contains(new BlobStoreDAO.BlobMetadataValue(String.valueOf(resourceBytes.length)));
         });
@@ -420,7 +420,7 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
 
         assertSoftly(softly -> {
             softly.assertThat(payload).isEqualTo(resourceBytes);
-            softly.assertThat(readBlob.metadata().contentTransferEncoding()).contains(BlobStoreDAO.ContentTransferEncoding.ZSTD);
+            softly.assertThat(readBlob.metadata().contentEncoding()).contains(BlobStoreDAO.ContentEncoding.ZSTD);
             softly.assertThat(readBlob.metadata().get(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE))
                 .contains(new BlobStoreDAO.BlobMetadataValue(String.valueOf(resourceBytes.length)));
         });
@@ -436,7 +436,7 @@ class ZstdBlobStoreDAOTest implements BlobStoreDAOContract, MetadataAwareBlobSto
 
     private static Stream<Arguments> blobsWithReservedCompressionMetadata() {
         BlobStoreDAO.BlobMetadata reservedMetadata = BlobStoreDAO.BlobMetadata.empty()
-            .withMetadata(BlobStoreDAO.ContentTransferEncoding.NAME, BlobStoreDAO.ContentTransferEncoding.ZSTD.asValue());
+            .withMetadata(BlobStoreDAO.ContentEncoding.NAME, BlobStoreDAO.ContentEncoding.ZSTD.asValue());
 
         return Stream.of(
             Arguments.of(BlobStoreDAO.BytesBlob.of(ELEVEN_KILOBYTES.payload(), reservedMetadata)),

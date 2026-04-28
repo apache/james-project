@@ -58,16 +58,16 @@ public interface BlobStoreDAO {
         }
     }
 
-    record ContentTransferEncoding(String value) {
-        public static BlobMetadataName NAME = new BlobMetadataName("content-transfer-encoding");
-        public static ContentTransferEncoding ZSTD = new ContentTransferEncoding("zstd");
+    record ContentEncoding(String value) {
+        public static BlobMetadataName NAME = new BlobMetadataName("content-encoding");
+        public static ContentEncoding ZSTD = new ContentEncoding("zstd");
 
-        public static ContentTransferEncoding fromValue(BlobMetadataValue value) {
-            return new ContentTransferEncoding(value.value());
+        public static ContentEncoding fromValue(BlobMetadataValue value) {
+            return new ContentEncoding(value.value());
         }
 
-        public ContentTransferEncoding {
-            Preconditions.checkArgument(value.length() < 128, "ContentTransferEncoding value is too long. Size exceed 128 chars");
+        public ContentEncoding {
+            Preconditions.checkArgument(value.length() < 128, "ContentEncoding value is too long. Size exceed 128 chars");
         }
 
         public BlobMetadataValue asValue() {
@@ -92,12 +92,12 @@ public interface BlobStoreDAO {
                 .build());
         }
 
-        public Optional<ContentTransferEncoding> contentTransferEncoding() {
-            return get(ContentTransferEncoding.NAME).map(ContentTransferEncoding::fromValue);
+        public Optional<ContentEncoding> contentEncoding() {
+            return get(ContentEncoding.NAME).map(ContentEncoding::fromValue);
         }
 
-        public BlobMetadata withContentTransferEncoding(ContentTransferEncoding contentTransferEncoding) {
-            return withMetadata(ContentTransferEncoding.NAME, contentTransferEncoding.asValue());
+        public BlobMetadata withContentEncoding(ContentEncoding contentEncoding) {
+            return withMetadata(ContentEncoding.NAME, contentEncoding.asValue());
         }
     }
 

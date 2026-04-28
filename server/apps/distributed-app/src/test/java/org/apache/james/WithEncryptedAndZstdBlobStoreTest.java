@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import static org.apache.james.blob.api.BlobStoreDAO.ContentTransferEncoding.ZSTD;
+import static org.apache.james.blob.api.BlobStoreDAO.ContentEncoding.ZSTD;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.nio.charset.StandardCharsets;
@@ -122,14 +122,14 @@ public class WithEncryptedAndZstdBlobStoreTest implements MailsShouldBeWellRecei
             // The intermediate encryption layer returns bytes that were zstd-compressed:
             // they differ from the original payload, keep zstd metadata, and round-trip through zstd decompression back to the original payload.
             softly.assertThat(blobSnapshot.encryptionLayerBlob().payload()).isNotEqualTo(blobSnapshot.originalPayload());
-            softly.assertThat(blobSnapshot.encryptionLayerBlob().metadata().contentTransferEncoding()).contains(ZSTD);
+            softly.assertThat(blobSnapshot.encryptionLayerBlob().metadata().contentEncoding()).contains(ZSTD);
             softly.assertThat(Zstd.decompress(blobSnapshot.encryptionLayerBlob().payload(), blobSnapshot.originalPayload().length))
                 .isEqualTo(blobSnapshot.originalPayload());
 
             // Raw S3 storage must therefore be the encrypted form of those compressed bytes.
             softly.assertThat(blobSnapshot.rawS3StoredBlob().payload()).isNotEqualTo(blobSnapshot.originalPayload());
             softly.assertThat(blobSnapshot.rawS3StoredBlob().payload()).isNotEqualTo(blobSnapshot.encryptionLayerBlob().payload());
-            softly.assertThat(blobSnapshot.rawS3StoredBlob().metadata().contentTransferEncoding()).contains(ZSTD);
+            softly.assertThat(blobSnapshot.rawS3StoredBlob().metadata().contentEncoding()).contains(ZSTD);
             softly.assertThat(blobSnapshot.rawS3StoredBlob().metadata().get(ZstdBlobStoreDAO.CONTENT_ORIGINAL_SIZE))
                 .contains(new BlobStoreDAO.BlobMetadataValue(String.valueOf(blobSnapshot.originalPayload().length)));
         });
