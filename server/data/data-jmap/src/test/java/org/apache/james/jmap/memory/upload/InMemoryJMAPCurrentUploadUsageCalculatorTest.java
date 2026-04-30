@@ -36,7 +36,7 @@ public class InMemoryJMAPCurrentUploadUsageCalculatorTest implements JMAPCurrent
     private JMAPCurrentUploadUsageCalculator jmapCurrentUploadUsageCalculator;
 
     @BeforeEach
-    private void setup() {
+    void setup() {
         uploadRepository = new InMemoryUploadRepository(new PlainBlobId.Factory(), new MemoryBlobStoreDAO(), Clock.systemUTC());
         uploadUsageRepository = new InMemoryUploadUsageRepository();
         jmapCurrentUploadUsageCalculator = new JMAPCurrentUploadUsageCalculator(uploadRepository, uploadUsageRepository);

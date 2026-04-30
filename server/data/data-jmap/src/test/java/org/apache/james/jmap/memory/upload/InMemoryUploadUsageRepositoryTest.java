@@ -28,7 +28,7 @@ public class InMemoryUploadUsageRepositoryTest implements UploadUsageRepositoryC
     private InMemoryUploadUsageRepository inMemoryUploadUsageRepository;
 
     @BeforeEach
-    private void setup() {
+    void setup() {
         inMemoryUploadUsageRepository = new InMemoryUploadUsageRepository();
         resetCounterToZero();
     }
