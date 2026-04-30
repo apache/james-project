@@ -19,14 +19,20 @@
 
 package org.apache.james.jmap.api.identity
 
+import java.util.concurrent.CopyOnWriteArrayList
+
 import org.apache.james.core.{MailAddress, Username}
+import org.apache.james.events.EventListener.{ExecutionMode, ReactiveGroupEventListener}
+import org.apache.james.events.{Event, EventBus, Group}
 import org.apache.james.jmap.api.identity.CustomIdentityDAOContract.{CREATION_REQUEST, bob}
 import org.apache.james.jmap.api.identity.IdentityRepositoryTest.{BOB, IDENTITY1}
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.junit.jupiter.api.Test
+import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 
+import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
 object CustomIdentityDAOContract {
@@ -37,10 +43,30 @@ object CustomIdentityDAOContract {
     bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
     textSignature = Some(TextSignature("text signature")),
     htmlSignature = Some(HtmlSignature("html signature")))
+
+  class IdentityEventCollectorGroup extends Group {}
+
+  class IdentityEventCollector extends ReactiveGroupEventListener {
+    val events: CopyOnWriteArrayList[IdentityEvent] = new CopyOnWriteArrayList[IdentityEvent]()
+
+    override def getDefaultGroup: Group = new IdentityEventCollectorGroup()
+
+    override def isHandling(event: Event): Boolean = event.isInstanceOf[IdentityEvent]
+
+    override def getExecutionMode: ExecutionMode = ExecutionMode.SYNCHRONOUS
+
+    override def reactiveEvent(event: Event): Publisher[Void] = {
+      events.add(event.asInstanceOf[IdentityEvent])
+      SMono.empty[Void]
+    }
+  }
 }
+
 trait CustomIdentityDAOContract {
 
   def testee(): CustomIdentityDAO
+
+  def eventBus: EventBus
 
   @Test
   def listShouldReturnEmptyWhenNone(): Unit = {
@@ -287,5 +313,105 @@ trait CustomIdentityDAOContract {
     SMono(testee().upsert(bob, identity)).block()
     assertThat(SMono(testee().findByIdentityId(bob, identity.id)).block())
       .isEqualTo(identity)
+  }
+
+  @Test
+  def saveShouldDispatchCreatedEvent(): Unit = {
+    val collector = new CustomIdentityDAOContract.IdentityEventCollector()
+    eventBus.register(collector, collector.getDefaultGroup)
+
+    val identity = SMono(testee().save(bob, CREATION_REQUEST)).block()
+
+    assertThat(collector.events.asScala.map(_.getClass).asJava)
+      .containsOnly(classOf[CustomIdentityCreated])
+    assertThat(collector.events.asScala.map(_.asInstanceOf[CustomIdentityCreated].identity).asJava)
+      .containsOnly(identity)
+    assertThat(collector.events.asScala.map(_.getUsername).asJava)
+      .containsOnly(bob)
+  }
+
+  @Test
+  def saveWithIdShouldDispatchCreatedEvent(): Unit = {
+    val collector = new CustomIdentityDAOContract.IdentityEventCollector()
+    eventBus.register(collector, collector.getDefaultGroup)
+
+    val id = IdentityId.generate
+    val identity = SMono(testee().save(bob, id, CREATION_REQUEST)).block()
+
+    assertThat(collector.events.asScala.map(_.getClass).asJava)
+      .containsOnly(classOf[CustomIdentityCreated])
+    assertThat(collector.events.asScala.map(_.asInstanceOf[CustomIdentityCreated].identity).asJava)
+      .containsOnly(identity)
+  }
+
+  @Test
+  def updateShouldDispatchUpdatedEvent(): Unit = {
+    val collector = new CustomIdentityDAOContract.IdentityEventCollector()
+    eventBus.register(collector, collector.getDefaultGroup)
+
+    val identity = SMono(testee().save(bob, CREATION_REQUEST)).block()
+    collector.events.clear()
+
+    SMono(testee().update(bob, identity.id, IdentityUpdateRequest(
+      name = Some(IdentityNameUpdate(IdentityName("Bob (updated)")))))).block()
+
+    assertThat(collector.events.asScala.map(_.getClass).asJava)
+      .containsOnly(classOf[CustomIdentityUpdated])
+    val updatedEvent = collector.events.get(0).asInstanceOf[CustomIdentityUpdated]
+    assertThat(updatedEvent.getUsername).isEqualTo(bob)
+    assertThat(updatedEvent.identity.name).isEqualTo(IdentityName("Bob (updated)"))
+    assertThat(updatedEvent.identity.id).isEqualTo(identity.id)
+  }
+
+  @Test
+  def upsertShouldDispatchUpdatedEvent(): Unit = {
+    val collector = new CustomIdentityDAOContract.IdentityEventCollector()
+    eventBus.register(collector, collector.getDefaultGroup)
+
+    val identity = SMono(testee().save(bob, CREATION_REQUEST)).block()
+    collector.events.clear()
+
+    val updatedIdentity = identity.copy(name = IdentityName("Bob (upserted)"))
+    SMono(testee().upsert(bob, updatedIdentity)).block()
+
+    assertThat(collector.events.asScala.map(_.getClass).asJava)
+      .containsOnly(classOf[CustomIdentityUpdated])
+    val updatedEvent = collector.events.get(0).asInstanceOf[CustomIdentityUpdated]
+    assertThat(updatedEvent.getUsername).isEqualTo(bob)
+    assertThat(updatedEvent.identity.name).isEqualTo(IdentityName("Bob (upserted)"))
+  }
+
+  @Test
+  def deleteShouldDispatchDeletedEvent(): Unit = {
+    val collector = new CustomIdentityDAOContract.IdentityEventCollector()
+    eventBus.register(collector, collector.getDefaultGroup)
+
+    val identity = SMono(testee().save(bob, CREATION_REQUEST)).block()
+    collector.events.clear()
+
+    SMono(testee().delete(bob, Set(identity.id))).block()
+
+    assertThat(collector.events.asScala.map(_.getClass).asJava)
+      .containsOnly(classOf[CustomIdentityDeleted])
+    val deletedEvent = collector.events.get(0).asInstanceOf[CustomIdentityDeleted]
+    assertThat(deletedEvent.getUsername).isEqualTo(bob)
+    assertThat(deletedEvent.identityIds.asJava).containsOnly(identity.id)
+  }
+
+  @Test
+  def deleteAllShouldDispatchAllDeletedEvent(): Unit = {
+    val collector = new CustomIdentityDAOContract.IdentityEventCollector()
+    eventBus.register(collector, collector.getDefaultGroup)
+
+    val identity = SMono(testee().save(bob, CREATION_REQUEST)).block()
+    collector.events.clear()
+
+    SMono(testee().delete(bob)).block()
+
+    assertThat(collector.events.asScala.map(_.getClass).asJava)
+      .containsOnly(classOf[AllCustomIdentitiesDeleted])
+    val deletedEvent = collector.events.get(0).asInstanceOf[AllCustomIdentitiesDeleted]
+    assertThat(deletedEvent.getUsername).isEqualTo(bob)
+    assertThat(deletedEvent.identityIds.asJava).containsOnly(identity.id)
   }
 }

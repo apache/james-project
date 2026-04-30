@@ -32,6 +32,10 @@ import java.util.UUID;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.apache.james.events.InVMEventBus;
+import org.apache.james.events.MemoryEventDeadLetters;
+import org.apache.james.events.RetryBackoffConfiguration;
+import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.jmap.api.identity.DefaultIdentitySupplier;
 import org.apache.james.jmap.api.identity.IdentityCreationRequest;
 import org.apache.james.jmap.api.identity.IdentityRepository;
@@ -40,6 +44,7 @@ import org.apache.james.jmap.api.model.EmailAddress;
 import org.apache.james.jmap.api.model.Identity;
 import org.apache.james.jmap.memory.identity.MemoryCustomIdentityDAO;
 import org.apache.james.json.DTOConverter;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
@@ -73,7 +78,8 @@ class UserIdentitiesRoutesTest {
         identityFactory = mock(DefaultIdentitySupplier.class);
         Mockito.when(identityFactory.userCanSendFrom(any(), any())).thenReturn(SMono.just(true).hasElement());
 
-        identityRepository = new IdentityRepository(new MemoryCustomIdentityDAO(), identityFactory);
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.FAST, new MemoryEventDeadLetters());
+        identityRepository = new IdentityRepository(new MemoryCustomIdentityDAO(eventBus), identityFactory);
 
         JsonTransformer jsonTransformer = new JsonTransformer();
         TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(UploadCleanupTaskAdditionalInformationDTO.SERIALIZATION_MODULE));

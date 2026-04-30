@@ -23,13 +23,20 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.InVMEventBus;
+import org.apache.james.events.MemoryEventDeadLetters;
+import org.apache.james.events.RetryBackoffConfiguration;
+import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
 import org.apache.james.jmap.api.identity.CustomIdentityDAOContract;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraCustomIdentityTest implements CustomIdentityDAOContract {
     private CassandraCustomIdentityDAO testee;
+    private InVMEventBus inVMEventBus;
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDataDefinition.aggregateModules(
@@ -38,12 +45,21 @@ public class CassandraCustomIdentityTest implements CustomIdentityDAOContract {
 
     @BeforeEach
     void setup(CassandraCluster cassandra) {
+        inVMEventBus = new InVMEventBus(
+            new InVmEventDelivery(new RecordingMetricFactory()),
+            RetryBackoffConfiguration.FAST,
+            new MemoryEventDeadLetters());
         testee = new CassandraCustomIdentityDAO(cassandra.getConf(),
-            cassandra.getTypesProvider());
+            cassandra.getTypesProvider(), inVMEventBus);
     }
 
     @Override
     public CustomIdentityDAO testee() {
         return testee;
+    }
+
+    @Override
+    public EventBus eventBus() {
+        return inVMEventBus;
     }
 }

@@ -19,8 +19,13 @@
 
 package org.apache.james.jmap.memory.identity
 
+import org.apache.james.events.InVMEventBus
+import org.apache.james.events.MemoryEventDeadLetters
+import org.apache.james.events.RetryBackoffConfiguration
+import org.apache.james.events.delivery.InVmEventDelivery
 import org.apache.james.jmap.api.identity.CustomIdentityDAOContract.{CREATION_REQUEST, bob}
 import org.apache.james.jmap.api.identity.IdentityUserDeletionTaskStep
+import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode}
 import org.junit.jupiter.api.{BeforeEach, Test}
 import reactor.core.publisher.Flux
@@ -32,7 +37,8 @@ class IdentityUserDeletionTaskStepTest {
 
   @BeforeEach
   def setUp(): Unit = {
-    identityDAO = new MemoryCustomIdentityDAO()
+    val eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.FAST, new MemoryEventDeadLetters())
+    identityDAO = new MemoryCustomIdentityDAO(eventBus)
     testee = new IdentityUserDeletionTaskStep(identityDAO)
   }
 

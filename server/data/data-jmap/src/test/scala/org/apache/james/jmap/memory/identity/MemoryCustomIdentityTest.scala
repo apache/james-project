@@ -19,14 +19,20 @@
 
 package org.apache.james.jmap.memory.identity
 
-import org.apache.james.jmap.api.identity.CustomIdentityDAOContract
-import org.junit.jupiter.api.BeforeEach
+import org.apache.james.events.delivery.InVmEventDelivery
+import org.apache.james.events.{EventBus, InVMEventBus, MemoryEventDeadLetters, RetryBackoffConfiguration}
+import org.apache.james.jmap.api.identity.{CustomIdentityDAO, CustomIdentityDAOContract}
+import org.apache.james.metrics.tests.RecordingMetricFactory
 
 class MemoryCustomIdentityTest extends CustomIdentityDAOContract {
-  var testee: MemoryCustomIdentityDAO = _
+  val inVMEventBus: InVMEventBus = new InVMEventBus(
+    new InVmEventDelivery(new RecordingMetricFactory()),
+    RetryBackoffConfiguration.FAST,
+    new MemoryEventDeadLetters())
 
-  @BeforeEach
-  def setUp(): Unit = {
-    testee = new MemoryCustomIdentityDAO()
-  }
+  val dao: MemoryCustomIdentityDAO = new MemoryCustomIdentityDAO(inVMEventBus)
+
+  override def testee(): CustomIdentityDAO = dao
+
+  override def eventBus: EventBus = inVMEventBus
 }

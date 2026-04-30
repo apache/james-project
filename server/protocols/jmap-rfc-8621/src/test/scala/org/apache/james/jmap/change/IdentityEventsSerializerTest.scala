@@ -26,7 +26,7 @@ import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.events.Event.EventId
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.jmap.change.IdentityEventsSerializerTest._
-import org.apache.james.jmap.mail.{AllCustomIdentitiesDeleted, CustomIdentityCreated, CustomIdentityDeleted, CustomIdentityUpdated}
+import org.apache.james.jmap.api.identity.{AllCustomIdentitiesDeleted, CustomIdentityCreated, CustomIdentityDeleted, CustomIdentityUpdated}
 import org.apache.james.json.JsonGenericSerializer
 import org.apache.james.json.JsonGenericSerializer.UnknownTypeException
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -63,7 +63,7 @@ object IdentityEventsSerializerTest {
   val CREATED_EVENT: CustomIdentityCreated = CustomIdentityCreated(EVENT_ID, USERNAME, IDENTITY)
   val CREATED_EVENT_JSON: String =
     """{
-      |  "type": "org.apache.james.jmap.mail.CustomIdentityCreated",
+      |  "type": "org.apache.james.jmap.api.identity.CustomIdentityCreated",
       |  "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
       |  "username": "bob",
       |  "identity": {
@@ -82,7 +82,7 @@ object IdentityEventsSerializerTest {
   val CREATED_EVENT_NO_OPTIONAL: CustomIdentityCreated = CustomIdentityCreated(EVENT_ID, USERNAME, IDENTITY_NO_OPTIONAL)
   val CREATED_EVENT_NO_OPTIONAL_JSON: String =
     """{
-      |  "type": "org.apache.james.jmap.mail.CustomIdentityCreated",
+      |  "type": "org.apache.james.jmap.api.identity.CustomIdentityCreated",
       |  "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
       |  "username": "bob",
       |  "identity": {
@@ -99,7 +99,7 @@ object IdentityEventsSerializerTest {
   val UPDATED_EVENT: CustomIdentityUpdated = CustomIdentityUpdated(EVENT_ID, USERNAME, IDENTITY)
   val UPDATED_EVENT_JSON: String =
     """{
-      |  "type": "org.apache.james.jmap.mail.CustomIdentityUpdated",
+      |  "type": "org.apache.james.jmap.api.identity.CustomIdentityUpdated",
       |  "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
       |  "username": "bob",
       |  "identity": {
@@ -118,7 +118,7 @@ object IdentityEventsSerializerTest {
   val DELETED_EVENT: CustomIdentityDeleted = CustomIdentityDeleted(EVENT_ID, USERNAME, Set(IDENTITY_ID))
   val DELETED_EVENT_JSON: String =
     """{
-      |  "type": "org.apache.james.jmap.mail.CustomIdentityDeleted",
+      |  "type": "org.apache.james.jmap.api.identity.CustomIdentityDeleted",
       |  "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
       |  "username": "bob",
       |  "identityIds": ["2c9f1b12-b35a-43e6-9af2-0106fb53a943"]
@@ -127,7 +127,7 @@ object IdentityEventsSerializerTest {
   val ALL_DELETED_EVENT: AllCustomIdentitiesDeleted = AllCustomIdentitiesDeleted(EVENT_ID, USERNAME, Set(IDENTITY_ID))
   val ALL_DELETED_EVENT_JSON: String =
     """{
-      |  "type": "org.apache.james.jmap.mail.AllCustomIdentitiesDeleted",
+      |  "type": "org.apache.james.jmap.api.identity.AllCustomIdentitiesDeleted",
       |  "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
       |  "username": "bob",
       |  "identityIds": ["2c9f1b12-b35a-43e6-9af2-0106fb53a943"]
@@ -178,7 +178,7 @@ class IdentityEventsSerializerTest {
         .withoutNestedType()
         .deserialize(
           """{
-            |  "type": "org.apache.james.jmap.mail.UnknownEvent",
+            |  "type": "org.apache.james.jmap.api.identity.UnknownEvent",
             |  "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
             |  "username": "bob",
             |  "identityIds": []
