@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.handler.ssl.IdentityCipherSuiteFilter;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
@@ -86,7 +87,10 @@ public class TCNativeEncryptionFactory implements Encryption.Factory {
             .sslProvider(SslProvider.OPENSSL);
 
         if (conf.getEnabledCipherSuites() != null && conf.getEnabledCipherSuites().length > 0) {
-            builder.ciphers(Arrays.asList(conf.getEnabledCipherSuites()));
+            // IdentityCipherSuiteFilter bypasses SupportedCipherSuiteFilter which strips TLS 1.3
+            // ciphers because BoringSSL's getSupportedCipherSuites() doesn't enumerate them.
+            // Without this, Netty calls SSL_CTX_set_ciphersuites("") disabling TLS 1.3 entirely.
+            builder.ciphers(Arrays.asList(conf.getEnabledCipherSuites()), IdentityCipherSuiteFilter.INSTANCE);
         }
         if (conf.getEnabledProtocols() != null && conf.getEnabledProtocols().length > 0) {
             builder.protocols(conf.getEnabledProtocols());
