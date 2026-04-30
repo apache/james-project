@@ -24,9 +24,9 @@ import java.util.UUID
 import org.apache.james.JsonSerializationVerifier
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.events.Event.EventId
+import org.apache.james.jmap.api.identity.{AllCustomIdentitiesDeleted, CustomIdentityCreated, CustomIdentityDeleted, CustomIdentityUpdated}
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.jmap.change.IdentityEventsSerializerTest._
-import org.apache.james.jmap.api.identity.{AllCustomIdentitiesDeleted, CustomIdentityCreated, CustomIdentityDeleted, CustomIdentityUpdated}
 import org.apache.james.json.JsonGenericSerializer
 import org.apache.james.json.JsonGenericSerializer.UnknownTypeException
 import org.assertj.core.api.Assertions.assertThatThrownBy
