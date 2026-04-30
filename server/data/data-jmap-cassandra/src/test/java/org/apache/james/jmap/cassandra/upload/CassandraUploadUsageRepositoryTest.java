@@ -37,7 +37,7 @@ public class CassandraUploadUsageRepositoryTest implements UploadUsageRepository
     private CassandraUploadUsageRepository cassandraUploadUsageRepository;
 
     @BeforeEach
-    private void setup() {
+    void setup() {
         cassandraUploadUsageRepository = new CassandraUploadUsageRepository(new CassandraQuotaCurrentValueDao(cassandraCluster.getCassandraCluster().getConf()));
         resetCounterToZero();
     }

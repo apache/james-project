@@ -45,7 +45,7 @@ public class CassandraJMAPCurrentUploadUsageCalculatorTest implements JMAPCurren
     private JMAPCurrentUploadUsageCalculator jmapCurrentUploadUsageCalculator;
 
     @BeforeEach
-    private void setup() {
+    void setup() {
         Clock clock = Clock.systemUTC();
         BlobId.Factory blobIdFactory = new PlainBlobId.Factory();
         uploadRepository = new CassandraUploadRepository(new UploadDAO(cassandraCluster.getCassandraCluster().getConf(),
