@@ -22,7 +22,12 @@ package org.apache.james.jmap.api.identity
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.identity.IdentityRepositoryTest.{BOB, CREATION_REQUEST, IDENTITY1, UPDATE_REQUEST}
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, ForbiddenSendFromException, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
+import org.apache.james.events.InVMEventBus
+import org.apache.james.events.MemoryEventDeadLetters
+import org.apache.james.events.RetryBackoffConfiguration
+import org.apache.james.events.delivery.InVmEventDelivery
 import org.apache.james.jmap.memory.identity.MemoryCustomIdentityDAO
+import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.mockito.ArgumentMatchers.any
@@ -77,7 +82,8 @@ class IdentityRepositoryTest {
 
   @BeforeEach
   def setUp(): Unit = {
-    customIdentityDAO = new MemoryCustomIdentityDAO()
+    val eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.FAST, new MemoryEventDeadLetters())
+    customIdentityDAO = new MemoryCustomIdentityDAO(eventBus)
     identityFactory = mock(classOf[DefaultIdentitySupplier])
     testee = new IdentityRepository(customIdentityDAO, identityFactory)
   }

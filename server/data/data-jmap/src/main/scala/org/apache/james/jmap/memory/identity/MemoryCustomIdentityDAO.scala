@@ -20,15 +20,20 @@
 package org.apache.james.jmap.memory.identity
 
 import com.google.common.collect.{HashBasedTable, Table}
+import com.google.inject.name.Named
+import jakarta.inject.Inject
 import org.apache.james.core.Username
-import org.apache.james.jmap.api.identity.{CustomIdentityDAO, IdentityCreationRequest, IdentityNotFoundException, IdentityUpdate}
-import org.apache.james.jmap.api.model.{Identity, IdentityId}
+import org.apache.james.events.Event.EventId
+import org.apache.james.events.{Event, EventBus}
+import org.apache.james.jmap.api.identity.{AllCustomIdentitiesDeleted, CustomIdentityCreated, CustomIdentityDAO, CustomIdentityDeleted, CustomIdentityUpdated, IdentityCreationRequest, IdentityNotFoundException, IdentityUpdate}
+import org.apache.james.jmap.api.model.{AccountId, Identity, IdentityId}
+import org.apache.james.jmap.change.AccountIdRegistrationKey
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
 
-class MemoryCustomIdentityDAO extends CustomIdentityDAO {
+class MemoryCustomIdentityDAO @Inject()(@Named("JMAP") eventBus: EventBus) extends CustomIdentityDAO {
   private val table: Table[Username, IdentityId, Identity] = HashBasedTable.create
 
   override def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] =
@@ -38,6 +43,9 @@ class MemoryCustomIdentityDAO extends CustomIdentityDAO {
     SMono.just(identityId)
       .map(creationRequest.asIdentity)
       .doOnNext(identity => table.put(user, identity.id, identity))
+      .flatMap(identity =>
+        SMono.fromPublisher(eventBus.dispatch(CustomIdentityCreated(Event.EventId.random(), user, identity), AccountIdRegistrationKey(AccountId.fromUsername(user))))
+          .`then`(SMono.just(identity)))
 
   override def list(user: Username): Publisher[Identity] = SFlux.fromIterable(table.row(user).values().asScala)
 
@@ -49,13 +57,27 @@ class MemoryCustomIdentityDAO extends CustomIdentityDAO {
   override def update(user: Username, identityId: IdentityId, identityUpdate: IdentityUpdate): Publisher[Unit] =
     Option(table.get(user, identityId))
       .map(identityUpdate.update)
-      .fold(SMono.error[Unit](IdentityNotFoundException(identityId)))(identity => SMono.fromCallable[Unit](() => table.put(user, identityId, identity)))
+      .fold(SMono.error[Unit](IdentityNotFoundException(identityId)))(updatedIdentity =>
+        SMono.fromCallable[Unit](() => table.put(user, identityId, updatedIdentity))
+          .flatMap(_ => SMono.fromPublisher(eventBus.dispatch(CustomIdentityUpdated(Event.EventId.random(), user, updatedIdentity), AccountIdRegistrationKey(AccountId.fromUsername(user))))
+            .`then`()))
 
-  override def upsert(user: Username, patch: Identity): SMono[Unit] = SMono.fromCallable[Unit](() => table.put(user, patch.id, patch))
+  override def upsert(user: Username, patch: Identity): SMono[Unit] =
+    SMono.fromCallable[Unit](() => table.put(user, patch.id, patch))
+      .flatMap(_ => SMono.fromPublisher(eventBus.dispatch(CustomIdentityUpdated(Event.EventId.random(), user, patch), AccountIdRegistrationKey(AccountId.fromUsername(user))))
+        .`then`())
 
-  override def delete(username: Username, ids: Set[IdentityId]): Publisher[Unit] = SFlux.fromIterable(ids)
-    .doOnNext(id => table.remove(username, id))
-    .`then`()
+  override def delete(username: Username, ids: Set[IdentityId]): Publisher[Unit] =
+    SMono.fromCallable[Unit](() => ids.foreach(id => table.remove(username, id)))
+      .flatMap(_ => SMono.fromPublisher(eventBus.dispatch(CustomIdentityDeleted(Event.EventId.random(), username, ids), AccountIdRegistrationKey(AccountId.fromUsername(username))))
+        .`then`())
 
-  override def delete(username: Username): Publisher[Unit] = SMono.fromCallable(() => table.rowMap().remove(username))
+  override def delete(username: Username): Publisher[Unit] =
+    SMono.fromCallable(() => {
+      val ids = table.row(username).keySet().asScala.toSet
+      table.rowMap().remove(username)
+      ids
+    })
+      .flatMap(ids => SMono.fromPublisher(eventBus.dispatch(AllCustomIdentitiesDeleted(Event.EventId.random(), username, ids), AccountIdRegistrationKey(AccountId.fromUsername(username))))
+        .`then`())
 }

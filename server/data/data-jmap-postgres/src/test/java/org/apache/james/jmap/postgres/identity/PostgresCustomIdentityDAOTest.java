@@ -20,16 +20,32 @@
 package org.apache.james.jmap.postgres.identity;
 
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.InVMEventBus;
+import org.apache.james.events.MemoryEventDeadLetters;
+import org.apache.james.events.RetryBackoffConfiguration;
+import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
 import org.apache.james.jmap.api.identity.CustomIdentityDAOContract;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresCustomIdentityDAOTest implements CustomIdentityDAOContract {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresCustomIdentityDataDefinition.MODULE);
 
+    private final InVMEventBus inVMEventBus = new InVMEventBus(
+        new InVmEventDelivery(new RecordingMetricFactory()),
+        RetryBackoffConfiguration.FAST,
+        new MemoryEventDeadLetters());
+
     @Override
     public CustomIdentityDAO testee() {
-        return new PostgresCustomIdentityDAO(postgresExtension.getExecutorFactory());
+        return new PostgresCustomIdentityDAO(postgresExtension.getExecutorFactory(), inVMEventBus);
+    }
+
+    @Override
+    public EventBus eventBus() {
+        return inVMEventBus;
     }
 }

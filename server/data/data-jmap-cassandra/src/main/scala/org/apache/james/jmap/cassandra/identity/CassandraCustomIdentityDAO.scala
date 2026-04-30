@@ -23,22 +23,27 @@ import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.cql.{BoundStatement, PreparedStatement, Row}
 import com.datastax.oss.driver.api.core.data.UdtValue
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder.{bindMarker, deleteFrom, insertInto, selectFrom}
+import com.google.inject.name.Named
 import jakarta.inject.Inject
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor
 import org.apache.james.core.{MailAddress, Username}
-import org.apache.james.jmap.api.identity.{CustomIdentityDAO, IdentityCreationRequest, IdentityNotFoundException, IdentityUpdate}
-import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
+import org.apache.james.events.Event
+import org.apache.james.events.EventBus
+import org.apache.james.jmap.api.identity.{AllCustomIdentitiesDeleted, CustomIdentityCreated, CustomIdentityDAO, CustomIdentityDeleted, CustomIdentityUpdated, IdentityCreationRequest, IdentityNotFoundException, IdentityUpdate}
+import org.apache.james.jmap.api.model.{AccountId, EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.jmap.cassandra.identity.tables.CassandraCustomIdentityTable
 import org.apache.james.jmap.cassandra.identity.tables.CassandraCustomIdentityTable.{BCC, EMAIL, HTML_SIGNATURE, ID, MAY_DELETE, NAME, REPLY_TO, SORT_ORDER, TABLE_NAME, TEXT_SIGNATURE, USER}
 import org.apache.james.jmap.cassandra.utils.EmailAddressTupleUtil
+import org.apache.james.jmap.change.AccountIdRegistrationKey
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.javaapi.CollectionConverters
 
 case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
-                                                typesProvider: CassandraTypesProvider) extends CustomIdentityDAO {
+                                                typesProvider: CassandraTypesProvider,
+                                                @Named("JMAP") eventBus: EventBus) extends CustomIdentityDAO {
   val executor: CassandraAsyncExecutor = new CassandraAsyncExecutor(session)
   val emailAddressTupleUtil: EmailAddressTupleUtil = EmailAddressTupleUtil(typesProvider)
 
@@ -82,6 +87,9 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
     SMono.just(identityId)
       .map(creationRequest.asIdentity)
       .flatMap(identity => insert(user, identity))
+      .flatMap(identity =>
+        SMono.fromPublisher(eventBus.dispatch(CustomIdentityCreated(Event.EventId.random(), user, identity), AccountIdRegistrationKey(AccountId.fromUsername(user))))
+          .`then`(SMono.just(identity)))
 
   override def list(user: Username): SFlux[Identity] =
     SFlux.fromPublisher(executor.executeRows(selectAllStatement.bind().setString(USER, user.asString()))
@@ -98,22 +106,33 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
       .switchIfEmpty(Mono.error(() => IdentityNotFoundException(identityId)))
       .map(toIdentity)
       .map(identityUpdate.update(_))
-      .flatMap(patch => insert(user, patch).`then`().asJava()))
+      .flatMap(updatedIdentity => insert(user, updatedIdentity)
+        .flatMap(i => SMono.fromPublisher(eventBus.dispatch(CustomIdentityUpdated(Event.EventId.random(), user, i), AccountIdRegistrationKey(AccountId.fromUsername(user))))
+          .`then`()).asJava()))
 
   override def upsert(user: Username, patch: Identity): SMono[Unit] =
-    insert(user, patch).`then`()
+    insert(user, patch)
+      .flatMap(_ => SMono.fromPublisher(eventBus.dispatch(CustomIdentityUpdated(Event.EventId.random(), user, patch), AccountIdRegistrationKey(AccountId.fromUsername(user))))
+        .`then`())
 
   override def delete(username: Username, ids: Set[IdentityId]): SMono[Unit] =
     SFlux.fromIterable(ids)
       .flatMap(id => executor.executeVoid(deleteOneStatement.bind()
         .setString(USER, username.asString())
         .setUuid(ID, id.id)))
-      .`then`()
+      .collectSeq()
+      .flatMap(_ => SMono.fromPublisher(eventBus.dispatch(CustomIdentityDeleted(Event.EventId.random(), username, ids), AccountIdRegistrationKey(AccountId.fromUsername(username))))
+        .`then`())
 
   override def delete(username: Username): SMono[Unit] =
-    SMono(executor.executeVoid(deleteAllStatement.bind()
-        .setString(USER, username.asString())))
-      .`then`()
+    list(username)
+      .map(_.id)
+      .collectSeq()
+      .flatMap(ids =>
+        SMono.fromPublisher(executor.executeVoid(deleteAllStatement.bind()
+          .setString(USER, username.asString()))
+          .then(Mono.from(eventBus.dispatch(AllCustomIdentitiesDeleted(Event.EventId.random(), username, ids.toSet), AccountIdRegistrationKey(AccountId.fromUsername(username))))))
+          .`then`())
 
   private def insert(username: Username, identity: Identity): SMono[Identity] = {
     val replyTo: java.util.Set[UdtValue] = toJavaSet(identity.replyTo.getOrElse(List()))

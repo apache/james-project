@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mail
+package org.apache.james.jmap.api.identity
 
 import org.apache.james.core.Username
 import org.apache.james.events.Event

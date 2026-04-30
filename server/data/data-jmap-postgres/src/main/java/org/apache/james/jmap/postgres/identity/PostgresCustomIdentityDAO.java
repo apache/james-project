@@ -35,17 +35,26 @@ import java.util.List;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
+import org.apache.james.jmap.api.identity.AllCustomIdentitiesDeleted;
+import org.apache.james.jmap.api.identity.CustomIdentityCreated;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
+import org.apache.james.jmap.api.identity.CustomIdentityDeleted;
+import org.apache.james.jmap.api.identity.CustomIdentityUpdated;
 import org.apache.james.jmap.api.identity.IdentityCreationRequest;
 import org.apache.james.jmap.api.identity.IdentityNotFoundException;
 import org.apache.james.jmap.api.identity.IdentityUpdate;
+import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.jmap.api.model.EmailAddress;
 import org.apache.james.jmap.api.model.Identity;
 import org.apache.james.jmap.api.model.IdentityId;
+import org.apache.james.jmap.change.AccountIdRegistrationKey;
 import org.jooq.JSON;
 import org.jooq.Record;
 import org.reactivestreams.Publisher;
@@ -57,6 +66,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -89,11 +99,14 @@ public class PostgresCustomIdentityDAO implements CustomIdentityDAO {
     }
 
     private final PostgresExecutor.Factory executorFactory;
+    private final EventBus eventBus;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    public PostgresCustomIdentityDAO(PostgresExecutor.Factory executorFactory) {
+    public PostgresCustomIdentityDAO(PostgresExecutor.Factory executorFactory,
+                                     @Named("JMAP") EventBus eventBus) {
         this.executorFactory = executorFactory;
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -104,7 +117,11 @@ public class PostgresCustomIdentityDAO implements CustomIdentityDAO {
     @Override
     public Publisher<Identity> save(Username user, IdentityId identityId, IdentityCreationRequest creationRequest) {
         final Identity identity = creationRequest.asIdentity(identityId);
-        return upsertReturnMono(user, identity);
+        return upsertReturnMono(user, identity)
+            .flatMap(saved -> eventBus.dispatch(
+                new CustomIdentityCreated(Event.EventId.random(), user, saved),
+                new AccountIdRegistrationKey(AccountId.fromUsername(user)))
+                .thenReturn(saved));
     }
 
     @Override
@@ -129,14 +146,20 @@ public class PostgresCustomIdentityDAO implements CustomIdentityDAO {
         return Mono.from(findByIdentityId(user, identityId))
             .switchIfEmpty(Mono.error(new IdentityNotFoundException(identityId)))
             .map(identityUpdate::update)
-            .flatMap(identity -> upsertReturnMono(user, identity))
-            .thenReturn(BoxedUnit.UNIT);
+            .flatMap(updatedIdentity -> upsertReturnMono(user, updatedIdentity)
+                .flatMap(saved -> eventBus.dispatch(
+                    new CustomIdentityUpdated(Event.EventId.random(), user, saved),
+                    new AccountIdRegistrationKey(AccountId.fromUsername(user)))
+                    .thenReturn(BoxedUnit.UNIT)));
     }
 
     @Override
     public SMono<BoxedUnit> upsert(Username user, Identity patch) {
         return SMono.fromPublisher(upsertReturnMono(user, patch)
-            .thenReturn(BoxedUnit.UNIT));
+            .flatMap(saved -> eventBus.dispatch(
+                new CustomIdentityUpdated(Event.EventId.random(), user, saved),
+                new AccountIdRegistrationKey(AccountId.fromUsername(user)))
+                .thenReturn(BoxedUnit.UNIT)));
     }
 
     private Mono<Identity> upsertReturnMono(Username user, Identity identity) {
@@ -168,21 +191,36 @@ public class PostgresCustomIdentityDAO implements CustomIdentityDAO {
     @Override
     public Publisher<BoxedUnit> delete(Username username, Set<IdentityId> ids) {
         if (ids.isEmpty()) {
-            return Mono.empty();
+            return eventBus.dispatch(
+                new CustomIdentityDeleted(Event.EventId.random(), username, ids),
+                new AccountIdRegistrationKey(AccountId.fromUsername(username)))
+                .thenReturn(BoxedUnit.UNIT);
         }
         return executorFactory.create(username.getDomainPart())
             .executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
                 .where(USERNAME.eq(username.asString()))
                 .and(ID.in(CollectionConverters.asJavaCollection(ids).stream().map(IdentityId::id).collect(ImmutableList.toImmutableList())))))
+            .then(eventBus.dispatch(
+                new CustomIdentityDeleted(Event.EventId.random(), username, ids),
+                new AccountIdRegistrationKey(AccountId.fromUsername(username))))
             .thenReturn(BoxedUnit.UNIT);
     }
 
     @Override
     public Publisher<BoxedUnit> delete(Username username) {
-        return executorFactory.create(username.getDomainPart())
-            .executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
-                .where(USERNAME.eq(username.asString()))))
-            .thenReturn(BoxedUnit.UNIT);
+        return Flux.from(list(username))
+            .map(Identity::id)
+            .collectList()
+            .flatMap(idList -> {
+                Set<IdentityId> idSet = CollectionConverters.asScala(ImmutableSet.copyOf(idList)).toSet();
+                return executorFactory.create(username.getDomainPart())
+                    .executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
+                        .where(USERNAME.eq(username.asString()))))
+                    .then(eventBus.dispatch(
+                        new AllCustomIdentitiesDeleted(Event.EventId.random(), username, idSet),
+                        new AccountIdRegistrationKey(AccountId.fromUsername(username))))
+                    .thenReturn(BoxedUnit.UNIT);
+            });
     }
 
     private Identity readRecord(Record record) throws Exception {
