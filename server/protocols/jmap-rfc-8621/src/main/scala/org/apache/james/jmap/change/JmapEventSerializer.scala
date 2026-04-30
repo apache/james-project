@@ -81,7 +81,12 @@ case class StateChangeEventDTO(@JsonProperty("type") getType: String,
 
 case class JmapEventSerializer @Inject()(stateChangeEventDTOFactory: StateChangeEventDTOFactory) extends EventSerializer {
   private val genericSerializer: JsonGenericSerializer[Event, EventDTO] = JsonGenericSerializer
-    .forModules(stateChangeEventDTOFactory.dtoModule.asInstanceOf[EventDTOModule[Event, EventDTO]])
+    .forModules(
+      stateChangeEventDTOFactory.dtoModule.asInstanceOf[EventDTOModule[Event, EventDTO]],
+      IdentityEventsSerializer.customIdentityCreatedModule.asInstanceOf[EventDTOModule[Event, EventDTO]],
+      IdentityEventsSerializer.customIdentityUpdatedModule.asInstanceOf[EventDTOModule[Event, EventDTO]],
+      IdentityEventsSerializer.customIdentityDeletedModule.asInstanceOf[EventDTOModule[Event, EventDTO]],
+      IdentityEventsSerializer.allCustomIdentitiesDeletedModule.asInstanceOf[EventDTOModule[Event, EventDTO]])
     .withoutNestedType()
 
   override def toJson(event: Event): SerializationResult = SerializationResult.of(
