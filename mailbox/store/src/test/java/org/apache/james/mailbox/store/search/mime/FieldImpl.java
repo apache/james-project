@@ -49,6 +49,11 @@ public class FieldImpl implements Field {
     }
 
     @Override
+    public ByteSequence getSafeRaw() {
+        return null;
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(name, body);
     }
