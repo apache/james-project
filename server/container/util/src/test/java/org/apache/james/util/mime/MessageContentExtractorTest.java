@@ -66,6 +66,11 @@ class MessageContentExtractorTest {
         public ByteSequence getRaw() {
             return ByteSequence.EMPTY;
         }
+
+        @Override
+        public ByteSequence getSafeRaw() {
+            return ByteSequence.EMPTY;
+        }
     };
 
     private MessageContentExtractor testee;
