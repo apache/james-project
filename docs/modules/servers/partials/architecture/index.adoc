@@ -279,6 +279,8 @@ the same content will be stored one once.
 The downside is that deletion is more complicated, and a garbage collection needs to be run. A first implementation
 based on bloom filters can be used and triggered using the WebAdmin REST API.
 
+See xref:{xref-base}/architecture/blobstore.adoc[BlobStore architecture page] for more details.
+
 === Task Manager
 
 Allows to control and schedule long running tasks run by other

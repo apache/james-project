@@ -1,0 +1,102 @@
+James stores large, non-indexable binary payloads in a BlobStore. Typical examples
+are message bodies, attachments, deleted messages retained by the vault, and mail
+queue payloads.
+
+Mailbox, Mail Queue, and Deleted Messages Vault components rely on it.
+
+Server components usually depend on the higher-level `BlobStore`. `BlobStoreDAO`
+is the lower-level virtual storage abstraction implemented by concrete storage
+connectors such as memory, file, Cassandra, Postgres, and S3 compatible object
+stores. It allows James to compose storage features such as encryption or
+compression independently of the storage connector.
+
+== Abstraction layers
+
+Most James components use `BlobStore`, which is responsible for saving content
+and returning a `BlobId`. `BlobStoreDAO` is the lower-level persistence contract:
+it stores, reads, lists, and deletes blobs for a given `BucketName` and `BlobId`.
+
+Cross-cutting storage features can be composed around this DAO contract. For
+example, deduplication decides blob identifiers at the `BlobStore` level, while
+wrappers such as compression or encryption can transform payloads and metadata
+before delegating to the concrete storage connector.
+
+=== BlobStore implementations
+
+James composes several behaviors at the `BlobStore` level:
+
+* `PassThroughBlobStore` is the non-deduplicating strategy. It generates a new
+  `BlobId` for each save, delegates persistence to the configured
+  `BlobStoreDAO`, and deletes blobs directly.
+* `DeDuplicationBlobStore` is the deduplicating strategy. It derives `BlobId`
+  values from content hashes, so identical content can share the same stored
+  blob. A single delete does not remove the underlying blob immediately; garbage
+  collection is responsible for eventually removing unreferenced blobs.
+* `MetricableBlobStore` decorates another `BlobStore` with timing metrics.
+* `CachedBlobStore` decorates another `BlobStore` with a Cassandra-backed cache
+  for small, frequently read blobs.
+
+=== BlobStoreDAO implementations
+
+Concrete `BlobStoreDAO` implementations persist payloads in a storage backend,
+for example memory, file, Cassandra, Postgres, or S3 compatible object storage.
+
+Some `BlobStoreDAO` implementations are wrappers rather than final storage
+connectors:
+
+* `AESBlobStoreDAO` encrypts payload bytes before delegating writes to the
+  underlying DAO, and decrypts them transparently on reads. This protects blob
+  content at rest, especially when James stores blobs in third-party object
+  storage.
+* `ZstdBlobStoreDAO` can compress payload bytes before delegating writes to the
+  underlying DAO. When it stores compressed bytes, it records metadata such as
+  `content-encoding` and the original size. On reads, it uses this metadata to
+  transparently decompress the payload. This reduces storage usage and network
+  transfer for compressible blob content.
+
+AES and Zstd can be enabled together. In the Guice binding chain, compression
+wraps encryption: `ZstdBlobStoreDAO` delegates to `AESBlobStoreDAO`, which then
+delegates to the concrete storage DAO. Writes therefore compress first and
+encrypt afterwards; reads decrypt first and decompress afterwards. This ordering
+preserves the benefit of compression, as encrypted payloads are generally not
+compressible.
+
+== Logical buckets
+
+`BucketName` is a James logical namespace in the `BlobStoreDAO` contract. It is
+not an AWS S3 bucket name, even when the selected connector stores data in an S3
+compatible object store.
+
+Each connector maps this logical namespace to its own storage model. Depending
+on the implementation and configuration, a logical bucket can be stored as a
+directory, an object-storage bucket, a database partition, or another
+connector-specific representation. Code using `BlobStoreDAO` should only rely on
+the James `BucketName` abstraction.
+
+== Metadata
+
+Blob metadata stores side information needed to interpret a blob payload without
+changing the payload bytes or blob identifier. One use case is object store
+compression: James uses a marker such as `content-encoding` to detect a
+compressed payload and transparently decompress it when reading.
+
+James uses a hybrid metadata model:
+
+* Metadata actively interpreted by James should expose typed helpers or constants
+  in the API. For example, `BlobMetadata.contentEncoding()` reads the
+  `content-encoding` entry.
+* Other metadata stays available through the underlying map as an extension point
+  for James library users and custom storage implementations.
+  Custom storage metadata could be used by James library users or storage extensions to implement other use cases.
+
+Metadata-aware storage implementations and wrappers should preserve unknown
+metadata entries.
+
+=== Metadata names
+
+`BlobMetadataName` defines the portable metadata key convention:
+
+* names are case-insensitive and are canonicalized to lowercase;
+* names must be non-empty;
+* names must be shorter than 128 characters;
+* names can contain only ASCII letters, digits, and `-`.
