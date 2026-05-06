@@ -1,0 +1,4 @@
+= Postgresql James server &mdash; BlobStore
+:navtitle: BlobStore
+
+include::partial$architecture/blobstore.adoc[]

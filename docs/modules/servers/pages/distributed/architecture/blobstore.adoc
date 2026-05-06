@@ -1,0 +1,4 @@
+= Distributed James Server &mdash; BlobStore
+:navtitle: BlobStore
+
+include::partial$architecture/blobstore.adoc[]
