@@ -38,6 +38,19 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSource;
 import com.google.common.io.FileBackedOutputStream;
 
+/**
+ * James virtual blob store abstraction.
+ *
+ * <p>A {@link BucketName} is a James-specific logical bucket. Each storage connector decides how this logical
+ * bucket is represented in its backend. It should not be conflated with an S3 bucket name and does not have to map one-to-one
+ * to a physical bucket.</p>
+ *
+ * <p>{@link BlobMetadata} is part of the contract so wrapper DAOs and storage implementations can keep side information
+ * needed to interpret a payload, such as compression markers. Metadata actively used by James should expose typed
+ * helpers, while the underlying metadata map remains an extension point for James library users and custom implementations.</p>
+ *
+ * <p>See {@code docs/modules/servers/partials/architecture/blobstore.adoc} for more details.</p>
+ */
 public interface BlobStoreDAO {
     record BlobMetadataName(String name) {
         private static final CharMatcher CHAR_MATCHER = CharMatcher.inRange('a', 'z')
@@ -46,6 +59,7 @@ public interface BlobStoreDAO {
             .or(CharMatcher.is('-'));
 
         public BlobMetadataName {
+            Preconditions.checkArgument(!name.isEmpty(), "Metadata name cannot be empty");
             Preconditions.checkArgument(CHAR_MATCHER.matchesAllOf(name), "Invalid char in metadata name. Must be a-z,A-Z,0-9 or - got " + name);
             Preconditions.checkArgument(name.length() < 128, "Metadata name is too long. Size exceed 128 chars");
             name = name.toLowerCase(Locale.US);
