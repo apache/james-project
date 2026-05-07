@@ -16,6 +16,12 @@ Most James components use `BlobStore`, which is responsible for saving content
 and returning a `BlobId`. `BlobStoreDAO` is the lower-level persistence contract:
 it stores, reads, lists, and deletes blobs for a given `BucketName` and `BlobId`.
 
+A `BlobStore` exposes a default logical bucket through `getDefaultBucketName()`.
+Callers can explicitly pass another `BucketName` when they need to store data in
+another logical bucket. More advanced organization rules inside a logical bucket
+are not part of the generic `BlobStore` contract; callers need to model them
+explicitly or provide a custom `BlobStore` implementation.
+
 Cross-cutting storage features can be composed around this DAO contract. For
 example, deduplication decides blob identifiers at the `BlobStore` level, while
 wrappers such as compression or encryption can transform payloads and metadata
