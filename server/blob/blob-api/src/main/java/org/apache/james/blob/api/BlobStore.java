@@ -27,6 +27,19 @@ import com.google.common.io.ByteSource;
 
 import reactor.util.function.Tuple2;
 
+/**
+ * High-level James blob storage abstraction.
+ *
+ * <p>A {@link BlobStore} stores binary payloads in a James logical {@link BucketName}
+ * and returns {@link BlobId} references. A configured {@link BlobStore} exposes a default
+ * logical bucket through {@link #getDefaultBucketName()}.</p>
+ *
+ * <p>A {@link BucketName} is a James-specific logical bucket. Each storage connector decides how this logical
+ * bucket is represented in its backend. It should not be conflated with an S3 bucket name and does not have to map one-to-one
+ * to a physical bucket.</p>
+ *
+ * <p>See {@code docs/modules/servers/partials/architecture/blobstore.adoc} for more details.</p>
+ */
 public interface BlobStore {
     String DEFAULT_BUCKET_NAME_QUALIFIER = "defaultBucket";
 
