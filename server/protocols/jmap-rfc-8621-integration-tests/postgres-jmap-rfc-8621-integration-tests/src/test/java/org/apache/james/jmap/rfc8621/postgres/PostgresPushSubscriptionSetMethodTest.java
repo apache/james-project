@@ -61,6 +61,7 @@ public class PostgresPushSubscriptionSetMethodTest implements PushSubscriptionSe
             .overrideWith(new PushSubscriptionProbeModule())
             .overrideWith(new TypeStateModule())
             .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @RegisterExtension
