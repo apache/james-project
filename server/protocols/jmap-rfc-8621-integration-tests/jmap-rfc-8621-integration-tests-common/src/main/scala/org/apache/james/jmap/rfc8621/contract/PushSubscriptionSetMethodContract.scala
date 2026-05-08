@@ -22,9 +22,10 @@ package org.apache.james.jmap.rfc8621.contract
 import java.net.URI
 import java.security.KeyPair
 import java.security.interfaces.ECPublicKey
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZonedDateTime}
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Consumer
 import java.util.{Base64, UUID}
 
@@ -49,8 +50,8 @@ import org.apache.james.jmap.change.{EmailDeliveryTypeName, EmailTypeName, Mailb
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
-import org.apache.james.jmap.rfc8621.contract.PushSubscriptionSetMethodContract.TIME_FORMATTER
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.PushSubscriptionSetMethodContract.{TIME_FORMATTER, TestContext}
 import org.apache.james.jmap.rfc8621.contract.probe.TypeStateProbe
 import org.apache.james.utils.{DataProbeImpl, GuiceProbe, UpdatableTickingClock}
 import org.assertj.core.api.Assertions.assertThat
@@ -67,6 +68,9 @@ import reactor.core.scala.publisher.SMono
 import scala.jdk.CollectionConverters._
 
 object PushSubscriptionSetMethodContract {
+  case class TestContext(bobUsername: Username)
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+
   val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
 }
 class PushSubscriptionProbe @Inject()(pushSubscriptionRepository: PushSubscriptionRepository) extends GuiceProbe {
@@ -93,18 +97,25 @@ class PushSubscriptionProbeModule extends AbstractModule {
 }
 
 trait PushSubscriptionSetMethodContract {
+  def bobUsername: Username = PushSubscriptionSetMethodContract.currentContext.get().bobUsername
+
   private lazy val awaitAtMostTenSeconds = Awaitility.`with`
     .await.atMost(10, TimeUnit.SECONDS)
 
   @BeforeEach
-  def setUp(server: GuiceJamesServer, pushServer: ClientAndServer): Unit = {
+  def setUp(server: GuiceJamesServer, pushServer: ClientAndServer, clock: UpdatableTickingClock): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    PushSubscriptionSetMethodContract.currentContext.set(TestContext(bobUsername = bob))
+    clock.setInstant(Instant.now())
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent()
       .addDomain(DOMAIN.asString())
-      .addUser(BOB.asString(), BOB_PASSWORD)
+      .addUser(bob.asString(), BOB_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build()
 
@@ -204,7 +215,7 @@ trait PushSubscriptionSetMethodContract {
   def updateShouldModifyTypes(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
@@ -255,7 +266,7 @@ trait PushSubscriptionSetMethodContract {
            |    ]
            |}""".stripMargin)
 
-    assertThat(probe.retrievePushSubscription(BOB, pushSubscription.id).types.asJava)
+    assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription.id).types.asJava)
       .containsExactlyInAnyOrder(MailboxTypeName, EmailTypeName)
   }
 
@@ -263,7 +274,7 @@ trait PushSubscriptionSetMethodContract {
   def updateWithMissingTypesPropertyShouldNotUpdateTypes(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
@@ -316,7 +327,7 @@ trait PushSubscriptionSetMethodContract {
            |}""".stripMargin)
 
     // Types are not updated
-    assertThat(probe.retrievePushSubscription(BOB, pushSubscription.id).types.asJava)
+    assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription.id).types.asJava)
       .containsOnly(MailboxTypeName)
   }
 
@@ -325,7 +336,7 @@ trait PushSubscriptionSetMethodContract {
     val subscriptionProbe = server.getProbe(classOf[PushSubscriptionProbe])
     val typeStateProbe = server.getProbe(classOf[TypeStateProbe])
     val pushSubscription = subscriptionProbe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
@@ -377,7 +388,7 @@ trait PushSubscriptionSetMethodContract {
            |}""".stripMargin)
 
     // All types are registered
-    assertThat(subscriptionProbe.retrievePushSubscription(BOB, pushSubscription.id).types.asJava)
+    assertThat(subscriptionProbe.retrievePushSubscription(bobUsername, pushSubscription.id).types.asJava)
       .containsExactlyInAnyOrderElementsOf(typeStateProbe.typesNames())
   }
 
@@ -385,7 +396,7 @@ trait PushSubscriptionSetMethodContract {
   def updateShouldRejectUnknownTypes(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
@@ -445,7 +456,7 @@ trait PushSubscriptionSetMethodContract {
   def updateShouldRejectBadTypes(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
@@ -505,7 +516,7 @@ trait PushSubscriptionSetMethodContract {
   def updateShouldRejectBadType(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
@@ -622,7 +633,7 @@ trait PushSubscriptionSetMethodContract {
     // All types are registered
     val subscriptionId: PushSubscriptionId = PushSubscriptionId.parse(JsonPath.from(response)
       .getString("methodResponses[0][1].created.4f29.id")).toOption.get
-    assertThat(subscriptionProbe.retrievePushSubscription(BOB, subscriptionId).types.asJava)
+    assertThat(subscriptionProbe.retrievePushSubscription(bobUsername, subscriptionId).types.asJava)
       .containsExactlyInAnyOrderElementsOf(typeStateProbe.typesNames())
   }
 
@@ -719,12 +730,12 @@ trait PushSubscriptionSetMethodContract {
   def getShouldReturnAllRecords(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription1 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
     val pushSubscription2 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d087"),
         types = Seq(EmailTypeName))
@@ -780,11 +791,11 @@ trait PushSubscriptionSetMethodContract {
   def getShouldReturnValidatedVerificationCode(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription1 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
-    probe.validatePushSubscription(BOB, pushSubscription1.id)
+    probe.validatePushSubscription(bobUsername, pushSubscription1.id)
 
     val request: String =
       """{
@@ -831,11 +842,11 @@ trait PushSubscriptionSetMethodContract {
   def getShouldNotReturnExpiredSubscriptionAndTriggerTheDeletion(server: GuiceJamesServer, clock: UpdatableTickingClock): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription1 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
-    probe.validatePushSubscription(BOB, pushSubscription1.id)
+    probe.validatePushSubscription(bobUsername, pushSubscription1.id)
 
     clock.setInstant(ZonedDateTime.now().plusDays(100).toInstant)
 
@@ -866,7 +877,7 @@ trait PushSubscriptionSetMethodContract {
              |    ]
              |}""".stripMargin)
 
-    assertThat(probe.retrievePushSubscription(BOB, pushSubscription1.id))
+    assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription1.id))
       .isNull()
   }
 
@@ -874,17 +885,17 @@ trait PushSubscriptionSetMethodContract {
   def getByIdShouldReturnRecords(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription1 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
     val pushSubscription2 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL),
         deviceId = DeviceClientId("12c6d087"),
         types = Seq(EmailTypeName))
     val pushSubscription3 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL),
         deviceId = DeviceClientId("12c6d088"),
         types = Seq(EmailTypeName))
@@ -942,7 +953,7 @@ trait PushSubscriptionSetMethodContract {
   def getByIdShouldReturnEmptyWhenEmpty(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription1 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
@@ -1024,12 +1035,12 @@ trait PushSubscriptionSetMethodContract {
   def getShouldFilterProperties(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription1 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName))
     val pushSubscription2 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d087"),
         types = Seq(EmailTypeName))
@@ -1661,7 +1672,7 @@ trait PushSubscriptionSetMethodContract {
   def updateShouldValidateVerificationCode(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
@@ -1712,7 +1723,7 @@ trait PushSubscriptionSetMethodContract {
            |    ]
            |}""".stripMargin)
 
-    assertThat(probe.retrievePushSubscription(BOB, pushSubscription.id).validated).isTrue
+    assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription.id).validated).isTrue
   }
 
   @Test
@@ -1835,22 +1846,22 @@ trait PushSubscriptionSetMethodContract {
   def updateMixed(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription1 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d081"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
     val pushSubscription2 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d082"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
     val pushSubscription3 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d083"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
     val pushSubscription4 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d084"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
@@ -1928,10 +1939,10 @@ trait PushSubscriptionSetMethodContract {
            |}""".stripMargin)
 
     SoftAssertions.assertSoftly(softly => {
-      softly.assertThat(probe.retrievePushSubscription(BOB, pushSubscription1.id).validated).isTrue
-      softly.assertThat(probe.retrievePushSubscription(BOB, pushSubscription2.id).validated).isFalse
-      softly.assertThat(probe.retrievePushSubscription(BOB, pushSubscription3.id).validated).isTrue
-      softly.assertThat(probe.retrievePushSubscription(BOB, pushSubscription4.id).validated).isFalse
+      softly.assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription1.id).validated).isTrue
+      softly.assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription2.id).validated).isFalse
+      softly.assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription3.id).validated).isTrue
+      softly.assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription4.id).validated).isFalse
     })
   }
 
@@ -1939,7 +1950,7 @@ trait PushSubscriptionSetMethodContract {
   def updateShouldNotValidateVerificationCodeWhenWrong(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
@@ -1996,14 +2007,14 @@ trait PushSubscriptionSetMethodContract {
            |    ]
            |}""".stripMargin)
 
-    assertThat(probe.retrievePushSubscription(BOB, pushSubscription.id).validated).isFalse
+    assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription.id).validated).isFalse
   }
 
   @Test
   def updateValidExpiresShouldSucceed(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
@@ -2055,7 +2066,7 @@ trait PushSubscriptionSetMethodContract {
            |    ]
            |}""".stripMargin)
 
-    assertThat(probe.retrievePushSubscription(BOB, pushSubscription.id)
+    assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription.id)
       .expires.value.format(TIME_FORMATTER))
       .isEqualTo(validExpiresString)
   }
@@ -2064,7 +2075,7 @@ trait PushSubscriptionSetMethodContract {
   def updateInvalidExpiresStringShouldFail(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
@@ -2125,7 +2136,7 @@ trait PushSubscriptionSetMethodContract {
   def updateWithBiggerExpiresThanServerLimitShouldSetToServerLimitAndExplicitlyReturned(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
@@ -2160,7 +2171,7 @@ trait PushSubscriptionSetMethodContract {
       .body
       .asString
 
-    val fixedExpires = probe.retrievePushSubscription(BOB, pushSubscription.id)
+    val fixedExpires = probe.retrievePushSubscription(bobUsername, pushSubscription.id)
       .expires.value.format(TIME_FORMATTER)
 
     assertThatJson(response)
@@ -2187,7 +2198,7 @@ trait PushSubscriptionSetMethodContract {
   def updateOutdatedExpiresShouldFail(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
@@ -2248,7 +2259,7 @@ trait PushSubscriptionSetMethodContract {
   def updateShouldFailWhenUnknownProperty(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
@@ -2303,7 +2314,7 @@ trait PushSubscriptionSetMethodContract {
            |    ]
            |}""".stripMargin)
 
-    assertThat(probe.retrievePushSubscription(BOB, pushSubscription.id).validated).isFalse
+    assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription.id).validated).isFalse
   }
 
   @Test
@@ -2730,7 +2741,7 @@ trait PushSubscriptionSetMethodContract {
   def destroyShouldSucceed(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
@@ -2775,7 +2786,7 @@ trait PushSubscriptionSetMethodContract {
            |    ]
            |}""".stripMargin)
 
-    assertThat(probe.retrievePushSubscription(BOB, pushSubscription.id)).isNull()
+    assertThat(probe.retrievePushSubscription(bobUsername, pushSubscription.id)).isNull()
   }
 
   @Test
@@ -2875,12 +2886,12 @@ trait PushSubscriptionSetMethodContract {
   def destroyShouldHandleMixedCases(server: GuiceJamesServer): Unit = {
     val probe = server.getProbe(classOf[PushSubscriptionProbe])
     val pushSubscription1 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL),
         deviceId = DeviceClientId("12c6d086"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))
     val pushSubscription2 = probe
-      .createPushSubscription(username = BOB,
+      .createPushSubscription(username = bobUsername,
         url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d087").toURL),
         deviceId = DeviceClientId("12c6d087"),
         types = Seq(MailboxTypeName, EmailDeliveryTypeName, EmailTypeName))

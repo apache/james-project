@@ -46,6 +46,7 @@ public class MemoryPushSubscriptionSetMethodTest implements PushSubscriptionSetM
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule(), new TypeStateModule())
             .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @RegisterExtension
