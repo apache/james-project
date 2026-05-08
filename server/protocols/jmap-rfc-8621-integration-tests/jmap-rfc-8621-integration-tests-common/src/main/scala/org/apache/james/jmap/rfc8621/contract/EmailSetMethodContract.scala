@@ -23,8 +23,10 @@ import java.nio.charset.{Charset, StandardCharsets}
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import java.util.{Date, UUID}
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, `with`, requestSpecification}
 import io.restassured.builder.ResponseSpecBuilder
@@ -35,14 +37,15 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
 import org.apache.http.HttpStatus.{SC_CREATED, SC_OK}
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.core.quota.QuotaCountLimit
 import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.DownloadContract.accountId
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.EmailSetMethodContract.TestContext
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.jmap.{JmapGuiceProbe, MessageIdProbe}
@@ -52,6 +55,7 @@ import org.apache.james.mailbox.model.{ComposedMessageId, MailboxACL, MailboxCon
 import org.apache.james.mailbox.probe.MailboxProbe
 import org.apache.james.mailbox.{DefaultMailboxes, FlagsBuilder}
 import org.apache.james.mime4j.dom.Message
+import org.apache.james.mime4j.message.DefaultMessageWriter
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl, QuotaProbesImpl}
 import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
@@ -67,25 +71,49 @@ import play.api.libs.json.{JsNumber, JsString, Json}
 
 import scala.jdk.CollectionConverters._
 
+object EmailSetMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String,
+                         andreUsername: Username, andreAccountId: String)
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+}
+
 trait EmailSetMethodContract {
+  def bobUsername: Username = EmailSetMethodContract.currentContext.get().bobUsername
+  def bobAccountId: String = EmailSetMethodContract.currentContext.get().bobAccountId
+  def andreUsername: Username = EmailSetMethodContract.currentContext.get().andreUsername
+  def andreAccountId: String = EmailSetMethodContract.currentContext.get().andreAccountId
+
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
     .pollInterval(slowPacedPollInterval)
     .and.`with`.pollDelay(slowPacedPollInterval)
     .await
   private lazy val awaitAtMostTenSeconds = calmlyAwait.atMost(10, TimeUnit.SECONDS)
+
+  private def sizeOf(message: Message): Int =
+    DefaultMessageWriter.asBytes(message).length
+
   private lazy val UTC_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    EmailSetMethodContract.currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString,
+      andreUsername = andre,
+      andreAccountId = Hashing.sha256().hashString(andre.asString(), StandardCharsets.UTF_8).toString))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString, ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -99,9 +127,9 @@ trait EmailSetMethodContract {
 
     val flags: Flags = new Flags(Flags.Flag.ANSWERED)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -111,7 +139,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |          "keywords": {
@@ -122,7 +150,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["${messageId.serialize}"],
          |       "properties": ["keywords"]
          |     },
@@ -171,7 +199,7 @@ trait EmailSetMethodContract {
     """"header:aheader:asGroupedAddresses": [{"name": null,"addresses": [{"name": "user1","email": "user1@domain.tld" },{"name": "user2", "email": "user2@domain.tld"}]},{"name": "Friends","addresses": [{"email": "user3@domain.tld"},{"name": "user4","email": "user4@domain.tld"}]}]"""
   ))
   def createShouldPositionSpecificHeaders(specificHeader: String, server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val propertyEnd = specificHeader.substring(1).indexOf('"')
     val property = specificHeader.substring(1, propertyEnd + 1)
@@ -181,7 +209,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -193,7 +221,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["mailboxIds", "$property"]
          |     },
@@ -248,7 +276,7 @@ trait EmailSetMethodContract {
 
   @Test
   def specificHeaderShouldMatchSupportedType(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -256,7 +284,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -293,7 +321,7 @@ trait EmailSetMethodContract {
 
   @Test
   def specificHeadersCannotOverrideConvenienceHeader(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -301,7 +329,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -339,7 +367,7 @@ trait EmailSetMethodContract {
 
   @Test
   def emailSetCreateShouldPositionMissingDateAndMessageId(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -347,20 +375,20 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
          |             "${mailboxId.serialize}": true
          |          },
          |          "to": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}],
-         |          "from": [{"email": "${BOB.asString}"}]
+         |          "from": [{"email": "${bobUsername.asString}"}]
          |        }
          |      }
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["sentAt", "messageId"]
          |     },
@@ -389,7 +417,7 @@ trait EmailSetMethodContract {
 
   @Test
   def emailSetCreateShouldSucceedWithEmptyKeywords(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -397,7 +425,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -405,13 +433,13 @@ trait EmailSetMethodContract {
          |          },
          |          "keywords":{},
          |          "to": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}],
-         |          "from": [{"email": "${BOB.asString}"}]
+         |          "from": [{"email": "${bobUsername.asString}"}]
          |        }
          |      }
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["sentAt", "messageId"]
          |     },
@@ -440,9 +468,9 @@ trait EmailSetMethodContract {
 
   @Test
   def shouldCombineCreateAndUpdateInASingleMethodCall(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
+    val messageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath,
         AppendCommand.from(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
       .getMessageId
 
@@ -451,7 +479,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "destroy": ["${messageId.serialize()}"],
          |      "create": {
          |        "aaaaaa":{
@@ -468,7 +496,7 @@ trait EmailSetMethodContract {
          |            }
          |          ],
          |          "to": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}],
-         |          "from": [{"email": "${BOB.asString}"}]
+         |          "from": [{"email": "${bobUsername.asString}"}]
          |        }
          |      }
          |    }, "c1"]]
@@ -496,7 +524,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenBadJsonPayloadForSpecificHeader(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -504,7 +532,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -541,7 +569,7 @@ trait EmailSetMethodContract {
 
   @Test
   def specificContentHeadersShouldBeRejected(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -549,7 +577,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -586,7 +614,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenEmailContainsHeadersProperties(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -594,7 +622,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -644,9 +672,9 @@ trait EmailSetMethodContract {
 
     val flags: Flags = new Flags(Flags.Flag.ANSWERED)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -656,7 +684,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |          "keywords": {
@@ -691,7 +719,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldAddAnEmailInTargetMailbox(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -699,7 +727,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -711,7 +739,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["mailboxIds", "subject"]
          |     },
@@ -766,7 +794,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldHandleAddressHeaders(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -774,7 +802,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {"${mailboxId.serialize}": true},
@@ -789,7 +817,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["cc", "bcc", "sender", "from", "to", "replyTo"]
          |     },
@@ -846,7 +874,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createWithMultipleSenderShouldNotCrash(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -854,7 +882,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {"${mailboxId.serialize}": true},
@@ -864,7 +892,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["sender"]
          |     },
@@ -916,14 +944,14 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportKeywords(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request = s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -938,7 +966,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["mailboxIds", "keywords"]
          |     },
@@ -997,7 +1025,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportReceivedAt(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
 
@@ -1005,7 +1033,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -1017,7 +1045,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["mailboxIds", "receivedAt"]
          |     },
@@ -1073,7 +1101,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportSentAt(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val sentAt = ZonedDateTime.now().minusDays(1)
 
@@ -1081,7 +1109,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -1093,7 +1121,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["mailboxIds", "sentAt"]
          |     },
@@ -1149,14 +1177,14 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportMessageIdHeaders(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request = s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -1170,7 +1198,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["references", "inReplyTo", "messageId"]
          |     },
@@ -1225,7 +1253,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailIfForbidden(server: GuiceJamesServer): Unit = {
-    val andrePath = MailboxPath.inbox(ANDRE)
+    val andrePath = MailboxPath.inbox(andreUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
 
     val request =
@@ -1233,7 +1261,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -1268,7 +1296,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldRejectEmptyMailboxIds(server: GuiceJamesServer): Unit = {
-    val andrePath = MailboxPath.inbox(ANDRE)
+    val andrePath = MailboxPath.inbox(andreUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
 
     val request =
@@ -1276,7 +1304,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {},
@@ -1309,7 +1337,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldRejectInvalidMailboxIds(server: GuiceJamesServer): Unit = {
-    val andrePath = MailboxPath.inbox(ANDRE)
+    val andrePath = MailboxPath.inbox(andreUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
 
     val request =
@@ -1317,7 +1345,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -1352,7 +1380,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldRejectNoMailboxIds(server: GuiceJamesServer): Unit = {
-    val andrePath = MailboxPath.inbox(ANDRE)
+    val andrePath = MailboxPath.inbox(andreUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
 
     val request =
@@ -1360,7 +1388,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "subject": "Boredome comes from a boring mind!"
@@ -1392,7 +1420,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldRejectInvalidJson(server: GuiceJamesServer): Unit = {
-    val andrePath = MailboxPath.inbox(ANDRE)
+    val andrePath = MailboxPath.inbox(andreUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
 
     val request =
@@ -1400,7 +1428,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -1435,18 +1463,18 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSucceedIfDelegated(server: GuiceJamesServer): Unit = {
-    val andrePath = MailboxPath.inbox(ANDRE)
+    val andrePath = MailboxPath.inbox(andreUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andrePath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Insert, Right.Lookup, Right.Read))
+      .replaceRights(andrePath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Insert, Right.Lookup, Right.Read))
 
     val request =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -1456,7 +1484,7 @@ trait EmailSetMethodContract {
          |      }
          |    }, "c1"], ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["mailboxIds"]
          |     },
@@ -1488,7 +1516,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportHtmlBody(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -1497,7 +1525,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -1522,7 +1550,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["mailboxIds", "subject", "bodyValues"],
          |       "fetchHTMLBodyValues": true
@@ -1587,7 +1615,7 @@ trait EmailSetMethodContract {
 
   @Test
   def tooBigEmailsShouldBeRejected(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val uploadResponse1: String = `given`
@@ -1596,7 +1624,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body("0123456789\\r\\n".repeat(500 * 1024))
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -1609,7 +1637,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body("0123456789\\r\\n".repeat(500 * 1024))
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -1623,7 +1651,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -1683,7 +1711,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSucceedWhenPartPropertiesOmitted(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -1692,7 +1720,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -1715,7 +1743,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["mailboxIds", "subject", "bodyValues"],
          |       "fetchHTMLBodyValues": true
@@ -1780,7 +1808,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenMultipleBodyParts(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -1789,7 +1817,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -1841,7 +1869,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenPartIdMisMatch(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -1850,7 +1878,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -1898,7 +1926,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenHtmlBodyIsNotHtmlType(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -1907,7 +1935,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -1955,7 +1983,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenIsTruncatedIsTrue(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -1964,7 +1992,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2012,7 +2040,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenIsEncodingProblemIsTrue(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -2021,7 +2049,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2069,7 +2097,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenCharsetIsSpecified(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -2078,7 +2106,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2126,7 +2154,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenSizeIsSpecified(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -2135,7 +2163,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2183,7 +2211,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenContentTransferEncodingIsSpecified(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -2192,7 +2220,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2240,7 +2268,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportAttachment(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
 
@@ -2250,7 +2278,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2264,7 +2292,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2286,7 +2314,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["mailboxIds", "subject", "attachments"],
          |        "bodyProperties": ["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location"]
@@ -2357,7 +2385,7 @@ trait EmailSetMethodContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
-      .get(s"/download/$accountId/${messageId}_4")
+      .get(s"/download/$bobAccountId/${messageId}_4")
     .`then`
       .statusCode(SC_OK)
       .contentType("text/plain")
@@ -2371,7 +2399,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportCustomCharsetInAttachment(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
 
@@ -2381,7 +2409,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2395,7 +2423,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2415,7 +2443,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["mailboxIds", "subject", "attachments"],
          |        "bodyProperties": ["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid"]
@@ -2484,7 +2512,7 @@ trait EmailSetMethodContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
-      .get(s"/download/$accountId/${messageId}_4")
+      .get(s"/download/$bobAccountId/${messageId}_4")
     .`then`
       .statusCode(SC_OK)
       .contentType("text/plain")
@@ -2498,7 +2526,7 @@ trait EmailSetMethodContract {
 
   @Test
   def rejectAttahmentCreationRequestWithContentTransferEncoding(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
 
@@ -2508,7 +2536,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2522,7 +2550,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2566,7 +2594,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportAttachmentAndHtmlBody(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
@@ -2577,7 +2605,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2591,7 +2619,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2624,7 +2652,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["mailboxIds", "subject", "attachments", "htmlBody", "bodyValues"],
          |        "fetchHTMLBodyValues": true
@@ -2708,7 +2736,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportAttachmentAndTextBody(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
     val textBody: String = "Let me tell you all about it."
@@ -2719,7 +2747,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2733,7 +2761,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2766,7 +2794,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["mailboxIds", "subject", "attachments", "textBody", "bodyValues"],
          |        "fetchTextBodyValues": true
@@ -2851,7 +2879,7 @@ trait EmailSetMethodContract {
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def creationShouldSupportTextBodyUsingBlobId(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val textBody: String = UUID.randomUUID().toString
     val payload = textBody.getBytes(StandardCharsets.UTF_8)
@@ -2862,7 +2890,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2873,7 +2901,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2891,7 +2919,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["mailboxIds", "subject", "preview", "textBody", "bodyValues"],
          |        "fetchTextBodyValues": true
@@ -2925,7 +2953,7 @@ trait EmailSetMethodContract {
 
   @Test
   def creationShouldSupportHtmlBodyUsingBlobId(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -2935,7 +2963,7 @@ trait EmailSetMethodContract {
       .contentType("text/html")
       .body(htmlBody)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2946,7 +2974,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -2964,7 +2992,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["mailboxIds", "subject", "preview", "htmlBody", "bodyValues"],
          |        "fetchTextBodyValues": true
@@ -2998,7 +3026,7 @@ trait EmailSetMethodContract {
 
   @Test
   def emailCreationShouldFailWhenHtmlBodyUsesUnsupportedBlobContentType(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -3010,7 +3038,7 @@ trait EmailSetMethodContract {
       .contentType(unSupportContentType)
       .body(htmlBody)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3021,7 +3049,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -3059,18 +3087,18 @@ trait EmailSetMethodContract {
 
   @Test
   def emailCreationShouldFailWhenHtmlBodyUsesNotFoundBlobId(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val blobIdOfAndre: String = given(baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+      .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
       .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build)
       .basePath("")
       .contentType("text/plain")
       .body(UUID.randomUUID().toString)
     .when
-      .post(s"/upload/$ANDRE_ACCOUNT_ID")
+      .post(s"/upload/$andreAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3082,7 +3110,7 @@ trait EmailSetMethodContract {
                |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
                |  "methodCalls": [
                |    ["Email/set", {
-               |      "accountId": "$ACCOUNT_ID",
+               |      "accountId": "$bobAccountId",
                |      "create": {
                |        "aaaaaa": {
                |          "mailboxIds": {
@@ -3119,14 +3147,14 @@ trait EmailSetMethodContract {
 
   @Test
   def emailCreationShouldFailWhenHtmlBodyUsesNotUploadBlobId(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val attachedMessageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(Message.Builder
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(Message.Builder
         .of
         .setSubject("test")
-        .setSender(ANDRE.asString())
-        .setFrom(ANDRE.asString())
+        .setSender(andreUsername.asString())
+        .setFrom(andreUsername.asString())
         .setSubject("I'm happy to be attached")
         .setBody("testmail", StandardCharsets.UTF_8)
         .build))
@@ -3140,7 +3168,7 @@ trait EmailSetMethodContract {
                |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
                |  "methodCalls": [
                |    ["Email/set", {
-               |      "accountId": "$ACCOUNT_ID",
+               |      "accountId": "$bobAccountId",
                |      "create": {
                |        "aaaaaa": {
                |          "mailboxIds": {
@@ -3174,7 +3202,7 @@ trait EmailSetMethodContract {
 
   @Test
   def emailCreationShouldFailWhenHtmlBodyPresentBothBlobIdAndPartId(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val textBody: String = UUID.randomUUID().toString
     val payload = textBody.getBytes(StandardCharsets.UTF_8)
@@ -3185,7 +3213,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3198,7 +3226,7 @@ trait EmailSetMethodContract {
            |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
            |  "methodCalls": [
            |    ["Email/set", {
-           |      "accountId": "$ACCOUNT_ID",
+           |      "accountId": "$bobAccountId",
            |      "create": {
            |        "aaaaaa": {
            |          "mailboxIds": {
@@ -3240,7 +3268,7 @@ trait EmailSetMethodContract {
 
   @Test
   def emailCreationShouldFailWhenHtmlBodyAbsentBothBlobIdAndPartId(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -3248,7 +3276,7 @@ trait EmailSetMethodContract {
                |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
                |  "methodCalls": [
                |    ["Email/set", {
-               |      "accountId": "$ACCOUNT_ID",
+               |      "accountId": "$bobAccountId",
                |      "create": {
                |        "aaaaaa": {
                |          "mailboxIds": {
@@ -3281,7 +3309,7 @@ trait EmailSetMethodContract {
 
   @Test
   def shouldPreserveCharsetOfBlobWhenEmailBodyWithBlobId(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val textBody: String = "Café"
     val payload = textBody.getBytes(Charset.forName("Windows-1252"))
@@ -3292,7 +3320,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain; charset=Windows-1252")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3303,7 +3331,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -3321,7 +3349,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["mailboxIds", "subject", "preview"],
          |        "fetchTextBodyValues": true
@@ -3344,7 +3372,7 @@ trait EmailSetMethodContract {
 
   @Test
   def textContentTransferEncodingShouldBeRejectedInTextBody(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val textBody: String = "Let me tell you all about it."
 
@@ -3353,7 +3381,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -3404,7 +3432,7 @@ trait EmailSetMethodContract {
 
   @Test
   def binaryContentTransferEncodingShouldBeRejectedInTextBody(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val textBody: String = "Let me tell you all about it."
 
@@ -3413,7 +3441,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -3464,7 +3492,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportInlinedAttachmentsMixedWithRegularAttachmentsAndHtmlBody(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
@@ -3475,7 +3503,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3489,7 +3517,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -3536,7 +3564,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["mailboxIds", "subject", "attachments", "htmlBody", "bodyValues"],
          |        "fetchHTMLBodyValues": true
@@ -3666,7 +3694,7 @@ trait EmailSetMethodContract {
 
   @Test
   def inlinedAttachmentsShouldBeWrappedInRelatedMultipart(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
@@ -3677,7 +3705,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3691,7 +3719,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -3738,7 +3766,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["bodyStructure"],
          |        "bodyProperties": ["type", "disposition", "cid", "subParts"]
@@ -3817,7 +3845,7 @@ trait EmailSetMethodContract {
 
   @Test
   def htmlBodyPartWithOnlyNormalAttachmentsShouldNotBeWrappedInARelatedMultipart(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
@@ -3828,7 +3856,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3842,7 +3870,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -3875,7 +3903,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["bodyStructure"],
          |        "bodyProperties": ["type", "disposition", "cid", "subParts"]
@@ -3950,7 +3978,7 @@ trait EmailSetMethodContract {
   @deprecated("specificHeaders should be set on EmailBodyPart as RFC8621")
   @Test
   def emailBodyValueShouldSupportSpecificHeaders(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
@@ -3960,7 +3988,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -3986,7 +4014,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["bodyStructure"],
          |        "bodyProperties": ["type", "disposition", "cid", "subParts", "header:Specific:asText"]
@@ -4054,7 +4082,7 @@ trait EmailSetMethodContract {
 
   @Test
   def shouldSupportSpecificHeadersInEmailBodyPart(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -4063,7 +4091,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -4089,7 +4117,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["bodyStructure"],
          |        "bodyProperties": ["type", "disposition", "cid", "subParts", "header:Specific:asText"]
@@ -4157,7 +4185,7 @@ trait EmailSetMethodContract {
 
   @Test
   def shouldFailIfSpecificHeadersSetInBothEmailBodyPartAndEmailBodyValue(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -4166,7 +4194,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -4214,7 +4242,7 @@ trait EmailSetMethodContract {
 
   @Test
   def inlinedAttachmentsOnlyShouldNotBeWrappedInAMixedMultipart(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
@@ -4225,7 +4253,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -4239,7 +4267,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -4280,7 +4308,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["bodyStructure"],
          |        "bodyProperties": ["type", "disposition", "cid", "subParts"]
@@ -4360,7 +4388,7 @@ trait EmailSetMethodContract {
 
   @Test
   def htmlBodyOnlyShouldNotBeWrappedInMultiparts(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
@@ -4371,7 +4399,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -4383,7 +4411,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -4409,7 +4437,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["bodyStructure"],
          |        "bodyProperties": ["type", "disposition", "cid", "subParts"]
@@ -4462,7 +4490,7 @@ trait EmailSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Email/set", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "newState": "${INSTANCE.value}",
            |      "created": {
            |        "aaaaaa": {
@@ -4474,7 +4502,7 @@ trait EmailSetMethodContract {
            |      }
            |    }, "c1"],
            |    ["Email/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "list": [
            |        {
            |          "id": "$messageId",
@@ -4498,7 +4526,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportHtmlAndTextBody(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
@@ -4507,7 +4535,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -4532,7 +4560,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["bodyStructure", "bodyValues"],
          |        "bodyProperties": ["type", "disposition", "cid", "subParts", "charset"],
@@ -4575,7 +4603,7 @@ trait EmailSetMethodContract {
            |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Email/set", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "oldState": "${State.INITIAL.getValue}",
            |      "created": {
            |        "aaaaaa": {
@@ -4587,7 +4615,7 @@ trait EmailSetMethodContract {
            |      }
            |    }, "c1"],
            |    ["Email/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "list": [
            |        {
            |          "id": "$messageId",
@@ -4627,7 +4655,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldWrapInlineBodyWithAlternativeMultipart(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
@@ -4638,7 +4666,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -4652,7 +4680,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -4699,7 +4727,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["bodyStructure"],
          |        "bodyProperties": ["type", "disposition", "cid", "subParts"]
@@ -4788,7 +4816,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportAttachmentWithName(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
 
@@ -4798,7 +4826,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -4812,7 +4840,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -4835,7 +4863,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["mailboxIds", "subject", "attachments"],
          |        "bodyProperties": ["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location"]
@@ -4906,18 +4934,19 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldSupportAttachedMessages(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
-      .setSender(ANDRE.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(andreUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("I'm happy to be attached")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
+    val expectedAttachmentSize = sizeOf(message)
     val attachedMessageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, bobPath, AppendCommand.from(message))
       .getMessageId
 
     val blobId: String = attachedMessageId.serialize()
@@ -4927,7 +4956,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -4947,7 +4976,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |      {
-         |        "accountId": "$ACCOUNT_ID",
+         |        "accountId": "$bobAccountId",
          |        "ids": ["#aaaaaa"],
          |        "properties": ["mailboxIds", "subject", "attachments"],
          |        "bodyProperties": ["partId", "blobId", "size", "type", "charset", "disposition"]
@@ -5004,7 +5033,7 @@ trait EmailSetMethodContract {
            |    {
            |      "partId": "4",
            |      "blobId": "${messageId}_4",
-           |      "size": 155,
+           |      "size": $expectedAttachmentSize,
            |      "type": "message/rfc822",
            |      "charset": "US-ASCII",
            |      "disposition": "attachment"
@@ -5015,7 +5044,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenAttachmentNotFound(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -5023,7 +5052,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -5067,7 +5096,7 @@ trait EmailSetMethodContract {
 
   @Test
   def createShouldFailWhenAttachmentDoesNotBelongToUser(server: GuiceJamesServer): Unit = {
-    val andrePath = MailboxPath.inbox(ANDRE)
+    val andrePath = MailboxPath.inbox(andreUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
 
     val payload = "123456789\r\n".repeat(1).getBytes
@@ -5078,7 +5107,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID")
+      .post(s"/upload/$bobAccountId")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -5092,7 +5121,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "create": {
          |        "aaaaaa": {
          |          "mailboxIds": {
@@ -5114,7 +5143,7 @@ trait EmailSetMethodContract {
 
     val response = `given`(
       baseRequestSpecBuilder(server)
-        .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+        .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
         .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .setBody(request)
         .build, new ResponseSpecBuilder().build)
@@ -5142,9 +5171,9 @@ trait EmailSetMethodContract {
 
     val flags: Flags = new Flags(Flags.Flag.ANSWERED)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -5154,7 +5183,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |          "keywords": {
@@ -5196,9 +5225,9 @@ trait EmailSetMethodContract {
 
     val flags: Flags = new Flags(Flags.Flag.ANSWERED)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -5208,7 +5237,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |          "keywords": {
@@ -5247,10 +5276,10 @@ trait EmailSetMethodContract {
   @Test
   def shouldKeepUnexposedKeywordWhenResetKeywords(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB.asString(), "mailbox");
+    mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, bobUsername.asString(), "mailbox");
 
-    val bobPath = MailboxPath.forUser(BOB, "mailbox")
-    val message: ComposedMessageId = mailboxProbe.appendMessage(BOB.asString, bobPath,
+    val bobPath = MailboxPath.forUser(bobUsername, "mailbox")
+    val message: ComposedMessageId = mailboxProbe.appendMessage(bobUsername.asString, bobPath,
       new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)),
       new Date, false, new Flags(Flags.Flag.DELETED))
 
@@ -5260,7 +5289,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "$messageId":{
          |          "keywords": {
@@ -5277,7 +5306,7 @@ trait EmailSetMethodContract {
     .when
       .post
 
-    val flags: List[Flags] = server.getProbe(classOf[MessageIdProbe]).getMessages(message.getMessageId, BOB).asScala.map(m => m.getFlags).toList
+    val flags: List[Flags] = server.getProbe(classOf[MessageIdProbe]).getMessages(message.getMessageId, bobUsername).asScala.map(m => m.getFlags).toList
     val expectedFlags: Flags  = FlagsBuilder.builder.add("music").add(Flags.Flag.DELETED).build
 
     assertThat(flags.asJava)
@@ -5290,9 +5319,9 @@ trait EmailSetMethodContract {
 
     val flags: Flags = new Flags(Flags.Flag.ANSWERED)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -5302,7 +5331,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |          "keywords": {
@@ -5313,7 +5342,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["${messageId.serialize}"],
          |       "properties": ["keywords"]
          |     },
@@ -5346,7 +5375,7 @@ trait EmailSetMethodContract {
 
   @Test
   def shouldNotResetKeywordWhenInvalidMessageId(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -5354,7 +5383,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "invalid":{
          |          "keywords": {
@@ -5391,14 +5420,14 @@ trait EmailSetMethodContract {
   def shouldNotResetKeywordWhenMessageIdNonExisted(server: GuiceJamesServer): Unit = {
     val invalidMessageId: MessageId = randomMessageId
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request = s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${invalidMessageId.serialize}":{
          |          "keywords": {
@@ -5434,20 +5463,20 @@ trait EmailSetMethodContract {
   @Test
   def shouldNotUpdateInDelegatedMailboxesWhenReadOnly(server: GuiceJamesServer): Unit = {
     val andreMailbox: String = "andrecustom"
-    val andrePath = MailboxPath.forUser(ANDRE, andreMailbox)
+    val andrePath = MailboxPath.forUser(andreUsername, andreMailbox)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
     val message: Message = Message.Builder
       .of
-      .setSender(BOB.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(bobUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, andrePath, AppendCommand.from(message))
+      .appendMessage(andreUsername.asString, andrePath, AppendCommand.from(message))
       .getMessageId
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andrePath, BOB.asString, MailboxACL.Rfc4314Rights.of(Set(Right.Read, Right.Lookup).asJava))
+      .replaceRights(andrePath, bobUsername.asString, MailboxACL.Rfc4314Rights.of(Set(Right.Read, Right.Lookup).asJava))
 
     val request =
       s"""{
@@ -5457,7 +5486,7 @@ trait EmailSetMethodContract {
          |  "methodCalls": [
          |  ["Email/set",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |          "keywords": {
@@ -5495,20 +5524,20 @@ trait EmailSetMethodContract {
   @Test
   def shouldResetFlagsInDelegatedMailboxesWhenHadAtLeastWriteRight(server: GuiceJamesServer): Unit = {
     val andreMailbox: String = "andrecustom"
-    val andrePath = MailboxPath.forUser(ANDRE, andreMailbox)
+    val andrePath = MailboxPath.forUser(andreUsername, andreMailbox)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
     val message: Message = Message.Builder
       .of
-      .setSender(BOB.asString())
-      .setFrom(ANDRE.asString())
+      .setSender(bobUsername.asString())
+      .setFrom(andreUsername.asString())
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString, andrePath, AppendCommand.from(message))
+      .appendMessage(andreUsername.asString, andrePath, AppendCommand.from(message))
       .getMessageId
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andrePath, BOB.asString, MailboxACL.Rfc4314Rights.of(Set(Right.Write, Right.Read).asJava))
+      .replaceRights(andrePath, bobUsername.asString, MailboxACL.Rfc4314Rights.of(Set(Right.Write, Right.Read).asJava))
 
     val request =
       s"""{
@@ -5518,7 +5547,7 @@ trait EmailSetMethodContract {
          |  "methodCalls": [
          |  ["Email/set",
          |    {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "update": {
          |        "${messageId.serialize}":{
@@ -5531,7 +5560,7 @@ trait EmailSetMethodContract {
          |    "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["${messageId.serialize}"],
          |       "properties": ["keywords"]
          |     },
@@ -5571,9 +5600,9 @@ trait EmailSetMethodContract {
       .add(Flags.Flag.SEEN)
       .build()
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -5583,7 +5612,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |          "keywords/music": true,
@@ -5593,7 +5622,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["${messageId.serialize}"],
          |       "properties": ["keywords"]
          |     },
@@ -5639,15 +5668,15 @@ trait EmailSetMethodContract {
       .add(Flags.Flag.ANSWERED)
       .build()
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
-    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
-    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
-    val messageId4: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId4: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
 
     val request = String.format(
@@ -5655,7 +5684,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId1.serialize}":{
          |          "keywords/music": true
@@ -5673,7 +5702,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["${messageId1.serialize}", "${messageId2.serialize}", "${messageId3.serialize}", "${messageId4.serialize}"],
          |       "properties": ["keywords"]
          |     },
@@ -5746,15 +5775,15 @@ trait EmailSetMethodContract {
       .add("music")
       .build()
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
-    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
-    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
-    val messageId4: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId4: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
 
     val request = String.format(
@@ -5762,7 +5791,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId1.serialize}":{
          |          "keywords/music": null
@@ -5780,7 +5809,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["${messageId1.serialize}", "${messageId2.serialize}", "${messageId3.serialize}", "${messageId4.serialize}"],
          |       "properties": ["keywords"]
          |     },
@@ -5849,16 +5878,16 @@ trait EmailSetMethodContract {
       .add("music")
       .build()
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val newId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
-    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val newId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "other"))
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
-    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
-    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
-    val messageId4: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId4: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags).build(message)).getMessageId
 
     val request = String.format(
@@ -5866,7 +5895,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId1.serialize}":{
          |          "mailboxIds": { "${newId.serialize()}" : true}
@@ -5884,7 +5913,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["${messageId1.serialize}", "${messageId2.serialize}", "${messageId3.serialize}", "${messageId4.serialize}"],
          |       "properties": ["mailboxIds"]
          |     },
@@ -5952,9 +5981,9 @@ trait EmailSetMethodContract {
       .add(Flags.Flag.SEEN)
       .build()
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -5964,7 +5993,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |          "keywords/music": true,
@@ -6006,9 +6035,9 @@ trait EmailSetMethodContract {
 
     val flags: Flags = new Flags(Flags.Flag.ANSWERED)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -6018,7 +6047,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |          "keywords/mus*c": true
@@ -6054,9 +6083,9 @@ trait EmailSetMethodContract {
 
     val flags: Flags = new Flags(Flags.Flag.ANSWERED)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -6066,7 +6095,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |           "keywords/music": true,
@@ -6107,9 +6136,9 @@ trait EmailSetMethodContract {
 
     val flags: Flags = new Flags(Flags.Flag.ANSWERED)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(bobUsername.asString(), bobPath, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -6119,7 +6148,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |           "keywords/music": true,
@@ -6156,9 +6185,9 @@ trait EmailSetMethodContract {
   @Test
   def emailSetShouldDestroyEmail(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -6170,11 +6199,11 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "destroy": ["${messageId.serialize}"]
          |    }, "c1"],
          |    ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"]
          |    }, "c2"]
          |  ]
@@ -6201,11 +6230,11 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "destroyed": ["${messageId.serialize}"]
            |      }, "c1"],
            |      ["Email/get", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "state": "${INSTANCE.value}",
            |        "list": [],
            |        "notFound": ["${messageId.serialize}"]
@@ -6223,7 +6252,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "destroy": ["invalid"]
          |    }, "c1"]]
          |}""".stripMargin
@@ -6248,7 +6277,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "notDestroyed": {
            |          "invalid": {
            |            "type": "invalidArguments",
@@ -6270,7 +6299,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "destroy": ["${messageId.serialize}"]
          |    }, "c1"]]
          |}""".stripMargin
@@ -6295,7 +6324,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "notDestroyed": {
            |          "${messageId.serialize}": {
            |            "type": "notFound",
@@ -6309,10 +6338,10 @@ trait EmailSetMethodContract {
   @Test
   def emailSetDestroyShouldFailWhenMailDoesNotBelongToUser(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(ANDRE))
+    mailboxProbe.createMailbox(MailboxPath.inbox(andreUsername))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, MailboxPath.inbox(ANDRE),
+      .appendMessage(andreUsername.asString, MailboxPath.inbox(andreUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -6324,7 +6353,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "destroy": ["${messageId.serialize}"]
          |    }, "c1"]]
          |}""".stripMargin
@@ -6349,7 +6378,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "notDestroyed": {
            |          "${messageId.serialize}": {
            |            "type": "notFound",
@@ -6359,7 +6388,7 @@ trait EmailSetMethodContract {
            |      }, "c1"]
            |    ]
            |}""".stripMargin)
-    assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, ANDRE))
+    assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, andreUsername))
       .hasSize(1)
   }
 
@@ -6368,17 +6397,17 @@ trait EmailSetMethodContract {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
 
     val andreMailbox: String = "andrecustom"
-    val path = MailboxPath.forUser(ANDRE, andreMailbox)
+    val path = MailboxPath.forUser(andreUsername, andreMailbox)
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, path,
+      .appendMessage(andreUsername.asString, path,
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -6387,7 +6416,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "destroy": ["${messageId.serialize}"]
          |    }, "c1"]]
          |}""".stripMargin
@@ -6412,7 +6441,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "notDestroyed": {
            |          "${messageId.serialize}": {
            |            "type": "notFound",
@@ -6429,17 +6458,17 @@ trait EmailSetMethodContract {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
 
     val andreMailbox: String = "andrecustom"
-    val path = MailboxPath.forUser(ANDRE, andreMailbox)
+    val path = MailboxPath.forUser(andreUsername, andreMailbox)
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, path,
+      .appendMessage(andreUsername.asString, path,
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.DeleteMessages))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.DeleteMessages))
 
     val request =
       s"""{
@@ -6448,11 +6477,11 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "destroy": ["${messageId.serialize}"]
          |    }, "c1"],
          |    ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"]
          |    }, "c2"]
          |  ]
@@ -6479,11 +6508,11 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "destroyed": ["${messageId.serialize}"]
            |      }, "c1"],
            |      ["Email/get", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "list": [],
            |        "notFound": ["${messageId.serialize}"]
            |      }, "c2"]
@@ -6497,18 +6526,18 @@ trait EmailSetMethodContract {
 
     val mailbox: String = "custom"
     val anotherMailbox: String = "anotherCustom"
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, mailbox))
-    val anotherMailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, anotherMailbox))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, mailbox))
+    val anotherMailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, anotherMailbox))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, mailbox),
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, mailbox),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
     // Move message from mailbox to anotherMailbox
     server.getProbe(classOf[JmapGuiceProbe])
-      .setInMailboxes(messageId, BOB, anotherMailboxId)
+      .setInMailboxes(messageId, bobUsername, anotherMailboxId)
 
     val request =
       s"""{
@@ -6517,11 +6546,11 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "destroy": ["${messageId.serialize}"]
          |    }, "c1"],
          |    ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"]
          |    }, "c2"]
          |  ]
@@ -6548,11 +6577,11 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "destroyed": ["${messageId.serialize}"]
            |      }, "c1"],
            |      ["Email/get", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "list": [],
            |        "notFound": ["${messageId.serialize}"]
            |      }, "c2"]
@@ -6563,12 +6592,12 @@ trait EmailSetMethodContract {
   @Test
   def mailboxIdsShouldSupportPartialUpdates(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val mailboxId2: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "other"))
-    val mailboxId3: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "yet-another"))
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId2: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "other"))
+    val mailboxId3: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "yet-another"))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -6578,7 +6607,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -6589,7 +6618,7 @@ trait EmailSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |           "mailboxIds/${mailboxId1.serialize}": null,
@@ -6598,7 +6627,7 @@ trait EmailSetMethodContract {
          |      }
          |    }, "c2"],
          |     ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["mailboxIds"]
          |    }, "c3"]
@@ -6629,12 +6658,12 @@ trait EmailSetMethodContract {
   @Test
   def updateShouldSupportMixingMoveAndFlagUpdate(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val mailboxId2: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "other"))
-    val mailboxId3: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "yet-another"))
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId2: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "other"))
+    val mailboxId3: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "yet-another"))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -6644,7 +6673,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -6656,7 +6685,7 @@ trait EmailSetMethodContract {
          |      }
          |    }, "c1"],
          |     ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties": ["mailboxIds", "keywords"]
          |    }, "c3"]
@@ -6688,10 +6717,10 @@ trait EmailSetMethodContract {
   @Test
   def invalidPatchPropertyShouldFail(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -6701,7 +6730,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "invalid": "value"
@@ -6737,10 +6766,10 @@ trait EmailSetMethodContract {
   @Test
   def invalidMailboxPartialUpdatePropertyShouldFail(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -6750,7 +6779,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds/invalid": "value"
@@ -6786,10 +6815,10 @@ trait EmailSetMethodContract {
   @Test
   def invalidMailboxPartialUpdateValueShouldFail(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -6799,7 +6828,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds/${mailboxId1.serialize}": false
@@ -6835,10 +6864,10 @@ trait EmailSetMethodContract {
   @Test
   def mixingResetAndPartialUpdatesShouldFail(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -6848,7 +6877,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds/${mailboxId1.serialize}": true,
@@ -6887,11 +6916,11 @@ trait EmailSetMethodContract {
   @Test
   def emailSetDestroySuccessAndFailureCanBeMixed(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val path = MailboxPath.inbox(BOB)
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val path = MailboxPath.inbox(bobUsername)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, path,
+      .appendMessage(bobUsername.asString, path,
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -6903,7 +6932,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "destroy": [
          |        "${messageId.serialize}",
          |        "invalid"
@@ -6931,7 +6960,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "destroyed": ["${messageId.serialize}"],
            |        "notDestroyed": {
            |          "invalid": {
@@ -6947,12 +6976,12 @@ trait EmailSetMethodContract {
   @Test
   def emailSetMailboxIdResetShouldSucceed(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val mailboxId2: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "other"))
-    val mailboxId3: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "other2"))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId2: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "other"))
+    val mailboxId3: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "other2"))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -6964,7 +6993,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -6975,7 +7004,7 @@ trait EmailSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["mailboxIds"]
          |    }, "c2"]
@@ -7003,14 +7032,14 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "newState": "${INSTANCE.value}",
            |        "updated": {
            |          "${messageId.serialize}": null
            |        }
            |      }, "c1"],
            |      ["Email/get",{
-           |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId":"$bobAccountId",
            |        "list":[
            |          {
            |            "id":"${messageId.serialize}",
@@ -7029,17 +7058,17 @@ trait EmailSetMethodContract {
   @Test
   def emailSetMailboxIdResetShouldSucceedForMultipleMessages(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val mailboxId2: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "other"))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val mailboxId2: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "other"))
 
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -7051,7 +7080,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId1.serialize}": {
          |          "mailboxIds": {
@@ -7066,7 +7095,7 @@ trait EmailSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId1.serialize}", "${messageId2.serialize}"],
          |      "properties":["mailboxIds"]
          |    }, "c2"]
@@ -7094,14 +7123,14 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "updated": {
            |          "${messageId1.serialize}": null,
            |          "${messageId2.serialize}": null
            |        }
            |      }, "c1"],
            |      ["Email/get", {
-           |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId":"$bobAccountId",
            |        "list":[
            |          {
            |            "id":"${messageId1.serialize}",
@@ -7125,13 +7154,13 @@ trait EmailSetMethodContract {
   @Test
   def emailSetMailboxIdsResetShouldFailWhenNoRightsOnSourceMailbox(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
-    val path = MailboxPath.forUser(ANDRE, "other")
+    val path = MailboxPath.forUser(andreUsername, "other")
     mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, path,
+      .appendMessage(andreUsername.asString, path,
         AppendCommand.from(buildTestMessage))
       .getMessageId
 
@@ -7142,7 +7171,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -7174,7 +7203,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        ["Email/set", {
-           |          "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |          "accountId": "$bobAccountId",
            |          "notUpdated": {
            |            "${messageId.serialize}": {
            |              "type": "notFound",
@@ -7189,19 +7218,19 @@ trait EmailSetMethodContract {
   @Test
   def emailSetMailboxIdsResetShouldFailWhenForbidden(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
-    val path = MailboxPath.forUser(ANDRE, "other")
+    val path = MailboxPath.forUser(andreUsername, "other")
     val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -7210,7 +7239,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -7220,7 +7249,7 @@ trait EmailSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["mailboxIds"]
          |    }, "c2"]
@@ -7248,7 +7277,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "newState": "${INSTANCE.value}",
            |        "notUpdated": {
            |          "${messageId.serialize}": {
@@ -7258,7 +7287,7 @@ trait EmailSetMethodContract {
            |        }
            |      }, "c1"],
            |      ["Email/get", {
-           |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId":"$bobAccountId",
            |        "list":[
            |          {
            |            "id":"${messageId.serialize}",
@@ -7276,19 +7305,19 @@ trait EmailSetMethodContract {
   @Test
   def emailSetMailboxIdsResetShouldFailWhenRemovingMessageFromSourceMailbox(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
-    val path = MailboxPath.forUser(ANDRE, "other")
+    val path = MailboxPath.forUser(andreUsername, "other")
     val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, path,
+      .appendMessage(andreUsername.asString, path,
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -7297,7 +7326,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -7307,7 +7336,7 @@ trait EmailSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["mailboxIds"]
          |    }, "c2"]
@@ -7334,7 +7363,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "notUpdated": {
            |          "${messageId.serialize}": {
            |            "type": "notFound",
@@ -7343,7 +7372,7 @@ trait EmailSetMethodContract {
            |        }
            |      }, "c1"],
            |      ["Email/get", {
-           |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId":"$bobAccountId",
            |        "state":"${INSTANCE.value}",
            |        "list":[
            |          {
@@ -7362,19 +7391,19 @@ trait EmailSetMethodContract {
   @Test
   def emailSetMailboxIdsResetShouldSucceedWhenCopyMessage(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
-    val path = MailboxPath.forUser(ANDRE, "other")
+    val path = MailboxPath.forUser(andreUsername, "other")
     val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, path,
+      .appendMessage(andreUsername.asString, path,
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -7383,7 +7412,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -7394,7 +7423,7 @@ trait EmailSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["mailboxIds"]
          |    }, "c2"]
@@ -7422,13 +7451,13 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "updated": {
            |          "${messageId.serialize}": null
            |        }
            |      }, "c1"],
            |      ["Email/get", {
-           |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId":"$bobAccountId",
            |        "list":[
            |          {
            |            "id":"${messageId.serialize}",
@@ -7447,19 +7476,19 @@ trait EmailSetMethodContract {
   @Test
   def emailSetMailboxIdsResetShouldSucceedWhenShareeHasRightOnTargetMailbox(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
-    val path = MailboxPath.forUser(ANDRE, "other")
+    val path = MailboxPath.forUser(andreUsername, "other")
     val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Insert))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Insert))
 
     val request =
       s"""{
@@ -7468,7 +7497,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -7478,7 +7507,7 @@ trait EmailSetMethodContract {
          |      }
          |    }, "c1"],
          |    ["Email/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "ids": ["${messageId.serialize}"],
          |      "properties":["mailboxIds"]
          |    }, "c2"]
@@ -7506,13 +7535,13 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "updated": {
            |          "${messageId.serialize}": null
            |        }
            |      }, "c1"],
            |      ["Email/get", {
-           |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId":"$bobAccountId",
            |        "list":[
            |          {
            |            "id":"${messageId.serialize}",
@@ -7531,17 +7560,17 @@ trait EmailSetMethodContract {
   def emailSetMailboxIdsResetShouldNotAffectMailboxIdFilter(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
 
-    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
-    val path = MailboxPath.forUser(ANDRE, "other")
+    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
+    val path = MailboxPath.forUser(andreUsername, "other")
     val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(ANDRE.asString, path,
+      .appendMessage(andreUsername.asString, path,
         AppendCommand.from(buildTestMessage))
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
 
     val request =
       s"""{
@@ -7550,7 +7579,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -7583,7 +7612,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "updated": {
            |          "${messageId.serialize}": null
            |        }
@@ -7591,7 +7620,7 @@ trait EmailSetMethodContract {
            |    ]
            |}""".stripMargin)
 
-    assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, ANDRE)
+    assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, andreUsername)
         .stream()
         .map(message => message.getMailboxId))
       .containsExactly(mailboxId2)
@@ -7600,10 +7629,10 @@ trait EmailSetMethodContract {
   @Test
   def emailSetMailboxIdsResetShouldFailWhenInvalidKey(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -7615,7 +7644,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -7647,7 +7676,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "notUpdated": {
            |          "${messageId.serialize}": {
            |            "type": "invalidPatch",
@@ -7662,10 +7691,10 @@ trait EmailSetMethodContract {
   @Test
   def emailSetMailboxIdsResetShouldFailWhenInvalidValue(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -7677,7 +7706,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -7709,7 +7738,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "notUpdated": {
            |          "${messageId.serialize}": {
            |            "type": "invalidPatch",
@@ -7724,10 +7753,10 @@ trait EmailSetMethodContract {
   @Test
   def emailSetMailboxIdsResetShouldFailWhenValueIsFalse(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val messageId: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
@@ -7739,7 +7768,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId.serialize}": {
          |          "mailboxIds": {
@@ -7771,7 +7800,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "notUpdated": {
            |          "${messageId.serialize}": {
            |            "type": "invalidPatch",
@@ -7786,25 +7815,25 @@ trait EmailSetMethodContract {
   @Test
   def emailSetMailboxIdsResetSuccessAndFailureCanBeMixed(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
-    val path = MailboxPath.forUser(ANDRE, "other")
+    val path = MailboxPath.forUser(andreUsername, "other")
     val mailboxId2: MailboxId = mailboxProbe.createMailbox(path)
 
     val messageId1: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
     val messageId2: MessageId = mailboxProbe
-      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+      .appendMessage(bobUsername.asString, MailboxPath.inbox(bobUsername),
         AppendCommand.from(
           buildTestMessage))
       .getMessageId
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Insert))
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Insert))
 
     val request =
       s"""{
@@ -7813,7 +7842,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "${messageId1.serialize}": {
          |          "mailboxIds": {
@@ -7850,7 +7879,7 @@ trait EmailSetMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "updated": {
            |          "${messageId1.serialize}": null
            |        },
@@ -7868,7 +7897,7 @@ trait EmailSetMethodContract {
   @Test
   def newStateShouldBeUpToDate(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox"))
 
     val request =
       s"""
@@ -7878,7 +7907,7 @@ trait EmailSetMethodContract {
          |     "urn:ietf:params:jmap:mail"],
          |   "methodCalls": [
          |       ["Email/set", {
-         |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |         "accountId": "$bobAccountId",
          |         "create": {
          |           "aaaaaa": {
          |             "mailboxIds": {
@@ -7888,7 +7917,7 @@ trait EmailSetMethodContract {
          |         }
          |       }, "c1"],
          |       ["Email/changes", {
-         |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |         "accountId": "$bobAccountId",
          |         "#sinceState": {
          |           "resultOf":"c1",
          |           "name":"Email/set",
@@ -7919,7 +7948,7 @@ trait EmailSetMethodContract {
       .inPath("methodResponses[1][1]")
       .isEqualTo(
         s"""{
-           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |  "accountId": "$bobAccountId",
            |  "hasMoreChanges": false,
            |  "created": [],
            |  "updated": [],
@@ -7929,12 +7958,12 @@ trait EmailSetMethodContract {
 
   @Test
   def oldStateShouldIncludeSetChanges(server: GuiceJamesServer): Unit = {
-    val path: MailboxPath = MailboxPath.forUser(BOB, "mailbox")
+    val path: MailboxPath = MailboxPath.forUser(bobUsername, "mailbox")
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
 
     val message: Message = Fixture.createTestMessage
     val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString(), path,
+      .appendMessage(bobUsername.asString(), path,
         AppendCommand.builder()
           .build(message))
       .getMessageId
@@ -7947,7 +7976,7 @@ trait EmailSetMethodContract {
          |     "urn:ietf:params:jmap:mail"],
          |   "methodCalls": [
          |       ["Email/set", {
-         |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |         "accountId": "$bobAccountId",
          |         "update": {
          |           "${messageId.serialize}": {
          |             "keywords": {
@@ -7957,7 +7986,7 @@ trait EmailSetMethodContract {
          |         }
          |       }, "c1"],
          |       ["Email/changes", {
-         |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |         "accountId": "$bobAccountId",
          |         "#sinceState": {
          |            "resultOf":"c1",
          |            "name":"Email/set",
@@ -7987,7 +8016,7 @@ trait EmailSetMethodContract {
       .inPath("methodResponses[1][1]")
       .isEqualTo(
         s"""{
-           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |  "accountId": "$bobAccountId",
            |  "hasMoreChanges": false,
            |  "created": [],
            |  "updated": ["${messageId.serialize}"],
@@ -8006,7 +8035,7 @@ trait EmailSetMethodContract {
            |    "urn:ietf:params:jmap:mail"],
            |  "methodCalls": [
            |    ["Email/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": []
            |    }, "c1"]
            |  ]
@@ -8018,16 +8047,16 @@ trait EmailSetMethodContract {
       .get("methodResponses[0][1].state")
 
     val sharedMailboxName = "AndreShared"
-    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     val message: Message = Fixture.createTestMessage
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString(), andreMailboxPath,
+      .appendMessage(andreUsername.asString(), andreMailboxPath,
         AppendCommand.builder()
           .build(message))
       .getMessageId
@@ -8040,7 +8069,7 @@ trait EmailSetMethodContract {
                |    "urn:ietf:params:jmap:mail"],
                |  "methodCalls": [
                |    ["Email/set", {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+               |      "accountId": "$bobAccountId"
                |    }, "c1"]
                |  ]
                |}""".stripMargin)
@@ -8062,7 +8091,7 @@ trait EmailSetMethodContract {
            |  "urn:ietf:params:jmap:mail"],
            |  "methodCalls": [
            |    ["Email/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids":[]
            |    }, "c1"]
            |  ]
@@ -8074,16 +8103,16 @@ trait EmailSetMethodContract {
       .get("methodResponses[0][1].state")
 
     val sharedMailboxName = "AndreShared"
-    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     val message: Message = Fixture.createTestMessage
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(ANDRE.asString(), andreMailboxPath,
+      .appendMessage(andreUsername.asString(), andreMailboxPath,
         AppendCommand.builder()
           .build(message))
       .getMessageId
@@ -8099,7 +8128,7 @@ trait EmailSetMethodContract {
              |    "urn:apache:james:params:jmap:mail:shares"],
              |  "methodCalls": [
              |    ["Email/set", {
-             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+             |      "accountId": "$bobAccountId"
              |    }, "c1"]
              |  ]
              |}""".stripMargin)
@@ -8114,14 +8143,14 @@ trait EmailSetMethodContract {
   @Test
   def createShouldEnforceQuotas(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB)), QuotaCountLimit.count(2L))
-    val id1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername)), QuotaCountLimit.count(2L))
+    val id1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(buildTestMessage))
+      .appendMessage(bobUsername.asString(), MailboxPath.inbox(bobUsername), AppendCommand.from(buildTestMessage))
       .getMessageId.serialize()
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(buildTestMessage))
+      .appendMessage(bobUsername.asString(), MailboxPath.inbox(bobUsername), AppendCommand.from(buildTestMessage))
       .getMessageId.serialize()
 
     val request =
@@ -8131,7 +8160,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail",
          |    "urn:apache:james:params:jmap:mail:shares"],
          |  "methodCalls": [["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "K39": {
          |          "mailboxIds": {"${id1.serialize()}":true}
@@ -8159,11 +8188,11 @@ trait EmailSetMethodContract {
            |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"methodResponses": [
            |		["Email/set", {
-           |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |			"accountId": "$bobAccountId",
            |			"notCreated": {
            |				"K39": {
            |					"type": "overQuota",
-           |					"description": "You have too many messages in #private&bob@domain.tld"
+           |					"description": "You have too many messages in #private&${bobUsername.asString}"
            |				}
            |			}
            |		}, "c1"]
@@ -8174,15 +8203,15 @@ trait EmailSetMethodContract {
   @Test
   def copyShouldEnforceQuotas(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
-    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB)), QuotaCountLimit.count(2L))
-    val id1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB)).serialize()
-    val id2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "aBox")).serialize()
+    quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(bobUsername)), QuotaCountLimit.count(2L))
+    val id1 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername)).serialize()
+    val id2 = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(bobUsername, "aBox")).serialize()
 
     val message1 = server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(buildTestMessage))
+      .appendMessage(bobUsername.asString(), MailboxPath.inbox(bobUsername), AppendCommand.from(buildTestMessage))
       .getMessageId.serialize()
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString(), MailboxPath.inbox(BOB), AppendCommand.from(buildTestMessage))
+      .appendMessage(bobUsername.asString(), MailboxPath.inbox(bobUsername), AppendCommand.from(buildTestMessage))
       .getMessageId.serialize()
 
     val request =
@@ -8192,7 +8221,7 @@ trait EmailSetMethodContract {
          |    "urn:ietf:params:jmap:mail",
          |    "urn:apache:james:params:jmap:mail:shares"],
          |  "methodCalls": [["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "update": {
          |        "$message1": {
          |          "mailboxIds": {"$id1":true, "$id2":true}
@@ -8220,11 +8249,11 @@ trait EmailSetMethodContract {
            |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
            |	"methodResponses": [
            |		["Email/set", {
-           |			"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |			"accountId": "$bobAccountId",
            |			"notUpdated": {
            |				"$message1": {
            |					"type": "overQuota",
-           |					"description": "You have too many messages in #private&bob@domain.tld"
+           |					"description": "You have too many messages in #private&${bobUsername.asString}"
            |				}
            |			}
            |		}, "c1"]
@@ -8236,21 +8265,21 @@ trait EmailSetMethodContract {
   def bobShouldBeAbleToUpdateEmailInAndreMailboxWhenDelegated(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
     val flags: Flags = new Flags(Flags.Flag.ANSWERED)
-    val path = MailboxPath.inbox(ANDRE)
+    val path = MailboxPath.inbox(andreUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(ANDRE.asString(), path, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(andreUsername.asString(), path, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
 
-    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(ANDRE, BOB)
+    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(andreUsername, bobUsername)
 
     val request =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "update": {
          |        "${messageId.serialize}":{
          |          "keywords": {
@@ -8261,7 +8290,7 @@ trait EmailSetMethodContract {
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ANDRE_ACCOUNT_ID",
+         |       "accountId": "$andreAccountId",
          |       "ids": ["${messageId.serialize}"],
          |       "properties": ["keywords"]
          |     },
@@ -8296,9 +8325,9 @@ trait EmailSetMethodContract {
   def bobShouldNotBeAbleToUpdateEmailInAndreMailboxWhenNotDelegated(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
     val flags: Flags = new Flags(Flags.Flag.ANSWERED)
-    val path = MailboxPath.inbox(ANDRE)
+    val path = MailboxPath.inbox(andreUsername)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
-    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(ANDRE.asString(), path, AppendCommand.builder()
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(andreUsername.asString(), path, AppendCommand.builder()
       .withFlags(flags)
       .build(message))
       .getMessageId
@@ -8308,7 +8337,7 @@ trait EmailSetMethodContract {
          |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |	"methodCalls": [
          |		["Email/set", {
-         |			"accountId": "$ANDRE_ACCOUNT_ID",
+         |			"accountId": "$andreAccountId",
          |			"update": {
          |				"${messageId.serialize}": {
          |					"keywords": {
@@ -8342,7 +8371,7 @@ trait EmailSetMethodContract {
 
   @Test
   def emailSetShouldSucceedWhenInvalidToMailAddressAndHaveDraftKeyword(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -8350,7 +8379,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -8358,13 +8387,13 @@ trait EmailSetMethodContract {
          |          },
          |          "keywords":{ "$$draft": true },
          |          "to": [{"email": "invalid1"}],
-         |          "from": [{"email": "${BOB.asString}"}]
+         |          "from": [{"email": "${bobUsername.asString}"}]
          |        }
          |      }
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#aaaaaa"],
          |       "properties": ["sentAt", "messageId"]
          |     },
@@ -8394,7 +8423,7 @@ trait EmailSetMethodContract {
 
   @Test
   def emailGetShouldReturnUncheckedMailAddressValueWhenDraftEmail(server: GuiceJamesServer): Unit = {
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
     val draftId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
 
     val request =
@@ -8402,7 +8431,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "e1526":{
          |          "mailboxIds": {
@@ -8410,13 +8439,13 @@ trait EmailSetMethodContract {
          |          },
          |          "keywords":{ "$$draft": true },
          |          "to": [{"email": "invalid1", "name" : "name1"}],
-         |          "from": [{"email": "${BOB.asString}"}]
+         |          "from": [{"email": "${bobUsername.asString}"}]
          |        }
          |      }
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#e1526"],
          |       "properties": ["to", "from" ]
          |     },
@@ -8452,7 +8481,7 @@ trait EmailSetMethodContract {
                    |      }],
                    |    "id": "$messageId",
                    |    "from": [{
-                   |        "email": "bob@domain.tld"
+                   |        "email": "${bobUsername.asString}"
                    |      }
                    |    ]}]""".stripMargin)
 
@@ -8460,9 +8489,9 @@ trait EmailSetMethodContract {
 
   @Test
   def emailSubmissionSetShouldFailWhenInvalidEmailAddressHeader(server: GuiceJamesServer): Unit = {
-    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    val bobDraftsPath = MailboxPath.forUser(bobUsername, DefaultMailboxes.DRAFTS)
 
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val draftId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
 
@@ -8471,7 +8500,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "e1526":{
          |          "mailboxIds": {
@@ -8479,25 +8508,25 @@ trait EmailSetMethodContract {
          |          },
          |          "keywords":{ "$$draft": true },
          |          "to": [{"email": "invalid1"}],
-         |          "from": [{"email": "${BOB.asString}"}]
+         |          "from": [{"email": "${bobUsername.asString}"}]
          |        }
          |      }
          |    }, "c1"],
          |    ["Email/get",
          |     {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "ids": ["#e1526"],
          |       "properties": ["sentAt"]
          |     },
          |     "c2"],
          |     ["EmailSubmission/set", {
-         |       "accountId": "$ACCOUNT_ID",
+         |       "accountId": "$bobAccountId",
          |       "create": {
          |         "k1490": {
          |           "emailId": "#e1526",
          |           "envelope": {
-         |             "mailFrom": {"email": "${BOB.asString}"},
-         |             "rcptTo": [{"email": "${BOB.asString}"}]
+         |             "mailFrom": {"email": "${bobUsername.asString}"},
+         |             "rcptTo": [{"email": "${bobUsername.asString}"}]
          |           }
          |         }
          |    }
@@ -8537,7 +8566,7 @@ trait EmailSetMethodContract {
 
   @Test
   def emailSetShouldFailWhenInvalidToEmailAddressAndHaveNotDraftKeyword(server: GuiceJamesServer): Unit = {
-    val bobPath = MailboxPath.inbox(BOB)
+    val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     val request =
@@ -8545,7 +8574,7 @@ trait EmailSetMethodContract {
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Email/set", {
-         |      "accountId": "$ACCOUNT_ID",
+         |      "accountId": "$bobAccountId",
          |      "create": {
          |        "aaaaaa":{
          |          "mailboxIds": {
@@ -8553,7 +8582,7 @@ trait EmailSetMethodContract {
          |          },
          |          "keywords":{ },
          |          "to": [{"email": "invalid1"}],
-         |          "from": [{"email": "${BOB.asString}"}]
+         |          "from": [{"email": "${bobUsername.asString}"}]
          |        }
          |      }
          |    }, "c1"]]

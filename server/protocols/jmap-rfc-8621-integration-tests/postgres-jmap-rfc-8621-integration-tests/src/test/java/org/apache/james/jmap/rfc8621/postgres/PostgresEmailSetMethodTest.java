@@ -26,7 +26,7 @@ import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class PostgresEmailSetMethodTest extends PostgresBase implements EmailSetMethodContract {
+public class PostgresEmailSetMethodTest extends PerClassPostgresBase implements EmailSetMethodContract {
     public static final PostgresMessageId.Factory MESSAGE_ID_FACTORY = new PostgresMessageId.Factory();
 
     @Override

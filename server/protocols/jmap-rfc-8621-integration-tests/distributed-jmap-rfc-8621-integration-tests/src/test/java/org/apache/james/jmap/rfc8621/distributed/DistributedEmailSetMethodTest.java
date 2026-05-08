@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 
-public class DistributedEmailSetMethodTest extends DistributedBase implements EmailSetMethodContract {
+public class DistributedEmailSetMethodTest extends PerClassDistributedBase implements EmailSetMethodContract {
     public static final CassandraMessageId.Factory MESSAGE_ID_FACTORY = new CassandraMessageId.Factory();
 
     @Override
