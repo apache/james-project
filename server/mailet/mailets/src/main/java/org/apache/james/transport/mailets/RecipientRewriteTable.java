@@ -57,6 +57,9 @@ import com.google.common.collect.ImmutableList;
  *
  * The <b>forwardAutoSubmittedEmails</b> option (default to false) can be used to prevent forwarding bounces as such a scenario
  * can lead to an infinite loop if the forward recipient bounces the email.
+ *
+ * When <b>rewriteSenderUponForward</b> is enabled, forwarded copies have the {@code org.apache.james.forwarded} mail attribute set to {@code true},
+ * allowing downstream mailets to condition their behaviour on forwarded traffic without heuristics.
  */
 public class RecipientRewriteTable extends GenericMailet {
     public static final String ERROR_PROCESSOR = "errorProcessor";

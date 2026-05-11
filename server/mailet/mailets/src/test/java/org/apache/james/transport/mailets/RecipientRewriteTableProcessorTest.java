@@ -44,6 +44,7 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -346,6 +347,32 @@ class RecipientRewriteTableProcessorTest {
 
         assertThat(mail.getState()).isEqualTo(Mail.GHOST);
         assertThat(mail.getRecipients()).isEmpty();
+    }
+
+    @Test
+    void processForwardsShouldSetForwardedAttributeOnForwardedCopy() throws Exception {
+        RecipientRewriteTableProcessor processorWithRewrite = new RecipientRewriteTableProcessor(
+            virtualTableStore, domainList, mailetContext, new ProcessingState(Mail.ERROR), true, false);
+
+        virtualTableStore.addMapping(
+            MappingSource.fromMailAddress(MailAddressFixture.OTHER_AT_LOCAL),
+            Mapping.forward(MailAddressFixture.ANY_AT_JAMES.asString()));
+
+        mail = FakeMail.builder()
+            .name("mail")
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(message)
+            .recipients(MailAddressFixture.OTHER_AT_LOCAL)
+            .build();
+
+        processorWithRewrite.processForwards(mail);
+
+        assertThat(mailetContext.getSentMails())
+            .hasSize(1)
+            .allSatisfy(sentMail -> assertThat(sentMail.getAttributes())
+                .containsEntry(
+                    RecipientRewriteTableProcessor.FORWARDED_ATTRIBUTE_NAME,
+                    new Attribute(RecipientRewriteTableProcessor.FORWARDED_ATTRIBUTE_NAME, AttributeValue.of(true))));
     }
 
     private void defineDefaultDomain(String jamesLocal) throws ConfigurationException {

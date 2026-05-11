@@ -20,3 +20,7 @@ domain.
 
 The *forwardAutoSubmittedEmails* option (default to false) can be used to prevent forwarding bounces as such a scenario
 can lead to an infinite loop if the forward recipient bounces the email.
+
+When *rewriteSenderUponForward* is enabled, forwarded copies carry the `org.apache.james.forwarded` mail attribute set to `true`.
+Downstream mailets can match on this attribute to apply specific processing to forwarded traffic (routing, rate-limiting, header rewriting…)
+without relying on fragile heuristics such as inspecting `Return-Path` or envelope topology.

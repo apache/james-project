@@ -49,6 +49,9 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.AuditTrail;
 import org.apache.james.util.MemoizedSupplier;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.DsnParameters.RecipientDsnParameters;
 import org.apache.mailet.LoopPrevention;
@@ -69,6 +72,9 @@ import com.google.common.collect.Sets;
 
 public class RecipientRewriteTableProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
+
+    public static final AttributeName FORWARDED_ATTRIBUTE_NAME = AttributeName.of("org.apache.james.forwarded");
+    private static final Attribute FORWARDED_ATTRIBUTE = new Attribute(FORWARDED_ATTRIBUTE_NAME, AttributeValue.of(true));
     private static final boolean REWRITE_SENDER_UPON_FORWARD = true;
     private static final boolean FORWARD_AUTOMATED_EMAILS = true;
 
@@ -237,6 +243,7 @@ public class RecipientRewriteTableProcessor {
                 try {
                     copy.setSender(originalRecipient);
                     copy.setRecipients(newRecipients);
+                    copy.setAttribute(FORWARDED_ATTRIBUTE);
                     recordedRecipients.merge(originalRecipient).recordOn(copy);
 
                     context.sendMail(copy);
