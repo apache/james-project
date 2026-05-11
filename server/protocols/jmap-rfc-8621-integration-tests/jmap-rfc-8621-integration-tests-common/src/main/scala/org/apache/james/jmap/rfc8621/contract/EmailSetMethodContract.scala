@@ -5767,6 +5767,7 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
   def rangeFlagsRemovalShouldUpdateStoredFlags(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
 
