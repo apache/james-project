@@ -1,5 +1,0 @@
-= Custom Mailbox Listeners
-:navtitle: Custom Mailbox Listeners
-:pages-path: extendable
-
-include::partial$customization/mailbox-listeners.adoc[]

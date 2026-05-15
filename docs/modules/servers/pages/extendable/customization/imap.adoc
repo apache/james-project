@@ -1,5 +1,0 @@
-= Custom IMAP processing
-:navtitle: Custom IMAP processing
-:pages-path: extendable
-
-include::partial$customization/imap.adoc[]
