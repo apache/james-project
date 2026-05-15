@@ -23,7 +23,7 @@ import org.apache.james.jmap.rfc8621.contract.MailboxGetMethodContract;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 
-public class PostgresMailboxGetMethodTest extends PostgresBase implements MailboxGetMethodContract {
+public class PostgresMailboxGetMethodTest extends PerClassPostgresBase implements MailboxGetMethodContract {
     @Override
     public MailboxId randomMailboxId() {
         return PostgresMailboxId.generate();
