@@ -20,8 +20,11 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.builder.ResponseSpecBuilder
@@ -31,12 +34,14 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.JmapGuiceProbe
 import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE_PASSWORD, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.MailboxChangesMethodContract.TestContext
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, MessageId}
@@ -46,10 +51,20 @@ import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
-import org.junit.jupiter.api.{BeforeEach, Nested, Test}
+import org.junit.jupiter.api.{BeforeEach, Test}
 import play.api.libs.json.{JsArray, JsString, Json}
 
+object MailboxChangesMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String,
+                         andreUsername: Username, andreAccountId: String)
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+}
+
 trait MailboxChangesMethodContract {
+  def bobUsername: Username = MailboxChangesMethodContract.currentContext.get().bobUsername
+  def bobAccountId: String = MailboxChangesMethodContract.currentContext.get().bobAccountId
+  def andreUsername: Username = MailboxChangesMethodContract.currentContext.get().andreUsername
+  def andreAccountId: String = MailboxChangesMethodContract.currentContext.get().andreAccountId
 
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
@@ -63,15 +78,24 @@ trait MailboxChangesMethodContract {
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    MailboxChangesMethodContract.currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString,
+      andreUsername = andre,
+      andreAccountId = Hashing.sha256().hashString(andre.asString(), StandardCharsets.UTF_8).toString))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
       .addDomain("domain-alias.tld")
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString, ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -81,15 +105,15 @@ trait MailboxChangesMethodContract {
     val provisioningState: State = provisionSystemMailboxes(server)
 
     val mailboxId1: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
       .serialize
 
     val mailboxId2: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
       .serialize
 
     val mailboxId3: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox3"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox3"))
       .serialize
 
     val request =
@@ -98,7 +122,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${provisioningState.getValue}"
          |    },
          |    "c1"]]
@@ -125,7 +149,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${provisioningState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": null,
@@ -141,18 +165,18 @@ trait MailboxChangesMethodContract {
   @Test
   def mailboxChangesShouldReturnUpdatedChangesWhenRenameMailbox(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val path = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId: String = mailboxProbe
       .createMailbox(path)
       .serialize
 
     val oldState: State = waitForNextState(server, accountId, provisioningState)
 
-    JmapRequests.renameMailbox(mailboxId, "mailbox11")
+    JmapRequests.renameMailbox(mailboxId, "mailbox11", bobUsername)
 
     val request =
       s"""{
@@ -160,7 +184,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${oldState.getValue}"
          |    },
          |    "c1"]]
@@ -187,7 +211,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": null,
@@ -202,21 +226,21 @@ trait MailboxChangesMethodContract {
 
   @Test
   def mailboxChangesShouldReturnUpdatedChangesWhenSubscribed(server: GuiceJamesServer): Unit = {
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
     val provisioningState: State = provisionSystemMailboxes(server)
 
     // create mailbox with isSubscribed = false
     val mailboxId: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .body(
-      """
+      s"""
         |{
         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
         |   "methodCalls": [
         |       [
         |           "Mailbox/set",
         |           {
-        |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |                "accountId": "$bobAccountId",
         |                "create": {
         |                    "C42": {
         |                      "name": "myMailbox",
@@ -242,7 +266,7 @@ trait MailboxChangesMethodContract {
     val oldState: State = waitForNextState(server, accountId, provisioningState)
 
     // change subscription
-    JmapRequests.subscribe(mailboxId)
+    JmapRequests.subscribe(mailboxId, bobUsername)
 
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`
@@ -253,7 +277,7 @@ trait MailboxChangesMethodContract {
              |  "methodCalls": [[
              |    "Mailbox/changes",
              |    {
-             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |      "accountId": "$bobAccountId",
              |      "sinceState": "${oldState.getValue}"
              |    },
              |    "c1"]]
@@ -275,7 +299,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": null,
@@ -290,21 +314,21 @@ trait MailboxChangesMethodContract {
 
   @Test
   def mailboxChangesShouldReturnUpdatedChangesWhenUnSubscribed(server: GuiceJamesServer): Unit = {
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
     val provisioningState: State = provisionSystemMailboxes(server)
 
     // create mailbox with isSubscribed = true
     val mailboxId: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(
-        """
+        s"""
           |{
           |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
           |   "methodCalls": [
           |       [
           |           "Mailbox/set",
           |           {
-          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+          |                "accountId": "$bobAccountId",
           |                "create": {
           |                    "C42": {
           |                      "name": "myMailbox",
@@ -330,7 +354,7 @@ trait MailboxChangesMethodContract {
     val oldState: State = waitForNextState(server, accountId, provisioningState)
 
     // change subscription
-    JmapRequests.unSubscribe(mailboxId)
+    JmapRequests.unSubscribe(mailboxId, bobUsername)
 
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`
@@ -341,7 +365,7 @@ trait MailboxChangesMethodContract {
              |  "methodCalls": [[
              |    "Mailbox/changes",
              |    {
-             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |      "accountId": "$bobAccountId",
              |      "sinceState": "${oldState.getValue}"
              |    },
              |    "c1"]]
@@ -363,7 +387,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": null,
@@ -382,19 +406,19 @@ trait MailboxChangesMethodContract {
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val path = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId: String = mailboxProbe
       .createMailbox(path)
       .serialize
 
-    val oldState: State = waitForNextState(server, AccountId.fromUsername(BOB), provisioningState)
+    val oldState: State = waitForNextState(server, AccountId.fromUsername(bobUsername), provisioningState)
 
     val message: Message = Message.Builder
       .of
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message))
+    mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message))
 
     val request =
       s"""{
@@ -402,7 +426,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${oldState.getValue}"
          |    },
          |    "c1"]]
@@ -429,7 +453,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": ["totalEmails", "unreadEmails", "totalThreads", "unreadThreads"],
@@ -445,11 +469,11 @@ trait MailboxChangesMethodContract {
   @Test
   def mailboxChangesShouldReturnUpdatedChangesWhenAddSeenFlag(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val path = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId: String = mailboxProbe
       .createMailbox(path)
       .serialize
@@ -461,11 +485,11 @@ trait MailboxChangesMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    val messageId: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    val messageId: MessageId = mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message)).getMessageId
 
     val oldState: State = waitForNextState(server, accountId, state1)
 
-    JmapRequests.markEmailAsSeen(messageId)
+    JmapRequests.markEmailAsSeen(messageId, bobUsername)
 
     val request =
       s"""{
@@ -473,7 +497,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${oldState.getValue}"
          |    },
          |    "c1"]]
@@ -500,7 +524,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": ["totalEmails", "unreadEmails", "totalThreads", "unreadThreads"],
@@ -516,11 +540,11 @@ trait MailboxChangesMethodContract {
   @Test
   def mailboxChangesShouldReturnUpdatedChangesWhenRemoveSeenFlag(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val path = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId: String = mailboxProbe
       .createMailbox(path)
       .serialize
@@ -528,11 +552,11 @@ trait MailboxChangesMethodContract {
     val state1: State = waitForNextState(server, accountId, provisioningState)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
     val state2: State = waitForNextState(server, accountId, state1)
 
-    val messageId: MessageId = mailboxProbe.appendMessage(BOB.asString(), path,
+    val messageId: MessageId = mailboxProbe.appendMessage(bobUsername.asString, path,
       AppendCommand.builder()
         .withFlags(new Flags(Flags.Flag.SEEN))
         .build("header: value\r\n\r\nbody"))
@@ -540,7 +564,7 @@ trait MailboxChangesMethodContract {
 
     val oldState: State = waitForNextState(server, accountId, state2)
 
-    JmapRequests.markEmailAsNotSeen(messageId)
+    JmapRequests.markEmailAsNotSeen(messageId, bobUsername)
 
     val request =
       s"""{
@@ -548,7 +572,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${oldState.getValue}"
          |    },
          |    "c1"]]
@@ -575,7 +599,7 @@ trait MailboxChangesMethodContract {
              |  "sessionState": "${SESSION_STATE.value}",
              |  "methodResponses": [
              |    ["Mailbox/changes", {
-             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |      "accountId": "$bobAccountId",
              |      "oldState": "${oldState.getValue}",
              |      "hasMoreChanges": false,
              |      "updatedProperties": ["totalEmails", "unreadEmails", "totalThreads", "unreadThreads"],
@@ -591,11 +615,11 @@ trait MailboxChangesMethodContract {
   @Test
   def mailboxChangesShouldReturnUpdatedChangesWhenDestroyEmail(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val path = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId: String = mailboxProbe
       .createMailbox(path)
       .serialize
@@ -607,11 +631,11 @@ trait MailboxChangesMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    val messageId: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    val messageId: MessageId = mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message)).getMessageId
 
     val oldState: State = waitForNextState(server, accountId, state1)
 
-    JmapRequests.destroyEmail(messageId)
+    JmapRequests.destroyEmail(messageId, bobUsername)
 
     val request =
       s"""{
@@ -619,7 +643,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${oldState.getValue}"
          |    },
          |    "c1"]]
@@ -646,7 +670,7 @@ trait MailboxChangesMethodContract {
              |  "sessionState": "${SESSION_STATE.value}",
              |  "methodResponses": [
              |    ["Mailbox/changes", {
-             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |      "accountId": "$bobAccountId",
              |      "oldState": "${oldState.getValue}",
              |      "hasMoreChanges": false,
              |      "updatedProperties": ["totalEmails", "unreadEmails", "totalThreads", "unreadThreads"],
@@ -659,30 +683,28 @@ trait MailboxChangesMethodContract {
     }
   }
 
-  @Nested
-  class MailboxDelegationTest {
     @Test
-    def mailboxChangesShouldReturnUpdatedChangesWhenAppendMessageToMailbox(server: GuiceJamesServer): Unit = {
+    def mailboxChangesShouldReturnUpdatedChangesWhenAppendMessageToDelegatedMailbox(server: GuiceJamesServer): Unit = {
       val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
       provisionSystemMailboxes(server)
 
-      val path = MailboxPath.forUser(BOB, "mailbox1")
+      val path = MailboxPath.forUser(bobUsername, "mailbox1")
       val mailboxId: String = mailboxProbe
         .createMailbox(path)
         .serialize
 
       server.getProbe(classOf[ACLProbeImpl])
-        .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+        .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
-      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), State.INITIAL)
 
       val message: Message = Message.Builder
         .of
         .setSubject("test")
         .setBody("testmail", StandardCharsets.UTF_8)
         .build
-      mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message))
+      mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message))
 
       val request =
         s"""{
@@ -690,7 +712,7 @@ trait MailboxChangesMethodContract {
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
-           |      "accountId": "$ANDRE_ACCOUNT_ID",
+           |      "accountId": "$andreAccountId",
            |      "sinceState": "${oldState.getValue}"
            |    },
            |    "c1"]]
@@ -699,7 +721,7 @@ trait MailboxChangesMethodContract {
       awaitAtMostTenSeconds.untilAsserted { () =>
         val response = `given`(
           baseRequestSpecBuilder(server)
-            .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+            .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
             .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
             .setBody(request)
             .build, new ResponseSpecBuilder().build)
@@ -719,7 +741,7 @@ trait MailboxChangesMethodContract {
                |    "sessionState": "${SESSION_STATE.value}",
                |    "methodResponses": [
                |      [ "Mailbox/changes", {
-               |        "accountId": "$ANDRE_ACCOUNT_ID",
+               |        "accountId": "$andreAccountId",
                |        "oldState": "${oldState.getValue}",
                |        "hasMoreChanges": false,
                |        "updatedProperties": ["totalEmails", "unreadEmails", "totalThreads", "unreadThreads"],
@@ -733,22 +755,22 @@ trait MailboxChangesMethodContract {
     }
 
     @Test
-    def mailboxChangesShouldReturnUpdatedChangesWhenRenameMailbox(server: GuiceJamesServer): Unit = {
+    def mailboxChangesShouldReturnUpdatedChangesWhenRenameDelegatedMailbox(server: GuiceJamesServer): Unit = {
       val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
       provisionSystemMailboxes(server)
 
-      val path = MailboxPath.forUser(BOB, "mailbox1")
+      val path = MailboxPath.forUser(bobUsername, "mailbox1")
       val mailboxId: String = mailboxProbe
         .createMailbox(path)
         .serialize
 
       server.getProbe(classOf[ACLProbeImpl])
-        .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+        .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
-      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), State.INITIAL)
 
-      JmapRequests.renameMailbox(mailboxId, "mailbox11")
+      JmapRequests.renameMailbox(mailboxId, "mailbox11", bobUsername)
 
       val request =
         s"""{
@@ -756,7 +778,7 @@ trait MailboxChangesMethodContract {
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
-           |      "accountId": "$ANDRE_ACCOUNT_ID",
+           |      "accountId": "$andreAccountId",
            |      "sinceState": "${oldState.getValue}"
            |    },
            |    "c1"]]
@@ -765,7 +787,7 @@ trait MailboxChangesMethodContract {
       awaitAtMostTenSeconds.untilAsserted { () =>
         val response = `given`(
           baseRequestSpecBuilder(server)
-            .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+            .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
             .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
             .setBody(request)
             .build, new ResponseSpecBuilder().build)
@@ -785,7 +807,7 @@ trait MailboxChangesMethodContract {
                |    "sessionState": "${SESSION_STATE.value}",
                |    "methodResponses": [
                |      [ "Mailbox/changes", {
-               |        "accountId": "$ANDRE_ACCOUNT_ID",
+               |        "accountId": "$andreAccountId",
                |        "oldState": "${oldState.getValue}",
                |        "hasMoreChanges": false,
                |        "updatedProperties":null,
@@ -799,31 +821,31 @@ trait MailboxChangesMethodContract {
     }
 
     @Test
-    def mailboxChangesShouldReturnUpdatedChangesWhenAddSeenFlag(server: GuiceJamesServer): Unit = {
+    def mailboxChangesShouldReturnUpdatedChangesWhenAddSeenFlagInDelegatedMailbox(server: GuiceJamesServer): Unit = {
       val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
       provisionSystemMailboxes(server)
 
-      val path = MailboxPath.forUser(BOB, "mailbox1")
+      val path = MailboxPath.forUser(bobUsername, "mailbox1")
       val mailboxId: String = mailboxProbe
         .createMailbox(path)
         .serialize
 
       server.getProbe(classOf[ACLProbeImpl])
-        .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+        .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
-      val state1: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+      val state1: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), State.INITIAL)
 
       val message: Message = Message.Builder
         .of
         .setSubject("test")
         .setBody("testmail", StandardCharsets.UTF_8)
         .build
-      val messageId: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+      val messageId: MessageId = mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message)).getMessageId
 
-      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), state1)
+      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), state1)
 
-      JmapRequests.markEmailAsSeen(messageId)
+      JmapRequests.markEmailAsSeen(messageId, bobUsername)
 
       val request =
         s"""{
@@ -831,7 +853,7 @@ trait MailboxChangesMethodContract {
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
-           |      "accountId": "$ANDRE_ACCOUNT_ID",
+           |      "accountId": "$andreAccountId",
            |      "sinceState": "${oldState.getValue}"
            |    },
            |    "c1"]]
@@ -840,7 +862,7 @@ trait MailboxChangesMethodContract {
       awaitAtMostTenSeconds.untilAsserted { () =>
         val response = `given`(
           baseRequestSpecBuilder(server)
-            .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+            .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
             .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
             .setBody(request)
             .build, new ResponseSpecBuilder().build)
@@ -860,7 +882,7 @@ trait MailboxChangesMethodContract {
                  |    "sessionState": "${SESSION_STATE.value}",
                  |    "methodResponses": [
                  |      [ "Mailbox/changes", {
-                 |        "accountId": "$ANDRE_ACCOUNT_ID",
+                 |        "accountId": "$andreAccountId",
                  |        "oldState": "${oldState.getValue}",
                  |        "hasMoreChanges": false,
                  |        "updatedProperties": ["totalEmails", "unreadEmails", "totalThreads", "unreadThreads"],
@@ -874,30 +896,30 @@ trait MailboxChangesMethodContract {
     }
 
     @Test
-    def mailboxChangesShouldReturnUpdatedChangesWhenRemoveSeenFlag(server: GuiceJamesServer): Unit = {
+    def mailboxChangesShouldReturnUpdatedChangesWhenRemoveSeenFlagInDelegatedMailbox(server: GuiceJamesServer): Unit = {
       val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
       provisionSystemMailboxes(server)
 
-      val path = MailboxPath.forUser(BOB, "mailbox1")
+      val path = MailboxPath.forUser(bobUsername, "mailbox1")
       val mailboxId: String = mailboxProbe
         .createMailbox(path)
         .serialize
 
       server.getProbe(classOf[ACLProbeImpl])
-        .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+        .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
-      val state1: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+      val state1: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), State.INITIAL)
 
-      val messageId: MessageId = mailboxProbe.appendMessage(BOB.asString(), path,
+      val messageId: MessageId = mailboxProbe.appendMessage(bobUsername.asString, path,
         AppendCommand.builder()
           .withFlags(new Flags(Flags.Flag.SEEN))
           .build("header: value\r\n\r\nbody"))
         .getMessageId
 
-      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), state1)
+      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), state1)
 
-      JmapRequests.markEmailAsNotSeen(messageId)
+      JmapRequests.markEmailAsNotSeen(messageId, bobUsername)
 
       val request =
         s"""{
@@ -905,7 +927,7 @@ trait MailboxChangesMethodContract {
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
-           |      "accountId": "$ANDRE_ACCOUNT_ID",
+           |      "accountId": "$andreAccountId",
            |      "sinceState": "${oldState.getValue}"
            |    },
            |    "c1"]]
@@ -914,7 +936,7 @@ trait MailboxChangesMethodContract {
       awaitAtMostTenSeconds.untilAsserted { () =>
         val response = `given`(
           baseRequestSpecBuilder(server)
-            .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+            .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
             .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
             .setBody(request)
             .build, new ResponseSpecBuilder().build)
@@ -934,7 +956,7 @@ trait MailboxChangesMethodContract {
                |    "sessionState": "${SESSION_STATE.value}",
                |    "methodResponses": [
                |      [ "Mailbox/changes", {
-               |        "accountId": "$ANDRE_ACCOUNT_ID",
+               |        "accountId": "$andreAccountId",
                |        "oldState": "${oldState.getValue}",
                |        "hasMoreChanges": false,
                |        "updatedProperties": ["totalEmails", "unreadEmails", "totalThreads", "unreadThreads"],
@@ -948,31 +970,31 @@ trait MailboxChangesMethodContract {
     }
 
     @Test
-    def mailboxChangesShouldReturnUpdatedChangesWhenDestroyEmail(server: GuiceJamesServer): Unit = {
+    def mailboxChangesShouldReturnUpdatedChangesWhenDestroyEmailInDelegatedMailbox(server: GuiceJamesServer): Unit = {
       val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
       provisionSystemMailboxes(server)
 
-      val path = MailboxPath.forUser(BOB, "mailbox1")
+      val path = MailboxPath.forUser(bobUsername, "mailbox1")
       val mailboxId: String = mailboxProbe
         .createMailbox(path)
         .serialize
 
       server.getProbe(classOf[ACLProbeImpl])
-        .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+        .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
-      val state1: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+      val state1: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), State.INITIAL)
 
       val message: Message = Message.Builder
         .of
         .setSubject("test")
         .setBody("testmail", StandardCharsets.UTF_8)
         .build
-      val messageId: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+      val messageId: MessageId = mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message)).getMessageId
 
-      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), state1)
+      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), state1)
 
-      JmapRequests.destroyEmail(messageId)
+      JmapRequests.destroyEmail(messageId, bobUsername)
 
       val request =
         s"""{
@@ -980,7 +1002,7 @@ trait MailboxChangesMethodContract {
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
-           |      "accountId": "$ANDRE_ACCOUNT_ID",
+           |      "accountId": "$andreAccountId",
            |      "sinceState": "${oldState.getValue}"
            |    },
            |    "c1"]]
@@ -989,7 +1011,7 @@ trait MailboxChangesMethodContract {
       awaitAtMostTenSeconds.untilAsserted { () =>
         val response = `given`(
           baseRequestSpecBuilder(server)
-            .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+            .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
             .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
             .setBody(request)
             .build, new ResponseSpecBuilder().build)
@@ -1009,7 +1031,7 @@ trait MailboxChangesMethodContract {
                |    "sessionState": "${SESSION_STATE.value}",
                |    "methodResponses": [
                |      [ "Mailbox/changes", {
-               |        "accountId": "$ANDRE_ACCOUNT_ID",
+               |        "accountId": "$andreAccountId",
                |        "oldState": "${oldState.getValue}",
                |        "hasMoreChanges": false,
                |        "updatedProperties": ["totalEmails", "unreadEmails", "totalThreads", "unreadThreads"],
@@ -1024,23 +1046,23 @@ trait MailboxChangesMethodContract {
 
     @Test
     def mailboxChangesShouldReturnUpdatedChangesWhenSubscribedOnlyPerUser(server: GuiceJamesServer): Unit = {
-      val accountId: AccountId = AccountId.fromUsername(BOB)
+      val accountId: AccountId = AccountId.fromUsername(bobUsername)
       val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
       val provisioningState: State = provisionSystemMailboxes(server)
 
-      val path = MailboxPath.forUser(BOB, "mailbox1")
+      val path = MailboxPath.forUser(bobUsername, "mailbox1")
       val mailboxId: String = mailboxProbe
         .createMailbox(path)
         .serialize
 
       server.getProbe(classOf[ACLProbeImpl])
-        .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+        .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
       val oldStateBob: State = waitForNextState(server, accountId, provisioningState)
-      val oldStateAndre: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+      val oldStateAndre: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), State.INITIAL)
 
       // change subscription
-      JmapRequests.subscribe(mailboxId)
+      JmapRequests.subscribe(mailboxId, bobUsername)
 
       awaitAtMostTenSeconds.untilAsserted { () =>
         val response = `given`
@@ -1051,7 +1073,7 @@ trait MailboxChangesMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/changes",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "sinceState": "${oldStateBob.getValue}"
                |    },
                |    "c1"]]
@@ -1073,7 +1095,7 @@ trait MailboxChangesMethodContract {
                |    "sessionState": "${SESSION_STATE.value}",
                |    "methodResponses": [
                |      [ "Mailbox/changes", {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "oldState": "${oldStateBob.getValue}",
                |        "hasMoreChanges": false,
                |        "updatedProperties": null,
@@ -1091,7 +1113,7 @@ trait MailboxChangesMethodContract {
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
-           |      "accountId": "$ANDRE_ACCOUNT_ID",
+           |      "accountId": "$andreAccountId",
            |      "sinceState": "${oldStateAndre.getValue}"
            |    },
            |    "c1"]]
@@ -1101,7 +1123,7 @@ trait MailboxChangesMethodContract {
 
       val responseAndre = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
@@ -1121,7 +1143,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "$ANDRE_ACCOUNT_ID",
+             |        "accountId": "$andreAccountId",
              |        "oldState": "${oldStateAndre.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": null,
@@ -1135,23 +1157,23 @@ trait MailboxChangesMethodContract {
 
     @Test
     def mailboxChangesShouldReturnUpdatedChangesWhenUnsubscribedOnlyPerUser(server: GuiceJamesServer): Unit = {
-      val accountId: AccountId = AccountId.fromUsername(BOB)
+      val accountId: AccountId = AccountId.fromUsername(bobUsername)
       val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
       val provisioningState: State = provisionSystemMailboxes(server)
 
-      val path = MailboxPath.forUser(BOB, "mailbox1")
+      val path = MailboxPath.forUser(bobUsername, "mailbox1")
       val mailboxId: String = mailboxProbe
         .createMailbox(path)
         .serialize
 
       server.getProbe(classOf[ACLProbeImpl])
-        .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+        .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
       val oldStateBob: State = waitForNextState(server, accountId, provisioningState)
-      val oldStateAndre: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+      val oldStateAndre: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), State.INITIAL)
 
       // change subscription
-      JmapRequests.unSubscribe(mailboxId)
+      JmapRequests.unSubscribe(mailboxId, bobUsername)
 
       awaitAtMostTenSeconds.untilAsserted { () =>
         val response = `given`
@@ -1162,7 +1184,7 @@ trait MailboxChangesMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/changes",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "sinceState": "${oldStateBob.getValue}"
                |    },
                |    "c1"]]
@@ -1184,7 +1206,7 @@ trait MailboxChangesMethodContract {
                |    "sessionState": "${SESSION_STATE.value}",
                |    "methodResponses": [
                |      [ "Mailbox/changes", {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "oldState": "${oldStateBob.getValue}",
                |        "hasMoreChanges": false,
                |        "updatedProperties": null,
@@ -1202,7 +1224,7 @@ trait MailboxChangesMethodContract {
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
-           |      "accountId": "$ANDRE_ACCOUNT_ID",
+           |      "accountId": "$andreAccountId",
            |      "sinceState": "${oldStateAndre.getValue}"
            |    },
            |    "c1"]]
@@ -1212,7 +1234,7 @@ trait MailboxChangesMethodContract {
 
       val responseAndre = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
@@ -1232,7 +1254,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "$ANDRE_ACCOUNT_ID",
+             |        "accountId": "$andreAccountId",
              |        "oldState": "${oldStateAndre.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": null,
@@ -1250,22 +1272,22 @@ trait MailboxChangesMethodContract {
 
       provisionSystemMailboxes(server)
 
-      val path = MailboxPath.forUser(BOB, "mailbox1")
+      val path = MailboxPath.forUser(bobUsername, "mailbox1")
       mailboxProbe.createMailbox(path)
 
       server.getProbe(classOf[ACLProbeImpl])
-        .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+        .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
       val message: Message = Message.Builder
         .of
         .setSubject("test")
         .setBody("testmail", StandardCharsets.UTF_8)
         .build
-      val messageId: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+      val messageId: MessageId = mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message)).getMessageId
 
-      waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+      waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), State.INITIAL)
 
-      JmapRequests.destroyEmail(messageId)
+      JmapRequests.destroyEmail(messageId, bobUsername)
 
       val request =
         s"""{
@@ -1273,7 +1295,7 @@ trait MailboxChangesMethodContract {
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
-           |      "accountId": "$ANDRE_ACCOUNT_ID",
+           |      "accountId": "$andreAccountId",
            |      "sinceState": "${State.INITIAL.getValue}"
            |    },
            |    "c1"]]
@@ -1282,7 +1304,7 @@ trait MailboxChangesMethodContract {
       awaitAtMostTenSeconds.untilAsserted { () =>
         val response = `given`(
           baseRequestSpecBuilder(server)
-            .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+            .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
             .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
             .setBody(request)
             .build, new ResponseSpecBuilder().build)
@@ -1302,7 +1324,7 @@ trait MailboxChangesMethodContract {
                |    "sessionState": "${SESSION_STATE.value}",
                |    "methodResponses": [
                |      [ "Mailbox/changes", {
-               |        "accountId": "$ANDRE_ACCOUNT_ID",
+               |        "accountId": "$andreAccountId",
                |        "oldState": "${State.INITIAL.getValue}",
                |        "hasMoreChanges": false,
                |        "updatedProperties": null,
@@ -1321,17 +1343,17 @@ trait MailboxChangesMethodContract {
 
       provisionSystemMailboxes(server)
 
-      val path = MailboxPath.forUser(BOB, "mailbox1")
+      val path = MailboxPath.forUser(bobUsername, "mailbox1")
       val mailboxId: String = mailboxProbe
         .createMailbox(path)
         .serialize
 
       server.getProbe(classOf[ACLProbeImpl])
-        .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+        .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
-      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+      val oldState: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), State.INITIAL)
 
-      JmapRequests.destroyMailbox(mailboxId)
+      JmapRequests.destroyMailbox(mailboxId, bobUsername)
 
       val request =
         s"""{
@@ -1339,7 +1361,7 @@ trait MailboxChangesMethodContract {
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
-           |      "accountId": "$ANDRE_ACCOUNT_ID",
+           |      "accountId": "$andreAccountId",
            |      "sinceState": "${oldState.getValue}"
            |    },
            |    "c1"]]
@@ -1348,7 +1370,7 @@ trait MailboxChangesMethodContract {
       awaitAtMostTenSeconds.untilAsserted { () =>
         val response = `given`(
           baseRequestSpecBuilder(server)
-            .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+            .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
             .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
             .setBody(request)
             .build, new ResponseSpecBuilder().build)
@@ -1368,7 +1390,7 @@ trait MailboxChangesMethodContract {
                |    "sessionState": "${SESSION_STATE.value}",
                |    "methodResponses": [
                |      [ "Mailbox/changes", {
-               |        "accountId": "$ANDRE_ACCOUNT_ID",
+               |        "accountId": "$andreAccountId",
                |        "oldState": "${oldState.getValue}",
                |        "hasMoreChanges": false,
                |        "updatedProperties": null,
@@ -1380,23 +1402,21 @@ trait MailboxChangesMethodContract {
                |}""".stripMargin)
       }
     }
-  }
-
   @Test
   def mailboxChangesShouldReturnDestroyedChanges(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val path = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId: String = mailboxProbe
       .createMailbox(path)
       .serialize
 
     val oldState: State = waitForNextState(server, accountId, provisioningState)
 
-    mailboxProbe.deleteMailbox(path.getNamespace, BOB.asString(), path.getName)
+    mailboxProbe.deleteMailbox(path.getNamespace, bobUsername.asString, path.getName)
 
     val request =
       s"""{
@@ -1404,7 +1424,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${oldState.getValue}"
          |    },
          |    "c1"]]
@@ -1431,7 +1451,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties":null,
@@ -1446,23 +1466,23 @@ trait MailboxChangesMethodContract {
 
   @Test
   def mailboxChangesShouldReturnUpdatedChangeWhenOwnerRevokingMailboxShareeRights(server: GuiceJamesServer): Unit = {
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val path = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId: String = mailboxProbe
       .createMailbox(path)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
     waitForNextState(server, accountId, provisioningState)
-    val oldStateAndre: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+    val oldStateAndre: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), State.INITIAL)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights())
+      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights())
 
     val request =
       s"""{
@@ -1470,7 +1490,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "sinceState": "${oldStateAndre.getValue}"
          |    },
          |    "c1"]]
@@ -1479,7 +1499,7 @@ trait MailboxChangesMethodContract {
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
@@ -1499,7 +1519,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "$ANDRE_ACCOUNT_ID",
+             |        "accountId": "$andreAccountId",
              |        "oldState": "${oldStateAndre.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": null,
@@ -1514,26 +1534,26 @@ trait MailboxChangesMethodContract {
 
   @Test
   def mailboxChangesShouldReturnUpdatedChangeWhenOwnerRevokingThenReEnablingMailboxShareeRights(server: GuiceJamesServer): Unit = {
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val path = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId: String = mailboxProbe
       .createMailbox(path)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
     waitForNextState(server, accountId, provisioningState)
-    val oldStateAndre: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+    val oldStateAndre: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(andreUsername), State.INITIAL)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights())
+      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights())
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+      .replaceRights(path, andreUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
     val request =
       s"""{
@@ -1541,7 +1561,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "accountId": "$andreAccountId",
          |      "sinceState": "${oldStateAndre.getValue}"
          |    },
          |    "c1"]]
@@ -1550,7 +1570,7 @@ trait MailboxChangesMethodContract {
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .setAuth(authScheme(UserCredential(andreUsername, ANDRE_PASSWORD)))
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
@@ -1570,7 +1590,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "$ANDRE_ACCOUNT_ID",
+             |        "accountId": "$andreAccountId",
              |        "oldState": "${oldStateAndre.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": null,
@@ -1589,7 +1609,7 @@ trait MailboxChangesMethodContract {
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path1 = MailboxPath.forUser(BOB, "mailbox1")
+    val path1 = MailboxPath.forUser(bobUsername, "mailbox1")
     mailboxProbe
       .createMailbox(path1)
       .serialize
@@ -1599,15 +1619,15 @@ trait MailboxChangesMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    mailboxProbe.appendMessage(BOB.asString(), path1, AppendCommand.from(message))
+    mailboxProbe.appendMessage(bobUsername.asString, path1, AppendCommand.from(message))
 
-    val path2 = MailboxPath.forUser(BOB, "mailbox2")
+    val path2 = MailboxPath.forUser(bobUsername, "mailbox2")
     val mailboxId2: String = mailboxProbe
       .createMailbox(path2)
       .serialize
-    JmapRequests.renameMailbox(mailboxId2, "mailbox22")
+    JmapRequests.renameMailbox(mailboxId2, "mailbox22", bobUsername)
 
-    mailboxProbe.deleteMailbox(path1.getNamespace, BOB.asString(), path1.getName)
+    mailboxProbe.deleteMailbox(path1.getNamespace, bobUsername.asString, path1.getName)
 
     val request =
       s"""{
@@ -1615,7 +1635,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${provisioningState.getValue}"
          |    },
          |    "c1"]]
@@ -1642,7 +1662,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${provisioningState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties":null,
@@ -1658,25 +1678,25 @@ trait MailboxChangesMethodContract {
   @Test
   def mailboxChangesShouldReturnAllTypeOfChanges(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path1 = MailboxPath.forUser(BOB, "mailbox1")
+    val path1 = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId1: String = mailboxProbe
       .createMailbox(path1)
       .serialize
 
     val state1: State = waitForNextState(server, accountId, provisioningState)
 
-    val path2 = MailboxPath.forUser(BOB, "mailbox2")
+    val path2 = MailboxPath.forUser(bobUsername, "mailbox2")
     val mailboxId2: String = mailboxProbe
       .createMailbox(path2)
       .serialize
 
     val oldState: State = waitForNextState(server, accountId, state1)
 
-    val path3 = MailboxPath.forUser(BOB, "mailbox3")
+    val path3 = MailboxPath.forUser(bobUsername, "mailbox3")
     val mailboxId3: String = mailboxProbe
       .createMailbox(path3)
       .serialize
@@ -1686,9 +1706,9 @@ trait MailboxChangesMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    mailboxProbe.appendMessage(BOB.asString(), path1, AppendCommand.from(message))
+    mailboxProbe.appendMessage(bobUsername.asString, path1, AppendCommand.from(message))
 
-    mailboxProbe.deleteMailbox(path2.getNamespace, BOB.asString(), path2.getName)
+    mailboxProbe.deleteMailbox(path2.getNamespace, bobUsername.asString, path2.getName)
 
     val request =
       s"""{
@@ -1696,7 +1716,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${oldState.getValue}"
          |    },
          |    "c1"]]
@@ -1723,7 +1743,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": null,
@@ -1743,27 +1763,27 @@ trait MailboxChangesMethodContract {
     val provisioningState: State = provisionSystemMailboxes(server)
 
     val mailboxId1: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
       .serialize
 
     val mailboxId2: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
       .serialize
 
     val mailboxId3: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox3"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox3"))
       .serialize
 
     val mailboxId4: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox4"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox4"))
       .serialize
 
     val mailboxId5: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox5"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox5"))
       .serialize
 
     mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox6"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox6"))
       .serialize
 
     val request =
@@ -1772,7 +1792,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${provisioningState.getValue}"
          |    },
          |    "c1"]]
@@ -1799,7 +1819,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${provisioningState.getValue}",
              |        "hasMoreChanges": true,
              |        "updatedProperties": null,
@@ -1819,27 +1839,27 @@ trait MailboxChangesMethodContract {
     val provisioningState: State = provisionSystemMailboxes(server)
 
     val mailboxId1: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
       .serialize
 
     val mailboxId2: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
       .serialize
 
     val mailboxId3: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox3"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox3"))
       .serialize
 
     val mailboxId4: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox4"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox4"))
       .serialize
 
     val mailboxId5: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox5"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox5"))
       .serialize
 
     val mailboxId6: String = mailboxProbe
-      .createMailbox(MailboxPath.forUser(BOB, "mailbox6"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "mailbox6"))
       .serialize
 
     val request =
@@ -1848,7 +1868,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${provisioningState.getValue}",
          |      "maxChanges": 38
          |    },
@@ -1876,7 +1896,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${provisioningState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": null,
@@ -1892,7 +1912,7 @@ trait MailboxChangesMethodContract {
   @Test
   def mailboxChangesShouldFailWhenAccountIdNotFound(server: GuiceJamesServer): Unit = {
     val jmapGuiceProbe:JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
-    val oldState: State = jmapGuiceProbe.getLatestMailboxState(AccountId.fromUsername(BOB))
+    val oldState: State = jmapGuiceProbe.getLatestMailboxState(AccountId.fromUsername(bobUsername))
 
     val request =
       s"""{
@@ -1942,7 +1962,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "$state"
          |    },
          |    "c1"]]
@@ -1985,7 +2005,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${provisioningState.getValue}"
          |    },
          |    "c1"]]
@@ -2011,7 +2031,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${provisioningState.getValue}",
              |        "newState": "${provisioningState.getValue}",
              |        "hasMoreChanges": false,
@@ -2031,8 +2051,8 @@ trait MailboxChangesMethodContract {
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox2"))
 
     val request =
       s"""{
@@ -2040,7 +2060,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${provisioningState.getValue}"
          |    },
          |    "c1"]]
@@ -2075,7 +2095,7 @@ trait MailboxChangesMethodContract {
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(bobUsername, "mailbox1"))
 
     val request1 =
       s"""{
@@ -2083,7 +2103,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${provisioningState.getValue}"
          |    },
          |    "c1"]]
@@ -2113,7 +2133,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "$newState"
          |    },
          |    "c1"]]
@@ -2138,7 +2158,7 @@ trait MailboxChangesMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      [ "Mailbox/changes", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "oldState": "$newState",
            |        "newState": "$newState",
            |        "hasMoreChanges": false,
@@ -2154,11 +2174,11 @@ trait MailboxChangesMethodContract {
   @Test
   def mailboxChangesShouldReturnUpdatedPropertiesWhenOnlyCountChanges(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val path = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId: String = mailboxProbe
       .createMailbox(path)
       .serialize
@@ -2170,12 +2190,12 @@ trait MailboxChangesMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
-    val messageId2: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
-    val messageId3: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message)).getMessageId
+    val messageId2: MessageId = mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message)).getMessageId
+    val messageId3: MessageId = mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message)).getMessageId
 
-    JmapRequests.destroyEmail(messageId2)
-    JmapRequests.markEmailAsSeen(messageId3)
+    JmapRequests.destroyEmail(messageId2, bobUsername)
+    JmapRequests.markEmailAsSeen(messageId3, bobUsername)
 
     val request =
       s"""{
@@ -2183,7 +2203,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${oldState.getValue}"
          |    },
          |    "c1"]]
@@ -2209,7 +2229,7 @@ trait MailboxChangesMethodContract {
            |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      [ "Mailbox/changes", {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "oldState": "${oldState.getValue}",
            |        "hasMoreChanges": false,
            |        "updatedProperties": ["totalEmails", "unreadEmails", "totalThreads", "unreadThreads"],
@@ -2224,18 +2244,18 @@ trait MailboxChangesMethodContract {
   @Test
   def mailboxChangesShouldNotReturnUpdatedPropertiesWhenMixedChanges(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val path = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId1: String = mailboxProbe
       .createMailbox(path)
       .serialize
 
     val oldState: State = waitForNextState(server, accountId, provisioningState)
 
-    val path2 = MailboxPath.forUser(BOB, "mailbox2")
+    val path2 = MailboxPath.forUser(bobUsername, "mailbox2")
     val mailboxId2: String = mailboxProbe
       .createMailbox(path2)
       .serialize
@@ -2245,7 +2265,7 @@ trait MailboxChangesMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message))
+    mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message))
 
     val request =
       s"""{
@@ -2253,7 +2273,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${oldState.getValue}"
          |    },
          |    "c1"]]
@@ -2280,7 +2300,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties":null,
@@ -2296,11 +2316,11 @@ trait MailboxChangesMethodContract {
   @Test
   def mailboxChangesShouldSupportBackReferenceWithUpdatedProperties(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val path = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId: String = mailboxProbe
       .createMailbox(path)
       .serialize
@@ -2312,18 +2332,18 @@ trait MailboxChangesMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    mailboxProbe.appendMessage(bobUsername.asString, path, AppendCommand.from(message)).getMessageId
 
     val request =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Mailbox/changes", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${oldState.getValue}"
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "#properties": {
          |        "resultOf": "c1",
          |        "name": "Mailbox/changes",
@@ -2359,7 +2379,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": ["totalEmails", "unreadEmails", "totalThreads", "unreadThreads"],
@@ -2368,7 +2388,7 @@ trait MailboxChangesMethodContract {
              |        "destroyed": []
              |      }, "c1"],
              |      ["Mailbox/get", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "notFound": [],
              |        "list": [
              |          {
@@ -2388,18 +2408,18 @@ trait MailboxChangesMethodContract {
   @Test
   def mailboxChangesShouldSupportBackReferenceWithNullUpdatedProperties(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val accountId: AccountId = AccountId.fromUsername(bobUsername)
 
     val provisioningState: State = provisionSystemMailboxes(server)
 
-    val path1 = MailboxPath.forUser(BOB, "mailbox1")
+    val path1 = MailboxPath.forUser(bobUsername, "mailbox1")
     val mailboxId1: String = mailboxProbe
       .createMailbox(path1)
       .serialize
 
     val oldState: State = waitForNextState(server, accountId, provisioningState)
 
-    val path2 = MailboxPath.forUser(BOB, "mailbox2")
+    val path2 = MailboxPath.forUser(bobUsername, "mailbox2")
     val mailboxId2: String = mailboxProbe
       .createMailbox(path2)
       .serialize
@@ -2409,18 +2429,18 @@ trait MailboxChangesMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    mailboxProbe.appendMessage(BOB.asString(), path1, AppendCommand.from(message)).getMessageId
+    mailboxProbe.appendMessage(bobUsername.asString, path1, AppendCommand.from(message)).getMessageId
 
     val request =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
          |  "methodCalls": [
          |    ["Mailbox/changes", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${oldState.getValue}"
          |    }, "c1"],
          |    ["Mailbox/get", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "#properties": {
          |        "resultOf": "c1",
          |        "name": "Mailbox/changes",
@@ -2456,7 +2476,7 @@ trait MailboxChangesMethodContract {
              |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |      [ "Mailbox/changes", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
              |        "updatedProperties": null,
@@ -2465,7 +2485,7 @@ trait MailboxChangesMethodContract {
              |        "destroyed": []
              |      }, "c1"],
              |      ["Mailbox/get", {
-             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "accountId": "$bobAccountId",
              |        "notFound": [],
              |        "list": [
              |          {
@@ -2513,7 +2533,7 @@ trait MailboxChangesMethodContract {
   }
 
   private def provisionSystemMailboxes(server: GuiceJamesServer): State = {
-    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(bobUsername))
     val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
 
     val request =
@@ -2522,7 +2542,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+         |      "accountId": "$bobAccountId"
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2543,7 +2563,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/changes",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "sinceState": "${State.INITIAL.getValue.toString}"
          |    },
          |    "c1"]]
@@ -2571,6 +2591,6 @@ trait MailboxChangesMethodContract {
       assertThat(createdSize).isEqualTo(5)
     }
 
-    jmapGuiceProbe.getLatestMailboxState(AccountId.fromUsername(BOB))
+    jmapGuiceProbe.getLatestMailboxState(AccountId.fromUsername(bobUsername))
   }
 }
