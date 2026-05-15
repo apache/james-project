@@ -27,6 +27,8 @@
 ***** xref:distributed/run/k8s-secrets.adoc[secrets.yaml]
 *** xref:distributed/configure/index.adoc[]
 **** Protocols
+***** xref:distributed/configure/server.adoc[Common Server Configuration]
+***** xref:distributed/configure/oidc.adoc[OIDC Configuration]
 ***** xref:distributed/configure/imap.adoc[imapserver.xml]
 ***** xref:distributed/configure/jmap.adoc[jmap.properties]
 ***** xref:distributed/configure/jmx.adoc[jmx.properties]
@@ -96,6 +98,8 @@
 **** xref:postgres/run/run-docker.adoc[Run with Docker]
 *** xref:postgres/configure/index.adoc[]
 **** Protocols
+***** xref:postgres/configure/server.adoc[Common Server Configuration]
+***** xref:postgres/configure/oidc.adoc[OIDC Configuration]
 ***** xref:postgres/configure/imap.adoc[imapserver.xml]
 ***** xref:postgres/configure/jmap.adoc[jmap.properties]
 ***** xref:postgres/configure/jmx.adoc[jmx.properties]

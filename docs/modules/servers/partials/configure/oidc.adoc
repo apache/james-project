@@ -1,0 +1,69 @@
+
+James supports OIDC via both `XOAUTH2` and `OAUTHBEARER`.
+Support is only available for Managesieve, IMAP, and SMTP.
+OIDC is not supported for POP3 and LMTP.
+We provide an link:https://github.com/apache/james-project/tree/master/examples/oidc[example] of an OIDC setup.
+It uses Keycloak as identity provider, but usage of other providers is possible.
+
+== Token Validation
+
+Every access token is locally validated.
+Local validation includes JWT validation using the established `io.jsonwebtoken` library with the configured JWKS and audience validation.
+It extracts the username from a claim of the JWT.
+
+If the introspection URL is configured **and** the local validation was successful, the introspection endpoint is queried.
+If the response indicates that the token is not active or the username in the response does not match the local username, the validation fails.
+
+If the userinfo URL is configured, the introspection URL is **not** configured, **and** the local validation was successful, the userinfo endpoint is queried.
+If the username in the response does not match the local username, the validation fails.
+
+== Configuration
+
+OIDC authentication is enabled by adding the `oidc` element to the server configuration.
+Please see the documentation of the concrete service for the exact location of the `oidc` element.
+
+.Configuration options for OIDC
+|===
+| Property Name | Explanation
+
+| `oidc.oidcConfigurationURL`
+| Sets the OIDC configuration URL (https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig) which can be used to retrieve other OIDC configuration values.
+This is currently not used.
+However, it is mandatory when OIDC is enabled.
+
+| `oidc.jwksURL`
+| Sets the URL for retrieving the JSON Web Key Set (RFC 7517) used to locally validate access tokens.
+It is mandatory when OIDC is enabled.
+
+| `oidc.claim`
+| Configures the name of the claim used to identify a user.
+This is usually `email_address` or `sub`.
+It is mandatory when OIDC is enabled.
+
+| `oidc.scope`
+| Configures which scopes should be requested (https://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims).
+This is currently not used as the email client is responsible for requesting the access token.
+It is mandatory when OIDC is enabled.
+
+| `oidc.aud`
+| Configures the expected audience for James (RFC 9068).
+This should be unique among the clients of your identity provider.
+It is mandatory when using OIDC for authentication, but this requirement can be relaxed with `-Djames.sasl.oidc.validate.aud=false`.
+However, we strongly recommend to keep the audience validation enabled.
+
+| `oidc.introspection.url`
+| Sets the URL of the OAuth 2.0 introspection endpoint (RFC 7662).
+This is an optional value that enables additional checks.
+Note that James always verifies the signature of the token even if this configuration is provided.
+
+| `oidc.introspection.auth`
+| Configures the authorization for requests to the introspection endpoint.
+If this and the introspection URL are provided, this is added as the value for the `Authorization` header.
+Example value: `Basic xyz`
+
+| `oidc.userinfo.url`
+| Sets the URL of the OIDC userinfo endpoint (https://openid.net/specs/openid-connect-core-1_0.html#UserInfo).
+This is an optional value that enables an additional check.
+Note that James always verifies the signature of the token even if this configuration is provided.
+
+|===

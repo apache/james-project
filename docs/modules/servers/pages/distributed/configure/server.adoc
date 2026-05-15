@@ -1,0 +1,5 @@
+= Distributed James Server &mdash; Common Server Configuration
+:navtitle: Common Server Configuration
+
+:pages-path: distributed
+include::partial$configure/server.adoc[]
