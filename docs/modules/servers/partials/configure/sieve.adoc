@@ -19,7 +19,7 @@ The following Sieve capabilities are supported by Apache James:
 To be correctly executed, please note that the *Sieve* mailet is required to be positioned prior the
 *LocalDelivery* mailet.
 
-== Managing Sieve scripts
+== Managing Sieve Scripts
 
 A user willing to manage his Sieve scripts on the server can do so via several means:
 
@@ -28,86 +28,16 @@ He can ask an admin to upload his script via the xref:{pages-path}/operate/cli.a
 As James supports ManageSieve (link:https://datatracker.ietf.org/doc/html/rfc5804[RFC-5804]) a user
 can thus use compatible software to manage his Sieve scripts.</p>
 
-== ManageSieve protocol
+== ManageSieve Protocol
 
-*WARNING*: ManageSieve protocol should be considered experimental.
+*WARNING*: Support for the ManageSieve protocol should be considered experimental.
 
-Consult link:{sample-configuration-prefix-url}/managesieveserver.xml[managesieveserver.xml]
-in GIT to get some examples and hints.
+Consult this link:{sample-configuration-prefix-url}/managesieveserver.xml[example] for guidance on how to configure ManageSieve.
 
-The  service is controlled by a configuration block in the managesieveserver.xml.
-The managesieveserver tag defines the boundaries of the configuration block.  It encloses
-all the relevant configuration for the ManageSieve server.  The behavior of the ManageSieve service is
-controlled by the attributes and children of this tag.
+The ManageSieve service is configured in the file `managesieveserver.xml`.
+It contains one `managesieveservers` element that can contain multiple `managesieveserver` elements.
 
-This tag has an optional boolean attribute - *enabled* - that defines whether the service is active or not.
-The value defaults to "false" if
-not present.
+The `managesieveserver` element can be configured using the common options described xref:{pages-path}/configure/server.adoc[here].
 
-The standard children of the managesieveserver tag are:
-
-.managesieveserver.xml content
-|===
-| Property name | explanation
-
-| bind
-| Configure this to bind to a specific inetaddress. This is an optional integer value.  This value is the port on which this ManageSieve server is configured to listen. If the tag or value is absent then the service
-will bind to all network interfaces for the machine If the tag or value is omitted, the value will default to the standard ManageSieve port (port 4190 is the well-known/IANA registered port for ManageSieve.)
-
-| tls
-| Set to true to support STARTTLS or SSL for the Socket.
-To use this you need to copy sunjce_provider.jar to /path/james/lib directory. To create a new keystore execute:
-`keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore /path/to/james/conf/keystore`.
-Please note that each ManageSieve server exposed on different port can specify its own keystore, independently from any other
-TLS based protocols.
-
-| connectionBacklog
-| Number of connection backlog of the server (maximum number of queued connection requests)
-
-| connectiontimeout
-| Connection timeout in seconds
-
-| connectionLimit
-| Set the maximum simultaneous incoming connections for this service
-
-| connectionLimitPerIP
-| Set the maximum simultaneous incoming connections per IP for this service
-
-| bossWorkerCount
-| Set the maximum count of boss threads. Boss threads are responsible for accepting incoming ManageSieve connections
-and initializing associated resources. Optional integer, by default, boss threads are not used and this responsibility is being dealt with
-by IO threads.
-
-| ioWorkerCount
-| Set the maximum count of IO threads. IO threads are responsible for receiving incoming ManageSieve messages and framing them
-(split line by line). IO threads also take care of compression and SSL encryption. Their tasks are short-lived and non-blocking.
-Optional integer, defaults to 2 times the count of CPUs.
-
-| maxExecutorCount
-| Set the maximum count of worker threads. Worker threads takes care of potentially blocking tasks like executing ManageSieve commands.
-Optional integer, defaults to 16.
-
-| oidc
-| If this property is present, OIDC will be configured and the following properties are mandatory (unless otherwise specified).
-
-| oidc.oidcConfigurationURL
-| Your identity provider's OIDC discovery URL. This is currently not used for managesieve but is still required when OIDC is configured.
-
-| oidc.jwksURL
-| URL to the endpoint for the JSON Web Key Set of your provider. This is used to locally validate tokens.
-
-| oidc.claim
-| Name of the claim in the token you want to use as the identifier for the user (e.g. "email_address").
-
-| oidc.scope
-| OIDC scope. This is currently not used for managesieve but is still required when OIDC is configured.
-
-| oidc.introspection.url
-| URL to your identity provider's introspection endpoint. It is optional and if specified James will use the endpoint to validate the token in addition to local validation.
-
-| oidc.introspection.auth
-| Provide Authorization header for introspection requests (optional, e.g. `Basic xyz`).
-
-| oidc.userinfo.url
-| URL to your identity provider's userinfo endpoint. It is optional and if specified James will use the endpoint to validate the token in addition to local validation. James will ignore this option if `oidc.introspection.url` is already configured.
-|===
+Additionally, it can contain an optional `oidc` element.
+The OIDC configuration is described xref:{pages-path}/configure/oidc.adoc[here].
