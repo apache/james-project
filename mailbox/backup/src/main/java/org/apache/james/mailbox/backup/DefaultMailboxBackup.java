@@ -116,6 +116,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
     public Publisher<BackupStatus> restore(Username username, InputStream source) {
         try {
             if (isAccountNonEmpty(username)) {
+                LOGGER.warn("Warning, account should be empty before performing a restoration for user: {}", username);
                 return Mono.just(BackupStatus.NON_EMPTY_RECEIVER_ACCOUNT);
             }
         } catch (Exception e) {

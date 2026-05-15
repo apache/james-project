@@ -1,0 +1,5 @@
+{
+  "type":"MailboxesRestoreTask",
+  "username": "bob",
+  "blobId": "abc123"
+}

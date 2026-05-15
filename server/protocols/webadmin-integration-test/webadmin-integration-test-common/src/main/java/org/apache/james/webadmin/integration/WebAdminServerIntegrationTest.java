@@ -34,7 +34,9 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -454,6 +456,32 @@ public abstract class WebAdminServerIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("type", is("MailboxesExportTask"));
+    }
+
+    @Test
+    void mailboxesRestoreTasksShouldBeExposed() throws Exception {
+        dataProbe.addUser(USERNAME, "anyPassword");
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            // empty zip
+        }
+        byte[] emptyZip = baos.toByteArray();
+
+        String taskId = with()
+            .queryParam("task", "restore")
+            .body(emptyZip)
+            .post("/users/" + USERNAME + "/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("type", is("MailboxesRestoreTask"));
     }
 
     @Test

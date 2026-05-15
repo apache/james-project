@@ -86,7 +86,7 @@ import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
-import org.apache.james.modules.server.MailboxesExportRoutesModule;
+import org.apache.james.modules.server.MailboxesBackupRoutesModule;
 import org.apache.james.modules.server.MessagesRoutesModule;
 import org.apache.james.modules.server.RabbitMailQueueRoutesModule;
 import org.apache.james.modules.server.UserIdentityModule;
@@ -114,7 +114,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new VacationRoutesModule(),
         new InconsistencyQuotasSolvingRoutesModule(),
         new InconsistencySolvingRoutesModule(),
-        new MailboxesExportRoutesModule(),
+        new MailboxesBackupRoutesModule(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
