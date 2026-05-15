@@ -25,7 +25,7 @@ import org.apache.james.mailbox.model.MailboxId;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 
-public class DistributedMailboxGetMethodTest extends DistributedBase implements MailboxGetMethodContract {
+public class DistributedMailboxGetMethodTest extends PerClassDistributedBase implements MailboxGetMethodContract {
     @Override
     public MailboxId randomMailboxId() {
         return CassandraId.of(Uuids.timeBased());

@@ -20,8 +20,10 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
-import java.util.Date
+import java.util.concurrent.atomic.AtomicReference
+import java.util.{Date, UUID}
 
+import com.google.common.hash.Hashing
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
@@ -30,6 +32,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaSizeLimit}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
@@ -48,6 +51,10 @@ import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 import scala.jdk.CollectionConverters._
 
 object MailboxGetMethodContract {
+  case class TestContext(bobUsername: Username, bobAccountId: String,
+                         andreUsername: Username)
+  val currentContext: AtomicReference[TestContext] = new AtomicReference[TestContext]()
+
   private val ARGUMENTS: String = "methodResponses[0][1]"
   private val FIRST_MAILBOX: String = ARGUMENTS + ".list[0]"
   private val SECOND_MAILBOX: String = ARGUMENTS + ".list[1]"
@@ -60,18 +67,50 @@ object MailboxGetMethodContract {
 trait MailboxGetMethodContract {
   import MailboxGetMethodContract._
 
+  def bobUsername: Username = MailboxGetMethodContract.currentContext.get().bobUsername
+  def bobAccountId: String = MailboxGetMethodContract.currentContext.get().bobAccountId
+  def andreUsername: Username = MailboxGetMethodContract.currentContext.get().andreUsername
+  def bobPrivateQuotaRoot: String = s"#private&${bobUsername.asString}"
+
+  def getAllMailboxesRequest: String =
+    s"""{
+       |  "using": [
+       |    "urn:ietf:params:jmap:core",
+       |    "urn:ietf:params:jmap:mail"],
+       |  "methodCalls": [[
+       |      "Mailbox/get",
+       |      {
+       |        "accountId": "$bobAccountId",
+       |        "ids": null
+       |      },
+       |      "c1"]]
+       |}""".stripMargin
+
   def randomMailboxId: MailboxId
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    val uniqueSuffix = UUID.randomUUID().toString.replace("-", "").take(8)
+    val bob = Username.fromLocalPartWithDomain(s"bob$uniqueSuffix", DOMAIN)
+    val andre = Username.fromLocalPartWithDomain(s"andre$uniqueSuffix", DOMAIN)
+    MailboxGetMethodContract.currentContext.set(TestContext(
+      bobUsername = bob,
+      bobAccountId = Hashing.sha256().hashString(bob.asString(), StandardCharsets.UTF_8).toString,
+      andreUsername = andre))
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
-      .addUser(BOB.asString, BOB_PASSWORD)
-      .addUser(ANDRE.asString, ANDRE_PASSWORD)
+      .addUser(bob.asString, BOB_PASSWORD)
+      .addUser(andre.asString(), ANDRE_PASSWORD)
+
+    server.getProbe(classOf[QuotaProbesImpl])
+      .setGlobalMaxStorage(QuotaSizeLimit.unlimited())
+    server.getProbe(classOf[QuotaProbesImpl])
+      .setGlobalMaxMessageCount(QuotaCountLimit.unlimited())
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(bob, BOB_PASSWORD)))
       .build
   }
 
@@ -119,7 +158,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldIncludeRightsAndNamespaceIfSharesCapabilityIsUsed(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
 
     val response: String = `given`
@@ -132,7 +171,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["${mailboxId}"]
                |    },
                |    "c1"]]
@@ -154,7 +193,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -189,7 +228,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldIncludeQuotasIfQuotaCapabilityIsUsed(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
 
     val response: String = `given`
@@ -202,7 +241,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["${mailboxId}"]
                |    },
                |    "c1"]]
@@ -224,7 +263,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -247,7 +286,7 @@ trait MailboxGetMethodContract {
          |          },
          |          "isSubscribed": false,
          |          "quotas": {
-         |            "#private&bob@domain.tld": {
+         |            "$bobPrivateQuotaRoot": {
          |              "Storage": { "used": 0},
          |              "Message": {"used": 0}
          |            }
@@ -263,7 +302,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldIncludeBothQuotasAndRightsIfUsed(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
 
     val response: String = `given`
@@ -277,7 +316,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["${mailboxId}"]
                |    },
                |    "c1"]]
@@ -299,7 +338,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -324,7 +363,7 @@ trait MailboxGetMethodContract {
          |          "namespace": "Personal",
          |          "rights": {},
          |          "quotas": {
-         |            "#private&bob@domain.tld": {
+         |            "$bobPrivateQuotaRoot": {
          |              "Storage": { "used": 0},
          |              "Message": {"used": 0}
          |            }
@@ -340,7 +379,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldReturnAllPropertiesWhenNull(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
 
     val response: String = `given`
@@ -352,7 +391,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "properties": null,
                |      "ids": ["${mailboxId}"]
                |    },
@@ -375,7 +414,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -408,7 +447,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldReturnIdWhenNoPropertiesRequested(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
 
     val response: String = `given`
@@ -420,7 +459,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "properties": [],
                |      "ids": ["${mailboxId}"]
                |    },
@@ -443,7 +482,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
          |          "id": "${mailboxId}"
@@ -458,7 +497,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldReturnOnlyNameAndIdWhenPropertiesRequested(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
 
     val response: String = `given`
@@ -470,7 +509,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "properties": ["id", "name"],
                |      "ids": ["${mailboxId}"]
                |    },
@@ -493,7 +532,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -509,7 +548,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldAlwaysReturnIdEvenIfNotRequested(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
 
     val response: String = `given`
@@ -521,7 +560,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "properties": ["name"],
                |      "ids": ["${mailboxId}"]
                |    },
@@ -544,7 +583,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -560,7 +599,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldNotIncludeNamespaceIfSharesCapabilityIsUsedAndNamespaceIsNotRequested(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
 
     val response: String = `given`
@@ -573,7 +612,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "properties": ["id", "name", "rights"],
                |      "ids": ["${mailboxId}"]
                |    },
@@ -596,7 +635,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -621,7 +660,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["invalid"]
                |    },
                |    "c1"]]
@@ -643,7 +682,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [],
          |      "notFound": ["invalid"]
          |    },
@@ -662,7 +701,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["#C42"]
                |    },
                |    "c1"]]
@@ -684,7 +723,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$bobAccountId",
          |      "list": [],
          |      "notFound": ["#C42"]
          |    },
@@ -695,7 +734,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldReturnInvalidArgumentsErrorWhenInvalidProperty(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
 
     val response: String = `given`
@@ -707,7 +746,7 @@ trait MailboxGetMethodContract {
               |  "methodCalls": [[
               |      "Mailbox/get",
               |      {
-              |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+              |        "accountId": "$bobAccountId",
               |        "properties": ["invalidProperty"],
               |        "ids": ["${mailboxId}"]
               |      },
@@ -739,14 +778,14 @@ trait MailboxGetMethodContract {
   def getMailboxesShouldReturnAllExistingMailboxes(server: GuiceJamesServer): Unit = {
     val customMailbox: String = "custom"
     server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, customMailbox))
+      .createMailbox(MailboxPath.forUser(bobUsername, customMailbox))
       .serialize
 
     val expectedList = DefaultMailboxes.DEFAULT_MAILBOXES.asScala ++ List(customMailbox)
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(getAllMailboxesRequest)
     .when
       .post
     .`then`
@@ -759,11 +798,11 @@ trait MailboxGetMethodContract {
   def getMailboxesShouldReturnOnlyMailboxesOfCurrentUser(server: GuiceJamesServer): Unit = {
     val andreMailbox: String = "andrecustom"
     server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(ANDRE, andreMailbox))
+      .createMailbox(MailboxPath.forUser(andreUsername, andreMailbox))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(GET_ALL_MAILBOXES_REQUEST)
+      .body(getAllMailboxesRequest)
     .when
       .post
     .`then`
@@ -779,13 +818,13 @@ trait MailboxGetMethodContract {
     val targetUser2: String = "touser2@" + DOMAIN.asString
     val mailboxName: String = "myMailbox"
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, mailboxName))
+      .createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(MailboxPath.forUser(BOB, mailboxName), targetUser1, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Administer))
+      .replaceRights(MailboxPath.forUser(bobUsername, mailboxName), targetUser1, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Administer))
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(MailboxPath.forUser(BOB, mailboxName), targetUser2, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+      .replaceRights(MailboxPath.forUser(bobUsername, mailboxName), targetUser2, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -797,7 +836,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -817,10 +856,10 @@ trait MailboxGetMethodContract {
     val targetUser2: String = "touser2@" + DOMAIN.asString
     val mailboxName: String = "myMailbox"
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, mailboxName))
+      .createMailbox(MailboxPath.forUser(bobUsername, mailboxName))
       .serialize
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(MailboxPath.forUser(BOB, mailboxName), targetUser2, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup, Right.DeleteMailbox))
+      .replaceRights(MailboxPath.forUser(bobUsername, mailboxName), targetUser2, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup, Right.DeleteMailbox))
 
     val response: String = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -832,7 +871,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -854,13 +893,13 @@ trait MailboxGetMethodContract {
   @Test
   def myRightsShouldReturnCorrectMayDeleteWhenHasRightInSharedMailbox(server: GuiceJamesServer): Unit = {
     val sharedMailboxName = "AndreShared"
-    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     val andreMailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.DeleteMailbox))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.DeleteMailbox))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -872,7 +911,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${andreMailboxId}"]
                |      },
                |      "c1"]]
@@ -888,13 +927,13 @@ trait MailboxGetMethodContract {
   @Tag(CategoryTags.BASIC_FEATURE)
   def getMailboxesShouldReturnDelegatedNamespaceWhenSharedMailbox(server: GuiceJamesServer): Unit = {
     val sharedMailboxName = "AndreShared"
-    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -906,7 +945,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -917,21 +956,21 @@ trait MailboxGetMethodContract {
       .statusCode(SC_OK)
       .body(s"$ARGUMENTS.list", hasSize(1))
       .body(s"$FIRST_MAILBOX.name", equalTo(sharedMailboxName))
-      .body(s"$FIRST_MAILBOX.namespace", equalTo(s"Delegated[${ANDRE.asString}]"))
-      .body(s"$FIRST_MAILBOX.rights['${BOB.asString}']", contains(LOOKUP))
+      .body(s"$FIRST_MAILBOX.namespace", equalTo(s"Delegated[${andreUsername.asString}]"))
+      .body(s"$FIRST_MAILBOX.rights['${bobUsername.asString}']", contains(LOOKUP))
   }
 
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def getMailboxesShouldReturnNotFoundWhenSharedMailboxAndNoExtension(server: GuiceJamesServer): Unit = {
     val sharedMailboxName = "AndreShared"
-    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -942,7 +981,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -958,12 +997,12 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldNotIncludeDelegatedMailboxesWhenExtensionNotPresent(server: GuiceJamesServer): Unit = {
     val sharedMailboxName = "AndreShared"
-    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -974,7 +1013,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+               |        "accountId": "$bobAccountId"
                |      },
                |      "c1"]]
                |}""".stripMargin)
@@ -991,13 +1030,13 @@ trait MailboxGetMethodContract {
   def getMailboxesShouldNotReturnOtherPeopleRightsAsSharee(server: GuiceJamesServer): Unit = {
     val toUser1: String = "touser1@" + DOMAIN.asString
     val sharedMailboxName: String = "AndreShared"
-    val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath: MailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
     server.getProbe(classOf[ACLProbeImpl])
       .replaceRights(andreMailboxPath, toUser1, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
@@ -1011,7 +1050,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -1022,7 +1061,7 @@ trait MailboxGetMethodContract {
       .statusCode(SC_OK)
       .body(s"$ARGUMENTS.list", hasSize(1))
       .body(s"$FIRST_MAILBOX.name", equalTo(sharedMailboxName))
-      .body(s"$FIRST_MAILBOX.rights['${BOB.asString}']", contains(LOOKUP, READ))
+      .body(s"$FIRST_MAILBOX.rights['${bobUsername.asString}']", contains(LOOKUP, READ))
       .body(s"$FIRST_MAILBOX.rights['$toUser1']", nullValue)
   }
 
@@ -1031,13 +1070,13 @@ trait MailboxGetMethodContract {
   def getMailboxesShouldNotReturnAnyoneRightsAsSharee(server: GuiceJamesServer): Unit = {
     val toUser1: String = "touser1@" + DOMAIN.asString
     val sharedMailboxName: String = "AndreShared"
-    val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath: MailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
     server.getProbe(classOf[ACLProbeImpl])
       .replaceRights(andreMailboxPath, toUser1, new MailboxACL.Rfc4314Rights(Right.Lookup))
     server.getProbe(classOf[ACLProbeImpl])
@@ -1053,7 +1092,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -1064,7 +1103,7 @@ trait MailboxGetMethodContract {
       .statusCode(SC_OK)
       .body(s"$ARGUMENTS.list", hasSize(1))
       .body(s"$FIRST_MAILBOX.name", equalTo(sharedMailboxName))
-      .body(s"$FIRST_MAILBOX.rights['${BOB.asString}']", contains(LOOKUP))
+      .body(s"$FIRST_MAILBOX.rights['${bobUsername.asString}']", contains(LOOKUP))
       .body(s"$FIRST_MAILBOX.rights['$toUser1']", nullValue)
       .body(s"$FIRST_MAILBOX.rights['anyone']", nullValue)
   }
@@ -1073,13 +1112,13 @@ trait MailboxGetMethodContract {
   def getMailboxesShouldReturnPartiallyAllowedMayPropertiesWhenDelegated(server: GuiceJamesServer): Unit = {
     val toUser1: String = "touser1@" + DOMAIN.asString
     val sharedMailboxName: String = "AndreShared"
-    val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath: MailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
     server.getProbe(classOf[ACLProbeImpl])
       .replaceRights(andreMailboxPath, toUser1, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
 
@@ -1093,7 +1132,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -1118,13 +1157,13 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldReturnMayCreateChildTrueWhenDelegatedWithCreateMailboxRight(server: GuiceJamesServer): Unit = {
     val sharedMailboxName: String = "AndreShared"
-    val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath: MailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.CreateMailbox))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.CreateMailbox))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -1136,7 +1175,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -1153,13 +1192,13 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldReturnMaySubmitTrueWhenDelegatedWithPostRight(server: GuiceJamesServer): Unit = {
     val sharedMailboxName: String = "AndreShared"
-    val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath: MailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Post))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Post))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -1171,7 +1210,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -1188,13 +1227,13 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldIncludeCreateMailboxRightInRightsFieldWhenSet(server: GuiceJamesServer): Unit = {
     val sharedMailboxName: String = "AndreShared"
-    val andreMailboxPath: MailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath: MailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.CreateMailbox))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.CreateMailbox))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -1206,7 +1245,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -1216,7 +1255,7 @@ trait MailboxGetMethodContract {
     .`then`
       .statusCode(SC_OK)
       .body(s"$ARGUMENTS.list", hasSize(1))
-      .body(s"$FIRST_MAILBOX.rights['${BOB.asString}']", containsInAnyOrder(
+      .body(s"$FIRST_MAILBOX.rights['${bobUsername.asString}']", containsInAnyOrder(
         Right.Lookup.asCharacter.toString,
         Right.Read.asCharacter.toString,
         Right.CreateMailbox.asCharacter.toString))
@@ -1226,13 +1265,13 @@ trait MailboxGetMethodContract {
   @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def getMailboxesShouldNotReturnInboxRoleToShareeWhenDelegatedInbox(server: GuiceJamesServer): Unit = {
-    val andreMailboxPath = MailboxPath.forUser(ANDRE, DefaultMailboxes.INBOX)
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, DefaultMailboxes.INBOX)
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
 
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -1244,7 +1283,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -1262,7 +1301,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldReturnCorrectMailboxRole(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.INBOX))
+      .createMailbox(MailboxPath.forUser(bobUsername, DefaultMailboxes.INBOX))
       .serialize
 
     `given`
@@ -1275,7 +1314,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -1293,7 +1332,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesShouldReturnCorrectMailboxRoleForJunk(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.SPAM))
+      .createMailbox(MailboxPath.forUser(bobUsername, DefaultMailboxes.SPAM))
       .serialize
 
     `given`
@@ -1306,7 +1345,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -1330,13 +1369,13 @@ trait MailboxGetMethodContract {
       .build
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.INBOX))
+      .createMailbox(MailboxPath.forUser(bobUsername, DefaultMailboxes.INBOX))
       .serialize
 
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, DefaultMailboxes.INBOX), AppendCommand.from(message))
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, DefaultMailboxes.INBOX), AppendCommand.from(message))
     server.getProbe(classOf[MailboxProbeImpl])
-      .appendMessage(BOB.asString, MailboxPath.forUser(BOB, DefaultMailboxes.INBOX),
+      .appendMessage(bobUsername.asString, MailboxPath.forUser(bobUsername, DefaultMailboxes.INBOX),
         new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.SEEN))
 
     Thread.sleep(1000) //dirty fix for distributed integration test...
@@ -1351,7 +1390,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -1362,10 +1401,10 @@ trait MailboxGetMethodContract {
       .statusCode(SC_OK)
       .body(s"$ARGUMENTS.list", hasSize(1))
       .body(s"$FIRST_MAILBOX.name", equalTo(DefaultMailboxes.INBOX))
-      .body(s"$FIRST_MAILBOX.quotas['#private&bob@domain.tld']['Storage'].used", equalTo(110))
-      .body(s"$FIRST_MAILBOX.quotas['#private&bob@domain.tld']['Storage'].max", nullValue)
-      .body(s"$FIRST_MAILBOX.quotas['#private&bob@domain.tld']['Message'].used", equalTo(2))
-      .body(s"$FIRST_MAILBOX.quotas['#private&bob@domain.tld']['Message'].max", nullValue)
+      .body(s"$FIRST_MAILBOX.quotas['$bobPrivateQuotaRoot']['Storage'].used", equalTo(110))
+      .body(s"$FIRST_MAILBOX.quotas['$bobPrivateQuotaRoot']['Storage'].max", nullValue)
+      .body(s"$FIRST_MAILBOX.quotas['$bobPrivateQuotaRoot']['Message'].used", equalTo(2))
+      .body(s"$FIRST_MAILBOX.quotas['$bobPrivateQuotaRoot']['Message'].max", nullValue)
   }
 
   @Test
@@ -1376,7 +1415,7 @@ trait MailboxGetMethodContract {
       .setGlobalMaxMessageCount(QuotaCountLimit.count(31))
 
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.INBOX))
+      .createMailbox(MailboxPath.forUser(bobUsername, DefaultMailboxes.INBOX))
       .serialize
 
     `given`
@@ -1389,7 +1428,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "accountId": "$bobAccountId",
                |        "ids": ["${mailboxId}"]
                |      },
                |      "c1"]]
@@ -1400,17 +1439,17 @@ trait MailboxGetMethodContract {
       .statusCode(SC_OK)
       .body(s"$ARGUMENTS.list", hasSize(1))
       .body(s"$FIRST_MAILBOX.name", equalTo(DefaultMailboxes.INBOX))
-      .body(s"$FIRST_MAILBOX.quotas['#private&bob@domain.tld']['Storage'].max", equalTo(142))
-      .body(s"$FIRST_MAILBOX.quotas['#private&bob@domain.tld']['Message'].max", equalTo(31))
+      .body(s"$FIRST_MAILBOX.quotas['$bobPrivateQuotaRoot']['Storage'].max", equalTo(142))
+      .body(s"$FIRST_MAILBOX.quotas['$bobPrivateQuotaRoot']['Message'].max", equalTo(31))
   }
 
   @Test
   def getMailboxesShouldReturnMailboxesInSorteredOrder(server: GuiceJamesServer): Unit = {
     val mailboxId1: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.TRASH))
+      .createMailbox(MailboxPath.forUser(bobUsername, DefaultMailboxes.TRASH))
       .serialize
     val mailboxId2: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.INBOX))
+      .createMailbox(MailboxPath.forUser(bobUsername, DefaultMailboxes.INBOX))
       .serialize
 
     `given`
@@ -1422,7 +1461,7 @@ trait MailboxGetMethodContract {
               |  "methodCalls": [[
               |      "Mailbox/get",
               |      {
-              |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+              |        "accountId": "$bobAccountId",
               |        "ids": ["${mailboxId1}", "${mailboxId2}"]
               |      },
               |      "c1"]]
@@ -1443,7 +1482,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesByIdsShouldReturnCorrespondingMailbox(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
 
     val response: String = `given`
@@ -1457,7 +1496,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["${mailboxId}"]
                |    },
                |    "c1"]]
@@ -1479,7 +1518,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |      {
-         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |        "accountId": "$bobAccountId",
          |        "list": [
          |          {
          |            "id": "${mailboxId}",
@@ -1504,7 +1543,7 @@ trait MailboxGetMethodContract {
          |            "namespace": "Personal",
          |            "rights": {},
          |            "quotas": {
-         |              "#private&bob@domain.tld": {
+         |              "$bobPrivateQuotaRoot": {
          |                "Storage": { "used": 0},
          |                "Message": {"used": 0}
          |              }
@@ -1520,7 +1559,7 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesByIdsShouldReturnCorrespondingMailboxWithoutPropertiesFromNotProvidedCapabilities(server: GuiceJamesServer): Unit = {
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
 
     val response: String = `given`
@@ -1532,7 +1571,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["${mailboxId}"]
                |    },
                |    "c1"]]
@@ -1554,7 +1593,7 @@ trait MailboxGetMethodContract {
          |  "methodResponses": [[
          |    "Mailbox/get",
          |      {
-         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |        "accountId": "$bobAccountId",
          |        "list": [
          |          {
          |            "id": "${mailboxId}",
@@ -1588,10 +1627,10 @@ trait MailboxGetMethodContract {
   def getMailboxesByIdsShouldReturnOnlyRequestedMailbox(server: GuiceJamesServer): Unit = {
     val mailboxName: String = "custom"
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
     server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "othercustom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "othercustom"))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -1602,7 +1641,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |    "Mailbox/get",
                |    {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |      "accountId": "$bobAccountId",
                |      "ids": ["${mailboxId}"]
                |    },
                |    "c1"]]
@@ -1620,11 +1659,11 @@ trait MailboxGetMethodContract {
   def getMailboxesByIdsShouldReturnBothFoundAndNotFound(server: GuiceJamesServer): Unit = {
     val mailboxName: String = "custom"
     val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "custom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "custom"))
       .serialize
     val randomId = randomMailboxId.serialize()
     server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, "othercustom"))
+      .createMailbox(MailboxPath.forUser(bobUsername, "othercustom"))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -1635,7 +1674,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |     "Mailbox/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["$mailboxId", "$randomId"]
                |     },
                |     "c1"]]
@@ -1665,7 +1704,7 @@ trait MailboxGetMethodContract {
            |  "methodCalls": [[
            |    "Mailbox/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$bobAccountId",
            |      "ids": ["$randomId"]
            |    },
            |    "c1"]]
@@ -1682,10 +1721,10 @@ trait MailboxGetMethodContract {
   @Test
   def getMailboxesByIdsShouldReturnMailboxesInSortedOrder(server: GuiceJamesServer): Unit = {
     val mailboxId1: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.TRASH))
+      .createMailbox(MailboxPath.forUser(bobUsername, DefaultMailboxes.TRASH))
       .serialize
     val mailboxId2: String = server.getProbe(classOf[MailboxProbeImpl])
-      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.INBOX))
+      .createMailbox(MailboxPath.forUser(bobUsername, DefaultMailboxes.INBOX))
       .serialize
 
     `given`
@@ -1697,7 +1736,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |     "Mailbox/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["$mailboxId1", "$mailboxId2"]
                |     },
                |     "c1"]]
@@ -1726,7 +1765,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |     "Mailbox/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["$mailboxId"]
                |     },
                |     "c1"]]
@@ -1764,7 +1803,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |     "Mailbox/get",
                |     {
-               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "accountId": "$bobAccountId",
                |       "ids": ["$mailboxId"]
                |     },
                |     "c1"]]
@@ -1794,7 +1833,7 @@ trait MailboxGetMethodContract {
   @Test
   def mailboxStateShouldBeTheLatestOne(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
-    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(bobUsername))
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -1804,14 +1843,14 @@ trait MailboxGetMethodContract {
            |  "methodCalls": [[
            |     "Mailbox/get",
            |     {
-           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "accountId": "$bobAccountId",
            |       "ids": null,
            |       "properties": ["id"]
            |     },
            |     "c1"],[
            |      "Mailbox/changes",
            |      {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "accountId": "$bobAccountId",
            |        "#sinceState": {
            |           "resultOf":"c1",
            |           "name":"Mailbox/get",
@@ -1835,7 +1874,7 @@ trait MailboxGetMethodContract {
       .inPath("methodResponses[1][1]")
       .isEqualTo(
         s"""{
-           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |  "accountId": "$bobAccountId",
            |  "hasMoreChanges": false,
            |  "updatedProperties": null,
            |  "created": [],
@@ -1854,7 +1893,7 @@ trait MailboxGetMethodContract {
            |  "methodCalls": [[
            |      "Mailbox/get",
            |      {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+           |        "accountId": "$bobAccountId"
            |      },
            |      "c1"]]
            |}""".stripMargin)
@@ -1865,12 +1904,12 @@ trait MailboxGetMethodContract {
       .get("methodResponses[0][1].state")
 
     val sharedMailboxName = "AndreShared"
-    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -1881,7 +1920,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+               |        "accountId": "$bobAccountId"
                |      },
                |      "c1"]]
                |}""".stripMargin)
@@ -1902,7 +1941,7 @@ trait MailboxGetMethodContract {
            |  "methodCalls": [[
            |      "Mailbox/get",
            |      {
-           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+           |        "accountId": "$bobAccountId"
            |      },
            |      "c1"]]
            |}""".stripMargin)
@@ -1913,12 +1952,12 @@ trait MailboxGetMethodContract {
       .get("methodResponses[0][1].state")
 
     val sharedMailboxName = "AndreShared"
-    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, sharedMailboxName)
     server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreMailboxPath)
       .serialize
     server.getProbe(classOf[ACLProbeImpl])
-      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -1930,7 +1969,7 @@ trait MailboxGetMethodContract {
                |  "methodCalls": [[
                |      "Mailbox/get",
                |      {
-               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+               |        "accountId": "$bobAccountId"
                |      },
                |      "c1"]]
                |}""".stripMargin)
