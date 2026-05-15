@@ -1,0 +1,96 @@
+The XML elements of all servers have an optional attribute `enabled` which defaults to `true`.
+
+.Common configuration options for servers (SMTP, LMTP, POP3, IMAP, Managesieve)
+|===
+| Property Name | Explanation
+
+| `bind`
+| The option describes which IPv4 addresses and ports the server should bind to.
+IPv6 addresses are not supported.
+It is an optional, comma-separated list of `<IPv4>:<port>` tuples.
+The default value is the IPv4 address `0.0.0.0` with the default port of the protocol
+(24 for LMTP, 25 for SMTP, 110 for POP3, 143 for IMAP, and 4190 for Managesieve).
+
+| `jmxName`
+| An optional name for the JMX of this server.
+The default value is `lmtpserver` for LMTP, `smtpserver` for SMTP, `pop3server` for POP3, `imapserver` for IMAP, and `managesieveserver` for Managesieve.
+
+| `ioWorkerCount`
+| Sets the maximum number of IO threads.
+IO threads are responsible for receiving incoming messages and framing them
+(split line by line).
+IO threads also take care of compression and TLS.
+Their tasks are short-lived and non-blocking.
+It is an optional integer and defaults to 2 times the number of CPUs.
+
+| `bossWorkerCount`
+| Sets the maximum number of boss threads.
+Boss threads are responsible for accepting incoming connections and initializing associated resources.
+It is an optional integer.
+By default, boss threads are not used and and IO threads handle their tasks.
+
+| `maxExecutorCount`
+| Sets the maximum number of worker threads.
+Worker threads takes care of potentially blocking tasks like executing commands.
+It is an optional integer which defaults to 16.
+
+| `helloName`
+| Defines the server name used in the initial server greeting.
+By default, Java libraries are used to get the local hostname.
+If that fails, `localhost` is used.
+If the element is present and the attribute `autodetect` is set to `false`, the body of this element is used instead.
+
+| `connectiontimeout`
+| Sets the timeout for connection in seconds.
+It is an optional integer with the default value 300.
+
+| `connectionBacklog`
+| Sets the maximum number of queued connection requests (backlog).
+It is an optional integer which defaults to 200.
+
+| `connectionLimit`
+| Sets the maximum number of simultaneous incoming connections.
+It is an optional, positive integer.
+If not configured, there is no limit.
+
+| `connectionLimitPerIP`
+| Sets the maximum number of simultaneous incoming connections per client IP.
+It is an optional, positive integer.
+If not configured, there is no limit.
+
+| `tls`
+| Configures implicit TLS and STARTTLS.
+The configuration is described in more detail xref:{pages-path}/configure/ssl.adoc[here].
+
+| `gracefulShutdown`
+| If `true`, the server attempts a graceful shutdown, which is safer but can take time.
+It is a boolean that defaults to `true`.
+
+| `useEpoll`
+| If `true`, the server uses the native EPOLL implementation for Netty, otherwise it uses NIO.
+It is a boolean that defaults to `false`.
+
+| `highWriteBufferWaterMark`, `lowWriteBufferWaterMark`
+| Configures a water mark for Netty's write buffer.
+If none of the two elements is present, no water mark is set and Netty's defaults apply.
+If only one of them is provided, both the high and the low water mark are set to that value.
+The last character of the value may be a unit.
+Supported units are `B` for bytes, `K` for kibibyte (1,024 bytes), `M` for mebibyte (1,024 kibibytes), and `G` for gibibyte (1,024 mebibytes).
+If no unit is given, the value is interpreted as bytes.
+
+| `proxyRequired`
+| Enables HAProxy's PROXY protocol for incoming connections.
+PROXY protocol allows a reverse proxy in front of the email server to provide information about the original TCP connection.
+This is most relevant for getting the real IP address of the client.
+If this is enabled, all connections are **required** to use the PROXY protocol.
+It is a boolean that defaults to `false`.
+
+| `proxyFirst`
+| Configures the order of encapsulation of TLS and PROXY protocol.
+If `true`, the server expects a PROXY protocol header first and TLS records (if enabled) after that.
+This means the reverse proxy transparently proxies TCP connections and does not touch the TLS connection between client and email server.
+If `false`, the server expects TLS records (if enabled) that contain a proxied connection.
+This means the TLS connection is established between reverse proxy and email server.
+It is a boolean that defaults to `true`.
+
+|===

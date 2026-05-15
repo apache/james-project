@@ -1,0 +1,5 @@
+= Distributed James Server &mdash; OIDC Configuration
+:navtitle: OIDC Configuration
+
+:pages-path: distributed
+include::partial$configure/oidc.adoc[]

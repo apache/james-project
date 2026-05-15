@@ -1,0 +1,5 @@
+= Postgresql James Server &mdash; Common Server Configuration
+:navtitle: Common Server Configuration
+
+:pages-path: postgres
+include::partial$configure/server.adoc[]
