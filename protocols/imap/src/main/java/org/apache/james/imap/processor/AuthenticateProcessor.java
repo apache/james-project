@@ -220,7 +220,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                             .as(associatedUser),
                         session, request, responder, authenticatedUser, associatedUser);
                 } else {
-                    authSuccess(authenticatedUser, session, request, responder);
+                    oauthSuccess(authenticatedUser, session, request, responder);
                 }
             }, () -> manageFailureCount(session, request, responder));
     }

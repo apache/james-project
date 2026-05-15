@@ -253,10 +253,17 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         return new AuthenticationAttempt(Optional.empty(), authenticationId, password);
     }
 
-    protected void authSuccess(Username username, ImapSession session, ImapRequest request, Responder responder) {
-        session.authenticated();
-        session.setMailboxSession(getMailboxManager().createSystemSession(username));
-        okComplete(request, responder);
+    protected void oauthSuccess(Username username, ImapSession session, ImapRequest request, Responder responder) {
+        try {
+            session.authenticated();
+            final MailboxSession mailboxSession = getMailboxManager().createSystemSession(username);
+            session.setMailboxSession(mailboxSession);
+            provisionInbox(session, getMailboxManager(), mailboxSession);
+            okComplete(request, responder);
+        } catch (MailboxException e) {
+            LOGGER.error("Error encountered while login", e);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+        }
     }
 
     protected static class AuthenticationAttempt {
