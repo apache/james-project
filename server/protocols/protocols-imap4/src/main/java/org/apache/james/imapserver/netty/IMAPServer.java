@@ -156,7 +156,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private static final String DEFAULT_TIME_UNIT = "SECONDS";
     private static final String CAPABILITY_SEPARATOR = "|";
     public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
-    public static final Size DEFAULT_IN_MEMORY_SIZE_LIMIT = Size.of(10L, Size.Unit.M); // Use 10MB as default
+    public static final Size DEFAULT_IN_MEMORY_SIZE_LIMIT = Size.of(10L, Size.Unit.M); // Use 10MiB as default
     public static final int DEFAULT_TIMEOUT = 30 * 60; // default timeout is 30 minutes
     public static final int DEFAULT_LITERAL_SIZE_LIMIT = 0;
 
