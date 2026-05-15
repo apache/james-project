@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.modules.server;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
@@ -28,12 +29,15 @@ import org.apache.james.webadmin.dto.DTOModuleInjections;
 import org.apache.james.webadmin.service.ExportService;
 import org.apache.james.webadmin.service.MailboxesExportTask;
 import org.apache.james.webadmin.service.MailboxesExportTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.service.MailboxesRestoreTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.service.MailboxesRestoreTaskDTO;
+import org.apache.james.webadmin.service.RestoreService;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Named;
 
-public class WebadminMailboxExportTaskSerializationModule extends AbstractModule {
+public class WebadminMailboxBackupTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public TaskDTOModule<? extends Task, ? extends TaskDTO> mailboxesExportTask(ExportService exportService) {
         return MailboxesExportTask.module(exportService);
@@ -48,5 +52,21 @@ public class WebadminMailboxExportTaskSerializationModule extends AbstractModule
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminMailboxesExportAdditionalInformation() {
         return MailboxesExportTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> mailboxesRestoreTask(RestoreService restoreService, BlobId.Factory blobIdFactory) {
+        return MailboxesRestoreTaskDTO.module(restoreService, blobIdFactory);
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> mailboxesRestoreAdditionalInformation() {
+        return MailboxesRestoreTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminMailboxesRestoreAdditionalInformation() {
+        return MailboxesRestoreTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 }

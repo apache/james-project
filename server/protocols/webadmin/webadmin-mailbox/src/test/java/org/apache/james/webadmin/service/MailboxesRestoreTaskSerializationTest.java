@@ -17,27 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.webadmin.service;
 
-import org.apache.james.webadmin.routes.UserMailboxesRoutes;
-import org.apache.james.webadmin.service.ExportService;
-import org.apache.james.webadmin.service.MailboxesExportRequestToTask;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import static org.mockito.Mockito.mock;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
+import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.PlainBlobId;
+import org.apache.james.core.Username;
+import org.apache.james.util.ClassLoaderUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MailboxesExportRoutesModule extends AbstractModule {
+class MailboxesRestoreTaskSerializationTest {
+    RestoreService service;
+    BlobId.Factory blobIdFactory;
 
-    @Override
-    protected void configure() {
-        install(new MailboxesBackupModule());
-        install(new WebadminMailboxExportTaskSerializationModule());
+    @BeforeEach
+    void setUp() {
+        service = mock(RestoreService.class);
+        blobIdFactory = new PlainBlobId.Factory();
+    }
 
-        bind(ExportService.class).in(Scopes.SINGLETON);
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
-            .addBinding().to(MailboxesExportRequestToTask.class);
+    @Test
+    void shouldMatchJsonSerializationContract() throws Exception {
+        JsonSerializationVerifier.dtoModule(MailboxesRestoreTaskDTO.module(service, blobIdFactory))
+            .bean(new MailboxesRestoreTask(service, Username.of("bob"), blobIdFactory.of("abc123")))
+            .json(ClassLoaderUtils.getSystemResourceAsString("json/mailboxesRestore.task.json"))
+            .verify();
     }
 }

@@ -83,7 +83,7 @@ import org.apache.james.modules.server.JmapUploadCleanupModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
-import org.apache.james.modules.server.MailboxesExportRoutesModule;
+import org.apache.james.modules.server.MailboxesBackupRoutesModule;
 import org.apache.james.modules.server.RabbitMailQueueRoutesModule;
 import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.modules.server.SieveRoutesModule;
@@ -121,7 +121,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new ReIndexingModule(),
         new SieveRoutesModule(),
         new WebAdminReIndexingTaskSerializationModule(),
-        new MailboxesExportRoutesModule(),
+        new MailboxesBackupRoutesModule(),
         new UserIdentityModule(),
         new DLPRoutesModule(),
         new JmapUploadCleanupModule(),

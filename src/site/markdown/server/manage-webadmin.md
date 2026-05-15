@@ -1665,7 +1665,7 @@ Response codes:
 ### Exporting user mailboxes
 
 ```
-curl -XPOST http://ip:port/users/{usernameToBeUsed}/mailboxes?action=export
+curl -XPOST http://ip:port/users/{usernameToBeUsed}/mailboxes?task=export
 ```
 
 Resource name `usernameToBeUsed` should be an existing user
@@ -1685,6 +1685,32 @@ The scheduled task will have the following type `MailboxesExportTask` and the fo
   "stage": "STARTING"
 }
 ```
+
+### Restoring user mailboxes
+
+```
+curl -XPOST http://ip:port/users/{usernameToBeUsed}/mailboxes?task=restore --data-binary @backup.zip
+```
+
+Resource name `usernameToBeUsed` should be an existing user. The request body must contain the ZIP backup data.
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned
+ - 400: The request body is empty
+ - 404: The user name does not exist
+
+The scheduled task will have the following type `MailboxesRestoreTask` and the following `additionalInformation`:
+
+```
+{
+  "type":"MailboxesRestoreTask",
+  "timestamp":"2007-12-03T10:15:30Z",
+  "username": "user"
+}
+```
+
+Note: The account must be empty for the restore to succeed. If the user already has mailboxes, the task will fail.
 
 ### ReIndexing a user mails
  
