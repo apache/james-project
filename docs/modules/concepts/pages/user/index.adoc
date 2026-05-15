@@ -41,7 +41,7 @@ Apache James offers Operators a range of servers for various use cases, includin
  * A xref:servers:basic/index.adoc[Basic Server] ideal for busy Operators who
    are interested in an easy-to-use self-hosting solution, but who may not have the
    time to gain deep expertise
- * An xref:servers:extendable/index.adoc[Advanced Server] well-suited for Operators with
+ * A xref:servers:distributed/index.adoc[Distributed Server] well-suited for Operators with
    advanced skills and resources who are not daunted by getting their hands dirty
    with configurations or using built-in extensions
 
