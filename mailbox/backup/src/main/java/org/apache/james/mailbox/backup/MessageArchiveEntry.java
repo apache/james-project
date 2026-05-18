@@ -23,47 +23,8 @@ import java.util.Date;
 
 import jakarta.mail.Flags;
 
-public class MessageArchiveEntry implements MailArchiveEntry {
-
-    private final SerializedMessageId messageId;
-    private final SerializedMailboxId mailboxId;
-    private final long size;
-    private final Date internalDate;
-    private final Flags flags;
-    private final InputStream content;
-
-    public MessageArchiveEntry(SerializedMessageId messageId, SerializedMailboxId mailboxId, long size, Date internalDate, Flags flags, InputStream content) {
-        this.messageId = messageId;
-        this.mailboxId = mailboxId;
-        this.size = size;
-        this.internalDate = internalDate;
-        this.flags = flags;
-        this.content = content;
-    }
-
-    public SerializedMessageId getMessageId() {
-        return messageId;
-    }
-
-    public SerializedMailboxId getMailboxId() {
-        return mailboxId;
-    }
-
-    public long getSize() {
-        return size;
-    }
-
-    public Date getInternalDate() {
-        return internalDate;
-    }
-
-    public Flags getFlags() {
-        return flags;
-    }
-
-    public InputStream getContent() {
-        return content;
-    }
+public record MessageArchiveEntry(SerializedMessageId messageId, SerializedMailboxId mailboxId, long size,
+                                  Date internalDate, Flags flags, InputStream content) implements MailArchiveEntry {
 
     @Override
     public ArchiveEntryType getType() {

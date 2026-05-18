@@ -20,10 +20,9 @@ package org.apache.james.mailbox.backup;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 
@@ -32,15 +31,15 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageManager.AppendResult;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ByteSourceContent;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class ZipMailArchiveRestorer implements MailArchiveRestorer {
 
@@ -61,38 +60,49 @@ public class ZipMailArchiveRestorer implements MailArchiveRestorer {
         mailboxManager.endProcessingRequest(session);
     }
 
-    private void restoreEntries(InputStream source, MailboxSession session) throws IOException {
+    private void restoreEntries(InputStream source, MailboxSession session) throws IOException, MailboxException {
         try (MailArchiveIterator archiveIterator = archiveLoader.load(source)) {
-            List<MailboxWithAnnotationsArchiveEntry> mailboxes = readMailboxes(archiveIterator);
-            restoreMailboxes(session, mailboxes);
-        }
-    }
-
-    private Map<SerializedMailboxId, MessageManager> restoreMailboxes(MailboxSession session, List<MailboxWithAnnotationsArchiveEntry> mailboxes) {
-        return mailboxes.stream()
-            .flatMap(Throwing.<MailboxWithAnnotationsArchiveEntry, Stream<ImmutablePair<SerializedMailboxId, MessageManager>>>function(
-                mailboxEntry -> restoreMailboxEntry(session, mailboxEntry).stream()).sneakyThrow())
-            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    private List<MailboxWithAnnotationsArchiveEntry> readMailboxes(MailArchiveIterator iterator) {
-        ImmutableList.Builder<MailboxWithAnnotationsArchiveEntry> mailboxes = ImmutableList.builder();
-        while (iterator.hasNext()) {
-            MailArchiveEntry entry = iterator.next();
-            switch (entry.getType()) {
-                case MAILBOX:
-                    mailboxes.add((MailboxWithAnnotationsArchiveEntry) entry);
-                    break;
-                case MESSAGE:
-                    //Ignore for know, TODO: implementation
-                    break;
-                case UNKNOWN:
-                    String entryName = ((UnknownArchiveEntry) entry).getEntryName();
-                    LOGGER.warn("unknown entry found in zip :" + entryName);
-                    break;
+            Map<SerializedMailboxId, MessageManager> restoredMailboxes = new HashMap<>();
+            while (archiveIterator.hasNext()) {
+                MailArchiveEntry entry = archiveIterator.next();
+                switch (entry.getType()) {
+                    case MAILBOX:
+                        MailboxWithAnnotationsArchiveEntry mailboxEntry = (MailboxWithAnnotationsArchiveEntry) entry;
+                        restoreMailboxEntry(session, mailboxEntry)
+                            .ifPresent(pair -> restoredMailboxes.put(pair.getKey(), pair.getValue()));
+                        break;
+                    case MESSAGE:
+                        MessageArchiveEntry messageEntry = (MessageArchiveEntry) entry;
+                        restoreMessage(session, messageEntry, restoredMailboxes);
+                        break;
+                    case UNKNOWN:
+                        String entryName = ((UnknownArchiveEntry) entry).entryName();
+                        LOGGER.warn("unknown entry found in zip :" + entryName);
+                        break;
+                }
             }
         }
-        return mailboxes.build();
+    }
+
+    private void restoreMessage(MailboxSession session, MessageArchiveEntry messageEntry, Map<SerializedMailboxId, MessageManager> mailboxes) {
+        try {
+            MessageManager messageManager = mailboxes.get(messageEntry.mailboxId());
+            if (messageManager == null) {
+                LOGGER.warn("Mailbox {} not found for message {}", messageEntry.mailboxId(), messageEntry.messageId());
+                return;
+            }
+            ByteSourceContent content = ByteSourceContent.of(messageEntry.content());
+            MessageManager.AppendCommand command = MessageManager.AppendCommand.builder()
+                .withInternalDate(messageEntry.internalDate())
+                .withFlags(messageEntry.flags())
+                .build(content);
+            AppendResult result = messageManager.appendMessage(command, session);
+            if (!result.getSize().equals(messageEntry.size())) {
+                LOGGER.warn("Size {} for message {} different from zip entry one {}", result.getSize(), messageEntry.messageId(), messageEntry.size());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error restoring message {} to mailbox {}", messageEntry.messageId(), messageEntry.mailboxId(), e);
+        }
     }
 
     private Optional<ImmutablePair<SerializedMailboxId, MessageManager>> restoreMailboxEntry(MailboxSession session,

@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.mailbox.backup.MailboxMessageFixture.DATE_1;
 import static org.apache.james.webadmin.service.ExportServiceTestSystem.BOB;
 import static org.apache.james.webadmin.service.ExportServiceTestSystem.CEDRIC;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +30,9 @@ import static org.mockito.Mockito.doThrow;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+import jakarta.mail.Flags;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -51,13 +54,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 
-import com.github.fge.lambdas.Throwing;
-
 import reactor.core.publisher.Mono;
 
 @ExtendWith(FileSystemExtension.class)
 class RestoreServiceTest {
     private static final int BUFFER_SIZE = 4096;
+    private static String OTHER_MAILBOX = "otherMailbox";
     private static final String MESSAGE_CONTENT = "MIME-Version: 1.0\r\n" +
         "Subject: test\r\n" +
         "Content-Type: text/plain; charset=UTF-8\r\n" +
@@ -87,7 +89,7 @@ class RestoreServiceTest {
 
     @Test
     void restoreShouldReturnCompleteWhenExistingUserWithoutDataAndNonEmptyZip() throws Exception {
-        createAMailboxWithAMail(MESSAGE_CONTENT);
+        createAMailboxWithAMail();
 
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
         testSystem.backup.backupAccount(BOB, destination);
@@ -101,7 +103,7 @@ class RestoreServiceTest {
 
     @Test
     void restoreShouldReturnPartialWhenNonEmptyAccount() throws Exception {
-        createAMailboxWithAMail(MESSAGE_CONTENT);
+        createAMailboxWithAMail();
 
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
         testSystem.backup.backupAccount(BOB, destination);
@@ -119,7 +121,7 @@ class RestoreServiceTest {
             .when(testSystem.blobStore)
             .read(any(), any());
 
-        createAMailboxWithAMail(MESSAGE_CONTENT);
+        createAMailboxWithAMail();
 
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
         testSystem.backup.backupAccount(BOB, destination);
@@ -148,7 +150,7 @@ class RestoreServiceTest {
 
     @Test
     void restoreShouldRestoreContentFromNonEmptyZip() throws Exception {
-        createAMailboxWithAMail(MESSAGE_CONTENT);
+        createAMailboxWithAMail();
 
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
         testSystem.backup.backupAccount(BOB, destination);
@@ -161,15 +163,99 @@ class RestoreServiceTest {
         MailboxSession cedricSession = testSystem.mailboxManager.createSystemSession(CEDRIC);
         MessageManager mailbox = testSystem.mailboxManager.getMailbox(MailboxPath.inbox(CEDRIC), cedricSession);
         MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, cedricSession);
+        assertThat(resultIterator).toIterable()
+            .hasSize(1)
+            .first()
+            .satisfies(result -> assertThat(new String(result.getFullContent().getInputStream().readAllBytes())).isEqualTo(MESSAGE_CONTENT));
+    }
+
+    @Test
+    void restoreShouldPreserveFlags() throws Exception {
+        Flags messageFlags = new Flags("customFlag");
+        messageFlags.add(Flags.Flag.SEEN);
+        createAMailboxWithAMail(messageFlags, new Date());
+
+        ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
+        testSystem.backup.backupAccount(BOB, destination);
+
+        InputStream source = new ByteArrayInputStream(destination.toByteArray());
+        BlobId blobId = Mono.from(testSystem.blobStore.save(testSystem.blobStore.getDefaultBucketName(), source, BlobStore.StoragePolicy.LOW_COST)).block();
+
+        testee.restore(CEDRIC, blobId).block();
+
+        MailboxSession cedricSession = testSystem.mailboxManager.createSystemSession(CEDRIC);
+        MessageManager mailbox = testSystem.mailboxManager.getMailbox(MailboxPath.inbox(CEDRIC), cedricSession);
+        MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, cedricSession);
+        assertThat(resultIterator).toIterable()
+            .hasSize(1)
+            .first()
+            .satisfies(result -> assertThat(result.getFlags()).isEqualTo(messageFlags));
+    }
+
+    @Test
+    void restoreShouldPreserveInternalDate() throws Exception {
+        Date internalDate = new Date(DATE_1.toEpochSecond());
+        createAMailboxWithAMail(new Flags(), internalDate);
+
+        ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
+        testSystem.backup.backupAccount(BOB, destination);
+
+        InputStream source = new ByteArrayInputStream(destination.toByteArray());
+        BlobId blobId = Mono.from(testSystem.blobStore.save(testSystem.blobStore.getDefaultBucketName(), source, BlobStore.StoragePolicy.LOW_COST)).block();
+
+        testee.restore(CEDRIC, blobId).block();
+
+        MailboxSession cedricSession = testSystem.mailboxManager.createSystemSession(CEDRIC);
+        MessageManager mailbox = testSystem.mailboxManager.getMailbox(MailboxPath.inbox(CEDRIC), cedricSession);
+        MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, cedricSession);
+        assertThat(resultIterator).toIterable()
+            .hasSize(1)
+            .first()
+            .satisfies(result -> assertThat(result.getInternalDate()).isEqualTo(internalDate));
+    }
+
+    @Test
+    void restoreShouldRestoreMultipleMailboxesAndMessages() throws Exception {
+        MailboxPath bobInboxPath = MailboxPath.inbox(BOB);
+        MailboxPath otherBobMailboxPath = MailboxPath.forUser(BOB, OTHER_MAILBOX);
+        testSystem.mailboxManager.createMailbox(bobInboxPath, testSystem.bobSession);
+        testSystem.mailboxManager.createMailbox(otherBobMailboxPath, testSystem.bobSession);
+
+        testSystem.mailboxManager.getMailbox(bobInboxPath, testSystem.bobSession)
+            .appendMessage(MessageManager.AppendCommand.builder()
+                    .build(MESSAGE_CONTENT),
+                testSystem.bobSession);
+        testSystem.mailboxManager.getMailbox(bobInboxPath, testSystem.bobSession)
+            .appendMessage(MessageManager.AppendCommand.builder()
+                    .build(MESSAGE_CONTENT),
+                testSystem.bobSession);
+        testSystem.mailboxManager.getMailbox(otherBobMailboxPath, testSystem.bobSession)
+            .appendMessage(MessageManager.AppendCommand.builder()
+                    .build(MESSAGE_CONTENT),
+                testSystem.bobSession);
+
+        ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
+        testSystem.backup.backupAccount(BOB, destination);
+
+        InputStream source = new ByteArrayInputStream(destination.toByteArray());
+        BlobId blobId = Mono.from(testSystem.blobStore.save(testSystem.blobStore.getDefaultBucketName(), source, BlobStore.StoragePolicy.LOW_COST)).block();
+
+        testee.restore(CEDRIC, blobId).block();
+
+        MailboxSession cedricSession = testSystem.mailboxManager.createSystemSession(CEDRIC);
+        MessageManager inbox = testSystem.mailboxManager.getMailbox(MailboxPath.inbox(CEDRIC), cedricSession);
+        MessageManager otherMailbox = testSystem.mailboxManager.getMailbox(MailboxPath.forUser(CEDRIC, OTHER_MAILBOX), cedricSession);
+        MessageResultIterator inboxMessages = inbox.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, cedricSession);
+        MessageResultIterator otherMailboxMessages = otherMailbox.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, cedricSession);
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(resultIterator).toIterable().hasSize(1);
-            softly.assertThat(Throwing.supplier(() -> resultIterator.next().getBody().asBytesSequence())).isEqualTo(MESSAGE_CONTENT.getBytes(StandardCharsets.UTF_8));
+            softly.assertThat(inboxMessages).toIterable().hasSize(2);
+            softly.assertThat(otherMailboxMessages).toIterable().hasSize(1);
         });
     }
 
     @Test
     void restoreShouldDeleteBlobAfterCompletion() throws Exception {
-        createAMailboxWithAMail(MESSAGE_CONTENT);
+        createAMailboxWithAMail();
 
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
         testSystem.backup.backupAccount(BOB, destination);
@@ -183,12 +269,18 @@ class RestoreServiceTest {
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
-    private ComposedMessageId createAMailboxWithAMail(String message) throws MailboxException {
+    private ComposedMessageId createAMailboxWithAMail() throws MailboxException {
+        return createAMailboxWithAMail(new Flags(), new Date());
+    }
+
+    private ComposedMessageId createAMailboxWithAMail(Flags flags, Date internalDate) throws MailboxException {
         MailboxPath bobInboxPath = MailboxPath.inbox(BOB);
         testSystem.mailboxManager.createMailbox(bobInboxPath, testSystem.bobSession);
         return testSystem.mailboxManager.getMailbox(bobInboxPath, testSystem.bobSession)
             .appendMessage(MessageManager.AppendCommand.builder()
-                    .build(message),
+                    .withFlags(flags)
+                    .withInternalDate(internalDate)
+                    .build(MESSAGE_CONTENT),
                 testSystem.bobSession)
             .getId();
     }
