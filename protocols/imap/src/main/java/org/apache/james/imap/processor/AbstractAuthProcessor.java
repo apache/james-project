@@ -27,6 +27,8 @@ import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
+import org.apache.james.jwt.OidcJwtTokenVerifier;
+import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
@@ -39,6 +41,7 @@ import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.protocols.api.OIDCSASLParser;
 import org.apache.james.util.AuditTrail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,6 +192,23 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
             LOGGER.info("Login failed", e);
             no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
+    }
+
+    protected void doOAuth(OIDCSASLParser.OIDCInitialResponse oidcInitialResponse, OidcSASLConfiguration oidcSASLConfiguration,
+                         ImapSession session, ImapRequest request, Responder responder) {
+        new OidcJwtTokenVerifier(oidcSASLConfiguration).validateToken(oidcInitialResponse.getToken())
+            .ifPresentOrElse(authenticatedUser -> {
+                Username associatedUser = Username.of(oidcInitialResponse.getAssociatedUser());
+                if (!associatedUser.equals(authenticatedUser)) {
+                    doAuthWithDelegation(() -> getMailboxManager()
+                            .withExtraAuthorizator(withAdminUsers())
+                            .authenticate(authenticatedUser)
+                            .as(associatedUser),
+                        session, request, responder, authenticatedUser, associatedUser);
+                } else {
+                    authSuccess(authenticatedUser, session, request, responder);
+                }
+            }, () -> manageFailureCount(session, request, responder));
     }
 
     protected void provisionInbox(ImapSession session, MailboxManager mailboxManager, MailboxSession mailboxSession) throws MailboxException {
