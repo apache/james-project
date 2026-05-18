@@ -19,10 +19,13 @@
 package org.apache.james.mailbox.backup.zip;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
+
+import jakarta.mail.Flags;
 
 import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
@@ -36,6 +39,36 @@ public class ExtraFieldExtractor {
             .filter(field -> field.getHeaderId().equals(id))
             .map(StringExtraField.class::cast)
             .map(StringExtraField::getValue)
+            .findFirst()
+            .flatMap(Function.identity());
+    }
+
+    public static Optional<Long> getLongExtraField(ZipShort id, ZipEntry entry) throws ZipException {
+        ZipExtraField[] extraFields = ExtraFieldUtils.parse(entry.getExtra());
+        return Arrays.stream(extraFields)
+            .filter(field -> field.getHeaderId().equals(id))
+            .map(LongExtraField.class::cast)
+            .map(LongExtraField::getValue)
+            .findFirst()
+            .flatMap(Function.identity());
+    }
+
+    public static Optional<Date> getDateExtraField(ZipShort id, ZipEntry entry) throws ZipException {
+        ZipExtraField[] extraFields = ExtraFieldUtils.parse(entry.getExtra());
+        return Arrays.stream(extraFields)
+            .filter(field -> field.getHeaderId().equals(id))
+            .map(InternalDateExtraField.class::cast)
+            .map(InternalDateExtraField::getDateValue)
+            .findFirst()
+            .flatMap(Function.identity());
+    }
+
+    public static Optional<Flags> getFlagsExtraField(ZipShort id, ZipEntry entry) throws ZipException {
+        ZipExtraField[] extraFields = ExtraFieldUtils.parse(entry.getExtra());
+        return Arrays.stream(extraFields)
+            .filter(field -> field.getHeaderId().equals(id))
+            .map(FlagsExtraField.class::cast)
+            .map(FlagsExtraField::getFlagsValue)
             .findFirst()
             .flatMap(Function.identity());
     }

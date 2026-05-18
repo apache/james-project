@@ -48,6 +48,30 @@ public class FlagsExtraField extends StringExtraField implements WithZipHeader {
         super(Optional.of(serializeFlags(flags)));
     }
 
+    public Optional<Flags> getFlagsValue() {
+        return getValue().map(FlagsExtraField::parseFlags);
+    }
+
+    private static Flags parseFlags(String serialized) {
+        Flags flags = new Flags();
+        if (serialized == null || serialized.isEmpty()) {
+            return flags;
+        }
+        String[] parts = serialized.split("%");
+        for (String part : parts) {
+            switch (part) {
+                case "\\ANSWERED" -> flags.add(Flags.Flag.ANSWERED);
+                case "\\DELETED" -> flags.add(Flags.Flag.DELETED);
+                case "\\DRAFT" -> flags.add(Flags.Flag.DRAFT);
+                case "\\FLAGGED" -> flags.add(Flags.Flag.FLAGGED);
+                case "\\RECENT" -> flags.add(Flags.Flag.RECENT);
+                case "\\SEEN" -> flags.add(Flags.Flag.SEEN);
+                default -> flags.add(part);
+            }
+        }
+        return flags;
+    }
+
     @Override
     public ZipShort getHeaderId() {
         return ID_AP;

@@ -29,7 +29,6 @@ public class ZipArchivesLoader implements MailArchivesLoader {
     @Override
     public MailArchiveIterator load(InputStream inputStream) throws IOException {
         ZipInputStream zipInputStream = new ZipInputStream(inputStream);
-        ZipEntryIterator zipEntryIterator = new ZipEntryIterator(zipInputStream);
-        return new ZippedMailAccountIterator(zipEntryIterator);
+        return new ZippedMailAccountIterator(zipInputStream);
     }
 }

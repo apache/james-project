@@ -19,17 +19,23 @@
 package org.apache.james.mailbox.backup.zip;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
+import java.util.zip.ZipInputStream;
+
+import jakarta.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.backup.MailArchiveEntry;
 import org.apache.james.mailbox.backup.MailArchiveIterator;
 import org.apache.james.mailbox.backup.MailboxWithAnnotationsArchiveEntry;
+import org.apache.james.mailbox.backup.MessageArchiveEntry;
 import org.apache.james.mailbox.backup.SerializedMailboxId;
+import org.apache.james.mailbox.backup.SerializedMessageId;
 import org.apache.james.mailbox.backup.UnknownArchiveEntry;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.slf4j.Logger;
@@ -41,37 +47,53 @@ import com.google.common.collect.ImmutableList;
 public class ZippedMailAccountIterator implements MailArchiveIterator {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZippedMailAccountIterator.class);
     private static final List<MailboxAnnotation> NO_ANNOTATION = ImmutableList.of();
-    private final ZipEntryIterator zipEntryIterator;
-    private Optional<ZipEntry> next;
+    private final ZipInputStream zipInputStream;
+    private Optional<ZipEntry> currentEntry;
+    private boolean closed;
 
-    public ZippedMailAccountIterator(ZipEntryIterator zipEntryIterator) {
-        this.zipEntryIterator = zipEntryIterator;
-        next = Optional.ofNullable(zipEntryIterator.next());
+    public ZippedMailAccountIterator(ZipInputStream zipInputStream) {
+        this.zipInputStream = zipInputStream;
+        this.currentEntry = Optional.empty();
+        this.closed = false;
     }
 
     @Override
     public void close() throws IOException {
-        zipEntryIterator.close();
+        closed = true;
+        zipInputStream.close();
     }
 
     @Override
     public boolean hasNext() {
-        return next.isPresent();
+        if (closed) {
+            return false;
+        }
+        if (currentEntry.isPresent()) {
+            return true;
+        }
+        try {
+            closeCurrentEntryIfNeeded();
+            ZipEntry nextEntry = zipInputStream.getNextEntry();
+            currentEntry = Optional.ofNullable(nextEntry);
+            return currentEntry.isPresent();
+        } catch (IOException e) {
+            LOGGER.error("Error reading next zip entry", e);
+            return false;
+        }
     }
 
     @Override
     public MailArchiveEntry next() {
-        return next.map(this::doNext).orElseThrow(() -> new NoSuchElementException());
-    }
-
-    private MailArchiveEntry doNext(ZipEntry currentElement) {
-        next = Optional.ofNullable(zipEntryIterator.next());
+        if (!hasNext()) {
+            throw new NoSuchElementException();
+        }
+        ZipEntry entry = currentEntry.get();
+        currentEntry = Optional.empty();
         try {
-            return getMailArchiveEntry(currentElement);
+            return getMailArchiveEntry(entry);
         } catch (Exception e) {
-            LOGGER.error("Error when reading archive on entry : " + currentElement.getName(), e);
-            next = Optional.empty();
-            return new UnknownArchiveEntry(currentElement.getName());
+            LOGGER.error("Error when reading archive on entry : " + entry.getName(), e);
+            return new UnknownArchiveEntry(entry.getName());
         }
     }
 
@@ -82,6 +104,14 @@ public class ZippedMailAccountIterator implements MailArchiveIterator {
                 from(currentElement, type)).sneakyThrow()
             )
             .orElseGet(() -> new UnknownArchiveEntry(currentElement.getName()));
+    }
+
+    private void closeCurrentEntryIfNeeded() {
+        try {
+            zipInputStream.closeEntry();
+        } catch (IOException e) {
+            LOGGER.warn("Error closing zip entry", e);
+        }
     }
 
     private Optional<SerializedMailboxId> getMailBoxId(ZipEntry entry) throws ZipException {
@@ -97,10 +127,25 @@ public class ZippedMailAccountIterator implements MailArchiveIterator {
         return new MailboxWithAnnotationsArchiveEntry(getMailboxName(current), getMailBoxId(current).get(), NO_ANNOTATION);
     }
 
+    private MailArchiveEntry fromMessageEntry(ZipEntry current) throws ZipException {
+        SerializedMessageId messageId = ExtraFieldExtractor.getStringExtraField(MessageIdExtraField.ID_AL, current)
+            .map(SerializedMessageId::new)
+            .orElseThrow(() -> new ZipException("Message entry missing messageId"));
+        SerializedMailboxId mailboxId = getMailBoxId(current)
+            .orElseThrow(() -> new ZipException("Message entry missing mailboxId"));
+        long size = ExtraFieldExtractor.getLongExtraField(SizeExtraField.ID_AJ, current).orElse(0L);
+        Date internalDate = ExtraFieldExtractor.getDateExtraField(InternalDateExtraField.ID_AO, current).orElse(new Date());
+        Flags flags = ExtraFieldExtractor.getFlagsExtraField(FlagsExtraField.ID_AP, current).orElse(new Flags());
+
+        return new MessageArchiveEntry(messageId, mailboxId, size, internalDate, flags, zipInputStream);
+    }
+
     private MailArchiveEntry from(ZipEntry current, ZipEntryType currentEntryType) throws ZipException {
         switch (currentEntryType) {
             case MAILBOX:
                 return fromMailboxEntry(current);
+            case MESSAGE:
+                return fromMessageEntry(current);
             default:
                 return new UnknownArchiveEntry(current.getName());
         }

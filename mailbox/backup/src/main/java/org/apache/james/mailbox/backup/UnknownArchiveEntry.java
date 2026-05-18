@@ -18,17 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.backup;
 
-public class UnknownArchiveEntry implements MailArchiveEntry {
-
-    private final String entryName;
-
-    public UnknownArchiveEntry(String entryName) {
-        this.entryName = entryName;
-    }
-
-    public String getEntryName() {
-        return entryName;
-    }
+public record UnknownArchiveEntry(String entryName) implements MailArchiveEntry {
 
     @Override
     public ArchiveEntryType getType() {
