@@ -39,8 +39,6 @@ import org.apache.james.imap.main.PathConverter;
 import org.apache.james.imap.message.request.AuthenticateRequest;
 import org.apache.james.imap.message.request.IRAuthenticateRequest;
 import org.apache.james.imap.message.response.AuthenticateResponse;
-import org.apache.james.jwt.OidcJwtTokenVerifier;
-import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.OIDCSASLParser;
@@ -143,6 +141,17 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         session.stopDetectingCommandInjection();
     }
 
+    /**
+     * Parse the initial client response and start oauth authentication.
+     */
+    protected void parseAndDoOAuth(String initialResponse, ImapSession session, ImapRequest request, Responder responder) {
+        OIDCSASLParser.parse(initialResponse)
+            .flatMap(oidcInitialResponseValue -> session.oidcSaslConfiguration().map(configure -> Pair.of(oidcInitialResponseValue, configure)))
+            .ifPresentOrElse(pair -> doOAuth(pair.getLeft(), pair.getRight(), session, request, responder),
+                () -> manageFailureCount(session, request, responder));
+        session.stopDetectingCommandInjection();
+    }
+
     private AuthenticationAttempt parseDelegationAttempt(String initialClientResponse) {
         try {
             String userpass = new String(Base64.getDecoder().decode(initialClientResponse));
@@ -199,34 +208,6 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "AUTHENTICATE")
             .addToContext("authType", request.getAuthType());
-    }
-
-    /**
-     * Parse the initial client response and start oauth authentication.
-     */
-    protected void parseAndDoOAuth(String initialResponse, ImapSession session, ImapRequest request, Responder responder) {
-        OIDCSASLParser.parse(initialResponse)
-            .flatMap(oidcInitialResponseValue -> session.oidcSaslConfiguration().map(configure -> Pair.of(oidcInitialResponseValue, configure)))
-            .ifPresentOrElse(pair -> doOAuth(pair.getLeft(), pair.getRight(), session, request, responder),
-                () -> manageFailureCount(session, request, responder));
-        session.stopDetectingCommandInjection();
-    }
-
-    private void doOAuth(OIDCSASLParser.OIDCInitialResponse oidcInitialResponse, OidcSASLConfiguration oidcSASLConfiguration,
-                         ImapSession session, ImapRequest request, Responder responder) {
-        new OidcJwtTokenVerifier(oidcSASLConfiguration).validateToken(oidcInitialResponse.getToken())
-            .ifPresentOrElse(authenticatedUser -> {
-                Username associatedUser = Username.of(oidcInitialResponse.getAssociatedUser());
-                if (!associatedUser.equals(authenticatedUser)) {
-                    doAuthWithDelegation(() -> getMailboxManager()
-                            .withExtraAuthorizator(withAdminUsers())
-                            .authenticate(authenticatedUser)
-                            .as(associatedUser),
-                        session, request, responder, authenticatedUser, associatedUser);
-                } else {
-                    oauthSuccess(authenticatedUser, session, request, responder);
-                }
-            }, () -> manageFailureCount(session, request, responder));
     }
 
     private static String extractInitialClientResponse(byte[] data) {
