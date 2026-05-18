@@ -105,19 +105,24 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 }
             }
         } else if (authType.equalsIgnoreCase(AUTH_TYPE_OAUTHBEARER) || authType.equalsIgnoreCase(AUTH_TYPE_XOAUTH2)) {
-            if (request instanceof IRAuthenticateRequest) {
-                IRAuthenticateRequest irRequest = (IRAuthenticateRequest) request;
-                doOAuth(irRequest.getInitialClientResponse(), session, request, responder);
+            if (!session.supportsOAuth()) {
+                LOGGER.warn("OAuth authentication rejected because it is disabled");
+                no(request, responder, HumanReadableText.UNSUPPORTED_AUTHENTICATION_MECHANISM);
             } else {
-                session.executeSafely(() -> {
-                    responder.respond(new AuthenticateResponse());
-                    responder.flush();
-                    session.pushLineHandler((requestSession, data) -> Mono.fromRunnable(() -> {
-                        doOAuth(extractInitialClientResponse(data), requestSession, request, responder);
-                        requestSession.popLineHandler();
+                if (request instanceof IRAuthenticateRequest) {
+                    IRAuthenticateRequest irRequest = (IRAuthenticateRequest) request;
+                    doOAuth(irRequest.getInitialClientResponse(), session, request, responder);
+                } else {
+                    session.executeSafely(() -> {
+                        responder.respond(new AuthenticateResponse());
                         responder.flush();
-                    }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER).then());
-                });
+                        session.pushLineHandler((requestSession, data) -> Mono.fromRunnable(() -> {
+                            doOAuth(extractInitialClientResponse(data), requestSession, request, responder);
+                            requestSession.popLineHandler();
+                            responder.flush();
+                        }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER).then());
+                    });
+                }
             }
         } else {
             LOGGER.debug("Unsupported authentication mechanism '{}'", authType);
@@ -197,14 +202,10 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     }
 
     protected void doOAuth(String initialResponse, ImapSession session, ImapRequest request, Responder responder) {
-        if (!session.supportsOAuth()) {
-            no(request, responder, HumanReadableText.UNSUPPORTED_AUTHENTICATION_MECHANISM);
-        } else {
-            OIDCSASLParser.parse(initialResponse)
-                .flatMap(oidcInitialResponseValue -> session.oidcSaslConfiguration().map(configure -> Pair.of(oidcInitialResponseValue, configure)))
-                .ifPresentOrElse(pair -> doOAuth(pair.getLeft(), pair.getRight(), session, request, responder),
-                    () -> manageFailureCount(session, request, responder));
-        }
+        OIDCSASLParser.parse(initialResponse)
+            .flatMap(oidcInitialResponseValue -> session.oidcSaslConfiguration().map(configure -> Pair.of(oidcInitialResponseValue, configure)))
+            .ifPresentOrElse(pair -> doOAuth(pair.getLeft(), pair.getRight(), session, request, responder),
+                () -> manageFailureCount(session, request, responder));
         session.stopDetectingCommandInjection();
     }
 
