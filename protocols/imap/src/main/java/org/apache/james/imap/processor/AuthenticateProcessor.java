@@ -55,7 +55,7 @@ import com.google.common.collect.ImmutableList;
 import reactor.core.publisher.Mono;
 
 /**
- * Processor which handles the AUTHENTICATE command. Only authtype of PLAIN is supported ATM.
+ * Processor which handles the AUTHENTICATE command. Supported authentication mechanisms are PLAIN, XOAUTH2, and OAUTHBEARER.
  */
 public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateRequest> implements CapabilityImplementingProcessor {
     public static final String AUTH_PLAIN = "AUTH=PLAIN";
@@ -85,18 +85,18 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         if (authType.equalsIgnoreCase(AUTH_TYPE_PLAIN)) {
             // See if AUTH=PLAIN is allowed. See IMAP-304
             if (session.isPlainAuthDisallowed()) {
-                LOGGER.warn("Login attempt over clear channel rejected");
+                LOGGER.warn("Plain authentication rejected because it is disabled or not allowed over insecure channel");
                 no(request, responder, HumanReadableText.DISABLED_LOGIN);
             } else {
                 if (request instanceof IRAuthenticateRequest) {
                     IRAuthenticateRequest irRequest = (IRAuthenticateRequest) request;
-                    doPlainAuth(irRequest.getInitialClientResponse(), session, request, responder);
+                    parseAndDoPlainAuth(irRequest.getInitialClientResponse(), session, request, responder);
                 } else {
                     session.executeSafely(() -> {
                         responder.respond(new AuthenticateResponse());
                         responder.flush();
                         session.pushLineHandler((requestSession, data) -> Mono.fromRunnable(() -> {
-                            doPlainAuth(extractInitialClientResponse(data), requestSession, request, responder);
+                            parseAndDoPlainAuth(extractInitialClientResponse(data), requestSession, request, responder);
                             // remove the handler now
                             requestSession.popLineHandler();
                             responder.flush();
@@ -111,13 +111,13 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
             } else {
                 if (request instanceof IRAuthenticateRequest) {
                     IRAuthenticateRequest irRequest = (IRAuthenticateRequest) request;
-                    doOAuth(irRequest.getInitialClientResponse(), session, request, responder);
+                    parseAndDoOAuth(irRequest.getInitialClientResponse(), session, request, responder);
                 } else {
                     session.executeSafely(() -> {
                         responder.respond(new AuthenticateResponse());
                         responder.flush();
                         session.pushLineHandler((requestSession, data) -> Mono.fromRunnable(() -> {
-                            doOAuth(extractInitialClientResponse(data), requestSession, request, responder);
+                            parseAndDoOAuth(extractInitialClientResponse(data), requestSession, request, responder);
                             requestSession.popLineHandler();
                             responder.flush();
                         }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER).then());
@@ -131,14 +131,14 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     }
 
     /**
-     * Parse the initialClientResponse and do a PLAIN AUTH with it
+     * Parse the initial client response and start plain authentication.
      */
-    protected void doPlainAuth(String initialClientResponse, ImapSession session, ImapRequest request, Responder responder) {
+    protected void parseAndDoPlainAuth(String initialClientResponse, ImapSession session, ImapRequest request, Responder responder) {
         AuthenticationAttempt authenticationAttempt = parseDelegationAttempt(initialClientResponse);
         if (authenticationAttempt.isDelegation()) {
-            doAuthWithDelegation(authenticationAttempt, session, request, responder);
+            doPasswordAuthWithDelegation(authenticationAttempt, session, request, responder);
         } else {
-            doAuth(authenticationAttempt, session, request, responder, HumanReadableText.AUTHENTICATION_FAILED);
+            doPasswordAuth(authenticationAttempt, session, request, responder, HumanReadableText.AUTHENTICATION_FAILED);
         }
         session.stopDetectingCommandInjection();
     }
@@ -201,7 +201,10 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
             .addToContext("authType", request.getAuthType());
     }
 
-    protected void doOAuth(String initialResponse, ImapSession session, ImapRequest request, Responder responder) {
+    /**
+     * Parse the initial client response and start oauth authentication.
+     */
+    protected void parseAndDoOAuth(String initialResponse, ImapSession session, ImapRequest request, Responder responder) {
         OIDCSASLParser.parse(initialResponse)
             .flatMap(oidcInitialResponseValue -> session.oidcSaslConfiguration().map(configure -> Pair.of(oidcInitialResponseValue, configure)))
             .ifPresentOrElse(pair -> doOAuth(pair.getLeft(), pair.getRight(), session, request, responder),

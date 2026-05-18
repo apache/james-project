@@ -50,14 +50,17 @@ public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implemen
         super(LoginRequest.class, mailboxManager, factory, metricFactory, pathConverterFactory);
     }
 
+    /**
+     * Start password authentication if enabled.
+     */
     @Override
     protected void processRequest(LoginRequest request, ImapSession session, Responder responder) {
         // check if the login is allowed with LOGIN command. See IMAP-304
         if (session.isPlainAuthDisallowed()) {
-            LOGGER.warn("Login attempt over clear channel rejected");
+            LOGGER.warn("Login rejected because it is disabled or not allowed over insecure channel");
             no(request, responder, HumanReadableText.DISABLED_LOGIN);
         } else {
-            doAuth(noDelegation(request.getUserid(), request.getPassword()),
+            doPasswordAuth(noDelegation(request.getUserid(), request.getPassword()),
                 session, request, responder, HumanReadableText.INVALID_LOGIN);
         }
     }

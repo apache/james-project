@@ -77,7 +77,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         this.imapConfiguration = imapConfiguration;
     }
 
-    protected void doAuth(AuthenticationAttempt authenticationAttempt, ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {
+    protected void doPasswordAuth(AuthenticationAttempt authenticationAttempt, ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {
         Preconditions.checkArgument(!authenticationAttempt.isDelegation());
         try {
             boolean authFailure = false;
@@ -118,7 +118,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         }
     }
 
-    protected void doAuthWithDelegation(AuthenticationAttempt authenticationAttempt, ImapSession session, ImapRequest request, Responder responder) {
+    protected void doPasswordAuthWithDelegation(AuthenticationAttempt authenticationAttempt, ImapSession session, ImapRequest request, Responder responder) {
         Preconditions.checkArgument(authenticationAttempt.isDelegation());
         Username givenUser = authenticationAttempt.getAuthenticationId();
         if (givenUser == null) {
