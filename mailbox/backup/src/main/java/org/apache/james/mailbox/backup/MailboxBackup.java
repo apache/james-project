@@ -42,8 +42,9 @@ public interface MailboxBackup {
     /**
      * @param username   the user in which account the restored elements will be stored.
      * @param source the input stream to the archive containing the account elements.
+     * @param force if true, delete the user's existing mailbox data before restoring.
      * @return a Publisher indicating when the action is completed
      */
-    Publisher<BackupStatus> restore(Username username, InputStream source) throws IOException, MailboxException;
+    Publisher<BackupStatus> restore(Username username, InputStream source, boolean force) throws IOException, MailboxException;
 
 }

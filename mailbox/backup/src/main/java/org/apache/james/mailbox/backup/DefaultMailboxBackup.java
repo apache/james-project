@@ -100,24 +100,17 @@ public class DefaultMailboxBackup implements MailboxBackup {
         mailboxManager.endProcessingRequest(session);
     }
 
-    private boolean isAccountNonEmpty(Username username) throws MailboxException {
-        MailboxSession session = mailboxManager.createSystemSession(username);
-        try {
-            return getAccountContentForUser(session)
-                .stream()
-                .findFirst()
-                .isPresent();
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
-    }
-
     @Override
-    public Publisher<BackupStatus> restore(Username username, InputStream source) {
+    public Publisher<BackupStatus> restore(Username username, InputStream source, boolean force) {
         try {
             if (isAccountNonEmpty(username)) {
-                LOGGER.warn("Warning, account should be empty before performing a restoration for user: {}", username);
-                return Mono.just(BackupStatus.NON_EMPTY_RECEIVER_ACCOUNT);
+                if (force) {
+                    LOGGER.warn("Force restore: deleting existing mailbox data for user: {}", username);
+                    clearAccountContent(username);
+                } else {
+                    LOGGER.warn("Warning, account should be empty before performing a restoration for user: {}", username);
+                    return Mono.just(BackupStatus.NON_EMPTY_RECEIVER_ACCOUNT);
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Error during account restoration for user : " + username.asString(), e);
@@ -130,6 +123,31 @@ public class DefaultMailboxBackup implements MailboxBackup {
             .doOnTerminate(Throwing.runnable(source::close).sneakyThrow())
             .thenReturn(BackupStatus.DONE)
             .onErrorReturn(BackupStatus.FAILED);
+    }
+
+    private void clearAccountContent(Username username) throws MailboxException {
+        MailboxSession session = mailboxManager.createSystemSession(username);
+        try {
+            List<MailAccountContent> accountContents = getAccountContentForUser(session);
+            for (MailAccountContent content : accountContents) {
+                MailboxPath path = content.getMailboxWithAnnotations().mailbox.generateAssociatedPath();
+                mailboxManager.deleteMailbox(path, session);
+            }
+        } finally {
+            mailboxManager.endProcessingRequest(session);
+        }
+    }
+
+    private boolean isAccountNonEmpty(Username username) throws MailboxException {
+        MailboxSession session = mailboxManager.createSystemSession(username);
+        try {
+            return getAccountContentForUser(session)
+                .stream()
+                .findFirst()
+                .isPresent();
+        } finally {
+            mailboxManager.endProcessingRequest(session);
+        }
     }
 
     private Stream<MailAccountContent> getMailboxWithAnnotationsFromPath(MailboxSession session, MailboxPath path) {
