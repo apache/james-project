@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
@@ -136,9 +137,8 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         if (authenticationAttempt.isDelegation()) {
             doPasswordAuthWithDelegation(authenticationAttempt, session, request, responder);
         } else {
-            doPasswordAuth(authenticationAttempt, session, request, responder, HumanReadableText.AUTHENTICATION_FAILED);
+            doPasswordAuth(authenticationAttempt, session, request, responder);
         }
-        session.stopDetectingCommandInjection();
     }
 
     /**
@@ -148,8 +148,8 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         OIDCSASLParser.parse(initialResponse)
             .flatMap(oidcInitialResponseValue -> session.oidcSaslConfiguration().map(configure -> Pair.of(oidcInitialResponseValue, configure)))
             .ifPresentOrElse(pair -> doOAuth(pair.getLeft(), pair.getRight(), session, request, responder),
-                () -> manageFailureCount(session, request, responder));
-        session.stopDetectingCommandInjection();
+                () -> authFailure(session, request, responder, HumanReadableText.AUTHENTICATION_FAILED, Optional.empty(),
+                    Optional.empty(), "Malformed authentication command."));
     }
 
     private AuthenticationAttempt parseDelegationAttempt(String initialClientResponse) {
