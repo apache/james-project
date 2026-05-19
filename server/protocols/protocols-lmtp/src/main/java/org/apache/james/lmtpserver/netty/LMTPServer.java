@@ -32,9 +32,8 @@ import org.apache.james.protocols.lib.handler.HandlersPackage;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.lmtp.LMTPConfiguration;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
+import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.apache.james.protocols.netty.Encryption;
-import org.apache.james.protocols.netty.LineDelimiterBasedChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.netty.SMTPChannelInboundHandler;
@@ -162,9 +161,7 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
                 return new ExtendedSMTPSession(lmtpConfig, transport);
             }
         };
-        boolean proxyRequired = true;
-        Encryption noEncryption = null;
-        return new SMTPChannelInboundHandler(transport, noEncryption, !proxyRequired, lmtpMetrics, lmtpChannelGroup);
+        return new SMTPChannelInboundHandler(transport, getEncryption(), proxyRequired, lmtpMetrics, lmtpChannelGroup);
     }
 
     @Override
@@ -179,7 +176,7 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
 
     @Override
     protected ChannelHandlerFactory createFrameHandlerFactory() {
-        return new LineDelimiterBasedChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
+        return new AllButStartTlsLineChannelHandlerFactory("starttls", AbstractChannelPipelineFactory.MAX_LINE_LENGTH);
     }
 
 }

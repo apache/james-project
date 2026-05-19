@@ -122,9 +122,9 @@ When trying to deliver emails to another email server using implicit TLS, James 
 
 | LMTP
 | Local MX
-| insecure: 24, no TLS port defined
+| insecure: 24, no TLS port defined by RFC
 
-TLS for LMTP is not supported by James.
+Both STARTTLS and implicit TLS are supported.
 
 |===
 
@@ -136,7 +136,7 @@ Every email server **must** therefore offer SMTP on port 25.
 You may choose to additionally offer SMTP with implicit TLS on port 465 as some email servers (e.g., James) also try that endpoint.
 Note that you need to move the SMTP submission service with implicit TLS to another port in that case (this works well as it is only used by MUAs).
 
-As James does not support TLS or authentication for LMTP,
+As James does not support authentication for LMTP,
 the port **must only be exposed** to the local SMTP server that uses it.
 
 **We strongly recommend that you enable STARTTLS for all services that you choose to offer without implicit TLS.**

@@ -216,10 +216,8 @@ Consult this link:{sample-configuration-prefix-url}/lmtpserver.xml[example] for 
 The LMTP service is configured in the file `lmtpserver.xml`.
 It contains one `lmtpservers` element that can contain multiple `lmtpserver` elements.
 
-The `lmtpserver` element can be configured using most of the common options described xref:{pages-path}/configure/server.adoc[here].
+The `lmtpserver` element can be configured using the common options described xref:{pages-path}/configure/server.adoc[here].
 Additional settings are described below.
-
-**Note:** Neither any form of TLS nor proxies are supported.
 
 .`lmtpserver` element
 |===
