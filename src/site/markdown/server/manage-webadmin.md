@@ -1711,6 +1711,8 @@ The scheduled task will have the following type `MailboxesRestoreTask` and the f
 ```
 
 Note: The account must be empty for the restore to succeed. If the user already has mailboxes, the task will fail.
+If you wish to really force the restoration on a non-empty user, you can add the `?force=true` query parameter.
+It will delete existing data of the user before proceeding with the restoration.
 
 ### ReIndexing a user mails
  
