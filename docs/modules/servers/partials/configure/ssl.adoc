@@ -124,8 +124,6 @@ When trying to deliver emails to another email server using implicit TLS, James 
 | Local MX
 | insecure: 24, no TLS port defined by RFC
 
-Both STARTTLS and implicit TLS are supported.
-
 |===
 
 As all modern email clients support TLS nowadays, there is no need to offer SMTP submission, IMAP, or POP3 without implicit TLS.
