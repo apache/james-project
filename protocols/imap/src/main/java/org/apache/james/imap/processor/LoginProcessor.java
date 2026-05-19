@@ -60,8 +60,7 @@ public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implemen
             LOGGER.warn("Login rejected because it is disabled or not allowed over insecure channel");
             no(request, responder, HumanReadableText.DISABLED_LOGIN);
         } else {
-            doPasswordAuth(noDelegation(request.getUserid(), request.getPassword()),
-                session, request, responder, HumanReadableText.INVALID_LOGIN);
+            doPasswordAuth(noDelegation(request.getUserid(), request.getPassword()), session, request, responder);
         }
     }
 
