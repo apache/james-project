@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import java.util.Optional;
+
 import jakarta.inject.Inject;
 
 import org.apache.james.blob.api.BlobId;
@@ -69,6 +71,8 @@ public class MailboxesRestoreRequestToTask extends TaskFromRequestRegistry.TaskR
 
         BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), data, BlobStore.StoragePolicy.LOW_COST)).block();
 
-        return new MailboxesRestoreTask(restoreService, username, blobId);
+        Optional<Boolean> force = Optional.of(Boolean.parseBoolean(request.queryParams("force")));
+
+        return new MailboxesRestoreTask(restoreService, username, blobId, force);
     }
 }

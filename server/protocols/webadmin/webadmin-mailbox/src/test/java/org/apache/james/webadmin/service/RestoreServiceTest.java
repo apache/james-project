@@ -116,6 +116,41 @@ class RestoreServiceTest {
     }
 
     @Test
+    void restoreWithForceShouldReturnCompleteWhenNonEmptyAccount() throws Exception {
+        createAMailboxWithAMail();
+
+        ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
+        testSystem.backup.backupAccount(BOB, destination);
+
+        InputStream source = new ByteArrayInputStream(destination.toByteArray());
+        BlobId blobId = Mono.from(testSystem.blobStore.save(testSystem.blobStore.getDefaultBucketName(), source, BlobStore.StoragePolicy.LOW_COST)).block();
+
+        assertThat(testee.restore(BOB, blobId, true).block())
+            .isEqualTo(Task.Result.COMPLETED);
+    }
+
+    @Test
+    void restoreWithForceShouldDeleteExistingAndRestoreContent() throws Exception {
+        createAMailboxWithAMail();
+
+        ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
+        testSystem.backup.backupAccount(BOB, destination);
+
+        InputStream source = new ByteArrayInputStream(destination.toByteArray());
+        BlobId blobId = Mono.from(testSystem.blobStore.save(testSystem.blobStore.getDefaultBucketName(), source, BlobStore.StoragePolicy.LOW_COST)).block();
+
+        testee.restore(BOB, blobId, true).block();
+
+        MailboxSession bobSession = testSystem.mailboxManager.createSystemSession(BOB);
+        MessageManager mailbox = testSystem.mailboxManager.getMailbox(MailboxPath.inbox(BOB), bobSession);
+        MessageResultIterator resultIterator = mailbox.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, bobSession);
+        assertThat(resultIterator).toIterable()
+            .hasSize(1)
+            .first()
+            .satisfies(result -> assertThat(new String(result.getFullContent().getInputStream().readAllBytes())).isEqualTo(MESSAGE_CONTENT));
+    }
+
+    @Test
     void restoreShouldReturnPartialWhenFailed() throws Exception {
         doThrow(new RuntimeException())
             .when(testSystem.blobStore)

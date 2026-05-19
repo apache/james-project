@@ -21,6 +21,8 @@ package org.apache.james.webadmin.service;
 
 import static org.apache.james.webadmin.service.MailboxesRestoreTask.TASK_TYPE;
 
+import java.util.Optional;
+
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOModule;
@@ -33,13 +35,16 @@ public class MailboxesRestoreTaskDTO implements TaskDTO {
     private final String type;
     private final String username;
     private final String blobId;
+    private final Optional<Boolean> force;
 
     public MailboxesRestoreTaskDTO(@JsonProperty("type") String type,
                                    @JsonProperty("username") String username,
-                                   @JsonProperty("blobId") String blobId) {
+                                   @JsonProperty("blobId") String blobId,
+                                   @JsonProperty("force") Optional<Boolean> force) {
         this.type = type;
         this.username = username;
         this.blobId = blobId;
+        this.force = force;
     }
 
     @Override
@@ -55,6 +60,10 @@ public class MailboxesRestoreTaskDTO implements TaskDTO {
         return blobId;
     }
 
+    public Optional<Boolean> getForce() {
+        return force;
+    }
+
     public static TaskDTOModule<MailboxesRestoreTask, MailboxesRestoreTaskDTO> module(RestoreService service, BlobId.Factory blobIdFactory) {
         return DTOModule
             .forDomainObject(MailboxesRestoreTask.class)
@@ -66,10 +75,10 @@ public class MailboxesRestoreTaskDTO implements TaskDTO {
     }
 
     public MailboxesRestoreTask fromDTO(RestoreService service, BlobId.Factory blobIdFactory) {
-        return new MailboxesRestoreTask(service, Username.of(username), blobIdFactory.of(blobId));
+        return new MailboxesRestoreTask(service, Username.of(username), blobIdFactory.parse(blobId), force);
     }
 
     public static MailboxesRestoreTaskDTO toDTO(MailboxesRestoreTask domainObject, String typeName) {
-        return new MailboxesRestoreTaskDTO(typeName, domainObject.getUsername().asString(), domainObject.getBlobId().asString());
+        return new MailboxesRestoreTaskDTO(typeName, domainObject.getUsername().asString(), domainObject.getBlobId().asString(), domainObject.isForce());
     }
 }

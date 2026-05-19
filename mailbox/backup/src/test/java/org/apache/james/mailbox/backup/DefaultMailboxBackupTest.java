@@ -47,6 +47,7 @@ import reactor.core.publisher.Mono;
 
 class DefaultMailboxBackupTest implements MailboxMessageFixture {
     private static final int BUFFER_SIZE = 4096;
+    private static final boolean FORCE_RESTORE = true;
     private static final String EXPECTED_ANNOTATIONS_DIR = "annotations";
 
     private final ArchiveService archiveService = new Zipper();
@@ -169,7 +170,7 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         backup.backupAccount(USERNAME_1, destination);
 
         InputStream source = new ByteArrayInputStream(destination.toByteArray());
-        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USERNAME_2, source)).block();
+        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USERNAME_2, source, !FORCE_RESTORE)).block();
         assertThat(backupStatus).isEqualTo(MailboxBackup.BackupStatus.DONE);
         List<DefaultMailboxBackup.MailAccountContent> content = backup.getAccountContentForUser(sessionOtherUser);
 
@@ -184,7 +185,7 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         backup.backupAccount(USERNAME_1, destination);
 
         InputStream source = new ByteArrayInputStream(destination.toByteArray());
-        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USERNAME_2, source)).block();
+        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USERNAME_2, source, !FORCE_RESTORE)).block();
         assertThat(backupStatus).isEqualTo(MailboxBackup.BackupStatus.DONE);
 
         List<DefaultMailboxBackup.MailAccountContent> content = backup.getAccountContentForUser(sessionOtherUser);
@@ -205,9 +206,31 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         backup.backupAccount(USERNAME_1, destination);
 
         InputStream source = new ByteArrayInputStream(destination.toByteArray());
-        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USERNAME_2, source)).block();
+        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USERNAME_2, source, !FORCE_RESTORE)).block();
 
         assertThat(backupStatus).isEqualTo(MailboxBackup.BackupStatus.NON_EMPTY_RECEIVER_ACCOUNT);
+    }
+
+    @Test
+    void restoringAccountInNonEmptyAccountWithForceShouldDeleteExistingAndRestore() throws Exception {
+        createMailbox(sessionUser, MAILBOX_PATH_USER1_MAILBOX1);
+        createMailbox(sessionOtherUser, MAILBOX_PATH_OTHER_USER_MAILBOX1);
+
+        ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
+        backup.backupAccount(USERNAME_1, destination);
+
+        InputStream source = new ByteArrayInputStream(destination.toByteArray());
+        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USERNAME_2, source, true)).block();
+
+        assertThat(backupStatus).isEqualTo(MailboxBackup.BackupStatus.DONE);
+
+        List<DefaultMailboxBackup.MailAccountContent> content = backup.getAccountContentForUser(sessionOtherUser);
+
+        assertThat(content).hasSize(1);
+        DefaultMailboxBackup.MailAccountContent mailAccountContent = content.get(0);
+        Mailbox mailbox = mailAccountContent.getMailboxWithAnnotations().mailbox;
+        assertThat(mailbox.getName()).isEqualTo(MAILBOX_1_NAME);
+        assertThat(mailAccountContent.getMessages().count()).isEqualTo(0);
     }
 
     @Test
@@ -219,7 +242,7 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         backup.backupAccount(USERNAME_1, destination);
 
         InputStream source = new ByteArrayInputStream(destination.toByteArray());
-        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USERNAME_2, source)).block();
+        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USERNAME_2, source, !FORCE_RESTORE)).block();
 
         assertThat(backupStatus).isEqualTo(MailboxBackup.BackupStatus.DONE);
 
@@ -235,6 +258,33 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
         Mailbox mailbox2 = contentMailbox2.getMailboxWithAnnotations().mailbox;
         assertThat(mailbox2.getName()).isEqualTo(MAILBOX_2_NAME);
         assertThat(contentMailbox2.getMessages().count()).isEqualTo(0);
+    }
+
+    @Test
+    void doRestoreWithTwoMailboxesAndOneMessageBackupShouldRestoreEntries() throws Exception {
+        ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
+        createMailboxWithMessages(sessionUser, MAILBOX_PATH_USER1_MAILBOX1, getMessage1AppendCommand());
+        createMailboxWithMessages(sessionUser, MAILBOX_PATH_USER1_MAILBOX2, getMessage1AppendCommand());
+
+        backup.backupAccount(USERNAME_1, destination);
+
+        InputStream source = new ByteArrayInputStream(destination.toByteArray());
+        MailboxBackup.BackupStatus backupStatus = Mono.from(backup.restore(USERNAME_2, source, !FORCE_RESTORE)).block();
+
+        assertThat(backupStatus).isEqualTo(MailboxBackup.BackupStatus.DONE);
+
+        List<DefaultMailboxBackup.MailAccountContent> content = backup.getAccountContentForUser(sessionOtherUser);
+
+        assertThat(content).hasSize(2);
+        DefaultMailboxBackup.MailAccountContent contentMailbox1 = content.get(0);
+        Mailbox mailbox1 = contentMailbox1.getMailboxWithAnnotations().mailbox;
+        assertThat(mailbox1.getName()).isEqualTo(MAILBOX_1_NAME);
+        assertThat(contentMailbox1.getMessages().count()).isEqualTo(1);
+
+        DefaultMailboxBackup.MailAccountContent contentMailbox2 = content.get(1);
+        Mailbox mailbox2 = contentMailbox2.getMailboxWithAnnotations().mailbox;
+        assertThat(mailbox2.getName()).isEqualTo(MAILBOX_2_NAME);
+        assertThat(contentMailbox2.getMessages().count()).isEqualTo(1);
     }
 
     private MessageManager.AppendCommand getMessage1AppendCommand() throws IOException {

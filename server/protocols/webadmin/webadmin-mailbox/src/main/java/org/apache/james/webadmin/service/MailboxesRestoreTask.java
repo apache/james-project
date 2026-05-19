@@ -54,16 +54,22 @@ public class MailboxesRestoreTask implements Task {
     private final Username username;
     private final RestoreService service;
     private final BlobId blobId;
+    private final Optional<Boolean> force;
 
     MailboxesRestoreTask(RestoreService service, Username username, BlobId blobId) {
+        this(service, username, blobId, Optional.of(false));
+    }
+
+    MailboxesRestoreTask(RestoreService service, Username username, BlobId blobId, Optional<Boolean> force) {
         this.username = username;
         this.service = service;
         this.blobId = blobId;
+        this.force = force;
     }
 
     @Override
     public Result run() {
-        return service.restore(username, blobId)
+        return service.restore(username, blobId, force.orElse(false))
             .block();
     }
 
@@ -78,6 +84,10 @@ public class MailboxesRestoreTask implements Task {
 
     public BlobId getBlobId() {
         return blobId;
+    }
+
+    public Optional<Boolean> isForce() {
+        return force;
     }
 
     @Override

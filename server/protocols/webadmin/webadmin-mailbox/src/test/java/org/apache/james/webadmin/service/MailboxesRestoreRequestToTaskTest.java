@@ -28,9 +28,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import java.io.ByteArrayOutputStream;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.export.file.FileSystemExtension;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.json.DTOConverter;
@@ -87,7 +85,6 @@ class MailboxesRestoreRequestToTaskTest {
     }
 
     private static final String BASE_PATH = "users/:username/mailboxes";
-    private static final BlobId.Factory BLOB_ID_FACTORY = new PlainBlobId.Factory();
 
     private WebAdminServer webAdminServer;
     private MemoryTaskManager taskManager;
@@ -208,6 +205,18 @@ class MailboxesRestoreRequestToTaskTest {
     void postShouldCreateANewTask() throws Exception {
         given()
             .queryParam("task", "restore")
+            .body(emptyZip())
+            .post()
+        .then()
+            .statusCode(HttpStatus.CREATED_201)
+            .body("taskId", is(notNullValue()));
+    }
+
+    @Test
+    void postShouldCreateANewTaskWithForceTrue() throws Exception {
+        given()
+            .queryParam("task", "restore")
+            .queryParam("force", "true")
             .body(emptyZip())
             .post()
         .then()

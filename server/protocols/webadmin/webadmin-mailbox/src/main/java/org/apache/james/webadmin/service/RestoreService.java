@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.service;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import jakarta.inject.Inject;
@@ -47,26 +48,44 @@ public class RestoreService {
     }
 
     public Mono<Task.Result> restore(Username username, BlobId blobId) {
-        try (InputStream inputStream = blobStore.read(blobStore.getDefaultBucketName(), blobId)) {
-            return restore(username, inputStream);
-        } catch (Exception e) {
-            LOGGER.error("Error restoring mailboxes for user {}", username.asString(), e);
-            return Mono.just(Task.Result.PARTIAL);
-        } finally {
-            try {
-                Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId)).block();
-            } catch (Exception e) {
-                LOGGER.error("Error deleting blob {} after restore", blobId.asString(), e);
-            }
+        return restore(username, blobId, false);
+    }
+
+    public Mono<Task.Result> restore(Username username, BlobId blobId, boolean force) {
+        return Mono.fromCallable(() -> blobStore.read(blobStore.getDefaultBucketName(), blobId))
+            .flatMap(inputStream -> {
+                try {
+                    return Mono.from(mailboxBackup.restore(username, inputStream, force))
+                        .map(this::computeTaskResult)
+                        .doFinally(signalType -> {
+                            closeStream(inputStream);
+                            deleteBlob(blobId);
+                        });
+                } catch (Exception e) {
+                    closeStream(inputStream);
+                    deleteBlob(blobId);
+                    return Mono.error(e);
+                }
+            })
+            .onErrorResume(e -> {
+                LOGGER.error("Error restoring mailboxes for user {}", username.asString(), e);
+                return Mono.just(Task.Result.PARTIAL);
+            });
+    }
+
+    private void closeStream(InputStream inputStream) {
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            LOGGER.error("Error closing input stream after restore", e);
         }
     }
 
-    private Mono<Task.Result> restore(Username username, InputStream source) {
+    private void deleteBlob(BlobId blobId) {
         try {
-            return Mono.from(mailboxBackup.restore(username, source))
-                .map(this::computeTaskResult);
+            Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId)).block();
         } catch (Exception e) {
-            return Mono.error(e);
+            LOGGER.error("Error deleting blob {} after restore", blobId.asString(), e);
         }
     }
 
