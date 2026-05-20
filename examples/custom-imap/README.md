@@ -50,7 +50,7 @@ Connected to localhost.
 Escape character is '^]'.
 * OK JAMES IMAP4rev1 Server james.local is ready.
 a01 LOGIN bob secret
-a01 NO LOGIN failed. Invalid login/password.
+a01 NO LOGIN failed. Invalid credentials.
 a02 LOGIN bob@localhost secret
 a02 OK LOGIN completed.
 A03 PING

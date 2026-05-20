@@ -27,10 +27,10 @@ C: a002a LOGIN imapuser password extra
 S: a002a BAD LOGIN failed. Illegal arguments.
 
 C: a003 LOGIN invaliduser password
-S: a003 NO LOGIN failed. Invalid login/password.
+S: a003 NO LOGIN failed. Invalid credentials.
 
 C: a004 LOGIN imapuser invalid
-S: a004 NO LOGIN failed. Invalid login/password.
+S: a004 NO LOGIN failed. Invalid credentials.
 
 C: a005 LOGIN imapuser password
 S: a005 OK LOGIN completed.

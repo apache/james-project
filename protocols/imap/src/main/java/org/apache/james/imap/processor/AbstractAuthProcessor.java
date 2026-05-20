@@ -95,7 +95,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                 ).withoutDelegation();
                 authSuccess(session, mailboxSession, request, responder, "Password authentication succeeded.");
             } catch (BadCredentialsException e) {
-                authFailure(session, request, responder, HumanReadableText.INVALID_LOGIN,
+                authFailure(session, request, responder, HumanReadableText.INVALID_CREDENTIALS,
                     Optional.of(authenticationAttempt.getAuthenticationId()),
                     Optional.empty(),
                     "Password authentication failed because of bad credentials."
@@ -143,7 +143,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         try {
             authSuccess(session, mailboxSessionSupplier.get(), request, responder, "Authentication with delegation succeeded.");
         } catch (BadCredentialsException e) {
-            authFailure(session, request, responder, HumanReadableText.INVALID_LOGIN, Optional.of(authenticateUser),
+            authFailure(session, request, responder, HumanReadableText.INVALID_CREDENTIALS, Optional.of(authenticateUser),
                 Optional.of(delegatorUser), "Password authentication with delegation failed because of bad credentials.");
         } catch (UserDoesNotExistException e) {
             authFailure(session, request, responder, HumanReadableText.USER_DOES_NOT_EXIST, Optional.of(authenticateUser),
