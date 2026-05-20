@@ -84,7 +84,6 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
             }
 
             Session manageSieveSession = ctx.channel().attr(NettyConstants.SESSION_ATTRIBUTE_KEY).get();
-            Session.State statePriorExecution = manageSieveSession.getState();
             String responseString = manageSieveProcessor.handleRequest(manageSieveSession, request);
             attachment.resetCumulation();
             attachment.write(responseString);
@@ -95,12 +94,6 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
                 attachment.stopDetectingCommandInjection();
 
                 // RFC-5804 section 1.7 returning capabilities is mandated after STARTTLS
-                String capabilities = manageSieveProcessor.handleRequest(manageSieveSession, "CAPABILITY");
-                attachment.write(capabilities);
-            }
-            if (manageSieveSession.getState() == Session.State.AUTHENTICATED &&
-                statePriorExecution != Session.State.AUTHENTICATED) {
-                // RFC-5804 section 1.7 returning capabilities is mandated after AUTH
                 String capabilities = manageSieveProcessor.handleRequest(manageSieveSession, "CAPABILITY");
                 attachment.write(capabilities);
             }

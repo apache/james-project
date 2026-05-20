@@ -159,7 +159,6 @@ class AuthenticateTest {
         this.client.sendCommand(command);
         ManageSieveClient.ServerResponse firstAuthenticationResponse = this.client.readResponse();
         Assertions.assertThat(firstAuthenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
-        this.client.readResponse(); // Read capabilities
 
         this.client.sendCommand(command);
         ManageSieveClient.ServerResponse secondAuthenticationResponse = this.client.readResponse();
@@ -235,6 +234,5 @@ class AuthenticateTest {
         this.client.sendCommand("AUTHENTICATE \"PLAIN\" \"" + Base64.getEncoder().encodeToString(initialClientResponse.getBytes(StandardCharsets.UTF_8)) + "\"");
         ManageSieveClient.ServerResponse authenticationResponse = this.client.readResponse();
         Assertions.assertThat(authenticationResponse.responseType()).isEqualTo(ManageSieveClient.ResponseType.OK);
-        this.client.readResponse(); // Read capabilities
     }
 }
