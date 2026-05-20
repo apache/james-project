@@ -141,7 +141,7 @@ public class HumanReadableText {
     public static final HumanReadableText COMPLETED = new HumanReadableText("org.apache.james.imap.COMPLETED", "completed.");
     public static final HumanReadableText REPLACE_READY = new HumanReadableText("org.apache.james.imap.REPLACE", "Replacement Message ready");
 
-    public static final HumanReadableText INVALID_LOGIN = new HumanReadableText("org.apache.james.imap.INVALID_LOGIN", "failed. Invalid login/password.");
+    public static final HumanReadableText INVALID_CREDENTIALS = new HumanReadableText("org.apache.james.imap.INVALID_CREDENTIALS", "failed. Invalid credentials.");
 
     public static final HumanReadableText DISABLED_LOGIN = new HumanReadableText("org.apache.james.imap.DISABLED_LOGIN", "failed. Plain login / authentication are disabled.");
 

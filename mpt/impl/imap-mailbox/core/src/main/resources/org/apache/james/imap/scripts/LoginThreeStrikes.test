@@ -21,10 +21,10 @@
 #
 S: \* OK IMAP4rev1 Server ready
 C: a003 LOGIN invaliduser password
-S: a003 NO LOGIN failed. Invalid login/password.
+S: a003 NO LOGIN failed. Invalid credentials.
 
 C: a004 LOGIN imapuser invalid
-S: a004 NO LOGIN failed. Invalid login/password.
+S: a004 NO LOGIN failed. Invalid credentials.
 
 C: a005 LOGIN imapuser bogus
 S: \* BYE Login failed too many times.

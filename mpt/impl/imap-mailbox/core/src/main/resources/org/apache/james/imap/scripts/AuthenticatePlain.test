@@ -85,7 +85,7 @@ REINIT
 C: 0005 AUTHENTICATE "PLAIN" {28+}
 # \0imapuser\0badpassword
 C: AGltYXB1c2VyAGJhZHBhc3N3b3Jk
-S: 0005 NO AUTHENTICATE failed. Authentication failed.
+S: 0005 NO AUTHENTICATE failed. Invalid credentials.
 
 REINIT
 
@@ -93,7 +93,7 @@ REINIT
 C: 0006 AUTHENTICATE "PLAIN" {24+}
 # \0baduser\0password
 C: AGJhZHVzZXIAcGFzc3dvcmQ=
-S: 0006 NO AUTHENTICATE failed. Authentication failed.
+S: 0006 NO AUTHENTICATE failed. Invalid credentials.
 
 REINIT
 
