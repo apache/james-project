@@ -131,8 +131,6 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         try (Closeable closeable = ManageSieveMDCContext.from(ctx)) {
-            LOGGER.warn("Error while processing ManageSieve request", cause);
-
             if (cause instanceof TooLongFrameException) {
                 // Max line length exceeded
                 // See also JAMES-1190
@@ -140,6 +138,8 @@ public class ManageSieveChannelUpstreamHandler extends ChannelInboundHandlerAdap
             } else if (cause instanceof SessionTerminatedException) {
                 ctx.channel().attr(NettyConstants.RESPONSE_WRITER_ATTRIBUTE_KEY).get().write("OK channel is closing");
                 logout(ctx);
+            } else {
+                LOGGER.warn("Error while processing ManageSieve request", cause);
             }
         }
     }
