@@ -52,6 +52,7 @@ import org.apache.commons.io.input.UnsynchronizedFilterInputStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -749,8 +750,8 @@ public class StoreMessageManager implements MessageManager {
             .previousMailboxIds(getMailboxEntity().getMailboxId())
             .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
             .build();
-        ImmutableSet<MailboxIdRegistrationKey> registrationKeys = messageMoves.impactedMailboxIds()
-            .map(MailboxIdRegistrationKey::new)
+        ImmutableSet<RegistrationKey> registrationKeys = messageMoves.impactedMailboxIds()
+            .<RegistrationKey>map(MailboxIdRegistrationKey::new)
             .collect(ImmutableSet.toImmutableSet());
 
         return Flux.fromIterable(sets)
@@ -836,8 +837,8 @@ public class StoreMessageManager implements MessageManager {
             .previousMailboxIds(getMailboxEntity().getMailboxId())
             .targetMailboxIds(to.getMailboxEntity().getMailboxId())
             .build();
-        ImmutableSet<MailboxIdRegistrationKey> registrationKeys = messageMoves.impactedMailboxIds()
-            .map(MailboxIdRegistrationKey::new)
+        ImmutableSet<RegistrationKey> registrationKeys = messageMoves.impactedMailboxIds()
+            .<RegistrationKey>map(MailboxIdRegistrationKey::new)
             .collect(ImmutableSet.toImmutableSet());
 
         return Flux.fromIterable(sets)
