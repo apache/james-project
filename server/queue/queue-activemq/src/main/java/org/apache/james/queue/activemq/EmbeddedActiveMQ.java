@@ -45,7 +45,9 @@ public class EmbeddedActiveMQ {
     private static final String BROKER_NAME = "james";
     private static final String BROCKER_URI = "tcp://localhost:0";
     private static final String STORE_USAGE_LIMIT_PROPERTY = "james.activemq.store.usage.limit.bytes";
+    private static final String TEMP_USAGE_LIMIT_PROPERTY = "james.activemq.temp.usage.limit.bytes";
     private static final long DEFAULT_STORE_USAGE_LIMIT_BYTES = 10L * 1024 * 1024 * 1024; // 10 GB
+    private static final long DEFAULT_TEMP_USAGE_LIMIT_BYTES = 5L * 1024 * 1024 * 1024; // 5 GB
 
     private final ActiveMQConnectionFactory activeMQConnectionFactory;
     private final PersistenceAdapter persistenceAdapter;
@@ -106,7 +108,9 @@ public class EmbeddedActiveMQ {
         brokerService.setSchedulerSupport(false);
         brokerService.setAdjustUsageLimits(configuration.isAdjustUsageLimits());
         long storeUsageLimitBytes = Long.getLong(STORE_USAGE_LIMIT_PROPERTY, DEFAULT_STORE_USAGE_LIMIT_BYTES);
+        long tempUsageLimitBytes = Long.getLong(TEMP_USAGE_LIMIT_PROPERTY, DEFAULT_TEMP_USAGE_LIMIT_BYTES);
         brokerService.getSystemUsage().getStoreUsage().setLimit(storeUsageLimitBytes);
+        brokerService.getSystemUsage().getTempUsage().setLimit(tempUsageLimitBytes);
         brokerService.setBrokerId(BROKER_ID);
         String[] uris = {BROCKER_URI};
         brokerService.setTransportConnectorURIs(uris);
