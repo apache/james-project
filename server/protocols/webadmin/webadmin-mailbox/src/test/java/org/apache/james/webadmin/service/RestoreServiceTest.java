@@ -24,6 +24,8 @@ import static org.apache.james.webadmin.service.ExportServiceTestSystem.BOB;
 import static org.apache.james.webadmin.service.ExportServiceTestSystem.CEDRIC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.ONE_MINUTE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 
@@ -49,6 +51,8 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.task.Task;
 import org.assertj.core.api.SoftAssertions;
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,6 +69,10 @@ class RestoreServiceTest {
         "Content-Type: text/plain; charset=UTF-8\r\n" +
         "\r\n" +
         "testmail";
+    private static final ConditionFactory AWAIT = Awaitility.await()
+        .atMost(ONE_MINUTE)
+        .with()
+        .pollInterval(FIVE_HUNDRED_MILLISECONDS);
 
     private RestoreService testee;
     private ExportServiceTestSystem testSystem;
@@ -300,8 +308,9 @@ class RestoreServiceTest {
 
         testee.restore(CEDRIC, blobId).block();
 
-        assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), blobId))
-            .isInstanceOf(ObjectNotFoundException.class);
+        AWAIT.untilAsserted(() ->
+            assertThatThrownBy(() -> testSystem.blobStore.read(testSystem.blobStore.getDefaultBucketName(), blobId))
+                .isInstanceOf(ObjectNotFoundException.class));
     }
 
     private ComposedMessageId createAMailboxWithAMail() throws MailboxException {
