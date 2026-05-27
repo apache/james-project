@@ -160,19 +160,22 @@ case class EmailBodyPartBlob(blobId: BlobId, part: MinimalEmailBodyPart) extends
 
 class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
                                     val messageIdManager: MessageIdManager) extends BlobResolver {
+  private def asMessageId(blobId: BlobId): Option[MessageId] =
+    Try(messageIdFactory.fromString(blobId.value.value)).toOption
+
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): SMono[BlobResolutionResult] = {
-    Try(messageIdFactory.fromString(blobId.value.value)) match {
-      case Failure(_) => SMono.just(NonApplicable)
-      case Success(messageId) => SMono.fromPublisher(messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
+    asMessageId(blobId) match {
+      case None => SMono.just(NonApplicable)
+      case Some(messageId) => SMono.fromPublisher(messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
         .map(message => Applicable(SMono.just(MessageBlob(blobId, message))))
         .switchIfEmpty(SMono.just(NonApplicable))
     }
   }
 
   override def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] =
-    Try(messageIdFactory.fromString(blobId.value.value)) match {
-      case Failure(_) => SMono.just(FALSE)
-      case Success(messageId) => SFlux.fromPublisher(messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.MINIMAL, mailboxSession))
+    asMessageId(blobId) match {
+      case None => SMono.just(FALSE)
+      case Some(messageId) => SFlux.fromPublisher(messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.MINIMAL, mailboxSession))
         .hasElements
         .map(valueOf)
     }
@@ -181,39 +184,37 @@ class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
 class UploadResolver @Inject()(val uploadService: UploadService) extends BlobResolver {
   private val prefix = "uploads-"
 
+  private def asUploadId(blobId: BlobId): Option[UploadId] =
+    Option(blobId.value.value)
+      .filter(_.startsWith(prefix))
+      .flatMap(value => Try(UploadId.from(value.substring(prefix.length))).toOption)
+
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): SMono[BlobResolutionResult] = {
-    if (!blobId.value.value.startsWith(prefix)) {
-      SMono.just(NonApplicable)
-    } else {
-      val uploadIdAsString = blobId.value.value.substring(prefix.length)
-      Try(UploadId.from(uploadIdAsString)) match {
-        case Failure(_) => SMono.just(NonApplicable)
-        case Success(uploadId) => SMono.fromPublisher(uploadService.retrieve(uploadId, mailboxSession.getUser))
-            .map(upload => Applicable(SMono.just(UploadedBlob(blobId, upload))))
-            .onErrorResume {
-              case _: UploadNotFoundException => SMono.just(NonApplicable)
-              case e => SMono.error[BlobResolutionResult](e)
-            }
+    asUploadId(blobId) match {
+      case None => SMono.just(NonApplicable)
+      case Some(uploadId) => SMono.fromPublisher(uploadService.retrieve(uploadId, mailboxSession.getUser))
+        .map(upload => Applicable(SMono.just(UploadedBlob(blobId, upload))))
+        .onErrorResume {
+          case _: UploadNotFoundException => SMono.just(NonApplicable)
+          case e => SMono.error[BlobResolutionResult](e)
       }
     }
   }
 
   override def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] =
-    if (!blobId.value.value.startsWith(prefix)) {
-      SMono.just(FALSE)
-    } else {
-      val uploadIdAsString = blobId.value.value.substring(prefix.length)
-      Try(UploadId.from(uploadIdAsString)) match {
-        case Failure(_) => SMono.just(FALSE)
-        case Success(uploadId) => SMono.fromPublisher(uploadService.validateAccess(uploadId, mailboxSession.getUser))
-      }
+    asUploadId(blobId) match {
+      case None => SMono.just(FALSE)
+      case Some(uploadId) => SMono.fromPublisher(uploadService.validateAccess(uploadId, mailboxSession.getUser))
     }
 }
 
 class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager, val attachmentIdFactory: AttachmentIdFactory) extends BlobResolver {
+  private def asAttachmentId(blobId: BlobId): Option[AttachmentId] =
+    Try(attachmentIdFactory.from(blobId.value.value)).toOption
+
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): SMono[BlobResolutionResult] =
-    Try(attachmentIdFactory.from(blobId.value.value)) match {
-      case Success(attachmentId) =>
+    asAttachmentId(blobId) match {
+      case Some(attachmentId) =>
         SMono(attachmentManager.getAttachmentReactive(attachmentId, mailboxSession))
           .map(attachmentMetadata => Applicable(SMono(attachmentManager.loadReactive(attachmentMetadata, mailboxSession))
             .map(content => AttachmentBlob(attachmentMetadata, content))))
@@ -221,19 +222,19 @@ class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager,
             case e: AttachmentNotFoundException =>  SMono.just(NonApplicable.asInstanceOf[BlobResolutionResult])
             case e => SMono.error[BlobResolutionResult](e)
           }
-      case _ => SMono.just(NonApplicable)
+      case None => SMono.just(NonApplicable)
     }
 
   override def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] =
-    Try(attachmentIdFactory.from(blobId.value.value)) match {
-      case Success(attachmentId) =>
+    asAttachmentId(blobId) match {
+      case Some(attachmentId) =>
         SMono(attachmentManager.getAttachmentReactive(attachmentId, mailboxSession))
           .map(_ => TRUE)
           .onErrorResume {
             case _: AttachmentNotFoundException => SMono.just(FALSE)
             case e => SMono.error[java.lang.Boolean](e)
           }
-      case _ => SMono.just(FALSE)
+      case None => SMono.just(FALSE)
     }
 }
 
@@ -280,11 +281,12 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
   }
 
   override def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] =
-    resolve(blobId, mailboxSession)
-      .map {
-        case NonApplicable => FALSE
-        case _: Applicable => TRUE
-      }
+    asMessageAndPartIds(blobId) match {
+      case Failure(_) => SMono.just(FALSE)
+      case Success((messageId, _)) => SFlux.fromPublisher(messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.MINIMAL, mailboxSession))
+        .hasElements
+        .map(valueOf)
+    }
 }
 
 class BlobResolvers(blobResolvers: Set[BlobResolver]) {
