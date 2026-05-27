@@ -99,6 +99,16 @@ public class InMemoryUploadRepository implements UploadRepository {
     }
 
     @Override
+    public Publisher<Boolean> validateAccess(UploadId id, Username user) {
+        Preconditions.checkNotNull(id);
+        Preconditions.checkNotNull(user);
+
+        return Mono.justOrEmpty(uploadStore.get(id))
+            .filter(pair -> user.equals(pair.left))
+            .hasElement();
+    }
+
+    @Override
     public Publisher<Boolean> delete(UploadId id, Username user) {
         return Mono.justOrEmpty(uploadStore.get(id))
             .filter(pair -> user.equals(pair.left))

@@ -32,4 +32,6 @@ public interface UploadService {
     Publisher<UploadMetaData> upload(InputStream data, ContentType contentType, Username user);
 
     Publisher<Upload> retrieve(UploadId id, Username user);
+
+    Publisher<Boolean> validateAccess(UploadId id, Username user);
 }

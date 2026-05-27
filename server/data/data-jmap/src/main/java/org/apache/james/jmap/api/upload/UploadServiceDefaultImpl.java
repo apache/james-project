@@ -71,6 +71,11 @@ public class UploadServiceDefaultImpl implements UploadService {
         return uploadRepository.retrieve(id, user);
     }
 
+    @Override
+    public Publisher<Boolean> validateAccess(UploadId id, Username user) {
+        return uploadRepository.validateAccess(id, user);
+    }
+
     private Mono<Void> cleanupUploadIfNeeded(Username username, UploadMetaData notCleanUpload) {
         return Mono.from(uploadUsageRepository.getSpaceUsage(username))
             .map(QuotaSizeUsage::asLong)

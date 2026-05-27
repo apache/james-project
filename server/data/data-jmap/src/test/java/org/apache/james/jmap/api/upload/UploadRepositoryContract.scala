@@ -29,7 +29,7 @@
  import org.apache.james.core.Username
  import org.apache.james.jmap.api.model.Size.sanitizeSize
  import org.apache.james.jmap.api.model.{Upload, UploadId, UploadMetaData, UploadNotFoundException}
- import org.apache.james.jmap.api.upload.UploadRepositoryContract.{CONTENT_TYPE, DATA_STRING, UPLOAD_BUCKET, USER}
+ import org.apache.james.jmap.api.upload.UploadRepositoryContract.{ALICE, CONTENT_TYPE, DATA_STRING, UPLOAD_BUCKET, USER}
  import org.apache.james.mailbox.model.ContentType
  import org.apache.james.utils.UpdatableTickingClock
  import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
@@ -43,6 +43,7 @@
    private lazy val CONTENT_TYPE: ContentType = ContentType
      .of("text/html")
    private lazy val DATA_STRING: String = "123321"
+   private lazy val ALICE: Username = Username.of("Alice")
    private lazy val USER: Username = Username.of("Bob")
    private lazy val UPLOAD_BUCKET: BucketName = BucketName.of("jmap-uploads")
  }
@@ -58,6 +59,37 @@
    def blobStoreDAO: BlobStoreDAO
 
    def data(): InputStream = IOUtils.toInputStream(DATA_STRING, StandardCharsets.UTF_8)
+
+   @Test
+   def validateAccessShouldReturnTrueWhenUploadBelongsToUser(): Unit = {
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
+
+     assertThat(SMono.fromPublisher(testee.validateAccess(uploadId, USER)).block())
+       .isTrue
+   }
+
+   @Test
+   def validateAccessShouldReturnFalseWhenUploadDoesNotExist(): Unit =
+     assertThat(SMono.fromPublisher(testee.validateAccess(randomUploadId(), USER)).block())
+       .isFalse
+
+   @Test
+   def validateAccessShouldReturnFalseWhenUploadBelongsToAnotherUser(): Unit = {
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, ALICE)).block().uploadId
+
+     assertThat(SMono.fromPublisher(testee.validateAccess(uploadId, USER)).block())
+       .isFalse
+   }
+
+   @Test
+   def validateAccessShouldReturnFalseWhenUploadWasDeleted(): Unit = {
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
+
+     SMono.fromPublisher(testee.delete(uploadId, USER)).block()
+
+     assertThat(SMono.fromPublisher(testee.validateAccess(uploadId, USER)).block())
+       .isFalse
+   }
 
    @Test
    def uploadShouldSuccess(): Unit = {

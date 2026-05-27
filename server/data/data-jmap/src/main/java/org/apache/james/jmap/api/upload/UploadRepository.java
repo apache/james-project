@@ -34,6 +34,8 @@ public interface UploadRepository {
 
     Publisher<Upload> retrieve(UploadId id, Username user);
 
+    Publisher<Boolean> validateAccess(UploadId id, Username user);
+
     Publisher<Boolean> delete(UploadId id, Username user);
 
     Publisher<UploadMetaData> listUploads(Username user);

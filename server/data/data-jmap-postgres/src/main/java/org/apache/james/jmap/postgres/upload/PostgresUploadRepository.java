@@ -89,6 +89,12 @@ public class PostgresUploadRepository implements UploadRepository {
     }
 
     @Override
+    public Mono<Boolean> validateAccess(UploadId id, Username user) {
+        return uploadDAOFactory.create(user.getDomainPart()).get(id, user)
+            .hasElement();
+    }
+
+    @Override
     public Mono<Boolean> delete(UploadId id, Username user) {
         return uploadDAOFactory.create(user.getDomainPart()).delete(id, user);
     }

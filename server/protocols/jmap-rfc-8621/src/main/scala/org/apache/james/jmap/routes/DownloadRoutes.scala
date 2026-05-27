@@ -19,6 +19,7 @@
 package org.apache.james.jmap.routes
 
 import java.io.InputStream
+import java.lang.Boolean.{FALSE, TRUE, valueOf}
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Callable
 import java.util.function.Consumer
@@ -87,6 +88,8 @@ case class Applicable(blob: SMono[Blob]) extends BlobResolutionResult {
 
 trait BlobResolver {
   def resolve(blobId: BlobId, mailboxSession: MailboxSession): Publisher[BlobResolutionResult]
+
+  def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): Publisher[java.lang.Boolean]
 }
 
 trait Blob {
@@ -165,6 +168,14 @@ class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
         .switchIfEmpty(SMono.just(NonApplicable))
     }
   }
+
+  override def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] =
+    Try(messageIdFactory.fromString(blobId.value.value)) match {
+      case Failure(_) => SMono.just(FALSE)
+      case Success(messageId) => SFlux.fromPublisher(messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.MINIMAL, mailboxSession))
+        .hasElements
+        .map(valueOf)
+    }
 }
 
 class UploadResolver @Inject()(val uploadService: UploadService) extends BlobResolver {
@@ -186,6 +197,17 @@ class UploadResolver @Inject()(val uploadService: UploadService) extends BlobRes
       }
     }
   }
+
+  override def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] =
+    if (!blobId.value.value.startsWith(prefix)) {
+      SMono.just(FALSE)
+    } else {
+      val uploadIdAsString = blobId.value.value.substring(prefix.length)
+      Try(UploadId.from(uploadIdAsString)) match {
+        case Failure(_) => SMono.just(FALSE)
+        case Success(uploadId) => SMono.fromPublisher(uploadService.validateAccess(uploadId, mailboxSession.getUser))
+      }
+    }
 }
 
 class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager, val attachmentIdFactory: AttachmentIdFactory) extends BlobResolver {
@@ -200,6 +222,18 @@ class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager,
             case e => SMono.error[BlobResolutionResult](e)
           }
       case _ => SMono.just(NonApplicable)
+    }
+
+  override def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] =
+    Try(attachmentIdFactory.from(blobId.value.value)) match {
+      case Success(attachmentId) =>
+        SMono(attachmentManager.getAttachmentReactive(attachmentId, mailboxSession))
+          .map(_ => TRUE)
+          .onErrorResume {
+            case _: AttachmentNotFoundException => SMono.just(FALSE)
+            case e => SMono.error[java.lang.Boolean](e)
+          }
+      case _ => SMono.just(FALSE)
     }
 }
 
@@ -244,6 +278,13 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
           .switchIfEmpty(SMono.just(NonApplicable))
     }
   }
+
+  override def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] =
+    resolve(blobId, mailboxSession)
+      .map {
+        case NonApplicable => FALSE
+        case _: Applicable => TRUE
+      }
 }
 
 class BlobResolvers(blobResolvers: Set[BlobResolver]) {
@@ -262,6 +303,13 @@ class BlobResolvers(blobResolvers: Set[BlobResolver]) {
       }
       .concatMap(result => result.asOption.getOrElse(SMono.error(BlobNotFoundException(blobId))))
       .next().switchIfEmpty(SMono.error(BlobNotFoundException(blobId)))
+
+  def validateAccess(blobId: BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] =
+    SFlux.fromIterable(blobResolvers)
+      .concatMap(resolver => resolver.validateAccess(blobId, mailboxSession))
+      .filter(_.booleanValue())
+      .next()
+      .switchIfEmpty(SMono.just(FALSE))
 }
 
 class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
