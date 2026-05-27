@@ -637,7 +637,7 @@
 
         <jsieve.version>0.8</jsieve.version>
         <spring.version>6.2.8</spring.version>
-        <activmq-artemis.version>2.52.0</activmq-artemis.version>
+        <activmq-artemis.version>2.53.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.5</apache-jspf-resolver.version>
         <angus-mail.version>2.0.3</angus-mail.version><!-- Align with EE10 Mail 2.1: https://eclipse-ee4j.github.io/angus-mail/ -->
         <angus-activation.version>2.0.2</angus-activation.version><!-- Align with EE10 Activation 2.1: https://eclipse-ee4j.github.io/angus-activation/ -->
