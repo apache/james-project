@@ -46,7 +46,6 @@ import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.CassandraBucketDAO;
 import org.apache.james.blob.cassandra.CassandraDefaultBucketDAO;
-import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -62,6 +61,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -177,7 +177,7 @@ class CassandraMessageDAOV3Test {
 
         Tuple2<BlobId, BlobId> blobIds = testee.save(message).block();
 
-        BlobId recoveryBlobId = blobIdFactory.parse(CassandraMessageDAOV3.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
+        BlobId recoveryBlobId = blobIdFactory.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
         assertThatThrownBy(() -> Mono.from(blobStoreDAO.readBytes(BucketName.DEFAULT, recoveryBlobId)).block())
             .isInstanceOf(ObjectNotFoundException.class);
     }
@@ -192,7 +192,7 @@ class CassandraMessageDAOV3Test {
 
         Tuple2<BlobId, BlobId> blobIds = testeeWithRecovery.save(message).block();
 
-        BlobId recoveryBlobId = blobIdFactory.parse(CassandraMessageDAOV3.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
+        BlobId recoveryBlobId = blobIdFactory.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
         byte[] recoveryContent = Mono.from(blobStoreDAO.readBytes(BucketName.DEFAULT, recoveryBlobId)).block().payload();
         assertThat(new String(recoveryContent, StandardCharsets.UTF_8)).isEqualTo(blobIds.getT2().asString());
     }
@@ -207,7 +207,7 @@ class CassandraMessageDAOV3Test {
 
         Tuple2<BlobId, BlobId> blobIds = testeeWithRecovery.save(message).block();
 
-        BlobId recoveryBlobId = blobIdFactory.parse(CassandraMessageDAOV3.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
+        BlobId recoveryBlobId = blobIdFactory.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
         // Asynchronous: give the parallel scheduler a moment to complete
         assertThat(Mono.from(blobStoreDAO.readBytes(BucketName.DEFAULT, recoveryBlobId))
                 .retryWhen(reactor.util.retry.Retry.fixedDelay(10, java.time.Duration.ofMillis(100)))

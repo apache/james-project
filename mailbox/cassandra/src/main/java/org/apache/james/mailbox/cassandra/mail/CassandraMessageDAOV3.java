@@ -68,6 +68,8 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -84,9 +86,6 @@ import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -95,7 +94,6 @@ import reactor.util.function.Tuple2;
 public class CassandraMessageDAOV3 {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageDAOV3.class);
     private static final byte[] EMPTY_BYTE_ARRAY = {};
-    static final String RECOVERY_BLOB_PREFIX = "recovery/";
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final BlobStore blobStore;
@@ -232,7 +230,7 @@ public class CassandraMessageDAOV3 {
     }
 
     private Mono<Void> writeRecoveryBlob(BlobId headerId, BlobId bodyId) {
-        BlobId recoveryBlobId = blobIdFactory.parse(RECOVERY_BLOB_PREFIX + headerId.asString());
+        BlobId recoveryBlobId = blobIdFactory.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + headerId.asString());
         BlobStoreDAO.BytesBlob content = BlobStoreDAO.BytesBlob.of(bodyId.asString().getBytes(StandardCharsets.UTF_8));
         return Mono.from(blobStoreDAO.save(blobStore.getDefaultBucketName(), recoveryBlobId, content));
     }

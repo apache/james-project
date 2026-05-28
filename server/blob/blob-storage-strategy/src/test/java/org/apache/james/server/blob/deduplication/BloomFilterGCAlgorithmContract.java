@@ -47,6 +47,7 @@ import org.apache.james.task.Task;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -81,6 +82,11 @@ public interface BloomFilterGCAlgorithmContract {
     @BeforeEach
     default void setUp() {
         CLOCK.setInstant(NOW.toInstant());
+    }
+
+    @AfterEach
+    default void tearDown() {
+        BloomFilterGCAlgorithm.RECOVERY_AWARE = false;
     }
 
     default BlobStore blobStore() {
@@ -229,6 +235,83 @@ public interface BloomFilterGCAlgorithmContract {
                 assertThatThrownBy(() -> blobStore.read(DEFAULT_BUCKET, blobId))
                     .isInstanceOf(ObjectNotFoundException.class));
         });
+    }
+
+    @Test
+    default void gcShouldPreserveRecoverySidecarOfReferencedBlobWhenRecoveryAware() {
+        // Without RECOVERY_AWARE the recovery sidecar has NO_FAMILY → inActiveGeneration()=false
+        // → treated as orphan and deleted even though its parent blob is alive. This tests the fix.
+        BloomFilterGCAlgorithm.RECOVERY_AWARE = true;
+        BlobStore blobStore = blobStore();
+        BlobId referencedId = Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
+        BlobId recoveryBlobId = BLOB_ID_FACTORY.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + referencedId.asString());
+        Mono.from(blobStoreDAO().save(DEFAULT_BUCKET, recoveryBlobId, BlobStoreDAO.BytesBlob.of("bodyBlobId".getBytes()))).block();
+
+        when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.just(referencedId));
+        CLOCK.setInstant(NOW.plusMonths(2).toInstant());
+
+        Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
+        Mono.from(bloomFilterGCAlgorithm().gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+
+        assertThat(blobStore.read(DEFAULT_BUCKET, referencedId)).isNotNull();
+        assertThat(Mono.from(blobStoreDAO().readBytes(DEFAULT_BUCKET, recoveryBlobId)).block()).isNotNull();
+    }
+
+    @Test
+    default void gcShouldDeleteRecoverySidecarOfReferencedBlobWhenNotRecoveryAware() {
+        // Documents the unsafe behavior when the flag is off: recovery sidecar of a live blob is GC-ed.
+        BlobStore blobStore = blobStore();
+        BlobId referencedId = Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
+        BlobId recoveryBlobId = BLOB_ID_FACTORY.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + referencedId.asString());
+        Mono.from(blobStoreDAO().save(DEFAULT_BUCKET, recoveryBlobId, BlobStoreDAO.BytesBlob.of("bodyBlobId".getBytes()))).block();
+
+        when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.just(referencedId));
+        CLOCK.setInstant(NOW.plusMonths(2).toInstant());
+
+        Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
+        Mono.from(bloomFilterGCAlgorithm().gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+
+        assertThat(blobStore.read(DEFAULT_BUCKET, referencedId)).isNotNull();
+        assertThatThrownBy(() -> Mono.from(blobStoreDAO().readBytes(DEFAULT_BUCKET, recoveryBlobId)).block())
+            .isInstanceOf(ObjectNotFoundException.class);
+    }
+
+    @Test
+    default void gcShouldDeleteRecoverySidecarAlongsideOrphanBlobWhenRecoveryAware() {
+        BloomFilterGCAlgorithm.RECOVERY_AWARE = true;
+        BlobStore blobStore = blobStore();
+        BlobId orphanId = Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
+        BlobId recoveryBlobId = BLOB_ID_FACTORY.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + orphanId.asString());
+        Mono.from(blobStoreDAO().save(DEFAULT_BUCKET, recoveryBlobId, BlobStoreDAO.BytesBlob.of("bodyBlobId".getBytes()))).block();
+
+        when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.empty());
+        CLOCK.setInstant(NOW.plusMonths(2).toInstant());
+
+        Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
+        Mono.from(bloomFilterGCAlgorithm().gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+
+        assertThatThrownBy(() -> blobStore.read(DEFAULT_BUCKET, orphanId))
+            .isInstanceOf(ObjectNotFoundException.class);
+        assertThatThrownBy(() -> Mono.from(blobStoreDAO().readBytes(DEFAULT_BUCKET, recoveryBlobId)).block())
+            .isInstanceOf(ObjectNotFoundException.class);
+    }
+
+    @Test
+    default void gcShouldNotCountRecoveryBlobsInStatsWhenRecoveryAware() {
+        BloomFilterGCAlgorithm.RECOVERY_AWARE = true;
+        BlobStore blobStore = blobStore();
+        BlobId orphanId = Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
+        BlobId recoveryBlobId = BLOB_ID_FACTORY.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + orphanId.asString());
+        Mono.from(blobStoreDAO().save(DEFAULT_BUCKET, recoveryBlobId, BlobStoreDAO.BytesBlob.of("bodyBlobId".getBytes()))).block();
+
+        when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.empty());
+        CLOCK.setInstant(NOW.plusMonths(2).toInstant());
+
+        Context context = new Context(EXPECTED_BLOB_COUNT, ASSOCIATED_PROBABILITY);
+        Mono.from(bloomFilterGCAlgorithm().gc(EXPECTED_BLOB_COUNT, DELETION_WINDOW_SIZE, ASSOCIATED_PROBABILITY, DEFAULT_BUCKET, context)).block();
+
+        assertThat(context.snapshot().getBlobCount()).isEqualTo(1);
+        assertThat(context.snapshot().getGcedBlobCount()).isEqualTo(1);
     }
 
     @Test
