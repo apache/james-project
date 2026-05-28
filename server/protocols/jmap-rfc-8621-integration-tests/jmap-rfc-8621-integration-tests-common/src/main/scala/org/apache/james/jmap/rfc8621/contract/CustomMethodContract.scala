@@ -20,6 +20,7 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.io.{ByteArrayInputStream, InputStream}
+import java.lang.Boolean.valueOf
 import java.net.URI
 import java.nio.charset.StandardCharsets
 
@@ -228,6 +229,9 @@ class CustomBlobResolver extends BlobResolver {
     } else {
       SMono.just(NonApplicable)
     }
+
+  override def validateAccess(blobId: org.apache.james.jmap.mail.BlobId, mailboxSession: MailboxSession): SMono[java.lang.Boolean] =
+    SMono.just(valueOf(blobId.equals(CustomBlob.blobId)))
 }
 
 class CustomMethod extends Method {

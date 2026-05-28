@@ -83,6 +83,12 @@ public class CassandraUploadRepository implements UploadRepository {
     }
 
     @Override
+    public Mono<Boolean> validateAccess(UploadId id, Username user) {
+        return uploadDAO.retrieve(user, id)
+            .hasElement();
+    }
+
+    @Override
     public Mono<Boolean> delete(UploadId id, Username user) {
         return uploadDAO.delete(user, id);
     }
