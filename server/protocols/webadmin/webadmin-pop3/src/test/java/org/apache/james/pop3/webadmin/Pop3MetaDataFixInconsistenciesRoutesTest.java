@@ -53,7 +53,9 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.mockito.Mockito;
 import org.apache.james.pop3server.mailbox.CassandraPop3MetadataStore;
 import org.apache.james.pop3server.mailbox.Pop3MetadataDataDefinition;
 import org.apache.james.pop3server.mailbox.Pop3MetadataStore;
@@ -184,6 +186,7 @@ class Pop3MetaDataFixInconsistenciesRoutesTest {
             cassandra.getTypesProvider(),
             CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .passthrough(),
+            Mockito.mock(BlobStoreDAO.class),
             new PlainBlobId.Factory(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
         MetaDataFixInconsistenciesService fixInconsistenciesService = new MetaDataFixInconsistenciesService(imapUidDAO, pop3MetadataStore, cassandraMessageDAOV3);

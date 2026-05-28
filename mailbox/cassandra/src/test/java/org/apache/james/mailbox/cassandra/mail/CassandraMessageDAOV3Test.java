@@ -20,6 +20,7 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.apache.james.mailbox.store.mail.model.MailboxMessage.EMPTY_SAVE_DATE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -35,10 +36,17 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDataDefinition;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.PlainBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobDataDefinition;
-import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
+import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
+import org.apache.james.blob.cassandra.CassandraBucketDAO;
+import org.apache.james.blob.cassandra.CassandraDefaultBucketDAO;
+import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -61,6 +69,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 class CassandraMessageDAOV3Test {
     private static final int BODY_START = 16;
@@ -87,6 +96,9 @@ class CassandraMessageDAOV3Test {
     private ThreadId threadId;
     private ComposedMessageIdWithMetaData messageIdWithMetadata;
     private MessageBlobReferenceSource blobReferenceSource;
+    private BlobStoreDAO blobStoreDAO;
+    private BlobStore blobStore;
+    private PlainBlobId.Factory blobIdFactory;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
@@ -94,15 +106,19 @@ class CassandraMessageDAOV3Test {
         messageId = messageIdFactory.generate();
         messageId2 = messageIdFactory.generate();
         threadId = ThreadId.fromBaseMessageId(messageId);
-        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
+
+        blobIdFactory = new PlainBlobId.Factory();
+        RecordingMetricFactory metricFactory = new RecordingMetricFactory();
+        CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, cassandra.getConf());
+        CassandraDefaultBucketDAO defaultBucketDAO = new CassandraDefaultBucketDAO(cassandra.getConf(), blobIdFactory);
+        blobStoreDAO = new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, CassandraConfiguration.DEFAULT_CONFIGURATION, BucketName.DEFAULT, metricFactory);
+        blobStore = BlobStoreFactory.builder()
+            .blobStoreDAO(blobStoreDAO)
+            .blobIdFactory(blobIdFactory)
+            .defaultBucketName()
             .passthrough();
-        PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
-        testee = new CassandraMessageDAOV3(
-            cassandra.getConf(),
-            cassandra.getTypesProvider(),
-            blobStore,
-            blobIdFactory,
-            CassandraConfiguration.DEFAULT_CONFIGURATION);
+
+        testee = buildTestee(cassandra, CassandraConfiguration.DEFAULT_CONFIGURATION);
 
         messageIdWithMetadata = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(MAILBOX_ID, messageId, messageUid))
@@ -111,6 +127,16 @@ class CassandraMessageDAOV3Test {
                 .threadId(threadId)
                 .build();
         blobReferenceSource = new MessageBlobReferenceSource(testee);
+    }
+
+    private CassandraMessageDAOV3 buildTestee(CassandraCluster cassandra, CassandraConfiguration configuration) {
+        return new CassandraMessageDAOV3(
+            cassandra.getConf(),
+            cassandra.getTypesProvider(),
+            blobStore,
+            blobStoreDAO,
+            blobIdFactory,
+            configuration);
     }
 
     @Test
@@ -143,6 +169,50 @@ class CassandraMessageDAOV3Test {
     void blobReferencesShouldBeEmptyByDefault() {
         assertThat(blobReferenceSource.listReferencedBlobs().collectList().block())
             .isEmpty();
+    }
+
+    @Test
+    void saveShouldNotWriteRecoveryBlobByDefault() throws Exception {
+        message = createMessage(messageId, threadId, CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
+
+        Tuple2<BlobId, BlobId> blobIds = testee.save(message).block();
+
+        BlobId recoveryBlobId = blobIdFactory.parse(CassandraMessageDAOV3.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
+        assertThatThrownBy(() -> Mono.from(blobStoreDAO.readBytes(BucketName.DEFAULT, recoveryBlobId)).block())
+            .isInstanceOf(ObjectNotFoundException.class);
+    }
+
+    @Test
+    void saveShouldWriteRecoveryBlobWhenSynchronousMode(CassandraCluster cassandra) throws Exception {
+        CassandraConfiguration conf = CassandraConfiguration.builder()
+            .blobRecoveryMode(CassandraConfiguration.BlobRecoveryMode.SYNCHRONOUS)
+            .build();
+        CassandraMessageDAOV3 testeeWithRecovery = buildTestee(cassandra, conf);
+        message = createMessage(messageId, threadId, CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
+
+        Tuple2<BlobId, BlobId> blobIds = testeeWithRecovery.save(message).block();
+
+        BlobId recoveryBlobId = blobIdFactory.parse(CassandraMessageDAOV3.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
+        byte[] recoveryContent = Mono.from(blobStoreDAO.readBytes(BucketName.DEFAULT, recoveryBlobId)).block().payload();
+        assertThat(new String(recoveryContent, StandardCharsets.UTF_8)).isEqualTo(blobIds.getT2().asString());
+    }
+
+    @Test
+    void saveShouldWriteRecoveryBlobWhenAsynchronousMode(CassandraCluster cassandra) throws Exception {
+        CassandraConfiguration conf = CassandraConfiguration.builder()
+            .blobRecoveryMode(CassandraConfiguration.BlobRecoveryMode.ASYNCHRONOUS)
+            .build();
+        CassandraMessageDAOV3 testeeWithRecovery = buildTestee(cassandra, conf);
+        message = createMessage(messageId, threadId, CONTENT, BODY_START, NO_ATTACHMENT, EMPTY_SAVE_DATE);
+
+        Tuple2<BlobId, BlobId> blobIds = testeeWithRecovery.save(message).block();
+
+        BlobId recoveryBlobId = blobIdFactory.parse(CassandraMessageDAOV3.RECOVERY_BLOB_PREFIX + blobIds.getT1().asString());
+        // Asynchronous: give the parallel scheduler a moment to complete
+        assertThat(Mono.from(blobStoreDAO.readBytes(BucketName.DEFAULT, recoveryBlobId))
+                .retryWhen(reactor.util.retry.Retry.fixedDelay(10, java.time.Duration.ofMillis(100)))
+                .block().payload())
+            .isEqualTo(blobIds.getT2().asString().getBytes(StandardCharsets.UTF_8));
     }
 
     @Test

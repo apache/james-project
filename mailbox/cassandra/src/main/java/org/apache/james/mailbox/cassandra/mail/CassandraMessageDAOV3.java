@@ -41,6 +41,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.T
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +56,7 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.ProfileLocator;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Attachments;
 import org.apache.james.mailbox.model.ByteContent;
@@ -82,16 +84,22 @@ import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 
 public class CassandraMessageDAOV3 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageDAOV3.class);
     private static final byte[] EMPTY_BYTE_ARRAY = {};
+    static final String RECOVERY_BLOB_PREFIX = "recovery/";
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final BlobStore blobStore;
+    private final BlobStoreDAO blobStoreDAO;
     private final BlobId.Factory blobIdFactory;
     private final PreparedStatement insert;
     private final PreparedStatement delete;
@@ -107,9 +115,11 @@ public class CassandraMessageDAOV3 {
 
     @Inject
     public CassandraMessageDAOV3(CqlSession session, CassandraTypesProvider typesProvider, BlobStore blobStore,
-                                 BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration) {
+                                 BlobStoreDAO blobStoreDAO, BlobId.Factory blobIdFactory,
+                                 CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.blobStore = blobStore;
+        this.blobStoreDAO = blobStoreDAO;
         this.blobIdFactory = blobIdFactory;
 
         this.insert = prepareInsert(session);
@@ -205,8 +215,26 @@ public class CassandraMessageDAOV3 {
                 Mono<BlobId> headerFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), headerContent, SIZE_BASED));
                 Mono<BlobId> bodyFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyByteSource, LOW_COST));
 
-                return headerFuture.zipWith(bodyFuture);
+                return headerFuture.zipWith(bodyFuture)
+                    .flatMap(pair -> saveRecovery(pair.getT1(), pair.getT2()).thenReturn(pair));
             });
+    }
+
+    private Mono<Void> saveRecovery(BlobId headerId, BlobId bodyId) {
+        return switch (configuration.getBlobRecoveryMode()) {
+            case NONE -> Mono.empty();
+            case SYNCHRONOUS -> writeRecoveryBlob(headerId, bodyId);
+            case ASYNCHRONOUS -> Mono.fromRunnable(() ->
+                writeRecoveryBlob(headerId, bodyId)
+                    .subscribeOn(Schedulers.parallel())
+                    .subscribe(null, e -> LOGGER.error("Failed to save recovery blob for header={} body={}", headerId.asString(), bodyId.asString(), e)));
+        };
+    }
+
+    private Mono<Void> writeRecoveryBlob(BlobId headerId, BlobId bodyId) {
+        BlobId recoveryBlobId = blobIdFactory.parse(RECOVERY_BLOB_PREFIX + headerId.asString());
+        BlobStoreDAO.BytesBlob content = BlobStoreDAO.BytesBlob.of(bodyId.asString().getBytes(StandardCharsets.UTF_8));
+        return Mono.from(blobStoreDAO.save(blobStore.getDefaultBucketName(), recoveryBlobId, content));
     }
 
     private BoundStatement boundWriteStatement(MailboxMessage message, Tuple2<BlobId, BlobId> pair) {
