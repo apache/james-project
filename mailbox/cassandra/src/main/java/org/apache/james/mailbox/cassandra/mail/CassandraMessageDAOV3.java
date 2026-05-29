@@ -225,7 +225,7 @@ public class CassandraMessageDAOV3 {
             case ASYNCHRONOUS -> Mono.fromRunnable(() ->
                 writeRecoveryBlob(headerId, bodyId)
                     .subscribeOn(Schedulers.parallel())
-                    .subscribe(null, e -> LOGGER.error("Failed to save recovery blob for header={} body={}", headerId.asString(), bodyId.asString(), e)));
+                    .subscribe(ignored -> { }, e -> LOGGER.error("Failed to save recovery blob for header={} body={}", headerId.asString(), bodyId.asString(), e)));
         };
     }
 
