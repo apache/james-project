@@ -852,6 +852,144 @@ trait MailboxGetMethodContract {
   }
 
   @Test
+  def getMailboxesShouldNotLeakFullAclWhenEffectiveAdministerRightIsRemovedByANegativeAclEntry(server: GuiceJamesServer): Unit = {
+    val otherUser: String = "touser@" + DOMAIN.asString
+    val mailboxName: String = "AndreShared"
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, mailboxName)
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+
+    // Bob holds a raw positive Administer right negated by an IMAP-style negative ACL entry:
+    // his effective Administer is false, so he must not be granted full-ACL visibility.
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Administer))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, "-" + bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Administer))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, otherUser, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+
+    val response: String = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "$bobAccountId",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .extract
+      .body
+      .asString
+
+    // The mailbox is visible to Bob (he keeps the Lookup right), but Bob (no effective Administer)
+    // must only see his own ACL entry, not the other sharee's entry.
+    assertThatJson(response)
+      .withOptions(Option.IGNORING_ARRAY_ORDER)
+      .inPath("methodResponses[0][1].list[0].rights")
+      .isEqualTo(s"""{ "${bobUsername.asString}": [ "a", "l" ] }""")
+  }
+
+  @Test
+  def getMailboxesShouldReturnNotFoundWhenLookupRightIsRemovedByANegativeAclEntry(server: GuiceJamesServer): Unit = {
+    // Regression guard: a mailbox is exposed only when the user effectively keeps Lookup.
+    // Bob holds raw positive Lookup+Read negated by IMAP-style negative ACL entries, so the
+    // delegated mailbox must no longer be visible to him.
+    val mailboxName: String = "AndreShared"
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, mailboxName)
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, "-" + bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "$bobAccountId",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.list", hasSize(0))
+      .body(s"$ARGUMENTS.notFound", hasSize(1))
+      .body(s"$ARGUMENTS.notFound[0]", equalTo(mailboxId))
+  }
+
+  @Test
+  def getMailboxesShouldNotDiscloseCountsWhenReadRightIsRemovedByANegativeAclEntry(server: GuiceJamesServer): Unit = {
+    // Regression guard: mailbox counts are disclosed only when the user effectively keeps Read.
+    // Bob keeps Lookup (the mailbox stays visible) but his Read is negated by an IMAP-style
+    // negative ACL entry, so total/unread counts must be hidden (reported as 0).
+    val mailboxName: String = "AndreShared"
+    val andreMailboxPath = MailboxPath.forUser(andreUsername, mailboxName)
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(andreUsername.asString, andreMailboxPath, AppendCommand.from(message))
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, "-" + bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "$bobAccountId",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.list", hasSize(1))
+      .body(s"$FIRST_MAILBOX.namespace", equalTo(s"Delegated[${andreUsername.asString}]"))
+      .body(s"$FIRST_MAILBOX.totalEmails", equalTo(0))
+      .body(s"$FIRST_MAILBOX.unreadEmails", equalTo(0))
+  }
+
+  @Test
   def getMailboxesShouldReturnDeleteMailboxRight(server: GuiceJamesServer): Unit = {
     val targetUser2: String = "touser2@" + DOMAIN.asString
     val mailboxName: String = "myMailbox"

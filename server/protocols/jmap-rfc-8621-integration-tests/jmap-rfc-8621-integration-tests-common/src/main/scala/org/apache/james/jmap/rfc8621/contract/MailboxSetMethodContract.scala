@@ -2203,6 +2203,73 @@ trait MailboxSetMethodContract {
   }
 
   @Test
+  def mailboxSetShouldNotCreateChildMailboxWhenCreateMailboxRightIsRemovedByANegativeAclEntry(server: GuiceJamesServer): Unit = {
+    // Regression guard: child creation gates on EFFECTIVE CreateMailbox. Bob holds a raw positive
+    // CreateMailbox right negated by an IMAP-style negative ACL entry, so it must not be honoured.
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.CreateMailbox))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, "-" + bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.CreateMailbox))
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+        |   "methodCalls": [
+        |       [
+        |           "Mailbox/set",
+        |           {
+        |                "accountId": "$bobAccountId",
+        |                "create": {
+        |                    "C42": {
+        |                      "name": "childMailbox",
+        |                      "parentId":"${mailboxId.serialize}"
+        |                    }
+        |                }
+        |           },
+        |    "c1"
+        |       ]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
+      .isEqualTo(
+      s"""{
+         |  "sessionState": "${SESSION_STATE.value}",
+         |  "methodResponses": [[
+         |    "Mailbox/set",
+         |    {
+         |      "accountId": "$bobAccountId",
+         |      "notCreated": {
+         |        "C42": {
+         |          "type": "forbidden",
+         |          "description": "Insufficient rights",
+         |          "properties":["parentId"]
+         |        }
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin)
+  }
+
+  @Test
   def mailboxSetShouldCreateChildMailboxWhenSharedParentMailboxWithCreateRight(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.forUser(andreUsername, "mailbox")
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
@@ -2760,6 +2827,45 @@ trait MailboxSetMethodContract {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     server.getProbe(classOf[ACLProbeImpl])
       .replaceRights(path, bobUsername.asString, MailboxACL.FULL_RIGHTS.except(new MailboxACL.Rfc4314Rights(Right.DeleteMailbox)))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""
+           |{
+           |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+           |   "methodCalls": [
+           |       [
+           |           "Mailbox/set",
+           |           {
+           |                "accountId": "$bobAccountId",
+           |                "destroy": ["${mailboxId.serialize}"]
+           |           },
+           |    "c1"
+           |       ]
+           |   ]
+           |}
+           |""".stripMargin)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("methodResponses[0][1].notDestroyed", hasKey(mailboxId.serialize))
+      .body("methodResponses[0][1].notDestroyed." + mailboxId.serialize + ".type", equalTo("invalidArguments"))
+  }
+
+  @Test
+  def deleteSharedMailboxShouldFailWhenDeleteMailboxRightIsRemovedByANegativeAclEntry(server: GuiceJamesServer): Unit = {
+    // Regression guard: Mailbox/set destroy gates on EFFECTIVE rights. Bob holds a raw positive
+    // DeleteMailbox right negated by an IMAP-style negative ACL entry, so it must not be honoured.
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read, Right.DeleteMailbox))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, "-" + bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.DeleteMailbox))
 
     `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -6125,6 +6231,80 @@ trait MailboxSetMethodContract {
     assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
       .getEntries)
       .doesNotContainKeys(EntryKey.createUserEntryKey(andreUsername))
+  }
+
+  @Test
+  def updateShouldFailWhenEffectiveAdministerRightIsRemovedByANegativeAclEntry(server: GuiceJamesServer): Unit = {
+    // Andre owns the mailbox and delegates it to Bob.
+    val path = MailboxPath.forUser(andreUsername, "mailbox")
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    // Bob is granted a raw positive Administer right...
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, bobUsername.asString(), new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Administer))
+    // ...but an IMAP-style negative ACL entry ("-bob a") removes Administer from his effective rights.
+    // JMAP does not let users set negative entries, but it must still enforce those defined through IMAP.
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, "-" + bobUsername.asString(), new MailboxACL.Rfc4314Rights(Right.Administer))
+
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "$bobAccountId",
+         |                "update": {
+         |                    "${mailboxId.serialize}": {
+         |                      "sharedWith": {
+         |                        "${DAVID.asString()}":["r", "l"]
+         |                      }
+         |                    }
+         |                }
+         |           },
+         |    "c1"
+         |       ]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].oldState", "methodResponses[0][1].newState")
+      .isEqualTo(
+      s"""{
+         |  "sessionState": "${SESSION_STATE.value}",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "$bobAccountId",
+         |      "notUpdated": {
+         |        "${mailboxId.serialize}": {
+         |          "type": "forbidden",
+         |          "description": "Invalid change to a delegated mailbox"
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin)
+
+    // The ACL mutation must not have happened: David has not been granted any right.
+    assertThat(server.getProbe(classOf[ACLProbeImpl]).retrieveRights(path)
+      .getEntries)
+      .doesNotContainKeys(EntryKey.createUserEntryKey(DAVID))
   }
 
   @Test

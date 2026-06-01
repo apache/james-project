@@ -3148,6 +3148,67 @@ trait EmailGetMethodContract {
   }
 
   @Test
+  def getShouldReturnNotFoundWhenReadRightIsRemovedByANegativeAclEntry(server: GuiceJamesServer): Unit = {
+    // Regression guard: Email/get gates on EFFECTIVE rights. Bob holds a raw positive Read right
+    // negated by an IMAP-style negative ACL entry, so the message must not be readable.
+    val andreMailbox: String = "andrecustom"
+    val path = MailboxPath.forUser(andreUsername, andreMailbox)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(andreUsername.asString, path, AppendCommand.from(message))
+      .getMessageId
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, "-" + bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "$bobAccountId",
+         |      "ids": ["${messageId.serialize}"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "${SESSION_STATE.value}",
+         |    "methodResponses": [[
+         |            "Email/get",
+         |            {
+         |                "accountId": "$bobAccountId",
+         |                "state": "${INSTANCE.value}",
+         |                "list": [],
+         |                "notFound": ["${messageId.serialize}"]
+         |            },
+         |            "c1"
+         |        ]]
+         |}""".stripMargin)
+  }
+
+  @Test
   def emailGetShouldReturnUnknownMethodWhenMissingOneCapability(): Unit = {
     val messageId: MessageId = randomMessageId
     val response = `given`
