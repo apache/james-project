@@ -244,7 +244,7 @@ public interface BloomFilterGCAlgorithmContract {
         BloomFilterGCAlgorithm.RECOVERY_AWARE = true;
         BlobStore blobStore = blobStore();
         BlobId referencedId = Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
-        BlobId recoveryBlobId = GENERATION_AWARE_BLOB_ID_FACTORY.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + referencedId.asString());
+        BlobId recoveryBlobId = BLOB_ID_FACTORY.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + referencedId.asString());
         Mono.from(blobStoreDAO().save(DEFAULT_BUCKET, recoveryBlobId, BlobStoreDAO.BytesBlob.of("bodyBlobId".getBytes()))).block();
 
         when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.just(referencedId));
@@ -262,7 +262,7 @@ public interface BloomFilterGCAlgorithmContract {
         // Documents the unsafe behavior when the flag is off: recovery sidecar of a live blob is GC-ed.
         BlobStore blobStore = blobStore();
         BlobId referencedId = Mono.from(blobStore.save(DEFAULT_BUCKET, UUID.randomUUID().toString(), BlobStore.StoragePolicy.HIGH_PERFORMANCE)).block();
-        BlobId recoveryBlobId = GENERATION_AWARE_BLOB_ID_FACTORY.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + referencedId.asString());
+        BlobId recoveryBlobId = BLOB_ID_FACTORY.parse(BlobStoreDAO.RECOVERY_BLOB_PREFIX + referencedId.asString());
         Mono.from(blobStoreDAO().save(DEFAULT_BUCKET, recoveryBlobId, BlobStoreDAO.BytesBlob.of("bodyBlobId".getBytes()))).block();
 
         when(BLOB_REFERENCE_SOURCE.listReferencedBlobs()).thenReturn(Flux.just(referencedId));
