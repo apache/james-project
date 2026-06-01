@@ -21,6 +21,11 @@ package org.apache.james.mailbox.cassandra.mail.task;
 
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Set;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -28,6 +33,8 @@ import org.apache.james.backends.cassandra.components.CassandraDataDefinition;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.cassandra.CassandraDomainListDataDefinition;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -36,6 +43,7 @@ import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.CassandraTestSystemFixture;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
+import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
@@ -89,12 +97,19 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
         userQuotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
         CurrentQuotaCalculator currentQuotaCalculator = new CurrentQuotaCalculator(mapperFactory, userQuotaRootResolver);
 
+        QuotaManager quotaManager = mock(QuotaManager.class);
+        when(quotaManager.getQuotasReactive(any())).thenReturn(reactor.core.publisher.Mono.empty());
+        EventBus eventBus = mock(EventBus.class);
+        when(eventBus.dispatch(any(Event.class), any(Set.class))).thenReturn(reactor.core.publisher.Mono.empty());
+
         testee = new RecomputeCurrentQuotasService(usersRepository,
             ImmutableSet.of(new RecomputeMailboxCurrentQuotasService(currentQuotaManager,
                     currentQuotaCalculator,
                     userQuotaRootResolver,
                     sessionProvider,
-                    mailboxManager),
+                    mailboxManager,
+                    quotaManager,
+                    eventBus),
                 RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE));
     }
 
