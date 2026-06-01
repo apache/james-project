@@ -1515,6 +1515,66 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def createShouldFailWhenInsertRightIsRemovedByANegativeAclEntry(server: GuiceJamesServer): Unit = {
+    // Regression guard: unlike ACL mutation/visibility, Email/set gates on EFFECTIVE rights.
+    // Bob holds a raw positive Insert right negated by an IMAP-style negative ACL entry ("-bob i"),
+    // so his effective Insert is false and he must not be able to append into the delegated mailbox.
+    val andrePath = MailboxPath.inbox(andreUsername)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andrePath, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Insert, Right.Lookup, Right.Read))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andrePath, "-" + bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Insert))
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$bobAccountId",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"], ["Email/get",
+         |     {
+         |       "accountId": "$bobAccountId",
+         |       "ids": ["#aaaaaa"],
+         |       "properties": ["mailboxIds"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    // The message must not have been created in the delegated mailbox...
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isObject
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].created")
+      .isAbsent()
+    // ...and must not be retrievable.
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list")
+      .isEqualTo("[]")
+  }
+
+  @Test
   def createShouldSupportHtmlBody(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(bobUsername)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
@@ -5522,6 +5582,71 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def shouldNotUpdateInDelegatedMailboxesWhenWriteRightIsRemovedByANegativeAclEntry(server: GuiceJamesServer): Unit = {
+    // Regression guard: Email/set update gates on EFFECTIVE rights. Bob holds a raw positive Write
+    // right negated by an IMAP-style negative ACL entry, so updating keywords must be rejected.
+    val andreMailbox: String = "andrecustom"
+    val andrePath = MailboxPath.forUser(andreUsername, andreMailbox)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+    val message: Message = Message.Builder
+      .of
+      .setSender(bobUsername.asString())
+      .setFrom(andreUsername.asString())
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(andreUsername.asString, andrePath, AppendCommand.from(message))
+      .getMessageId
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andrePath, bobUsername.asString, MailboxACL.Rfc4314Rights.of(Set(Right.Read, Right.Lookup, Right.Write).asJava))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andrePath, "-" + bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Write))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |  ["Email/set",
+         |    {
+         |      "accountId": "$bobAccountId",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords": {
+         |             "music": true
+         |          }
+         |        }
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notUpdated")
+      .isEqualTo(
+        s"""{
+           |  "${messageId.serialize}":{
+           |     "type": "notFound",
+           |     "description": "Mailbox not found"
+           |  }
+           |}""".stripMargin)
+  }
+
+  @Test
   def shouldResetFlagsInDelegatedMailboxesWhenHadAtLeastWriteRight(server: GuiceJamesServer): Unit = {
     val andreMailbox: String = "andrecustom"
     val andrePath = MailboxPath.forUser(andreUsername, andreMailbox)
@@ -6452,6 +6577,72 @@ trait EmailSetMethodContract {
            |      }, "c1"]
            |    ]
            |}""".stripMargin)
+  }
+
+  @Test
+  def emailSetDestroyShouldFailWhenDeleteRightIsRemovedByANegativeAclEntry(server: GuiceJamesServer): Unit = {
+    // Regression guard: Email/set destroy gates on EFFECTIVE rights. Bob holds a raw positive
+    // DeleteMessages right negated by an IMAP-style negative ACL entry, so destroy must be rejected.
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+
+    val andreMailbox: String = "andrecustom"
+    val path = MailboxPath.forUser(andreUsername, andreMailbox)
+    mailboxProbe.createMailbox(path)
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(andreUsername.asString, path,
+        AppendCommand.from(
+          buildTestMessage))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup, Right.DeleteMessages))
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, "-" + bobUsername.asString, new MailboxACL.Rfc4314Rights(Right.DeleteMessages))
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$bobAccountId",
+         |      "destroy": ["${messageId.serialize}"]
+         |    }, "c1"],
+         |    ["Email/get", {
+         |      "accountId": "$bobAccountId",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties": ["id"]
+         |    }, "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    // The destroy is rejected...
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notDestroyed")
+      .isEqualTo(
+        s"""{
+           |  "${messageId.serialize}": {
+           |    "type": "notFound",
+           |    "description": "Cannot find message with messageId: ${messageId.serialize}"
+           |  }
+           |}""".stripMargin)
+    // ...and the message is still there (Bob keeps the Read right).
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list")
+      .isEqualTo(s"""[{ "id": "${messageId.serialize}" }]""")
   }
 
   @Test

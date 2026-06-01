@@ -42,6 +42,7 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.DifferentDomainException;
+import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
@@ -49,6 +50,7 @@ import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.ACLCommand;
+import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
@@ -214,7 +216,7 @@ class StoreRightManagerTest {
         MailboxACL acl = new MailboxACL()
             .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(BOB).asAddition())
             .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
-        MailboxACL actual = StoreRightManager.filteredForSession(
+        MailboxACL actual = storeRightManager.filteredForSession(
             new Mailbox(INBOX_ALICE, UID_VALIDITY, MAILBOX_ID), acl, aliceSession);
         assertThat(actual).isEqualTo(acl);
     }
@@ -224,7 +226,7 @@ class StoreRightManagerTest {
         MailboxACL acl = new MailboxACL()
             .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(BOB).asAddition())
             .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
-        MailboxACL actual = StoreRightManager.filteredForSession(
+        MailboxACL actual = storeRightManager.filteredForSession(
             new Mailbox(INBOX_ALICE, UID_VALIDITY, MAILBOX_ID), acl, MailboxSessionUtil.create(CEDRIC));
         assertThat(actual).isEqualTo(acl);
     }
@@ -234,7 +236,7 @@ class StoreRightManagerTest {
         MailboxACL acl = new MailboxACL()
             .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(BOB).asAddition())
             .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
-        MailboxACL actual = StoreRightManager.filteredForSession(
+        MailboxACL actual = storeRightManager.filteredForSession(
             new Mailbox(INBOX_ALICE, UID_VALIDITY, MAILBOX_ID), acl, MailboxSessionUtil.create(BOB));
         assertThat(actual.getEntries()).containsKey(MailboxACL.EntryKey.createUserEntryKey(BOB));
     }
@@ -334,5 +336,68 @@ class StoreRightManagerTest {
         } finally {
             StoreRightManager.IS_CROSS_DOMAIN_ACCESS_ALLOWED = false;
         }
+    }
+
+    @Test
+    void applyRightsCommandShouldThrowWhenAdministerIsRemovedByANegativeAclEntry() throws Exception {
+        // Alice holds a raw positive Administer grant, but an applicable negative ACL entry
+        // (as can be set through IMAP SETACL "-alice a") removes Administer from her effective rights.
+        MailboxPath mailboxPath = MailboxPath.forUser(BOB, "mailbox");
+        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY, MAILBOX_ID);
+        mailbox.setACL(new MailboxACL()
+            .apply(MailboxACL.command().forUser(ALICE).rights(Right.Lookup, Right.Administer).asAddition())
+            .apply(MailboxACL.command().key(EntryKey.createUserEntryKey(ALICE, true)).rights(Right.Administer).asAddition()));
+
+        // Sanity check: Alice's effective rights no longer contain Administer
+        assertThat(storeRightManager.hasRight(mailbox, Right.Administer, aliceSession)).isFalse();
+
+        ACLCommand aclCommand = MailboxACL.command()
+            .forUser(ALICE)
+            .rights(Right.Read)
+            .asAddition();
+
+        when(mockedMailboxMapper.findMailboxByPath(mailboxPath)).thenReturn(Mono.just(mailbox));
+
+        assertThatThrownBy(() -> storeRightManager.applyRightsCommand(mailboxPath, aclCommand, aliceSession))
+            .isInstanceOf(InsufficientRightsException.class);
+    }
+
+    @Test
+    void applyRightsCommandShouldNotThrowWhenEffectiveAdministerIsHeld() throws Exception {
+        // Baseline counterpart: with a positive Administer grant and no negating entry,
+        // the mutation is legitimately authorized.
+        MailboxPath mailboxPath = MailboxPath.forUser(BOB, "mailbox");
+        Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY, MAILBOX_ID);
+        mailbox.setACL(new MailboxACL(new MailboxACL.Entry(ALICE.asString(), Right.Lookup, Right.Administer)));
+
+        assertThat(storeRightManager.hasRight(mailbox, Right.Administer, aliceSession)).isTrue();
+
+        ACLCommand aclCommand = MailboxACL.command()
+            .forUser(ALICE)
+            .rights(Right.Read)
+            .asAddition();
+
+        when(mockedMailboxMapper.findMailboxByPath(mailboxPath)).thenReturn(Mono.just(mailbox));
+        when(mockedMailboxMapper.updateACL(mailbox, aclCommand)).thenReturn(Mono.just(ACLDiff.computeDiff(MailboxACL.EMPTY, MailboxACL.EMPTY)));
+        when(eventBus.dispatch(any(Event.class), any(MailboxIdRegistrationKey.class))).thenReturn(Mono.empty());
+
+        assertThatCode(() -> storeRightManager.applyRightsCommand(mailboxPath, aclCommand, aliceSession))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void filteredForSessionShouldHideOtherEntriesWhenAdministerIsRemovedByANegativeAclEntry() throws UnsupportedRightException {
+        // BOB holds a raw positive Administer grant negated by an applicable negative ACL entry:
+        // his effective Administer right is false, so he must not be granted full-ACL visibility.
+        MailboxACL acl = new MailboxACL()
+            .apply(MailboxACL.command().forUser(BOB).rights(Right.Lookup, Right.Administer).asAddition())
+            .apply(MailboxACL.command().key(EntryKey.createUserEntryKey(BOB, true)).rights(Right.Administer).asAddition())
+            .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
+
+        MailboxACL actual = storeRightManager.filteredForSession(
+            new Mailbox(INBOX_ALICE, UID_VALIDITY, MAILBOX_ID), acl, MailboxSessionUtil.create(BOB));
+
+        assertThat(actual.getEntries())
+            .doesNotContainKey(EntryKey.createUserEntryKey(CEDRIC));
     }
 }
