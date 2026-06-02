@@ -254,6 +254,8 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
                     this::asBlobMetadataName,
                     Throwing.function((String attributeName) -> new BlobMetadataValue(readFileAttributeValue(attributeView, attributeName)))
                         .sneakyThrow())));
+        } catch (NoSuchFileException e) {
+            throw new ObjectNotFoundException(String.format("Cannot locate %s", path), e);
         } catch (IOException e) {
             throw new ObjectStoreIOException("IOException occurred", e);
         }
