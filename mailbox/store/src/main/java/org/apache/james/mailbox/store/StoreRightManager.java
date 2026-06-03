@@ -324,7 +324,7 @@ public class StoreRightManager implements RightManager {
         MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser());
         // Expose the full ACL only when the user effectively holds Administer (i.e. after applicable
         // negative ACL entries have been subtracted), not merely from their raw positive entry.
-        Rfc4314Rights effectiveRights = aclResolver.resolveRights(mailboxSession.getUser(), acl, mailbox.getUser());
+        Rfc4314Rights effectiveRights = aclResolver.resolveRights(mailboxSession.getUser(), acl, mailbox.getUser().asString());
         if (effectiveRights.contains(MailboxACL.Right.Administer)) {
             return acl;
         }
