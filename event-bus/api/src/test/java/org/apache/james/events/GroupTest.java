@@ -103,20 +103,34 @@ class GroupTest {
     }
 
     @Test
-    void deserializeShouldThrowWhenClassNotFound() {
-        assertThatThrownBy(() -> Group.deserialize("org.apache.james.events.Noone"))
-            .isInstanceOf(Group.GroupDeserializationException.class);
+    void deserializeShouldNotRequireTheClassToBeLoadable() throws Exception {
+        // Groups defined in extensions are not part of the default class path: deserialization
+        // must not rely on Class.forName so that such groups can still be reprocessed.
+        assertThat(Group.deserialize("org.apache.james.events.Noone").asString())
+            .isEqualTo("org.apache.james.events.Noone");
     }
 
     @Test
-    void deserializeShouldThrowWhenNotAGroup() {
-        assertThatThrownBy(() -> Group.deserialize("java.lang.String"))
-            .isInstanceOf(Group.GroupDeserializationException.class);
+    void deserializeShouldMatchConcreteGroupSharingItsName() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.events.EventBusTestFixture$GroupA"))
+            .isEqualTo(new EventBusTestFixture.GroupA());
     }
 
     @Test
-    void deserializeShouldThrowWhenConstructorArgumentsRequired() {
-        assertThatThrownBy(() -> Group.deserialize("org.apache.james.mailbox.events.GenericGroup"))
+    void deserializeShouldNotRequireAGroupClass() throws Exception {
+        assertThat(Group.deserialize("java.lang.String").asString())
+            .isEqualTo("java.lang.String");
+    }
+
+    @Test
+    void deserializeShouldNotRequireANoArgConstructor() throws Exception {
+        assertThat(Group.deserialize("org.apache.james.mailbox.events.GenericGroup").asString())
+            .isEqualTo("org.apache.james.mailbox.events.GenericGroup");
+    }
+
+    @Test
+    void deserializeShouldThrowWhenNotAFullyQualifiedName() {
+        assertThatThrownBy(() -> Group.deserialize("invalid"))
             .isInstanceOf(Group.GroupDeserializationException.class);
     }
 
