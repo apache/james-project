@@ -136,11 +136,17 @@ public class GenerationAwareBlobId implements BlobId, GenerationAware {
             if (separatorIndex2 == -1 || separatorIndex2 == id.length() - 1) {
                 return decorateWithoutGeneration(id);
             }
-            int family = Integer.parseInt(id.substring(0, separatorIndex1));
-            int generation = Integer.parseInt(id.substring(separatorIndex1 + 1, separatorIndex2));
-            BlobId wrapped = delegate.parse(id.substring(separatorIndex2 + 1));
+            try {
+                int family = Integer.parseInt(id.substring(0, separatorIndex1));
+                int generation = Integer.parseInt(id.substring(separatorIndex1 + 1, separatorIndex2));
+                BlobId wrapped = delegate.parse(id.substring(separatorIndex2 + 1));
 
-            return new GenerationAwareBlobId(generation, family, wrapped);
+                return new GenerationAwareBlobId(generation, family, wrapped);
+            } catch (NumberFormatException e) {
+                // The id does not follow the family_generation_blobId layout (eg. a recovery sidecar prefixed key).
+                // Fall back to a plain, non-generation-aware blob id preserving the original string.
+                return decorateWithoutGeneration(id);
+            }
         }
 
         private GenerationAwareBlobId decorateWithoutGeneration(String id) {
