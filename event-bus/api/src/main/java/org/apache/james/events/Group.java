@@ -19,42 +19,67 @@
 
 package org.apache.james.events;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 
 import org.apache.james.mailbox.events.GenericGroup;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 public class Group {
     public static class GroupDeserializationException extends Exception {
+        GroupDeserializationException(String message) {
+            super(message);
+        }
+
         GroupDeserializationException(Throwable cause) {
             super(cause);
         }
     }
 
-    public static Group deserialize(String serializedGroup) throws GroupDeserializationException {
-        try {
-            Preconditions.checkNotNull(serializedGroup, "A serialized group can not be null");
-            Preconditions.checkArgument(!Strings.isNullOrEmpty(serializedGroup), "A serialized group can not be empty");
+    /**
+     * A {@link Group} identified solely by its serialized form.
+     *
+     * Groups are encoded as a plain String, historically the fully qualified name of the concrete
+     * {@link Group} subclass. Deserialization purposely no longer instantiates that class: requiring the
+     * class to be loadable broke the reprocessing of dead-lettered events whose Group is defined in an
+     * extension that is not part of the default class path (extensions are loaded in a dedicated class
+     * loader). Since {@link Group} identity (see {@link #equals(Object)} / {@link #hashCode()}) relies on
+     * {@link #asString()}, a {@code DeserializedGroup} is interchangeable with the concrete instance
+     * registered by the running extension, both for lookups in registration maps and for redelivery.
+     */
+    private static class DeserializedGroup extends Group {
+        private final String value;
 
-            if (serializedGroup.startsWith(GenericGroup.class.getName() + GenericGroup.DELIMITER)) {
-                return new GenericGroup(serializedGroup.substring(GenericGroup.class.getName().length() + 1));
-            } else if (serializedGroup.startsWith(DispatchingFailureGroup.class.getName() + DispatchingFailureGroup.DELIMITER)) {
-                return DispatchingFailureGroup.from(serializedGroup);
-            }
+        private DeserializedGroup(String value) {
+            this.value = value;
+        }
 
-            Class<?> groupClass = Class.forName(serializedGroup);
-            return instantiateGroup(groupClass);
-        } catch (Exception e) {
-            throw new GroupDeserializationException(e);
+        @Override
+        public String asString() {
+            return value;
         }
     }
 
-    private static Group instantiateGroup(Class<?> aClass) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        Preconditions.checkArgument(Group.class.isAssignableFrom(aClass), "The supplied class is not a group: %s", aClass.getName());
-        return (Group) aClass.getDeclaredConstructor().newInstance();
+    public static Group deserialize(String serializedGroup) throws GroupDeserializationException {
+        if (Strings.isNullOrEmpty(serializedGroup)) {
+            throw new GroupDeserializationException("A serialized group can not be null or empty");
+        }
+        try {
+            if (serializedGroup.startsWith(GenericGroup.class.getName() + GenericGroup.DELIMITER)) {
+                return new GenericGroup(serializedGroup.substring(GenericGroup.class.getName().length() + 1));
+            }
+            if (serializedGroup.startsWith(DispatchingFailureGroup.class.getName() + DispatchingFailureGroup.DELIMITER)) {
+                return DispatchingFailureGroup.from(serializedGroup);
+            }
+            if (!serializedGroup.contains(".")) {
+                throw new GroupDeserializationException("A serialized group must be a fully qualified name: " + serializedGroup);
+            }
+            return new DeserializedGroup(serializedGroup);
+        } catch (GroupDeserializationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new GroupDeserializationException(e);
+        }
     }
 
     public String asString() {
@@ -63,14 +88,15 @@ public class Group {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null) {
-            return false;
+        if (o instanceof Group) {
+            Group group = (Group) o;
+            return Objects.equals(asString(), group.asString());
         }
-        return this.getClass().equals(o.getClass());
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getClass());
+        return Objects.hash(asString());
     }
 }
