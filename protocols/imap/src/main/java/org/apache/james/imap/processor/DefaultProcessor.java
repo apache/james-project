@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.protocols.sasl.JamesSaslAuthenticator.jamesSaslAuthenticator;
+
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -40,6 +42,9 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.protocols.api.sasl.SaslMechanism;
+import org.apache.james.protocols.sasl.JamesSaslAuthenticator;
+import org.apache.james.protocols.sasl.plain.PlainSaslMechanism;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -59,16 +64,56 @@ public class DefaultProcessor implements ImapProcessor {
                                                        MailboxCounterCorrector mailboxCounterCorrector,
                                                        MetricFactory metricFactory,
                                                        FetchProcessor.LocalCacheConfiguration localCacheConfiguration) {
+        return createDefaultProcessor(chainEndProcessor, mailboxManager, eventBus, subscriptionManager,
+            statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver, mailboxCounterCorrector,
+            metricFactory, localCacheConfiguration, ImmutableList.of(new PlainSaslMechanism()));
+    }
+
+    public static ImapProcessor createDefaultProcessor(ImapProcessor chainEndProcessor,
+                                                       MailboxManager mailboxManager,
+                                                       EventBus eventBus,
+                                                       SubscriptionManager subscriptionManager,
+                                                       StatusResponseFactory statusResponseFactory,
+                                                       MailboxTyper mailboxTyper,
+                                                       QuotaManager quotaManager,
+                                                       QuotaRootResolver quotaRootResolver,
+                                                       MailboxCounterCorrector mailboxCounterCorrector,
+                                                       MetricFactory metricFactory,
+                                                       FetchProcessor.LocalCacheConfiguration localCacheConfiguration,
+                                                       ImmutableList<SaslMechanism> defaultSaslMechanisms) {
+        return createDefaultProcessor(chainEndProcessor, mailboxManager, eventBus, subscriptionManager,
+            statusResponseFactory, mailboxTyper, quotaManager, quotaRootResolver, mailboxCounterCorrector,
+            metricFactory, localCacheConfiguration, defaultSaslMechanisms, jamesSaslAuthenticator(mailboxManager));
+    }
+
+    public static ImapProcessor createDefaultProcessor(ImapProcessor chainEndProcessor,
+                                                       MailboxManager mailboxManager,
+                                                       EventBus eventBus,
+                                                       SubscriptionManager subscriptionManager,
+                                                       StatusResponseFactory statusResponseFactory,
+                                                       MailboxTyper mailboxTyper,
+                                                       QuotaManager quotaManager,
+                                                       QuotaRootResolver quotaRootResolver,
+                                                       MailboxCounterCorrector mailboxCounterCorrector,
+                                                       MetricFactory metricFactory,
+                                                       FetchProcessor.LocalCacheConfiguration localCacheConfiguration,
+                                                       ImmutableList<SaslMechanism> defaultSaslMechanisms,
+                                                       JamesSaslAuthenticator saslAuthenticator) {
         PathConverter.Factory pathConverterFactory = PathConverter.Factory.DEFAULT;
 
         ImmutableList.Builder<AbstractProcessor> builder = ImmutableList.builder();
         CapabilityProcessor capabilityProcessor = new CapabilityProcessor(mailboxManager, statusResponseFactory, metricFactory);
+        LoginProcessor loginProcessor = new LoginProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory, saslAuthenticator);
+        loginProcessor.configureSaslMechanisms(defaultSaslMechanisms);
+        AuthenticateProcessor authenticateProcessor = new AuthenticateProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory, saslAuthenticator);
+        authenticateProcessor.configureSaslMechanisms(defaultSaslMechanisms);
+
         builder.add(new SystemMessageProcessor());
         builder.add(new LogoutProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(capabilityProcessor);
         builder.add(new IdProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new CheckProcessor(mailboxManager, statusResponseFactory, metricFactory));
-        builder.add(new LoginProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(loginProcessor);
         builder.add(new RenameProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new DeleteProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new CreateProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
@@ -76,7 +121,7 @@ public class DefaultProcessor implements ImapProcessor {
         builder.add(new UnsubscribeProcessor(mailboxManager, subscriptionManager, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new SubscribeProcessor(mailboxManager, subscriptionManager, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new CopyProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
-        builder.add(new AuthenticateProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
+        builder.add(authenticateProcessor);
         builder.add(new ExpungeProcessor(mailboxManager, statusResponseFactory, metricFactory));
         builder.add(new ReplaceProcessor(mailboxManager, statusResponseFactory, metricFactory, pathConverterFactory));
         builder.add(new ExamineProcessor(mailboxManager, eventBus, statusResponseFactory, metricFactory, pathConverterFactory, mailboxCounterCorrector));

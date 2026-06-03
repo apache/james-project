@@ -31,7 +31,6 @@ import javax.net.ssl.SSLSession;
 import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionState;
-import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.util.MDCBuilder;
@@ -247,19 +246,6 @@ public interface ImapSession extends CommandDetectionSession {
      */
     void popLineHandler();
 
-    /**
-     * Return true if SSL is required when Authenticating
-     */
-    boolean isSSLRequired();
-
-    /**
-     * Return true if the login / authentication via plain username / password is
-     * enabled
-     */
-    boolean isPlainAuthEnabled();
-
-    boolean supportsOAuth();
-
     default void withMDC(Runnable runnable) {
         try (Closeable c = mdc().build()) {
             runnable.run();
@@ -280,8 +266,6 @@ public interface ImapSession extends CommandDetectionSession {
      */
     InetSocketAddress getRemoteAddress();
 
-    Optional<OidcSASLConfiguration> oidcSaslConfiguration();
-
     default void setMailboxSession(MailboxSession mailboxSession) {
         setAttribute(MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
     }
@@ -294,14 +278,6 @@ public interface ImapSession extends CommandDetectionSession {
         return Optional.ofNullable(getMailboxSession())
             .map(MailboxSession::getUser)
             .orElse(null);
-    }
-
-    default boolean isPlainAuthDisallowed() {
-        return !isPlainAuthEnabled() || isAuthenticatingNonEncryptedWhenRequiredSSL();
-    }
-
-    default boolean isAuthenticatingNonEncryptedWhenRequiredSSL() {
-        return isSSLRequired() && !isTLSActive();
     }
 
     void schedule(Runnable runnable, Duration waitDelay);

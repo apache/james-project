@@ -42,6 +42,7 @@
         <module>managesieve</module>
         <module>netty</module>
         <module>pop3</module>
+        <module>sasl</module>
         <module>smtp</module>
     </modules>
 

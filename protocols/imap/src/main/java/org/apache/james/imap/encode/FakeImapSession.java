@@ -34,7 +34,6 @@ import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapLineHandler;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
-import org.apache.james.jwt.OidcSASLConfiguration;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 
 import reactor.core.publisher.Mono;
@@ -167,28 +166,8 @@ public class FakeImapSession implements ImapSession {
     }
 
     @Override
-    public boolean isSSLRequired() {
-        return false;
-    }
-
-    @Override
-    public boolean isPlainAuthEnabled() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsOAuth() {
-        return false;
-    }
-
-    @Override
     public InetSocketAddress getRemoteAddress() {
         return null;
-    }
-
-    @Override
-    public Optional<OidcSASLConfiguration> oidcSaslConfiguration() {
-        return Optional.empty();
     }
 
     @Override
