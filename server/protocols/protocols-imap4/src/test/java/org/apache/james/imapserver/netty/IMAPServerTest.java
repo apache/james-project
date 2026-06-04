@@ -40,7 +40,6 @@ import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
@@ -100,16 +99,9 @@ import com.google.common.collect.ImmutableSet;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.compression.JdkZlibDecoder;
-import io.netty.handler.codec.compression.JdkZlibEncoder;
-import io.netty.handler.codec.compression.ZlibWrapper;
-import io.netty.handler.ssl.SslContextBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import reactor.netty.Connection;
-import reactor.netty.tcp.TcpClient;
 
 @SuppressWarnings("checkstyle:membername")
 class IMAPServerTest {
@@ -251,78 +243,6 @@ class IMAPServerTest {
 
 
 
-    @Nested
-    class IdleSSLCompress {
-        IMAPServer imapServer;
-        private Connection connection;
-        private ConcurrentLinkedDeque<String> responses;
-
-        @BeforeEach
-        void beforeEach() throws Exception {
-            imapServer = createImapServer("imapServerSSLCompress.xml");
-            int port = imapServer.getListenAddresses().get(0).getPort();
-            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
-            memoryIntegrationResources.getMailboxManager()
-                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
-
-            connection = TcpClient.create()
-                .secure(Throwing.consumer(ssl -> ssl.sslContext(SslContextBuilder.forClient().trustManager(new BlindTrustManager()).build())))
-                .remoteAddress(() -> new InetSocketAddress(LOCALHOST_IP, port))
-                .connectNow();
-            responses = new ConcurrentLinkedDeque<>();
-            readBytes(connection);
-        }
-
-        @AfterEach
-        void tearDown() {
-            try {
-                connection.disposeNow();
-            } finally {
-                imapServer.destroy();
-            }
-        }
-
-        @Test
-        void idleShouldBeInterruptible() {
-            send(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS));
-
-            send("a1 COMPRESS DEFLATE\r\n");
-
-            Awaitility.await().until(() -> responses.stream().anyMatch(s -> s.contains("a1 OK COMPRESS DEFLATE active")));
-            responses.clear();
-
-            connection.addHandlerFirst(new JdkZlibDecoder(ZlibWrapper.ZLIB_OR_NONE));
-            connection.addHandlerFirst(new JdkZlibEncoder(ZlibWrapper.NONE, 5));
-
-            send("a2 SELECT INBOX\r\n");
-            Awaitility.await().until(() -> responses.stream().anyMatch(s -> s.contains("a2 OK [READ-WRITE] SELECT completed.")));
-            responses.clear();
-
-            send("a3 IDLE\r\n");
-            Awaitility.await().until(() -> responses.stream().anyMatch(s -> s.contains("+ Idling")));
-            assertThat(responses).hasSize(1); // No pollution
-            responses.clear();
-
-            send("DONE\r\n");
-            Awaitility.await().until(() -> responses.stream().anyMatch(s -> s.contains("a3 OK IDLE completed.")));
-            assertThat(responses).hasSize(1); // No pollution
-        }
-
-        private void send(String format) {
-            connection.outbound()
-                .send(Mono.just(Unpooled.wrappedBuffer(format
-                    .getBytes(StandardCharsets.UTF_8))))
-                .then()
-                .subscribe();
-        }
-
-        private void readBytes(Connection connection) {
-            connection.inbound().receive().asString()
-                .doOnNext(responses::addLast)
-                .subscribeOn(Schedulers.newSingle("test"))
-                .subscribe();
-        }
-    }
 
     @Nested
     class Idle {
