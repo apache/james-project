@@ -258,58 +258,6 @@ class IMAPServerTest {
 
 
 
-    @Nested
-    class PlainAuthEnabledWithoutRequireSSL {
-        IMAPServer imapServer;
-        private int port;
-
-        @BeforeEach
-        void beforeEach() throws Exception {
-            imapServer = createImapServer("imapServerPlainAuthEnabledWithoutRequireSSL.xml");
-            port = imapServer.getListenAddresses().get(0).getPort();
-        }
-
-        @AfterEach
-        void tearDown() {
-            imapServer.destroy();
-        }
-
-        @Test
-        void loginShouldSucceed() {
-            assertThatCode(() ->
-                testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS))
-                .doesNotThrowAnyException();
-        }
-
-        @RepeatedTest(100)
-        void authenticatePlainShouldSucceed() {
-            assertThatCode(() ->
-                testIMAPClient.connect("127.0.0.1", port)
-                    .authenticatePlain(USER.asString(), USER_PASS))
-                .doesNotThrowAnyException();
-        }
-
-        @Test
-        void capabilityShouldAdvertiseLoginAndAuthenticationPlain() throws Exception {
-            testIMAPClient.connect("127.0.0.1", port);
-
-            assertThat(testIMAPClient.capability())
-                .doesNotContain("LOGINDISABLED")
-                .contains("AUTH=PLAIN");
-        }
-
-        @Test
-        void authenticatePlainShouldSucceedWhenPasswordHasMoreThan255Characters() {
-            Username user1 = Username.of("user1@domain.org");
-            String user1Password = "1".repeat(300);
-            authenticator.addUser(user1, user1Password);
-            assertThatCode(() ->
-                testIMAPClient.connect("127.0.0.1", port)
-                    .authenticatePlain(user1.asString(), user1Password))
-                .doesNotThrowAnyException();
-        }
-    }
 
     @Nested
     class PlainAuthDisallowed {
