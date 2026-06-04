@@ -24,7 +24,9 @@ import static org.apache.james.mailbox.fixture.MailboxFixture.BOB;
 import static org.apache.james.mailbox.fixture.MailboxFixture.CEDRIC;
 import static org.apache.james.mailbox.fixture.MailboxFixture.INBOX_ALICE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -70,6 +72,7 @@ class StoreRightManagerTest {
     MailboxSession aliceSession;
     MailboxACLResolver mailboxAclResolver;
     MailboxMapper mockedMailboxMapper;
+    EventBus eventBus;
 
     @BeforeEach
     void setup() {
@@ -77,7 +80,7 @@ class StoreRightManagerTest {
         MailboxSessionMapperFactory mockedMapperFactory = mock(MailboxSessionMapperFactory.class);
         mockedMailboxMapper = mock(MailboxMapper.class);
         mailboxAclResolver = new UnionMailboxACLResolver();
-        EventBus eventBus = mock(EventBus.class);
+        eventBus = mock(EventBus.class);
         when(mockedMapperFactory.getMailboxMapper(aliceSession))
             .thenReturn(mockedMailboxMapper);
 
