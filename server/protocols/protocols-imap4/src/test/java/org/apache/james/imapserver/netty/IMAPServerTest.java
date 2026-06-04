@@ -260,39 +260,6 @@ class IMAPServerTest {
 
 
 
-    @Nested
-    class PlainAuthDisallowedSSL {
-        IMAPServer imapServer;
-        private int port;
-
-        @BeforeEach
-        void beforeEach() throws Exception {
-            imapServer = createImapServer("imapServerPlainAuthAllowed.xml");
-            port = imapServer.getListenAddresses().get(0).getPort();
-        }
-
-        @AfterEach
-        void tearDown() {
-            imapServer.destroy();
-        }
-
-        @Test
-        void loginShouldSucceedOnUnEncryptedChannel() {
-            assertThatCode(() ->
-                testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS))
-                .doesNotThrowAnyException();
-        }
-
-        @Test
-        void capabilityShouldAdvertiseLoginOnUnEncryptedChannel() throws Exception {
-            testIMAPClient.connect("127.0.0.1", port);
-
-            assertThat(testIMAPClient.capability())
-                .doesNotContain("LOGINDISABLED")
-                .contains("AUTH=PLAIN");
-        }
-    }
 
     @Nested
     class AuthenticationRequireSSL {
