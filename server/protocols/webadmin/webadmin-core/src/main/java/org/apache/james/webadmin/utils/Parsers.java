@@ -38,7 +38,7 @@ public class Parsers {
         try {
             return Domain.of(domain);
         } catch (IllegalArgumentException e) {
-            throw invalidArgument("Invalid domain: " + domain, e);
+            throw invalidArgument("Invalid arguments supplied in the user request", e);
         }
     }
 
@@ -46,7 +46,7 @@ public class Parsers {
         try {
             return Username.of(username);
         } catch (IllegalArgumentException e) {
-            throw invalidArgument("Invalid username: " + username, e);
+            throw invalidArgument("Invalid arguments supplied in the user request", e);
         }
     }
 
