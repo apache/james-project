@@ -24,6 +24,7 @@ import static spark.Spark.halt;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +66,14 @@ public class ErrorResponder {
 
     public static ErrorResponder builder() {
         return new ErrorResponder();
+    }
+
+    public static HaltException notFound(String message, Object... args) {
+        return builder()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .type(ErrorType.NOT_FOUND)
+            .message(message, args)
+            .haltError();
     }
 
     public ErrorResponder statusCode(int statusCode) {

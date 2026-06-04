@@ -32,6 +32,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.Parsers;
 import org.eclipse.jetty.http.HttpStatus;
 
 import reactor.core.publisher.Mono;
@@ -51,13 +52,9 @@ public class MailboxesRestoreRequestToTask extends TaskFromRequestRegistry.TaskR
                                UsersRepository usersRepository,
                                BlobStore blobStore,
                                Request request) throws UsersRepositoryException {
-        Username username = Username.of(request.params("username"));
+        Username username = Parsers.parseUsername(request.params("username"));
         if (!usersRepository.contains(username)) {
-            throw ErrorResponder.builder()
-                .type(ErrorResponder.ErrorType.NOT_FOUND)
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .message(String.format("User '%s' does not exist", username.asString()))
-                .haltError();
+            throw ErrorResponder.notFound("User '%s' does not exist", username.asString());
         }
 
         byte[] data = request.bodyAsBytes();

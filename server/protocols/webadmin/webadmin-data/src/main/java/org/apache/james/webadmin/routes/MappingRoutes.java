@@ -40,6 +40,7 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Parsers;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -124,7 +125,7 @@ public class MappingRoutes implements Routes {
     }
 
     private Mappings getUserMappings(Request request, Response response) throws RecipientRewriteTableException {
-        Username username = Username.of(request.params(USER).toLowerCase());
+        Username username = Parsers.parseUsername(request.params(USER).toLowerCase());
         return recipientRewriteTable.getStoredMappings(MappingSource.fromUser(username));
     }
 

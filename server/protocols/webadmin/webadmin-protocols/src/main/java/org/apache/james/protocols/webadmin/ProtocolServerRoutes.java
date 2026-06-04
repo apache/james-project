@@ -40,6 +40,7 @@ import org.apache.james.protocols.lib.netty.CertificateReloadable;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.Parsers;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -135,7 +136,7 @@ public class ProtocolServerRoutes implements Routes {
         });
 
         service.delete(SERVERS + "/channels/:user", (request, response) -> {
-            Username username = Username.of(request.params("user"));
+            Username username = Parsers.parseUsername(request.params("user"));
             disconnectorNotifier.disconnect(MultipleUserRequest.of(username));
 
             return Responses.returnNoContent(response);
@@ -165,7 +166,7 @@ public class ProtocolServerRoutes implements Routes {
         });
 
         service.get(SERVERS + "/channels/:user", (request, response) -> {
-            Username username = Username.of(request.params("user"));
+            Username username = Parsers.parseUsername(request.params("user"));
             ChannelsQueryParameters params = ChannelsQueryParameters.from(request);
             return OBJECT_MAPPER.writeValueAsString(params.apply(connectionDescriptionSupplier.describeConnections()
                 .filter(connectionDescription -> connectionDescription.username().map(username::equals).orElse(false))

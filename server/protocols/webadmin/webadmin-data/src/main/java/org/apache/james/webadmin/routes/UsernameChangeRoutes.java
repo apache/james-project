@@ -33,6 +33,7 @@ import org.apache.james.webadmin.service.UsernameChangeTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Parsers;
 
 import com.google.common.base.Preconditions;
 
@@ -71,8 +72,8 @@ public class UsernameChangeRoutes implements Routes {
 
     public Route changeUsername() {
         return TaskFromRequestRegistry.of(RENAME, request -> {
-            Username oldUser = Username.of(request.params(OLD_USER_PARAM));
-            Username newUser = Username.of(request.params(NEW_USER_PARAM));
+            Username oldUser = Parsers.parseUsername(request.params(OLD_USER_PARAM));
+            Username newUser = Parsers.parseUsername(request.params(NEW_USER_PARAM));
 
             Preconditions.checkArgument(request.queryParams(FORCE_PARAM) != null || usersRepository.contains(oldUser), "'oldUser' parameter should be an existing user");
             Preconditions.checkArgument(usersRepository.contains(newUser), "'newUser' parameter should be an existing user");

@@ -50,6 +50,7 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Parsers;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
@@ -287,11 +288,7 @@ public class UserRoutes implements Routes {
                     .collectList()
                     .block();
             } else {
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorType.NOT_FOUND)
-                    .message(String.format("User '%s' does not exist", baseUser.asString()))
-                    .haltError();
+                throw ErrorResponder.notFound("User '%s' does not exist", baseUser.asString());
             }
         } catch (NotImplementedException e) {
             throw ErrorResponder.builder()
@@ -311,11 +308,7 @@ public class UserRoutes implements Routes {
                 Mono.from(delegationStore.clear(baseUser)).block();
                 return Constants.EMPTY_BODY;
             } else {
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorType.NOT_FOUND)
-                    .message(String.format("User '%s' does not exist", baseUser.asString()))
-                    .haltError();
+                throw ErrorResponder.notFound("User '%s' does not exist", baseUser.asString());
             }
         } catch (NotImplementedException e) {
             throw ErrorResponder.builder()
@@ -333,11 +326,7 @@ public class UserRoutes implements Routes {
             Username delegatedUser = extractDelegatedUsername(request);
 
             if (!userService.userExists(baseUser)) {
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorType.NOT_FOUND)
-                    .message(String.format("User '%s' does not exist", baseUser.asString()))
-                    .haltError();
+                throw ErrorResponder.notFound("User '%s' does not exist", baseUser.asString());
             } else {
                 Mono.from(delegationStore
                     .addAuthorizedUser(delegatedUser)
@@ -361,11 +350,7 @@ public class UserRoutes implements Routes {
             Username delegatedUser = extractDelegatedUsername(request);
 
             if (!userService.userExists(baseUser)) {
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .type(ErrorType.NOT_FOUND)
-                    .message(String.format("User '%s' does not exist", baseUser.asString()))
-                    .haltError();
+                throw ErrorResponder.notFound("User '%s' does not exist", baseUser.asString());
             } else {
                 Mono.from(delegationStore.removeAuthorizedUser(delegatedUser)
                     .forUser(baseUser))
@@ -412,11 +397,11 @@ public class UserRoutes implements Routes {
     }
 
     private Username extractUsername(Request request) {
-        return Username.of(request.params(USER_NAME));
+        return Parsers.parseUsername(request.params(USER_NAME));
     }
 
     private Username extractDelegatedUsername(Request request) {
-        return Username.of(request.params(DELEGATED_USER_NAME));
+        return Parsers.parseUsername(request.params(DELEGATED_USER_NAME));
     }
 
 }

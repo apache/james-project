@@ -40,6 +40,7 @@ import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Parsers;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.fge.lambdas.Throwing;
@@ -129,16 +130,7 @@ public class MessagesRoutes implements Routes {
     }
 
     private MessageId extractMessageId(Request request) {
-        try {
-            return messageIdFactory.fromString(request.params(MESSAGE_ID_PARAM));
-        } catch (Exception e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("Error while parsing 'messageId'")
-                .cause(e)
-                .haltError();
-        }
+        return Parsers.parseId("messageId", () -> messageIdFactory.fromString(request.params(MESSAGE_ID_PARAM)));
     }
 
     private Route allMessagesOperations() {

@@ -121,11 +121,7 @@ public class DomainMappingsRoutes implements Routes {
         return Optional.of(recipientRewriteTable.getStoredMappings(mappingSource).select(Mapping.Type.Domain))
             .filter(mappings -> mappings.contains(Mapping.Type.Domain))
             .map(this::toDomainList)
-            .orElseThrow(() -> ErrorResponder.builder()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorResponder.ErrorType.NOT_FOUND)
-                .message(String.format("Cannot find mappings for %s", mappingSource.getFixedDomain()))
-                .haltError());
+            .orElseThrow(() -> ErrorResponder.notFound("Cannot find mappings for %s", mappingSource.getFixedDomain()));
     }
 
     private MappingSource mappingSourceFrom(final Request request) {

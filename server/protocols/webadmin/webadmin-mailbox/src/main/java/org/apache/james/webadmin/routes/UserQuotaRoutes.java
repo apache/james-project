@@ -57,6 +57,7 @@ import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.apache.james.webadmin.utils.ParametersExtractor;
+import org.apache.james.webadmin.utils.Parsers;
 import org.apache.james.webadmin.utils.Responses;
 import org.apache.james.webadmin.validation.QuotaDTOValidator;
 import org.apache.james.webadmin.validation.Quotas;
@@ -296,14 +297,10 @@ public class UserQuotaRoutes implements Routes {
     }
 
     private Username checkUserExist(Request request) throws UsersRepositoryException {
-        Username username = Username.of(request.params(USER));
+        Username username = Parsers.parseUsername(request.params(USER));
 
         if (!usersRepository.contains(username)) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorType.NOT_FOUND)
-                .message("User not found")
-                .haltError();
+            throw ErrorResponder.notFound("User not found");
         }
         return username;
     }

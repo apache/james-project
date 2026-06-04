@@ -43,6 +43,7 @@ import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Parsers;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.base.Strings;
@@ -157,16 +158,7 @@ public class MailboxesRoutes implements Routes {
     }
 
     private static MailboxId extractMailboxId(MailboxId.Factory mailboxIdFactory, Request request) {
-        try {
-            return mailboxIdFactory.fromString(request.params(MAILBOX_PARAM));
-        } catch (Exception e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("Error while parsing 'mailbox'")
-                .cause(e)
-                .haltError();
-        }
+        return Parsers.parseId("mailbox", () -> mailboxIdFactory.fromString(request.params(MAILBOX_PARAM)));
     }
 
     private static final String BASE_PATH = "/mailboxes";

@@ -33,6 +33,7 @@ import org.apache.james.webadmin.service.DeleteUserDataTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.Parsers;
 
 import com.google.common.base.Preconditions;
 
@@ -71,7 +72,7 @@ public class DeleteUserDataRoutes implements Routes {
         return TaskFromRequestRegistry.builder()
             .parameterName("action")
             .register(DELETE_USER_DATA, request -> {
-                Username username = Username.of(request.params(USER_PATH_PARAM));
+                Username username = Parsers.parseUsername(request.params(USER_PATH_PARAM));
 
                 Preconditions.checkArgument(request.queryParams("force") != null || usersRepository.contains(username), "'username' parameter should be an existing user");
 

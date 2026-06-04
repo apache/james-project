@@ -47,6 +47,7 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.MailboxHaveChildrenException;
+import org.apache.james.webadmin.utils.Parsers;
 import org.apache.james.webadmin.utils.Responses;
 import org.apache.james.webadmin.validation.MailboxName;
 import org.eclipse.jetty.http.HttpStatus;
@@ -70,7 +71,7 @@ public class UserMailboxesRoutes implements Routes {
     }
 
     private static Username getUsernameParam(Request request) {
-        return Username.of(request.params(USER_NAME));
+        return Parsers.parseUsername(request.params(USER_NAME));
     }
 
     private static UserMailboxesService.Options getOptions(Request request) {
@@ -217,11 +218,7 @@ public class UserMailboxesRoutes implements Routes {
                 if (userMailboxesService.testMailboxExists(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)), getOptions(request))) {
                     return Responses.returnNoContent(response);
                 } else {
-                    throw ErrorResponder.builder()
-                        .statusCode(HttpStatus.NOT_FOUND_404)
-                        .type(ErrorType.NOT_FOUND)
-                        .message("Mailbox does not exist")
-                        .haltError();
+                    throw ErrorResponder.notFound("Mailbox does not exist");
                 }
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid get on user mailbox", e);
