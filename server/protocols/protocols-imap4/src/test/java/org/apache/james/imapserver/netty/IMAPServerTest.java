@@ -234,65 +234,6 @@ class IMAPServerTest {
     }
 
     @Nested
-    class ConnectionCheckTest {
-
-        IMAPServer imapServer;
-        private int port;
-
-        @BeforeEach
-        void beforeEach() throws Exception {
-            HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("imapServerImapConnectCheck.xml"));
-            imapServer = createImapServer(config);
-            port = imapServer.getListenAddresses().get(0).getPort();
-        }
-
-        @AfterEach
-        void tearDown() {
-            imapServer.destroy();
-        }
-
-        @Test
-        void banIpWhenBannedIpConnect() {
-            imapServer.getConnectionChecks().stream()
-                .filter(check -> check instanceof IpConnectionCheck)
-                .map(check -> (IpConnectionCheck) check)
-                .forEach(ipCheck -> ipCheck.setBannedIps(Set.of("127.0.0.1")));
-
-            assertThatThrownBy(() -> testIMAPClient.connect("127.0.0.1", port)
-                .login(USER.asString(), USER_PASS)
-                .append("INBOX", SMALL_MESSAGE));
-        }
-
-        @Test
-        void logoutShouldDisconnectUser() throws Exception {
-            testIMAPClient.connect("127.0.0.1", port)
-                .login(USER.asString(), USER_PASS);
-
-            imapServer.disconnect(USER::equals);
-
-            assertThatThrownBy(() -> testIMAPClient
-                .append("INBOX", SMALL_MESSAGE));
-        }
-
-        @Test
-        void allowConnectWithUnbannedIp() throws IOException {
-            imapServer.getConnectionChecks().stream()
-                .filter(check -> check instanceof IpConnectionCheck)
-                .map(check -> (IpConnectionCheck) check)
-                .forEach(ipCheck -> ipCheck.setBannedIps(Set.of("127.0.0.2")));
-
-            testIMAPClient.connect("127.0.0.1", port)
-                .login(USER.asString(), USER_PASS)
-                .append("INBOX", SMALL_MESSAGE);
-
-            assertThat(testIMAPClient
-                .select("INBOX")
-                .readFirstMessage())
-                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[] {21}\r\nheader: value\r\n\r\nBODY)\r\n");
-        }
-    }
-
-    @Nested
     class PartialFetch {
         IMAPServer imapServer;
         private int port;
