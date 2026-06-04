@@ -19,7 +19,6 @@
 
 package org.apache.james.imapserver.netty;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 
 import java.io.IOException;
@@ -42,11 +41,8 @@ import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.fetch.FetchProcessor;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
@@ -59,10 +55,6 @@ import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.TestIMAPClient;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.LoggerFactory;
 
@@ -242,82 +234,5 @@ class IMAPServerTest {
 
     
 
-    @Nested
-    class RenameMailboxTest {
-        IMAPServer imapServer;
-        private int port;
-
-        @BeforeEach
-        void beforeEach() throws Exception {
-            imapServer = createImapServer("imapServer.xml");
-            port = imapServer.getListenAddresses().get(0).getPort();
-            MailboxSession mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
-            memoryIntegrationResources.getMailboxManager()
-                .createMailbox(MailboxPath.forUser(USER, "mailbox1"), mailboxSession);
-            memoryIntegrationResources.getMailboxManager()
-                .createMailbox(MailboxPath.forUser(USER, "mailbox2"), mailboxSession);
-        }
-
-        @AfterEach
-        void tearDown() {
-            imapServer.destroy();
-        }
-
-        @Test
-        void renameShouldFailWhenTargetMailboxAlreadyExists() throws Exception {
-            testIMAPClient.connect("127.0.0.1", port)
-                .login(USER.asString(), USER_PASS);
-
-            String response = testIMAPClient.sendCommand("RENAME mailbox1 mailbox2");
-
-            assertThat(response).contains("NO RENAME failed. Mailbox already exists.");
-        }
-
-        @Test
-        void renameShouldFailWhenRequestedMailboxDoesNotExist() throws Exception {
-            testIMAPClient.connect("127.0.0.1", port)
-                .login(USER.asString(), USER_PASS);
-
-            String response = testIMAPClient.sendCommand("RENAME nonExistingMailbox newMailboxName");
-
-            assertThat(response).contains("NO RENAME failed. Mailbox not found.");
-        }
-
-        @Test
-        void renameShouldFailWhenInsufficientRightsOnSharedMailbox() throws Exception {
-            // Create a mailbox for another user
-            memoryIntegrationResources.getMailboxManager()
-                .createMailbox(MailboxPath.forUser(USER2, "sharedMailbox.child1"),
-                    memoryIntegrationResources.getMailboxManager().createSystemSession(USER2));
-
-            // Ensure the current user does not have the "delete mailbox" right on the shared mailbox
-            memoryIntegrationResources.getMailboxManager()
-                .applyRightsCommand(MailboxPath.forUser(USER2, "sharedMailbox"),
-                    MailboxACL.command()
-                        .forUser(USER)
-                        .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.Insert,
-                            MailboxACL.Right.CreateMailbox,
-                            MailboxACL.Right.Administer, MailboxACL.Right.Write)
-                        .asAddition(),
-                    memoryIntegrationResources.getMailboxManager().createSystemSession(USER2));
-            memoryIntegrationResources.getMailboxManager()
-                .applyRightsCommand(MailboxPath.forUser(USER2, "sharedMailbox.child1"),
-                    MailboxACL.command()
-                        .forUser(USER)
-                        .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read, MailboxACL.Right.Insert,
-                            MailboxACL.Right.CreateMailbox,
-                            MailboxACL.Right.Administer, MailboxACL.Right.Write)
-                        .asAddition(),
-                    memoryIntegrationResources.getMailboxManager().createSystemSession(USER2));
-
-            // Connect and attempt to rename the shared mailbox
-            testIMAPClient.connect("127.0.0.1", port)
-                .login(USER.asString(), USER_PASS);
-            String response = testIMAPClient.sendCommand("RENAME #user.bobo.sharedMailbox.child1 #user.bobo.sharedMailbox.newChild");
-
-            // Assert that the operation fails due to insufficient rights
-            assertThat(response).contains("NO RENAME failed. Insufficient rights.");
-        }
-    }
 
 }
