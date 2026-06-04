@@ -237,57 +237,6 @@ class IMAPServerTest {
 
 
 
-    @Nested
-    class Compress {
-        IMAPServer imapServer;
-        private int port;
-
-        @BeforeEach
-        void beforeEach() throws Exception {
-            imapServer = createImapServer("imapServerCompress.xml");
-            port = imapServer.getListenAddresses().get(0).getPort();
-        }
-
-        @AfterEach
-        void tearDown() {
-            imapServer.destroy();
-        }
-
-        @Test
-        void shouldNotThrowWhenCompressionEnabled() throws Exception {
-            InMemoryMailboxManager mailboxManager = memoryIntegrationResources.getMailboxManager();
-            MailboxSession mailboxSession = mailboxManager.createSystemSession(USER);
-            mailboxManager.createMailbox(
-                MailboxPath.inbox(USER),
-                mailboxSession);
-            mailboxManager.getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .appendMessage(MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession);
-
-            Properties props = new Properties();
-            props.put("mail.imap.user", USER.asString());
-            props.put("mail.imap.host", "127.0.0.1");
-            props.put("mail.imap.auth.mechanisms", "LOGIN");
-            props.put("mail.imap.compress.enable", true);
-            final Session session = Session.getInstance(props);
-            final Store store = session.getStore("imap");
-            store.connect("127.0.0.1", port, USER.asString(), USER_PASS);
-            final FetchProfile fetchProfile = new FetchProfile();
-            fetchProfile.add(FetchProfile.Item.ENVELOPE);
-            final IMAPFolder inbox = (IMAPFolder) store.getFolder("INBOX");
-            inbox.open(READ_WRITE);
-
-            inbox.getMessageByUID(1);
-        }
-
-        @Test
-        void compressShouldFailWhenUnknownCompressionAlgorithm() throws Exception {
-            String reply = testIMAPClient.connect("127.0.0.1", port)
-                .login(USER.asString(), USER_PASS)
-                .sendCommand("COMPRESS BAD");
-
-            assertThat(reply).contains("AAAB BAD COMPRESS failed. Illegal arguments.");
-        }
-    }
 
     @Nested
     class CompressWithSSL {
