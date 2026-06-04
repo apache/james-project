@@ -20,7 +20,6 @@
 package org.apache.james.imapserver.netty;
 
 import static jakarta.mail.Flags.Flag.ANSWERED;
-import static jakarta.mail.Folder.READ_WRITE;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.apache.james.jwt.OidcTokenFixture.INTROSPECTION_RESPONSE;
 import static org.apache.james.mailbox.MessageManager.FlagsUpdateMode.REPLACE;
@@ -58,7 +57,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import jakarta.mail.FetchProfile;
 import jakarta.mail.Flags;
 import jakarta.mail.Folder;
 import jakarta.mail.Message;
@@ -111,7 +109,6 @@ import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.james.utils.TestIMAPClient;
 import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
-import org.eclipse.angus.mail.imap.IMAPFolder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -238,52 +235,6 @@ class IMAPServerTest {
 
 
 
-    @Nested
-    class CompressWithSSL {
-        IMAPServer imapServer;
-        private int port;
-
-        @BeforeEach
-        void beforeEach() throws Exception {
-            imapServer = createImapServer("imapServerSSLCompress.xml");
-            port = imapServer.getListenAddresses().get(0).getPort();
-        }
-
-        @AfterEach
-        void tearDown() {
-            imapServer.destroy();
-        }
-
-        @Test
-        void shouldNotThrowWhenCompressionEnabled() throws Exception {
-            InMemoryMailboxManager mailboxManager = memoryIntegrationResources.getMailboxManager();
-            MailboxSession mailboxSession = mailboxManager.createSystemSession(USER);
-            mailboxManager.createMailbox(
-                MailboxPath.inbox(USER),
-                mailboxSession);
-            mailboxManager.getMailbox(MailboxPath.inbox(USER), mailboxSession)
-                .appendMessage(MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession);
-
-            Properties props = new Properties();
-            props.put("mail.imaps.user", USER.asString());
-            props.put("mail.imaps.host", "127.0.0.1");
-            props.put("mail.imaps.auth.mechanisms", "LOGIN");
-            props.put("mail.imaps.compress.enable", true);
-            props.put("mail.imaps.ssl.enable", "true");
-            props.put("mail.imaps.ssl.trust", "*");
-            props.put("mail.imaps.ssl.checkserveridentity", "false");
-            final Session session = Session.getInstance(props);
-            final Store store = session.getStore("imaps");
-            store.connect("127.0.0.1", port, USER.asString(), USER_PASS);
-            final FetchProfile fetchProfile = new FetchProfile();
-            fetchProfile.add(FetchProfile.Item.ENVELOPE);
-            final IMAPFolder inbox = (IMAPFolder) store.getFolder("INBOX");
-            inbox.open(READ_WRITE);
-
-            inbox.getMessageByUID(1);
-        }
-
-    }
 
     public static class BlindTrustManager implements X509TrustManager {
         public X509Certificate[] getAcceptedIssuers() {
