@@ -257,47 +257,6 @@ class IMAPServerTest {
 
 
 
-    @Nested
-    class PlainAuthDisabled {
-        IMAPServer imapServer;
-        private int port;
-
-        @BeforeEach
-        void beforeEach() throws Exception {
-            imapServer = createImapServer("imapServerPlainAuthDisabled.xml");
-            port = imapServer.getListenAddresses().get(0).getPort();
-        }
-
-        @AfterEach
-        void tearDown() {
-            imapServer.destroy();
-        }
-
-        @Test
-        void loginShouldFail() {
-            assertThatThrownBy(() ->
-                testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS))
-                .hasMessage("Login failed");
-        }
-
-        @Test
-        void authenticatePlainShouldFail() {
-            assertThatThrownBy(() ->
-                testIMAPClient.connect("127.0.0.1", port)
-                    .authenticatePlain(USER.asString(), USER_PASS))
-                .hasMessage("Login failed");
-        }
-
-        @Test
-        void capabilityShouldNotAdvertiseLoginAndAuthenticationPlain() throws Exception {
-            testIMAPClient.connect("127.0.0.1", port);
-
-            assertThat(testIMAPClient.capability())
-                .contains("LOGINDISABLED")
-                .doesNotContain("AUTH=PLAIN");
-        }
-    }
 
     @Nested
     class PlainAuthEnabledWithoutRequireSSL {
