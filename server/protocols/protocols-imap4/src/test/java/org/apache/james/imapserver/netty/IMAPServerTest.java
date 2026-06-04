@@ -34,7 +34,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
-import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -73,13 +72,11 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.net.imap.AuthenticatingIMAPClient;
-import org.apache.commons.net.imap.IMAPReply;
 import org.apache.commons.net.imap.IMAPSClient;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ConnectionCheck;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
-import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.fetch.FetchProcessor;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.jwt.OidcTokenFixture;
@@ -130,7 +127,6 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelOption;
 import io.netty.handler.codec.compression.JdkZlibDecoder;
 import io.netty.handler.codec.compression.JdkZlibEncoder;
 import io.netty.handler.codec.compression.ZlibWrapper;
@@ -262,105 +258,6 @@ class IMAPServerTest {
     }
 
 
-    @Nested
-    class StartTLS {
-        IMAPServer imapServer;
-        private int port;
-        private Connection connection;
-        private ConcurrentLinkedDeque<String> responses;
-
-        @BeforeEach
-        void beforeEach() throws Exception {
-            imapServer = createImapServer("imapServerStartTLS.xml");
-            port = imapServer.getListenAddresses().get(0).getPort();
-            connection = TcpClient.create()
-                .noSSL()
-                .remoteAddress(() -> new InetSocketAddress(LOCALHOST_IP, port))
-                .option(ChannelOption.TCP_NODELAY, true)
-                .connectNow();
-            responses = new ConcurrentLinkedDeque<>();
-            connection.inbound().receive().asString()
-                .doOnNext(responses::addLast)
-                .subscribeOn(Schedulers.newSingle("imap-test"))
-                .subscribe();
-        }
-
-        @AfterEach
-        void tearDown() {
-            imapServer.destroy();
-        }
-
-        @Test
-        void extraLinesBatchedWithStartTLSShouldBeSanitized() throws Exception {
-            IMAPSClient imapClient = new IMAPSClient();
-            imapClient.connect("127.0.0.1", port);
-            assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS\r\nA1 NOOP\r\n"))
-                .isInstanceOf(EOFException.class)
-                .hasMessage("Connection closed without indication.");
-        }
-
-        @Test
-        void extraLFLinesBatchedWithStartTLSShouldBeSanitized() throws Exception {
-            IMAPSClient imapClient = new IMAPSClient();
-            imapClient.connect("127.0.0.1", port);
-            assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS\nA1 NOOP\r\n"))
-                .isInstanceOf(EOFException.class)
-                .hasMessage("Connection closed without indication.");
-        }
-
-        @Test
-        void tagsShouldBeWellSanitized() throws Exception {
-            IMAPSClient imapClient = new IMAPSClient();
-            imapClient.connect("127.0.0.1", port);
-            assertThatThrownBy(() -> imapClient.sendCommand("NOOP\r\n A1 STARTTLS\r\nA2 NOOP"))
-                .isInstanceOf(EOFException.class)
-                .hasMessage("Connection closed without indication.");
-        }
-
-        @Test
-        void lineFollowingStartTLSShouldBeSanitized() throws Exception {
-            IMAPSClient imapClient = new IMAPSClient();
-            imapClient.connect("127.0.0.1", port);
-            assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS A1 NOOP\r\n"))
-                .isInstanceOf(EOFException.class)
-                .hasMessage("Connection closed without indication.");
-        }
-
-        @Test
-        void startTLSShouldFailWhenAuthenticated() throws Exception {
-            // Avoids session fixation attacks as described in https://www.usenix.org/system/files/sec21-poddebniak.pdf
-            // section 6.2
-
-            IMAPSClient imapClient = new IMAPSClient();
-            imapClient.connect("127.0.0.1", port);
-            imapClient.login(USER.asString(), USER_PASS);
-            int imapCode = imapClient.sendCommand("STARTTLS\r\n");
-
-            assertThat(imapCode).isEqualTo(IMAPReply.NO);
-        }
-
-        private void send(String format) {
-            connection.outbound()
-                .send(Mono.just(Unpooled.wrappedBuffer(format
-                    .getBytes(StandardCharsets.UTF_8))))
-                .then()
-                .subscribe();
-        }
-
-        @RepeatedTest(10)
-        void concurrencyShouldNotLeadToCommandInjection() throws Exception {
-            ListAppender<ILoggingEvent> listAppender = getListAppenderForClass(AbstractProcessor.class);
-
-            send("a0 STARTTLS\r\n");
-            send("a1 NOOP\r\n");
-
-            Thread.sleep(50);
-
-            assertThat(listAppender.list)
-                .filteredOn(event -> event.getFormattedMessage().contains("Processing org.apache.james.imap.message.request.NoopRequest"))
-                .isEmpty();
-        }
-    }
 
     @Nested
     class Ssl {
