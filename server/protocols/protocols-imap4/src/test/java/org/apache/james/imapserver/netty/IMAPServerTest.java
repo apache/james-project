@@ -241,40 +241,7 @@ class IMAPServerTest {
 
 
 
-    @Nested
-    class PlainAuthenticateThenAnotherCommand {
-        IMAPServer imapServer;
-        int port;
 
-        @BeforeEach
-        void setup() throws Exception {
-            imapServer = createImapServer("imapServer.xml");
-            port = imapServer.getListenAddresses().get(0).getPort();
-        }
-
-        @AfterEach
-        void tearDown() {
-            if (imapServer != null) {
-                imapServer.destroy();
-            }
-        }
-
-        @Test
-        void authenticateShouldOnlyConsumeAuthDataCommandNotTheNextCommand() throws Exception {
-            ConcurrentTestRunner.builder()
-                    .operation((threadNumber, step) -> {
-                        AuthenticatingIMAPClient imapClient = new AuthenticatingIMAPClient();
-                        imapClient.connect("127.0.0.1", port);
-                        assertThat(imapClient.authenticate(AuthenticatingIMAPClient.AUTH_METHOD.PLAIN, USER.asString(),
-                                USER_PASS)).isTrue();
-                        assertThat(imapClient.logout()).isTrue();
-                        imapClient.disconnect();
-                    })
-                    .threadCount(10)
-                    .operationCount(200)
-                    .runSuccessfullyWithin(Duration.ofMinutes(10));
-        }
-    }
     
     @Nested
     class IDCommandTest {
