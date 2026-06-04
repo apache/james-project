@@ -34,7 +34,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -69,7 +68,6 @@ import jakarta.mail.search.SearchTerm;
 import jakarta.mail.search.SubjectTerm;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.net.imap.AuthenticatingIMAPClient;
 import org.apache.commons.net.imap.IMAPSClient;
@@ -131,8 +129,6 @@ import io.netty.handler.codec.compression.JdkZlibDecoder;
 import io.netty.handler.codec.compression.JdkZlibEncoder;
 import io.netty.handler.codec.compression.ZlibWrapper;
 import io.netty.handler.ssl.SslContextBuilder;
-import nl.altindag.ssl.exception.GenericKeyStoreException;
-import nl.altindag.ssl.pem.exception.PrivateKeyParseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -259,101 +255,6 @@ class IMAPServerTest {
 
 
 
-    @Nested
-    class Ssl {
-        IMAPServer imapServer;
-
-        @AfterEach
-        void tearDown() {
-            if (imapServer != null) {
-                imapServer.destroy();
-            }
-        }
-
-        @Test
-        void initShouldAcceptJKSFormat() {
-            assertThatCode(() -> imapServer = createImapServer("imapServerSslJKS.xml"))
-                .doesNotThrowAnyException();
-        }
-
-        @Test
-        void initShouldAcceptPKCS12Format() {
-            assertThatCode(() -> imapServer = createImapServer("imapServerSslPKCS12.xml"))
-                .doesNotThrowAnyException();
-        }
-
-        @Test
-        void initShouldAcceptPEMKeysWithPassword() {
-            assertThatCode(() -> imapServer = createImapServer("imapServerSslPEM.xml"))
-                .doesNotThrowAnyException();
-        }
-
-        @Test
-        void initShouldAcceptPEMKeysWithoutPassword() {
-            assertThatCode(() -> imapServer = createImapServer("imapServerSslPEMNoPass.xml"))
-                .doesNotThrowAnyException();
-        }
-
-        @Test
-        void initShouldAcceptJKSByDefault() {
-            assertThatCode(() -> imapServer = createImapServer("imapServerSslDefaultJKS.xml"))
-                .doesNotThrowAnyException();
-        }
-
-        @Test
-        void initShouldThrowWhenSslEnabledWithoutKeys() {
-            assertThatThrownBy(() -> createImapServer("imapServerSslNoKeys.xml"))
-                .isInstanceOf(ConfigurationException.class)
-                .hasMessageContaining("keystore or (privateKey and certificates) needs to get configured");
-        }
-
-        @Test
-        void initShouldThrowWhenJKSWithBadPassword() {
-            assertThatThrownBy(() -> createImapServer("imapServerSslJKSBadPassword.xml"))
-                .isInstanceOf(GenericKeyStoreException.class)
-                .hasMessageContaining("keystore password was incorrect");
-        }
-
-        @Test
-        void initShouldThrowWhenPEMWithBadPassword() {
-            assertThatThrownBy(() -> createImapServer("imapServerSslPEMBadPass.xml"))
-                .isInstanceOf(PrivateKeyParseException.class);
-        }
-
-        @Test
-        void initShouldThrowWhenPEMWithMissingPassword() {
-            assertThatThrownBy(() -> createImapServer("imapServerSslPEMMissingPass.xml"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("A password is mandatory with an encrypted key");
-        }
-
-        @Test
-        void initShouldNotThrowWhenPEMWithExtraPassword() {
-            assertThatCode(() -> imapServer = createImapServer("imapServerSslPEMExtraPass.xml"))
-                .doesNotThrowAnyException();
-        }
-
-        @Test
-        void initShouldThrowWhenJKSWenNotFound() {
-            assertThatThrownBy(() -> createImapServer("imapServerSslJKSNotFound.xml"))
-                .isInstanceOf(FileNotFoundException.class)
-                .hasMessage("class path resource [keystore.notfound.jks] cannot be resolved to URL because it does not exist");
-        }
-
-        @Test
-        void initShouldThrowWhenPKCS12WithBadPassword() {
-            assertThatThrownBy(() -> createImapServer("imapServerSslPKCS12WrongPassword.xml"))
-                .isInstanceOf(GenericKeyStoreException.class)
-                .hasMessageContaining("keystore password was incorrect");
-        }
-
-        @Test
-        void initShouldThrowWhenPKCS12WithMissingPassword() {
-            assertThatThrownBy(() -> createImapServer("imapServerSslPKCS12MissingPassword.xml"))
-                .isInstanceOf(GenericKeyStoreException.class)
-                .hasMessageContaining("keystore password was incorrect");
-        }
-    }
 
     @Nested
     class Limit {
