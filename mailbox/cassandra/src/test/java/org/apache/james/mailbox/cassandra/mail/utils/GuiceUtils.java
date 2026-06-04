@@ -27,8 +27,13 @@ import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.PlainBlobId;
+import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
+import org.apache.james.blob.cassandra.CassandraBucketDAO;
+import org.apache.james.blob.cassandra.CassandraDefaultBucketDAO;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
 import org.apache.james.eventsourcing.eventstore.EventStore;
@@ -91,6 +96,12 @@ public class GuiceUtils {
             binder -> binder.bind(ACLMapper.class).to(CassandraACLMapper.class),
             binder -> binder.bind(BlobId.Factory.class).toInstance(new PlainBlobId.Factory()),
             binder -> binder.bind(BlobStore.class).toProvider(() -> CassandraBlobStoreFactory.forTesting(session, new RecordingMetricFactory()).passthrough()),
+            binder -> binder.bind(BlobStoreDAO.class).toProvider(() -> {
+                PlainBlobId.Factory blobIdFactory = new PlainBlobId.Factory();
+                CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, session);
+                CassandraDefaultBucketDAO defaultBucketDAO = new CassandraDefaultBucketDAO(session, blobIdFactory);
+                return new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, configuration, BucketName.DEFAULT, new RecordingMetricFactory());
+            }),
             binder -> binder.bind(CqlSession.class).toInstance(session),
             binder -> Multibinder.newSetBinder(binder, new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {})
                 .addBinding().toInstance(ACLModule.ACL_UPDATE),
