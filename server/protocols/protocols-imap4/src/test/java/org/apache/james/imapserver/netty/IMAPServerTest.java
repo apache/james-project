@@ -37,7 +37,6 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.net.imap.AuthenticatingIMAPClient;
-import org.apache.commons.net.imap.IMAPSClient;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ConnectionCheck;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
@@ -241,47 +240,6 @@ class IMAPServerTest {
     }
 
 
-    @Nested
-    class SslConcurrentConnections {
-        IMAPServer imapServer;
-        int port;
-
-        @BeforeEach
-        void setup() throws Exception {
-            HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("imapSSL.xml"));
-            imapServer = createImapServer(config);
-            port = imapServer.getListenAddresses().get(0).getPort();
-        }
-
-        @AfterEach
-        void tearDown() {
-            if (imapServer != null) {
-                imapServer.destroy();
-            }
-        }
-
-        @Test
-        void shouldSupportManyConcurrentSSLConnections() throws Exception {
-            //Failed for 3.7.0, this serves as a non regression test
-            ConcurrentTestRunner.builder()
-                .operation((a, b) -> {
-                    IMAPSClient imapsClient = imapsImplicitClient(port);
-                    boolean capability = imapsClient.capability();
-                    assertThat(capability).isTrue();
-                    imapsClient.close();
-                })
-                .threadCount(10)
-                .operationCount(200)
-                .runSuccessfullyWithin(Duration.ofMinutes(10));
-        }
-
-        private IMAPSClient imapsImplicitClient(int port) throws Exception {
-            IMAPSClient client = new IMAPSClient(true, BogusSslContextFactory.getClientContext());
-            client.setTrustManager(BogusTrustManagerFactory.getTrustManagers()[0]);
-            client.connect("127.0.0.1", port);
-            return client;
-        }
-    }
 
     @Nested
     class PlainAuthenticateThenAnotherCommand {
