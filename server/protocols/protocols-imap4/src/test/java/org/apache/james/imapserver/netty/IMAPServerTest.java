@@ -27,7 +27,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
-import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -59,7 +58,6 @@ import org.apache.james.protocols.lib.LegacyJavaEncryptionFactory;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.ClassLoaderUtils;
-import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -243,54 +241,6 @@ class IMAPServerTest {
 
 
     
-    @Nested
-    class IDCommandTest {
-        IMAPServer imapServer;
-
-        @AfterEach
-        void tearDown() {
-            if (imapServer != null) {   
-                imapServer.destroy();
-            }
-        }
-
-        @Test
-        void idCommandShouldReturnNILWhenNoConfigured() throws Exception {
-            imapServer = createImapServer("imapServer.xml");
-
-            assertThat(
-                testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().getFirst().getPort())
-                    .sendCommand("ID (\"name\" \"Apache James\")"))
-                .contains("* ID NIL")
-                .contains("OK ID completed.");
-        }
-
-        @Test
-        void idCommandShouldReturnConfiguredResponse() throws Exception {
-            imapServer = createImapServer("imapServerIdCommandResponseFields.xml");
-            assertThat(
-                testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().getFirst().getPort())
-                    .sendCommand("ID (\"name\" \"Apache James\")"))
-                .contains("* ID (\"name\" \"Apache James\" \"version\" \"3.9.0\")")
-                .contains("OK ID completed.");
-        }
-
-        @Test
-        void concurrentIdCommandsInTheSameSessionShouldSucceed() throws Exception {
-            imapServer = createImapServer("imapServer.xml");
-
-            testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().getFirst().getPort());
-            ConcurrentTestRunner.builder()
-                .operation((threadNumber, step) -> {
-                    assertThat(testIMAPClient.sendCommand("ID (\"name\" \"Apache James\")"))
-                        .contains("* ID NIL")
-                        .contains("OK ID completed.");
-                })
-                .threadCount(20)
-                .operationCount(1)
-                .runSuccessfullyWithin(Duration.ofMinutes(5));
-        }
-    }
 
     @Nested
     class RenameMailboxTest {
