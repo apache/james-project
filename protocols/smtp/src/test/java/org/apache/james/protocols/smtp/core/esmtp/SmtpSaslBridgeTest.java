@@ -41,7 +41,11 @@ class SmtpSaslBridgeTest {
     private static final Username USER = Username.of("user@example.com");
     private static final SaslIdentity IDENTITY = new SaslIdentity(USER, USER);
 
-    private final SmtpSaslBridge testee = new SmtpSaslBridge();
+    private static class LmtpSaslBridge extends SmtpSaslBridge {
+        private LmtpSaslBridge() {
+            super(SaslProtocol.LMTP);
+        }
+    }
 
     private static class RecordingExchange implements SaslExchange {
         private final List<String> lifecycleEvents;
@@ -59,7 +63,7 @@ class SmtpSaslBridgeTest {
         @Override
         public SaslStep onResponse(byte[] clientResponse) {
             lastClientResponse = clientResponse.clone();
-            return new SaslStep.Success(IDENTITY, Optional.empty(), "success");
+            return new SaslStep.Success(IDENTITY, Optional.empty());
         }
 
         @Override
@@ -73,6 +77,8 @@ class SmtpSaslBridgeTest {
         }
     }
 
+    private final SmtpSaslBridge testee = new SmtpSaslBridge();
+
     @Test
     void initialRequestShouldDecodeInitialClientResponse() {
         String encodedInitialResponse = Base64.getEncoder().encodeToString(bytes("initial"));
@@ -80,6 +86,17 @@ class SmtpSaslBridgeTest {
         SaslInitialRequest request = testee.initialRequest("PLAIN", Optional.of(encodedInitialResponse));
 
         assertThat(request.protocol()).isEqualTo(SaslProtocol.SMTP);
+        assertThat(request.mechanismName()).isEqualTo("PLAIN");
+        assertThat(request.initialResponse()).hasValueSatisfying(value -> assertThat(value).containsExactly(bytes("initial")));
+    }
+
+    @Test
+    void initialRequestShouldUseConfiguredProtocol() {
+        String encodedInitialResponse = Base64.getEncoder().encodeToString(bytes("initial"));
+
+        SaslInitialRequest request = new LmtpSaslBridge().initialRequest("PLAIN", Optional.of(encodedInitialResponse));
+
+        assertThat(request.protocol()).isEqualTo(SaslProtocol.LMTP);
         assertThat(request.mechanismName()).isEqualTo("PLAIN");
         assertThat(request.initialResponse()).hasValueSatisfying(value -> assertThat(value).containsExactly(bytes("initial")));
     }

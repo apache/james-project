@@ -33,11 +33,21 @@ import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 
 public class SmtpSaslBridge {
+    private final SaslProtocol protocol;
+
+    public SmtpSaslBridge() {
+        this(SaslProtocol.SMTP);
+    }
+
+    protected SmtpSaslBridge(SaslProtocol protocol) {
+        this.protocol = Objects.requireNonNull(protocol);
+    }
+
     /**
      * Converts an SMTP AUTH request into a protocol-neutral SASL initial request.
      */
     public SaslInitialRequest initialRequest(String mechanismName, Optional<String> initialClientResponse) {
-        return new SaslInitialRequest(SaslProtocol.SMTP, mechanismName,
+        return new SaslInitialRequest(protocol, mechanismName,
             Objects.requireNonNull(initialClientResponse).map(this::decodeInitialClientResponse));
     }
 

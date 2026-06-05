@@ -25,6 +25,7 @@ package org.apache.james.protocols.api.sasl;
 public enum SaslProtocol {
     IMAP,
     SMTP,
+    LMTP,
     MANAGESIEVE,
     POP3
 }
