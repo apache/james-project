@@ -16,24 +16,36 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.imap.encode;
 
-import java.io.IOException;
+package org.apache.james.imap.processor.sasl;
 
-import org.apache.james.imap.message.response.AuthenticateResponse;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
-public class AuthenticateResponseEncoder implements ImapResponseEncoder<AuthenticateResponse> {
-    @Override
-    public Class<AuthenticateResponse> acceptableMessages() {
-        return AuthenticateResponse.class;
+import org.apache.james.imap.api.process.ImapSession;
+import org.junit.jupiter.api.Test;
+
+class ImapSaslSessionContextTest {
+    private interface ExtensionSaslService {
     }
 
-    @Override
-    public void encode(AuthenticateResponse message, ImapResponseComposer composer) throws IOException {
-        if (message.getResponse().filter(response -> !response.isEmpty()).isPresent()) {
-            composer.continuationResponse(message.getResponse().get());
-        } else {
-            composer.continuationResponse();
-        }
+    private static class FakeExtensionSaslService implements ExtensionSaslService {
+    }
+
+    @Test
+    void serviceShouldExposeRegisteredProtocolService() {
+        ImapSaslSessionContext testee = new ImapSaslSessionContext(mock(ImapSession.class));
+        ExtensionSaslService service = new FakeExtensionSaslService();
+
+        testee.register(ExtensionSaslService.class, service);
+
+        assertThat(testee.service(ExtensionSaslService.class)).contains(service);
+    }
+
+    @Test
+    void serviceShouldReturnEmptyWhenProtocolServiceIsNotRegistered() {
+        ImapSaslSessionContext testee = new ImapSaslSessionContext(mock(ImapSession.class));
+
+        assertThat(testee.service(ExtensionSaslService.class)).isEmpty();
     }
 }

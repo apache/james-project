@@ -57,7 +57,7 @@ class ImapSaslBridgeTest {
         @Override
         public SaslStep onResponse(byte[] clientResponse) {
             lastClientResponse = clientResponse.clone();
-            return new SaslStep.Success(IDENTITY, Optional.empty(), "success");
+            return new SaslStep.Success(IDENTITY, Optional.empty());
         }
 
         @Override

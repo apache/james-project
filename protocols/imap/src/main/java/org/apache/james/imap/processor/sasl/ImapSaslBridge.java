@@ -21,7 +21,6 @@ package org.apache.james.imap.processor.sasl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -36,7 +35,7 @@ public class ImapSaslBridge {
      */
     public SaslInitialRequest initialRequest(String mechanismName, Optional<String> initialClientResponse) {
         return new SaslInitialRequest(SaslProtocol.IMAP, mechanismName,
-            Objects.requireNonNull(initialClientResponse).map(this::decodeInitialClientResponse));
+            initialClientResponse.map(this::decodeInitialClientResponse));
     }
 
     /**
@@ -53,6 +52,10 @@ public class ImapSaslBridge {
      */
     public SaslStep onClientResponse(SaslExchange exchange, byte[] line) {
         return exchange.onResponse(decodeBase64(stripTrailingCrlf(line)));
+    }
+
+    public boolean isAbort(byte[] line) {
+        return "*".equals(stripTrailingCrlf(line));
     }
 
     /**
